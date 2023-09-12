@@ -61,6 +61,8 @@ DEFINE_RUN_ONCE_STATIC(ossl_init_base)
     ossl_malloc_setup_failures();
 #endif
 
+    CRYPTO_THREAD_rcu_init();
+
     if ((optsdone_lock = CRYPTO_THREAD_lock_new()) == NULL
         || (init_lock = CRYPTO_THREAD_lock_new()) == NULL)
         goto err;
