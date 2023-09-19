@@ -110,7 +110,7 @@ static void rwwriter_fn(int id, void *ptr, int *iterations)
 
     clock_gettime(CLOCK_REALTIME, &tv);
     for (count = 0; ; count++) {
-        sleep(1);
+        //sleep(1);
         CRYPTO_THREAD_write_lock(rwtorturelock);
         rwwriter_ptr = ptr;
         CRYPTO_THREAD_unlock(rwtorturelock);
@@ -290,7 +290,7 @@ static void writer_fn(int id, void *ptr, int *iterations)
     clock_gettime(CLOCK_REALTIME, &tv);
 
     for (count = 0; ; count++) {
-        sleep(1);
+        //sleep(1);
         CRYPTO_THREAD_synchronize_rcu();
         CRYPTO_THREAD_rcu_assign_pointer(&writer_ptr, &ptr);
         clock_gettime(CLOCK_REALTIME, &tv2);
