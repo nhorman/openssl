@@ -100,7 +100,7 @@ struct rcu_thr_data;
 #define READER_SHIFT 0
 #define WRITER_SHIFT 16 
 #define ID_SHIFT 32 
-#define READER_MASK ((uint64_t)1<<READER_SHIFT)
+#define READER_MASK ((uint64_t)0xff)
 #define WRITER_MASK (((uint64_t)1<<WRITER_SHIFT)-1)
 #define ID_MASK (((uint64_t)1<<USER_SHIFT)-1)
 #define READER_COUNT(x) ((x) & READER_MASK)
