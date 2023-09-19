@@ -148,7 +148,6 @@ static inline volatile struct rcu_qp* get_hold_current_qp(volatile struct rcu_qp
 
     if (new == NULL) {
         count = __atomic_add_fetch(&current_qp->users, VAL_READER, __ATOMIC_SEQ_CST);
-        old_qp = __atomic_load_n(&current_qp, __ATOMIC_SEQ_CST);
         id = ID_VAL(count);
     } else {
         count = __atomic_add_fetch(&id_ctr, 1, __ATOMIC_SEQ_CST);
