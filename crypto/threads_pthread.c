@@ -102,7 +102,6 @@ struct rcu_thr_data;
 #define ID_SHIFT 32 
 #define READER_MASK ((uint64_t)0xff)
 #define WRITER_MASK (((uint64_t)1<<WRITER_SHIFT)-1)
-#define ID_MASK (((uint64_t)1<<USER_SHIFT)-1)
 #define READER_COUNT(x) ((x) & READER_MASK)
 #define WRITER_COUNT(x) (uint64_t)(((x) >> WRITER_SHIFT) & WRITER_MASK)
 #define ID_VAL(x) ((x) >> ID_SHIFT)
@@ -230,7 +229,6 @@ void CRYPTO_THREAD_synchronize_rcu(void)
 {
     volatile struct rcu_qp *qp; 
     struct rcu_qp *new;
-    struct rcu_qp *next_qp;
     uint64_t count;
 
     new = CRYPTO_zalloc(sizeof(struct rcu_qp), NULL, 0);
