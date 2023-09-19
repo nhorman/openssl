@@ -395,6 +395,7 @@ static int torture_rcu(void)
     avw = tottime / (writer1_iterations + writer2_iterations);
     TEST_info("Average read time %e/read", avr);
     TEST_info("Average write time %e/write", avw);
+    CRYPTO_THREAD_synchronize_rcu();
 
     if (!TEST_int_eq(rcu_torture_result, 1))
         return 0;

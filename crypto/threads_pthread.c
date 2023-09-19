@@ -139,10 +139,10 @@ void CRYPTO_THREAD_rcu_init(void)
 }
 
 static pthread_mutex_t qp_lock = PTHREAD_MUTEX_INITIALIZER;
-static unsigned short id_ctr = 0;
+static uint32_t  id_ctr = 0;
 static inline volatile struct rcu_qp* get_hold_current_qp(volatile struct rcu_qp *new)
 {
-    int id;
+    uint32_t id;
     uint64_t count;
     volatile struct rcu_qp *old_qp;
 
@@ -157,8 +157,6 @@ static inline volatile struct rcu_qp* get_hold_current_qp(volatile struct rcu_qp
         /* exchange the current qp for a new one */
         __atomic_store_n(&new->next, current_qp, __ATOMIC_SEQ_CST);
         old_qp = __atomic_exchange_n(&current_qp, new, __ATOMIC_SEQ_CST);
-        count = __atomic_load_n(&old_qp->users, __ATOMIC_SEQ_CST);
-        id = ID_VAL(count);
         pthread_mutex_unlock(&qp_lock);
         return old_qp;
     }
@@ -205,7 +203,7 @@ void CRYPTO_THREAD_rcu_read_lock(void)
 void CRYPTO_THREAD_rcu_read_unlock(void)
 {
     struct rcu_thr_data *data = pthread_getspecific(rcu_thr_key);
-    int count;
+    uint64_t count;
 
     if (data == NULL)
         abort();
@@ -236,7 +234,7 @@ void CRYPTO_THREAD_synchronize_rcu(void)
     volatile struct rcu_qp *qp, *next_qp, *tmpqp; 
     struct rcu_qp *new;
     uint64_t count;
-    unsigned short ctr;
+    uint32_t ctr;
 
     
     new = CRYPTO_zalloc(sizeof(struct rcu_qp), NULL, 0);
@@ -258,18 +256,26 @@ void CRYPTO_THREAD_synchronize_rcu(void)
     if (next_qp != NULL)
         fwait(&next_qp->prior_complete);
 
-    pthread_mutex_lock(&qp_lock);
-    if (ID_VAL(count) == (ctr - 1)) {
+    if (ID_VAL(count) == (ctr - 1) && next_qp != NULL) {
         /* only clean if we're the last sync */
-        __atomic_store_n(&qp->next, NULL, __ATOMIC_SEQ_CST);
-        while(next_qp != NULL) {
-            tmpqp = next_qp;
+        /* we need to not change the pointers of at least the two 
+         * following qps so as not to corrupt any list traversals
+         */
+        pthread_mutex_lock(&qp_lock);
+        next_qp = __atomic_load_n(&next_qp->next, __ATOMIC_SEQ_CST);
+        if (next_qp != NULL)
             next_qp = __atomic_load_n(&next_qp->next, __ATOMIC_SEQ_CST);
-            __atomic_store_n(&tmpqp->next, NULL, __ATOMIC_SEQ_CST);
-            CRYPTO_free((void *)tmpqp, __FILE__, __LINE__);
+        if (next_qp != NULL) {
+            tmpqp = __atomic_load_n(&next_qp->next, __ATOMIC_SEQ_CST);
+            __atomic_store_n(&next_qp->next, NULL, __ATOMIC_SEQ_CST);
+            while (tmpqp != NULL) {
+                next_qp = __atomic_load_n(&tmpqp->next, __ATOMIC_SEQ_CST);
+                CRYPTO_free((void *)tmpqp, __FILE__, __LINE__);
+                tmpqp = next_qp;
+            }
         }
+        pthread_mutex_unlock(&qp_lock);
     }
-    pthread_mutex_unlock(&qp_lock);
 
     /* now signal that we are done, and let the next sync clean up our qp */
     fpost(&qp->prior_complete);
