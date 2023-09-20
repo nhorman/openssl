@@ -92,22 +92,33 @@ pthread_key_t rcu_thr_key;
 struct rcu_thr_data;
 
 /*
- * users is broken up into 3 parts
+ * users is broken up into 4 parts
  * bits 0-15 current readers
- * bits 16-31 current writers 
+ * bits 16-24 current writers 
+ * bits 25-31 current users
  * bit 32-63 - ID
  */
 #define READER_SHIFT 0
 #define WRITER_SHIFT 16 
+#define USER_SHIFT 24
 #define ID_SHIFT 32 
-#define READER_MASK ((uint64_t)0xff)
-#define WRITER_MASK (((uint64_t)1<<WRITER_SHIFT)-1)
-#define READER_COUNT(x) ((x) & READER_MASK)
-#define WRITER_COUNT(x) (uint64_t)(((x) >> WRITER_SHIFT) & WRITER_MASK)
-#define ID_VAL(x) ((x) >> ID_SHIFT)
-#define VAL_READER ((uint64_t)1<<READER_SHIFT)
-#define VAL_WRITER ((uint64_t)1 << WRITER_SHIFT)
-#define VAL_ID(x) ((uint64_t)x<<ID_SHIFT)
+#define READER_SIZE 16
+#define WRITER_SIZE 8
+#define USER_SIZE 8
+#define ID_SIZE 32
+
+#define READER_MASK     (((uint64_t)1 << READER_SIZE)-1)
+#define WRITER_MASK     (((uint64_t)1 << WRITER_SIZE)-1)
+#define USER_MASK       (((uint64_t)1 << USER_SIZE)-1)
+#define ID_MASK         (((uint64_t)1 << ID_SIZE)-1)
+#define READER_COUNT(x) (((uint64_t)(x) >> READER_SHIFT) & READER_MASK)
+#define WRITER_COUNT(x) (((uint64_t)(x) >> WRITER_SHIFT) & WRITER_MASK) 
+#define USER_COUNT(x)   (((uint64_t)(x) >> USER_SHIFT) & USER_MASK)
+#define ID_VAL(x)       (((uint64_t)(x) >> ID_SHIFT) & ID_MASK) 
+#define VAL_READER      ((uint64_t)1 << READER_SHIFT)
+#define VAL_WRITER      ((uint64_t)1 << WRITER_SHIFT)
+#define VAL_USER        ((uint64_t)1 << USER_SHIFT)
+#define VAL_ID(x)       ((uint64_t)x << ID_SHIFT)
 
 struct rcu_qp {
     volatile uint64_t users;
@@ -147,7 +158,7 @@ static inline volatile struct rcu_qp* get_hold_current_qp(volatile struct rcu_qp
     volatile struct rcu_qp *old_qp;
 
     if (new == NULL) {
-        count = __atomic_add_fetch(&current_qp->users, VAL_READER, __ATOMIC_SEQ_CST);
+        count = __atomic_add_fetch(&current_qp->users, VAL_READER+VAL_USER, __ATOMIC_SEQ_CST);
         id = ID_VAL(count);
     } else {
         pthread_mutex_lock(&qp_lock);
@@ -163,7 +174,6 @@ static inline volatile struct rcu_qp* get_hold_current_qp(volatile struct rcu_qp
 
     /* Now that we've taken our refcount, find the qp by its id */
     old_qp = __atomic_load_n(&current_qp, __ATOMIC_SEQ_CST);
-    count = __atomic_load_n(&old_qp->users, __ATOMIC_SEQ_CST);
     while (old_qp != NULL) {
         count = __atomic_load_n(&old_qp->users, __ATOMIC_SEQ_CST);
         if (ID_VAL(count) == id)
@@ -172,6 +182,7 @@ static inline volatile struct rcu_qp* get_hold_current_qp(volatile struct rcu_qp
     }
     if (old_qp == NULL)
         abort();
+    __atomic_sub_fetch(&old_qp->users, VAL_USER, __ATOMIC_SEQ_CST);
 
     return old_qp;
 }
@@ -250,30 +261,54 @@ void CRYPTO_THREAD_synchronize_rcu(void)
         fwait(&qp->futex); 
     }
 
-    ctr = __atomic_load_n(&id_ctr, __ATOMIC_SEQ_CST);
 
     next_qp = __atomic_load_n(&qp->next, __ATOMIC_SEQ_CST);
     if (next_qp != NULL)
         fwait(&next_qp->prior_complete);
 
+    pthread_mutex_lock(&qp_lock);
+    ctr = __atomic_load_n(&id_ctr, __ATOMIC_SEQ_CST);
+    /*
+     * only clean if we're the last sync
+     * we determine this by checking to see if no other writers
+     * have incremented the id counter
+     */
     if (ID_VAL(count) == (ctr - 1) && next_qp != NULL) {
-        /* only clean if we're the last sync */
-        /* we need to not change the pointers of at least the two 
-         * following qps so as not to corrupt any list traversals
+        /*
+         * we need to wait until no one is using our qp on the read side
+         * so spin until the user count reaches zero
          */
-        pthread_mutex_lock(&qp_lock);
-        next_qp = __atomic_load_n(&next_qp->next, __ATOMIC_SEQ_CST);
-        if (next_qp != NULL)
-            next_qp = __atomic_load_n(&next_qp->next, __ATOMIC_SEQ_CST);
-        if (next_qp != NULL) {
-            tmpqp = __atomic_load_n(&next_qp->next, __ATOMIC_SEQ_CST);
-            __atomic_store_n(&next_qp->next, NULL, __ATOMIC_SEQ_CST);
-            while (tmpqp != NULL) {
-                next_qp = __atomic_load_n(&tmpqp->next, __ATOMIC_SEQ_CST);
-                CRYPTO_free((void *)tmpqp, __FILE__, __LINE__);
-                tmpqp = next_qp;
-            }
+        for (;;) {
+            count = __atomic_load_n(&qp->users, __ATOMIC_SEQ_CST);
+            if (USER_COUNT(count) == 0)
+                break;
+            __asm volatile ("pause" ::: "memory");
         }
+
+        /*
+         * now that we are user free, we can orphan the list
+         * from this qp forward
+         */
+        next_qp = __atomic_load_n(&qp->next, __ATOMIC_SEQ_CST);
+
+        /*
+         * and now we can orphan part of the list
+         */
+        __atomic_store_n(&qp->next, NULL, __ATOMIC_SEQ_CST);
+
+        /*
+         * now that we have snapped off our list
+         * it should be safe to unlock, and allow other writers
+         * to procede
+         */
+        pthread_mutex_unlock(&qp_lock);
+
+        while (next_qp != NULL) {
+            tmpqp = __atomic_load_n(&next_qp->next, __ATOMIC_SEQ_CST);
+            CRYPTO_free((void *)next_qp, __FILE__, __LINE__);
+            next_qp = tmpqp;
+        }
+    } else {
         pthread_mutex_unlock(&qp_lock);
     }
 
