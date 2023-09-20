@@ -120,6 +120,8 @@ struct rcu_thr_data;
 #define VAL_USER        ((uint64_t)1 << USER_SHIFT)
 #define VAL_ID(x)       ((uint64_t)x << ID_SHIFT)
 
+#define SANITY_CHECKS
+
 struct rcu_qp {
     volatile uint64_t users;
     volatile uint32_t futex;
@@ -147,19 +149,39 @@ void CRYPTO_THREAD_rcu_init(void)
     pthread_key_create(&rcu_thr_key, free_rcu_thr_data);
     current_qp = CRYPTO_zalloc(sizeof(struct rcu_qp), NULL, 0);
     current_qp->futex = 0; /*start locked */
+    current_qp->users = VAL_ID(1);
 }
 
 static pthread_mutex_t qp_lock = PTHREAD_MUTEX_INITIALIZER;
-static uint32_t  id_ctr = 0;
+static uint32_t  id_ctr = 1;
 static inline volatile struct rcu_qp* get_hold_current_qp(volatile struct rcu_qp *new)
 {
     uint32_t id;
     uint64_t count;
+    uint64_t tmp;
+    uint64_t tmp_mask;
+    uint32_t tmp_ctr;
     volatile struct rcu_qp *old_qp;
 
+try_again:
     if (new == NULL) {
         count = __atomic_add_fetch(&current_qp->users, VAL_READER+VAL_USER, __ATOMIC_SEQ_CST);
         id = ID_VAL(count);
+#ifdef SANITY_CHECKS
+        tmp_ctr = __atomic_load_n(&id_ctr, __ATOMIC_SEQ_CST);
+        if (USER_COUNT(count) == 0)
+            abort();
+        /* sanity check */
+        tmp = VAL_ID(id);
+        tmp_mask = ~ID_MASK;
+        if (tmp != (count & tmp_mask))
+            abort();
+        if (id == 0)
+            abort();
+        /* overflow check */
+        if (USER_COUNT(count) == 0)
+            abort();
+#endif
     } else {
         pthread_mutex_lock(&qp_lock);
         count = __atomic_add_fetch(&id_ctr, 1, __ATOMIC_SEQ_CST);
@@ -176,12 +198,18 @@ static inline volatile struct rcu_qp* get_hold_current_qp(volatile struct rcu_qp
     old_qp = __atomic_load_n(&current_qp, __ATOMIC_SEQ_CST);
     while (old_qp != NULL) {
         count = __atomic_load_n(&old_qp->users, __ATOMIC_SEQ_CST);
+        if (ID_VAL(count) < id) {
+            fprintf(stderr, "we somehow lost id %x\n", id);
+            goto try_again;
+        }
         if (ID_VAL(count) == id)
             break;
         old_qp = __atomic_load_n(&old_qp->next, __ATOMIC_SEQ_CST);
     }
-    if (old_qp == NULL)
-        abort();
+    if (old_qp == NULL) {
+        fprintf(stderr, "id %x is missing from list, try again\n", id);
+        goto try_again;
+    }
     __atomic_sub_fetch(&old_qp->users, VAL_USER, __ATOMIC_SEQ_CST);
 
     return old_qp;
@@ -242,20 +270,19 @@ void CRYPTO_THREAD_rcu_read_unlock(void)
 
 void CRYPTO_THREAD_synchronize_rcu(void)
 {
-    volatile struct rcu_qp *qp, *next_qp, *tmpqp; 
+    volatile struct rcu_qp *qp, *next_qp, *tmpqp;
     struct rcu_qp *new;
     uint64_t count;
     uint32_t ctr;
-
     
     new = CRYPTO_zalloc(sizeof(struct rcu_qp), NULL, 0);
     new->futex = 0; /* futex starts locked */
 
     qp = get_hold_current_qp(new);
 
-    for(;;) {
+    for (;;) {
         count = __atomic_load_n(&qp->users, __ATOMIC_SEQ_CST);
-        if (READER_COUNT(count) == 0) {
+        if (READER_COUNT(count) == 0 && USER_COUNT(count) == 0) {
             break;
         }
         fwait(&qp->futex); 
@@ -282,7 +309,29 @@ void CRYPTO_THREAD_synchronize_rcu(void)
             count = __atomic_load_n(&qp->users, __ATOMIC_SEQ_CST);
             if (USER_COUNT(count) == 0)
                 break;
-            __asm volatile ("pause" ::: "memory");
+        }
+
+        /*
+         * do a sanity check to ensure that no one ahead of us is still
+         * waiting
+         */
+        next_qp = __atomic_load_n(&qp->next, __ATOMIC_SEQ_CST);
+        while (next_qp != NULL) {
+            count = __atomic_load_n(&next_qp->users, __ATOMIC_SEQ_CST);
+            if (READER_COUNT(count) != 0) {
+                pthread_mutex_unlock(&qp_lock);
+                goto out;
+            }
+            if (USER_COUNT(count) != 0) {
+                pthread_mutex_unlock(&qp_lock);
+                goto out;
+            }
+            ctr = __atomic_load_n(&next_qp->prior_complete, __ATOMIC_SEQ_CST);
+            if (ctr == 0) {
+                pthread_mutex_unlock(&qp_lock);
+                goto out;
+            }
+            next_qp = __atomic_load_n(&next_qp->next, __ATOMIC_SEQ_CST);
         }
 
         /*
@@ -290,7 +339,6 @@ void CRYPTO_THREAD_synchronize_rcu(void)
          * from this qp forward
          */
         next_qp = __atomic_load_n(&qp->next, __ATOMIC_SEQ_CST);
-
         /*
          * and now we can orphan part of the list
          */
@@ -305,6 +353,13 @@ void CRYPTO_THREAD_synchronize_rcu(void)
 
         while (next_qp != NULL) {
             tmpqp = __atomic_load_n(&next_qp->next, __ATOMIC_SEQ_CST);
+            count = __atomic_load_n(&next_qp->users, __ATOMIC_SEQ_CST);
+#ifdef SANITY_CHECKS
+            if (READER_COUNT(count) != 0)
+                abort();
+            if (USER_COUNT(count) != 0)
+                abort();
+#endif
             CRYPTO_free((void *)next_qp, __FILE__, __LINE__);
             next_qp = tmpqp;
         }
@@ -312,6 +367,7 @@ void CRYPTO_THREAD_synchronize_rcu(void)
         pthread_mutex_unlock(&qp_lock);
     }
 
+out:
     /* now signal that we are done, and let the next sync clean up our qp */
     fpost(&qp->prior_complete);
     return;
