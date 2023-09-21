@@ -120,8 +120,6 @@ struct rcu_thr_data;
 #define VAL_USER        ((uint64_t)1 << USER_SHIFT)
 #define VAL_ID(x)       ((uint64_t)x << ID_SHIFT)
 
-#define SANITY_CHECKS
-
 struct rcu_qp {
     volatile uint64_t users;
     volatile uint32_t futex;
@@ -154,45 +152,52 @@ void CRYPTO_THREAD_rcu_init(void)
 
 static pthread_mutex_t qp_lock = PTHREAD_MUTEX_INITIALIZER;
 static uint32_t  id_ctr = 1;
-static inline volatile struct rcu_qp* get_hold_current_qp(volatile struct rcu_qp *new)
+
+static inline volatile struct rcu_qp* swap_current_qp(volatile struct rcu_qp *new)
+{
+    uint64_t count;
+    volatile struct rcu_qp *old_qp;
+
+    pthread_mutex_lock(&qp_lock);
+    count = __atomic_add_fetch(&id_ctr, 1, __ATOMIC_SEQ_CST);
+    __atomic_store_n(&new->users, VAL_ID(count), __ATOMIC_SEQ_CST);
+    __atomic_add_fetch(&current_qp->users, VAL_WRITER, __ATOMIC_SEQ_CST);
+    /* exchange the current qp for a new one */
+    __atomic_store_n(&new->next, current_qp, __ATOMIC_SEQ_CST);
+    old_qp = __atomic_exchange_n(&current_qp, new, __ATOMIC_SEQ_CST);
+    pthread_mutex_unlock(&qp_lock);
+    return old_qp;
+}
+
+static inline volatile struct rcu_qp* get_hold_current_qp(void)
 {
     uint32_t id;
     uint64_t count;
+#ifdef SANITY_CHECKS
     uint64_t tmp;
     uint64_t tmp_mask;
     uint32_t tmp_ctr;
+#endif
     volatile struct rcu_qp *old_qp;
 
 try_again:
-    if (new == NULL) {
-        count = __atomic_add_fetch(&current_qp->users, VAL_READER+VAL_USER, __ATOMIC_SEQ_CST);
-        id = ID_VAL(count);
+    count = __atomic_add_fetch(&current_qp->users, VAL_READER+VAL_USER, __ATOMIC_SEQ_CST);
+    id = ID_VAL(count);
 #ifdef SANITY_CHECKS
-        tmp_ctr = __atomic_load_n(&id_ctr, __ATOMIC_SEQ_CST);
-        if (USER_COUNT(count) == 0)
-            abort();
-        /* sanity check */
-        tmp = VAL_ID(id);
-        tmp_mask = ~ID_MASK;
-        if (tmp != (count & tmp_mask))
-            abort();
-        if (id == 0)
-            abort();
-        /* overflow check */
-        if (USER_COUNT(count) == 0)
-            abort();
+    tmp_ctr = __atomic_load_n(&id_ctr, __ATOMIC_SEQ_CST);
+    if (USER_COUNT(count) == 0)
+        abort();
+    /* sanity check */
+    tmp = VAL_ID(id);
+    tmp_mask = ~ID_MASK;
+    if (tmp != (count & tmp_mask))
+        abort();
+    if (id == 0)
+        abort();
+    /* overflow check */
+    if (USER_COUNT(count) == 0)
+        abort();
 #endif
-    } else {
-        pthread_mutex_lock(&qp_lock);
-        count = __atomic_add_fetch(&id_ctr, 1, __ATOMIC_SEQ_CST);
-        __atomic_store_n(&new->users, VAL_ID(count), __ATOMIC_SEQ_CST);
-        __atomic_add_fetch(&current_qp->users, VAL_WRITER, __ATOMIC_SEQ_CST);
-        /* exchange the current qp for a new one */
-        __atomic_store_n(&new->next, current_qp, __ATOMIC_SEQ_CST);
-        old_qp = __atomic_exchange_n(&current_qp, new, __ATOMIC_SEQ_CST);
-        pthread_mutex_unlock(&qp_lock);
-        return old_qp;
-    }
 
     /* Now that we've taken our refcount, find the qp by its id */
     old_qp = __atomic_load_n(&current_qp, __ATOMIC_SEQ_CST);
@@ -228,7 +233,7 @@ void CRYPTO_THREAD_rcu_read_lock(void)
     }
 
     if (data->qp == NULL)
-        data->qp = get_hold_current_qp(NULL);
+        data->qp = get_hold_current_qp();
 
     /* inc our local count */
     data->count++;
@@ -278,7 +283,7 @@ void CRYPTO_THREAD_synchronize_rcu(void)
     new = CRYPTO_zalloc(sizeof(struct rcu_qp), NULL, 0);
     new->futex = 0; /* futex starts locked */
 
-    qp = get_hold_current_qp(new);
+    qp = swap_current_qp(new);
 
     for (;;) {
         count = __atomic_load_n(&qp->users, __ATOMIC_SEQ_CST);
