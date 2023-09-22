@@ -180,11 +180,8 @@ static inline volatile struct rcu_qp* get_hold_current_qp(void)
     uint32_t tmp_ctr;
 #endif
     volatile struct rcu_qp *old_qp;
-#ifdef SANITY_CHECKS
     count = __atomic_add_fetch(&current_qp->users, VAL_READER+VAL_USER, __ATOMIC_SEQ_CST);
-#else
-    count = __atomic_fetch_add(&current_qp->users, VAL_READER+VAL_USER, __ATOMIC_SEQ_CST);
-#endif
+
     id = ID_VAL(count);
 
 #ifdef SANITY_CHECKS
@@ -240,7 +237,7 @@ void CRYPTO_THREAD_rcu_read_lock(void)
         pthread_setspecific(rcu_thr_key, data);
     }
 
-    if (data->qp == NULL)
+    if (likely(data->qp == NULL))
         data->qp = get_hold_current_qp();
 
     /* inc our local count */
@@ -298,9 +295,10 @@ void CRYPTO_THREAD_synchronize_rcu(void)
     struct rcu_qp *new;
     uint64_t count;
     uint32_t ctr;
-    
+   
+    __builtin_prefetch(&current_qp, 1, 0); 
+
     new = CRYPTO_zalloc(sizeof(struct rcu_qp), NULL, 0);
-    new->futex = 0; /* futex starts locked */
 
     qp = swap_current_qp(new);
 

@@ -91,6 +91,7 @@ static int test_lock(void)
     return res;
 }
 
+static int contention = 0;
 
 static int rwwriter1_int = 1;
 static int rwwriter2_int = 2;
@@ -103,6 +104,7 @@ static int rwwriter2_iterations = 0;
 static int *rwwriter_ptr = &rwwriter1_int; 
 static int rw_torture_result = 1;
 static CRYPTO_RWLOCK *rwtorturelock = NULL;
+
 static void rwwriter_fn(int id, void *ptr, int *iterations)
 {
     int count;
@@ -110,7 +112,8 @@ static void rwwriter_fn(int id, void *ptr, int *iterations)
 
     clock_gettime(CLOCK_REALTIME, &tv);
     for (count = 0; ; count++) {
-        //sleep(1);
+        if (contention == 0)
+            sleep(1);
         CRYPTO_THREAD_write_lock(rwtorturelock);
         rwwriter_ptr = ptr;
         CRYPTO_THREAD_unlock(rwtorturelock);
@@ -174,7 +177,7 @@ static thread_t rwwriter2;
 static thread_t rwreader1;
 static thread_t rwreader2;
 
-static int torture_rw(void)
+static int _torture_rw(void)
 {
     struct timespec sts;
     struct timespec ets;
@@ -227,6 +230,19 @@ out:
     CRYPTO_THREAD_lock_free(rwtorturelock);
     return ret;
 }
+
+static int torture_rw_low(void)
+{
+    contention = 0;
+    return _torture_rw();
+}
+
+static int torture_rw_high(void)
+{
+    contention = 1;
+    return _torture_rw();
+}
+
 static int rcu_counter = 0;
 
 static void rcu_sync_cb(void)
@@ -290,7 +306,8 @@ static void writer_fn(int id, void *ptr, int *iterations)
     clock_gettime(CLOCK_REALTIME, &tv);
 
     for (count = 0; ; count++) {
-        //sleep(1);
+        if (contention == 0)
+            sleep(1);
         CRYPTO_THREAD_synchronize_rcu();
         CRYPTO_THREAD_rcu_assign_pointer(&writer_ptr, &ptr);
         clock_gettime(CLOCK_REALTIME, &tv2);
@@ -353,7 +370,7 @@ static thread_t writer2;
 static thread_t reader1;
 static thread_t reader2;
 
-static int torture_rcu(void)
+static int _torture_rcu(void)
 {
     struct timespec sts;
     struct timespec ets;
@@ -401,6 +418,18 @@ static int torture_rcu(void)
         return 0;
 
     return 1;
+}
+
+static int torture_rcu_low(void)
+{
+    contention = 0;
+    return _torture_rcu();
+}
+
+static int torture_rcu_high(void)
+{
+    contention = 1;
+    return _torture_rcu();
 }
 
 static CRYPTO_ONCE once_run = CRYPTO_ONCE_STATIC_INIT;
@@ -1162,9 +1191,11 @@ int setup_tests(void)
     ADD_TEST(test_multi_default);
 
     ADD_TEST(test_lock);
-    ADD_TEST(torture_rw);
+    ADD_TEST(torture_rw_low);
+    ADD_TEST(torture_rw_high);
     ADD_TEST(test_rcu);
-    ADD_TEST(torture_rcu);
+    ADD_TEST(torture_rcu_low);
+    ADD_TEST(torture_rcu_high);
     ADD_TEST(test_once);
     ADD_TEST(test_thread_local);
     ADD_TEST(test_atomic);
