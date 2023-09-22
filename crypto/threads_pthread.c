@@ -181,9 +181,9 @@ static inline volatile struct rcu_qp* get_hold_current_qp(void)
 #endif
     volatile struct rcu_qp *old_qp;
 
-try_again:
     count = __atomic_add_fetch(&current_qp->users, VAL_READER+VAL_USER, __ATOMIC_SEQ_CST);
     id = ID_VAL(count);
+
 #ifdef SANITY_CHECKS
     tmp_ctr = __atomic_load_n(&id_ctr, __ATOMIC_SEQ_CST);
     if (USER_COUNT(count) == 0)
@@ -202,34 +202,33 @@ try_again:
 
     /* Now that we've taken our refcount, find the qp by its id */
     old_qp = current_qp; 
-    while (old_qp != NULL) {
-#ifdef SANITY_CHECKS
-        if (ID_VAL(old_qp->users) < id) {
-            abort();
-        }
-#endif
+    do {
         if (ID_VAL(old_qp->users) == id)
             break;
         old_qp = old_qp->next;
-    }
+    } while (old_qp != NULL);
+
 #ifdef SANITY_CHECKS
     if (old_qp == NULL) {
         fprintf(stderr, "id %x is missing from list, try again\n", id);
         abort();
     }
 #endif
-    old_count = count - VAL_USER;
-    while (!__atomic_compare_exchange(&old_qp->users, &count, &old_count, 0, __ATOMIC_SEQ_CST, __ATOMIC_RELAXED)) {
-        old_count = count - VAL_USER;
-    }
-
+    __atomic_fetch_sub(&old_qp->users, VAL_USER, __ATOMIC_SEQ_CST);
     return old_qp;
 }
 
 void CRYPTO_THREAD_rcu_read_lock(void)
 {
-    struct rcu_thr_data *data = pthread_getspecific(rcu_thr_key);
+    struct rcu_thr_data *data;
 
+    /*
+     * we're going to access current_qp here so ask the 
+     * processor to fetch it
+     */
+    __builtin_prefetch(&current_qp, 1, 3);
+
+    data = pthread_getspecific(rcu_thr_key);
     if (unlikely(data == NULL)) {
         data = CRYPTO_zalloc(sizeof(struct rcu_thr_data), NULL, 0);
         if (data == NULL)
@@ -256,6 +255,11 @@ void CRYPTO_THREAD_rcu_read_unlock(void)
 {
     struct rcu_thr_data *data = pthread_getspecific(rcu_thr_key);
     uint64_t count;
+
+    /*
+     * we're likely to access data->qp, so lets fetch it now
+     */
+    __builtin_prefetch(&data->qp, 1, 0);
 
 #ifdef SANITY_CHECKS
     if (data == NULL)
