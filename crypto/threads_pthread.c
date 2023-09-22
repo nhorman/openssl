@@ -180,8 +180,11 @@ static inline volatile struct rcu_qp* get_hold_current_qp(void)
     uint32_t tmp_ctr;
 #endif
     volatile struct rcu_qp *old_qp;
-
+#ifdef SANITY_CHECKS
     count = __atomic_add_fetch(&current_qp->users, VAL_READER+VAL_USER, __ATOMIC_SEQ_CST);
+#else
+    count = __atomic_fetch_add(&current_qp->users, VAL_READER+VAL_USER, __ATOMIC_SEQ_CST);
+#endif
     id = ID_VAL(count);
 
 #ifdef SANITY_CHECKS
