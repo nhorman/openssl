@@ -87,7 +87,7 @@ fpost(volatile uint32_t *futexp)
     }
 }
 
-pthread_key_t rcu_thr_key;
+static pthread_key_t rcu_thr_key;
 
 struct rcu_thr_data;
 
@@ -120,19 +120,11 @@ struct rcu_thr_data;
 #define VAL_USER        ((uint64_t)1 << USER_SHIFT)
 #define VAL_ID(x)       ((uint64_t)x << ID_SHIFT)
 
-struct rcu_qp {
-    volatile uint64_t users;
-    volatile uint32_t futex;
-    volatile uint32_t prior_complete;
-    volatile struct rcu_qp *next;
-};
-
 struct rcu_thr_data {
     volatile struct rcu_qp *qp;
     int count;
 };
 
-static volatile struct rcu_qp *current_qp = NULL;
 
 static void free_rcu_thr_data(void *ptr)
 {
@@ -145,31 +137,27 @@ static void free_rcu_thr_data(void *ptr)
 void CRYPTO_THREAD_rcu_init(void)
 {
     pthread_key_create(&rcu_thr_key, free_rcu_thr_data);
-    current_qp = CRYPTO_zalloc(sizeof(struct rcu_qp), NULL, 0);
-    current_qp->futex = 0; /*start locked */
-    current_qp->users = VAL_ID(1);
 }
 
 static pthread_mutex_t qp_lock = PTHREAD_MUTEX_INITIALIZER;
-static uint32_t  id_ctr = 1;
 
-static inline volatile struct rcu_qp* swap_current_qp(volatile struct rcu_qp *new)
+static inline volatile struct rcu_qp* swap_current_qp(CRYPTO_RCU_LOCK *lock, volatile struct rcu_qp *new)
 {
     uint64_t count;
     volatile struct rcu_qp *old_qp;
 
     pthread_mutex_lock(&qp_lock);
-    count = __atomic_add_fetch(&id_ctr, 1, __ATOMIC_SEQ_CST);
+    count = __atomic_add_fetch(&lock->id_ctr, 1, __ATOMIC_SEQ_CST);
     __atomic_store_n(&new->users, VAL_ID(count), __ATOMIC_SEQ_CST);
-    __atomic_add_fetch(&current_qp->users, VAL_WRITER, __ATOMIC_SEQ_CST);
+    __atomic_add_fetch(&lock->current_qp->users, VAL_WRITER, __ATOMIC_SEQ_CST);
     /* exchange the current qp for a new one */
-    __atomic_store_n(&new->next, current_qp, __ATOMIC_SEQ_CST);
-    old_qp = __atomic_exchange_n(&current_qp, new, __ATOMIC_SEQ_CST);
+    __atomic_store_n(&new->next, lock->current_qp, __ATOMIC_SEQ_CST);
+    old_qp = __atomic_exchange_n(&lock->current_qp, new, __ATOMIC_SEQ_CST);
     pthread_mutex_unlock(&qp_lock);
     return old_qp;
 }
 
-static inline volatile struct rcu_qp* get_hold_current_qp(void)
+static inline volatile struct rcu_qp* get_hold_current_qp(CRYPTO_RCU_LOCK *lock)
 {
     uint32_t id;
     uint64_t old_count;
@@ -180,11 +168,11 @@ static inline volatile struct rcu_qp* get_hold_current_qp(void)
     uint32_t tmp_ctr;
 #endif
     volatile struct rcu_qp *old_qp;
-    count = __atomic_add_fetch(&current_qp->users, VAL_READER+VAL_USER, __ATOMIC_SEQ_CST);
+    count = __atomic_add_fetch(&lock->current_qp->users, VAL_READER+VAL_USER, __ATOMIC_SEQ_CST);
     id = ID_VAL(count);
 
 #ifdef SANITY_CHECKS
-    tmp_ctr = __atomic_load_n(&id_ctr, __ATOMIC_SEQ_CST);
+    tmp_ctr = __atomic_load_n(&lock->id_ctr, __ATOMIC_SEQ_CST);
     if (USER_COUNT(count) == 0)
         abort();
     /* sanity check */
@@ -200,7 +188,7 @@ static inline volatile struct rcu_qp* get_hold_current_qp(void)
 #endif
 
     /* Now that we've taken our refcount, find the qp by its id */
-    old_qp = current_qp; 
+    old_qp = lock->current_qp; 
     do {
         if (ID_VAL(old_qp->users) == id)
             break;
@@ -217,7 +205,7 @@ static inline volatile struct rcu_qp* get_hold_current_qp(void)
     return old_qp;
 }
 
-void CRYPTO_THREAD_rcu_read_lock(void)
+void CRYPTO_THREAD_rcu_read_lock(CRYPTO_RCU_LOCK *lock)
 {
     struct rcu_thr_data *data;
 
@@ -225,7 +213,7 @@ void CRYPTO_THREAD_rcu_read_lock(void)
      * we're going to access current_qp here so ask the 
      * processor to fetch it
      */
-    __builtin_prefetch(&current_qp, 1, 3);
+    __builtin_prefetch(&lock->current_qp, 1, 3);
     data = pthread_getspecific(rcu_thr_key);
 
     if (unlikely(data == NULL)) {
@@ -237,7 +225,7 @@ void CRYPTO_THREAD_rcu_read_lock(void)
     }
 
     if (likely(data->qp == NULL))
-        data->qp = get_hold_current_qp();
+        data->qp = get_hold_current_qp(lock);
 
     /* inc our local count */
     data->count++;
@@ -250,7 +238,7 @@ void CRYPTO_THREAD_rcu_read_lock(void)
 }
 
 
-void CRYPTO_THREAD_rcu_read_unlock(void)
+void CRYPTO_THREAD_rcu_read_unlock(CRYPTO_RCU_LOCK *lock)
 {
     struct rcu_thr_data *data = pthread_getspecific(rcu_thr_key);
     uint64_t count;
@@ -288,18 +276,18 @@ void CRYPTO_THREAD_rcu_read_unlock(void)
     }
 }
 
-void CRYPTO_THREAD_synchronize_rcu(void)
+void CRYPTO_THREAD_synchronize_rcu(CRYPTO_RCU_LOCK *lock)
 {
     volatile struct rcu_qp *qp, *next_qp, *tmpqp;
     struct rcu_qp *new;
     uint64_t count;
     uint32_t ctr;
    
-    __builtin_prefetch(&current_qp, 1, 0); 
+    __builtin_prefetch(&lock->current_qp, 1, 0); 
 
     new = CRYPTO_zalloc(sizeof(struct rcu_qp), NULL, 0);
 
-    qp = swap_current_qp(new);
+    qp = swap_current_qp(lock, new);
 
     for (;;) {
         count = __atomic_load_n(&qp->users, __ATOMIC_SEQ_CST);
@@ -316,7 +304,7 @@ void CRYPTO_THREAD_synchronize_rcu(void)
         fwait(&next_qp->prior_complete);
 
     pthread_mutex_lock(&qp_lock);
-    ctr = __atomic_load_n(&id_ctr, __ATOMIC_SEQ_CST);
+    ctr = __atomic_load_n(&lock->id_ctr, __ATOMIC_SEQ_CST);
     /*
      * only clean if we're the last sync
      * we determine this by checking to see if no other writers
@@ -393,6 +381,30 @@ out:
     /* now signal that we are done, and let the next sync clean up our qp */
     fpost(&qp->prior_complete);
     return;
+}
+
+CRYPTO_RCU_LOCK *CRYPTO_THREAD_rcu_lock_new(void)
+{
+    CRYPTO_RCU_LOCK *new = CRYPTO_zalloc(sizeof(CRYPTO_RCU_LOCK), NULL, 0);
+
+    if (new == NULL)
+        return NULL;
+
+    new->current_qp = CRYPTO_zalloc(sizeof(struct rcu_qp), NULL, 0);
+    if (new->current_qp == NULL) {
+        CRYPTO_free(new, NULL, 0);
+        new = NULL;
+    } else {
+        new->current_qp->futex = 1; /*new rcu_locks start unlocked */
+        new->id_ctr = 1;
+    }
+    return new;
+}
+
+void CRYPTO_THREAD_rcu_lock_free(CRYPTO_RCU_LOCK *lock)
+{
+    CRYPTO_free(lock->current_qp, NULL, 0);
+    CRYPTO_free(lock, NULL, 0);
 }
 
 CRYPTO_RWLOCK *CRYPTO_THREAD_lock_new(void)

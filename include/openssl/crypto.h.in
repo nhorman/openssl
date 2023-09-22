@@ -79,10 +79,24 @@ typedef struct {
 
 typedef void CRYPTO_RWLOCK;
 
+struct rcu_qp {
+    volatile uint64_t users;
+    volatile uint32_t futex;
+    volatile uint32_t prior_complete;
+    volatile struct rcu_qp *next;
+};
+
+typedef struct {
+    struct rcu_qp *current_qp;
+    uint32_t id_ctr;
+} CRYPTO_RCU_LOCK;
+
 void CRYPTO_THREAD_rcu_init(void);
-void CRYPTO_THREAD_rcu_read_lock(void);
-void CRYPTO_THREAD_rcu_read_unlock(void);
-void CRYPTO_THREAD_synchronize_rcu(void);
+CRYPTO_RCU_LOCK *CRYPTO_THREAD_rcu_lock_new(void);
+void CRYPTO_THREAD_rcu_lock_free(CRYPTO_RCU_LOCK *lock);
+void CRYPTO_THREAD_rcu_read_lock(CRYPTO_RCU_LOCK *lock);
+void CRYPTO_THREAD_rcu_read_unlock(CRYPTO_RCU_LOCK *lock);
+void CRYPTO_THREAD_synchronize_rcu(CRYPTO_RCU_LOCK *lock);
 #define CRYPTO_THREAD_rcu_derefrence(p) __atomic_load_n(p, __ATOMIC_ACQUIRE)
 #define CRYPTO_THREAD_rcu_assign_pointer(p, v) __atomic_store(p, v, __ATOMIC_RELEASE)
  

@@ -244,11 +244,12 @@ static int torture_rw_high(void)
 }
 
 static int rcu_counter = 0;
+static CRYPTO_RCU_LOCK *rcu_lock = NULL;
 
 static void rcu_sync_cb(void)
 {
-    CRYPTO_THREAD_synchronize_rcu();
     rcu_counter = 1;
+    CRYPTO_THREAD_synchronize_rcu(rcu_lock);
 }
 
 static int test_rcu(void)
@@ -256,24 +257,26 @@ static int test_rcu(void)
     thread_t thread;
     int ret = 0;
 
+    rcu_lock = CRYPTO_THREAD_rcu_lock_new();
+
     rcu_counter = 0;
     TEST_info("Locking rcu read lock");
-    CRYPTO_THREAD_rcu_read_lock();
+    CRYPTO_THREAD_rcu_read_lock(rcu_lock);
 
     TEST_info("starting sync thread");
     if (!TEST_true(run_thread(&thread, rcu_sync_cb))) {
-        CRYPTO_THREAD_rcu_read_unlock();
+        CRYPTO_THREAD_rcu_read_unlock(rcu_lock);
         goto out;
     }
 
     TEST_info("Confirming rcu counter state read side");
     if (!TEST_int_eq(rcu_counter, 0)) {
-        CRYPTO_THREAD_rcu_read_unlock();
+        CRYPTO_THREAD_rcu_read_unlock(rcu_lock);
         goto out;
     }
 
     TEST_info("Unlocking rcu read lock");
-    CRYPTO_THREAD_rcu_read_unlock();
+    CRYPTO_THREAD_rcu_read_unlock(rcu_lock);
 
     TEST_info("Waiting for sync thread to finish");
     if (!TEST_true(wait_for_thread(thread)))
@@ -284,7 +287,8 @@ static int test_rcu(void)
     ret = 1;
 
 out:
-   return ret; 
+    CRYPTO_THREAD_rcu_lock_free(rcu_lock); 
+    return ret; 
 }
 
 static int writer1_int = 1;
@@ -308,8 +312,8 @@ static void writer_fn(int id, void *ptr, int *iterations)
     for (count = 0; ; count++) {
         if (contention == 0)
             sleep(1);
-        CRYPTO_THREAD_synchronize_rcu();
         CRYPTO_THREAD_rcu_assign_pointer(&writer_ptr, &ptr);
+        CRYPTO_THREAD_synchronize_rcu(rcu_lock);
         clock_gettime(CLOCK_REALTIME, &tv2);
         if (tv2.tv_sec > (tv.tv_sec + 4))
             break;
@@ -338,11 +342,11 @@ static void reader_fn(int *iterations)
     int *val;
     while (writer1_done != 1 || writer2_done != 1) {
         count++;
-        CRYPTO_THREAD_rcu_read_lock();
+        CRYPTO_THREAD_rcu_read_lock(rcu_lock);
         val = CRYPTO_THREAD_rcu_derefrence(&writer_ptr); 
         if (val != &writer1_int && val != &writer2_int)
             rcu_torture_result = 0;
-        CRYPTO_THREAD_rcu_read_unlock();
+        CRYPTO_THREAD_rcu_read_unlock(rcu_lock);
         if (rcu_torture_result == 0) {
             TEST_info("rcu torture reader got a pointer %p to neither %p or %p at iteration %d",
                       val, &writer1_int, &writer2_int, count);
@@ -384,6 +388,8 @@ static int _torture_rcu(void)
     memset(&reader1, 0, sizeof(thread_t));
     memset(&reader2, 0, sizeof(thread_t));
 
+    rcu_lock = CRYPTO_THREAD_rcu_lock_new();
+
     TEST_info("Staring rcu torture");
     clock_gettime(CLOCK_REALTIME, &sts);
     if (!TEST_true(run_thread(&reader1, reader1_fn))
@@ -412,7 +418,8 @@ static int _torture_rcu(void)
     avw = tottime / (writer1_iterations + writer2_iterations);
     TEST_info("Average read time %e/read", avr);
     TEST_info("Average write time %e/write", avw);
-    CRYPTO_THREAD_synchronize_rcu();
+
+    CRYPTO_THREAD_rcu_lock_free(rcu_lock);
 
     if (!TEST_int_eq(rcu_torture_result, 1))
         return 0;
