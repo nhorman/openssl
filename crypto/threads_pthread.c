@@ -181,7 +181,6 @@ static inline volatile struct rcu_qp* get_hold_current_qp(void)
 #endif
     volatile struct rcu_qp *old_qp;
     count = __atomic_add_fetch(&current_qp->users, VAL_READER+VAL_USER, __ATOMIC_SEQ_CST);
-
     id = ID_VAL(count);
 
 #ifdef SANITY_CHECKS
@@ -227,8 +226,8 @@ void CRYPTO_THREAD_rcu_read_lock(void)
      * processor to fetch it
      */
     __builtin_prefetch(&current_qp, 1, 3);
-
     data = pthread_getspecific(rcu_thr_key);
+
     if (unlikely(data == NULL)) {
         data = CRYPTO_zalloc(sizeof(struct rcu_thr_data), NULL, 0);
         if (data == NULL)
@@ -259,7 +258,7 @@ void CRYPTO_THREAD_rcu_read_unlock(void)
     /*
      * we're likely to access data->qp, so lets fetch it now
      */
-    __builtin_prefetch(&data->qp, 1, 0);
+    __builtin_prefetch(&data, 1, 3);
 
 #ifdef SANITY_CHECKS
     if (data == NULL)
