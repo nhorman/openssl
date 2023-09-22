@@ -172,6 +172,7 @@ static inline volatile struct rcu_qp* swap_current_qp(volatile struct rcu_qp *ne
 static inline volatile struct rcu_qp* get_hold_current_qp(void)
 {
     uint32_t id;
+    uint64_t old_count;
     uint64_t count;
 #ifdef SANITY_CHECKS
     uint64_t tmp;
@@ -200,22 +201,27 @@ try_again:
 #endif
 
     /* Now that we've taken our refcount, find the qp by its id */
-    old_qp = __atomic_load_n(&current_qp, __ATOMIC_SEQ_CST);
+    old_qp = current_qp; 
     while (old_qp != NULL) {
-        count = __atomic_load_n(&old_qp->users, __ATOMIC_SEQ_CST);
-        if (ID_VAL(count) < id) {
-            fprintf(stderr, "we somehow lost id %x\n", id);
-            goto try_again;
+#ifdef SANITY_CHECKS
+        if (ID_VAL(old_qp->users) < id) {
+            abort();
         }
-        if (ID_VAL(count) == id)
+#endif
+        if (ID_VAL(old_qp->users) == id)
             break;
-        old_qp = __atomic_load_n(&old_qp->next, __ATOMIC_SEQ_CST);
+        old_qp = old_qp->next;
     }
+#ifdef SANITY_CHECKS
     if (old_qp == NULL) {
         fprintf(stderr, "id %x is missing from list, try again\n", id);
-        goto try_again;
+        abort();
     }
-    __atomic_sub_fetch(&old_qp->users, VAL_USER, __ATOMIC_SEQ_CST);
+#endif
+    old_count = count - VAL_USER;
+    while (!__atomic_compare_exchange(&old_qp->users, &count, &old_count, 0, __ATOMIC_SEQ_CST, __ATOMIC_RELAXED)) {
+        old_count = count - VAL_USER;
+    }
 
     return old_qp;
 }
@@ -224,7 +230,7 @@ void CRYPTO_THREAD_rcu_read_lock(void)
 {
     struct rcu_thr_data *data = pthread_getspecific(rcu_thr_key);
 
-    if (!data) {
+    if (unlikely(data == NULL)) {
         data = CRYPTO_zalloc(sizeof(struct rcu_thr_data), NULL, 0);
         if (data == NULL)
             abort();
@@ -239,8 +245,10 @@ void CRYPTO_THREAD_rcu_read_lock(void)
     data->count++;
 
     /* check for underflow condition */
+#ifdef SANITY_CHECKS
     if (data->count <= 0)
         abort();
+#endif
 }
 
 
@@ -249,14 +257,19 @@ void CRYPTO_THREAD_rcu_read_unlock(void)
     struct rcu_thr_data *data = pthread_getspecific(rcu_thr_key);
     uint64_t count;
 
+#ifdef SANITY_CHECKS
     if (data == NULL)
         abort();
     if (data->qp == NULL)
         abort();
+#endif
+
     data->count--;
 
+#ifdef SANITY_CHECKS
     if (data->count < 0)
         abort();
+#endif
 
     if (data->count == 0) {
         count = __atomic_sub_fetch(&data->qp->users, VAL_READER, __ATOMIC_SEQ_CST);
@@ -270,7 +283,6 @@ void CRYPTO_THREAD_rcu_read_unlock(void)
         }
         data->qp = NULL;
     }
-        
 }
 
 void CRYPTO_THREAD_synchronize_rcu(void)
@@ -287,12 +299,13 @@ void CRYPTO_THREAD_synchronize_rcu(void)
 
     for (;;) {
         count = __atomic_load_n(&qp->users, __ATOMIC_SEQ_CST);
-        if (READER_COUNT(count) == 0 && USER_COUNT(count) == 0) {
+        if (USER_COUNT(count) == 0) {
             break;
         }
-        fwait(&qp->futex); 
     }
 
+    if (READER_COUNT(count) != 0)
+        fwait(&qp->futex);
 
     next_qp = __atomic_load_n(&qp->next, __ATOMIC_SEQ_CST);
     if (next_qp != NULL)
