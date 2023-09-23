@@ -125,6 +125,14 @@ struct rcu_thr_data {
     int count;
 };
 
+struct rcu_internal_data {
+    struct rcu_qp qp; /* must be first */
+    uint8_t readers_done;
+    uint8_t prior_done;
+    pthread_mutex_t lock;
+    pthread_cond_t signal;
+    pthread_cond_t prior_signal;
+};
 
 static void free_rcu_thr_data(void *ptr)
 {
@@ -242,7 +250,7 @@ void CRYPTO_THREAD_rcu_read_unlock(CRYPTO_RCU_LOCK *lock)
 {
     struct rcu_thr_data *data = pthread_getspecific(rcu_thr_key);
     uint64_t count;
-
+    struct rcu_internal_data *idata;
     /*
      * we're likely to access data->qp, so lets fetch it now
      */
@@ -270,22 +278,37 @@ void CRYPTO_THREAD_rcu_read_unlock(CRYPTO_RCU_LOCK *lock)
          * qp later
          */
         if (READER_COUNT(count) == 0 && WRITER_COUNT(count) != 0) {
-            fpost(&data->qp->futex);
+            idata = (struct rcu_internal_data *)data->qp;
+            pthread_mutex_lock(&idata->lock);
+            idata->readers_done = 1;
+            pthread_cond_signal(&idata->signal);
+            pthread_mutex_unlock(&idata->lock);
         }
         data->qp = NULL;
     }
 }
 
+static struct rcu_qp *allocate_new_qp()
+{
+    struct rcu_internal_data *new = CRYPTO_zalloc(sizeof(struct rcu_internal_data), NULL, 0);
+    pthread_mutex_init(&new->lock, NULL);
+    pthread_cond_init(&new->signal, NULL);
+    pthread_cond_init(&new->prior_signal, NULL);
+    new->qp.futex = 1;
+    return (struct rcu_qp *)new;
+}
+
 void CRYPTO_THREAD_synchronize_rcu(CRYPTO_RCU_LOCK *lock)
 {
     volatile struct rcu_qp *qp, *next_qp, *tmpqp;
+    struct rcu_internal_data *idata;
     struct rcu_qp *new;
     uint64_t count;
     uint32_t ctr;
    
     __builtin_prefetch(&lock->current_qp, 1, 0); 
 
-    new = CRYPTO_zalloc(sizeof(struct rcu_qp), NULL, 0);
+    new = allocate_new_qp();
 
     qp = swap_current_qp(lock, new);
 
@@ -296,12 +319,22 @@ void CRYPTO_THREAD_synchronize_rcu(CRYPTO_RCU_LOCK *lock)
         }
     }
 
-    if (READER_COUNT(count) != 0)
-        fwait(&qp->futex);
+    if (READER_COUNT(count) != 0) {
+        idata = (struct rcu_internal_data *)qp;
+        pthread_mutex_lock(&idata->lock);
+        while (idata->readers_done != 1)
+            pthread_cond_wait(&idata->signal, &idata->lock);
+        pthread_mutex_unlock(&idata->lock);
+    }
 
     next_qp = __atomic_load_n(&qp->next, __ATOMIC_SEQ_CST);
-    if (next_qp != NULL)
-        fwait(&next_qp->prior_complete);
+    if (next_qp != NULL) {
+        idata = (struct rcu_internal_data *)next_qp;
+        pthread_mutex_lock(&idata->lock);
+        while (idata->prior_done != 1)
+            pthread_cond_wait(&idata->prior_signal, &idata->lock);
+        pthread_mutex_unlock(&idata->lock);
+    }
 
     pthread_mutex_lock(&qp_lock);
     ctr = __atomic_load_n(&lock->id_ctr, __ATOMIC_SEQ_CST);
@@ -379,7 +412,11 @@ void CRYPTO_THREAD_synchronize_rcu(CRYPTO_RCU_LOCK *lock)
 
 out:
     /* now signal that we are done, and let the next sync clean up our qp */
-    fpost(&qp->prior_complete);
+    idata = (struct rcu_internal_data *)qp; 
+    pthread_mutex_lock(&idata->lock);
+    idata->prior_done = 1;
+    pthread_cond_signal(&idata->prior_signal);
+    pthread_mutex_unlock(&idata->lock);
     return;
 }
 
@@ -390,20 +427,25 @@ CRYPTO_RCU_LOCK *CRYPTO_THREAD_rcu_lock_new(void)
     if (new == NULL)
         return NULL;
 
-    new->current_qp = CRYPTO_zalloc(sizeof(struct rcu_qp), NULL, 0);
+    new->id_ctr = 1;
+    new->current_qp = allocate_new_qp(); 
     if (new->current_qp == NULL) {
         CRYPTO_free(new, NULL, 0);
         new = NULL;
-    } else {
-        new->current_qp->futex = 1; /*new rcu_locks start unlocked */
-        new->id_ctr = 1;
     }
     return new;
 }
 
 void CRYPTO_THREAD_rcu_lock_free(CRYPTO_RCU_LOCK *lock)
 {
-    CRYPTO_free(lock->current_qp, NULL, 0);
+    struct rcu_internal_data *idata = (struct rcu_internal_data *)lock->current_qp;
+    struct rcu_internal_data *tmp;
+
+    while (idata != NULL) {
+        tmp = idata;
+        idata = (struct rcu_internal_data *)idata->qp.next;
+        CRYPTO_free((void *)tmp, NULL, 0);
+    }
     CRYPTO_free(lock, NULL, 0);
 }
 
