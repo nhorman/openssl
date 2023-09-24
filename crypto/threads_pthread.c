@@ -129,6 +129,7 @@ struct rcu_internal_data {
     struct rcu_qp qp; /* must be first */
     uint8_t readers_done;
     uint8_t prior_done;
+    pthread_mutex_t write_lock;
     pthread_mutex_t lock;
     pthread_cond_t signal;
     pthread_cond_t prior_signal;
@@ -292,10 +293,25 @@ static struct rcu_qp *allocate_new_qp()
 {
     struct rcu_internal_data *new = CRYPTO_zalloc(sizeof(struct rcu_internal_data), NULL, 0);
     pthread_mutex_init(&new->lock, NULL);
+    pthread_mutex_init(&new->write_lock, NULL);
     pthread_cond_init(&new->signal, NULL);
     pthread_cond_init(&new->prior_signal, NULL);
     new->qp.futex = 1;
     return (struct rcu_qp *)new;
+}
+
+void CRYPTO_THREAD_rcu_write_lock(CRYPTO_RCU_LOCK *lock)
+{
+    struct rcu_internal_data *idata = (struct rcu_internal_data *)lock;
+
+    pthread_mutex_lock(&idata->write_lock);
+}
+
+void CRYPTO_THREAD_rcu_write_unlock(CRYPTO_RCU_LOCK *lock)
+{
+    struct rcu_internal_data *idata = (struct rcu_internal_data *)lock;
+
+    pthread_mutex_unlock(&idata->write_lock);
 }
 
 void CRYPTO_THREAD_synchronize_rcu(CRYPTO_RCU_LOCK *lock)
