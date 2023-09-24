@@ -114,7 +114,7 @@ static void rwwriter_fn(int id, int *iterations)
         new = CRYPTO_zalloc(sizeof (int), NULL, 0);
         if (contention == 0)
             sleep(1);
-        CRYPTO_THREAD_write_lock(rwtorturelock);
+        (void)CRYPTO_THREAD_write_lock(rwtorturelock);
         if (rwwriter_ptr != NULL) {
             *new = *rwwriter_ptr + 1;
         } else {
@@ -122,7 +122,7 @@ static void rwwriter_fn(int id, int *iterations)
         }
         old = rwwriter_ptr;
         rwwriter_ptr = new;
-        CRYPTO_THREAD_unlock(rwtorturelock);
+        (void)CRYPTO_THREAD_unlock(rwtorturelock);
         if (old != NULL)
             CRYPTO_free(old, __FILE__, __LINE__);
         clock_gettime(CLOCK_REALTIME, &tv2);
@@ -273,8 +273,6 @@ static int writer2_iterations = 0;
 static int *writer_ptr = NULL; 
 static int rcu_torture_result = 1;
 
-static CRYPTO_RWLOCK *rcu_write_lock = NULL;
-
 static void writer_fn(int id, int *iterations)
 {
     int count;
@@ -287,7 +285,7 @@ static void writer_fn(int id, int *iterations)
         new = CRYPTO_zalloc(sizeof(int), NULL, 0);
         if (contention == 0)
             sleep(1);
-        CRYPTO_THREAD_write_lock(write_lock);
+        CRYPTO_THREAD_rcu_write_lock(rcu_lock);
         old = CRYPTO_THREAD_rcu_derefrence(&writer_ptr);
         if (old != NULL) {
             *new = *old + 1;
@@ -295,7 +293,7 @@ static void writer_fn(int id, int *iterations)
             *new = 0;
         }
         CRYPTO_THREAD_rcu_assign_pointer(&writer_ptr, &new);
-        CRYPTO_THREAD_unlock(write_lock);
+        CRYPTO_THREAD_rcu_write_unlock(rcu_lock);
         CRYPTO_THREAD_synchronize_rcu(rcu_lock);
         if (old != NULL)
             CRYPTO_free(old, __FILE__, __LINE__);
@@ -386,7 +384,6 @@ static int _torture_rcu(void)
     rcu_torture_result = 1;
 
     rcu_lock = CRYPTO_THREAD_rcu_lock_new();
-    write_lock = CRYPTO_THREAD_lock_new();
 
     TEST_info("Staring rcu torture");
     clock_gettime(CLOCK_REALTIME, &sts);
@@ -418,7 +415,6 @@ static int _torture_rcu(void)
     TEST_info("Average write time %e/write", avw);
 
     CRYPTO_THREAD_rcu_lock_free(rcu_lock);
-    CRYPTO_THREAD_lock_free(write_lock);
     if (!TEST_int_eq(rcu_torture_result, 1))
         return 0;
 
