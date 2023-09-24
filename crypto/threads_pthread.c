@@ -44,49 +44,6 @@
 #  define USE_RWLOCK
 # endif
 
-#define FUTEX_IS_UNAVAILABLE 0
-#define FUTEX_IS_AVAILABLE 1
-static int
-futex(volatile uint32_t *uaddr, int futex_op, uint32_t val,
-      const struct timespec *timeout, uint32_t *uaddr2, uint32_t val3)
-{
-   return syscall(SYS_futex, uaddr, futex_op, val,
-                  timeout, uaddr2, val3);
-}
-
-/* Acquire the futex pointed to by 'futexp': wait for its value to
-  become 1, and then set the value to 0. */
-
-static void inline
-fwait(volatile uint32_t *futexp)
-{
-    long            s;
-    uint32_t  one = 1;
-    while (1) {
-        /* Is the futex available? */
-        if (__atomic_compare_exchange_n(futexp, &one, 0, 0, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED))
-            break;      /* Yes */
-
-        /* Futex is not available; wait. */
-        s = futex(futexp, FUTEX_WAIT, 0, NULL, NULL, 0);
-        if (s == -1 && errno != EAGAIN)
-            abort();
-    }
-}
-
-static void inline
-fpost(volatile uint32_t *futexp)
-{
-    long            s;
-    uint32_t  zero = 0;
-
-    if (__atomic_compare_exchange_n(futexp, &zero, 1, 0, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED)) {
-        s = futex(futexp, FUTEX_WAKE, 1, NULL, NULL, 0);
-        if (s  == -1)
-            abort();
-    }
-}
-
 static pthread_key_t rcu_thr_key;
 
 struct rcu_thr_data;
@@ -169,7 +126,6 @@ static inline volatile struct rcu_qp* swap_current_qp(CRYPTO_RCU_LOCK *lock, vol
 static inline volatile struct rcu_qp* get_hold_current_qp(CRYPTO_RCU_LOCK *lock)
 {
     uint32_t id;
-    uint64_t old_count;
     uint64_t count;
 #ifdef SANITY_CHECKS
     uint64_t tmp;
@@ -289,7 +245,7 @@ void CRYPTO_THREAD_rcu_read_unlock(CRYPTO_RCU_LOCK *lock)
     }
 }
 
-static struct rcu_qp *allocate_new_qp()
+static struct rcu_qp *allocate_new_qp(void)
 {
     struct rcu_internal_data *new = CRYPTO_zalloc(sizeof(struct rcu_internal_data), NULL, 0);
     pthread_mutex_init(&new->lock, NULL);
