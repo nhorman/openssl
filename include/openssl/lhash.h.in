@@ -85,6 +85,10 @@ typedef struct lhash_st OPENSSL_LHASH;
 int OPENSSL_LH_error(OPENSSL_LHASH *lh);
 OPENSSL_LHASH *OPENSSL_LH_new(OPENSSL_LH_HASHFUNC h, OPENSSL_LH_COMPFUNC c);
 void OPENSSL_LH_free(OPENSSL_LHASH *lh);
+void OPENSSL_LH_read_lock(OPENSSL_LHASH *lh);
+void OPENSSL_LH_read_unlock(OPENSSL_LHASH *lh);
+void OPENSSL_LH_write_lock(OPENSSL_LHASH *lh);
+void OPENSSL_LH_write_unlock(OPENSSL_LHASH *lh);
 void OPENSSL_LH_flush(OPENSSL_LHASH *lh);
 void *OPENSSL_LH_insert(OPENSSL_LHASH *lh, void *data);
 void *OPENSSL_LH_delete(OPENSSL_LHASH *lh, const void *data);
@@ -217,6 +221,26 @@ OSSL_DEPRECATEDIN_3_2 void OPENSSL_LH_node_usage_stats_bio(const OPENSSL_LHASH *
     lh_##type##_free(LHASH_OF(type) *lh) \
     { \
         OPENSSL_LH_free((OPENSSL_LHASH *)lh); \
+    } \
+    static ossl_unused ossl_inline void \
+    lh_##type##_read_lock(LHASH_OF(type) *lh) \
+    { \
+        OPENSSL_LH_read_lock((OPENSSL_LHASH *)lh); \
+    } \
+    static ossl_unused ossl_inline void \
+    lh_##type##_read_unlock(LHASH_OF(type) *lh) \
+    { \
+        OPENSSL_LH_read_unlock((OPENSSL_LHASH *)lh); \
+    } \
+    static ossl_unused ossl_inline void \
+    lh_##type##_write_lock(LHASH_OF(type) *lh) \
+    { \
+        OPENSSL_LH_write_lock((OPENSSL_LHASH *)lh); \
+    } \
+    static ossl_unused ossl_inline void \
+    lh_##type##_write_unlock(LHASH_OF(type) *lh) \
+    { \
+        OPENSSL_LH_write_unlock((OPENSSL_LHASH *)lh); \
     } \
     static ossl_unused ossl_inline void \
     lh_##type##_flush(LHASH_OF(type) *lh) \

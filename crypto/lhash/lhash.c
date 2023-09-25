@@ -52,6 +52,8 @@ OPENSSL_LHASH *OPENSSL_LH_new(OPENSSL_LH_HASHFUNC h, OPENSSL_LH_COMPFUNC c)
         return NULL;
     if ((ret->b = OPENSSL_zalloc(sizeof(*ret->b) * MIN_NODES)) == NULL)
         goto err;
+    if ((ret->lock = CRYPTO_THREAD_rcu_lock_new()) == NULL)
+        goto err;
     ret->comp = ((c == NULL) ? (OPENSSL_LH_COMPFUNC)strcmp : c);
     ret->hash = ((h == NULL) ? (OPENSSL_LH_HASHFUNC)OPENSSL_LH_strhash : h);
     ret->num_nodes = MIN_NODES / 2;
@@ -62,6 +64,7 @@ OPENSSL_LHASH *OPENSSL_LH_new(OPENSSL_LH_HASHFUNC h, OPENSSL_LH_COMPFUNC c)
     return ret;
 
 err:
+    CRYPTO_THREAD_rcu_lock_free(ret->lock);
     OPENSSL_free(ret->b);
     OPENSSL_free(ret);
     return NULL;
@@ -73,8 +76,30 @@ void OPENSSL_LH_free(OPENSSL_LHASH *lh)
         return;
 
     OPENSSL_LH_flush(lh);
+    CRYPTO_THREAD_rcu_lock_free(lh->lock);
     OPENSSL_free(lh->b);
     OPENSSL_free(lh);
+}
+
+void OPENSSL_LH_read_lock(OPENSSL_LHASH *lh)
+{
+    CRYPTO_THREAD_rcu_read_lock(lh->lock);
+}
+
+void OPENSSL_LH_read_unlock(OPENSSL_LHASH *lh)
+{
+    CRYPTO_THREAD_rcu_read_unlock(lh->lock);
+}
+
+void OPENSSL_LH_write_lock(OPENSSL_LHASH *lh)
+{
+    CRYPTO_THREAD_rcu_write_lock(lh->lock);
+}
+
+void OPENSSL_LH_write_unlock(OPENSSL_LHASH *lh)
+{
+    CRYPTO_THREAD_rcu_write_unlock(lh->lock);
+    CRYPTO_THREAD_synchronize_rcu(lh->lock);
 }
 
 void OPENSSL_LH_flush(OPENSSL_LHASH *lh)

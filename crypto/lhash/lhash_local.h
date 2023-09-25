@@ -20,6 +20,7 @@ struct lhash_st {
     OPENSSL_LH_NODE **b;
     OPENSSL_LH_COMPFUNC comp;
     OPENSSL_LH_HASHFUNC hash;
+    CRYPTO_RCU_LOCK *lock;
     unsigned int num_nodes;
     unsigned int num_alloc_nodes;
     unsigned int p;
