@@ -275,6 +275,11 @@ static int writer2_iterations = 0;
 static int *writer_ptr = NULL; 
 static int rcu_torture_result = 1;
 
+static void free_old_rcu_data(void *data)
+{
+    CRYPTO_free(data, NULL, 0);
+}
+
 static void writer_fn(int id, int *iterations)
 {
     int count;
@@ -295,8 +300,11 @@ static void writer_fn(int id, int *iterations)
             *new = 0;
         }
         CRYPTO_THREAD_rcu_assign_pointer(&writer_ptr, &new);
+        if (contention == 0)
+            CRYPTO_THREAD_rcu_call(rcu_lock, free_old_rcu_data, old);
         CRYPTO_THREAD_rcu_write_unlock(rcu_lock);
-        CRYPTO_THREAD_synchronize_rcu(rcu_lock);
+        if (contention != 0)
+            CRYPTO_THREAD_synchronize_rcu(rcu_lock);
         if (old != NULL)
             CRYPTO_free(old, __FILE__, __LINE__);
         clock_gettime(CLOCK_REALTIME, &tv2);
