@@ -114,7 +114,8 @@ static void rwwriter_fn(int id, int *iterations)
         new = CRYPTO_zalloc(sizeof (int), NULL, 0);
         if (contention == 0)
             sleep(1);
-        (void)CRYPTO_THREAD_write_lock(rwtorturelock);
+        if (!CRYPTO_THREAD_write_lock(rwtorturelock))
+            abort();
         if (rwwriter_ptr != NULL) {
             *new = *rwwriter_ptr + 1;
         } else {
@@ -122,7 +123,8 @@ static void rwwriter_fn(int id, int *iterations)
         }
         old = rwwriter_ptr;
         rwwriter_ptr = new;
-        (void)CRYPTO_THREAD_unlock(rwtorturelock);
+        if (!CRYPTO_THREAD_unlock(rwtorturelock))
+            abort();
         if (old != NULL)
             CRYPTO_free(old, __FILE__, __LINE__);
         clock_gettime(CLOCK_REALTIME, &tv2);
@@ -154,12 +156,14 @@ static void rwreader_fn(int *iterations)
 
     while (rwwriter1_done != 1 || rwwriter2_done != 1) {
         count++;
-        CRYPTO_THREAD_read_lock(rwtorturelock);
+        if (CRYPTO_THREAD_read_lock(rwtorturelock) == 0)
+            abort();
         if (rwwriter_ptr != NULL && old > *rwwriter_ptr) {
             TEST_info("rwwriter pointer went backwards\n");
             rw_torture_result = 0;
         }
-        CRYPTO_THREAD_unlock(rwtorturelock);
+        if (CRYPTO_THREAD_unlock(rwtorturelock) == 0)
+            abort();
         *iterations = count;
         if (rw_torture_result == 0) {
             *iterations = count;
@@ -260,9 +264,7 @@ static int torture_rw_high(void)
     return _torture_rw();
 }
 
-static int rcu_counter = 0;
 static CRYPTO_RCU_LOCK *rcu_lock = NULL;
-static CRYPTO_RWLOCK *write_lock = NULL;
 
 static int writer1_done = 0;
 static int writer2_done = 0;

@@ -86,10 +86,15 @@ struct rcu_internal_data {
     struct rcu_qp qp; /* must be first */
     uint8_t readers_done;
     uint8_t prior_done;
-    pthread_mutex_t write_lock;
     pthread_mutex_t lock;
     pthread_cond_t signal;
     pthread_cond_t prior_signal;
+};
+
+struct rcu_lock_internal {
+    CRYPTO_RCU_LOCK lock;
+    pthread_mutex_t write_lock;
+    struct rcu_cb_item *cb_items;
 };
 
 static void free_rcu_thr_data(void *ptr)
@@ -249,7 +254,6 @@ static struct rcu_qp *allocate_new_qp(void)
 {
     struct rcu_internal_data *new = CRYPTO_zalloc(sizeof(struct rcu_internal_data), NULL, 0);
     pthread_mutex_init(&new->lock, NULL);
-    pthread_mutex_init(&new->write_lock, NULL);
     pthread_cond_init(&new->signal, NULL);
     pthread_cond_init(&new->prior_signal, NULL);
     new->qp.futex = 1;
@@ -258,26 +262,32 @@ static struct rcu_qp *allocate_new_qp(void)
 
 void CRYPTO_THREAD_rcu_write_lock(CRYPTO_RCU_LOCK *lock)
 {
-    struct rcu_internal_data *idata = (struct rcu_internal_data *)lock;
-
-    pthread_mutex_lock(&idata->write_lock);
+    struct rcu_lock_internal *ilock = (struct rcu_lock_internal *)lock;
+    pthread_mutex_lock(&ilock->write_lock);
 }
 
 void CRYPTO_THREAD_rcu_write_unlock(CRYPTO_RCU_LOCK *lock)
 {
-    struct rcu_internal_data *idata = (struct rcu_internal_data *)lock;
-
-    pthread_mutex_unlock(&idata->write_lock);
+    struct rcu_lock_internal *ilock = (struct rcu_lock_internal *)lock;
+    pthread_mutex_unlock(&ilock->write_lock);
 }
 
 void CRYPTO_THREAD_synchronize_rcu(CRYPTO_RCU_LOCK *lock)
 {
     volatile struct rcu_qp *qp, *next_qp, *tmpqp;
     struct rcu_internal_data *idata;
+    struct rcu_lock_internal *ilock;
     struct rcu_qp *new;
     uint64_t count;
     uint32_t ctr;
-   
+    struct rcu_cb_item *cb_items, *tmpcb;
+ 
+    /*
+     * before we do anything else, lets grab the cb list
+     */ 
+    ilock = (struct rcu_lock_internal *)lock;
+    cb_items = __atomic_exchange_n(&ilock->cb_items, NULL, __ATOMIC_SEQ_CST);
+
     __builtin_prefetch(&lock->current_qp, 1, 0); 
 
     new = allocate_new_qp();
@@ -389,30 +399,52 @@ out:
     idata->prior_done = 1;
     pthread_cond_signal(&idata->prior_signal);
     pthread_mutex_unlock(&idata->lock);
+
+    /* lastly, if we have any callback items, process them now */
+    while (cb_items != NULL) {
+        tmpcb = cb_items->next;
+        cb_items->fn(cb_items->data);
+        CRYPTO_free(cb_items, NULL, 0);
+        cb_items = tmpcb;
+    }
     return;
+}
+
+void CRYPTO_THREAD_rcu_call(CRYPTO_RCU_LOCK *lock, rcu_cb_fn cb, void *data)
+{
+    struct rcu_cb_item *new = CRYPTO_zalloc(sizeof(struct rcu_cb_item), NULL, 0);
+
+    new->data = data;
+    new->fn = cb;
+    new->next = __atomic_exchange_n(&lock->cb_items, new, __ATOMIC_SEQ_CST);
 }
 
 CRYPTO_RCU_LOCK *CRYPTO_THREAD_rcu_lock_new(void)
 {
-    CRYPTO_RCU_LOCK *new = CRYPTO_zalloc(sizeof(CRYPTO_RCU_LOCK), NULL, 0);
+    struct rcu_lock_internal *new = CRYPTO_zalloc(sizeof(struct rcu_lock_internal), NULL, 0);
 
     if (new == NULL)
         return NULL;
 
-    new->id_ctr = 1;
-    new->current_qp = allocate_new_qp(); 
-    if (new->current_qp == NULL) {
+    new->lock.id_ctr = 1;
+    pthread_mutex_init(&new->write_lock, NULL);
+    new->lock.current_qp = allocate_new_qp(); 
+    if (new->lock.current_qp == NULL) {
         CRYPTO_free(new, NULL, 0);
         new = NULL;
     }
-    return new;
+    return (CRYPTO_RCU_LOCK *)new;
 }
 
 void CRYPTO_THREAD_rcu_lock_free(CRYPTO_RCU_LOCK *lock)
 {
-    struct rcu_internal_data *idata = (struct rcu_internal_data *)lock->current_qp;
+    struct rcu_internal_data *idata;
     struct rcu_internal_data *tmp;
 
+    /* make sure we're sycchronized */
+    CRYPTO_THREAD_synchronize_rcu(lock);
+
+    idata = (struct rcu_internal_data *)lock->current_qp;
     while (idata != NULL) {
         tmp = idata;
         idata = (struct rcu_internal_data *)idata->qp.next;
