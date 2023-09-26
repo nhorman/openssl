@@ -100,6 +100,23 @@ unsigned long OPENSSL_LH_num_items(const OPENSSL_LHASH *lh);
 unsigned long OPENSSL_LH_get_down_load(const OPENSSL_LHASH *lh);
 void OPENSSL_LH_set_down_load(OPENSSL_LHASH *lh, unsigned long down_load);
 
+int OPENSSL_LH_rc_error(OPENSSL_LHASH *lh);
+OPENSSL_LHASH *OPENSSL_LH_rc_new(OPENSSL_LH_HASHFUNC h, OPENSSL_LH_COMPFUNC c);
+void OPENSSL_LH_rc_free(OPENSSL_LHASH *lh);
+void OPENSSL_LH_rc_read_lock(OPENSSL_LHASH *lh);
+void OPENSSL_LH_rc_read_unlock(OPENSSL_LHASH *lh);
+void OPENSSL_LH_rc_write_lock(OPENSSL_LHASH *lh);
+void OPENSSL_LH_rc_write_unlock(OPENSSL_LHASH *lh);
+void OPENSSL_LH_rc_flush(OPENSSL_LHASH *lh);
+void *OPENSSL_LH_rc_insert(OPENSSL_LHASH *lh, void *data);
+void *OPENSSL_LH_rc_delete(OPENSSL_LHASH *lh, const void *data);
+void *OPENSSL_LH_rc_retrieve(OPENSSL_LHASH *lh, const void *data);
+void OPENSSL_LH_rc_doall(OPENSSL_LHASH *lh, OPENSSL_LH_DOALL_FUNC func);
+void OPENSSL_LH_rc_doall_arg(OPENSSL_LHASH *lh, OPENSSL_LH_DOALL_FUNCARG func, void *arg);
+void OPENSSL_LH_rc_set_down_load(OPENSSL_LHASH *lh, unsigned long down_load);
+unsigned long OPENSSL_LH_rc_num_items(const OPENSSL_LHASH *lh);
+void OPENSSL_LH_rc_obj_put(void *data);
+
 # ifndef OPENSSL_NO_STDIO
 #  ifndef OPENSSL_NO_DEPRECATED_3_2
 OSSL_DEPRECATEDIN_3_2 void OPENSSL_LH_stats(const OPENSSL_LHASH *lh, FILE *fp);
@@ -284,7 +301,7 @@ OSSL_DEPRECATEDIN_3_2 void OPENSSL_LH_node_usage_stats_bio(const OPENSSL_LHASH *
 #define BUILD_BUG_ON(cond, msg) _Static_assert(cond, msg)
 
 typedef struct  {
-    void *nodeptr;
+    void *refptr;
 } LHASH_REF;
 
 # define DEFINE_REFCNT_LHASH_OF_EX(type) \

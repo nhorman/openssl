@@ -70,7 +70,7 @@ void OPENSSL_LH_node_usage_stats(const OPENSSL_LHASH *lh, FILE *fp)
  */
 void OPENSSL_LH_stats_bio(const OPENSSL_LHASH *lh, BIO *out)
 {
-    struct lhash_ctrl_st *lhctrl = &lh->ctrl;
+    const struct lhash_ctrl_st *lhctrl = &lh->ctrl;
 
     BIO_printf(out, "num_items             = %lu\n", lhctrl->num_items);
     BIO_printf(out, "num_nodes             = %u\n",  lhctrl->num_nodes);
@@ -94,7 +94,7 @@ void OPENSSL_LH_node_stats_bio(const OPENSSL_LHASH *lh, BIO *out)
 {
     OPENSSL_LH_NODE *n;
     unsigned int i, num;
-    struct lhash_ctrl_st *lhctrl = &lh->ctrl;
+    const struct lhash_ctrl_st *lhctrl = &lh->ctrl;
 
     for (i = 0; i < lhctrl->num_nodes; i++) {
         for (n = lhctrl->b[i], num = 0; n != NULL; n = n->next)
@@ -109,7 +109,7 @@ void OPENSSL_LH_node_usage_stats_bio(const OPENSSL_LHASH *lh, BIO *out)
     unsigned long num;
     unsigned int i;
     unsigned long total = 0, n_used = 0;
-    struct lhash_ctrl_st *lhctrl = &lh->ctrl;
+    const struct lhash_ctrl_st *lhctrl = &lh->ctrl;
 
     for (i = 0; i < lhctrl->num_nodes; i++) {
         for (n = lh->ctrl.b[i], num = 0; n != NULL; n = n->next)
