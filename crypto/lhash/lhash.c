@@ -91,7 +91,7 @@ OPENSSL_LHASH *OPENSSL_LH_rc_new(OPENSSL_LH_HASHFUNC h, OPENSSL_LH_COMPFUNC c)
     newctrl->pmax = MIN_NODES / 2;
     newctrl->up_load = UP_LOAD;
     newctrl->down_load = DOWN_LOAD;
-    CRYPTO_THREAD_rcu_assign_pointer(ret->ctrlptr, newctrl);
+    CRYPTO_THREAD_rcu_assign_pointer(&ret->ctrlptr, &newctrl);
       
     return ret;
 
@@ -419,12 +419,17 @@ void *OPENSSL_LH_rc_retrieve(OPENSSL_LHASH *lh, const void *data)
     ctrl->error = 0;
 
     rn = getrn(ctrl, lh->comp, lh->hash, data, &hash);
-    dref = (*rn)->data;
-    if (dref != NULL) {
-        CRYPTO_UP_REF(dref->refptr, &refcount);
-        if (refcount == 0)
-            abort();
+    if ((*rn) == NULL) {
+        dref = NULL;
+    } else {
+        dref = (*rn)->data;
+        if (dref != NULL) {
+            CRYPTO_UP_REF(dref->refptr, &refcount);
+            if (refcount == 0)
+                abort();
+        }
     }
+
     CRYPTO_THREAD_rcu_read_unlock(lh->lock);
     return (void *)dref;
 }
@@ -491,6 +496,9 @@ void OPENSSL_LH_rc_obj_put(void *data)
 {
     LHASH_REF *dref = data;
     int oldcount;
+
+    if (data == NULL)
+        return;
 
     CRYPTO_DOWN_REF(dref->refptr, &oldcount);
 
