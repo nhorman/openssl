@@ -419,6 +419,16 @@ void CRYPTO_THREAD_rcu_call(CRYPTO_RCU_LOCK *lock, rcu_cb_fn cb, void *data)
     new->next = __atomic_exchange_n(&lock->cb_items, new, __ATOMIC_SEQ_CST);
 }
 
+void *CRYPTO_THREAD_rcu_uptr_derefrence(uintptr_t *p)
+{
+    return (void *)__atomic_load_n(p, __ATOMIC_ACQUIRE);
+}
+
+void CRYPTO_THREAD_rcu_assign_uptr(uintptr_t *p, uintptr_t *v)
+{
+    __atomic_store(p, v, __ATOMIC_RELEASE);
+}
+
 CRYPTO_RCU_LOCK *CRYPTO_THREAD_rcu_lock_new(void)
 {
     struct rcu_lock_internal *new = CRYPTO_zalloc(sizeof(struct rcu_lock_internal), NULL, 0);
