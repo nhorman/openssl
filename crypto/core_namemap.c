@@ -251,8 +251,10 @@ static int namemap_add_name(OSSL_NAMEMAP *namemap, int number,
         number != 0 ? number : 1 + tsan_counter(&namemap->max_number);
     (void)lh_NAMENUM_ENTRY_insert(namemap->namenum, namenum);
 
-    if (lh_NAMENUM_ENTRY_error(namemap->namenum))
+    if (lh_NAMENUM_ENTRY_error(namemap->namenum)) {
+        fprintf(stderr, "INSERT ERROR FOR %p\n", namenum);
         goto err;
+    }
     return namenum->number;
 
  err:
@@ -492,7 +494,7 @@ OSSL_NAMEMAP *ossl_namemap_new(void)
 
     if ((namemap = OPENSSL_zalloc(sizeof(*namemap))) != NULL
         && (namemap->namenum =
-            lh_NAMENUM_ENTRY_new(namenum_hash, namenum_cmp)) != NULL)
+            lh_NAMENUM_ENTRY_new(namenum_hash, namenum_cmp, namenum_free)) != NULL)
         return namemap;
 
     ossl_namemap_free(namemap);
@@ -504,7 +506,6 @@ void ossl_namemap_free(OSSL_NAMEMAP *namemap)
     if (namemap == NULL || namemap->stored)
         return;
 
-    lh_NAMENUM_ENTRY_doall(namemap->namenum, namenum_free);
     lh_NAMENUM_ENTRY_free(namemap->namenum);
 
     OPENSSL_free(namemap);
