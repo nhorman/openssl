@@ -13,7 +13,6 @@
 
 struct lhash_node_st {
     void *data;
-    CRYPTO_REF_COUNT refcount;
     struct lhash_node_st *next;
     unsigned long hash;
 };

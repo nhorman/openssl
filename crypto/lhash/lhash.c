@@ -15,6 +15,7 @@
 #include <openssl/err.h>
 #include "crypto/ctype.h"
 #include "crypto/lhash.h"
+#include "internal/refcount.h"
 #include "lhash_local.h"
 
 /*
@@ -121,6 +122,8 @@ void OPENSSL_LH_rc_free(OPENSSL_LHASH *lh)
     num_nodes = OPENSSL_LH_rc_num_items(lh);
     if (num_nodes != 0)
         abort();
+    CRYPTO_THREAD_rcu_lock_free(lh->lock);
+    OPENSSL_free(lh->ctrlptr->b);
     OPENSSL_free(lh->ctrlptr);
     OPENSSL_free(lh);
 }
@@ -172,7 +175,7 @@ static void ctrl_flush_cb(void *data)
     struct lhash_ctrl_st *ctrl = data;
     unsigned int i;
     OPENSSL_LH_NODE *n, *nn;
-
+    fprintf(stderr, "freeing old ctrl\n");
     for (i = 0; i < ctrl->num_nodes; i++) {
         n = ctrl->b[i];
         while (n != NULL) {
@@ -193,7 +196,7 @@ void OPENSSL_LH_rc_flush(OPENSSL_LHASH *lh)
     int oldref;
     LHASH_REF *dref;
 
-    CRYPTO_THREAD_rcu_write_lock(lh->lock);
+    OPENSSL_LH_write_lock(lh);
     ctrl = CRYPTO_THREAD_rcu_derefrence(&lh->ctrlptr);
 
     /*
@@ -207,7 +210,7 @@ void OPENSSL_LH_rc_flush(OPENSSL_LHASH *lh)
             dref = n->data;
             CRYPTO_DOWN_REF(dref->refptr, &oldref);
             /* invalid ref count check */
-            if (oldref != 0)
+            if (oldref != 1)
                 abort();
         }
     }
@@ -232,7 +235,7 @@ void OPENSSL_LH_rc_flush(OPENSSL_LHASH *lh)
      */
     CRYPTO_THREAD_rcu_call(lh->lock, ctrl_flush_cb, ctrl);
 
-    CRYPTO_THREAD_rcu_write_unlock(lh->lock);
+    OPENSSL_LH_write_unlock(lh);
 }
 
 void *OPENSSL_LH_insert(OPENSSL_LHASH *lh, void *data)
@@ -278,56 +281,68 @@ void *OPENSSL_LH_rc_insert(OPENSSL_LHASH *lh, void *data)
     unsigned long hash;
     OPENSSL_LH_NODE *nn, **rn;
     void *ret;
+    int oldref;
     LHASH_REF *dref;
     struct lhash_ctrl_st *ctrl = NULL, *newctrl = NULL, *oldctrl = NULL;
 
-    CRYPTO_THREAD_rcu_write_lock(lh->lock);
+    OPENSSL_LH_write_lock(lh);
     ctrl = CRYPTO_THREAD_rcu_derefrence(&lh->ctrlptr);
 
     /* cheating here a bit */
     ctrl->error = 0;
-    if ((ctrl->up_load <= (ctrl->num_items * LH_LOAD_MULT / ctrl->num_nodes)) && (ctrl->p + 1 >= ctrl->pmax)) {
-        /*
-         * p +1 >= pmax signals that we are going to need to expand
-         * before that happens we need to clone the whole control structure
-         */
-        newctrl = OPENSSL_memdup(ctrl, sizeof(struct lhash_ctrl_st));
-        if (newctrl == NULL) {
-            ctrl->error++;
-            ret = NULL;
-            goto out;
-        }
+    if ((ctrl->up_load <= (ctrl->num_items * LH_LOAD_MULT / ctrl->num_nodes))) {
+        if (ctrl->p + 1 >= ctrl->pmax) {
+            /*
+             * p +1 >= pmax signals that we are going to need to expand
+             * before that happens we need to clone the whole control structure
+             */
+            newctrl = OPENSSL_memdup(ctrl, sizeof(struct lhash_ctrl_st));
+            if (newctrl == NULL) {
+                ctrl->error++;
+                ret = NULL;
+                goto out;
+            }
 
-        /* we also need to dup the b array */
-        newctrl->b = OPENSSL_memdup(ctrl->b, sizeof(OPENSSL_LH_NODE *) * ctrl->num_alloc_nodes);
-        if (newctrl->b == NULL) {
-            ctrl->error++;
-            OPENSSL_free(newctrl);
-            ret = NULL;
-            goto out;
-        }
+            /* we also need to dup the b array */
+            newctrl->b = OPENSSL_memdup(ctrl->b, sizeof(OPENSSL_LH_NODE *) * ctrl->num_alloc_nodes);
+            if (newctrl->b == NULL) {
+                ctrl->error++;
+                OPENSSL_free(newctrl);
+                ret = NULL;
+                goto out;
+            }
 
-        /* expand the new array */
-        if (!expand(ctrl)) {
-            OPENSSL_free(newctrl->b);
-            OPENSSL_free(newctrl);
-            /* lh->error done in expand */
-            ret = NULL;
-            goto out;
-        }
-        /*
-         * now that we have a new control structure thats
-         * been expanded to our needs, queue the old one for 
-         * removal
-         */
-        CRYPTO_THREAD_rcu_call(lh->lock, ctrl_retire_cb, ctrl);
+            /* expand the new array */
+            if (!expand(ctrl)) {
+                OPENSSL_free(newctrl->b);
+                OPENSSL_free(newctrl);
+                /* lh->error done in expand */
+                ret = NULL;
+                goto out;
+            }
+            /*
+             * now that we have a new control structure thats
+             * been expanded to our needs, queue the old one for 
+             * removal
+             */
+            CRYPTO_THREAD_rcu_call(lh->lock, ctrl_retire_cb, ctrl);
 
-        /*
-         * and point ctrl to the new ctrl
-         */
-        oldctrl = ctrl;
-        ctrl = newctrl;
+            /*
+             * and point ctrl to the new ctrl
+             */
+            oldctrl = ctrl;
+            ctrl = newctrl;
+        } else {
+            /*
+             * we still need to call expand here, as it has
+             * a side effect of incrementing ctrl->p, and rehashing
+             * the table
+             */
+            if (!expand(ctrl)) 
+                goto out;
+        }
     }
+    
 
     rn = getrn(ctrl, lh->comp, lh->hash, data, &hash);
 
@@ -338,11 +353,11 @@ void *OPENSSL_LH_rc_insert(OPENSSL_LHASH *lh, void *data)
             OPENSSL_free(newctrl);
             goto out;
         }
-        CRYPTO_NEW_REF(&nn->refcount, 1); /* take internal reference */
 
         /* reference counted objects always have an LHASH_REF first */
         dref = (LHASH_REF *)data;
-        dref->refptr = &nn->refcount;
+        dref->refptr = OPENSSL_zalloc(sizeof(CRYPTO_REF_COUNT));
+        CRYPTO_NEW_REF(dref->refptr, 1); /*initial internal reference */ 
         nn->data = data;
         nn->next = NULL;
         nn->hash = hash;
@@ -352,8 +367,13 @@ void *OPENSSL_LH_rc_insert(OPENSSL_LHASH *lh, void *data)
     } else {                    /* replace same key */
         ret = (*rn)->data;
         dref = (LHASH_REF *)data;
-        dref->refptr = &(*rn)->refcount; /* dont up the refcount, it should match old data, I think */
+        dref->refptr = OPENSSL_zalloc(sizeof(CRYPTO_REF_COUNT));
+        CRYPTO_NEW_REF(dref->refptr, 1);
         (*rn)->data = data;
+        /*
+         * Note: Don't mod the ref counter here, since we're returning the data
+         * let the caller put it
+         */
     }
 
     if (newctrl != NULL) {
@@ -364,7 +384,7 @@ void *OPENSSL_LH_rc_insert(OPENSSL_LHASH *lh, void *data)
          CRYPTO_THREAD_rcu_assign_pointer(&lh->ctrl, newctrl);
     }
 out:
-    CRYPTO_THREAD_rcu_write_unlock(lh->lock);
+    OPENSSL_LH_write_unlock(lh);
     return ret;
 }
 void *OPENSSL_LH_delete(OPENSSL_LHASH *lh, const void *data)
@@ -502,11 +522,15 @@ void OPENSSL_LH_rc_obj_put(void *data)
 
     CRYPTO_DOWN_REF(dref->refptr, &oldcount);
 
-    /* should allow a zero and free here, but we're not
-     * safe against freeing the whole hash table yet
-     */
     if (oldcount <= 0)
         abort();
+    if (oldcount == 1) {
+        /*
+         * we were the last ref, free it up
+         */
+        OPENSSL_free(dref->refptr);
+        OPENSSL_free(data);
+    }
 }
 
 static int expand(struct lhash_ctrl_st *lhctrl)
