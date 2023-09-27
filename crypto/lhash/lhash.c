@@ -117,7 +117,6 @@ void OPENSSL_LH_free(OPENSSL_LHASH *lh)
 void OPENSSL_LH_rc_free(OPENSSL_LHASH *lh)
 {
     int num_nodes;
-
     OPENSSL_LH_rc_flush(lh);
     num_nodes = OPENSSL_LH_rc_num_items(lh);
     if (num_nodes != 0)
@@ -175,7 +174,6 @@ static void ctrl_flush_cb(void *data)
     struct lhash_ctrl_st *ctrl = data;
     unsigned int i;
     OPENSSL_LH_NODE *n, *nn;
-    fprintf(stderr, "freeing old ctrl\n");
     for (i = 0; i < ctrl->num_nodes; i++) {
         n = ctrl->b[i];
         while (n != NULL) {
@@ -198,7 +196,6 @@ void OPENSSL_LH_rc_flush(OPENSSL_LHASH *lh)
 
     OPENSSL_LH_write_lock(lh);
     ctrl = CRYPTO_THREAD_rcu_derefrence(&lh->ctrlptr);
-
     /*
      * sanity check
      * scan the list to see if there are any outstanding references
@@ -228,8 +225,7 @@ void OPENSSL_LH_rc_flush(OPENSSL_LHASH *lh)
     /*
      * swap in the new ctrl structure
      */ 
-    CRYPTO_THREAD_rcu_assign_pointer(&lh->ctrl, newctrl);
-
+    CRYPTO_THREAD_rcu_assign_pointer(&lh->ctrlptr, &newctrl);
     /*
      * queue the old structure for removal
      */
@@ -381,7 +377,7 @@ void *OPENSSL_LH_rc_insert(OPENSSL_LHASH *lh, void *data)
          * we updated our control structure, assign it 
          * to the hash table
          */
-         CRYPTO_THREAD_rcu_assign_pointer(&lh->ctrl, newctrl);
+         CRYPTO_THREAD_rcu_assign_pointer(&lh->ctrlptr, &newctrl);
     }
 out:
     OPENSSL_LH_write_unlock(lh);
