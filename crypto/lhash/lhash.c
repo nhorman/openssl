@@ -175,10 +175,15 @@ static void ctrl_flush_cb(void *data)
     struct lhash_ctrl_st *ctrl = data;
     unsigned int i;
     OPENSSL_LH_NODE *n, *nn;
+    LHASH_REF *dref;
+
     for (i = 0; i < ctrl->num_nodes; i++) {
         n = ctrl->b[i];
         while (n != NULL) {
             nn = n->next;
+            dref = (LHASH_REF *)n->data;
+            CRYPTO_FREE_REF(dref->refptr);
+            OPENSSL_free(dref->refptr);
             ctrl->free(n->data);
             OPENSSL_free(n);
             n = nn;
@@ -208,7 +213,6 @@ void OPENSSL_LH_rc_flush(OPENSSL_LHASH *lh)
             nn = n->next;
             dref = n->data;
             CRYPTO_DOWN_REF(dref->refptr, &oldref);
-            fprintf(stderr, "data %p down to %d in flush\n", dref, oldref);
             /* invalid ref count check */
             if (oldref != 0)
                 abort();
@@ -314,7 +318,7 @@ void *OPENSSL_LH_rc_insert(OPENSSL_LHASH *lh, void *data)
             }
 
             /* expand the new array */
-            if (!expand(ctrl)) {
+            if (!expand(newctrl)) {
                 OPENSSL_free(newctrl->b);
                 OPENSSL_free(newctrl);
                 /* lh->error done in expand */
@@ -354,12 +358,11 @@ void *OPENSSL_LH_rc_insert(OPENSSL_LHASH *lh, void *data)
             OPENSSL_free(newctrl);
             goto out;
         }
-
         /* reference counted objects always have an LHASH_REF first */
         dref = (LHASH_REF *)data;
         dref->refptr = OPENSSL_zalloc(sizeof(CRYPTO_REF_COUNT));
         CRYPTO_NEW_REF(dref->refptr, 1); /*initial internal reference */ 
-        fprintf(stderr, "data %p has new ref 1\n",data);
+        dref->freefn = ctrl->free;
         nn->data = data;
         nn->next = NULL;
         nn->hash = hash;
@@ -367,17 +370,23 @@ void *OPENSSL_LH_rc_insert(OPENSSL_LHASH *lh, void *data)
         ret = NULL;
         ctrl->num_items++;
     } else {                    /* replace same key */
+        fprintf(stderr, "DOING KEY REPLACEMENT\n");
         ret = (*rn)->data;
         dref = (LHASH_REF *)data;
         if (dref->refptr == NULL) {
             dref->refptr = OPENSSL_zalloc(sizeof(CRYPTO_REF_COUNT));
             CRYPTO_NEW_REF(dref->refptr, 1);
+            dref->freefn = ctrl->free;
+        } else {
+            abort();
         }
-        (*rn)->data = data;
         /*
-         * Note: Don't mod the ref counter here, since we're returning the data
-         * let the caller put it
+         * The old data is now effectively orphaned
+         * just return it, expecting that the caller will
+         * detect that we have returned prior data and put it
+         * appropriately
          */
+        (*rn)->data = data;
     }
 
     if (newctrl != NULL) {
@@ -451,7 +460,6 @@ void *OPENSSL_LH_rc_retrieve(OPENSSL_LHASH *lh, const void *data)
             abort();
         } else {
             CRYPTO_UP_REF(dref->refptr, &refcount);
-            fprintf(stderr, "data %p ref up to %d\n", dref, refcount);
             if (refcount == 0)
                 abort();
         }
@@ -515,12 +523,13 @@ void OPENSSL_LH_rc_doall_arg(OPENSSL_LHASH *lh, OPENSSL_LH_DOALL_FUNCARG func, v
 
     CRYPTO_THREAD_rcu_read_lock(lh->lock);
     ctrl = CRYPTO_THREAD_rcu_derefrence(&lh->ctrlptr);
-    doall_util_fn(&lh->ctrl, 1, (OPENSSL_LH_DOALL_FUNC)0, func, arg);
+    doall_util_fn(ctrl, 1, (OPENSSL_LH_DOALL_FUNC)0, func, arg);
     CRYPTO_THREAD_rcu_read_unlock(lh->lock);
 }
 
 void OPENSSL_LH_rc_obj_put(void *data)
 {
+    OPENSSL_LH_FREEFUNC freefn;
     LHASH_REF *dref = data;
     int oldcount;
 
@@ -528,10 +537,24 @@ void OPENSSL_LH_rc_obj_put(void *data)
         return;
 
     CRYPTO_DOWN_REF(dref->refptr, &oldcount);
-    fprintf(stderr, "data %p ref down to %d in obj put\n", data, oldcount);
 
-    if (oldcount <= 0)
+    if (oldcount < 0)
         abort();
+
+    if (oldcount == 0) {
+        fprintf(stderr, "Freeing last reference!\n");
+        /*
+         * This was our last refcount, free the object
+         */
+        CRYPTO_FREE_REF(dref->refptr);
+        OPENSSL_free(dref->refptr);
+        freefn = (OPENSSL_LH_FREEFUNC)dref->freefn;
+        freefn(data);
+        /*
+         * Don't need to free the hash node here
+         * as we're no longer in the hash
+         */
+    }
 }
 
 static int expand(struct lhash_ctrl_st *lhctrl)

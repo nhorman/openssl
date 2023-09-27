@@ -303,6 +303,7 @@ OSSL_DEPRECATEDIN_3_2 void OPENSSL_LH_node_usage_stats_bio(const OPENSSL_LHASH *
 
 typedef struct  {
     void *refptr;
+    void *freefn;
 } LHASH_REF;
 
 # define DEFINE_REFCNT_LHASH_OF_EX(type) \
@@ -415,6 +416,24 @@ typedef struct  {
                                    argtype *arg) \
     { \
         OPENSSL_LH_doall_arg((OPENSSL_LHASH *)lh, \
+                             (OPENSSL_LH_DOALL_FUNCARG)fn, (void *)arg); \
+    } \
+    LHASH_OF(type)
+
+
+#define IMPLEMENT_LHASH_REFCNT_DOALL_ARG_CONST(type, argtype) \
+    int_implement_lhash_rc_doall(type, argtype, const type)
+
+#define IMPLEMENT_LHASH_REFCNT_DOALL_ARG(type, argtype) \
+    int_implement_lhash_rc_doall(type, argtype, type)
+
+#define int_implement_lhash_rc_doall(type, argtype, cbargtype) \
+    static ossl_unused ossl_inline void \
+        lh_##type##_doall_##argtype(LHASH_OF(type) *lh, \
+                                   void (*fn)(cbargtype *, argtype *), \
+                                   argtype *arg) \
+    { \
+        OPENSSL_LH_rc_doall_arg((OPENSSL_LHASH *)lh, \
                              (OPENSSL_LH_DOALL_FUNCARG)fn, (void *)arg); \
     } \
     LHASH_OF(type)
