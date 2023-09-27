@@ -27,6 +27,7 @@ struct lhash_ctrl_st {
     unsigned long down_load;
     unsigned long num_items;
     int error;
+    OPENSSL_LH_FREEFUNC free;
 };
 
 struct lhash_st {

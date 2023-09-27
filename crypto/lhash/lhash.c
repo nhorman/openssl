@@ -71,7 +71,7 @@ err:
     return NULL;
 }
 
-OPENSSL_LHASH *OPENSSL_LH_rc_new(OPENSSL_LH_HASHFUNC h, OPENSSL_LH_COMPFUNC c)
+OPENSSL_LHASH *OPENSSL_LH_rc_new(OPENSSL_LH_HASHFUNC h, OPENSSL_LH_COMPFUNC c, OPENSSL_LH_FREEFUNC f)
 {
     OPENSSL_LHASH *ret;
     struct lhash_ctrl_st *newctrl;
@@ -92,6 +92,7 @@ OPENSSL_LHASH *OPENSSL_LH_rc_new(OPENSSL_LH_HASHFUNC h, OPENSSL_LH_COMPFUNC c)
     newctrl->pmax = MIN_NODES / 2;
     newctrl->up_load = UP_LOAD;
     newctrl->down_load = DOWN_LOAD;
+    newctrl->free = f;
     CRYPTO_THREAD_rcu_assign_pointer(&ret->ctrlptr, &newctrl);
       
     return ret;
@@ -178,6 +179,7 @@ static void ctrl_flush_cb(void *data)
         n = ctrl->b[i];
         while (n != NULL) {
             nn = n->next;
+            ctrl->free(n->data);
             OPENSSL_free(n);
             n = nn;
         }
@@ -206,9 +208,11 @@ void OPENSSL_LH_rc_flush(OPENSSL_LHASH *lh)
             nn = n->next;
             dref = n->data;
             CRYPTO_DOWN_REF(dref->refptr, &oldref);
+            fprintf(stderr, "data %p down to %d in flush\n", dref, oldref);
             /* invalid ref count check */
-            if (oldref != 1)
+            if (oldref != 0)
                 abort();
+            n = nn;
         }
     }
 
@@ -221,6 +225,7 @@ void OPENSSL_LH_rc_flush(OPENSSL_LHASH *lh)
     newctrl->b = OPENSSL_zalloc(sizeof(OPENSSL_LH_NODE) * ctrl->num_alloc_nodes);
     if (newctrl->b == NULL)
         abort();
+    newctrl->num_items = 0;
 
     /*
      * swap in the new ctrl structure
@@ -354,6 +359,7 @@ void *OPENSSL_LH_rc_insert(OPENSSL_LHASH *lh, void *data)
         dref = (LHASH_REF *)data;
         dref->refptr = OPENSSL_zalloc(sizeof(CRYPTO_REF_COUNT));
         CRYPTO_NEW_REF(dref->refptr, 1); /*initial internal reference */ 
+        fprintf(stderr, "data %p has new ref 1\n",data);
         nn->data = data;
         nn->next = NULL;
         nn->hash = hash;
@@ -363,8 +369,10 @@ void *OPENSSL_LH_rc_insert(OPENSSL_LHASH *lh, void *data)
     } else {                    /* replace same key */
         ret = (*rn)->data;
         dref = (LHASH_REF *)data;
-        dref->refptr = OPENSSL_zalloc(sizeof(CRYPTO_REF_COUNT));
-        CRYPTO_NEW_REF(dref->refptr, 1);
+        if (dref->refptr == NULL) {
+            dref->refptr = OPENSSL_zalloc(sizeof(CRYPTO_REF_COUNT));
+            CRYPTO_NEW_REF(dref->refptr, 1);
+        }
         (*rn)->data = data;
         /*
          * Note: Don't mod the ref counter here, since we're returning the data
@@ -439,8 +447,11 @@ void *OPENSSL_LH_rc_retrieve(OPENSSL_LHASH *lh, const void *data)
         dref = NULL;
     } else {
         dref = (*rn)->data;
-        if (dref != NULL) {
+        if (dref->refptr == NULL) {
+            abort();
+        } else {
             CRYPTO_UP_REF(dref->refptr, &refcount);
+            fprintf(stderr, "data %p ref up to %d\n", dref, refcount);
             if (refcount == 0)
                 abort();
         }
@@ -517,16 +528,10 @@ void OPENSSL_LH_rc_obj_put(void *data)
         return;
 
     CRYPTO_DOWN_REF(dref->refptr, &oldcount);
+    fprintf(stderr, "data %p ref down to %d in obj put\n", data, oldcount);
 
     if (oldcount <= 0)
         abort();
-    if (oldcount == 1) {
-        /*
-         * we were the last ref, free it up
-         */
-        OPENSSL_free(dref->refptr);
-        OPENSSL_free(data);
-    }
 }
 
 static int expand(struct lhash_ctrl_st *lhctrl)

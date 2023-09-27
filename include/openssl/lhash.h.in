@@ -37,6 +37,7 @@ extern "C" {
 typedef struct lhash_node_st OPENSSL_LH_NODE;
 typedef int (*OPENSSL_LH_COMPFUNC) (const void *, const void *);
 typedef unsigned long (*OPENSSL_LH_HASHFUNC) (const void *);
+typedef void (*OPENSSL_LH_FREEFUNC)(void *);
 typedef void (*OPENSSL_LH_DOALL_FUNC) (void *);
 typedef void (*OPENSSL_LH_DOALL_FUNCARG) (void *, void *);
 typedef struct lhash_st OPENSSL_LHASH;
@@ -101,7 +102,7 @@ unsigned long OPENSSL_LH_get_down_load(const OPENSSL_LHASH *lh);
 void OPENSSL_LH_set_down_load(OPENSSL_LHASH *lh, unsigned long down_load);
 
 int OPENSSL_LH_rc_error(OPENSSL_LHASH *lh);
-OPENSSL_LHASH *OPENSSL_LH_rc_new(OPENSSL_LH_HASHFUNC h, OPENSSL_LH_COMPFUNC c);
+OPENSSL_LHASH *OPENSSL_LH_rc_new(OPENSSL_LH_HASHFUNC h, OPENSSL_LH_COMPFUNC c, OPENSSL_LH_FREEFUNC f);
 void OPENSSL_LH_rc_free(OPENSSL_LHASH *lh);
 void OPENSSL_LH_rc_read_lock(OPENSSL_LHASH *lh);
 void OPENSSL_LH_rc_read_unlock(OPENSSL_LHASH *lh);
@@ -311,10 +312,11 @@ typedef struct  {
     }; \
     static ossl_unused ossl_inline LHASH_OF(type) * \
     lh_##type##_new(unsigned long (*hfn)(const type *), \
-                    int (*cfn)(const type *, const type *)) \
+                    int (*cfn)(const type *, const type *), \
+                    void (*ffn)(type *obj)) \
     { \
         return (LHASH_OF(type) *) \
-            OPENSSL_LH_rc_new((OPENSSL_LH_HASHFUNC)hfn, (OPENSSL_LH_COMPFUNC)cfn); \
+            OPENSSL_LH_rc_new((OPENSSL_LH_HASHFUNC)hfn, (OPENSSL_LH_COMPFUNC)cfn, (OPENSSL_LH_FREEFUNC)ffn); \
     } \
     static ossl_unused ossl_inline void \
     lh_##type##_free(LHASH_OF(type) *lh) \
