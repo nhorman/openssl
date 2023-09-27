@@ -116,7 +116,7 @@ static void do_name(const NAMENUM_ENTRY *namenum, DOALL_NAMES_DATA *data)
         data->names[data->found++] = namenum->name;
 }
 
-IMPLEMENT_LHASH_DOALL_ARG_CONST(NAMENUM_ENTRY, DOALL_NAMES_DATA);
+IMPLEMENT_LHASH_REFCNT_DOALL_ARG_CONST(NAMENUM_ENTRY, DOALL_NAMES_DATA);
 
 /*
  * Call the callback for all names in the namemap with the given number.
@@ -234,6 +234,7 @@ static int namemap_add_name(OSSL_NAMEMAP *namemap, int number,
                             const char *name)
 {
     NAMENUM_ENTRY *namenum = NULL;
+    NAMENUM_ENTRY *old_entry;
     int tmp_number;
 
     /* If it already exists, we don't add it */
@@ -249,12 +250,18 @@ static int namemap_add_name(OSSL_NAMEMAP *namemap, int number,
     /* The tsan_counter use here is safe since we're under lock */
     namenum->number =
         number != 0 ? number : 1 + tsan_counter(&namemap->max_number);
-    (void)lh_NAMENUM_ENTRY_insert(namemap->namenum, namenum);
+    old_entry = lh_NAMENUM_ENTRY_insert(namemap->namenum, namenum);
 
     if (lh_NAMENUM_ENTRY_error(namemap->namenum)) {
         fprintf(stderr, "INSERT ERROR FOR %p\n", namenum);
         goto err;
     }
+
+    /*
+     * Drop the last refcount on any returned object 
+     * so it can be freed 
+     */
+    lh_NAMENUM_ENTRY_obj_put(old_entry);
     return namenum->number;
 
  err:
