@@ -286,7 +286,7 @@ void CRYPTO_THREAD_synchronize_rcu(CRYPTO_RCU_LOCK *lock)
      * before we do anything else, lets grab the cb list
      */ 
     ilock = (struct rcu_lock_internal *)lock;
-    cb_items = __atomic_exchange_n(&ilock->cb_items, NULL, __ATOMIC_SEQ_CST);
+    cb_items = __atomic_exchange_n(&ilock->cb_items, NULL, __ATOMIC_SEQ_CST); 
 
     __builtin_prefetch(&lock->current_qp, 1, 0); 
 
@@ -413,10 +413,11 @@ out:
 void CRYPTO_THREAD_rcu_call(CRYPTO_RCU_LOCK *lock, rcu_cb_fn cb, void *data)
 {
     struct rcu_cb_item *new = CRYPTO_zalloc(sizeof(struct rcu_cb_item), NULL, 0);
+    struct rcu_lock_internal *ilock = (struct rcu_lock_internal *)lock;
 
     new->data = data;
     new->fn = cb;
-    new->next = __atomic_exchange_n(&lock->cb_items, new, __ATOMIC_SEQ_CST);
+    new->next = __atomic_exchange_n(&ilock->cb_items, new, __ATOMIC_SEQ_CST);
 }
 
 void *CRYPTO_THREAD_rcu_uptr_derefrence(uintptr_t *p)
