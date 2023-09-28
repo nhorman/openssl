@@ -399,6 +399,7 @@ out:
     OPENSSL_LH_write_unlock(lh);
     return ret;
 }
+
 void *OPENSSL_LH_delete(OPENSSL_LHASH *lh, const void *data)
 {
     unsigned long hash;
@@ -425,6 +426,85 @@ void *OPENSSL_LH_delete(OPENSSL_LHASH *lh, const void *data)
     return ret;
 }
 
+void *OPENSSL_LH_rc_delete(OPENSSL_LHASH *lh, const void *data)
+{
+    unsigned long hash;
+    OPENSSL_LH_NODE *nn, **rn;
+    void *ret;
+    struct lhash_ctrl_st *ctrl = NULL, *newctrl = NULL;
+
+    OPENSSL_LH_write_lock(lh);
+
+    ctrl = CRYPTO_THREAD_rcu_derefrence(&lh->ctrlptr);
+    ctrl->error = 0;
+
+    if ((ctrl->num_nodes > MIN_NODES) &&
+        (ctrl->down_load >= (ctrl->num_items * LH_LOAD_MULT / ctrl->num_nodes))) {
+        /*
+         * we need to shrink the table here
+         * start by duplicating the ctrl structure
+         */
+        newctrl = OPENSSL_memdup(ctrl, sizeof(struct lhash_ctrl_st));
+        if (newctrl == NULL) {
+            ctrl->error++;
+            ret = NULL;
+            goto out;
+        }
+
+        /* we also need to dup the b array */
+        newctrl->b = OPENSSL_memdup(ctrl->b, sizeof(OPENSSL_LH_NODE *) * ctrl->num_alloc_nodes);
+        if (newctrl->b == NULL) {
+            ctrl->error++;
+            OPENSSL_free(newctrl);
+            ret = NULL;
+            goto out;
+        }
+
+        /* contract the new ctrl structure */
+        contract(newctrl);
+
+        /*
+         * now that we have a new control structure thats
+         * been expanded to our needs, queue the old one for 
+         * removal
+         */
+        CRYPTO_THREAD_rcu_call(lh->lock, ctrl_retire_cb, ctrl);
+
+        /*
+         * and point ctrl to the new ctrl
+         */
+        ctrl = newctrl;
+    }
+
+    rn = getrn(ctrl, lh->comp, lh->hash, data, &hash);
+
+    if (*rn == NULL) {
+        return NULL;
+    } else {
+        /* this is a bit wonky, as ctrl might point to the current struct */
+        ctrl->num_items--;
+        nn = *rn;
+        *rn = nn->next;
+        ret = nn->data;
+        OPENSSL_free(nn);
+        /*
+         * Note, don't drop the refcount here
+         * we assume the caller, having the returned
+         * data, will call obj_put
+         */
+    }
+
+    /*
+     * now that we've done the delete, if we have a new
+     * ctrl structure, swap it in
+     */
+    if (newctrl != NULL) 
+        CRYPTO_THREAD_rcu_assign_pointer(&lh->ctrlptr, &newctrl);
+
+out:
+    OPENSSL_LH_write_unlock(lh);
+    return ret;
+}
 void *OPENSSL_LH_retrieve(OPENSSL_LHASH *lh, const void *data)
 {
     unsigned long hash;
