@@ -306,6 +306,8 @@ typedef struct  {
     void *freefn;
 } LHASH_REF;
 
+#define LHASH_INIT {NULL, NULL}
+
 # define DEFINE_REFCNT_LHASH_OF_EX(type) \
     BUILD_BUG_ON((offsetof(type, objref) == 0), "objref member must be first in this struct"); \
     LHASH_OF(type) { \

@@ -297,6 +297,7 @@ int main(int argc, char *argv[])
     } else {
         argv[0] = pname;
     }
+    lh_FUNCTION_obj_put(fp);
 
     /*
      * If there's no command, assume "help". If there's an override for help
@@ -405,6 +406,7 @@ int help_main(int argc, char **argv)
 static int do_cmd(LHASH_OF(FUNCTION) *prog, int argc, char *argv[])
 {
     FUNCTION f, *fp;
+    int ret;
 
     if (argc <= 0 || argv[0] == NULL)
         return 0;
@@ -425,7 +427,9 @@ static int do_cmd(LHASH_OF(FUNCTION) *prog, int argc, char *argv[])
     if (fp != NULL) {
         if (fp->deprecated_alternative != NULL)
             warn_deprecated(fp);
-        return fp->func(argc, argv);
+        ret = fp->func(argc, argv);
+        lh_FUNCTION_obj_put(fp);
+        return ret;
     }
     f.name = argv[0];
     if (CHECK_AND_SKIP_PREFIX(f.name, "no-")) {
@@ -433,10 +437,12 @@ static int do_cmd(LHASH_OF(FUNCTION) *prog, int argc, char *argv[])
          * User is asking if foo is unsupported, by trying to "run" the
          * no-foo command.  Strange.
          */
-        if (lh_FUNCTION_retrieve(prog, &f) == NULL) {
+        fp = lh_FUNCTION_retrieve(prog, &f);
+        if (fp == NULL) {
             BIO_printf(bio_out, "%s\n", argv[0]);
             return 0;
         }
+        lh_FUNCTION_obj_put(fp);
         BIO_printf(bio_out, "%s\n", argv[0] + 3);
         return 1;
     }
@@ -466,6 +472,11 @@ static int SortFnByName(const void *_f1, const void *_f2)
     return strcmp(f1->name, f2->name);
 }
 
+static void function_free(void *data)
+{
+    return; /*nothing extra to free*/
+}
+
 static LHASH_OF(FUNCTION) *prog_init(void)
 {
     static LHASH_OF(FUNCTION) *ret = NULL;
@@ -483,7 +494,8 @@ static LHASH_OF(FUNCTION) *prog_init(void)
         ;
     qsort(functions, i, sizeof(*functions), SortFnByName);
 
-    if ((ret = lh_FUNCTION_new(function_hash, function_cmp)) == NULL)
+    if ((ret = lh_FUNCTION_new(function_hash, function_cmp,
+                               function_free)) == NULL)
         return NULL;
 
     for (f = functions; f->name != NULL; f++)
