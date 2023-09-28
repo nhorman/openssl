@@ -370,7 +370,6 @@ void *OPENSSL_LH_rc_insert(OPENSSL_LHASH *lh, void *data)
         ret = NULL;
         ctrl->num_items++;
     } else {                    /* replace same key */
-        fprintf(stderr, "DOING KEY REPLACEMENT\n");
         ret = (*rn)->data;
         dref = (LHASH_REF *)data;
         if (dref->refptr == NULL) {
@@ -542,7 +541,6 @@ void OPENSSL_LH_rc_obj_put(void *data)
         abort();
 
     if (oldcount == 0) {
-        fprintf(stderr, "Freeing last reference!\n");
         /*
          * This was our last refcount, free the object
          */

@@ -10,6 +10,7 @@
 #include "internal/namemap.h"
 #include <openssl/lhash.h>
 #include "crypto/lhash.h"      /* ossl_lh_strcasehash */
+#include "internal/thread_once.h"
 #include "internal/tsan_assist.h"
 #include "internal/sizes.h"
 #include "crypto/context.h"
@@ -30,11 +31,12 @@ DEFINE_REFCNT_LHASH_OF_EX(NAMENUM_ENTRY);
  * The namemap itself
  * ==================
  */
-
 struct ossl_namemap_st {
     /* Flags */
     unsigned int stored:1; /* If 1, it's stored in a library context */
-
+    struct ossl_namemap_st *init_complete;
+    CRYPTO_RWLOCK *tsan_lock;
+    CRYPTO_RCU_LOCK *init_lock;
     LHASH_OF(NAMENUM_ENTRY) *namenum;  /* Name->number mapping */
 
     TSAN_QUALIFIER int max_number;     /* Current max number */
@@ -64,6 +66,7 @@ static void namenum_free(NAMENUM_ENTRY *n)
 void *ossl_stored_namemap_new(OSSL_LIB_CTX *libctx)
 {
     OSSL_NAMEMAP *namemap = ossl_namemap_new();
+    int i, end;
 
     if (namemap != NULL)
         namemap->stored = 1;
@@ -247,13 +250,18 @@ static int namemap_add_name(OSSL_NAMEMAP *namemap, int number,
     if ((namenum->name = OPENSSL_strdup(name)) == NULL)
         goto err;
 
-    /* The tsan_counter use here is safe since we're under lock */
+    /*
+     * The tsan_counter use here is safe since we're under lock
+     * But we should convert this to be an atomic operation
+     */
+    CRYPTO_THREAD_write_lock(namemap->tsan_lock);
     namenum->number =
         number != 0 ? number : 1 + tsan_counter(&namemap->max_number);
+    CRYPTO_THREAD_unlock(namemap->tsan_lock);
+
     old_entry = lh_NAMENUM_ENTRY_insert(namemap->namenum, namenum);
 
     if (lh_NAMENUM_ENTRY_error(namemap->namenum)) {
-        fprintf(stderr, "INSERT ERROR FOR %p\n", namenum);
         goto err;
     }
 
@@ -453,18 +461,45 @@ static void get_legacy_pkey_meth_names(const EVP_PKEY_ASN1_METHOD *ameth,
  * Constructors / destructors
  * ==========================
  */
+static unsigned long namemap_initalizing = 1;
+void ossl_namemap_wait_init_done(OSSL_NAMEMAP *namemap)
+{
+    struct OSSL_NAMEMAP *ready;
+    for(;;) {
+        CRYPTO_THREAD_rcu_read_lock(namemap->init_lock);
+        ready = CRYPTO_THREAD_rcu_derefrence(&namemap->init_complete);
+        CRYPTO_THREAD_rcu_read_unlock(namemap->init_lock);
+        if (ready == namemap)
+            break;
+        if (ready == NULL) {
+            CRYPTO_THREAD_rcu_write_lock(namemap->init_lock);
+                ready = CRYPTO_THREAD_rcu_derefrence(&namemap->init_complete);
+                if (ready == NULL) {
+                    CRYPTO_THREAD_rcu_assign_pointer(&namemap->init_complete, &namemap_initalizing);
+                    CRYPTO_THREAD_rcu_write_unlock(namemap->init_lock);
+                    break;
+                } else {
+                    CRYPTO_THREAD_rcu_write_unlock(namemap->init_lock);
+                    continue;
+                }
+        }
+    }
+}
+
 
 OSSL_NAMEMAP *ossl_namemap_stored(OSSL_LIB_CTX *libctx)
 {
 #ifndef FIPS_MODULE
     int nms;
 #endif
+    OSSL_NAMEMAP *ready;
     OSSL_NAMEMAP *namemap =
         ossl_lib_ctx_get_data(libctx, OSSL_LIB_CTX_NAMEMAP_INDEX);
 
     if (namemap == NULL)
-        return NULL;
+        return NULL; 
 
+    ossl_namemap_wait_init_done(namemap);
 #ifndef FIPS_MODULE
     nms = ossl_namemap_empty(namemap);
     if (nms < 0) {
@@ -490,6 +525,18 @@ OSSL_NAMEMAP *ossl_namemap_stored(OSSL_LIB_CTX *libctx)
         for (i = 0, end = EVP_PKEY_asn1_get_count(); i < end; i++)
             get_legacy_pkey_meth_names(EVP_PKEY_asn1_get0(i), namemap);
     }
+    CRYPTO_THREAD_rcu_read_lock(namemap->init_lock);
+    ready = CRYPTO_THREAD_rcu_derefrence(&namemap->init_complete);
+    CRYPTO_THREAD_rcu_read_unlock(namemap->init_lock);
+    if (ready != namemap) {
+        /*
+         * mark us as initalized
+         * should only happen once
+         */
+        CRYPTO_THREAD_rcu_write_lock(namemap->init_lock);
+        CRYPTO_THREAD_rcu_assign_pointer(&namemap->init_complete, &namemap);
+        CRYPTO_THREAD_rcu_write_unlock(namemap->init_lock);
+    }
 #endif
 
     return namemap;
@@ -500,6 +547,8 @@ OSSL_NAMEMAP *ossl_namemap_new(void)
     OSSL_NAMEMAP *namemap;
 
     if ((namemap = OPENSSL_zalloc(sizeof(*namemap))) != NULL
+        && ((namemap->tsan_lock = CRYPTO_THREAD_lock_new()) != NULL)
+        && ((namemap->init_lock = CRYPTO_THREAD_rcu_lock_new()) != NULL)
         && (namemap->namenum =
             lh_NAMENUM_ENTRY_new(namenum_hash, namenum_cmp, namenum_free)) != NULL)
         return namemap;
@@ -514,6 +563,7 @@ void ossl_namemap_free(OSSL_NAMEMAP *namemap)
         return;
 
     lh_NAMENUM_ENTRY_free(namemap->namenum);
-
+    CRYPTO_THREAD_lock_free(namemap->tsan_lock);
+    CRYPTO_THREAD_rcu_lock_free(namemap->init_lock);
     OPENSSL_free(namemap);
 }
