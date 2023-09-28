@@ -303,8 +303,10 @@ static void writer_fn(int id, int *iterations)
         if (contention == 0)
             CRYPTO_THREAD_rcu_call(rcu_lock, free_old_rcu_data, old);
         CRYPTO_THREAD_rcu_write_unlock(rcu_lock);
-        if (contention != 0)
+        if (contention != 0) {
             CRYPTO_THREAD_synchronize_rcu(rcu_lock);
+            CRYPTO_free(old, NULL, 0);
+        }
         clock_gettime(CLOCK_REALTIME, &tv2);
         if (tv2.tv_sec > (tv.tv_sec + 4))
             break;
