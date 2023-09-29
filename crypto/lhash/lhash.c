@@ -184,7 +184,8 @@ static void ctrl_flush_cb(void *data)
             dref = (LHASH_REF *)n->data;
             CRYPTO_FREE_REF(dref->refptr);
             OPENSSL_free(dref->refptr);
-            ctrl->free(n->data);
+            if (ctrl->free != NULL)
+                ctrl->free(n->data);
             OPENSSL_free(n);
             n = nn;
         }
@@ -627,7 +628,8 @@ void OPENSSL_LH_rc_obj_put(void *data)
         CRYPTO_FREE_REF(dref->refptr);
         OPENSSL_free(dref->refptr);
         freefn = (OPENSSL_LH_FREEFUNC)dref->freefn;
-        freefn(data);
+        if (freefn != NULL)
+            freefn(data);
         /*
          * Don't need to free the hash node here
          * as we're no longer in the hash
