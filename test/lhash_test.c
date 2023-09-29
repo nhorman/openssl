@@ -91,14 +91,14 @@ static int test_int_lhash(void)
 {
     static struct {
         int data;
-        int null;
+        int should_del;
     } dels[] = {
-        { 65537,    0 },
-        { 173,      0 },
-        { 999,      1 },
-        { 37,       0 },
-        { 1,        0 },
-        { 34,       1 }
+        { 65537, 1 },
+        { 173 , 1 },
+        { 999, 0 },
+        { 37, 1 },
+        { 1, 1 },
+        { 34, 0 }
     };
     INT *intval, *r, *p;
     INT tmpl = LHASH_INIT;
@@ -219,15 +219,22 @@ static int test_int_lhash(void)
     for (i = 0; i < n_dels; i++) {
         tmpl.val = dels[i].data;
         INT *b = lh_INT_delete(h, &tmpl);
-        if (!TEST_ptr(b)) {
-            TEST_info("lhash unable to delete %d\n", tmpl.val);
-            goto end;
+        if (dels[i].should_del == 1) {
+            if (!TEST_ptr(b)) {
+                TEST_info("lhash unable to delete %d\n", tmpl.val);
+                goto end;
+            }
+            if (!TEST_int_eq(b->val, dels[i].data)) {
+                TEST_info("lhash int delete %d", i);
+                goto end;
+            }
+            lh_INT_obj_put(b);
+        } else {
+            if (!TEST_ptr_null(b)) {
+                TEST_info("lhash deleted an item not added %d", dels[i]);
+                goto end;
+            }
         }
-        if (!TEST_int_eq(b->val ^ dels[i].null,  0)) {
-            TEST_info("lhash int delete %d", i);
-            goto end;
-        }
-        lh_INT_obj_put(b);
     }
 
     /* error */
@@ -250,7 +257,7 @@ static int test_stress(void)
     LHASH_OF(INT) *h = lh_INT_new(&stress_hash, &int_cmp, int_free);
     const unsigned int n = 2500000;
     unsigned int i;
-    INT tmpl;
+    INT tmpl = LHASH_INIT;
     INT *p;
     int testresult = 0;
 
@@ -276,6 +283,7 @@ static int test_stress(void)
     for (i = 0; i < n; i++) {
         const int j = (7 * i + 4) % n * 3 + 1;
         tmpl.val = j;
+        fprintf(stderr, "Deleteing %d iteration %d\n", j, i);
         if (!TEST_ptr(p = lh_INT_delete(h, &tmpl))) {
             TEST_info("lhash stress delete %d\n", i);
             goto end;
