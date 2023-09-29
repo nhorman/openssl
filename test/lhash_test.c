@@ -283,7 +283,6 @@ static int test_stress(void)
     for (i = 0; i < n; i++) {
         const int j = (7 * i + 4) % n * 3 + 1;
         tmpl.val = j;
-        fprintf(stderr, "Deleteing %d iteration %d\n", j, i);
         if (!TEST_ptr(p = lh_INT_delete(h, &tmpl))) {
             TEST_info("lhash stress delete %d\n", i);
             goto end;
