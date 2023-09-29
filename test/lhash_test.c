@@ -254,19 +254,26 @@ static unsigned long int stress_hash(const INT *p)
 
 static int test_stress(void)
 {
-    LHASH_OF(INT) *h = lh_INT_new(&stress_hash, &int_cmp, int_free);
+    LHASH_OF(INT) *h = lh_INT_new(&stress_hash, &int_cmp, NULL);
     const unsigned int n = 2500000;
     unsigned int i;
     INT tmpl = LHASH_INIT;
     INT *p;
     int testresult = 0;
+    INT *alloc_table;
 
     if (!TEST_ptr(h))
         goto end;
 
+    alloc_table = OPENSSL_malloc(sizeof(INT)*n);
+    if (!TEST_ptr(alloc_table)) {
+        TEST_info("Failed to allocate integer table");
+        goto end;
+    }
+
     /* insert */
     for (i = 0; i < n; i++) {
-        p = OPENSSL_malloc(sizeof(INT));
+        p = &alloc_table[i];
         if (!TEST_ptr(p)) {
             TEST_info("lhash stress out of memory %d", i);
             goto end;
@@ -279,8 +286,20 @@ static int test_stress(void)
     if (!TEST_int_eq(lh_INT_num_items(h), n))
             goto end;
 
+    /*
+     * Deleting 2.5 million hash table entries takes
+     * forever (literally minutes), weather your using
+     * rcu or rwlocks.  The only reason it worked here
+     * previously was because no locking was being done 
+     * at all, and because we were just storing integers
+     * rather than allocated structures, no alloc/free was
+     * needed either
+     * instead, just delete a quarter to exercise the code
+     * and then free the rest with lh_INT_free
+     */
+
     /* delete in a different order */
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < n/4; i++) {
         const int j = (7 * i + 4) % n * 3 + 1;
         tmpl.val = j;
         if (!TEST_ptr(p = lh_INT_delete(h, &tmpl))) {
@@ -297,6 +316,7 @@ static int test_stress(void)
     testresult = 1;
 end:
     lh_INT_free(h);
+    OPENSSL_free(alloc_table);
     return testresult;
 }
 
