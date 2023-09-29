@@ -431,7 +431,7 @@ void *OPENSSL_LH_rc_delete(OPENSSL_LHASH *lh, const void *data)
 {
     unsigned long hash;
     OPENSSL_LH_NODE *nn, **rn;
-    void *ret;
+    void *ret = NULL;
     struct lhash_ctrl_st *ctrl = NULL, *newctrl = NULL;
 
     OPENSSL_LH_write_lock(lh);
@@ -448,7 +448,6 @@ void *OPENSSL_LH_rc_delete(OPENSSL_LHASH *lh, const void *data)
         newctrl = OPENSSL_memdup(ctrl, sizeof(struct lhash_ctrl_st));
         if (newctrl == NULL) {
             ctrl->error++;
-            ret = NULL;
             goto out;
         }
 
@@ -457,7 +456,6 @@ void *OPENSSL_LH_rc_delete(OPENSSL_LHASH *lh, const void *data)
         if (newctrl->b == NULL) {
             ctrl->error++;
             OPENSSL_free(newctrl);
-            ret = NULL;
             goto out;
         }
 
@@ -480,7 +478,7 @@ void *OPENSSL_LH_rc_delete(OPENSSL_LHASH *lh, const void *data)
     rn = getrn(ctrl, lh->comp, lh->hash, data, &hash);
 
     if (*rn == NULL) {
-        return NULL;
+        goto out;
     } else {
         /* this is a bit wonky, as ctrl might point to the current struct */
         ctrl->num_items--;
