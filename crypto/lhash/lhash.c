@@ -856,9 +856,10 @@ void OPENSSL_LH_set_down_load(OPENSSL_LHASH *lh, unsigned long down_load)
     lh->ctrl.down_load = down_load;
 }
 
-static void ctrl_update_cb(struct lhash_ctrl_st *old)
+static void ctrl_update_cb(void *old)
 {
-    OPENSSL_free(old);
+    struct lhash_ctrl_st *data = old;
+    OPENSSL_free(data);
 }
 
 void OPENSSL_LH_rc_set_down_load(OPENSSL_LHASH *lh, unsigned long down_load)
