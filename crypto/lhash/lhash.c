@@ -530,7 +530,7 @@ void *OPENSSL_LH_rc_retrieve(OPENSSL_LHASH *lh, const void *data)
     int refcount;
     LHASH_REF *dref;
 
-    CRYPTO_THREAD_rcu_read_lock(lh->lock);
+    OPENSSL_LH_read_lock(lh);
     ctrl = CRYPTO_THREAD_rcu_derefrence(&lh->ctrlptr);
     ctrl->error = 0;
 
@@ -548,7 +548,7 @@ void *OPENSSL_LH_rc_retrieve(OPENSSL_LHASH *lh, const void *data)
         }
     }
 
-    CRYPTO_THREAD_rcu_read_unlock(lh->lock);
+    OPENSSL_LH_read_unlock(lh);
     return (void *)dref;
 }
 
@@ -587,10 +587,10 @@ void OPENSSL_LH_rc_doall(OPENSSL_LHASH *lh, OPENSSL_LH_DOALL_FUNC func)
 {
     struct lhash_ctrl_st *ctrl;
 
-    CRYPTO_THREAD_rcu_read_lock(lh->lock);
+    OPENSSL_LH_read_lock(lh);
     ctrl = CRYPTO_THREAD_rcu_derefrence(&lh->ctrlptr);
     doall_util_fn(ctrl, 0, func, (OPENSSL_LH_DOALL_FUNCARG)0, NULL);
-    CRYPTO_THREAD_rcu_read_unlock(lh->lock);
+    OPENSSL_LH_read_unlock(lh);
 }
 
 void OPENSSL_LH_doall_arg(OPENSSL_LHASH *lh, OPENSSL_LH_DOALL_FUNCARG func, void *arg)
@@ -604,10 +604,10 @@ void OPENSSL_LH_rc_doall_arg(OPENSSL_LHASH *lh, OPENSSL_LH_DOALL_FUNCARG func, v
 {
     struct lhash_ctrl_st *ctrl;
 
-    CRYPTO_THREAD_rcu_read_lock(lh->lock);
+    OPENSSL_LH_read_lock(lh);
     ctrl = CRYPTO_THREAD_rcu_derefrence(&lh->ctrlptr);
     doall_util_fn(ctrl, 1, (OPENSSL_LH_DOALL_FUNC)0, func, arg);
-    CRYPTO_THREAD_rcu_read_unlock(lh->lock);
+    OPENSSL_LH_read_unlock(lh);
 }
 
 void OPENSSL_LH_rc_obj_put(void *data)
@@ -831,7 +831,6 @@ unsigned long OPENSSL_LH_rc_num_items(const OPENSSL_LHASH *lh)
     ctrl = CRYPTO_THREAD_rcu_derefrence(&lh->ctrlptr);
     ret = ctrl->num_items;
     OPENSSL_LH_read_unlock(lh);
-    CRYPTO_THREAD_rcu_read_unlock(lh->lock);
     return ret;
 }
     
@@ -888,10 +887,10 @@ int OPENSSL_LH_rc_error(OPENSSL_LHASH *lh)
     struct lhash_ctrl_st *ctrl;
     int ret;
 
-    CRYPTO_THREAD_rcu_read_lock(lh->lock);
+    OPENSSL_LH_read_lock(lh);
     ctrl = CRYPTO_THREAD_rcu_derefrence(&lh->ctrlptr);
     ret = ctrl->error;
-    CRYPTO_THREAD_rcu_read_unlock(lh->lock);
+    OPENSSL_LH_read_unlock(lh);
     return ret;    
 }
 
