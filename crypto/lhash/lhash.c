@@ -441,38 +441,43 @@ void *OPENSSL_LH_rc_delete(OPENSSL_LHASH *lh, const void *data)
 
     if ((ctrl->num_nodes > MIN_NODES) &&
         (ctrl->down_load >= (ctrl->num_items * LH_LOAD_MULT / ctrl->num_nodes))) {
-        /*
-         * we need to shrink the table here
-         * start by duplicating the ctrl structure
-         */
-        newctrl = OPENSSL_memdup(ctrl, sizeof(struct lhash_ctrl_st));
-        if (newctrl == NULL) {
-            ctrl->error++;
-            goto out;
+        if (ctrl->p == 0) {
+            /*
+             * we need to shrink the table here
+             * start by duplicating the ctrl structure
+             */
+            newctrl = OPENSSL_memdup(ctrl, sizeof(struct lhash_ctrl_st));
+            if (newctrl == NULL) {
+                ctrl->error++;
+                goto out;
+            }
+
+            /* we also need to dup the b array */
+            newctrl->b = OPENSSL_memdup(ctrl->b, sizeof(OPENSSL_LH_NODE *) * ctrl->num_alloc_nodes);
+            if (newctrl->b == NULL) {
+                ctrl->error++;
+                OPENSSL_free(newctrl);
+                goto out;
+            }
+
+            /* contract the new ctrl structure */
+            contract(newctrl);
+
+            /*
+             * now that we have a new control structure thats
+             * been expanded to our needs, queue the old one for 
+             * removal
+             */
+            CRYPTO_THREAD_rcu_call(lh->lock, ctrl_retire_cb, ctrl);
+
+            /*
+             * and point ctrl to the new ctrl
+             */
+            ctrl = newctrl;
+        } else {
+            /* we still have to call contract here */
+            contract(ctrl);
         }
-
-        /* we also need to dup the b array */
-        newctrl->b = OPENSSL_memdup(ctrl->b, sizeof(OPENSSL_LH_NODE *) * ctrl->num_alloc_nodes);
-        if (newctrl->b == NULL) {
-            ctrl->error++;
-            OPENSSL_free(newctrl);
-            goto out;
-        }
-
-        /* contract the new ctrl structure */
-        contract(newctrl);
-
-        /*
-         * now that we have a new control structure thats
-         * been expanded to our needs, queue the old one for 
-         * removal
-         */
-        CRYPTO_THREAD_rcu_call(lh->lock, ctrl_retire_cb, ctrl);
-
-        /*
-         * and point ctrl to the new ctrl
-         */
-        ctrl = newctrl;
     }
 
     rn = getrn(ctrl, lh->comp, lh->hash, data, &hash);
