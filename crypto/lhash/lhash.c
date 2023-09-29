@@ -827,9 +827,10 @@ unsigned long OPENSSL_LH_rc_num_items(const OPENSSL_LHASH *lh)
     if (lh == NULL)
         return 0;
 
-    CRYPTO_THREAD_rcu_read_lock(lh->lock);
+    OPENSSL_LH_read_lock(lh);
     ctrl = CRYPTO_THREAD_rcu_derefrence(&lh->ctrlptr);
     ret = ctrl->num_items;
+    OPENSSL_LH_read_unlock(lh);
     CRYPTO_THREAD_rcu_read_unlock(lh->lock);
     return ret;
 }
@@ -839,9 +840,42 @@ unsigned long OPENSSL_LH_get_down_load(const OPENSSL_LHASH *lh)
     return lh->ctrl.down_load;
 }
 
+unsigned long OPENSSL_LH_rc_get_down_load(OPENSSL_LHASH *lh)
+{
+    struct lhash_ctrl_st *ctrl;
+    unsigned long ret;
+
+    OPENSSL_LH_read_lock(lh);
+    ctrl = CRYPTO_THREAD_rcu_derefrence(&lh->ctrlptr);
+    ret = ctrl->down_load;    
+    OPENSSL_LH_read_unlock(lh);
+    return ret;
+}
+
 void OPENSSL_LH_set_down_load(OPENSSL_LHASH *lh, unsigned long down_load)
 {
     lh->ctrl.down_load = down_load;
+}
+
+static void ctrl_update_cb(struct lhash_ctrl_st *old)
+{
+    OPENSSL_free(old);
+}
+
+void OPENSSL_LH_rc_set_down_load(OPENSSL_LHASH *lh, unsigned long down_load)
+{
+    struct lhash_ctrl_st *ctrl, *newctrl;
+
+    OPENSSL_LH_write_lock(lh);
+    ctrl = CRYPTO_THREAD_rcu_derefrence(&lh->ctrlptr);
+    newctrl = OPENSSL_memdup(ctrl, sizeof(struct lhash_ctrl_st));
+    if (newctrl == NULL)
+        goto out;
+    newctrl->down_load = down_load;
+    CRYPTO_THREAD_rcu_call(lh->lock, ctrl_update_cb, ctrl);
+    CRYPTO_THREAD_rcu_assign_pointer(&lh->ctrlptr, &newctrl);
+out:
+    OPENSSL_LH_write_unlock(lh);
 }
 
 int OPENSSL_LH_error(OPENSSL_LHASH *lh)

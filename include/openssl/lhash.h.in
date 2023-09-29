@@ -114,6 +114,7 @@ void *OPENSSL_LH_rc_delete(OPENSSL_LHASH *lh, const void *data);
 void *OPENSSL_LH_rc_retrieve(OPENSSL_LHASH *lh, const void *data);
 void OPENSSL_LH_rc_doall(OPENSSL_LHASH *lh, OPENSSL_LH_DOALL_FUNC func);
 void OPENSSL_LH_rc_doall_arg(OPENSSL_LHASH *lh, OPENSSL_LH_DOALL_FUNCARG func, void *arg);
+unsigned long OPENSSL_LH_rc_get_down_load(OPENSSL_LHASH *lh);
 void OPENSSL_LH_rc_set_down_load(OPENSSL_LHASH *lh, unsigned long down_load);
 unsigned long OPENSSL_LH_rc_num_items(const OPENSSL_LHASH *lh);
 void OPENSSL_LH_rc_obj_put(void *data);
@@ -384,7 +385,7 @@ typedef struct  {
     static ossl_unused ossl_inline void \
     lh_##type##_set_down_load(LHASH_OF(type) *lh, unsigned long dl) \
     { \
-        OPENSSL_LH_set_rc_down_load((OPENSSL_LHASH *)lh, dl); \
+        OPENSSL_LH_rc_set_down_load((OPENSSL_LHASH *)lh, dl); \
     } \
     static ossl_unused ossl_inline void \
     lh_##type##_doall(LHASH_OF(type) *lh, void (*doall)(type *)) \
