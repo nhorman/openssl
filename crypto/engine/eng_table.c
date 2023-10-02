@@ -13,8 +13,11 @@
 #include <openssl/trace.h>
 #include "eng_local.h"
 
+static void engine_pile_free(ENGINE_PILE *p);
+
 /* The type of the items in the table */
 struct st_engine_pile {
+    LHASH_REF objref;
     /* The 'nid' of this algorithm/mode */
     int nid;
     /* ENGINEs that implement this algorithm/mode. */
@@ -26,6 +29,8 @@ struct st_engine_pile {
      */
     int uptodate;
 };
+
+DEFINE_REFCNT_LHASH_OF_EX(ENGINE_PILE);
 
 /* The type exposed in eng_local.h */
 struct st_engine_table {
@@ -70,7 +75,7 @@ static int int_table_check(ENGINE_TABLE **t, int create)
         return 1;
     if (!create)
         return 0;
-    if ((lh = lh_ENGINE_PILE_new(engine_pile_hash, engine_pile_cmp)) == NULL)
+    if ((lh = lh_ENGINE_PILE_new(engine_pile_hash, engine_pile_cmp, engine_pile_free)) == NULL)
         return 0;
     *t = (ENGINE_TABLE *)lh;
     return 1;
@@ -85,10 +90,9 @@ int engine_table_register(ENGINE_TABLE **table, ENGINE_CLEANUP_CB *cleanup,
                           int setdefault)
 {
     int ret = 0, added = 0;
-    ENGINE_PILE tmplate, *fnd;
+    ENGINE_PILE tmplate, *fnd, *old;
+    int should_put = 0;
 
-    if (!CRYPTO_THREAD_write_lock(global_engine_lock))
-        return 0;
     if (!(*table))
         added = 1;
     if (!int_table_check(table, 1))
@@ -97,10 +101,11 @@ int engine_table_register(ENGINE_TABLE **table, ENGINE_CLEANUP_CB *cleanup,
         /* The cleanup callback needs to be added */
         engine_cleanup_add_first(cleanup);
     while (num_nids--) {
+        should_put = 0;
         tmplate.nid = *nids;
         fnd = lh_ENGINE_PILE_retrieve(&(*table)->piles, &tmplate);
         if (!fnd) {
-            fnd = OPENSSL_malloc(sizeof(*fnd));
+            fnd = OPENSSL_zalloc(sizeof(*fnd));
             if (fnd == NULL)
                 goto end;
             fnd->uptodate = 1;
@@ -111,12 +116,15 @@ int engine_table_register(ENGINE_TABLE **table, ENGINE_CLEANUP_CB *cleanup,
                 goto end;
             }
             fnd->funct = NULL;
-            (void)lh_ENGINE_PILE_insert(&(*table)->piles, fnd);
-            if (lh_ENGINE_PILE_retrieve(&(*table)->piles, &tmplate) != fnd) {
-                sk_ENGINE_free(fnd->sk);
-                OPENSSL_free(fnd);
+            old = lh_ENGINE_PILE_insert(&(*table)->piles, fnd);
+            old = lh_ENGINE_PILE_retrieve(&(*table)->piles, &tmplate);
+            lh_ENGINE_PILE_obj_put(old);
+            if (old != fnd) {
+                /* This would only happen if someone raced in and replaced the data */
                 goto end;
             }
+        } else {
+            should_put = 1;
         }
         /* A registration shouldn't add duplicate entries */
         (void)sk_ENGINE_delete_ptr(fnd->sk, e);
@@ -138,10 +146,15 @@ int engine_table_register(ENGINE_TABLE **table, ENGINE_CLEANUP_CB *cleanup,
             fnd->uptodate = 1;
         }
         nids++;
+        if (should_put == 1) {
+            lh_ENGINE_PILE_obj_put(fnd);
+            should_put = 0;
+        }
     }
     ret = 1;
  end:
-    CRYPTO_THREAD_unlock(global_engine_lock);
+    if (should_put == 1)
+        lh_ENGINE_PILE_obj_put(fnd);
     return ret;
 }
 
@@ -163,12 +176,8 @@ IMPLEMENT_LHASH_DOALL_ARG(ENGINE_PILE, ENGINE);
 
 void engine_table_unregister(ENGINE_TABLE **table, ENGINE *e)
 {
-    if (!CRYPTO_THREAD_write_lock(global_engine_lock))
-        /* Can't return a value. :( */
-        return;
     if (int_table_check(table, 0))
         lh_ENGINE_PILE_doall_ENGINE(&(*table)->piles, int_unregister_cb, e);
-    CRYPTO_THREAD_unlock(global_engine_lock);
 }
 
 static void int_cleanup_cb_doall(ENGINE_PILE *p)
@@ -181,16 +190,23 @@ static void int_cleanup_cb_doall(ENGINE_PILE *p)
     OPENSSL_free(p);
 }
 
+static void engine_pile_free(ENGINE_PILE *p)
+{
+    if (p == NULL)
+        return;
+    sk_ENGINE_free(p->sk);
+    if (p->funct)
+        engine_unlocked_finish(p->funct, 0);
+    OPENSSL_free(p);
+}
+
 void engine_table_cleanup(ENGINE_TABLE **table)
 {
-    if (!CRYPTO_THREAD_write_lock(global_engine_lock))
-        return;
     if (*table) {
-        lh_ENGINE_PILE_doall(&(*table)->piles, int_cleanup_cb_doall);
+        //lh_ENGINE_PILE_doall(&(*table)->piles, int_cleanup_cb_doall);
         lh_ENGINE_PILE_free(&(*table)->piles);
         *table = NULL;
     }
-    CRYPTO_THREAD_unlock(global_engine_lock);
 }
 
 /* return a functional reference for a given 'nid' */
@@ -213,8 +229,6 @@ ENGINE *ossl_engine_table_select(ENGINE_TABLE **table, int nid,
         return NULL;
     }
     ERR_set_mark();
-    if (!CRYPTO_THREAD_write_lock(global_engine_lock))
-        goto end;
     /*
      * Check again inside the lock otherwise we could race against cleanup
      * operations. But don't worry about a debug printout
@@ -282,7 +296,7 @@ ENGINE *ossl_engine_table_select(ENGINE_TABLE **table, int nid,
         OSSL_TRACE3(ENGINE_TABLE,
                     "%s:%d, nid=%d, caching 'no matching ENGINE'\n",
                     f, l, nid);
-    CRYPTO_THREAD_unlock(global_engine_lock);
+    lh_ENGINE_PILE_obj_put(fnd);
     /*
      * Whatever happened, any failed init()s are not failures in this
      * context, so clear our error state.
@@ -298,7 +312,7 @@ static void int_dall(const ENGINE_PILE *pile, ENGINE_PILE_DOALL *dall)
     dall->cb(pile->nid, pile->sk, pile->funct, dall->arg);
 }
 
-IMPLEMENT_LHASH_DOALL_ARG_CONST(ENGINE_PILE, ENGINE_PILE_DOALL);
+IMPLEMENT_LHASH_REFCNT_DOALL_ARG_CONST(ENGINE_PILE, ENGINE_PILE_DOALL);
 
 void engine_table_doall(ENGINE_TABLE *table, engine_table_doall_cb *cb,
                         void *arg)
