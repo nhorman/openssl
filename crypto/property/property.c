@@ -758,7 +758,7 @@ int ossl_method_store_cache_set(OSSL_METHOD_STORE *store, OSSL_PROVIDER *prov,
         }
         goto end;
     }
-    p = OPENSSL_malloc(sizeof(*p) + (len = strlen(prop_query)));
+    p = OPENSSL_zalloc(sizeof(*p) + (len = strlen(prop_query)));
     if (p != NULL) {
         p->query = p->body;
         p->provider = prov;
