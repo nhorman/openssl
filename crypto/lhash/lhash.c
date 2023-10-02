@@ -118,6 +118,8 @@ void OPENSSL_LH_free(OPENSSL_LHASH *lh)
 void OPENSSL_LH_rc_free(OPENSSL_LHASH *lh)
 {
     int num_nodes;
+    if (lh == NULL)
+        return;
     OPENSSL_LH_rc_flush(lh);
     num_nodes = OPENSSL_LH_rc_num_items(lh);
     if (num_nodes != 0)
