@@ -589,10 +589,10 @@ void OPENSSL_LH_rc_doall(OPENSSL_LHASH *lh, OPENSSL_LH_DOALL_FUNC func)
 {
     struct lhash_ctrl_st *ctrl;
 
-    OPENSSL_LH_read_lock(lh);
+    OPENSSL_LH_write_lock(lh);
     ctrl = CRYPTO_THREAD_rcu_derefrence(&lh->ctrlptr);
     doall_util_fn(ctrl, 0, func, (OPENSSL_LH_DOALL_FUNCARG)0, NULL);
-    OPENSSL_LH_read_unlock(lh);
+    OPENSSL_LH_write_unlock(lh);
 }
 
 void OPENSSL_LH_doall_arg(OPENSSL_LHASH *lh, OPENSSL_LH_DOALL_FUNCARG func, void *arg)
@@ -606,10 +606,10 @@ void OPENSSL_LH_rc_doall_arg(OPENSSL_LHASH *lh, OPENSSL_LH_DOALL_FUNCARG func, v
 {
     struct lhash_ctrl_st *ctrl;
 
-    OPENSSL_LH_read_lock(lh);
+    OPENSSL_LH_write_lock(lh);
     ctrl = CRYPTO_THREAD_rcu_derefrence(&lh->ctrlptr);
     doall_util_fn(ctrl, 1, (OPENSSL_LH_DOALL_FUNC)0, func, arg);
-    OPENSSL_LH_read_unlock(lh);
+    OPENSSL_LH_write_unlock(lh);
 }
 
 void OPENSSL_LH_rc_obj_put(void *data)
