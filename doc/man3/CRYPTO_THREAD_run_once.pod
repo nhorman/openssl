@@ -24,6 +24,17 @@ OSSL_THREAD_SUPPORT_FLAG_DEFAULT_SPAWN - OpenSSL thread support
  int CRYPTO_THREAD_unlock(CRYPTO_RWLOCK *lock);
  void CRYPTO_THREAD_lock_free(CRYPTO_RWLOCK *lock);
 
+ CRYPTO_RCU_LOCK *CRYPTO_THREAD_rcu_lock_new(void);
+ void CRYPTO_THREAD_rcu_read_lock(CRYPTO_RCU_LOCK *lock);
+ void CRYPTO_THREAD_rcu_write_lock(CRYPTO_RCU_LOCK *lock);
+ void CRYPTO_THREAD_rcu_write_unlock(CRYPTO_RCU_LOCK *lock);
+ void CRYPTO_THREAD_rcu_read_unlock(CRYPTO_RCU_LOCK *lock);
+ void CRYPTO_THREAD_synchronize_rcu(CRYPTO_RCU_LOCK *lock);
+ void CRYPTO_THREAD_rcu_call(CRYPTO_RCU_LOCK *lock, rcu_cb_fn cb, void *data);
+ CRYPTO_THREAD_rcu_derefrence(p)
+ CRYPTO_THREAD_rcu_assign_pointer(p,v)
+ void CRYPTO_THREAD_rcu_lock_free(CRYPTO_RCU_LOCK *lock);
+
  int CRYPTO_atomic_add(int *val, int amount, int *ret, CRYPTO_RWLOCK *lock);
  int CRYPTO_atomic_or(uint64_t *val, uint64_t op, uint64_t *ret,
                       CRYPTO_RWLOCK *lock);
@@ -45,6 +56,14 @@ supports the pthread and Windows APIs. OpenSSL can also be built without
 any multi-threading support, for example on platforms that don't provide
 any threading support or that provide a threading API that is not yet
 supported by OpenSSL.
+
+OpenSSL currently support both traditional Read/Write locks and
+Read-Copy-Update (RCU) locks.  The latter provides both improved read side
+performance, as well as lower writer-starvation than their read/write
+counterparts, but require additional synchronization.  The read side operation
+of RCU locks is simmilar to that of read/write locks, but the write side
+requires that writers copy the data being modified, atomically updating a shared
+read/write pointer, a synchronization period, folowed by freeing of the old data
 
 The following multi-threading function are provided:
 
@@ -81,6 +100,57 @@ CRYPTO_THREAD_unlock() unlocks the previously locked I<lock>.
 =item *
 
 CRYPTO_THREAD_lock_free() frees the provided I<lock>.
+
+=item *
+
+CRYPTO_THREAD_rcu_lock_new() allocates a new rcu lock
+
+=item *
+
+CRYPTO_THREAD_rcu_read_lock() acquires a read side hold on data protected by
+the lock
+
+=item *
+
+CRYPTO_THREAD_rcu_read_unlock() releases a read side hold on data protected by
+the lock
+
+=item *
+
+CRYPTO_THREAD_rcu_write_lock() acquires a write side hold on data protected by
+the lock.  Note only one writer per lock is permitted, as with read/write locks
+
+=item *
+
+CRYPTO_THREAD_rcu_write_unlock() releases a write side hold on data protected
+by the lock
+
+=item *
+
+CRYPTO_THREAD_synchronize_rcu() blocks the calling thread until all read side
+holds on the lock have been released, guaranteing that any old data updated by
+the write side thread is safe to free
+
+=item *
+
+CRYPTO_THREAD_rcu_call() enqueues a callback function to the lock, to be called
+when the next synchronization completes.  Note: It is not guaranteed that the
+thread which enqueued the callback will be the thread which executes the
+callback
+
+=item *
+
+CRYPTO_THREAD_rcu_derefrence(p) atomically reads a pointer under an RCU locks
+protection
+
+=item *
+
+CRYPTO_THREAD_rcu_assign_pointer(p,v) atomically writes to a pointer under an
+RCU locks protection
+
+=item *
+
+CRYPTO_THREAD_rcu_lock_free() frees an allocated RCU lock
 
 =item *
 

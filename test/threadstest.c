@@ -82,13 +82,365 @@ static int test_lock(void)
     int res;
 
     res = TEST_true(CRYPTO_THREAD_read_lock(lock))
-          && TEST_true(CRYPTO_THREAD_unlock(lock))
-          && TEST_true(CRYPTO_THREAD_write_lock(lock))
-          && TEST_true(CRYPTO_THREAD_unlock(lock));
+        && TEST_true(CRYPTO_THREAD_unlock(lock))
+        && TEST_true(CRYPTO_THREAD_write_lock(lock))
+        && TEST_true(CRYPTO_THREAD_unlock(lock));
 
     CRYPTO_THREAD_lock_free(lock);
 
     return res;
+}
+
+static int contention = 0;
+
+static int rwwriter1_done = 0;
+static int rwwriter2_done = 0;
+static int rwreader1_iterations = 0;
+static int rwreader2_iterations = 0;
+static int rwwriter1_iterations = 0;
+static int rwwriter2_iterations = 0;
+static int *rwwriter_ptr = NULL;
+static int rw_torture_result = 1;
+static CRYPTO_RWLOCK *rwtorturelock = NULL;
+
+static void rwwriter_fn(int id, int *iterations)
+{
+    int count;
+    struct timespec tv, tv2;
+    int *old, *new;
+
+    clock_gettime(CLOCK_REALTIME, &tv);
+    for (count = 0; ; count++) {
+        new = CRYPTO_zalloc(sizeof (int), NULL, 0);
+        if (contention == 0)
+            sleep(1);
+        if (!CRYPTO_THREAD_write_lock(rwtorturelock))
+            abort();
+        if (rwwriter_ptr != NULL) {
+            *new = *rwwriter_ptr + 1;
+        } else {
+            *new = 0;
+        }
+        old = rwwriter_ptr;
+        rwwriter_ptr = new;
+        if (!CRYPTO_THREAD_unlock(rwtorturelock))
+            abort();
+        if (old != NULL)
+            CRYPTO_free(old, __FILE__, __LINE__);
+        clock_gettime(CLOCK_REALTIME, &tv2);
+        if (tv2.tv_sec > (tv.tv_sec + 4))
+            break;
+    }
+    *iterations = count;
+    return;
+}
+
+static void rwwriter1_fn(void)
+{
+    TEST_info("Starting writer1");
+    rwwriter_fn(1, &rwwriter1_iterations);
+    rwwriter1_done = 1;
+}
+
+static void rwwriter2_fn(void)
+{
+    TEST_info("Starting writer 2");
+    rwwriter_fn(2, &rwwriter2_iterations);
+    rwwriter2_done = 1;
+}
+
+static void rwreader_fn(int *iterations)
+{
+    unsigned int count = 0;
+    int old = 0;
+
+    while (rwwriter1_done != 1 || rwwriter2_done != 1) {
+        count++;
+        if (CRYPTO_THREAD_read_lock(rwtorturelock) == 0)
+            abort();
+        if (rwwriter_ptr != NULL && old > *rwwriter_ptr) {
+            TEST_info("rwwriter pointer went backwards\n");
+            rw_torture_result = 0;
+        }
+        if (CRYPTO_THREAD_unlock(rwtorturelock) == 0)
+            abort();
+        *iterations = count;
+        if (rw_torture_result == 0) {
+            *iterations = count;
+            return;
+        }
+    }
+    *iterations = count;
+}
+
+static void rwreader1_fn(void)
+{
+    TEST_info("Starting reader 1");
+    rwreader_fn(&rwreader1_iterations);
+}
+
+static void rwreader2_fn(void)
+{
+    TEST_info("Starting reader 2");
+    rwreader_fn(&rwreader2_iterations);
+}
+
+static thread_t rwwriter1;
+static thread_t rwwriter2;
+static thread_t rwreader1;
+static thread_t rwreader2;
+
+static int _torture_rw(void)
+{
+    struct timespec sts;
+    struct timespec ets;
+    time_t seconds;
+    double nanoseconds;
+    double tottime = 0;
+    int ret = 0;
+    double avr, avw;
+
+    rwtorturelock = CRYPTO_THREAD_lock_new();
+    rwwriter1_iterations = 0;
+    rwwriter2_iterations = 0;
+    rwreader1_iterations = 0;
+    rwreader2_iterations = 0;
+    rwwriter1_done = 0;
+    rwwriter2_done = 0;
+    rw_torture_result = 1;
+
+    memset(&rwwriter1, 0, sizeof(thread_t));
+    memset(&rwwriter2, 0, sizeof(thread_t));
+    memset(&rwreader1, 0, sizeof(thread_t));
+    memset(&rwreader2, 0, sizeof(thread_t));
+
+    TEST_info("Staring rw torture");
+    clock_gettime(CLOCK_REALTIME, &sts);
+    if (!TEST_true(run_thread(&rwreader1, rwreader1_fn))
+        || !TEST_true(run_thread(&rwreader2, rwreader2_fn))
+        || !TEST_true(run_thread(&rwwriter1, rwwriter1_fn))
+        || !TEST_true(run_thread(&rwwriter2, rwwriter2_fn))
+        || !TEST_true(wait_for_thread(rwwriter1))
+        || !TEST_true(wait_for_thread(rwwriter2))
+        || !TEST_true(wait_for_thread(rwreader1))
+        || !TEST_true(wait_for_thread(rwreader2)))
+        goto out;
+
+    clock_gettime(CLOCK_REALTIME, &ets);
+    seconds = ets.tv_sec - sts.tv_sec;
+    if (sts.tv_nsec > ets.tv_nsec)
+        nanoseconds = (1e9 - sts.tv_nsec) + ets.tv_nsec;
+    else
+        nanoseconds = ets.tv_nsec - sts.tv_nsec;
+
+    nanoseconds = nanoseconds / 1e9;
+    tottime = seconds + nanoseconds;
+    TEST_info("rw_torture_result is %d\n", rw_torture_result);
+    TEST_info("performed %d reads and %d writes over 2 read and 2 write threads in %e seconds",
+              rwreader1_iterations + rwreader2_iterations,
+              rwwriter1_iterations + rwwriter2_iterations, tottime);
+    avr = tottime / (rwreader1_iterations + rwreader2_iterations);
+    avw = (tottime / (rwwriter1_iterations + rwwriter2_iterations));
+    TEST_info("Average read time %e/read", avr);
+    TEST_info("Averate write time %e/write", avw);
+
+    if (TEST_int_eq(rw_torture_result, 1))
+        ret = 1;
+out:
+    CRYPTO_THREAD_lock_free(rwtorturelock);
+    rwtorturelock = NULL;
+    return ret;
+}
+
+static int torture_rw_low(void)
+{
+    contention = 0;
+    return _torture_rw();
+}
+
+static int torture_rw_high(void)
+{
+    contention = 1;
+    return _torture_rw();
+}
+
+static CRYPTO_RCU_LOCK *rcu_lock = NULL;
+
+static int writer1_done = 0;
+static int writer2_done = 0;
+static int reader1_iterations = 0;
+static int reader2_iterations = 0;
+static int writer1_iterations = 0;
+static int writer2_iterations = 0;
+static int *writer_ptr = NULL;
+static int rcu_torture_result = 1;
+
+static void free_old_rcu_data(void *data)
+{
+    CRYPTO_free(data, NULL, 0);
+}
+
+static void writer_fn(int id, int *iterations)
+{
+    int count;
+    struct timespec tv, tv2;
+    int *old, *new;
+
+    clock_gettime(CLOCK_REALTIME, &tv);
+
+    for (count = 0; ; count++) {
+        new = CRYPTO_zalloc(sizeof(int), NULL, 0);
+        if (contention == 0)
+            sleep(1);
+        CRYPTO_THREAD_rcu_write_lock(rcu_lock);
+        old = CRYPTO_THREAD_rcu_derefrence(&writer_ptr);
+        if (old != NULL) {
+            *new = *old + 1;
+        } else {
+            *new = 0;
+        }
+        CRYPTO_THREAD_rcu_assign_pointer(&writer_ptr, &new);
+        if (contention == 0)
+            CRYPTO_THREAD_rcu_call(rcu_lock, free_old_rcu_data, old);
+        CRYPTO_THREAD_rcu_write_unlock(rcu_lock);
+        if (contention != 0) {
+            CRYPTO_THREAD_synchronize_rcu(rcu_lock);
+            CRYPTO_free(old, NULL, 0);
+        }
+        clock_gettime(CLOCK_REALTIME, &tv2);
+        if (tv2.tv_sec > (tv.tv_sec + 4))
+            break;
+    }
+    *iterations = count;
+    return;
+}
+
+static void writer1_fn(void)
+{
+    TEST_info("Starting writer1");
+    writer_fn(1, &writer1_iterations);
+    writer1_done = 1;
+}
+
+static void writer2_fn(void)
+{
+    TEST_info("Starting writer 2");
+    writer_fn(2, &writer2_iterations);
+    writer2_done = 1;
+}
+
+static void reader_fn(int *iterations)
+{
+    unsigned int count = 0;
+    int *val;
+    int oldval = 0;
+
+    while (writer1_done != 1 || writer2_done != 1) {
+        count++;
+        CRYPTO_THREAD_rcu_read_lock(rcu_lock);
+        val = CRYPTO_THREAD_rcu_derefrence(&writer_ptr);
+        if (val != NULL && oldval > *val) {
+            TEST_info("rcu torture value went backwards!\n");
+            rcu_torture_result = 0;
+        }
+        if (val != NULL)
+            oldval = *val; /* just try to deref the pointer */
+        CRYPTO_THREAD_rcu_read_unlock(rcu_lock);
+        if (rcu_torture_result == 0) {
+            *iterations = count;
+            return;
+        }
+    }
+    *iterations = count;
+}
+
+static void reader1_fn(void)
+{
+    TEST_info("Starting reader 1");
+    reader_fn(&reader1_iterations);
+}
+
+static void reader2_fn(void)
+{
+    TEST_info("Starting reader 2");
+    reader_fn(&reader2_iterations);
+}
+
+static thread_t writer1;
+static thread_t writer2;
+static thread_t reader1;
+static thread_t reader2;
+
+static int _torture_rcu(void)
+{
+    struct timespec sts;
+    struct timespec ets;
+    time_t seconds;
+    double nanoseconds;
+    double tottime;
+    double avr, avw;
+
+    memset(&writer1, 0, sizeof(thread_t));
+    memset(&writer2, 0, sizeof(thread_t));
+    memset(&reader1, 0, sizeof(thread_t));
+    memset(&reader2, 0, sizeof(thread_t));
+
+    writer1_iterations = 0;
+    writer2_iterations = 0;
+    reader1_iterations = 0;
+    reader2_iterations = 0;
+    writer1_done = 0;
+    writer2_done = 0;
+    rcu_torture_result = 1;
+
+    rcu_lock = CRYPTO_THREAD_rcu_lock_new();
+
+    TEST_info("Staring rcu torture");
+    clock_gettime(CLOCK_REALTIME, &sts);
+    if (!TEST_true(run_thread(&reader1, reader1_fn))
+        || !TEST_true(run_thread(&reader2, reader2_fn))
+        || !TEST_true(run_thread(&writer1, writer1_fn))
+        || !TEST_true(run_thread(&writer2, writer2_fn))
+        || !TEST_true(wait_for_thread(writer1))
+        || !TEST_true(wait_for_thread(writer2))
+        || !TEST_true(wait_for_thread(reader1))
+        || !TEST_true(wait_for_thread(reader2)))
+        return 0;
+    clock_gettime(CLOCK_REALTIME, &ets);
+    seconds = ets.tv_sec - sts.tv_sec;
+    if (sts.tv_nsec > ets.tv_nsec)
+        nanoseconds = (1e9 - (double)sts.tv_nsec) + (double)ets.tv_nsec;
+    else
+        nanoseconds = (ets.tv_nsec - sts.tv_nsec);
+
+    nanoseconds = nanoseconds / 1e9;
+    tottime = seconds + nanoseconds;
+    TEST_info("rcu_torture_result is %d\n", rcu_torture_result);
+    TEST_info("performed %d reads and %d writes over 2 read and 2 write threads in %e seconds",
+              reader1_iterations + reader2_iterations,
+              writer1_iterations + writer2_iterations, tottime);
+    avr = tottime / (reader1_iterations + reader2_iterations);
+    avw = tottime / (writer1_iterations + writer2_iterations);
+    TEST_info("Average read time %e/read", avr);
+    TEST_info("Average write time %e/write", avw);
+
+    CRYPTO_THREAD_rcu_lock_free(rcu_lock);
+    if (!TEST_int_eq(rcu_torture_result, 1))
+        return 0;
+
+    return 1;
+}
+
+static int torture_rcu_low(void)
+{
+    contention = 0;
+    return _torture_rcu();
+}
+
+static int torture_rcu_high(void)
+{
+    contention = 1;
+    return _torture_rcu();
 }
 
 static CRYPTO_ONCE once_run = CRYPTO_ONCE_STATIC_INIT;
@@ -850,6 +1202,10 @@ int setup_tests(void)
     ADD_TEST(test_multi_default);
 
     ADD_TEST(test_lock);
+    ADD_TEST(torture_rw_low);
+    ADD_TEST(torture_rw_high);
+    ADD_TEST(torture_rcu_low);
+    ADD_TEST(torture_rcu_high);
     ADD_TEST(test_once);
     ADD_TEST(test_thread_local);
     ADD_TEST(test_atomic);
