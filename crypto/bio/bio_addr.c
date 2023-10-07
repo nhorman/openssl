@@ -171,6 +171,7 @@ int BIO_ADDR_rawaddress(const BIO_ADDR *ap, void *p, size_t *l)
 {
     size_t len = 0;
     const void *addrptr = NULL;
+    int i;
 
     if (ap->sa.sa_family == AF_INET) {
         len = sizeof(ap->s_in.sin_addr);
@@ -184,11 +185,28 @@ int BIO_ADDR_rawaddress(const BIO_ADDR *ap, void *p, size_t *l)
 #endif
 #ifndef OPENSSL_NO_UNIX_SOCK
     else if (ap->sa.sa_family == AF_UNIX) {
-        len = strlen(ap->s_un.sun_path);
         addrptr = &ap->s_un.sun_path;
+        /*
+         * some platforms don't have strnlen, so lets implement
+         * it manually
+         */
+        for (i=0; i < sizeof(ap->s_un.sun_path); i++) {
+            if (ap->s_un.sun_path[i] == '\0') {
+                len = strlen(ap->s_un.sun_path);
+                goto found_len;
+            }
+        }
+        /*
+         * If we get here then len should be 108 bytes, which is
+         * dubious, but I think strictly speaking legal
+         * but it implies that the address in the socket is not
+         * NULL terminated
+         */
+        len = i;
     }
 #endif
 
+found_len:
     if (addrptr == NULL)
         return 0;
 
