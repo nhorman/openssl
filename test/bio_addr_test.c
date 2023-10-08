@@ -80,7 +80,23 @@ static BIO_ADDR *make_dummy_addr(int family)
 
 static int bio_addr_is_eq(const BIO_ADDR *a, const BIO_ADDR *b)
 {
-    struct sockaddr_storage adata, bdata;
+
+    /*
+     * Can't use sockaddr_storage here, as NonStop platforms
+     * don't define sockaddr_storage to be large enough to
+     * hold the contents of their AF_INET sockets
+     */
+    union {
+        struct sockaddr_in sin;
+#if OPENSSL_USE_IPV6
+        struct sockaddr_in6 sin6;
+#endif
+#ifndef OPENSSL_NO_UNIX_SOCK
+        struct sockaddr_un sun;
+#endif
+    } adata, bdata;
+
+    void *aaddr, *baddr;
     size_t alen, blen;
 
     /* True even if a and b are NULL */
@@ -98,14 +114,37 @@ static int bio_addr_is_eq(const BIO_ADDR *a, const BIO_ADDR *b)
     if (BIO_ADDR_rawport(a) != BIO_ADDR_rawport(b))
         return 0;
 
+    /* get the right raw address location */
+    switch(BIO_ADDR_family(a)) {
+    case AF_INET:
+        aaddr = &adata.sin.sin_addr;
+        baddr = &bdata.sin.sin_addr;
+        break;
+#if OPENSSL_USE_IPV6
+    case AF_INET6:
+        aaddr = &adata.sin6.sin6_addr;
+        baddr = &bdata.sin6.sin6_addr;
+        break;
+#endif
+#ifndef OPENSSL_NO_UNIX_SOCK
+    case AF_UNIX:
+        aaddr = &adata.sun.sun_path;
+        baddr = &bdata.sun.sun_path;
+        break;
+#endif
+    default:
+        TEST_error("Unsupported address family");
+        return 0;
+    }
+
     if (!BIO_ADDR_rawaddress(a, NULL, &alen)
             || alen > sizeof(adata)
-            || !BIO_ADDR_rawaddress(a, &adata, &alen))
+            || !BIO_ADDR_rawaddress(a, &aaddr, &alen))
         return 0;
 
     if (!BIO_ADDR_rawaddress(a, NULL, &blen)
             || blen > sizeof(bdata)
-            || !BIO_ADDR_rawaddress(a, &bdata, &blen))
+            || !BIO_ADDR_rawaddress(a, &baddr, &blen))
         return 0;
 
     if (alen != blen)
@@ -114,7 +153,7 @@ static int bio_addr_is_eq(const BIO_ADDR *a, const BIO_ADDR *b)
     if (alen == 0)
         return 1;
 
-    return memcmp(&adata, &bdata, alen) == 0;
+    return memcmp(&aaddr, &baddr, alen) == 0;
 }
 
 static int test_bio_addr_copy_dup(int idx)
