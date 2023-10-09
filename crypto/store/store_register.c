@@ -15,13 +15,11 @@
 #include <openssl/lhash.h>
 #include "store_local.h"
 
-static CRYPTO_RWLOCK *registry_lock;
 static CRYPTO_ONCE registry_init = CRYPTO_ONCE_STATIC_INIT;
-
+static int ossl_store_register_init(void);
 DEFINE_RUN_ONCE_STATIC(do_registry_init)
 {
-    registry_lock = CRYPTO_THREAD_lock_new();
-    return registry_lock != NULL;
+    return ossl_store_register_init();
 }
 
 /*
@@ -153,7 +151,8 @@ static int ossl_store_register_init(void)
 {
     if (loader_register == NULL) {
         loader_register = lh_OSSL_STORE_LOADER_new(store_loader_hash,
-                                                   store_loader_cmp);
+                                                   store_loader_cmp,
+                                                   NULL);
     }
     return loader_register != NULL;
 }
@@ -193,15 +192,11 @@ int ossl_store_register_loader_int(OSSL_STORE_LOADER *loader)
         ERR_raise(ERR_LIB_OSSL_STORE, ERR_R_CRYPTO_LIB);
         return 0;
     }
-    if (!CRYPTO_THREAD_write_lock(registry_lock))
-        return 0;
 
     if (ossl_store_register_init()
         && (lh_OSSL_STORE_LOADER_insert(loader_register, loader) != NULL
             || lh_OSSL_STORE_LOADER_error(loader_register) == 0))
         ok = 1;
-
-    CRYPTO_THREAD_unlock(registry_lock);
 
     return ok;
 }
@@ -227,8 +222,6 @@ const OSSL_STORE_LOADER *ossl_store_get0_loader_int(const char *scheme)
         ERR_raise(ERR_LIB_OSSL_STORE, ERR_R_CRYPTO_LIB);
         return NULL;
     }
-    if (!CRYPTO_THREAD_write_lock(registry_lock))
-        return NULL;
 
     if (!ossl_store_register_init())
         ERR_raise(ERR_LIB_OSSL_STORE, ERR_R_INTERNAL_ERROR);
@@ -237,8 +230,12 @@ const OSSL_STORE_LOADER *ossl_store_get0_loader_int(const char *scheme)
         ERR_raise_data(ERR_LIB_OSSL_STORE, OSSL_STORE_R_UNREGISTERED_SCHEME,
                        "scheme=%s", scheme);
 
-    CRYPTO_THREAD_unlock(registry_lock);
-
+    /*
+     * This is kinda wierd, because callers of this api
+     * seem to maintain control over freeing the loader
+     * so we drop the last refcount and return the pointer
+     */
+    lh_OSSL_STORE_LOADER_obj_put(loader);
     return loader;
 }
 
@@ -258,8 +255,6 @@ OSSL_STORE_LOADER *ossl_store_unregister_loader_int(const char *scheme)
         ERR_raise(ERR_LIB_OSSL_STORE, ERR_R_CRYPTO_LIB);
         return NULL;
     }
-    if (!CRYPTO_THREAD_write_lock(registry_lock))
-        return NULL;
 
     if (!ossl_store_register_init())
         ERR_raise(ERR_LIB_OSSL_STORE, ERR_R_INTERNAL_ERROR);
@@ -268,8 +263,7 @@ OSSL_STORE_LOADER *ossl_store_unregister_loader_int(const char *scheme)
         ERR_raise_data(ERR_LIB_OSSL_STORE, OSSL_STORE_R_UNREGISTERED_SCHEME,
                        "scheme=%s", scheme);
 
-    CRYPTO_THREAD_unlock(registry_lock);
-
+    lh_OSSL_STORE_LOADER_obj_put(loader);
     return loader;
 }
 OSSL_STORE_LOADER *OSSL_STORE_unregister_loader(const char *scheme)
@@ -281,8 +275,6 @@ void ossl_store_destroy_loaders_int(void)
 {
     lh_OSSL_STORE_LOADER_free(loader_register);
     loader_register = NULL;
-    CRYPTO_THREAD_lock_free(registry_lock);
-    registry_lock = NULL;
 }
 
 /*

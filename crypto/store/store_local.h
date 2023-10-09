@@ -80,6 +80,7 @@ OSSL_STORE_LOADER *ossl_store_unregister_loader_int(const char *scheme);
 
 /* loader stuff */
 struct ossl_store_loader_st {
+    LHASH_REF objref;
 #ifndef OPENSSL_NO_DEPRECATED_3_0
     /* Legacy stuff */
     const char *scheme;
@@ -115,7 +116,7 @@ struct ossl_store_loader_st {
     OSSL_FUNC_store_delete_fn *p_delete;
     OSSL_FUNC_store_open_ex_fn *p_open_ex;
 };
-DEFINE_LHASH_OF_EX(OSSL_STORE_LOADER);
+DEFINE_REFCNT_LHASH_OF_EX(OSSL_STORE_LOADER);
 
 const OSSL_STORE_LOADER *ossl_store_get0_loader_int(const char *scheme);
 void ossl_store_destroy_loaders_int(void);
