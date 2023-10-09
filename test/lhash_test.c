@@ -27,7 +27,12 @@
 #pragma clang diagnostic ignored "-Wunused-function"
 #endif
 
-DEFINE_LHASH_OF_EX(int);
+typedef struct int_struct {
+    LHASH_REF objref;
+    int val;
+} INT;
+
+DEFINE_REFCNT_LHASH_OF_EX(INT);
 
 static int int_tests[] = { 65537, 13, 1, 3, -5, 6, 7, 4, -10, -12, -14, 22, 9,
                            -17, 16, 17, -23, 35, 37, 173, 11 };
@@ -35,14 +40,19 @@ static const unsigned int n_int_tests = OSSL_NELEM(int_tests);
 static short int_found[OSSL_NELEM(int_tests)];
 static short int_not_found;
 
-static unsigned long int int_hash(const int *p)
+static unsigned long int int_hash(const INT *p)
 {
-    return 3 & *p;      /* To force collisions */
+    return 3 & p->val;      /* To force collisions */
 }
 
-static int int_cmp(const int *p, const int *q)
+static int int_cmp(const INT *p, const INT *q)
 {
-    return *p != *q;
+    return p->val != q->val;
+}
+
+static void int_free(INT *data)
+{
+    OPENSSL_free(data);
 }
 
 static int int_find(int n)
@@ -55,9 +65,9 @@ static int int_find(int n)
     return -1;
 }
 
-static void int_doall(int *v)
+static void int_doall(INT *v)
 {
-    const int n = int_find(*v);
+    const int n = int_find(v->val);
 
     if (n < 0)
         int_not_found++;
@@ -65,9 +75,9 @@ static void int_doall(int *v)
         int_found[n]++;
 }
 
-static void int_doall_arg(int *p, short *f)
+static void int_doall_arg(INT *p, short *f)
 {
-    const int n = int_find(*p);
+    const int n = int_find(p->val);
 
     if (n < 0)
         int_not_found++;
@@ -75,68 +85,112 @@ static void int_doall_arg(int *p, short *f)
         f[n]++;
 }
 
-IMPLEMENT_LHASH_DOALL_ARG(int, short);
+IMPLEMENT_LHASH_REFCNT_DOALL_ARG(INT, short);
 
 static int test_int_lhash(void)
 {
     static struct {
         int data;
-        int null;
+        int should_del;
     } dels[] = {
-        { 65537,    0 },
-        { 173,      0 },
-        { 999,      1 },
-        { 37,       0 },
-        { 1,        0 },
-        { 34,       1 }
+        { 65537, 1 },
+        { 173, 1 },
+        { 999, 0 },
+        { 37, 1 },
+        { 1, 1 },
+        { 34, 0 }
     };
+    INT *intval, *r, *p;
+    INT tmpl = LHASH_INIT;
     const unsigned int n_dels = OSSL_NELEM(dels);
-    LHASH_OF(int) *h = lh_int_new(&int_hash, &int_cmp);
+    LHASH_OF(INT) *h = lh_INT_new(&int_hash, &int_cmp, int_free);
     unsigned int i;
-    int testresult = 0, j, *p;
+    int testresult = 0, j;
 
     if (!TEST_ptr(h))
         goto end;
 
     /* insert */
-    for (i = 0; i < n_int_tests; i++)
-        if (!TEST_ptr_null(lh_int_insert(h, int_tests + i))) {
-            TEST_info("int insert %d", i);
+    for (i = 0; i < n_int_tests; i++) {
+        intval = OPENSSL_zalloc(sizeof(INT));
+        if (!TEST_ptr(intval))
+            goto end;
+        intval->val = int_tests[i];
+        if (!TEST_ptr_null(lh_INT_insert(h, intval))) {
+            TEST_info("int insert %d", intval->val);
             goto end;
         }
+    }
 
     /* num_items */
-    if (!TEST_int_eq(lh_int_num_items(h), n_int_tests))
+    if (!TEST_int_eq(lh_INT_num_items(h), n_int_tests))
         goto end;
 
     /* retrieve */
-    for (i = 0; i < n_int_tests; i++)
-        if (!TEST_int_eq(*lh_int_retrieve(h, int_tests + i), int_tests[i])) {
+    for (i = 0; i < n_int_tests; i++) {
+        tmpl.val = int_tests[i];
+        r = lh_INT_retrieve(h, &tmpl);
+        if (!TEST_ptr(r)) {
+            TEST_info("lhash INT test could not find %d", tmpl.val);
+            goto end;
+        }
+        if (!TEST_int_eq(r->val, int_tests[i])) {
             TEST_info("lhash int retrieve value %d", i);
             goto end;
         }
-    for (i = 0; i < n_int_tests; i++)
-        if (!TEST_ptr_eq(lh_int_retrieve(h, int_tests + i), int_tests + i)) {
+        lh_INT_obj_put(r);
+    }
+    for (i = 0; i < n_int_tests; i++) {
+        tmpl.val = int_tests[i];
+        r = lh_INT_retrieve(h, &tmpl);
+        if (!TEST_ptr(r)) {
+            TEST_info("lhash INT test could nt find %d", tmpl.val);
+            goto end;
+        }
+        if (!TEST_int_eq(r->val, int_tests[i])) {
             TEST_info("lhash int retrieve address %d", i);
             goto end;
         }
-    j = 1;
-    if (!TEST_ptr_eq(lh_int_retrieve(h, &j), int_tests + 2))
+        lh_INT_obj_put(r);
+    }
+    tmpl.val = 1;
+    r = lh_INT_retrieve(h, &tmpl);
+    if (!TEST_ptr(r)) {
+        TEST_info("lhash could not find %d", tmpl.val);
         goto end;
+    }
+    if (!TEST_int_eq(r->val, int_tests[2]))
+        goto end;
+    lh_INT_obj_put(r);
 
     /* replace */
-    j = 13;
-    if (!TEST_ptr(p = lh_int_insert(h, &j)))
+    p = OPENSSL_zalloc(sizeof(INT));
+    if (!TEST_ptr(p)) {
+        TEST_info("lhash failed malloc on replace");
         goto end;
-    if (!TEST_ptr_eq(p, int_tests + 1))
+    }
+    p->val = 13;
+    /*
+     * Note, insert swaps the existing p data
+     * for the new one we inserted here
+     * put it to make sure its freed
+     */
+    if (!TEST_ptr(p = lh_INT_insert(h, p)))
         goto end;
-    if (!TEST_ptr_eq(lh_int_retrieve(h, int_tests + 1), &j))
+    if (!TEST_int_eq(p->val, int_tests[1]))
         goto end;
+    lh_INT_obj_put(p);
+
+    tmpl.val = int_tests[1];
+    p = lh_INT_retrieve(h, &tmpl);
+    if (!TEST_int_eq(p->val, tmpl.val))
+        goto end;
+    lh_INT_obj_put(p);
 
     /* do_all */
     memset(int_found, 0, sizeof(int_found));
     int_not_found = 0;
-    lh_int_doall(h, &int_doall);
+    lh_INT_doall(h, &int_doall, 0);
     if (!TEST_int_eq(int_not_found, 0)) {
         TEST_info("lhash int doall encountered a not found condition");
         goto end;
@@ -150,7 +204,7 @@ static int test_int_lhash(void)
     /* do_all_arg */
     memset(int_found, 0, sizeof(int_found));
     int_not_found = 0;
-    lh_int_doall_short(h, int_doall_arg, int_found);
+    lh_INT_doall_short(h, int_doall_arg, int_found, 0);
     if (!TEST_int_eq(int_not_found, 0)) {
         TEST_info("lhash int doall arg encountered a not found condition");
         goto end;
@@ -163,71 +217,91 @@ static int test_int_lhash(void)
 
     /* delete */
     for (i = 0; i < n_dels; i++) {
-        const int b = lh_int_delete(h, &dels[i].data) == NULL;
-        if (!TEST_int_eq(b ^ dels[i].null,  0)) {
-            TEST_info("lhash int delete %d", i);
-            goto end;
+        tmpl.val = dels[i].data;
+        INT *b = lh_INT_delete(h, &tmpl);
+        if (dels[i].should_del == 1) {
+            if (!TEST_ptr(b)) {
+                TEST_info("lhash unable to delete %d\n", tmpl.val);
+                goto end;
+            }
+            if (!TEST_int_eq(b->val, dels[i].data)) {
+                TEST_info("lhash int delete %d", i);
+                goto end;
+            }
+            lh_INT_obj_put(b);
+        } else {
+            if (!TEST_ptr_null(b)) {
+                TEST_info("lhash deleted an item not added %d", dels[i]);
+                goto end;
+            }
         }
     }
 
     /* error */
-    if (!TEST_int_eq(lh_int_error(h), 0))
+    if (!TEST_int_eq(lh_INT_error(h), 0))
         goto end;
 
     testresult = 1;
 end:
-    lh_int_free(h);
+    lh_INT_free(h);
     return testresult;
 }
 
-static unsigned long int stress_hash(const int *p)
+static unsigned long int stress_hash(const INT *p)
 {
-    return *p;
+    return p->val;
 }
 
 static int test_stress(void)
 {
-    LHASH_OF(int) *h = lh_int_new(&stress_hash, &int_cmp);
+    LHASH_OF(INT) *h = lh_INT_new(&stress_hash, &int_cmp, NULL);
     const unsigned int n = 2500000;
     unsigned int i;
-    int testresult = 0, *p;
+    INT tmpl = LHASH_INIT;
+    INT *p;
+    int testresult = 0;
+    INT *alloc_table;
 
     if (!TEST_ptr(h))
         goto end;
 
+    alloc_table = OPENSSL_malloc(sizeof(INT)*n);
+    if (!TEST_ptr(alloc_table)) {
+        TEST_info("Failed to allocate integer table");
+        goto end;
+    }
+
     /* insert */
     for (i = 0; i < n; i++) {
-        p = OPENSSL_malloc(sizeof(i));
-        if (!TEST_ptr(p)) {
-            TEST_info("lhash stress out of memory %d", i);
-            goto end;
-        }
-        *p = 3 * i + 1;
-        lh_int_insert(h, p);
+        p = &alloc_table[i];
+        p->val = 3 * i + 1;
+        lh_INT_insert(h, p);
     }
 
     /* num_items */
-    if (!TEST_int_eq(lh_int_num_items(h), n))
-            goto end;
+    if (!TEST_int_eq(lh_INT_num_items(h), n))
+        goto end;
 
     /* delete in a different order */
     for (i = 0; i < n; i++) {
         const int j = (7 * i + 4) % n * 3 + 1;
 
-        if (!TEST_ptr(p = lh_int_delete(h, &j))) {
+        tmpl.val = j;
+        if (!TEST_ptr(p = lh_INT_delete(h, &tmpl))) {
             TEST_info("lhash stress delete %d\n", i);
             goto end;
         }
-        if (!TEST_int_eq(*p, j)) {
+        if (!TEST_int_eq(p->val, j)) {
             TEST_info("lhash stress bad value %d", i);
             goto end;
         }
-        OPENSSL_free(p);
+        lh_INT_obj_put(p);
     }
 
     testresult = 1;
 end:
-    lh_int_free(h);
+    lh_INT_free(h);
+    OPENSSL_free(alloc_table);
     return testresult;
 }
 

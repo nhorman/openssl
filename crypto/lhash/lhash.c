@@ -15,6 +15,7 @@
 #include <openssl/err.h>
 #include "crypto/ctype.h"
 #include "crypto/lhash.h"
+#include "internal/refcount.h"
 #include "lhash_local.h"
 
 /*
@@ -40,9 +41,18 @@
 #define UP_LOAD         (2*LH_LOAD_MULT) /* load times 256 (default 2) */
 #define DOWN_LOAD       (LH_LOAD_MULT) /* load times 256 (default 1) */
 
-static int expand(OPENSSL_LHASH *lh);
-static void contract(OPENSSL_LHASH *lh);
-static OPENSSL_LH_NODE **getrn(OPENSSL_LHASH *lh, const void *data, unsigned long *rhash);
+static int expand(struct lhash_ctrl_st *lhctrl, CRYPTO_RCU_LOCK *lock);
+static int expand_rcu(struct lhash_ctrl_st *lhctrl, struct lhash_ctrl_st **new);
+static void contract(struct lhash_ctrl_st *lhctrl);
+static void contract_rcu(struct lhash_ctrl_st *lhctrl, struct lhash_ctrl_st **new);
+static OPENSSL_LH_NODE **getrn(struct lhash_ctrl_st *lhcrtl,
+                               OPENSSL_LH_COMPFUNC cf,
+                               OPENSSL_LH_HASHFUNC hf,
+                               const void *data, unsigned long *rhash);
+static OPENSSL_LH_NODE **getrn_rcu(struct lhash_ctrl_st *lhcrtl,
+                               OPENSSL_LH_COMPFUNC cf,
+                               OPENSSL_LH_HASHFUNC hf,
+                               const void *data, unsigned long *rhash);
 
 OPENSSL_LHASH *OPENSSL_LH_new(OPENSSL_LH_HASHFUNC h, OPENSSL_LH_COMPFUNC c)
 {
@@ -50,19 +60,55 @@ OPENSSL_LHASH *OPENSSL_LH_new(OPENSSL_LH_HASHFUNC h, OPENSSL_LH_COMPFUNC c)
 
     if ((ret = OPENSSL_zalloc(sizeof(*ret))) == NULL)
         return NULL;
-    if ((ret->b = OPENSSL_zalloc(sizeof(*ret->b) * MIN_NODES)) == NULL)
+    if ((ret->ctrl.b =
+         OPENSSL_zalloc(sizeof(*ret->ctrl.b) * MIN_NODES)) == NULL)
         goto err;
     ret->comp = ((c == NULL) ? (OPENSSL_LH_COMPFUNC)strcmp : c);
     ret->hash = ((h == NULL) ? (OPENSSL_LH_HASHFUNC)OPENSSL_LH_strhash : h);
-    ret->num_nodes = MIN_NODES / 2;
-    ret->num_alloc_nodes = MIN_NODES;
-    ret->pmax = MIN_NODES / 2;
-    ret->up_load = UP_LOAD;
-    ret->down_load = DOWN_LOAD;
+    ret->ctrl.num_nodes = MIN_NODES / 2;
+    ret->ctrl.num_alloc_nodes = MIN_NODES;
+    ret->ctrl.pmax = MIN_NODES / 2;
+    ret->ctrl.up_load = UP_LOAD;
+    ret->ctrl.down_load = DOWN_LOAD;
     return ret;
 
 err:
-    OPENSSL_free(ret->b);
+    OPENSSL_free(ret->ctrl.b);
+    OPENSSL_free(ret);
+    return NULL;
+}
+
+OPENSSL_LHASH *OPENSSL_LH_rc_new(OPENSSL_LH_HASHFUNC h,
+                                 OPENSSL_LH_COMPFUNC c, OPENSSL_LH_FREEFUNC f)
+{
+    OPENSSL_LHASH *ret;
+    struct lhash_ctrl_st *newctrl;
+
+    if ((ret = OPENSSL_zalloc(sizeof(*ret))) == NULL)
+        return NULL;
+    if ((newctrl = OPENSSL_zalloc(sizeof(struct lhash_ctrl_st))) == NULL)
+        goto err;
+    if ((newctrl->b = OPENSSL_zalloc(sizeof(*newctrl->b) * MIN_NODES)) == NULL)
+        goto err;
+    if ((ret->lock = CRYPTO_THREAD_rcu_lock_new()) == NULL)
+        goto err;
+
+    ret->comp = ((c == NULL) ? (OPENSSL_LH_COMPFUNC)strcmp : c);
+    ret->hash = ((h == NULL) ? (OPENSSL_LH_HASHFUNC)OPENSSL_LH_strhash : h);
+    newctrl->num_nodes = MIN_NODES / 2;
+    newctrl->num_alloc_nodes = MIN_NODES;
+    newctrl->pmax = MIN_NODES / 2;
+    newctrl->up_load = UP_LOAD;
+    newctrl->down_load = DOWN_LOAD;
+    newctrl->free = f;
+    CRYPTO_THREAD_rcu_assign_pointer(&ret->ctrlptr, &newctrl);
+
+    return ret;
+
+err:
+    CRYPTO_THREAD_rcu_lock_free(ret->lock);
+    OPENSSL_free(newctrl->b);
+    OPENSSL_free(newctrl);
     OPENSSL_free(ret);
     return NULL;
 }
@@ -73,8 +119,45 @@ void OPENSSL_LH_free(OPENSSL_LHASH *lh)
         return;
 
     OPENSSL_LH_flush(lh);
-    OPENSSL_free(lh->b);
+    OPENSSL_free(lh->ctrl.b);
     OPENSSL_free(lh);
+}
+
+void OPENSSL_LH_rc_free(OPENSSL_LHASH *lh)
+{
+    int num_nodes;
+
+    if (lh == NULL)
+        return;
+    OPENSSL_LH_rc_flush(lh);
+    num_nodes = OPENSSL_LH_rc_num_items(lh);
+    if (num_nodes != 0)
+        abort();
+    CRYPTO_THREAD_rcu_lock_free(lh->lock);
+    OPENSSL_free(lh->ctrlptr->b);
+    OPENSSL_free(lh->ctrlptr);
+    OPENSSL_free(lh);
+}
+
+void OPENSSL_LH_read_lock(const OPENSSL_LHASH *lh)
+{
+    CRYPTO_THREAD_rcu_read_lock(lh->lock);
+}
+
+void OPENSSL_LH_read_unlock(const OPENSSL_LHASH *lh)
+{
+    CRYPTO_THREAD_rcu_read_unlock(lh->lock);
+}
+
+void OPENSSL_LH_write_lock(const OPENSSL_LHASH *lh)
+{
+    CRYPTO_THREAD_rcu_write_lock(lh->lock);
+}
+
+void OPENSSL_LH_write_unlock(const OPENSSL_LHASH *lh)
+{
+    CRYPTO_THREAD_rcu_write_unlock(lh->lock);
+    CRYPTO_THREAD_synchronize_rcu(lh->lock);
 }
 
 void OPENSSL_LH_flush(OPENSSL_LHASH *lh)
@@ -85,17 +168,86 @@ void OPENSSL_LH_flush(OPENSSL_LHASH *lh)
     if (lh == NULL)
         return;
 
-    for (i = 0; i < lh->num_nodes; i++) {
-        n = lh->b[i];
+    for (i = 0; i < lh->ctrl.num_nodes; i++) {
+        n = lh->ctrl.b[i];
         while (n != NULL) {
             nn = n->next;
             OPENSSL_free(n);
             n = nn;
         }
-        lh->b[i] = NULL;
+        lh->ctrl.b[i] = NULL;
     }
 
-    lh->num_items = 0;
+    lh->ctrl.num_items = 0;
+}
+
+static void ctrl_flush_cb(void *data)
+{
+    struct lhash_ctrl_st *ctrl = data;
+    unsigned int i;
+    OPENSSL_LH_NODE *n, *nn;
+    LHASH_REF *dref;
+
+    for (i = 0; i < ctrl->num_alloc_nodes; i++) {
+        n = ctrl->b[i];
+        while (n != NULL) {
+            nn = n->nexts[ctrl->whichnextidx];
+            OPENSSL_free(n);
+            n = nn;
+        }
+    }
+    OPENSSL_free(ctrl->b);
+    OPENSSL_free(ctrl);
+}
+
+void OPENSSL_LH_rc_flush(OPENSSL_LHASH *lh)
+{
+    struct lhash_ctrl_st *ctrl, *newctrl = NULL;
+    OPENSSL_LH_NODE *n, *nn;
+    unsigned int i;
+    int oldref;
+    LHASH_REF *dref;
+
+    OPENSSL_LH_write_lock(lh);
+    ctrl = CRYPTO_THREAD_rcu_derefrence(&lh->ctrlptr);
+    /*
+     * sanity check
+     * scan the list to see if there are any outstanding references
+     */
+    for (i = 0; i < ctrl->num_alloc_nodes; i++) {
+        n = ctrl->b[i];
+        while (n != NULL) {
+            nn = n->nexts[ctrl->whichnextidx];
+            dref = n->data;
+            OPENSSL_LH_rc_obj_put(n->data);
+            n = nn;
+        }
+    }
+
+    /*
+     * allocate a new control structure
+     */
+    newctrl = OPENSSL_memdup(ctrl, sizeof(struct lhash_ctrl_st));
+    if (newctrl == NULL)
+        abort();
+    newctrl->b =
+        OPENSSL_zalloc(sizeof(OPENSSL_LH_NODE) * ctrl->num_alloc_nodes);
+    if (newctrl->b == NULL)
+        abort();
+    newctrl->num_alloc_nodes = ctrl->num_alloc_nodes;
+    newctrl->whichnextidx = !ctrl->whichnextidx;
+    newctrl->num_items = 0;
+
+    /*
+     * swap in the new ctrl structure
+     */
+    CRYPTO_THREAD_rcu_assign_pointer(&lh->ctrlptr, &newctrl);
+    /*
+     * queue the old structure for removal
+     */
+    CRYPTO_THREAD_rcu_call(lh->lock, ctrl_flush_cb, ctrl);
+
+    OPENSSL_LH_write_unlock(lh);
 }
 
 void *OPENSSL_LH_insert(OPENSSL_LHASH *lh, void *data)
@@ -104,15 +256,15 @@ void *OPENSSL_LH_insert(OPENSSL_LHASH *lh, void *data)
     OPENSSL_LH_NODE *nn, **rn;
     void *ret;
 
-    lh->error = 0;
-    if ((lh->up_load <= (lh->num_items * LH_LOAD_MULT / lh->num_nodes)) && !expand(lh))
+    lh->ctrl.error = 0;
+    if ((lh->ctrl.up_load <= (lh->ctrl.num_items * LH_LOAD_MULT / lh->ctrl.num_nodes)) && !expand(&lh->ctrl, NULL))
         return NULL;        /* 'lh->error++' already done in 'expand' */
 
-    rn = getrn(lh, data, &hash);
+    rn = getrn(&lh->ctrl, lh->comp, lh->hash, data, &hash);
 
     if (*rn == NULL) {
         if ((nn = OPENSSL_malloc(sizeof(*nn))) == NULL) {
-            lh->error++;
+            lh->ctrl.error++;
             return NULL;
         }
         nn->data = data;
@@ -120,11 +272,100 @@ void *OPENSSL_LH_insert(OPENSSL_LHASH *lh, void *data)
         nn->hash = hash;
         *rn = nn;
         ret = NULL;
-        lh->num_items++;
+        lh->ctrl.num_items++;
     } else {                    /* replace same key */
         ret = (*rn)->data;
         (*rn)->data = data;
     }
+    return ret;
+}
+
+static void ctrl_retire_cb(void *data)
+{
+    struct lhash_ctrl_st *ctrl = data;
+
+    OPENSSL_free(ctrl->b);
+    OPENSSL_free(ctrl);
+}
+
+void *OPENSSL_LH_rc_insert(OPENSSL_LHASH *lh, void *data)
+{
+    unsigned long hash;
+    OPENSSL_LH_NODE *nn, **rn;
+    void *ret;
+    int oldref;
+    LHASH_REF *dref;
+    struct lhash_ctrl_st *ctrl = NULL, *newctrl = NULL, *oldctrl = NULL;
+
+    OPENSSL_LH_write_lock(lh);
+    ctrl = CRYPTO_THREAD_rcu_derefrence(&lh->ctrlptr);
+
+    ctrl->error = 0;
+
+    if ((ctrl->up_load <= (ctrl->num_items * LH_LOAD_MULT / ctrl->num_alloc_nodes))) {
+
+        expand_rcu(ctrl, &newctrl);
+
+        if (newctrl != NULL) {
+            /*
+             * now that we have a new control structure thats
+             * been expanded to our needs, queue the old one for
+             * removal
+             */
+            CRYPTO_THREAD_rcu_call(lh->lock, ctrl_retire_cb, ctrl);
+
+            ctrl = newctrl;
+        }
+    }
+
+    rn = getrn_rcu(ctrl, lh->comp, lh->hash, data, &hash);
+
+    if (*rn == NULL) {
+        if ((nn = OPENSSL_zalloc(sizeof(*nn))) == NULL) {
+            oldctrl->error++;
+            OPENSSL_free(newctrl->b);
+            OPENSSL_free(newctrl);
+            goto out;
+        }
+        /* reference counted objects always have an LHASH_REF first */
+        dref = (LHASH_REF *)data;
+        dref->refptr = OPENSSL_zalloc(sizeof(CRYPTO_REF_COUNT));
+        CRYPTO_NEW_REF(dref->refptr, 1); /* initial internal reference */
+        dref->freefn = ctrl->free;
+        nn->data = data;
+        nn->hash = hash;
+        *rn = nn; /* might need rcu_assign_pointer here */
+        ret = NULL;
+        ctrl->num_items++;
+    } else {                    /* replace same key */
+        ret = (*rn)->data;
+        dref = (LHASH_REF *)data;
+        if (dref->refptr == NULL) {
+            dref->refptr = OPENSSL_zalloc(sizeof(CRYPTO_REF_COUNT));
+            CRYPTO_NEW_REF(dref->refptr, 1);
+            dref->freefn = ctrl->free;
+        } else {
+            abort();
+        }
+        /*
+         * The old data is now effectively orphaned
+         * just return it, expecting that the caller will
+         * detect that we have returned prior data and put it
+         * appropriately
+         */
+        (*rn)->data = data;
+    }
+
+    if (newctrl != NULL) {
+
+        /*
+         * we updated our control structure, assign it
+         * to the hash table
+         */
+        CRYPTO_THREAD_rcu_assign_pointer(&lh->ctrlptr, &newctrl);
+    }
+out:
+    OPENSSL_LH_write_unlock(lh);
     return ret;
 }
 
@@ -134,8 +375,8 @@ void *OPENSSL_LH_delete(OPENSSL_LHASH *lh, const void *data)
     OPENSSL_LH_NODE *nn, **rn;
     void *ret;
 
-    lh->error = 0;
-    rn = getrn(lh, data, &hash);
+    lh->ctrl.error = 0;
+    rn = getrn(&lh->ctrl, lh->comp, lh->hash, data, &hash);
 
     if (*rn == NULL) {
         return NULL;
@@ -146,43 +387,139 @@ void *OPENSSL_LH_delete(OPENSSL_LHASH *lh, const void *data)
         OPENSSL_free(nn);
     }
 
-    lh->num_items--;
-    if ((lh->num_nodes > MIN_NODES) &&
-        (lh->down_load >= (lh->num_items * LH_LOAD_MULT / lh->num_nodes)))
-        contract(lh);
+    lh->ctrl.num_items--;
+    if ((lh->ctrl.num_nodes > MIN_NODES) &&
+        (lh->ctrl.down_load >= (lh->ctrl.num_items * LH_LOAD_MULT / lh->ctrl.num_nodes)))
+        contract(&lh->ctrl);
 
     return ret;
 }
 
+static void ctrl_retire_node(void *data)
+{
+    OPENSSL_LH_NODE *nn = data;
+    OPENSSL_free(nn);
+}
+
+void *OPENSSL_LH_rc_delete(OPENSSL_LHASH *lh, const void *data)
+{
+    unsigned long hash;
+    OPENSSL_LH_NODE *nn, **rn;
+    void *ret = NULL;
+    struct lhash_ctrl_st *ctrl = NULL, *newctrl = NULL;
+
+    OPENSSL_LH_write_lock(lh);
+
+    ctrl = CRYPTO_THREAD_rcu_derefrence(&lh->ctrlptr);
+    ctrl->error = 0;
+
+    if ((ctrl->num_alloc_nodes > MIN_NODES) &&
+        (ctrl->down_load >=
+         (ctrl->num_items * LH_LOAD_MULT / ctrl->num_alloc_nodes))) {
+
+        /* contract the new ctrl structure */
+        contract_rcu(ctrl, &newctrl);
+
+        if (newctrl != NULL) {
+            /*
+             * now that we have a new control structure thats
+             * been expanded to our needs, queue the old one for
+             * removal
+             */
+            CRYPTO_THREAD_rcu_call(lh->lock, ctrl_retire_cb, ctrl);
+
+            /*
+             * and point ctrl to the new ctrl
+             */
+            ctrl = newctrl;
+        }
+    }
+
+    rn = getrn_rcu(ctrl, lh->comp, lh->hash, data, &hash);
+
+    if (*rn == NULL) {
+        goto out;
+    } else {
+        /* this is a bit wonky, as ctrl might point to the current struct */
+        ctrl->num_items--;
+        nn = *rn;
+        *rn = nn->nexts[ctrl->whichnextidx];
+        ret = nn->data;
+        CRYPTO_THREAD_rcu_call(lh->lock, ctrl_retire_node, nn);
+        /*
+         * Note, don't drop the refcount here
+         * we assume the caller, having the returned
+         * data, will call obj_put
+         */
+    }
+
+    /*
+     * now that we've done the delete, if we have a new
+     * ctrl structure, swap it in
+     */
+    if (newctrl != NULL)
+        CRYPTO_THREAD_rcu_assign_pointer(&lh->ctrlptr, &newctrl);
+
+out:
+    OPENSSL_LH_write_unlock(lh);
+    return ret;
+}
 void *OPENSSL_LH_retrieve(OPENSSL_LHASH *lh, const void *data)
 {
     unsigned long hash;
     OPENSSL_LH_NODE **rn;
 
-    if (lh->error != 0)
-        lh->error = 0;
+    if (lh->ctrl.error != 0)
+        lh->ctrl.error = 0;
 
-    rn = getrn(lh, data, &hash);
+    rn = getrn(&lh->ctrl, lh->comp, lh->hash, data, &hash);
 
     return *rn == NULL ? NULL : (*rn)->data;
 }
 
-static void doall_util_fn(OPENSSL_LHASH *lh, int use_arg,
+void *OPENSSL_LH_rc_retrieve(OPENSSL_LHASH *lh, const void *data)
+{
+    unsigned long hash;
+    OPENSSL_LH_NODE **rn;
+    struct lhash_ctrl_st *ctrl;
+    int refcount;
+    LHASH_REF *dref;
+
+    OPENSSL_LH_read_lock(lh);
+    ctrl = CRYPTO_THREAD_rcu_derefrence(&lh->ctrlptr);
+    ctrl->error = 0;
+
+    rn = getrn_rcu(ctrl, lh->comp, lh->hash, data, &hash);
+    if ((*rn) == NULL) {
+        dref = NULL;
+    } else {
+        dref = (*rn)->data;
+        if (dref->refptr == NULL) {
+            abort();
+        } else {
+            CRYPTO_UP_REF(dref->refptr, &refcount);
+            if (refcount == 0)
+                abort();
+        }
+    }
+
+    OPENSSL_LH_read_unlock(lh);
+    return (void *)dref;
+}
+
+static void doall_util_fn(struct lhash_ctrl_st *ctrl, int use_arg,
                           OPENSSL_LH_DOALL_FUNC func,
                           OPENSSL_LH_DOALL_FUNCARG func_arg, void *arg)
 {
     int i;
     OPENSSL_LH_NODE *a, *n;
 
-    if (lh == NULL)
-        return;
-
     /*
      * reverse the order so we search from 'top to bottom' We were having
      * memory leaks otherwise
      */
-    for (i = lh->num_nodes - 1; i >= 0; i--) {
-        a = lh->b[i];
+    for (i = ctrl->num_nodes - 1; i >= 0; i--) {
+        a = ctrl->b[i];
         while (a != NULL) {
             n = a->next;
             if (use_arg)
@@ -194,109 +531,321 @@ static void doall_util_fn(OPENSSL_LHASH *lh, int use_arg,
     }
 }
 
+static void doall_util_fn_rc(struct lhash_ctrl_st *ctrl, int use_arg,
+                             OPENSSL_LH_DOALL_FUNC func,
+                             OPENSSL_LH_DOALL_FUNCARG func_arg, void *arg)
+{
+    int i;
+    OPENSSL_LH_NODE *a, *n;
+
+    /*
+     * reverse the order so we search from 'top to bottom' We were having
+     * memory leaks otherwise
+     */
+    for (i = ctrl->num_alloc_nodes - 1; i >= 0; i--) {
+        a = ctrl->b[i];
+        while (a != NULL) {
+            n = a->nexts[ctrl->whichnextidx];
+            if (use_arg)
+                func_arg(a->data, arg);
+            else
+                func(a->data);
+            a = n;
+        }
+    }
+}
+
 void OPENSSL_LH_doall(OPENSSL_LHASH *lh, OPENSSL_LH_DOALL_FUNC func)
 {
-    doall_util_fn(lh, 0, func, (OPENSSL_LH_DOALL_FUNCARG)0, NULL);
+    if (lh == NULL)
+        return;
+    doall_util_fn(&lh->ctrl, 0, func, (OPENSSL_LH_DOALL_FUNCARG)0, NULL);
 }
 
-void OPENSSL_LH_doall_arg(OPENSSL_LHASH *lh, OPENSSL_LH_DOALL_FUNCARG func, void *arg)
+void OPENSSL_LH_rc_doall(OPENSSL_LHASH *lh, OPENSSL_LH_DOALL_FUNC func,
+                        int write_lock)
 {
-    doall_util_fn(lh, 1, (OPENSSL_LH_DOALL_FUNC)0, func, arg);
+    struct lhash_ctrl_st *ctrl;
+
+    if (lh == NULL)
+        return;
+    (write_lock == 1) ? OPENSSL_LH_write_lock(lh) : OPENSSL_LH_read_lock(lh);
+    ctrl = CRYPTO_THREAD_rcu_derefrence(&lh->ctrlptr);
+    doall_util_fn_rc(ctrl, 0, func, (OPENSSL_LH_DOALL_FUNCARG)0, NULL);
+    (write_lock == 1) ? OPENSSL_LH_write_unlock(lh) : OPENSSL_LH_read_unlock(lh);
 }
 
-static int expand(OPENSSL_LHASH *lh)
+void OPENSSL_LH_doall_arg(OPENSSL_LHASH *lh, OPENSSL_LH_DOALL_FUNCARG func,
+                         void *arg)
 {
-    OPENSSL_LH_NODE **n, **n1, **n2, *np;
+    doall_util_fn(&lh->ctrl, 1, (OPENSSL_LH_DOALL_FUNC)0, func, arg);
+}
+
+void OPENSSL_LH_rc_doall_arg(OPENSSL_LHASH *lh,
+                             OPENSSL_LH_DOALL_FUNCARG func, void *arg,
+                             int write_lock)
+{
+    struct lhash_ctrl_st *ctrl;
+
+    (write_lock == 1) ? OPENSSL_LH_write_lock(lh) : OPENSSL_LH_read_lock(lh);
+    ctrl = CRYPTO_THREAD_rcu_derefrence(&lh->ctrlptr);
+    doall_util_fn_rc(ctrl, 1, (OPENSSL_LH_DOALL_FUNC)0, func, arg);
+    (write_lock == 1) ? OPENSSL_LH_write_unlock(lh) : OPENSSL_LH_read_unlock(lh);
+}
+
+int OPENSSL_LH_rc_obj_put(void *data)
+{
+    OPENSSL_LH_FREEFUNC freefn;
+    LHASH_REF *dref = data;
+    int oldcount;
+
+    if (data == NULL)
+        return 0;
+
+    CRYPTO_DOWN_REF(dref->refptr, &oldcount);
+
+    if (oldcount < 0)
+        abort();
+
+    if (oldcount == 0) {
+        /*
+         * This was our last refcount, free the object
+         */
+        CRYPTO_FREE_REF(dref->refptr);
+        OPENSSL_free(dref->refptr);
+        freefn = (OPENSSL_LH_FREEFUNC)dref->freefn;
+        if (freefn != NULL)
+            freefn(data);
+        /*
+         * Don't need to free the hash node here
+         * as we're no longer in the hash
+         */
+    }
+    return oldcount;
+}
+
+int OPENSSL_LH_rc_obj_get(void *data)
+{
+    OPENSSL_LH_FREEFUNC freefn;
+    LHASH_REF *dref = data;
+    int oldcount;
+
+    if (data == NULL)
+        return 0;
+
+    CRYPTO_UP_REF(dref->refptr, &oldcount);
+    if (oldcount == 0) {
+        /*
+         * we underflowed somewhere
+         */
+        abort();
+    }
+    return oldcount;
+}
+
+static void lhash_node_retire_cb(void *data)
+{
+    OPENSSL_LH_NODE *nn = (OPENSSL_LH_NODE *)data;
+    OPENSSL_free(nn);
+}
+
+static int expand_rcu(struct lhash_ctrl_st *lhctrl, struct lhash_ctrl_st **new)
+{
+    int i;
+    OPENSSL_LH_NODE *cidx;
+    OPENSSL_LH_NODE *nidx;
+    unsigned long hash;
+    unsigned int newidx;
+
+   *new =
+    OPENSSL_memdup(lhctrl, sizeof (struct lhash_ctrl_st));
+
+    if (*new == NULL)
+        return 0;
+
+    (*new)->b =
+    OPENSSL_zalloc(sizeof(OPENSSL_LH_NODE *) * lhctrl->num_alloc_nodes * 2);
+
+    if ((*new)->b == NULL) {
+        OPENSSL_free(*new);
+        *new = NULL;
+        return 0;
+    }
+
+    (*new)->whichnextidx = !lhctrl->whichnextidx;
+    (*new)->num_alloc_nodes = lhctrl->num_alloc_nodes * 2;
+    /*
+     * rehash the table
+     */
+    for (i = 0; i < lhctrl->num_alloc_nodes; i++) {
+        cidx = lhctrl->b[i];
+        while (cidx != NULL) {
+            hash = cidx->hash;
+            newidx = hash % (*new)->num_alloc_nodes;
+            nidx = (*new)->b[newidx];
+            cidx->nexts[(*new)->whichnextidx] = (*new)->b[newidx];
+            (*new)->b[newidx] = cidx;
+            cidx = cidx->nexts[lhctrl->whichnextidx];
+        }
+    }
+
+    return 1;
+}
+
+static int expand(struct lhash_ctrl_st *lhctrl, CRYPTO_RCU_LOCK *lock)
+{
+    OPENSSL_LH_NODE **n, **n1, **n2, *np, *nn;
     unsigned int p, pmax, nni, j;
     unsigned long hash;
 
-    nni = lh->num_alloc_nodes;
-    p = lh->p;
-    pmax = lh->pmax;
+    nni = lhctrl->num_alloc_nodes;
+    p = lhctrl->p;
+    pmax = lhctrl->pmax;
     if (p + 1 >= pmax) {
         j = nni * 2;
-        n = OPENSSL_realloc(lh->b, sizeof(OPENSSL_LH_NODE *) * j);
+        n = OPENSSL_realloc(lhctrl->b, sizeof(OPENSSL_LH_NODE *) * j);
         if (n == NULL) {
-            lh->error++;
+            lhctrl->error++;
             return 0;
         }
-        lh->b = n;
+        lhctrl->b = n;
         memset(n + nni, 0, sizeof(*n) * (j - nni));
-        lh->pmax = nni;
-        lh->num_alloc_nodes = j;
-        lh->p = 0;
+        lhctrl->pmax = nni;
+        lhctrl->num_alloc_nodes = j;
+        lhctrl->p = 0;
     } else {
-        lh->p++;
+        lhctrl->p++;
     }
 
-    lh->num_nodes++;
-    n1 = &(lh->b[p]);
-    n2 = &(lh->b[p + pmax]);
+    lhctrl->num_nodes++;
+    n1 = &(lhctrl->b[p]);
+    n2 = &(lhctrl->b[p + pmax]);
     *n2 = NULL;
 
     for (np = *n1; np != NULL;) {
         hash = np->hash;
         if ((hash % nni) != p) { /* move it */
-            *n1 = (*n1)->next;
-            np->next = *n2;
-            *n2 = np;
-        } else
+            if (lock != NULL) {
+                nn = OPENSSL_memdup(np, sizeof (OPENSSL_LH_NODE));
+                if (nn == NULL)
+                    abort();
+                *n1 = (*n1)->next;
+                nn->next = *n2;
+                *n2 = nn;
+                CRYPTO_THREAD_rcu_call(lock, lhash_node_retire_cb, np);
+            } else {
+                *n1 = (*n1)->next;
+                np->next = *n2;
+                *n2 = np;
+            }
+        } else {
             n1 = &((*n1)->next);
+        }
         np = *n1;
     }
 
     return 1;
 }
 
-static void contract(OPENSSL_LHASH *lh)
+static void contract_rcu(struct lhash_ctrl_st *lhctrl, struct lhash_ctrl_st **new)
+{
+    unsigned int newcnt;
+    unsigned int i, newidx;
+    OPENSSL_LH_NODE *cidx, *nidx;
+    unsigned long hash;
+
+    newcnt = lhctrl->num_alloc_nodes / 2;
+
+    *new = NULL;
+    if (newcnt <= MIN_NODES)
+        return;
+
+    *new =
+        OPENSSL_memdup(lhctrl, sizeof(struct lhash_ctrl_st));
+
+    if (*new == NULL)
+        return;
+
+    (*new)->b =
+        OPENSSL_zalloc(sizeof(OPENSSL_LH_NODE *) * newcnt);
+
+    if ((*new)->b == NULL) {
+        OPENSSL_free(*new);
+        *new = NULL;
+        return;
+    }
+
+    (*new)->whichnextidx = !lhctrl->whichnextidx;
+    (*new)->num_alloc_nodes = newcnt;
+
+    /*
+     * rehash the table
+     */
+    for (i = 0; i < lhctrl->num_alloc_nodes; i++) {
+        cidx = lhctrl->b[i];
+        while (cidx != NULL) {
+            hash = cidx->hash;
+            newidx = hash % (*new)->num_alloc_nodes;
+            nidx = (*new)->b[newidx];
+            cidx->nexts[(*new)->whichnextidx] = (*new)->b[newidx];
+            (*new)->b[newidx] = cidx;
+            cidx = cidx->nexts[lhctrl->whichnextidx];
+        }
+    }
+    return;
+}
+
+static void contract(struct lhash_ctrl_st *lhctrl)
 {
     OPENSSL_LH_NODE **n, *n1, *np;
 
-    np = lh->b[lh->p + lh->pmax - 1];
-    lh->b[lh->p + lh->pmax - 1] = NULL; /* 24/07-92 - eay - weird but :-( */
-    if (lh->p == 0) {
-        n = OPENSSL_realloc(lh->b,
-                            (unsigned int)(sizeof(OPENSSL_LH_NODE *) * lh->pmax));
+    np = lhctrl->b[lhctrl->p + lhctrl->pmax - 1];
+    lhctrl->b[lhctrl->p + lhctrl->pmax - 1] = NULL; /* 24/07-92 - eay - weird but :-( */
+    if (lhctrl->p == 0) {
+        n = OPENSSL_realloc(lhctrl->b,
+                            (unsigned int)(sizeof(OPENSSL_LH_NODE *) * lhctrl->pmax));
         if (n == NULL) {
             /* fputs("realloc error in lhash", stderr); */
-            lh->error++;
+            lhctrl->error++;
         } else {
-            lh->b = n;
+            lhctrl->b = n;
         }
-        lh->num_alloc_nodes /= 2;
-        lh->pmax /= 2;
-        lh->p = lh->pmax - 1;
-    } else
-        lh->p--;
 
-    lh->num_nodes--;
+        lhctrl->num_alloc_nodes /= 2;
+        lhctrl->pmax /= 2;
+        lhctrl->p = lhctrl->pmax - 1;
+    } else {
+        lhctrl->p--;
+    }
 
-    n1 = lh->b[(int)lh->p];
-    if (n1 == NULL)
-        lh->b[(int)lh->p] = np;
-    else {
+    lhctrl->num_nodes--;
+
+    n1 = lhctrl->b[(int)lhctrl->p];
+    if (n1 == NULL) {
+        lhctrl->b[(int)lhctrl->p] = np;
+    } else {
         while (n1->next != NULL)
             n1 = n1->next;
         n1->next = np;
     }
 }
 
-static OPENSSL_LH_NODE **getrn(OPENSSL_LHASH *lh,
+static OPENSSL_LH_NODE **getrn(struct lhash_ctrl_st *lhctrl,
+                               OPENSSL_LH_COMPFUNC cf,
+                               OPENSSL_LH_HASHFUNC hf,
                                const void *data, unsigned long *rhash)
 {
     OPENSSL_LH_NODE **ret, *n1;
     unsigned long hash, nn;
-    OPENSSL_LH_COMPFUNC cf;
 
-    hash = (*(lh->hash)) (data);
+    hash = hf(data);
     *rhash = hash;
 
-    nn = hash % lh->pmax;
-    if (nn < lh->p)
-        nn = hash % lh->num_alloc_nodes;
+    nn = hash % lhctrl->pmax;
+    if (nn < lhctrl->p)
+        nn = hash % lhctrl->num_alloc_nodes;
 
-    cf = lh->comp;
-    ret = &(lh->b[(int)nn]);
+    ret = &(lhctrl->b[(int)nn]);
     for (n1 = *ret; n1 != NULL; n1 = n1->next) {
         if (n1->hash != hash) {
             ret = &(n1->next);
@@ -309,6 +858,31 @@ static OPENSSL_LH_NODE **getrn(OPENSSL_LHASH *lh,
     return ret;
 }
 
+static OPENSSL_LH_NODE **getrn_rcu(struct lhash_ctrl_st *lhctrl,
+                               OPENSSL_LH_COMPFUNC cf,
+                               OPENSSL_LH_HASHFUNC hf,
+                               const void *data, unsigned long *rhash)
+{
+    OPENSSL_LH_NODE **ret, *n1;
+    unsigned long hash, nn;
+
+    hash = hf(data);
+    *rhash = hash;
+
+    nn = hash % lhctrl->num_alloc_nodes;
+
+    ret = &(lhctrl->b[(int)nn]);
+    for (n1 = *ret; n1 != NULL; n1 = n1->nexts[lhctrl->whichnextidx]) {
+        if (n1->hash != hash) {
+            ret = &(n1->nexts[lhctrl->whichnextidx]);
+            continue;
+        }
+        if (cf(n1->data, data) == 0)
+            break;
+        ret = &(n1->nexts[lhctrl->whichnextidx]);
+    }
+    return ret;
+}
 /*
  * The following hash seems to work very well on normal text strings no
  * collisions on /usr/dict/words and it distributes on %2^n quite well, not
@@ -381,20 +955,83 @@ unsigned long ossl_lh_strcasehash(const char *c)
 
 unsigned long OPENSSL_LH_num_items(const OPENSSL_LHASH *lh)
 {
-    return lh ? lh->num_items : 0;
+    return lh ? lh->ctrl.num_items : 0;
+}
+
+unsigned long OPENSSL_LH_rc_num_items(const OPENSSL_LHASH *lh)
+{
+    struct lhash_ctrl_st *ctrl;
+    unsigned long ret;
+
+    if (lh == NULL)
+        return 0;
+
+    OPENSSL_LH_read_lock(lh);
+    ctrl = CRYPTO_THREAD_rcu_derefrence(&lh->ctrlptr);
+    ret = ctrl->num_items;
+    OPENSSL_LH_read_unlock(lh);
+    return ret;
 }
 
 unsigned long OPENSSL_LH_get_down_load(const OPENSSL_LHASH *lh)
 {
-    return lh->down_load;
+    return lh->ctrl.down_load;
+}
+
+unsigned long OPENSSL_LH_rc_get_down_load(OPENSSL_LHASH *lh)
+{
+    struct lhash_ctrl_st *ctrl;
+    unsigned long ret;
+
+    OPENSSL_LH_read_lock(lh);
+    ctrl = CRYPTO_THREAD_rcu_derefrence(&lh->ctrlptr);
+    ret = ctrl->down_load;
+    OPENSSL_LH_read_unlock(lh);
+    return ret;
 }
 
 void OPENSSL_LH_set_down_load(OPENSSL_LHASH *lh, unsigned long down_load)
 {
-    lh->down_load = down_load;
+    lh->ctrl.down_load = down_load;
+}
+
+static void ctrl_update_cb(void *old)
+{
+    struct lhash_ctrl_st *data = old;
+
+    OPENSSL_free(data);
+}
+
+void OPENSSL_LH_rc_set_down_load(OPENSSL_LHASH *lh, unsigned long down_load)
+{
+    struct lhash_ctrl_st *ctrl, *newctrl;
+
+    OPENSSL_LH_write_lock(lh);
+    ctrl = CRYPTO_THREAD_rcu_derefrence(&lh->ctrlptr);
+    newctrl = OPENSSL_memdup(ctrl, sizeof(struct lhash_ctrl_st));
+    if (newctrl == NULL)
+        goto out;
+    newctrl->down_load = down_load;
+    CRYPTO_THREAD_rcu_call(lh->lock, ctrl_update_cb, ctrl);
+    CRYPTO_THREAD_rcu_assign_pointer(&lh->ctrlptr, &newctrl);
+out:
+    OPENSSL_LH_write_unlock(lh);
 }
 
 int OPENSSL_LH_error(OPENSSL_LHASH *lh)
 {
-    return lh->error;
+    return lh->ctrl.error;
 }
+
+int OPENSSL_LH_rc_error(OPENSSL_LHASH *lh)
+{
+    struct lhash_ctrl_st *ctrl;
+    int ret;
+
+    OPENSSL_LH_read_lock(lh);
+    ctrl = CRYPTO_THREAD_rcu_derefrence(&lh->ctrlptr);
+    ret = ctrl->error;
+    OPENSSL_LH_read_unlock(lh);
+    return ret;
+}
+

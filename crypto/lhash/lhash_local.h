@@ -8,24 +8,38 @@
  */
 #include <openssl/crypto.h>
 
+#include "internal/refcount.h"
 #include "internal/tsan_assist.h"
 
 struct lhash_node_st {
     void *data;
-    struct lhash_node_st *next;
+    union {
+        struct lhash_node_st *next;
+        struct lhash_node_st *nexts[2];
+    };
     unsigned long hash;
 };
 
-struct lhash_st {
+struct lhash_ctrl_st {
     OPENSSL_LH_NODE **b;
-    OPENSSL_LH_COMPFUNC comp;
-    OPENSSL_LH_HASHFUNC hash;
     unsigned int num_nodes;
     unsigned int num_alloc_nodes;
     unsigned int p;
     unsigned int pmax;
-    unsigned long up_load;      /* load times 256 */
-    unsigned long down_load;    /* load times 256 */
+    unsigned long up_load;
+    unsigned long down_load;
     unsigned long num_items;
+    unsigned int whichnextidx;
     int error;
+    OPENSSL_LH_FREEFUNC free;
+};
+
+struct lhash_st {
+    OPENSSL_LH_COMPFUNC comp;
+    OPENSSL_LH_HASHFUNC hash;
+    CRYPTO_RCU_LOCK *lock;
+    union {
+        struct lhash_ctrl_st ctrl;
+        struct lhash_ctrl_st *ctrlptr;
+    };
 };
