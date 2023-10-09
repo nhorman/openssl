@@ -20,6 +20,7 @@
 # include <openssl/bio.h>
 # include <openssl/asn1.h>
 # include <openssl/objectserr.h>
+# include "internal/refcount.h"
 
 # define OBJ_NAME_TYPE_UNDEF             0x00
 # define OBJ_NAME_TYPE_MD_METH           0x01
@@ -41,6 +42,7 @@ extern "C" {
 #endif
 
 typedef struct obj_name_st {
+    LHASH_REF objref;
     int type;
     int alias;
     const char *name;

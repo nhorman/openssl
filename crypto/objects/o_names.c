@@ -45,6 +45,7 @@ static STACK_OF(NAME_FUNCS) *name_funcs_stack;
 
 static unsigned long obj_name_hash(const OBJ_NAME *a);
 static int obj_name_cmp(const OBJ_NAME *a, const OBJ_NAME *b);
+static void obj_name_free(OBJ_NAME *a);
 
 static CRYPTO_ONCE init = CRYPTO_ONCE_STATIC_INIT;
 DEFINE_RUN_ONCE_STATIC(o_names_init)
@@ -52,7 +53,7 @@ DEFINE_RUN_ONCE_STATIC(o_names_init)
     names_lh = NULL;
     obj_lock = CRYPTO_THREAD_lock_new();
     if (obj_lock != NULL)
-        names_lh = lh_OBJ_NAME_new(obj_name_hash, obj_name_cmp);
+        names_lh = lh_OBJ_NAME_new(obj_name_hash, obj_name_cmp, obj_name_free);
     if (names_lh == NULL) {
         CRYPTO_THREAD_lock_free(obj_lock);
         obj_lock = NULL;
@@ -126,8 +127,9 @@ static int obj_name_cmp(const OBJ_NAME *a, const OBJ_NAME *b)
             && (sk_NAME_FUNCS_num(name_funcs_stack) > a->type)) {
             ret = sk_NAME_FUNCS_value(name_funcs_stack,
                                       a->type)->cmp_func(a->name, b->name);
-        } else
+        } else {
             ret = OPENSSL_strcasecmp(a->name, b->name);
+        }
     }
     return ret;
 }
@@ -148,17 +150,31 @@ static unsigned long obj_name_hash(const OBJ_NAME *a)
     return ret;
 }
 
+static void obj_name_free(OBJ_NAME *a)
+{
+    /* free things */
+    if ((name_funcs_stack != NULL)
+        && (sk_NAME_FUNCS_num(name_funcs_stack) > a->type)) {
+        /*
+         * XXX: I'm not sure I understand why the free function should
+         * get three arguments... -- Richard Levitte
+         */
+        sk_NAME_FUNCS_value(name_funcs_stack,
+                            a->type)->free_func(a->name, a->type,
+                                                a->data);
+    }
+    OPENSSL_free(a);
+}
+
 const char *OBJ_NAME_get(const char *name, int type)
 {
-    OBJ_NAME on, *ret;
+    OBJ_NAME on, *ret = NULL;
     int num = 0, alias;
     const char *value = NULL;
 
     if (name == NULL)
         return NULL;
     if (!OBJ_NAME_init())
-        return NULL;
-    if (!CRYPTO_THREAD_read_lock(obj_lock))
         return NULL;
 
     alias = type & OBJ_NAME_ALIAS;
@@ -179,9 +195,10 @@ const char *OBJ_NAME_get(const char *name, int type)
             value = ret->data;
             break;
         }
+        lh_OBJ_NAME_obj_put(ret);
     }
 
-    CRYPTO_THREAD_unlock(obj_lock);
+    lh_OBJ_NAME_obj_put(ret);
     return value;
 }
 
@@ -196,7 +213,7 @@ int OBJ_NAME_add(const char *name, int type, const char *data)
     alias = type & OBJ_NAME_ALIAS;
     type &= ~OBJ_NAME_ALIAS;
 
-    onp = OPENSSL_malloc(sizeof(*onp));
+    onp = OPENSSL_zalloc(sizeof(*onp));
     if (onp == NULL)
         return 0;
 
@@ -205,25 +222,9 @@ int OBJ_NAME_add(const char *name, int type, const char *data)
     onp->type = type;
     onp->data = data;
 
-    if (!CRYPTO_THREAD_write_lock(obj_lock)) {
-        OPENSSL_free(onp);
-        return 0;
-    }
-
     ret = lh_OBJ_NAME_insert(names_lh, onp);
     if (ret != NULL) {
-        /* free things */
-        if ((name_funcs_stack != NULL)
-            && (sk_NAME_FUNCS_num(name_funcs_stack) > ret->type)) {
-            /*
-             * XXX: I'm not sure I understand why the free function should
-             * get three arguments... -- Richard Levitte
-             */
-            sk_NAME_FUNCS_value(name_funcs_stack,
-                                ret->type)->free_func(ret->name, ret->type,
-                                                      ret->data);
-        }
-        OPENSSL_free(ret);
+        lh_OBJ_NAME_obj_put(ret);
     } else {
         if (lh_OBJ_NAME_error(names_lh)) {
             /* ERROR */
@@ -235,9 +236,14 @@ int OBJ_NAME_add(const char *name, int type, const char *data)
     ok = 1;
 
 unlock:
-    CRYPTO_THREAD_unlock(obj_lock);
     return ok;
 }
+
+struct obj_name_remove_list {
+    int type;
+    int num_entries;
+    char **entries;
+};
 
 int OBJ_NAME_remove(const char *name, int type)
 {
@@ -247,30 +253,16 @@ int OBJ_NAME_remove(const char *name, int type)
     if (!OBJ_NAME_init())
         return 0;
 
-    if (!CRYPTO_THREAD_write_lock(obj_lock))
-        return 0;
-
     type &= ~OBJ_NAME_ALIAS;
     on.name = name;
     on.type = type;
     ret = lh_OBJ_NAME_delete(names_lh, &on);
     if (ret != NULL) {
         /* free things */
-        if ((name_funcs_stack != NULL)
-            && (sk_NAME_FUNCS_num(name_funcs_stack) > ret->type)) {
-            /*
-             * XXX: I'm not sure I understand why the free function should
-             * get three arguments... -- Richard Levitte
-             */
-            sk_NAME_FUNCS_value(name_funcs_stack,
-                                ret->type)->free_func(ret->name, ret->type,
-                                                      ret->data);
-        }
-        OPENSSL_free(ret);
+        lh_OBJ_NAME_obj_put(ret);
         ok = 1;
     }
 
-    CRYPTO_THREAD_unlock(obj_lock);
     return ok;
 }
 
@@ -280,13 +272,19 @@ typedef struct {
     void *arg;
 } OBJ_DOALL;
 
+struct doall_sorted {
+    int type;
+    int n;
+    const OBJ_NAME **names;
+};
+
 static void do_all_fn(const OBJ_NAME *name, OBJ_DOALL *d)
 {
     if (name->type == d->type)
         d->fn(name, d->arg);
 }
 
-IMPLEMENT_LHASH_DOALL_ARG_CONST(OBJ_NAME, OBJ_DOALL);
+IMPLEMENT_LHASH_REFCNT_DOALL_ARG_CONST(OBJ_NAME, OBJ_DOALL);
 
 void OBJ_NAME_do_all(int type, void (*fn) (const OBJ_NAME *, void *arg),
                      void *arg)
@@ -297,14 +295,8 @@ void OBJ_NAME_do_all(int type, void (*fn) (const OBJ_NAME *, void *arg),
     d.fn = fn;
     d.arg = arg;
 
-    lh_OBJ_NAME_doall_OBJ_DOALL(names_lh, do_all_fn, &d);
+    lh_OBJ_NAME_doall_OBJ_DOALL(names_lh, do_all_fn, &d, 0);
 }
-
-struct doall_sorted {
-    int type;
-    int n;
-    const OBJ_NAME **names;
-};
 
 static void do_all_sorted_fn(const OBJ_NAME *name, void *d_)
 {
@@ -348,15 +340,25 @@ void OBJ_NAME_do_all_sorted(int type,
     }
 }
 
-static int free_type;
+struct obj_name_free_list {
+    int type;
+    int num_entries;
+    char **entries;
+};
 
-static void names_lh_free_doall(OBJ_NAME *onp)
+static void names_lh_free_doall(OBJ_NAME *onp, void *cdata)
 {
+    struct obj_name_free_list *list = cdata;
+
     if (onp == NULL)
         return;
 
-    if (free_type < 0 || free_type == onp->type)
-        OBJ_NAME_remove(onp->name, onp->type);
+    if (list->type < 0 || list->type == onp->type) {
+        list->entries = OPENSSL_realloc(list->entries,
+                                        sizeof(char *)*(list->num_entries + 1));
+        list->entries[list->num_entries] = (char *)onp->name;
+        list->num_entries++;
+    }
 }
 
 static void name_funcs_free(NAME_FUNCS *ptr)
@@ -367,22 +369,44 @@ static void name_funcs_free(NAME_FUNCS *ptr)
 void OBJ_NAME_cleanup(int type)
 {
     unsigned long down_load;
+    struct obj_name_free_list list;
+    OBJ_NAME *ret;
+    OBJ_NAME tmpl;
+    int i;
+
+    if (!OBJ_NAME_init()) {
+        return 0;
+    }
+
+    if (!CRYPTO_THREAD_write_lock(obj_lock))
+        return 0;
 
     if (names_lh == NULL)
         return;
 
-    free_type = type;
     down_load = lh_OBJ_NAME_get_down_load(names_lh);
     lh_OBJ_NAME_set_down_load(names_lh, 0);
 
-    lh_OBJ_NAME_doall(names_lh, names_lh_free_doall);
     if (type < 0) {
         lh_OBJ_NAME_free(names_lh);
         sk_NAME_FUNCS_pop_free(name_funcs_stack, name_funcs_free);
-        CRYPTO_THREAD_lock_free(obj_lock);
         names_lh = NULL;
-        name_funcs_stack = NULL;
+        CRYPTO_THREAD_unlock(obj_lock);
+        CRYPTO_THREAD_lock_free(obj_lock);
         obj_lock = NULL;
-    } else
-        lh_OBJ_NAME_set_down_load(names_lh, down_load);
+        return;
+    }
+
+    list.type = type;
+    list.num_entries = 0;
+    list.entries = NULL;
+    lh_OBJ_NAME_doall_arg(names_lh, names_lh_free_doall, &list, 0);
+    for (i = 0; i < list.num_entries; i++) {
+        tmpl.name = list.entries[i];
+        tmpl.type = type;
+        ret = lh_OBJ_NAME_delete(names_lh, &tmpl);
+        lh_OBJ_NAME_obj_put(ret);
+    }
+    OPENSSL_free(list.entries);
+    lh_OBJ_NAME_set_down_load(names_lh, down_load);
 }
