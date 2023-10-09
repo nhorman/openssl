@@ -317,6 +317,7 @@ static int check_keymgmt(EVP_KEYMGMT *keymgmt, struct collect_data_st *data)
     if (!data->keytype_resolved) {
         /* We haven't cached the IDs from the keytype string yet. */
         OSSL_NAMEMAP *namemap = ossl_namemap_stored(data->libctx);
+
         data->keytype_id = ossl_namemap_name2num(namemap, data->keytype);
 
         /*
@@ -404,7 +405,7 @@ static int ossl_decoder_ctx_setup_for_pkey(OSSL_DECODER_CTX *ctx,
     if ((process_data = OPENSSL_zalloc(sizeof(*process_data))) == NULL)
         goto err;
     if ((propquery != NULL
-            && (process_data->propq = OPENSSL_strdup(propquery)) == NULL))
+         && (process_data->propq = OPENSSL_strdup(propquery)) == NULL))
         goto err;
 
     /* Allocate our list of EVP_KEYMGMTs. */
@@ -586,6 +587,7 @@ ossl_decoder_ctx_for_pkey_dup(OSSL_DECODER_CTX *src,
 }
 
 typedef struct {
+    LHASH_REF objref;
     char *input_type;
     char *input_structure;
     char *keytype;
@@ -594,10 +596,9 @@ typedef struct {
     OSSL_DECODER_CTX *template;
 } DECODER_CACHE_ENTRY;
 
-DEFINE_LHASH_OF_EX(DECODER_CACHE_ENTRY);
+DEFINE_REFCNT_LHASH_OF_EX(DECODER_CACHE_ENTRY);
 
 typedef struct {
-    CRYPTO_RWLOCK *lock;
     LHASH_OF(DECODER_CACHE_ENTRY) *hashtable;
 } DECODER_CACHE;
 
@@ -686,15 +687,10 @@ void *ossl_decoder_cache_new(OSSL_LIB_CTX *ctx)
     if (cache == NULL)
         return NULL;
 
-    cache->lock = CRYPTO_THREAD_lock_new();
-    if (cache->lock == NULL) {
-        OPENSSL_free(cache);
-        return NULL;
-    }
     cache->hashtable = lh_DECODER_CACHE_ENTRY_new(decoder_cache_entry_hash,
-                                                  decoder_cache_entry_cmp);
+                                                  decoder_cache_entry_cmp,
+                                                  decoder_cache_entry_free);
     if (cache->hashtable == NULL) {
-        CRYPTO_THREAD_lock_free(cache->lock);
         OPENSSL_free(cache);
         return NULL;
     }
@@ -706,9 +702,7 @@ void ossl_decoder_cache_free(void *vcache)
 {
     DECODER_CACHE *cache = (DECODER_CACHE *)vcache;
 
-    lh_DECODER_CACHE_ENTRY_doall(cache->hashtable, decoder_cache_entry_free);
     lh_DECODER_CACHE_ENTRY_free(cache->hashtable);
-    CRYPTO_THREAD_lock_free(cache->lock);
     OPENSSL_free(cache);
 }
 
@@ -726,15 +720,8 @@ int ossl_decoder_cache_flush(OSSL_LIB_CTX *libctx)
         return 0;
     }
 
-    if (!CRYPTO_THREAD_write_lock(cache->lock)) {
-        ERR_raise(ERR_LIB_OSSL_DECODER, ERR_R_OSSL_DECODER_LIB);
-        return 0;
-    }
-
-    lh_DECODER_CACHE_ENTRY_doall(cache->hashtable, decoder_cache_entry_free);
     lh_DECODER_CACHE_ENTRY_flush(cache->hashtable);
 
-    CRYPTO_THREAD_unlock(cache->lock);
     return 1;
 }
 
@@ -769,21 +756,14 @@ OSSL_DECODER_CTX_new_for_pkey(EVP_PKEY **pkey,
     cacheent.selection = selection;
     cacheent.propquery = (char *)propquery;
 
-    if (!CRYPTO_THREAD_read_lock(cache->lock)) {
-        ERR_raise(ERR_LIB_OSSL_DECODER, ERR_R_CRYPTO_LIB);
-        return NULL;
-    }
-
     /* First see if we have a template OSSL_DECODER_CTX */
     res = lh_DECODER_CACHE_ENTRY_retrieve(cache->hashtable, &cacheent);
 
     if (res == NULL) {
         /*
          * There is no template so we will have to construct one. This will be
-         * time consuming so release the lock and we will later upgrade it to a
-         * write lock.
+         * time consuming
          */
-        CRYPTO_THREAD_unlock(cache->lock);
 
         if ((ctx = OSSL_DECODER_CTX_new()) == NULL) {
             ERR_raise(ERR_LIB_OSSL_DECODER, ERR_R_OSSL_DECODER_LIB);
@@ -844,11 +824,6 @@ OSSL_DECODER_CTX_new_for_pkey(EVP_PKEY **pkey,
         newcache->selection = selection;
         newcache->template = ctx;
 
-        if (!CRYPTO_THREAD_write_lock(cache->lock)) {
-            ctx = NULL;
-            ERR_raise(ERR_LIB_OSSL_DECODER, ERR_R_CRYPTO_LIB);
-            goto err;
-        }
         res = lh_DECODER_CACHE_ENTRY_retrieve(cache->hashtable, &cacheent);
         if (res == NULL) {
             (void)lh_DECODER_CACHE_ENTRY_insert(cache->hashtable, newcache);
@@ -870,7 +845,7 @@ OSSL_DECODER_CTX_new_for_pkey(EVP_PKEY **pkey,
     }
 
     ctx = ossl_decoder_ctx_for_pkey_dup(ctx, pkey, input_type, input_structure);
-    CRYPTO_THREAD_unlock(cache->lock);
+    lh_DECODER_CACHE_ENTRY_obj_put(res);
 
     return ctx;
  err:
