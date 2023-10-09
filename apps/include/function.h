@@ -21,6 +21,7 @@ typedef enum FUNC_TYPE {
 } FUNC_TYPE;
 
 typedef struct function_st {
+    LHASH_REF objref;
     FUNC_TYPE type;
     const char *name;
     int (*func)(int argc, char *argv[]);
@@ -29,7 +30,7 @@ typedef struct function_st {
     const char *deprecated_version;
 } FUNCTION;
 
-DEFINE_LHASH_OF_EX(FUNCTION);
+DEFINE_REFCNT_LHASH_OF_EX(FUNCTION);
 
 /* Structure to hold the number of columns to be displayed and the
  * field width used to display them.
