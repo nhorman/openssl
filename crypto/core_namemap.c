@@ -259,21 +259,23 @@ static int namemap_add_name(OSSL_NAMEMAP *namemap, int number,
         number != 0 ? number : 1 + tsan_counter(&namemap->max_number);
     CRYPTO_THREAD_unlock(namemap->tsan_lock);
 
+    tmp_number = namenum->number;
     old_entry = lh_NAMENUM_ENTRY_insert(namemap->namenum, namenum);
-
-    if (lh_NAMENUM_ENTRY_error(namemap->namenum)) {
-        goto err;
-    }
 
     /*
      * Drop the last refcount on any returned object
      * so it can be freed
      */
     lh_NAMENUM_ENTRY_obj_put(old_entry);
-    return namenum->number;
+
+    if (lh_NAMENUM_ENTRY_error(namemap->namenum)) {
+        lh_NAMENUM_ENTRY_obj_put(namenum);
+        goto err;
+    }
+
+    return tmp_number;
 
  err:
-    namenum_free(namenum);
     return 0;
 }
 
