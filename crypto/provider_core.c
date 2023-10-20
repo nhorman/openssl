@@ -199,6 +199,8 @@ struct ossl_provider_st {
 };
 DEFINE_REFCNT_LHASH_OF_EX(OSSL_PROVIDER);
 
+static void infopair_free(INFOPAIR *pair);
+
 struct gather_providers_info {
     int num_providers;
     OSSL_PROVIDER **list;
@@ -215,6 +217,50 @@ static unsigned long ossl_provider_hash(const OSSL_PROVIDER *prov)
     return ossl_lh_strcasehash(prov->name);
 }
 
+static void _ossl_provider_free_lhash(OSSL_PROVIDER *prov)
+{
+    if (prov->flag_initialized) {
+        ossl_provider_teardown(prov);
+#ifndef OPENSSL_NO_ERR
+# ifndef FIPS_MODULE
+        if (prov->error_strings != NULL) {
+            ERR_unload_strings(prov->error_lib, prov->error_strings);
+            OPENSSL_free(prov->error_strings);
+            prov->error_strings = NULL;
+        }
+# endif
+#endif
+        OPENSSL_free(prov->operation_bits);
+        prov->operation_bits = NULL;
+        prov->operation_bits_sz = 0;
+        prov->flag_initialized = 0;
+    }
+
+#ifndef FIPS_MODULE
+    /*
+     * We deregister thread handling whether or not the provider was
+     * initialized. If init was attempted but was not successful then
+     * the provider may still have registered a thread handler.
+     */
+    ossl_init_thread_deregister(prov);
+    DSO_free(prov->module);
+#endif
+    OPENSSL_free(prov->name);
+    OPENSSL_free(prov->path);
+    sk_INFOPAIR_pop_free(prov->parameters, infopair_free);
+    CRYPTO_THREAD_lock_free(prov->opbits_lock);
+    CRYPTO_THREAD_lock_free(prov->flag_lock);
+#ifndef HAVE_ATOMICS
+    CRYPTO_THREAD_lock_free(prov->activatecnt_lock);
+#endif
+    CRYPTO_FREE_REF(&prov->refcnt);
+    OPENSSL_free(prov);
+}
+
+static void ossl_provider_free_lhash(OSSL_PROVIDER *prov)
+{
+    _ossl_provider_free_lhash(prov);
+}
 
 static void gather_providers_cb(OSSL_PROVIDER *prov, void *data)
 {
@@ -304,9 +350,13 @@ void ossl_provider_info_clear(OSSL_PROVIDER_INFO *info)
     sk_INFOPAIR_pop_free(info->parameters, infopair_free);
 }
 
-static void check_orphaned_providers(const OSSL_PROVIDER *prov)
+static void check_orphaned_providers(OSSL_PROVIDER *prov)
 {
-    fprintf(stderr, "Provider %s was orphaned in the store\n", prov->name);
+    int ref;
+    fprintf(stderr, "Provider %p(%s) was orphaned in the store. fixing up \n", prov, prov->name);
+    do {
+        ref = lh_OSSL_PROVIDER_obj_put(prov);
+    } while (ref != 1);
 }
 
 void ossl_provider_store_free(void *vstore)
@@ -351,7 +401,7 @@ void *ossl_provider_store_new(OSSL_LIB_CTX *ctx)
 #else
         || (store->providers = lh_OSSL_PROVIDER_new(ossl_provider_hash,
                                                     ossl_provider_cmp,
-                                                    NULL)) == NULL
+                                                    ossl_provider_free_lhash)) == NULL
 #endif
         || (store->default_path_lock = CRYPTO_THREAD_lock_new()) == NULL
 #ifndef FIPS_MODULE
@@ -473,11 +523,9 @@ OSSL_PROVIDER *ossl_provider_find(OSSL_LIB_CTX *libctx, const char *name,
         if (prov != NULL && !ossl_provider_up_ref(prov))
             prov = NULL;
 #else
+        lh_OSSL_PROVIDER_obj_put(prov);
         if (prov != NULL && !ossl_provider_up_ref(prov)) {
-            lh_OSSL_PROVIDER_obj_put(prov);
             prov = NULL;
-        } else {
-            lh_OSSL_PROVIDER_obj_put(prov);
         }
 #endif
     }
@@ -531,11 +579,15 @@ static OSSL_PROVIDER *provider_new(const char *name,
 
 int ossl_provider_up_ref(OSSL_PROVIDER *prov)
 {
-    int ref = 0;
+    int ref = 0, hashref = 0;
 
-    if (CRYPTO_UP_REF(&prov->refcnt, &ref) <= 0)
+    if (prov->store)
+        hashref = lh_OSSL_PROVIDER_obj_get(prov);
+
+    if (CRYPTO_UP_REF(&prov->refcnt, &ref) <= 0) {
+        lh_OSSL_PROVIDER_obj_put(prov);
         return 0;
-
+    }
 #ifndef FIPS_MODULE
     if (prov->ischild) {
         if (!ossl_provider_up_ref_parent(prov, 0)) {
@@ -681,6 +733,8 @@ int ossl_provider_add_to_store(OSSL_PROVIDER *prov, OSSL_PROVIDER **actualprov,
     OSSL_PROVIDER tmpl = { 0, };
     OSSL_PROVIDER *actualtmp = NULL;
     OSSL_PROVIDER *sprov;
+    int inserted = 0;
+    int found = 0;
 
     if (actualprov != NULL)
         *actualprov = NULL;
@@ -724,16 +778,19 @@ int ossl_provider_add_to_store(OSSL_PROVIDER *prov, OSSL_PROVIDER **actualprov,
     }
 #else
     if (sprov == NULL) {
+        prov->store = store;
         sprov = lh_OSSL_PROVIDER_insert(store->providers, prov);
         lh_OSSL_PROVIDER_obj_put(sprov);
-        prov->store = store;
+        inserted = 1;
         if (!create_provider_children(prov)) {
             sprov = lh_OSSL_PROVIDER_delete(store->providers, prov);
-            lh_OSSL_PROVIDER_obj_put(sprov);
+            lh_OSSL_PROVIDER_obj_put(prov);
             goto err;
         }
         if (!retain_fallbacks)
             store->use_fallbacks = 0;
+    } else {
+        found = 1;
     }
 #endif
 
@@ -746,7 +803,10 @@ int ossl_provider_add_to_store(OSSL_PROVIDER *prov, OSSL_PROVIDER **actualprov,
             return 0;
         }
         *actualprov = actualtmp;
+    } else if (inserted == 1) {
+        ossl_provider_up_ref(prov);
     }
+
 
 #if 0 /*NH*/
     if (idx >= 0) {
@@ -786,71 +846,32 @@ int ossl_provider_add_to_store(OSSL_PROVIDER *prov, OSSL_PROVIDER **actualprov,
 void ossl_provider_free(OSSL_PROVIDER *prov)
 {
     OSSL_PROVIDER *sprov;
+    int hashref, ref;
+    CRYPTO_REF_COUNT *cnt;
 
     if (prov != NULL) {
         int ref = 0;
-
         CRYPTO_DOWN_REF(&prov->refcnt, &ref);
-        fprintf(stderr, "Freeing provider %s with refcount %d\n", prov->name, ref);
-        /*
-         * When the refcount drops to zero, we clean up the provider.
-         * Note that this also does teardown, which may seem late,
-         * considering that init happens on first activation.  However,
-         * there may be other structures hanging on to the provider after
-         * the last deactivation and may therefore need full access to the
-         * provider's services.  Therefore, we deinit late.
-         */
-        if (ref == 0) {
-
-            /*
-             * remove it from the hash table
-             */
-            if (prov->store) {
+        if (prov->store) {
+            hashref = lh_OSSL_PROVIDER_obj_put(prov);
+            /* last external ref */
+            if (hashref == 1) {
                 sprov = lh_OSSL_PROVIDER_delete(prov->store->providers, prov);
                 lh_OSSL_PROVIDER_obj_put(sprov);
             }
-            if (prov->flag_initialized) {
-                ossl_provider_teardown(prov);
-#ifndef OPENSSL_NO_ERR
-# ifndef FIPS_MODULE
-                if (prov->error_strings != NULL) {
-                    ERR_unload_strings(prov->error_lib, prov->error_strings);
-                    OPENSSL_free(prov->error_strings);
-                    prov->error_strings = NULL;
-                }
-# endif
-#endif
-                OPENSSL_free(prov->operation_bits);
-                prov->operation_bits = NULL;
-                prov->operation_bits_sz = 0;
-                prov->flag_initialized = 0;
+#ifndef FIPS_MODULE
+            else if (prov->ischild) {
+                ossl_provider_free_parent(prov, 0);
             }
-
+#endif
+        } else {
+            if (ref == 0)
+                _ossl_provider_free_lhash(prov);
 #ifndef FIPS_MODULE
-            /*
-             * We deregister thread handling whether or not the provider was
-             * initialized. If init was attempted but was not successful then
-             * the provider may still have registered a thread handler.
-             */
-            ossl_init_thread_deregister(prov);
-            DSO_free(prov->module);
+            else if (prov->ischild)
+                ossl_provider_free_parent(prov, 0);
 #endif
-            OPENSSL_free(prov->name);
-            OPENSSL_free(prov->path);
-            sk_INFOPAIR_pop_free(prov->parameters, infopair_free);
-            CRYPTO_THREAD_lock_free(prov->opbits_lock);
-            CRYPTO_THREAD_lock_free(prov->flag_lock);
-#ifndef HAVE_ATOMICS
-            CRYPTO_THREAD_lock_free(prov->activatecnt_lock);
-#endif
-            CRYPTO_FREE_REF(&prov->refcnt);
-            OPENSSL_free(prov);
         }
-#ifndef FIPS_MODULE
-        else if (prov->ischild) {
-            ossl_provider_free_parent(prov, 0);
-        }
-#endif
     }
 }
 
@@ -1489,6 +1510,7 @@ static int provider_activate_fallbacks(struct provider_store_st *store)
 #else
         sprov = lh_OSSL_PROVIDER_insert(store->providers, prov);
         lh_OSSL_PROVIDER_obj_put(sprov);
+        lh_OSSL_PROVIDER_obj_get(prov);
 #endif
         activated_fallback_count++;
     }
