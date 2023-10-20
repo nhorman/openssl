@@ -512,8 +512,6 @@ OSSL_PROVIDER *ossl_provider_find(OSSL_LIB_CTX *libctx, const char *name,
 #endif
 
         tmpl.name = (char *)name;
-        if (!CRYPTO_THREAD_write_lock(store->lock))
-            return NULL;
 #if 0
         sk_OSSL_PROVIDER_sort(store->providers);
         if ((i = sk_OSSL_PROVIDER_find(store->providers, &tmpl)) != -1)
@@ -521,7 +519,6 @@ OSSL_PROVIDER *ossl_provider_find(OSSL_LIB_CTX *libctx, const char *name,
 #else
         prov = lh_OSSL_PROVIDER_retrieve(store->providers, &tmpl);
 #endif
-        CRYPTO_THREAD_unlock(store->lock);
 #if 0 /*NH*/
         if (prov != NULL && !ossl_provider_up_ref(prov))
             prov = NULL;
@@ -745,9 +742,6 @@ int ossl_provider_add_to_store(OSSL_PROVIDER *prov, OSSL_PROVIDER **actualprov,
     if ((store = get_provider_store(prov->libctx)) == NULL)
         return 0;
 
-    if (!CRYPTO_THREAD_write_lock(store->lock))
-        return 0;
-
     tmpl.name = (char *)prov->name;
 #if 0 /*NH*/
     idx = sk_OSSL_PROVIDER_find(store->providers, &tmpl);
@@ -797,8 +791,6 @@ int ossl_provider_add_to_store(OSSL_PROVIDER *prov, OSSL_PROVIDER **actualprov,
     }
 #endif
 
-    CRYPTO_THREAD_unlock(store->lock);
-
     if (actualprov != NULL) {
         if (!ossl_provider_up_ref(actualtmp)) {
             ERR_raise(ERR_LIB_CRYPTO, ERR_R_CRYPTO_LIB);
@@ -842,7 +834,6 @@ int ossl_provider_add_to_store(OSSL_PROVIDER *prov, OSSL_PROVIDER **actualprov,
     return 1;
 
  err:
-    CRYPTO_THREAD_unlock(store->lock);
     return 0;
 }
 
@@ -1468,15 +1459,6 @@ static int provider_activate_fallbacks(struct provider_store_st *store)
     if (!use_fallbacks)
         return 1;
 
-    if (!CRYPTO_THREAD_write_lock(store->lock))
-        return 0;
-    /* Check again, just in case another thread changed it */
-    use_fallbacks = store->use_fallbacks;
-    if (!use_fallbacks) {
-        CRYPTO_THREAD_unlock(store->lock);
-        return 1;
-    }
-
     for (p = ossl_predefined_providers; p->name != NULL; p++) {
         OSSL_PROVIDER *prov = NULL;
 
@@ -1523,7 +1505,6 @@ static int provider_activate_fallbacks(struct provider_store_st *store)
         ret = 1;
     }
  err:
-    CRYPTO_THREAD_unlock(store->lock);
     return ret;
 }
 
@@ -1551,12 +1532,6 @@ int ossl_provider_doall_activated(OSSL_LIB_CTX *ctx,
     if (!provider_activate_fallbacks(store))
         return 0;
 
-    /*
-     * Under lock, grab a copy of the provider list and up_ref each
-     * provider so that they don't disappear underneath us.
-     */
-    if (!CRYPTO_THREAD_read_lock(store->lock))
-        return 0;
 #if 0 /*NH*/
     provs = sk_OSSL_PROVIDER_dup(store->providers);
     if (provs == NULL) {
@@ -1564,10 +1539,7 @@ int ossl_provider_doall_activated(OSSL_LIB_CTX *ctx,
         return 0;
     }
 #else
-    /*
-     * Do this under the hash table write lock
-     */
-    lh_OSSL_PROVIDER_doall_arg(store->providers, gather_providers_cb, &cbinfo, 1);
+    lh_OSSL_PROVIDER_doall_arg(store->providers, gather_providers_cb, &cbinfo, 0);
 #endif
 
 #if 0 /*NH*/
@@ -1611,7 +1583,6 @@ int ossl_provider_doall_activated(OSSL_LIB_CTX *ctx,
         }
         CRYPTO_THREAD_unlock(prov->flag_lock);
     }
-    CRYPTO_THREAD_unlock(store->lock);
 
     /*
      * Now, we sweep through all providers not under lock
@@ -1637,7 +1608,6 @@ int ossl_provider_doall_activated(OSSL_LIB_CTX *ctx,
     goto finish;
 
  err_unlock:
-    CRYPTO_THREAD_unlock(store->lock);
  finish:
     /*
      * The pop_free call doesn't do what we want on an error condition. We
