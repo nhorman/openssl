@@ -1508,6 +1508,63 @@ static int provider_activate_fallbacks(struct provider_store_st *store)
     return ret;
 }
 
+struct doall_activated_info {
+    void *cbdata;
+    int (*cb)(OSSL_PROVIDER *prov, void *cbdata);
+    int ret;
+};
+
+static void doall_activated_cb(OSSL_PROVIDER *prov, void *data)
+{
+    int ref = 0;
+    int deactivate = 0;;
+    struct doall_activated_info *cbinfo = data;
+
+    /*
+     * If there was a prior failure
+     * skip everything else
+     */
+    if (!cbinfo->ret)
+        return;
+
+    if (!CRYPTO_THREAD_read_lock(prov->flag_lock)) {
+            cbinfo->ret = 0;
+            return;
+    }
+    if (prov->flag_activated) {
+        if (!CRYPTO_atomic_add(&prov->activatecnt, 1, &ref,
+                               prov->activatecnt_lock)) {
+                CRYPTO_THREAD_unlock(prov->flag_lock);
+                cbinfo->ret = 0;
+                goto out;
+        }
+        deactivate = 1;
+    }
+    CRYPTO_THREAD_unlock(prov->flag_lock);
+
+    cbinfo->ret = cbinfo->cb(prov, cbinfo->cbdata);
+    if (deactivate == 1) {
+        if (!CRYPTO_atomic_add(&prov->activatecnt, -1, &ref,
+                                   prov->activatecnt_lock)) {
+            cbinfo->ret = 0;
+            goto out;
+        }
+        if (ref < 1) {
+            /*
+             * Looks like we need to deactivate properly. We could just have
+             * done this originally, but it involves taking a write lock so
+             * we avoid it. We up the count again and do a full deactivation
+             */
+            if (CRYPTO_atomic_add(&prov->activatecnt, 1, &ref,
+                                  prov->activatecnt_lock))
+                provider_deactivate(prov, 0, 1);
+            else
+                cbinfo->ret = 0;
+        }
+    }
+out:
+}
+
 int ossl_provider_doall_activated(OSSL_LIB_CTX *ctx,
                                   int (*cb)(OSSL_PROVIDER *provider,
                                             void *cbdata),
@@ -1516,7 +1573,7 @@ int ossl_provider_doall_activated(OSSL_LIB_CTX *ctx,
     int ret = 0, curr, max, ref = 0, i;
     struct provider_store_st *store = get_provider_store(ctx);
     STACK_OF(OSSL_PROVIDER) *provs = NULL;
-    struct gather_providers_info cbinfo = { 0, NULL };
+    struct doall_activated_info cbinfo = { cbdata, cb, 1 };
 
 #if !defined(FIPS_MODULE) && !defined(OPENSSL_NO_AUTOLOAD_CONFIG)
     /*
@@ -1532,132 +1589,9 @@ int ossl_provider_doall_activated(OSSL_LIB_CTX *ctx,
     if (!provider_activate_fallbacks(store))
         return 0;
 
-#if 0 /*NH*/
-    provs = sk_OSSL_PROVIDER_dup(store->providers);
-    if (provs == NULL) {
-        CRYPTO_THREAD_unlock(store->lock);
-        return 0;
-    }
-#else
-    lh_OSSL_PROVIDER_doall_arg(store->providers, gather_providers_cb, &cbinfo, 0);
-#endif
+    lh_OSSL_PROVIDER_doall_arg(store->providers, doall_activated_cb, &cbinfo, 0);
 
-#if 0 /*NH*/
-    max = sk_OSSL_PROVIDER_num(provs);
-#endif
-
-    /*
-     * We work backwards through the stack so that we can safely delete items
-     * as we go.
-     */
-#if 0 /*NH*/
-    for (curr = max - 1; curr >= 0; curr--) {
-        OSSL_PROVIDER *prov = sk_OSSL_PROVIDER_value(provs, curr);
-#else
-    for (i = 0; i < cbinfo.num_providers; i++) {
-        OSSL_PROVIDER *prov = cbinfo.list[i];
-#endif
-
-        if (!CRYPTO_THREAD_read_lock(prov->flag_lock))
-            goto err_unlock;
-        if (prov->flag_activated) {
-            /*
-             * It's already activated, but we up the activated count to ensure
-             * it remains activated until after we've called the user callback.
-             * In theory this could mean the parent provider goes inactive,
-             * whilst still activated in the child for a short period. That's ok.
-             */
-            if (!CRYPTO_atomic_add(&prov->activatecnt, 1, &ref,
-                                   prov->activatecnt_lock)) {
-                CRYPTO_THREAD_unlock(prov->flag_lock);
-                goto err_unlock;
-            }
-        } else {
-#if 0 /*NH*/
-            sk_OSSL_PROVIDER_delete(provs, curr);
-            max--;
-#else
-            lh_OSSL_PROVIDER_obj_put(cbinfo.list[i]);
-            cbinfo.list[i] = NULL;
-#endif
-        }
-        CRYPTO_THREAD_unlock(prov->flag_lock);
-    }
-
-    /*
-     * Now, we sweep through all providers not under lock
-     */
-#if 0
-    for (curr = 0; curr < max; curr++) {
-        OSSL_PROVIDER *prov = sk_OSSL_PROVIDER_value(provs, curr);
-#else
-    for (i = 0; i < cbinfo.num_providers; i++) {
-        OSSL_PROVIDER *prov = cbinfo.list[i];
-
-        if (prov == NULL)
-            continue;
-#endif
-        if (!cb(prov, cbdata)) {
-            curr = -1;
-            goto finish;
-        }
-    }
-    curr = -1;
-
-    ret = 1;
-    goto finish;
-
- err_unlock:
- finish:
-    /*
-     * The pop_free call doesn't do what we want on an error condition. We
-     * either start from the first item in the stack, or part way through if
-     * we only processed some of the items.
-     */
-#if 0 /*NH*/
-    for (curr++; curr < max; curr++) {
-        OSSL_PROVIDER *prov = sk_OSSL_PROVIDER_value(provs, curr);
-#else
-    for (i = 0; i < cbinfo.num_providers; i++) {
-        OSSL_PROVIDER *prov = cbinfo.list[i];
-
-        if (prov == NULL)
-            continue;
-#endif
-
-        if (!CRYPTO_atomic_add(&prov->activatecnt, -1, &ref,
-                               prov->activatecnt_lock)) {
-            ret = 0;
-            continue;
-        }
-        if (ref < 1) {
-            /*
-             * Looks like we need to deactivate properly. We could just have
-             * done this originally, but it involves taking a write lock so
-             * we avoid it. We up the count again and do a full deactivation
-             */
-            if (CRYPTO_atomic_add(&prov->activatecnt, 1, &ref,
-                                  prov->activatecnt_lock))
-                provider_deactivate(prov, 0, 1);
-            else
-                ret = 0;
-        }
-        /*
-         * Not much we can do if this assert ever fails. So we don't use
-         * ossl_assert here.
-         */
-        assert(ref > 0);
-    }
-#if 0 /*NH*/
-    sk_OSSL_PROVIDER_free(provs);
-#else
-    for (i = 0; i < cbinfo.num_providers; i++) {
-        if (cbinfo.list[i] != NULL)
-            lh_OSSL_PROVIDER_obj_put(cbinfo.list[i]);
-    }
-    OPENSSL_free(cbinfo.list);
-#endif
-    return ret;
+    return cbinfo.ret;
 }
 
 int OSSL_PROVIDER_available(OSSL_LIB_CTX *libctx, const char *name)
