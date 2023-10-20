@@ -1590,15 +1590,6 @@ int ossl_provider_doall_activated(OSSL_LIB_CTX *ctx,
             goto err_unlock;
         if (prov->flag_activated) {
             /*
-             * We call CRYPTO_UP_REF directly rather than ossl_provider_up_ref
-             * to avoid upping the ref count on the parent provider, which we
-             * must not do while holding locks.
-             */
-            if (CRYPTO_UP_REF(&prov->refcnt, &ref) <= 0) {
-                CRYPTO_THREAD_unlock(prov->flag_lock);
-                goto err_unlock;
-            }
-            /*
              * It's already activated, but we up the activated count to ensure
              * it remains activated until after we've called the user callback.
              * In theory this could mean the parent provider goes inactive,
@@ -1606,7 +1597,6 @@ int ossl_provider_doall_activated(OSSL_LIB_CTX *ctx,
              */
             if (!CRYPTO_atomic_add(&prov->activatecnt, 1, &ref,
                                    prov->activatecnt_lock)) {
-                CRYPTO_DOWN_REF(&prov->refcnt, &ref);
                 CRYPTO_THREAD_unlock(prov->flag_lock);
                 goto err_unlock;
             }
@@ -1681,15 +1671,6 @@ int ossl_provider_doall_activated(OSSL_LIB_CTX *ctx,
                 provider_deactivate(prov, 0, 1);
             else
                 ret = 0;
-        }
-        /*
-         * As above where we did the up-ref, we don't call ossl_provider_free
-         * to avoid making upcalls. There should always be at least one ref
-         * to the provider in the store, so this should never drop to 0.
-         */
-        if (!CRYPTO_DOWN_REF(&prov->refcnt, &ref)) {
-            ret = 0;
-            continue;
         }
         /*
          * Not much we can do if this assert ever fails. So we don't use
