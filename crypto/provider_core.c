@@ -269,6 +269,7 @@ static void gather_providers_cb(OSSL_PROVIDER *prov, void *data)
     cbinfo->list = OPENSSL_realloc(cbinfo->list, sizeof(OSSL_PROVIDER *)*(cbinfo->num_providers + 1));
     cbinfo->list[cbinfo->num_providers] = prov;
     cbinfo->num_providers++;
+    lh_OSSL_PROVIDER_obj_get(prov);
 }
 
 /*-
@@ -373,8 +374,10 @@ void ossl_provider_store_free(void *vstore)
     sk_OSSL_PROVIDER_pop_free(store->providers, provider_deactivate_free);
 #else
     lh_OSSL_PROVIDER_doall_arg(store->providers, gather_providers_cb, &cbinfo, 1);
-    for (i = 0; i < cbinfo.num_providers; i++)
+    for (i = 0; i < cbinfo.num_providers; i++) {
+        lh_OSSL_PROVIDER_obj_put(cbinfo.list[i]);
         provider_deactivate_free(cbinfo.list[i]);
+    }
     OPENSSL_free(cbinfo.list);
     lh_OSSL_PROVIDER_doall(store->providers, check_orphaned_providers, 0);
     lh_OSSL_PROVIDER_free(store->providers);
@@ -1612,6 +1615,7 @@ int ossl_provider_doall_activated(OSSL_LIB_CTX *ctx,
             sk_OSSL_PROVIDER_delete(provs, curr);
             max--;
 #else
+            lh_OSSL_PROVIDER_obj_put(cbinfo.list[i]);
             cbinfo.list[i] = NULL;
 #endif
         }
@@ -1696,6 +1700,10 @@ int ossl_provider_doall_activated(OSSL_LIB_CTX *ctx,
 #if 0 /*NH*/
     sk_OSSL_PROVIDER_free(provs);
 #else
+    for (i = 0; i < cbinfo.num_providers; i++) {
+        if (cbinfo.list[i] != NULL)
+            lh_OSSL_PROVIDER_obj_put(cbinfo.list[i]);
+    }
     OPENSSL_free(cbinfo.list);
 #endif
     return ret;
@@ -2032,6 +2040,8 @@ static int ossl_provider_register_child_cb(const OSSL_CORE_HANDLE *handle,
     }
     CRYPTO_THREAD_unlock(store->lock);
 
+    for (i = 0; i < cbinfo.num_providers; i++)
+        lh_OSSL_PROVIDER_obj_put(cbinfo.list[i]);
     OPENSSL_free(cbinfo.list);
 
     return ret;
