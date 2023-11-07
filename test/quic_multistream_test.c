@@ -1015,6 +1015,8 @@ static int run_script_worker(struct helper *h, const struct script_op *script,
     size_t repeat_stack_limit[REPEAT_SLOTS];
     size_t repeat_stack_len = 0;
 
+    fprintf(stderr, "Starting run_script_worker with thread_idx %d\n", thread_idx);
+
     if (!TEST_true(helper_local_init(hl, h, thread_idx)))
         goto out;
 
@@ -1073,11 +1075,13 @@ static int run_script_worker(struct helper *h, const struct script_op *script,
 
         if (thread_idx < 0) {
             if (!h->blocking) {
+                fprintf(stderr, "Updating tserver tick\n");
                 ossl_quic_tserver_tick(h->s);
             }
 #if defined(OPENSSL_THREADS)
             else if (h->blocking && !h->server_thread.ready) {
                 ossl_crypto_mutex_lock(h->server_thread.m);
+                fprintf(stderr, "Signaling readiness of server\n");
                 h->server_thread.ready = 1;
                 ossl_crypto_condvar_signal(h->server_thread.c);
                 ossl_crypto_mutex_unlock(h->server_thread.m);
@@ -1118,6 +1122,7 @@ static int run_script_worker(struct helper *h, const struct script_op *script,
             }
         }
 
+        fprintf(stderr, "Handling operation %d\n", op->op);
         switch (op->op) {
         case OPK_END:
             if (!TEST_size_t_eq(repeat_stack_len, 0))
@@ -1232,8 +1237,9 @@ static int run_script_worker(struct helper *h, const struct script_op *script,
                 int ret;
 
                 connect_started = 1;
-
+                fprintf(stderr, "Issuing SSL_connect\n");
                 ret = SSL_connect(h->c_conn);
+                fprintf(stderr, "SSL_connect returns %d\n", ret);
                 if (!check_consistent_want(c_tgt, ret))
                     goto out;
                 if (ret != 1) {
