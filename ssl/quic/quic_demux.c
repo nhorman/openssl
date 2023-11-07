@@ -395,6 +395,8 @@ static int demux_recv(QUIC_DEMUX *demux)
     QUIC_URXE *urxe = ossl_list_urxe_head(&demux->urx_free), *unext;
     OSSL_TIME now;
 
+    fprintf(stderr, "In demux_recv with demux->net_bio %p\n", (void *)demux->net_bio);
+
     /* This should never be called when we have any pending URXE. */
     assert(ossl_list_urxe_head(&demux->urx_pending) == NULL);
     assert(urxe->demux_state == URXE_DEMUX_STATE_FREE);
@@ -438,18 +440,22 @@ static int demux_recv(QUIC_DEMUX *demux)
     }
 
     ERR_set_mark();
+    fprintf(stderr, "Calling BIO_recvmmsg for %lu messages\n", i);
     if (!BIO_recvmmsg(demux->net_bio, msg, sizeof(BIO_MSG), i, 0, &rd)) {
         if (BIO_err_is_non_fatal(ERR_peek_last_error())) {
             /* Transient error, clear the error and stop. */
             ERR_pop_to_mark();
+            fprintf(stderr, "BIO_recvmmsg transient fail\n");
             return QUIC_DEMUX_PUMP_RES_TRANSIENT_FAIL;
         } else {
             /* Non-transient error, do not clear the error. */
             ERR_clear_last_mark();
+            fprintf(stderr, "BIO_recvmmsg permanent fail\n");
             return QUIC_DEMUX_PUMP_RES_PERMANENT_FAIL;
         }
     }
 
+    fprintf(stderr, "BIO_recvmmsg gets %lu frames\n", rd);
     ERR_clear_last_mark();
     now = demux->now != NULL ? demux->now(demux->now_arg) : ossl_time_zero();
 
@@ -466,6 +472,7 @@ static int demux_recv(QUIC_DEMUX *demux)
         urxe->demux_state = URXE_DEMUX_STATE_PENDING;
     }
 
+    fprintf(stderr, "dmux_recvmsg returns ok\n");
     return QUIC_DEMUX_PUMP_RES_OK;
 }
 
