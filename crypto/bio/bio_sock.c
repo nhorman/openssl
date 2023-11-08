@@ -354,14 +354,17 @@ int BIO_socket_nbio(int s, int mode)
     int l;
 
     l = mode;
+    fprintf(stderr, "In BIO_socket_nbio for sd %d\n", s);
 # ifdef FIONBIO
     l = mode;
 
     ret = BIO_socket_ioctl(s, FIONBIO, &l);
+    fprintf(stderr, "Calling FIONBIO: %x\n", l);
 # elif defined(F_GETFL) && defined(F_SETFL) && (defined(O_NONBLOCK) || defined(FNDELAY))
     /* make sure this call always pushes an error level; BIO_socket_ioctl() does so, so we do too. */
 
     l = fcntl(s, F_GETFL, 0);
+    fprintf(stderr, "Caling F_GETFL: %x\n", l);
     if (l == -1) {
         ERR_raise_data(ERR_LIB_SYS, get_last_sys_error(),
                        "calling fcntl()");
@@ -374,11 +377,14 @@ int BIO_socket_nbio(int s, int mode)
 #  endif
         if (mode) {
 #  if defined(O_NONBLOCK)
+            fprintf(stderr, "setting O_NONBLOCK\n");
             l |= O_NONBLOCK;
 #  else
+            fprintf(stderr, "setting FNDELAY\n");
             l |= FNDELAY; /* BSD4.x */
 #  endif
         }
+        fprintf(stderr, "Calling set flags %x\n", l);
         ret = fcntl(s, F_SETFL, l);
 
         if (ret < 0) {
@@ -391,6 +397,7 @@ int BIO_socket_nbio(int s, int mode)
     ERR_raise(ERR_LIB_BIO, ERR_R_PASSED_INVALID_ARGUMENT);
 # endif
 
+    fprintf(stderr, "nbio returns %d\n", ret == 0);
     return (ret == 0);
 }
 
