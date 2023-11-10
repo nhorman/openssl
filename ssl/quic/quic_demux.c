@@ -6,7 +6,7 @@
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
  */
-
+#include <fcntl.h>
 #include "internal/quic_demux.h"
 #include "internal/quic_wire_pkt.h"
 #include "internal/common.h"
@@ -393,6 +393,7 @@ static int demux_recv(QUIC_DEMUX *demux)
     BIO_MSG msg[DEMUX_MAX_MSGS_PER_CALL];
     size_t rd, i;
     int sd;
+    int l;
     QUIC_URXE *urxe = ossl_list_urxe_head(&demux->urx_free), *unext;
     OSSL_TIME now;
 
@@ -443,6 +444,12 @@ static int demux_recv(QUIC_DEMUX *demux)
     ERR_set_mark();
     BIO_get_fd(demux->net_bio, &sd);
     fprintf(stderr, "Calling BIO_recvmmsg for %lu messages on sd %d\n", i, sd);
+    if (sd == -1) {
+        fprintf(stderr, "SD UNSET for BIO\n");
+    } else {
+        l = fcntl(sd, F_GETFL, 0);
+        fprintf(stderr, "BIO_recvmmsg operates on socket %d with flags %x\n", sd, l);
+    }
     if (!BIO_recvmmsg(demux->net_bio, msg, sizeof(BIO_MSG), i, 0, &rd)) {
         if (BIO_err_is_non_fatal(ERR_peek_last_error())) {
             /* Transient error, clear the error and stop. */

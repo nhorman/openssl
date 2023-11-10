@@ -1525,6 +1525,7 @@ static int dgram_recvmmsg(BIO *b, BIO_MSG *msg,
     socklen_t slen;
 # endif
 
+    fprintf(stderr, "in dgram_recvmmsg with num_msg %lu\n", num_msg);
     if (num_msg == 0) {
         *num_processed = 0;
         return 1;
@@ -1538,6 +1539,7 @@ static int dgram_recvmmsg(BIO *b, BIO_MSG *msg,
 # endif
 
 # if M_METHOD == M_METHOD_RECVMMSG
+    fprintf(stderr, "RX method is M_METHOD_RECVMMSG\n");
     /*
      * In the sendmmsg/recvmmsg case, we need to allocate our translated struct
      * msghdr and struct iovec on the stack to support multithreaded use. Thus
@@ -1548,6 +1550,7 @@ static int dgram_recvmmsg(BIO *b, BIO_MSG *msg,
     if (num_msg > BIO_MAX_MSGS_PER_CALL)
         num_msg = BIO_MAX_MSGS_PER_CALL;
 
+    fprintf(stderr, "Translating messages to iovecs\n");
     for (i = 0; i < num_msg; ++i) {
         translate_msg(b, &mh[i].msg_hdr, &iov[i],
                       control[i], &BIO_MSG_N(msg, stride, i));
@@ -1561,7 +1564,9 @@ static int dgram_recvmmsg(BIO *b, BIO_MSG *msg,
     }
 
     /* Do the batch */
+    fprintf(stderr, "Calling recvmmsg on sd %d num_msg %lu, flags %x\n", b->num, num_msg, sysflags);
     ret = recvmmsg(b->num, mh, num_msg, sysflags, NULL);
+    fprintf(stderr, "recvmmsg returns %d\n", ret);
     if (ret < 0) {
         ERR_raise(ERR_LIB_SYS, get_last_socket_error());
         *num_processed = 0;
@@ -1591,9 +1596,11 @@ static int dgram_recvmmsg(BIO *b, BIO_MSG *msg,
     return 1;
 
 # elif M_METHOD == M_METHOD_RECVMSG
+    fprintf(stderr, "method is M_METHOD_RECVMSG\n");
     /*
      * If recvmsg is available, use it.
      */
+    fprintf(stderr, "translating messages to iovecs\n");
     translate_msg(b, &mh, &iov, control, msg);
 
     /* If local address was requested, it must have been enabled */
@@ -1607,7 +1614,9 @@ static int dgram_recvmmsg(BIO *b, BIO_MSG *msg,
         return 0;
     }
 
+    fprintf(stderr, "Calling recvmsg on sd %d, flags %x\n", b->num, sysflags);
     l = recvmsg(b->num, &mh, sysflags);
+    fprintf(stderr, "Recvmsg returns %d\n", l);
     if (l < 0) {
         ERR_raise(ERR_LIB_SYS, get_last_socket_error());
         *num_processed = 0;
@@ -1646,6 +1655,7 @@ static int dgram_recvmmsg(BIO *b, BIO_MSG *msg,
     return 1;
 
 # elif M_METHOD == M_METHOD_RECVFROM || M_METHOD == M_METHOD_WSARECVMSG
+    fprintf(stderr, "Method is recvfrom\n");
 #  if M_METHOD == M_METHOD_WSARECVMSG
     if (bio_WSARecvMsg != NULL) {
         /* WSARecvMsg-based implementation for Windows. */
@@ -1706,6 +1716,7 @@ static int dgram_recvmmsg(BIO *b, BIO_MSG *msg,
     }
 
     slen = sizeof(*msg[0].peer);
+    fprintf(stderr, "Calling recvfrom on sd %d\n", b->num);
     ret = recvfrom(b->num, msg[0].data,
 #  if defined(OPENSSL_SYS_WINDOWS)
                    (int)msg[0].data_len,
@@ -1715,6 +1726,7 @@ static int dgram_recvmmsg(BIO *b, BIO_MSG *msg,
                    sysflags,
                    msg[0].peer != NULL ? &msg[0].peer->sa : NULL,
                    msg[0].peer != NULL ? &slen : NULL);
+    fprintf(stderr, "recvfrom returns %d\n", ret);
     if (ret <= 0) {
         ERR_raise(ERR_LIB_SYS, get_last_socket_error());
         return 0;
