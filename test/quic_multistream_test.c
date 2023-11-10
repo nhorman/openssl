@@ -1261,7 +1261,7 @@ static int run_script_worker(struct helper *h, const struct script_op *script,
 
                 if (!TEST_ptr(c_tgt))
                     goto out;
-
+                fprintf(stderr, "Sending data\n");
                 r = SSL_write_ex(c_tgt, op->arg0, op->arg1, &bytes_written);
                 if (!TEST_true(r)
                     || !check_consistent_want(c_tgt, r)
