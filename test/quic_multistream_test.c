@@ -707,6 +707,8 @@ static int helper_init(struct helper *h, int free_order, int blocking,
     if (!TEST_int_gt(BIO_ADDR_rawport(h->s_net_bio_addr), 0))
         goto err;
 
+    fprintf(stderr, "SD %d bound to ip %x port %d\n", h->s_fd, ina.s_addr, BIO_ADDR_rawport(h->s_net_bio_addr));
+
     if  (!TEST_ptr(h->s_net_bio = h->s_net_bio_own = BIO_new_dgram(h->s_fd, 0)))
         goto err;
 
