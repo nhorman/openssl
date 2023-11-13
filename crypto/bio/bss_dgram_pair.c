@@ -832,6 +832,7 @@ static size_t dgram_pair_read_inner(struct bio_dgram_pair_st *b, uint8_t *buf, s
 {
     size_t total_read = 0;
 
+    fprintf(stderr, "In dgram_pair_read_inner\n");
     /*
      * We repeat pops from the ring buffer for as long as we have more
      * application *buffer to fill until we fail. We may not be able to pop
@@ -842,6 +843,7 @@ static size_t dgram_pair_read_inner(struct bio_dgram_pair_st *b, uint8_t *buf, s
         uint8_t *src_buf = NULL;
         size_t src_len = 0;
 
+        fprintf(stderr, "In dgram_pair_read_inner loop\n");
         /*
          * There are two BIO instances, each with a ringbuf. We read from the
          * peer ringbuf and write to our own ringbuf.
@@ -864,6 +866,7 @@ static size_t dgram_pair_read_inner(struct bio_dgram_pair_st *b, uint8_t *buf, s
         sz          -= src_len;
     }
 
+    printf(stderr, "exiting dgram_pair_read_inner\n");
     return total_read;
 }
 
@@ -1153,6 +1156,7 @@ static size_t dgram_pair_write_inner(struct bio_dgram_pair_st *b,
 {
     size_t total_written = 0;
 
+    fprintf(stderr, "In dgram_pair_write_inner\n");
     /*
      * We repeat pushes to the ring buffer for as long as we have data until we
      * fail. We may not be able to push in one operation if the ring buffer
@@ -1162,6 +1166,7 @@ static size_t dgram_pair_write_inner(struct bio_dgram_pair_st *b,
         size_t dst_len;
         uint8_t *dst_buf;
 
+        fprintf(stderr, "In dgram_pair_write_inner loop\n");
         /*
          * There are two BIO instances, each with a ringbuf. We write to our own
          * ringbuf and read from the peer ringbuf.
@@ -1190,6 +1195,7 @@ static size_t dgram_pair_write_inner(struct bio_dgram_pair_st *b,
         total_written   += dst_len;
     }
 
+    fprintf(stderr, "Exiting dgram_pair_write_inner\n");
     return total_written;
 }
 
