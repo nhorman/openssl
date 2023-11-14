@@ -353,11 +353,13 @@ static int file_gets(BIO *bp, char *buf, int size)
         if (!UP_fgets(buf, size, bp->ptr))
             goto err;
     } else {
+        fprintf(stderr, "Calling fgets\n");
         if (!fgets(buf, size, (FILE *)bp->ptr))
             goto err;
     }
     if (buf[0] != '\0')
         ret = strlen(buf);
+    fprintf(stderr, "fgets returns %s\n", buf);
  err:
     return ret;
 }
