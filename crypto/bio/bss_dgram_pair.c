@@ -866,7 +866,7 @@ static size_t dgram_pair_read_inner(struct bio_dgram_pair_st *b, uint8_t *buf, s
         sz          -= src_len;
     }
 
-    printf(stderr, "exiting dgram_pair_read_inner\n");
+    fprintf(stderr, "exiting dgram_pair_read_inner\n");
     return total_read;
 }
 
