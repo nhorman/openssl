@@ -98,6 +98,7 @@ DEFINE_RUN_ONCE_STATIC(ossl_init_register_atexit)
     if (_onexit(win32atexit) == NULL)
         return 0;
 # else
+    fprintf(stderr, "ATEXIT: REGISTERING OPENSSL_cleanup\n");
     if (atexit(OPENSSL_cleanup) != 0)
         return 0;
 # endif
@@ -352,6 +353,7 @@ void OPENSSL_cleanup(void)
         return;
     stopped = 1;
 
+    fprintf(stderr, "ATEXIT: CALLING OPENSSL_cleanup\n");
     /*
      * Thread stop may not get automatically called by the thread library for
      * the very last thread in some situations, so call it directly.

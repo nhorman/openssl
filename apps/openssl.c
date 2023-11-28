@@ -161,6 +161,7 @@ static STACK_OF(tracedata) *trace_data_stack;
 
 static void cleanup_trace(void)
 {
+    fprintf(stderr, "ATEXIT: CALLING CLEANUP_TRACE\n");
     sk_tracedata_pop_free(trace_data_stack, tracedata_free);
 }
 
@@ -199,6 +200,7 @@ static void setup_trace(const char *str)
      * as late as possible, i.e. after the TRACE code has done its cleanup
      * (which happens last in OPENSSL_cleanup).
      */
+    fprintf(stderr, "ATEXIT: REGISTERING for CLEANUP_TRACE\n");
     atexit(cleanup_trace);
 
     trace_data_stack = sk_tracedata_new_null();

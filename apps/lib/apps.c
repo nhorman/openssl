@@ -2778,6 +2778,7 @@ static int stdin_sock = -1;
 
 static void close_stdin_sock(void)
 {
+    fprintf(stderr, "ATEXIT: close_stdin_sock\n");
     TerminalSocket (TERM_SOCK_DELETE, &stdin_sock);
 }
 
@@ -2785,6 +2786,7 @@ int fileno_stdin(void)
 {
     if (stdin_sock == -1) {
         TerminalSocket(TERM_SOCK_CREATE, &stdin_sock);
+        fprintf(stderr, "ATEXIT: REGISTERING FOR CLOSE_STDIN_SOCK\n");
         atexit(close_stdin_sock);
     }
 
