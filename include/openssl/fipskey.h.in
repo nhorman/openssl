@@ -20,6 +20,7 @@ extern "C" {
 /*
  * The FIPS validation HMAC key, usable as an array initializer.
  */
+/* *INDENT-OFF* */
 #define FIPS_KEY_ELEMENTS \
     {- join(', ', map { "0x$_" } unpack("(A2)*", $config{FIPSKEY})) -}
 
@@ -27,7 +28,7 @@ extern "C" {
  * The FIPS validation key, as a string.
  */
 #define FIPS_KEY_STRING "{- $config{FIPSKEY} -}"
-
+/* *INDENT-ON* */
 # ifdef  __cplusplus
 }
 # endif

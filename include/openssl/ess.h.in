@@ -9,9 +9,11 @@
  * https://www.openssl.org/source/license.html
  */
 
+/* *INDENT-OFF* */
 {-
 use OpenSSL::stackhash qw(generate_stack_macros);
 -}
+/* *INDENT-ON* */
 
 #ifndef OPENSSL_ESS_H
 # define OPENSSL_ESS_H
@@ -32,17 +34,19 @@ typedef struct ESS_issuer_serial ESS_ISSUER_SERIAL;
 typedef struct ESS_cert_id ESS_CERT_ID;
 typedef struct ESS_signing_cert ESS_SIGNING_CERT;
 
+/* *INDENT-OFF* */
 {-
     generate_stack_macros("ESS_CERT_ID");
 -}
-
+/* *INDENT-ON* */
 
 typedef struct ESS_signing_cert_v2_st ESS_SIGNING_CERT_V2;
 typedef struct ESS_cert_id_v2_st ESS_CERT_ID_V2;
-
+/* *INDENT-OFF* */
 {-
     generate_stack_macros("ESS_CERT_ID_V2");
 -}
+/* *INDENT-ON* */
 
 DECLARE_ASN1_ALLOC_FUNCTIONS(ESS_ISSUER_SERIAL)
 DECLARE_ASN1_ENCODE_FUNCTIONS_only(ESS_ISSUER_SERIAL, ESS_ISSUER_SERIAL)

@@ -8,10 +8,11 @@
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
  */
-
+/* *INDENT-OFF* */
 {-
 use OpenSSL::stackhash qw(generate_stack_macros);
 -}
+/* *INDENT-ON* */
 
 #ifndef OPENSSL_CMS_H
 # define OPENSSL_CMS_H
@@ -43,13 +44,14 @@ typedef struct CMS_ReceiptRequest_st CMS_ReceiptRequest;
 typedef struct CMS_Receipt_st CMS_Receipt;
 typedef struct CMS_RecipientEncryptedKey_st CMS_RecipientEncryptedKey;
 typedef struct CMS_OtherKeyAttribute_st CMS_OtherKeyAttribute;
-
+/* *INDENT-OFF* */
 {-
     generate_stack_macros("CMS_SignerInfo")
     .generate_stack_macros("CMS_RecipientEncryptedKey")
     .generate_stack_macros("CMS_RecipientInfo")
     .generate_stack_macros("CMS_RevocationInfoChoice");
 -}
+/* *INDENT-ON* */
 
 DECLARE_ASN1_ITEM(CMS_EnvelopedData)
 DECLARE_ASN1_ALLOC_FUNCTIONS(CMS_SignedData)

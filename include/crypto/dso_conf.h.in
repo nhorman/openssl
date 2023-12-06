@@ -1,3 +1,4 @@
+/* *INDENT-OFF* */
 {- join("\n",map { "/* $_ */" } @autowarntext) -}
 /*
  * Copyright 2016-2021 The OpenSSL Project Authors. All Rights Reserved.
@@ -31,3 +32,4 @@
     join("\n", map { "# define $_" } @macros); -}
 # define DSO_EXTENSION "{- platform->dsoext() -}"
 #endif
+/* *INDENT-ON* */

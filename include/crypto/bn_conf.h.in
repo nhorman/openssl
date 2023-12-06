@@ -1,3 +1,4 @@
+/* *INDENT-OFF* */
 {- join("\n",map { "/* $_ */" } @autowarntext) -}
 /*
  * Copyright 2016-2021 The OpenSSL Project Authors. All Rights Reserved.
@@ -24,5 +25,5 @@
 {- $config{b64l} ? "#define" : "#undef" -} SIXTY_FOUR_BIT_LONG
 {- $config{b64}  ? "#define" : "#undef" -} SIXTY_FOUR_BIT
 {- $config{b32}  ? "#define" : "#undef" -} THIRTY_TWO_BIT
-
+/* *INDENT-ON* */
 #endif

@@ -8,10 +8,11 @@
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
  */
-
+/* *INDENT-OFF* */
 {-
 use OpenSSL::stackhash qw(generate_stack_macros);
 -}
+/* *INDENT-ON* */
 
 #ifndef OPENSSL_UI_H
 # define OPENSSL_UI_H
@@ -290,10 +291,11 @@ const UI_METHOD *UI_null(void);
  * about a string or a prompt, including test data for a verification prompt.
  */
 typedef struct ui_string_st UI_STRING;
-
+/* *INDENT-OFF* */
 {-
     generate_stack_macros("UI_STRING");
 -}
+/* *INDENT-ON* */
 
 /*
  * The different types of strings that are currently supported. This is only

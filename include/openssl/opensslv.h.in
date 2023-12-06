@@ -17,6 +17,7 @@
 extern "C" {
 # endif
 
+/* *INDENT-OFF* */
 /*
  * SECTION 1: VERSION DATA.  These will change for each release
  */
@@ -104,6 +105,7 @@ extern "C" {
 # ifdef  __cplusplus
 }
 # endif
+/* *INDENT-ON* */
 
 # include <openssl/macros.h>
 # ifndef OPENSSL_NO_DEPRECATED_3_0

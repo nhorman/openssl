@@ -10,10 +10,11 @@
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
  */
-
+/* *INDENT-OFF* */
 {-
 use OpenSSL::stackhash qw(generate_stack_macros generate_const_stack_macros);
 -}
+/* *INDENT-ON* */
 
 #ifndef OPENSSL_SSL_H
 # define OPENSSL_SSL_H
@@ -246,9 +247,11 @@ typedef struct srtp_protection_profile_st {
     const char *name;
     unsigned long id;
 } SRTP_PROTECTION_PROFILE;
+/* *INDENT-OFF* */
 {-
     generate_stack_macros("SRTP_PROTECTION_PROFILE");
 -}
+/* *INDENT-ON* */
 
 
 typedef int (*tls_session_ticket_ext_cb_fn)(SSL *s, const unsigned char *data,
@@ -974,10 +977,12 @@ extern "C" {
  * These need to be after the above set of includes due to a compiler bug
  * in VisualStudio 2015
  */
+/* *INDENT-OFF* */
 {-
     generate_const_stack_macros("SSL_CIPHER")
     .generate_stack_macros("SSL_COMP");
 -}
+/* *INDENT-ON* */
 
 /* compatibility */
 # define SSL_set_app_data(s,arg)         (SSL_set_ex_data(s,0,(char *)(arg)))
