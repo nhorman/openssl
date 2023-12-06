@@ -104,7 +104,7 @@ int PKCS5_PBE_keyivgen_ex(EVP_CIPHER_CTX *cctx, const char *pass, int passlen,
     OPENSSL_cleanse(key, EVP_MAX_KEY_LENGTH);
     OPENSSL_cleanse(iv, EVP_MAX_IV_LENGTH);
     rv = 1;
- err:
+err:
     EVP_KDF_CTX_free(kctx);
     PBEPARAM_free(pbe);
     return rv;

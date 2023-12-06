@@ -61,13 +61,15 @@ extern "C" {
 # define SSL3_CK_DHE_DSS_DES_64_CBC_SHA          0x03000012
 # define SSL3_CK_EDH_DSS_DES_64_CBC_SHA          SSL3_CK_DHE_DSS_DES_64_CBC_SHA
 # define SSL3_CK_DHE_DSS_DES_192_CBC3_SHA        0x03000013
-# define SSL3_CK_EDH_DSS_DES_192_CBC3_SHA        SSL3_CK_DHE_DSS_DES_192_CBC3_SHA
+# define SSL3_CK_EDH_DSS_DES_192_CBC3_SHA \
+        SSL3_CK_DHE_DSS_DES_192_CBC3_SHA
 # define SSL3_CK_DHE_RSA_DES_40_CBC_SHA          0x03000014
 # define SSL3_CK_EDH_RSA_DES_40_CBC_SHA          SSL3_CK_DHE_RSA_DES_40_CBC_SHA
 # define SSL3_CK_DHE_RSA_DES_64_CBC_SHA          0x03000015
 # define SSL3_CK_EDH_RSA_DES_64_CBC_SHA          SSL3_CK_DHE_RSA_DES_64_CBC_SHA
 # define SSL3_CK_DHE_RSA_DES_192_CBC3_SHA        0x03000016
-# define SSL3_CK_EDH_RSA_DES_192_CBC3_SHA        SSL3_CK_DHE_RSA_DES_192_CBC3_SHA
+# define SSL3_CK_EDH_RSA_DES_192_CBC3_SHA \
+        SSL3_CK_DHE_RSA_DES_192_CBC3_SHA
 
 # define SSL3_CK_ADH_RC4_40_MD5                  0x03000017
 # define SSL3_CK_ADH_RC4_128_MD5                 0x03000018
@@ -79,9 +81,12 @@ extern "C" {
 # define SSL3_RFC_RSA_NULL_MD5                   "TLS_RSA_WITH_NULL_MD5"
 # define SSL3_RFC_RSA_NULL_SHA                   "TLS_RSA_WITH_NULL_SHA"
 # define SSL3_RFC_RSA_DES_192_CBC3_SHA           "TLS_RSA_WITH_3DES_EDE_CBC_SHA"
-# define SSL3_RFC_DHE_DSS_DES_192_CBC3_SHA       "TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA"
-# define SSL3_RFC_DHE_RSA_DES_192_CBC3_SHA       "TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA"
-# define SSL3_RFC_ADH_DES_192_CBC_SHA            "TLS_DH_anon_WITH_3DES_EDE_CBC_SHA"
+# define SSL3_RFC_DHE_DSS_DES_192_CBC3_SHA \
+        "TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA"
+# define SSL3_RFC_DHE_RSA_DES_192_CBC3_SHA \
+        "TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA"
+# define SSL3_RFC_ADH_DES_192_CBC_SHA \
+        "TLS_DH_anon_WITH_3DES_EDE_CBC_SHA"
 # define SSL3_RFC_RSA_IDEA_128_SHA               "TLS_RSA_WITH_IDEA_CBC_SHA"
 # define SSL3_RFC_RSA_RC4_128_MD5                "TLS_RSA_WITH_RC4_128_MD5"
 # define SSL3_RFC_RSA_RC4_128_SHA                "TLS_RSA_WITH_RC4_128_SHA"
@@ -141,14 +146,14 @@ extern "C" {
 # define SSL3_HM_HEADER_LENGTH                  4
 
 # ifndef SSL3_ALIGN_PAYLOAD
- /*
-  * Some will argue that this increases memory footprint, but it's not
-  * actually true. Point is that malloc has to return at least 64-bit aligned
-  * pointers, meaning that allocating 5 bytes wastes 3 bytes in either case.
-  * Suggested pre-gaping simply moves these wasted bytes from the end of
-  * allocated region to its front, but makes data payload aligned, which
-  * improves performance:-)
-  */
+/*
+ * Some will argue that this increases memory footprint, but it's not
+ * actually true. Point is that malloc has to return at least 64-bit aligned
+ * pointers, meaning that allocating 5 bytes wastes 3 bytes in either case.
+ * Suggested pre-gaping simply moves these wasted bytes from the end of
+ * allocated region to its front, but makes data payload aligned, which
+ * improves performance:-)
+ */
 #  define SSL3_ALIGN_PAYLOAD                     8
 # else
 #  if (SSL3_ALIGN_PAYLOAD&(SSL3_ALIGN_PAYLOAD-1))!=0
@@ -192,7 +197,7 @@ extern "C" {
  */
 
 # define SSL3_RT_SEND_MAX_ENCRYPTED_OVERHEAD \
-                        (SSL_RT_MAX_CIPHER_BLOCK_SIZE + SSL3_RT_MAX_MD_SIZE)
+        (SSL_RT_MAX_CIPHER_BLOCK_SIZE + SSL3_RT_MAX_MD_SIZE)
 
 /* If compression isn't used don't include the compression overhead */
 
@@ -200,14 +205,14 @@ extern "C" {
 #  define SSL3_RT_MAX_COMPRESSED_LENGTH           SSL3_RT_MAX_PLAIN_LENGTH
 # else
 #  define SSL3_RT_MAX_COMPRESSED_LENGTH   \
-            (SSL3_RT_MAX_PLAIN_LENGTH+SSL3_RT_MAX_COMPRESSED_OVERHEAD)
+        (SSL3_RT_MAX_PLAIN_LENGTH+SSL3_RT_MAX_COMPRESSED_OVERHEAD)
 # endif
 # define SSL3_RT_MAX_ENCRYPTED_LENGTH    \
-            (SSL3_RT_MAX_ENCRYPTED_OVERHEAD+SSL3_RT_MAX_COMPRESSED_LENGTH)
+        (SSL3_RT_MAX_ENCRYPTED_OVERHEAD+SSL3_RT_MAX_COMPRESSED_LENGTH)
 # define SSL3_RT_MAX_TLS13_ENCRYPTED_LENGTH \
-            (SSL3_RT_MAX_PLAIN_LENGTH + SSL3_RT_MAX_TLS13_ENCRYPTED_OVERHEAD)
+        (SSL3_RT_MAX_PLAIN_LENGTH + SSL3_RT_MAX_TLS13_ENCRYPTED_OVERHEAD)
 # define SSL3_RT_MAX_PACKET_SIZE         \
-            (SSL3_RT_MAX_ENCRYPTED_LENGTH+SSL3_RT_HEADER_LENGTH)
+        (SSL3_RT_MAX_ENCRYPTED_LENGTH+SSL3_RT_HEADER_LENGTH)
 
 # define SSL3_MD_CLIENT_FINISHED_CONST   "\x43\x4C\x4E\x54"
 # define SSL3_MD_SERVER_FINISHED_CONST   "\x53\x52\x56\x52"
@@ -295,7 +300,8 @@ extern "C" {
 
 /* Set if we encrypt then mac instead of usual mac then encrypt */
 # define TLS1_FLAGS_ENCRYPT_THEN_MAC_READ        0x0100
-# define TLS1_FLAGS_ENCRYPT_THEN_MAC             TLS1_FLAGS_ENCRYPT_THEN_MAC_READ
+# define TLS1_FLAGS_ENCRYPT_THEN_MAC \
+        TLS1_FLAGS_ENCRYPT_THEN_MAC_READ
 
 /* Set if extended master secret extension received from peer */
 # define TLS1_FLAGS_RECEIVED_EXTMS               0x0200

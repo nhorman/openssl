@@ -33,7 +33,7 @@
 #endif
 
 #ifndef S_ISDIR
-# define S_ISDIR(a) (((a) & S_IFMT) == S_IFDIR)
+# define S_ISDIR(a) (((a)&S_IFMT) == S_IFDIR)
 #endif
 
 /*
@@ -259,7 +259,7 @@ static int def_load_bio(CONF *conf, BIO *in, long *line)
         }
         p = &(buff->data[bufnum]);
         *p = '\0';
- read_retry:
+read_retry:
         if (in != NULL && BIO_gets(in, p, CONFBUFSIZE - 1) < 0)
             goto err;
         p[CONFBUFSIZE - 1] = '\0';
@@ -356,7 +356,7 @@ static int def_load_bio(CONF *conf, BIO *in, long *line)
             s++;
             start = eat_ws(conf, s);
             ss = start;
- again:
+again:
             end = eat_alpha_numeric(conf, ss);
             p = eat_ws(conf, end);
             if (*p != ']') {
@@ -435,10 +435,11 @@ static int def_load_bio(CONF *conf, BIO *in, long *line)
                  */
                 continue;
             } else if (CHECK_AND_SKIP_PREFIX(pname, ".include")
-                && (p != pname || *p == '=')) {
+                       && (p != pname || *p == '=')) {
                 char *include = NULL;
                 BIO *next;
-                const char *include_dir = ossl_safe_getenv("OPENSSL_CONF_INCLUDE");
+                const char *include_dir = ossl_safe_getenv(
+                    "OPENSSL_CONF_INCLUDE");
                 char *include_path = NULL;
 
 #ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
@@ -485,7 +486,7 @@ static int def_load_bio(CONF *conf, BIO *in, long *line)
                 }
 
                 if (conf->flag_abspath
-                        && !ossl_is_absolute_path(include_path)) {
+                    && !ossl_is_absolute_path(include_path)) {
                     ERR_raise(ERR_LIB_CONF, CONF_R_RELATIVE_PATH);
                     OPENSSL_free(include_path);
                     goto err;
@@ -567,7 +568,7 @@ static int def_load_bio(CONF *conf, BIO *in, long *line)
     sk_BIO_free(biosk);
     return 1;
 
- err:
+err:
     BUF_MEM_free(buff);
     OPENSSL_free(section);
     /*
@@ -792,7 +793,7 @@ static int str_copy(CONF *conf, char *section, char **pto, char *from)
     *pto = buf->data;
     OPENSSL_free(buf);
     return 1;
- err:
+err:
     BUF_MEM_free(buf);
     return 0;
 }

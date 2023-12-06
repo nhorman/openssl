@@ -277,7 +277,7 @@ int BIO_get_accept_socket(char *host, int bind_mode)
         s = INVALID_SOCKET;
     }
 
- err:
+err:
     BIO_ADDRINFO_free(res);
     OPENSSL_free(h);
     OPENSSL_free(p);
@@ -324,7 +324,7 @@ int BIO_accept(int sock, char **ip_port)
         OPENSSL_free(port);
     }
 
- end:
+end:
     return ret;
 }
 # endif
@@ -358,7 +358,8 @@ int BIO_socket_nbio(int s, int mode)
     l = mode;
 
     ret = BIO_socket_ioctl(s, FIONBIO, &l);
-# elif defined(F_GETFL) && defined(F_SETFL) && (defined(O_NONBLOCK) || defined(FNDELAY))
+# elif defined(F_GETFL) && defined(F_SETFL) && (defined(O_NONBLOCK) || \
+    defined(FNDELAY))
     /* make sure this call always pushes an error level; BIO_socket_ioctl() does so, so we do too. */
 
     l = fcntl(s, F_GETFL, 0);
@@ -398,7 +399,7 @@ int BIO_sock_info(int sock,
                   enum BIO_sock_info_type type, union BIO_sock_info_u *info)
 {
     switch (type) {
-    case BIO_SOCK_INFO_ADDRESS:
+        case BIO_SOCK_INFO_ADDRESS:
         {
             socklen_t addr_len;
             int ret = 0;
@@ -417,9 +418,9 @@ int BIO_sock_info(int sock,
             }
         }
         break;
-    default:
-        ERR_raise(ERR_LIB_BIO, BIO_R_UNKNOWN_INFO_TYPE);
-        return 0;
+        default:
+            ERR_raise(ERR_LIB_BIO, BIO_R_UNKNOWN_INFO_TYPE);
+            return 0;
     }
     return 1;
 }

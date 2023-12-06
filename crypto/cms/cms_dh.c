@@ -64,13 +64,13 @@ static int dh_cms_set_peerkey(EVP_PKEY_CTX *pctx,
 
     pkpeer = EVP_PKEY_new();
     if (pkpeer == NULL
-            || !EVP_PKEY_copy_parameters(pkpeer, pk)
-            || !EVP_PKEY_set1_encoded_public_key(pkpeer, buf, plen))
+        || !EVP_PKEY_copy_parameters(pkpeer, pk)
+        || !EVP_PKEY_set1_encoded_public_key(pkpeer, buf, plen))
         goto err;
 
     if (EVP_PKEY_derive_set_peer(pctx, pkpeer) > 0)
         rv = 1;
- err:
+err:
     ASN1_INTEGER_free(public_key);
     BN_free(bnpub);
     OPENSSL_free(buf);
@@ -104,7 +104,7 @@ static int dh_cms_set_shared_info(EVP_PKEY_CTX *pctx, CMS_RecipientInfo *ri)
     }
 
     if (EVP_PKEY_CTX_set_dh_kdf_type(pctx, EVP_PKEY_DH_KDF_X9_42) <= 0
-            || EVP_PKEY_CTX_set_dh_kdf_md(pctx, EVP_sha1()) <= 0)
+        || EVP_PKEY_CTX_set_dh_kdf_md(pctx, EVP_sha1()) <= 0)
         goto err;
 
     if (alg->parameter->type != V_ASN1_SEQUENCE)
@@ -123,7 +123,7 @@ static int dh_cms_set_shared_info(EVP_PKEY_CTX *pctx, CMS_RecipientInfo *ri)
         goto err;
 
     kekcipher = EVP_CIPHER_fetch(pctx->libctx, name, pctx->propquery);
-    if (kekcipher == NULL 
+    if (kekcipher == NULL
         || EVP_CIPHER_get_mode(kekcipher) != EVP_CIPH_WRAP_MODE)
         goto err;
     if (!EVP_EncryptInit_ex(kekctx, kekcipher, NULL, NULL, NULL))
@@ -136,7 +136,8 @@ static int dh_cms_set_shared_info(EVP_PKEY_CTX *pctx, CMS_RecipientInfo *ri)
         goto err;
     /* Use OBJ_nid2obj to ensure we use built in OID that isn't freed */
     if (EVP_PKEY_CTX_set0_dh_kdf_oid(pctx,
-                                     OBJ_nid2obj(EVP_CIPHER_get_type(kekcipher)))
+                                     OBJ_nid2obj(EVP_CIPHER_get_type(
+                                                     kekcipher)))
         <= 0)
         goto err;
 
@@ -152,7 +153,7 @@ static int dh_cms_set_shared_info(EVP_PKEY_CTX *pctx, CMS_RecipientInfo *ri)
     dukm = NULL;
 
     rv = 1;
- err:
+err:
     X509_ALGOR_free(kekalg);
     EVP_CIPHER_free(kekcipher);
     OPENSSL_free(dukm);
@@ -321,7 +322,7 @@ static int dh_cms_encrypt(CMS_RecipientInfo *ri)
     if (!rv)
         ASN1_STRING_free(wrap_str);
 
- err:
+err:
     OPENSSL_free(penc);
     X509_ALGOR_free(wrap_alg);
     OPENSSL_free(dukm);

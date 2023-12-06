@@ -64,12 +64,12 @@ static long tls_corrupt_ctrl(BIO *bio, int cmd, long num, void *ptr)
         return 0;
 
     switch (cmd) {
-    case BIO_CTRL_DUP:
-        ret = 0L;
-        break;
-    default:
-        ret = BIO_ctrl(next, cmd, num, ptr);
-        break;
+        case BIO_CTRL_DUP:
+            ret = 0L;
+            break;
+        default:
+            ret = BIO_ctrl(next, cmd, num, ptr);
+            break;
     }
     return ret;
 }
@@ -145,8 +145,8 @@ static int setup_cipher_list(void)
     int i, j, numciphers = 0;
 
     if (!TEST_ptr(ctx = SSL_CTX_new(TLS_server_method()))
-            || !TEST_ptr(ssl = SSL_new(ctx))
-            || !TEST_ptr(sk_ciphers = SSL_get1_supported_ciphers(ssl)))
+        || !TEST_ptr(ssl = SSL_new(ctx))
+        || !TEST_ptr(sk_ciphers = SSL_get1_supported_ciphers(ssl)))
         goto err;
 
     /*
@@ -201,11 +201,11 @@ static int test_ssl_corrupt(int testidx)
         return 0;
 
     if (!TEST_true(SSL_CTX_set_dh_auto(sctx, 1))
-            || !TEST_true(SSL_CTX_set_cipher_list(cctx, cipher_list[testidx]))
-            || !TEST_true(SSL_CTX_set_ciphersuites(cctx, ""))
-            || !TEST_ptr(ciphers = SSL_CTX_get_ciphers(cctx))
-            || !TEST_int_eq(sk_SSL_CIPHER_num(ciphers), 1)
-            || !TEST_ptr(currcipher = sk_SSL_CIPHER_value(ciphers, 0)))
+        || !TEST_true(SSL_CTX_set_cipher_list(cctx, cipher_list[testidx]))
+        || !TEST_true(SSL_CTX_set_ciphersuites(cctx, ""))
+        || !TEST_ptr(ciphers = SSL_CTX_get_ciphers(cctx))
+        || !TEST_int_eq(sk_SSL_CIPHER_num(ciphers), 1)
+        || !TEST_ptr(currcipher = sk_SSL_CIPHER_value(ciphers, 0)))
         goto end;
 
     /*
@@ -244,7 +244,7 @@ static int test_ssl_corrupt(int testidx)
     } while (ERR_GET_REASON(err) != SSL_R_DECRYPTION_FAILED_OR_BAD_RECORD_MAC);
 
     testresult = 1;
- end:
+end:
     SSL_free(server);
     SSL_free(client);
     SSL_CTX_free(sctx);
@@ -264,7 +264,7 @@ int setup_tests(void)
     }
 
     if (!TEST_ptr(cert = test_get_argument(0))
-            || !TEST_ptr(privkey = test_get_argument(1)))
+        || !TEST_ptr(privkey = test_get_argument(1)))
         return 0;
 
     n = setup_cipher_list();

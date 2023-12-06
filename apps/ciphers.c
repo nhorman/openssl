@@ -108,67 +108,67 @@ int ciphers_main(int argc, char **argv)
     prog = opt_init(argc, argv, ciphers_options);
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_EOF:
-        case OPT_ERR:
- opthelp:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto end;
-        case OPT_HELP:
-            opt_help(ciphers_options);
-            ret = 0;
-            goto end;
-        case OPT_V:
-            verbose = 1;
-            break;
-        case OPT_UPPER_V:
-            verbose = Verbose = 1;
-            break;
-        case OPT_S:
-            use_supported = 1;
-            break;
-        case OPT_STDNAME:
-            stdname = verbose = 1;
-            break;
-        case OPT_CONVERT:
-            convert = opt_arg();
-            break;
-        case OPT_SSL3:
-            min_version = SSL3_VERSION;
-            max_version = SSL3_VERSION;
-            break;
-        case OPT_TLS1:
-            min_version = TLS1_VERSION;
-            max_version = TLS1_VERSION;
-            break;
-        case OPT_TLS1_1:
-            min_version = TLS1_1_VERSION;
-            max_version = TLS1_1_VERSION;
-            break;
-        case OPT_TLS1_2:
-            min_version = TLS1_2_VERSION;
-            max_version = TLS1_2_VERSION;
-            break;
-        case OPT_TLS1_3:
-            min_version = TLS1_3_VERSION;
-            max_version = TLS1_3_VERSION;
-            break;
-        case OPT_PSK:
-#ifndef OPENSSL_NO_PSK
-            psk = 1;
-#endif
-            break;
-        case OPT_SRP:
-#ifndef OPENSSL_NO_SRP
-            srp = 1;
-#endif
-            break;
-        case OPT_CIPHERSUITES:
-            ciphersuites = opt_arg();
-            break;
-        case OPT_PROV_CASES:
-            if (!opt_provider(o))
+            case OPT_EOF:
+            case OPT_ERR:
+opthelp:
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
                 goto end;
-            break;
+            case OPT_HELP:
+                opt_help(ciphers_options);
+                ret = 0;
+                goto end;
+            case OPT_V:
+                verbose = 1;
+                break;
+            case OPT_UPPER_V:
+                verbose = Verbose = 1;
+                break;
+            case OPT_S:
+                use_supported = 1;
+                break;
+            case OPT_STDNAME:
+                stdname = verbose = 1;
+                break;
+            case OPT_CONVERT:
+                convert = opt_arg();
+                break;
+            case OPT_SSL3:
+                min_version = SSL3_VERSION;
+                max_version = SSL3_VERSION;
+                break;
+            case OPT_TLS1:
+                min_version = TLS1_VERSION;
+                max_version = TLS1_VERSION;
+                break;
+            case OPT_TLS1_1:
+                min_version = TLS1_1_VERSION;
+                max_version = TLS1_1_VERSION;
+                break;
+            case OPT_TLS1_2:
+                min_version = TLS1_2_VERSION;
+                max_version = TLS1_2_VERSION;
+                break;
+            case OPT_TLS1_3:
+                min_version = TLS1_3_VERSION;
+                max_version = TLS1_3_VERSION;
+                break;
+            case OPT_PSK:
+#ifndef OPENSSL_NO_PSK
+                psk = 1;
+#endif
+                break;
+            case OPT_SRP:
+#ifndef OPENSSL_NO_SRP
+                srp = 1;
+#endif
+                break;
+            case OPT_CIPHERSUITES:
+                ciphersuites = opt_arg();
+                break;
+            case OPT_PROV_CASES:
+                if (!opt_provider(o))
+                    goto end;
+                break;
         }
     }
 
@@ -256,10 +256,12 @@ int ciphers_main(int argc, char **argv)
                 int id3 = (int)(id & 0xffL);
 
                 if ((id & 0xff000000L) == 0x03000000L)
-                    BIO_printf(bio_out, "          0x%02X,0x%02X - ", id2, id3); /* SSL3
-                                                                                  * cipher */
+                    BIO_printf(bio_out, "          0x%02X,0x%02X - ", id2, id3);
+                /* SSL3
+                 * cipher */
                 else
-                    BIO_printf(bio_out, "0x%02X,0x%02X,0x%02X,0x%02X - ", id0, id1, id2, id3); /* whatever */
+                    BIO_printf(bio_out, "0x%02X,0x%02X,0x%02X,0x%02X - ", id0,
+                               id1, id2, id3);                                                 /* whatever */
             }
             if (stdname) {
                 const char *nm = SSL_CIPHER_standard_name(c);
@@ -273,9 +275,9 @@ int ciphers_main(int argc, char **argv)
 
     ret = 0;
     goto end;
- err:
+err:
     ERR_print_errors(bio_err);
- end:
+end:
     if (use_supported)
         sk_SSL_CIPHER_free(sk);
     SSL_CTX_free(ctx);

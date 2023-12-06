@@ -36,16 +36,16 @@ static int gen_init(EVP_PKEY_CTX *ctx, int operation)
         goto legacy;
 
     switch (operation) {
-    case EVP_PKEY_OP_PARAMGEN:
-        ctx->op.keymgmt.genctx =
-            evp_keymgmt_gen_init(ctx->keymgmt,
-                                 OSSL_KEYMGMT_SELECT_ALL_PARAMETERS, NULL);
-        break;
-    case EVP_PKEY_OP_KEYGEN:
-        ctx->op.keymgmt.genctx =
-            evp_keymgmt_gen_init(ctx->keymgmt, OSSL_KEYMGMT_SELECT_KEYPAIR,
-                                 NULL);
-        break;
+        case EVP_PKEY_OP_PARAMGEN:
+            ctx->op.keymgmt.genctx =
+                evp_keymgmt_gen_init(ctx->keymgmt,
+                                     OSSL_KEYMGMT_SELECT_ALL_PARAMETERS, NULL);
+            break;
+        case EVP_PKEY_OP_KEYGEN:
+            ctx->op.keymgmt.genctx =
+                evp_keymgmt_gen_init(ctx->keymgmt, OSSL_KEYMGMT_SELECT_KEYPAIR,
+                                     NULL);
+            break;
     }
 
     if (ctx->op.keymgmt.genctx == NULL)
@@ -54,7 +54,7 @@ static int gen_init(EVP_PKEY_CTX *ctx, int operation)
         ret = 1;
     goto end;
 
- legacy:
+legacy:
 #ifdef FIPS_MODULE
     goto not_supported;
 #else
@@ -67,25 +67,25 @@ static int gen_init(EVP_PKEY_CTX *ctx, int operation)
 
     ret = 1;
     switch (operation) {
-    case EVP_PKEY_OP_PARAMGEN:
-        if (ctx->pmeth->paramgen_init != NULL)
-            ret = ctx->pmeth->paramgen_init(ctx);
-        break;
-    case EVP_PKEY_OP_KEYGEN:
-        if (ctx->pmeth->keygen_init != NULL)
-            ret = ctx->pmeth->keygen_init(ctx);
-        break;
+        case EVP_PKEY_OP_PARAMGEN:
+            if (ctx->pmeth->paramgen_init != NULL)
+                ret = ctx->pmeth->paramgen_init(ctx);
+            break;
+        case EVP_PKEY_OP_KEYGEN:
+            if (ctx->pmeth->keygen_init != NULL)
+                ret = ctx->pmeth->keygen_init(ctx);
+            break;
     }
 #endif
 
- end:
+end:
     if (ret <= 0 && ctx != NULL) {
         evp_pkey_ctx_free_old_ops(ctx);
         ctx->operation = EVP_PKEY_OP_UNDEFINED;
     }
     return ret;
 
- not_supported:
+not_supported:
     ERR_raise(ERR_LIB_EVP, EVP_R_OPERATION_NOT_SUPPORTED_FOR_THIS_KEYTYPE);
     ret = -2;
     goto end;
@@ -186,9 +186,9 @@ int EVP_PKEY_generate(EVP_PKEY_CTX *ctx, EVP_PKEY **ppkey)
      * so we do not need to save it, just check it.
      */
     ret = ret
-        && (evp_keymgmt_util_gen(*ppkey, ctx->keymgmt, ctx->op.keymgmt.genctx,
-                                 ossl_callback_to_pkey_gencb, ctx)
-            != NULL);
+          && (evp_keymgmt_util_gen(*ppkey, ctx->keymgmt, ctx->op.keymgmt.genctx,
+                                   ossl_callback_to_pkey_gencb, ctx)
+              != NULL);
 
     ctx->keygen_info = NULL;
 
@@ -205,7 +205,7 @@ int EVP_PKEY_generate(EVP_PKEY_CTX *ctx, EVP_PKEY **ppkey)
 
     goto end;
 
- legacy:
+legacy:
 #ifdef FIPS_MODULE
     goto not_supported;
 #else
@@ -221,18 +221,18 @@ int EVP_PKEY_generate(EVP_PKEY_CTX *ctx, EVP_PKEY **ppkey)
         goto not_accessible;
 
     switch (ctx->operation) {
-    case EVP_PKEY_OP_PARAMGEN:
-        ret = ctx->pmeth->paramgen(ctx, *ppkey);
-        break;
-    case EVP_PKEY_OP_KEYGEN:
-        ret = ctx->pmeth->keygen(ctx, *ppkey);
-        break;
-    default:
-        goto not_supported;
+        case EVP_PKEY_OP_PARAMGEN:
+            ret = ctx->pmeth->paramgen(ctx, *ppkey);
+            break;
+        case EVP_PKEY_OP_KEYGEN:
+            ret = ctx->pmeth->keygen(ctx, *ppkey);
+            break;
+        default:
+            goto not_supported;
     }
 #endif
 
- end:
+end:
     if (ret <= 0) {
         if (allocated_pkey != NULL)
             *ppkey = NULL;
@@ -240,16 +240,16 @@ int EVP_PKEY_generate(EVP_PKEY_CTX *ctx, EVP_PKEY **ppkey)
     }
     return ret;
 
- not_supported:
+not_supported:
     ERR_raise(ERR_LIB_EVP, EVP_R_OPERATION_NOT_SUPPORTED_FOR_THIS_KEYTYPE);
     ret = -2;
     goto end;
- not_initialized:
+not_initialized:
     ERR_raise(ERR_LIB_EVP, EVP_R_OPERATION_NOT_INITIALIZED);
     ret = -1;
     goto end;
 #ifndef FIPS_MODULE
- not_accessible:
+not_accessible:
     ERR_raise(ERR_LIB_EVP, EVP_R_INACCESSIBLE_DOMAIN_PARAMETERS);
     ret = -1;
     goto end;
@@ -327,7 +327,7 @@ EVP_PKEY *EVP_PKEY_new_mac_key(int type, ENGINE *e,
         goto merr;
     if (EVP_PKEY_keygen(mac_ctx, &mac_key) <= 0)
         goto merr;
- merr:
+merr:
     EVP_PKEY_CTX_free(mac_ctx);
     return mac_key;
 }
@@ -348,7 +348,7 @@ static int fromdata_init(EVP_PKEY_CTX *ctx, int operation)
     ctx->operation = operation;
     return 1;
 
- not_supported:
+not_supported:
     if (ctx != NULL)
         ctx->operation = EVP_PKEY_OP_UNDEFINED;
     ERR_raise(ERR_LIB_EVP, EVP_R_OPERATION_NOT_SUPPORTED_FOR_THIS_KEYTYPE);
@@ -382,7 +382,8 @@ int EVP_PKEY_fromdata(EVP_PKEY_CTX *ctx, EVP_PKEY **ppkey, int selection,
         return -1;
     }
 
-    keydata = evp_keymgmt_util_fromdata(*ppkey, ctx->keymgmt, selection, params);
+    keydata =
+        evp_keymgmt_util_fromdata(*ppkey, ctx->keymgmt, selection, params);
     if (keydata == NULL) {
         if (allocated_pkey != NULL) {
             *ppkey = NULL;

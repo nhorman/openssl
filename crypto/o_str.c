@@ -65,7 +65,7 @@ size_t OPENSSL_strnlen(const char *str, size_t maxlen)
 {
     const char *p;
 
-    for (p = str; maxlen-- != 0 && *p != CH_ZERO; ++p) ;
+    for (p = str; maxlen-- != 0 && *p != CH_ZERO; ++p);
 
     return p - str;
 }
@@ -97,38 +97,38 @@ int OPENSSL_hexchar2int(unsigned char c)
 #endif
 
     switch (c) {
-    case '0':
-        return 0;
-    case '1':
-        return 1;
-    case '2':
-        return 2;
-    case '3':
-        return 3;
-    case '4':
-          return 4;
-    case '5':
-          return 5;
-    case '6':
-          return 6;
-    case '7':
-          return 7;
-    case '8':
-          return 8;
-    case '9':
-          return 9;
-    case 'a': case 'A':
-          return 0x0A;
-    case 'b': case 'B':
-          return 0x0B;
-    case 'c': case 'C':
-          return 0x0C;
-    case 'd': case 'D':
-          return 0x0D;
-    case 'e': case 'E':
-          return 0x0E;
-    case 'f': case 'F':
-          return 0x0F;
+        case '0':
+            return 0;
+        case '1':
+            return 1;
+        case '2':
+            return 2;
+        case '3':
+            return 3;
+        case '4':
+            return 4;
+        case '5':
+            return 5;
+        case '6':
+            return 6;
+        case '7':
+            return 7;
+        case '8':
+            return 8;
+        case '9':
+            return 9;
+        case 'a': case 'A':
+            return 0x0A;
+        case 'b': case 'B':
+            return 0x0B;
+        case 'c': case 'C':
+            return 0x0C;
+        case 'd': case 'D':
+            return 0x0D;
+        case 'e': case 'E':
+            return 0x0E;
+        case 'f': case 'F':
+            return 0x0F;
     }
     return -1;
 }
@@ -314,7 +314,7 @@ int openssl_strerror_r(int errnum, char *buf, size_t buflen)
         OPENSSL_strlcpy(buf, err, buflen);
     return 1;
 #elif (defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 200112L) || \
-      (defined(_XOPEN_SOURCE) && _XOPEN_SOURCE >= 600)
+    (defined(_XOPEN_SOURCE) && _XOPEN_SOURCE >= 600)
     /*
      * We can use "real" strerror_r. The OpenSSL version differs in that it
      * gives 1 on success and 0 on failure for consistency with other OpenSSL

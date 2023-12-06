@@ -76,10 +76,10 @@ struct object_st {
 #define p2_init 6.283                           /* Magic number */
 /* Stolen from evp_data, BLAKE2s256 test */
 #define p3_init                                 \
-    "4142434445464748494a4b4c4d4e4f50"          \
-    "5152535455565758595a616263646566"          \
-    "6768696a6b6c6d6e6f70717273747576"          \
-    "7778797a30313233343536373839"
+        "4142434445464748494a4b4c4d4e4f50"          \
+        "5152535455565758595a616263646566"          \
+        "6768696a6b6c6d6e6f70717273747576"          \
+        "7778797a30313233343536373839"
 #define p4_init "BLAKE2s256"                    /* Random string */
 #define p5_init "Hellow World"                  /* Random string */
 #define p6_init OPENSSL_FULL_VERSION_STR        /* Static string */
@@ -112,7 +112,7 @@ static void *init_object(void)
     obj->p6 = p6_init;
 
     return obj;
- fail:
+fail:
     cleanup_object(obj);
     obj = NULL;
 
@@ -433,7 +433,8 @@ static struct {
 };
 
 /* Generic tester of combinations of "providers" and params */
-static int test_case_variant(OSSL_PARAM *params, const struct provider_dispatch_st *prov)
+static int test_case_variant(OSSL_PARAM *params,
+                             const struct provider_dispatch_st *prov)
 {
     BIGNUM *verify_p3 = NULL;
     void *obj = NULL;
@@ -525,7 +526,7 @@ static int test_case_variant(OSSL_PARAM *params, const struct provider_dispatch_
         || !TEST_ptr(p = OSSL_PARAM_locate(params, "foo")))
         errcnt++;
 
- fin:
+fin:
     BN_free(verify_p3);
     verify_p3 = NULL;
     cleanup_app_variables();
@@ -540,9 +541,9 @@ static int test_case(int i)
 
     return test_case_variant(test_cases[i].app->static_params,
                              test_cases[i].prov)
-        && (test_cases[i].app->constructed_params == NULL
-            || test_case_variant(test_cases[i].app->constructed_params(),
-                                 test_cases[i].prov));
+           && (test_cases[i].app->constructed_params == NULL
+               || test_case_variant(test_cases[i].app->constructed_params(),
+                                    test_cases[i].prov));
 }
 
 /*-
@@ -554,7 +555,8 @@ static const OSSL_PARAM params_from_text[] = {
     /* Fixed size buffer */
     OSSL_PARAM_int32("int", NULL),
     OSSL_PARAM_DEFN("short", OSSL_PARAM_INTEGER, NULL, sizeof(int16_t)),
-    OSSL_PARAM_DEFN("ushort", OSSL_PARAM_UNSIGNED_INTEGER, NULL, sizeof(uint16_t)),
+    OSSL_PARAM_DEFN("ushort", OSSL_PARAM_UNSIGNED_INTEGER, NULL,
+                    sizeof(uint16_t)),
     /* Arbitrary size buffer.  Make sure the result fits in a long */
     OSSL_PARAM_DEFN("num", OSSL_PARAM_INTEGER, NULL, 0),
     OSSL_PARAM_DEFN("unum", OSSL_PARAM_UNSIGNED_INTEGER, NULL, 0),
@@ -620,8 +622,9 @@ static int check_int_from_text(const struct int_from_text_test_st a)
     if (!OSSL_PARAM_allocate_from_text(&param, params_from_text,
                                        a.argname, a.strval, 0, NULL)) {
         if (a.expected_res)
-            TEST_error("unexpected OSSL_PARAM_allocate_from_text() return for %s \"%s\"",
-                       a.argname, a.strval);
+            TEST_error(
+                "unexpected OSSL_PARAM_allocate_from_text() return for %s \"%s\"",
+                a.argname, a.strval);
         return !a.expected_res;
     }
 
@@ -663,6 +666,7 @@ static int test_allocate_from_text(int i)
 int setup_tests(void)
 {
     ADD_ALL_TESTS(test_case, OSSL_NELEM(test_cases));
-    ADD_ALL_TESTS(test_allocate_from_text, OSSL_NELEM(int_from_text_test_cases));
+    ADD_ALL_TESTS(test_allocate_from_text,
+                  OSSL_NELEM(int_from_text_test_cases));
     return 1;
 }

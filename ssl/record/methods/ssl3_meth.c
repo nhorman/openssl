@@ -65,7 +65,7 @@ static int ssl3_set_crypto_state(OSSL_RECORD_LAYER *rl, int level,
     }
 
     if (EVP_CIPHER_get0_provider(ciph) != NULL
-            && !ossl_set_tls_provider_parameters(rl, ciph_ctx, ciph, md)) {
+        && !ossl_set_tls_provider_parameters(rl, ciph_ctx, ciph, md)) {
         /* ERR_raise already called */
         return OSSL_RECORD_RETURN_FATAL;
     }
@@ -178,13 +178,13 @@ static int ssl3_cipher(OSSL_RECORD_LAYER *rl, TLS_RL_RECORD *inrecs,
 
         if (!sending)
             return ssl3_cbc_remove_padding_and_mac(&rec->length,
-                                        rec->orig_len,
-                                        rec->data,
-                                        (mac != NULL) ? &mac->mac : NULL,
-                                        (mac != NULL) ? &mac->alloced : NULL,
-                                        bs,
-                                        macsize,
-                                        rl->libctx);
+                                                   rec->orig_len,
+                                                   rec->data,
+                                                   (mac != NULL) ? &mac->mac : NULL,
+                                                   (mac != NULL) ? &mac->alloced : NULL,
+                                                   bs,
+                                                   macsize,
+                                                   rl->libctx);
     }
 
     return 1;
@@ -208,7 +208,8 @@ static const unsigned char ssl3_pad_2[48] = {
     0x5c, 0x5c, 0x5c, 0x5c, 0x5c, 0x5c, 0x5c, 0x5c
 };
 
-static int ssl3_mac(OSSL_RECORD_LAYER *rl, TLS_RL_RECORD *rec, unsigned char *md,
+static int ssl3_mac(OSSL_RECORD_LAYER *rl, TLS_RL_RECORD *rec,
+                    unsigned char *md,
                     int sending)
 {
     unsigned char *mac_sec, *seq = rl->sequence;

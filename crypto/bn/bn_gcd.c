@@ -61,7 +61,7 @@ BIGNUM *bn_mod_inverse_no_branch(BIGNUM *in,
          * Turn BN_FLG_CONSTTIME flag on, so that when BN_div is invoked,
          * BN_div_no_branch will be called eventually.
          */
-         {
+        {
             BIGNUM local_B;
             bn_init(&local_B);
             BN_with_flags(&local_B, B, BN_FLG_CONSTTIME);
@@ -182,7 +182,7 @@ BIGNUM *bn_mod_inverse_no_branch(BIGNUM *in,
     ret = R;
     *pnoinv = 0;
 
- err:
+err:
     if ((ret == NULL) && (in == NULL))
         BN_free(R);
     BN_CTX_end(ctx);
@@ -503,7 +503,7 @@ BIGNUM *int_bn_mod_inverse(BIGNUM *in,
         goto err;
     }
     ret = R;
- err:
+err:
     if ((ret == NULL) && (in == NULL))
         BN_free(R);
     BN_CTX_end(ctx);
@@ -581,7 +581,8 @@ int BN_gcd(BIGNUM *r, const BIGNUM *in_a, const BIGNUM *in_b, BN_CTX *ctx)
 {
     BIGNUM *g, *temp = NULL;
     BN_ULONG mask = 0;
-    int i, j, top, rlen, glen, m, bit = 1, delta = 1, cond = 0, shifts = 0, ret = 0;
+    int i, j, top, rlen, glen, m, bit = 1, delta = 1, cond = 0, shifts = 0,
+        ret = 0;
 
     /* Note 2: zero input corner cases are not constant-time since they are
      * handled immediately. An attacker can run an attack under this
@@ -643,8 +644,8 @@ int BN_gcd(BIGNUM *r, const BIGNUM *in_a, const BIGNUM *in_b, BN_CTX *ctx)
     for (i = 0; i < m; i++) {
         /* conditionally flip signs if delta is positive and g is odd */
         cond = ((unsigned int)-delta >> (8 * sizeof(delta) - 1)) & g->d[0] & 1
-            /* make sure g->top > 0 (i.e. if top == 0 then g == 0 always) */
-            & (~((unsigned int)(g->top - 1) >> (sizeof(g->top) * 8 - 1)));
+               /* make sure g->top > 0 (i.e. if top == 0 then g == 0 always) */
+               & (~((unsigned int)(g->top - 1) >> (sizeof(g->top) * 8 - 1)));
         delta = (-cond & -delta) | ((cond - 1) & delta);
         r->neg ^= cond;
         /* swap */
@@ -655,9 +656,10 @@ int BN_gcd(BIGNUM *r, const BIGNUM *in_a, const BIGNUM *in_b, BN_CTX *ctx)
         if (!BN_add(temp, g, r))
             goto err;
         BN_consttime_swap(g->d[0] & 1 /* g is odd */
-                /* make sure g->top > 0 (i.e. if top == 0 then g == 0 always) */
-                & (~((unsigned int)(g->top - 1) >> (sizeof(g->top) * 8 - 1))),
-                g, temp, top);
+                          /* make sure g->top > 0 (i.e. if top == 0 then g == 0 always) */
+                          & (~((unsigned int)(g->top - 1) >>
+                               (sizeof(g->top) * 8 - 1))),
+                          g, temp, top);
         if (!BN_rshift1(g, g))
             goto err;
     }
@@ -671,7 +673,7 @@ int BN_gcd(BIGNUM *r, const BIGNUM *in_a, const BIGNUM *in_b, BN_CTX *ctx)
 
     ret = 1;
 
- err:
+err:
     BN_CTX_end(ctx);
     bn_check_top(r);
     return ret;

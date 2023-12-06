@@ -41,7 +41,7 @@
  *    the number of pointers in a tree node;
  *    a bit mask to quickly extract an index and
  *    the maximum depth of the tree structure.
-  */
+ */
 #define SA_BLOCK_MAX            (1 << OPENSSL_SA_BLOCK_BITS)
 #define SA_BLOCK_MASK           (SA_BLOCK_MAX - 1)
 #define SA_BLOCK_MAX_LEVELS     (((int)sizeof(ossl_uintmax_t) * 8 \
@@ -141,8 +141,8 @@ void ossl_sa_doall(const OPENSSL_SA *sa, void (*leaf)(ossl_uintmax_t, void *))
 }
 
 void ossl_sa_doall_arg(const OPENSSL_SA *sa,
-                          void (*leaf)(ossl_uintmax_t, void *, void *),
-                          void *arg)
+                       void (*leaf)(ossl_uintmax_t, void *, void *),
+                       void *arg)
 {
     if (sa != NULL)
         sa_doall(sa, NULL, leaf, arg);
@@ -189,7 +189,7 @@ int ossl_sa_set(OPENSSL_SA *sa, ossl_uintmax_t posn, void *val)
         if ((n >>= OPENSSL_SA_BLOCK_BITS) == 0)
             break;
 
-    for (;sa->levels < level; sa->levels++) {
+    for (; sa->levels < level; sa->levels++) {
         p = alloc_node();
         if (p == NULL)
             return 0;

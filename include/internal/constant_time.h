@@ -230,7 +230,7 @@ static ossl_inline unsigned int value_barrier(unsigned int a)
 {
 #if !defined(OPENSSL_NO_ASM) && defined(__GNUC__)
     unsigned int r;
-    __asm__("" : "=r"(r) : "0"(a));
+    __asm__ ("" : "=r" (r) : "0" (a));
 #else
     volatile unsigned int r = a;
 #endif
@@ -242,7 +242,7 @@ static ossl_inline uint32_t value_barrier_32(uint32_t a)
 {
 #if !defined(OPENSSL_NO_ASM) && defined(__GNUC__)
     uint32_t r;
-    __asm__("" : "=r"(r) : "0"(a));
+    __asm__ ("" : "=r" (r) : "0" (a));
 #else
     volatile uint32_t r = a;
 #endif
@@ -254,7 +254,7 @@ static ossl_inline uint64_t value_barrier_64(uint64_t a)
 {
 #if !defined(OPENSSL_NO_ASM) && defined(__GNUC__)
     uint64_t r;
-    __asm__("" : "=r"(r) : "0"(a));
+    __asm__ ("" : "=r" (r) : "0" (a));
 #else
     volatile uint64_t r = a;
 #endif
@@ -266,7 +266,7 @@ static ossl_inline size_t value_barrier_s(size_t a)
 {
 #if !defined(OPENSSL_NO_ASM) && defined(__GNUC__)
     size_t r;
-    __asm__("" : "=r"(r) : "0"(a));
+    __asm__ ("" : "=r" (r) : "0" (a));
 #else
     volatile size_t r = a;
 #endif
@@ -303,7 +303,7 @@ static ossl_inline int constant_time_select_int(unsigned int mask, int a,
 static ossl_inline int constant_time_select_int_s(size_t mask, int a, int b)
 {
     return (int)constant_time_select((unsigned)mask, (unsigned)(a),
-                                      (unsigned)(b));
+                                     (unsigned)(b));
 }
 
 static ossl_inline uint32_t constant_time_select_32(uint32_t mask, uint32_t a,

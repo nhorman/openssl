@@ -16,7 +16,7 @@
 #ifndef OPENSSL_NO_TRACE
 typedef struct tracedata_st {
     BIO *bio;
-    unsigned int ingroup:1;
+    unsigned int ingroup : 1;
 } tracedata;
 
 static size_t internal_trace_cb(const char *buf, size_t cnt,
@@ -28,24 +28,24 @@ static size_t internal_trace_cb(const char *buf, size_t cnt,
     CRYPTO_THREAD_ID tid;
 
     switch (cmd) {
-    case OSSL_TRACE_CTRL_BEGIN:
-        trace_data->ingroup = 1;
+        case OSSL_TRACE_CTRL_BEGIN:
+            trace_data->ingroup = 1;
 
-        tid = CRYPTO_THREAD_get_current_id();
-        hex = OPENSSL_buf2hexstr((const unsigned char *)&tid, sizeof(tid));
-        BIO_snprintf(buffer, sizeof(buffer), "TRACE[%s]:%s: ",
-                     hex, OSSL_trace_get_category_name(category));
-        OPENSSL_free(hex);
-        BIO_set_prefix(trace_data->bio, buffer);
-        break;
-    case OSSL_TRACE_CTRL_WRITE:
-        ret = BIO_write(trace_data->bio, buf, cnt);
-        break;
-    case OSSL_TRACE_CTRL_END:
-        trace_data->ingroup = 0;
+            tid = CRYPTO_THREAD_get_current_id();
+            hex = OPENSSL_buf2hexstr((const unsigned char *)&tid, sizeof(tid));
+            BIO_snprintf(buffer, sizeof(buffer), "TRACE[%s]:%s: ",
+                         hex, OSSL_trace_get_category_name(category));
+            OPENSSL_free(hex);
+            BIO_set_prefix(trace_data->bio, buffer);
+            break;
+        case OSSL_TRACE_CTRL_WRITE:
+            ret = BIO_write(trace_data->bio, buf, cnt);
+            break;
+        case OSSL_TRACE_CTRL_END:
+            trace_data->ingroup = 0;
 
-        BIO_set_prefix(trace_data->bio, NULL);
-        break;
+            BIO_set_prefix(trace_data->bio, NULL);
+            break;
     }
 
     return ret < 0 ? 0 : ret;

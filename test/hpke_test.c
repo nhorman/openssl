@@ -864,10 +864,10 @@ static const char *bogus_suite_strs[] = {
     "0x10,0x01,,0x02",
     /* embedded NUL chars */
     "0x10,\00x01,,0x02",
-    "0x10,\0""0x01,0x02",
+    "0x10,\0" "0x01,0x02",
     "0x10\0,0x01,0x02",
     "0x10,0x01\0,0x02",
-    "0x10,0x01,\0""0x02",
+    "0x10,0x01,\0" "0x02",
     /* embedded whitespace */
     " aes-256-gcm,hkdf-sha512,x25519",
     "aes-256-gcm, hkdf-sha512,x25519",
@@ -1061,7 +1061,7 @@ static int test_hpke_modes_suites(void)
                             if (!TEST_false(OSSL_HPKE_CTX_set1_authpub(rctx,
                                                                        authpub,
                                                                        10
-                                                                       )))
+                                                                      )))
                                 overallresult = 0;
                         }
                         if (!TEST_true(OSSL_HPKE_CTX_set1_authpub(rctx,
@@ -1096,8 +1096,8 @@ static int test_hpke_modes_suites(void)
                         const char *res = NULL;
 
                         res = (overallresult == 1 ? "worked" : "failed");
-                        TEST_note("HPKE %s for mode: %s/0x%02x, "\
-                                  "kem: %s/0x%02x, kdf: %s/0x%02x, "\
+                        TEST_note("HPKE %s for mode: %s/0x%02x, " \
+                                  "kem: %s/0x%02x, kdf: %s/0x%02x, " \
                                   "aead: %s/0x%02x", res,
                                   mode_str_list[mind], (int) mind,
                                   kem_str_list[kemind], kem_id,
@@ -1478,7 +1478,8 @@ static int test_hpke_oddcalls(void)
     if (!TEST_false(OSSL_HPKE_encap(ctx, enc, &enclen, pub, 1, info, 0)))
         goto end;
     /* encap with too small enc */
-    if (!TEST_false(OSSL_HPKE_encap(ctx, smallenc, &smallenclen, pub, 1, NULL, 0)))
+    if (!TEST_false(OSSL_HPKE_encap(ctx, smallenc, &smallenclen, pub, 1, NULL,
+                                    0)))
         goto end;
     /* good encap */
     if (!TEST_true(OSSL_HPKE_encap(ctx, enc, &enclen, pub, publen, NULL, 0)))
@@ -1823,8 +1824,8 @@ static int test_hpke_compressed(void)
         goto end;
     /* now get the compressed form public key */
     if (!TEST_true(EVP_PKEY_set_utf8_string_param(authpriv,
-                      OSSL_PKEY_PARAM_EC_POINT_CONVERSION_FORMAT,
-                      OSSL_PKEY_EC_POINT_CONVERSION_FORMAT_COMPRESSED)))
+                                                  OSSL_PKEY_PARAM_EC_POINT_CONVERSION_FORMAT,
+                                                  OSSL_PKEY_EC_POINT_CONVERSION_FORMAT_COMPRESSED)))
         goto end;
     if (!TEST_true(EVP_PKEY_get_octet_string_param(authpriv,
                                                    OSSL_PKEY_PARAM_PUB_KEY,
@@ -1970,13 +1971,13 @@ int setup_tests(void)
 
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_VERBOSE:
-            verbose = 1; /* Print progress dots */
-            break;
-        case OPT_TEST_CASES:
-            break;
-        default:
-            return 0;
+            case OPT_VERBOSE:
+                verbose = 1; /* Print progress dots */
+                break;
+            case OPT_TEST_CASES:
+                break;
+            default:
+                return 0;
         }
     }
 

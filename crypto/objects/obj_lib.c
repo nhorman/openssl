@@ -48,7 +48,7 @@ ASN1_OBJECT *OBJ_dup(const ASN1_OBJECT *o)
         goto err;
 
     return r;
- err:
+err:
     ASN1_OBJECT_free(r);
     return NULL;
 }

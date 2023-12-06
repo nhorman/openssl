@@ -52,22 +52,22 @@ static long null_ctrl(BIO *b, int cmd, long num, void *ptr)
     long ret = 1;
 
     switch (cmd) {
-    case BIO_CTRL_RESET:
-    case BIO_CTRL_EOF:
-    case BIO_CTRL_SET:
-    case BIO_CTRL_SET_CLOSE:
-    case BIO_CTRL_FLUSH:
-    case BIO_CTRL_DUP:
-        ret = 1;
-        break;
-    case BIO_CTRL_GET_CLOSE:
-    case BIO_CTRL_INFO:
-    case BIO_CTRL_GET:
-    case BIO_CTRL_PENDING:
-    case BIO_CTRL_WPENDING:
-    default:
-        ret = 0;
-        break;
+        case BIO_CTRL_RESET:
+        case BIO_CTRL_EOF:
+        case BIO_CTRL_SET:
+        case BIO_CTRL_SET_CLOSE:
+        case BIO_CTRL_FLUSH:
+        case BIO_CTRL_DUP:
+            ret = 1;
+            break;
+        case BIO_CTRL_GET_CLOSE:
+        case BIO_CTRL_INFO:
+        case BIO_CTRL_GET:
+        case BIO_CTRL_PENDING:
+        case BIO_CTRL_WPENDING:
+        default:
+            ret = 0;
+            break;
     }
     return ret;
 }

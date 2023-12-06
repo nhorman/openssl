@@ -108,7 +108,7 @@ int ossl_rsa_fromdata(RSA *rsa, const OSSL_PARAM params[], int include_private)
     sk_BIGNUM_free(coeffs);
     return 1;
 
- err:
+err:
     BN_free(n);
     BN_free(e);
     BN_free(d);
@@ -152,7 +152,7 @@ int ossl_rsa_todata(RSA *rsa, OSSL_PARAM_BLD *bld, OSSL_PARAM params[],
             || !ossl_param_build_set_multi_key_bn(bld, params,
                                                   ossl_rsa_mp_coeff_names,
                                                   coeffs))
-        goto err;
+            goto err;
     }
 
 #if defined(FIPS_MODULE) && !defined(OPENSSL_NO_ACVP_TESTS)
@@ -161,7 +161,7 @@ int ossl_rsa_todata(RSA *rsa, OSSL_PARAM_BLD *bld, OSSL_PARAM params[],
         ossl_rsa_acvp_test_get_params(rsa, params);
 #endif
     ret = 1;
- err:
+err:
     sk_BIGNUM_const_free(factors);
     sk_BIGNUM_const_free(exps);
     sk_BIGNUM_const_free(coeffs);
@@ -179,7 +179,7 @@ int ossl_rsa_pss_params_30_todata(const RSA_PSS_PARAMS_30 *pss,
         int default_hashalg_nid = ossl_rsa_pss_params_30_hashalg(NULL);
         int default_maskgenalg_nid = ossl_rsa_pss_params_30_maskgenalg(NULL);
         int default_maskgenhashalg_nid =
-                ossl_rsa_pss_params_30_maskgenhashalg(NULL);
+            ossl_rsa_pss_params_30_maskgenhashalg(NULL);
         const char *mdname =
             (hashalg_nid == default_hashalg_nid
              ? NULL : ossl_rsa_oaeppss_nid2name(hashalg_nid));
@@ -265,7 +265,8 @@ int ossl_rsa_pss_params_30_fromdata(RSA_PSS_PARAMS_30 *pss_params,
             return 0;
 
         if (OPENSSL_strcasecmp(param_mgf->data,
-                               ossl_rsa_mgf_nid2name(default_maskgenalg_nid)) != 0)
+                               ossl_rsa_mgf_nid2name(default_maskgenalg_nid)) !=
+            0)
             return 0;
     }
 
@@ -298,7 +299,7 @@ int ossl_rsa_pss_params_30_fromdata(RSA_PSS_PARAMS_30 *pss_params,
 
         if ((mgf1md = EVP_MD_fetch(libctx, mgf1mdname, propq)) == NULL
             || !ossl_rsa_pss_params_30_set_maskgenhashalg(
-                    pss_params, ossl_rsa_oaeppss_md2nid(mgf1md)))
+                pss_params, ossl_rsa_oaeppss_md2nid(mgf1md)))
             goto err;
     }
 
@@ -310,7 +311,7 @@ int ossl_rsa_pss_params_30_fromdata(RSA_PSS_PARAMS_30 *pss_params,
 
     ret = 1;
 
- err:
+err:
     EVP_MD_free(md);
     EVP_MD_free(mgf1md);
     return ret;
@@ -410,7 +411,8 @@ RSA *ossl_rsa_dup(const RSA *rsa, int selection)
         dupkey->pss = RSA_PSS_PARAMS_dup(rsa->pss);
         if (rsa->pss->maskGenAlgorithm != NULL
             && dupkey->pss->maskGenAlgorithm == NULL) {
-            dupkey->pss->maskHash = ossl_x509_algor_mgf1_decode(rsa->pss->maskGenAlgorithm);
+            dupkey->pss->maskHash = ossl_x509_algor_mgf1_decode(
+                rsa->pss->maskGenAlgorithm);
             if (dupkey->pss->maskHash == NULL)
                 goto err;
         }
@@ -422,7 +424,7 @@ RSA *ossl_rsa_dup(const RSA *rsa, int selection)
 
     return dupkey;
 
- err:
+err:
     RSA_free(dupkey);
     return NULL;
 }
@@ -489,7 +491,8 @@ static int ossl_rsa_sync_to_pss_params_30(RSA *rsa)
 }
 
 int ossl_rsa_pss_get_param_unverified(const RSA_PSS_PARAMS *pss,
-                                      const EVP_MD **pmd, const EVP_MD **pmgf1md,
+                                      const EVP_MD **pmd,
+                                      const EVP_MD **pmgf1md,
                                       int *psaltlen, int *ptrailerField)
 {
     RSA_PSS_PARAMS_30 pss_params;
@@ -565,15 +568,15 @@ RSA *ossl_rsa_key_from_pkcs8(const PKCS8_PRIV_KEY_INFO *p8inf,
 
     RSA_clear_flags(rsa, RSA_FLAG_TYPE_MASK);
     switch (OBJ_obj2nid(alg->algorithm)) {
-    case EVP_PKEY_RSA:
-        RSA_set_flags(rsa, RSA_FLAG_TYPE_RSA);
-        break;
-    case EVP_PKEY_RSA_PSS:
-        RSA_set_flags(rsa, RSA_FLAG_TYPE_RSASSAPSS);
-        break;
-    default:
-        /* Leave the type bits zero */
-        break;
+        case EVP_PKEY_RSA:
+            RSA_set_flags(rsa, RSA_FLAG_TYPE_RSA);
+            break;
+        case EVP_PKEY_RSA_PSS:
+            RSA_set_flags(rsa, RSA_FLAG_TYPE_RSASSAPSS);
+            break;
+        default:
+            /* Leave the type bits zero */
+            break;
     }
 
     return rsa;

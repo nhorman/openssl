@@ -379,7 +379,8 @@ OSSL_PARAM *OSSL_PARAM_BLD_to_param(OSSL_PARAM_BLD *bld)
     OSSL_PARAM_ALIGNED_BLOCK *blk, *s = NULL;
     OSSL_PARAM *params, *last;
     const int num = sk_OSSL_PARAM_BLD_DEF_num(bld->params);
-    const size_t p_blks = ossl_param_bytes_to_blocks((1 + num) * sizeof(*params));
+    const size_t p_blks =
+        ossl_param_bytes_to_blocks((1 + num) * sizeof(*params));
     const size_t total = OSSL_PARAM_ALIGN_SIZE * (p_blks + bld->total_blocks);
     const size_t ss = OSSL_PARAM_ALIGN_SIZE * bld->secure_blocks;
 

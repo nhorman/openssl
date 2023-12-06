@@ -38,7 +38,7 @@ int ossl_ffc_params_fromdata(FFC_PARAMS *ffc, const OSSL_PARAM params[])
             || (group = ossl_ffc_name_to_dh_named_group(prm->data)) == NULL
             || !ossl_ffc_named_group_set(ffc, group))
 #endif
-            goto err;
+        goto err;
     }
 
     param_p = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_FFC_P);
@@ -115,7 +115,7 @@ int ossl_ffc_params_fromdata(FFC_PARAMS *ffc, const OSSL_PARAM params[])
     ossl_ffc_params_set0_j(ffc, j);
     return 1;
 
- err:
+err:
     BN_free(j);
     BN_free(p);
     BN_free(q);

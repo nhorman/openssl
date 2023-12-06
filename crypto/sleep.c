@@ -84,7 +84,7 @@ static void ossl_sleep_millis(uint64_t millis)
         = ossl_time_add(ossl_time_now(), ossl_ms2time(millis));
 
     while (ossl_time_compare(ossl_time_now(), finish) < 0)
-        /* busy wait */ ;
+        /* busy wait */;
 }
 
 void OSSL_sleep(uint64_t millis)

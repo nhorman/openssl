@@ -136,7 +136,7 @@ int ossl_ecdh_simple_compute_key(unsigned char **pout, size_t *poutlen,
 
     ret = 1;
 
- err:
+err:
     /* Step(4) : Destroy all intermediate calculations */
     BN_clear(x);
     EC_POINT_clear_free(tmp);

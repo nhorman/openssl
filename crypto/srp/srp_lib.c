@@ -46,7 +46,7 @@ static BIGNUM *srp_Calc_xy(const BIGNUM *x, const BIGNUM *y, const BIGNUM *N,
         || !EVP_Digest(tmp, numN * 2, digest, NULL, sha1, NULL))
         goto err;
     res = BN_bin2bn(digest, sizeof(digest), NULL);
- err:
+err:
     EVP_MD_free(sha1);
     OPENSSL_free(tmp);
     return res;
@@ -97,7 +97,7 @@ BIGNUM *SRP_Calc_server_key(const BIGNUM *A, const BIGNUM *v, const BIGNUM *u,
         BN_free(S);
         S = NULL;
     }
- err:
+err:
     BN_CTX_free(bn_ctx);
     BN_clear_free(tmp);
     return S;
@@ -127,7 +127,7 @@ BIGNUM *SRP_Calc_B_ex(const BIGNUM *b, const BIGNUM *N, const BIGNUM *g,
         BN_free(B);
         B = NULL;
     }
- err:
+err:
     BN_CTX_free(bn_ctx);
     BN_clear_free(kv);
     BN_clear_free(gb);
@@ -181,7 +181,7 @@ BIGNUM *SRP_Calc_x_ex(const BIGNUM *s, const char *user, const char *pass,
 
     res = BN_bin2bn(dig, sizeof(dig), NULL);
 
- err:
+err:
     EVP_MD_free(sha1);
     OPENSSL_free(cs);
     EVP_MD_CTX_free(ctxt);
@@ -209,9 +209,11 @@ BIGNUM *SRP_Calc_A(const BIGNUM *a, const BIGNUM *N, const BIGNUM *g)
     return A;
 }
 
-BIGNUM *SRP_Calc_client_key_ex(const BIGNUM *N, const BIGNUM *B, const BIGNUM *g,
-                            const BIGNUM *x, const BIGNUM *a, const BIGNUM *u,
-                            OSSL_LIB_CTX *libctx, const char *propq)
+BIGNUM *SRP_Calc_client_key_ex(const BIGNUM *N, const BIGNUM *B,
+                               const BIGNUM *g,
+                               const BIGNUM *x, const BIGNUM *a,
+                               const BIGNUM *u,
+                               OSSL_LIB_CTX *libctx, const char *propq)
 {
     BIGNUM *tmp = NULL, *tmp2 = NULL, *tmp3 = NULL, *k = NULL, *K = NULL;
     BIGNUM *xtmp = NULL;
@@ -247,7 +249,7 @@ BIGNUM *SRP_Calc_client_key_ex(const BIGNUM *N, const BIGNUM *B, const BIGNUM *g
         K = NULL;
     }
 
- err:
+err:
     BN_CTX_free(bn_ctx);
     BN_free(xtmp);
     BN_clear_free(tmp);
@@ -278,7 +280,7 @@ int SRP_Verify_B_mod_N(const BIGNUM *B, const BIGNUM *N)
     if (!BN_nnmod(r, B, N, bn_ctx))
         goto err;
     ret = !BN_is_zero(r);
- err:
+err:
     BN_CTX_free(bn_ctx);
     BN_free(r);
     return ret;

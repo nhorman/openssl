@@ -130,7 +130,7 @@ int ossl_rsa_padding_add_PKCS1_OAEP_mgf1_ex(OSSL_LIB_CTX *libctx,
         seed[i] ^= seedmask[i];
     rv = 1;
 
- err:
+err:
     OPENSSL_cleanse(seedmask, sizeof(seedmask));
     OPENSSL_clear_free(dbmask, dbmask_len);
     return rv;
@@ -167,7 +167,7 @@ int RSA_padding_check_PKCS1_OAEP_mgf1(unsigned char *to, int tlen,
      * Y || maskedSeed || maskedDB
      */
     unsigned char *db = NULL, *em = NULL, seed[EVP_MAX_MD_SIZE],
-        phash[EVP_MAX_MD_SIZE];
+                  phash[EVP_MAX_MD_SIZE];
     int mdlen;
 
     if (md == NULL) {
@@ -308,7 +308,7 @@ int RSA_padding_check_PKCS1_OAEP_mgf1(unsigned char *to, int tlen,
     ERR_raise(ERR_LIB_RSA, RSA_R_OAEP_DECODING_ERROR);
     err_clear_last_constant_time(1 & good);
 #endif
- cleanup:
+cleanup:
     OPENSSL_cleanse(seed, sizeof(seed));
     OPENSSL_clear_free(db, dblen);
     OPENSSL_clear_free(em, num);
@@ -362,7 +362,7 @@ int PKCS1_MGF1(unsigned char *mask, long len,
         }
     }
     rv = 0;
- err:
+err:
     OPENSSL_cleanse(md, sizeof(md));
     EVP_MD_CTX_free(c);
     return rv;

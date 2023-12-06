@@ -67,11 +67,11 @@ static int policy_cache_create(X509 *x,
     sk_X509_POLICY_DATA_sort(cache->data);
     ret = 1;
 
- bad_policy:
+bad_policy:
     if (ret == -1)
         x->ex_flags |= EXFLAG_INVALID_POLICY;
     ossl_policy_data_free(data);
- just_cleanup:
+just_cleanup:
     sk_POLICYINFO_pop_free(policies, POLICYINFO_free);
     if (ret <= 0) {
         sk_X509_POLICY_DATA_pop_free(cache->data, ossl_policy_data_free);
@@ -165,10 +165,10 @@ static int policy_cache_new(X509 *x)
         goto bad_cache;
     goto just_cleanup;
 
- bad_cache:
+bad_cache:
     x->ex_flags |= EXFLAG_INVALID_POLICY;
 
- just_cleanup:
+just_cleanup:
     POLICY_CONSTRAINTS_free(ext_pcons);
     ASN1_INTEGER_free(ext_any);
     return 1;

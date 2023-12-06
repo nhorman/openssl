@@ -88,8 +88,8 @@
  * We know that VMS, MSDOS, VXWORKS, use entirely other mechanisms.
  */
 #  elif !defined(OPENSSL_SYS_VMS) \
-        && !defined(OPENSSL_SYS_MSDOS) \
-        && !defined(OPENSSL_SYS_VXWORKS)
+    && !defined(OPENSSL_SYS_MSDOS) \
+    && !defined(OPENSSL_SYS_VXWORKS)
 #   define TERMIOS
 #   undef  TERMIO
 #   undef  SGTTY
@@ -127,7 +127,9 @@
 #  define TTY_set(tty,data)      ioctl(tty,TIOCSETP,data)
 # endif
 
-# if !defined(_LIBC) && !defined(OPENSSL_SYS_MSDOS) && !defined(OPENSSL_SYS_VMS) && ! (defined(OPENSSL_SYS_TANDEM) && defined(_SPT_MODEL_))
+# if !defined(_LIBC) && !defined(OPENSSL_SYS_MSDOS) && \
+    !defined(OPENSSL_SYS_VMS) && !(defined(OPENSSL_SYS_TANDEM) && \
+    defined(_SPT_MODEL_))
 #  include <sys/ioctl.h>
 # endif
 
@@ -203,16 +205,16 @@ static int close_console(UI *ui);
 static int write_string(UI *ui, UI_STRING *uis)
 {
     switch (UI_get_string_type(uis)) {
-    case UIT_ERROR:
-    case UIT_INFO:
-        fputs(UI_get0_output_string(uis), tty_out);
-        fflush(tty_out);
-        break;
-    case UIT_NONE:
-    case UIT_PROMPT:
-    case UIT_VERIFY:
-    case UIT_BOOLEAN:
-        break;
+        case UIT_ERROR:
+        case UIT_INFO:
+            fputs(UI_get0_output_string(uis), tty_out);
+            fflush(tty_out);
+            break;
+        case UIT_NONE:
+        case UIT_PROMPT:
+        case UIT_VERIFY:
+        case UIT_BOOLEAN:
+            break;
     }
     return 1;
 }
@@ -222,36 +224,39 @@ static int read_string(UI *ui, UI_STRING *uis)
     int ok = 0;
 
     switch (UI_get_string_type(uis)) {
-    case UIT_BOOLEAN:
-        fputs(UI_get0_output_string(uis), tty_out);
-        fputs(UI_get0_action_string(uis), tty_out);
-        fflush(tty_out);
-        return read_string_inner(ui, uis,
-                                 UI_get_input_flags(uis) & UI_INPUT_FLAG_ECHO,
-                                 0);
-    case UIT_PROMPT:
-        fputs(UI_get0_output_string(uis), tty_out);
-        fflush(tty_out);
-        return read_string_inner(ui, uis,
-                                 UI_get_input_flags(uis) & UI_INPUT_FLAG_ECHO,
-                                 1);
-    case UIT_VERIFY:
-        fprintf(tty_out, "Verifying - %s", UI_get0_output_string(uis));
-        fflush(tty_out);
-        if ((ok = read_string_inner(ui, uis,
-                                    UI_get_input_flags(uis) &
-                                    UI_INPUT_FLAG_ECHO, 1)) <= 0)
-            return ok;
-        if (strcmp(UI_get0_result_string(uis), UI_get0_test_string(uis)) != 0) {
-            fprintf(tty_out, "Verify failure\n");
+        case UIT_BOOLEAN:
+            fputs(UI_get0_output_string(uis), tty_out);
+            fputs(UI_get0_action_string(uis), tty_out);
             fflush(tty_out);
-            return 0;
-        }
-        break;
-    case UIT_NONE:
-    case UIT_INFO:
-    case UIT_ERROR:
-        break;
+            return read_string_inner(ui, uis,
+                                     UI_get_input_flags(
+                                         uis) & UI_INPUT_FLAG_ECHO,
+                                     0);
+        case UIT_PROMPT:
+            fputs(UI_get0_output_string(uis), tty_out);
+            fflush(tty_out);
+            return read_string_inner(ui, uis,
+                                     UI_get_input_flags(
+                                         uis) & UI_INPUT_FLAG_ECHO,
+                                     1);
+        case UIT_VERIFY:
+            fprintf(tty_out, "Verifying - %s", UI_get0_output_string(uis));
+            fflush(tty_out);
+            if ((ok = read_string_inner(ui, uis,
+                                        UI_get_input_flags(uis) &
+                                        UI_INPUT_FLAG_ECHO, 1)) <= 0)
+                return ok;
+            if (strcmp(UI_get0_result_string(uis),
+                       UI_get0_test_string(uis)) != 0) {
+                fprintf(tty_out, "Verify failure\n");
+                fflush(tty_out);
+                return 0;
+            }
+            break;
+        case UIT_NONE:
+        case UIT_INFO:
+        case UIT_ERROR:
+            break;
     }
     return 1;
 }
@@ -303,7 +308,7 @@ static int read_string_inner(UI *ui, UI_STRING *uis, int echo, int strip_nl)
             WCHAR wresult[BUFSIZ];
 
             if (ReadConsoleW(GetStdHandle(STD_INPUT_HANDLE),
-                         wresult, maxsize, &numread, NULL)) {
+                             wresult, maxsize, &numread, NULL)) {
                 if (numread >= 2 &&
                     wresult[numread-2] == L'\r' &&
                     wresult[numread-1] == L'\n') {
@@ -336,7 +341,7 @@ static int read_string_inner(UI *ui, UI_STRING *uis, int echo, int strip_nl)
         p = result;             /* FIXME: noecho_fgets doesn't return errors */
     } else
 #  endif
-    p = fgets(result, maxsize, tty_in);
+        p = fgets(result, maxsize, tty_in);
     if (p == NULL)
         goto error;
     if (feof(tty_in))
@@ -351,7 +356,7 @@ static int read_string_inner(UI *ui, UI_STRING *uis, int echo, int strip_nl)
     if (UI_set_result(ui, uis, result) >= 0)
         ok = 1;
 
- error:
+error:
     if (intr_signal == SIGINT)
         ok = -1;
     if (echo_eol)
@@ -410,56 +415,56 @@ static int open_console(UI *ui)
         else
 #  endif
 #  ifdef EINVAL
-            /*
-             * Ariel Glenn reports that solaris can return EINVAL instead.
-             * This should be ok
-             */
+        /*
+         * Ariel Glenn reports that solaris can return EINVAL instead.
+         * This should be ok
+         */
         if (errno == EINVAL)
             is_a_tty = 0;
         else
 #  endif
 #  ifdef ENXIO
-            /*
-             * Solaris can return ENXIO.
-             * This should be ok
-             */
+        /*
+         * Solaris can return ENXIO.
+         * This should be ok
+         */
         if (errno == ENXIO)
             is_a_tty = 0;
         else
 #  endif
 #  ifdef EIO
-            /*
-             * Linux can return EIO.
-             * This should be ok
-             */
+        /*
+         * Linux can return EIO.
+         * This should be ok
+         */
         if (errno == EIO)
             is_a_tty = 0;
         else
 #  endif
 #  ifdef EPERM
-            /*
-             * Linux can return EPERM (Operation not permitted),
-             * e.g. if a daemon executes openssl via fork()+execve()
-             * This should be ok
-             */
+        /*
+         * Linux can return EPERM (Operation not permitted),
+         * e.g. if a daemon executes openssl via fork()+execve()
+         * This should be ok
+         */
         if (errno == EPERM)
             is_a_tty = 0;
         else
 #  endif
 #  ifdef ENODEV
-            /*
-             * MacOS X returns ENODEV (Operation not supported by device),
-             * which seems appropriate.
-             */
+        /*
+         * MacOS X returns ENODEV (Operation not supported by device),
+         * which seems appropriate.
+         */
         if (errno == ENODEV)
-                is_a_tty = 0;
+            is_a_tty = 0;
         else
 #  endif
-            {
-                ERR_raise_data(ERR_LIB_UI, UI_R_UNKNOWN_TTYGET_ERRNO_VALUE,
-                               "errno=%d", errno);
-                return 0;
-            }
+        {
+            ERR_raise_data(ERR_LIB_UI, UI_R_UNKNOWN_TTYGET_ERRNO_VALUE,
+                           "errno=%d", errno);
+            return 0;
+        }
     }
 # endif
 # ifdef OPENSSL_SYS_VMS

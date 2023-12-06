@@ -29,7 +29,8 @@ static int test_do_updatedb(void)
     int have64bit;
 
     if (argc != 4) {
-        TEST_error("Usage: %s: do_updatedb dbfile testdate need64bit\n", binname);
+        TEST_error("Usage: %s: do_updatedb dbfile testdate need64bit\n",
+                   binname);
         TEST_error("       testdate format: ASN1-String\n");
         return 0;
     }
@@ -42,7 +43,7 @@ static int test_do_updatedb(void)
     have64bit = sizeof(time_t) > sizeof(uint32_t);
     if (need64bit && !have64bit) {
         BIO_printf(bio_out, "skipping test (need64bit: %i, have64bit: %i)",
-            need64bit, have64bit);
+                   need64bit, have64bit);
         return 1;
     }
 
@@ -87,7 +88,8 @@ int setup_tests(void)
     if (strcmp(command, "do_updatedb") == 0)
         return test_do_updatedb();
 
-    TEST_error("%s: command '%s' is not supported for testing\n", binname, command);
+    TEST_error("%s: command '%s' is not supported for testing\n", binname,
+               command);
     return 0;
 }
 

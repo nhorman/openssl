@@ -353,7 +353,8 @@ static ossl_inline int ktls_send_ctrl_message(int fd, unsigned char record_type,
  * KTLS enables the sendfile system call to send data from a file over TLS.
  * @flags are ignored on Linux. (placeholder for FreeBSD sendfile)
  * */
-static ossl_inline ossl_ssize_t ktls_sendfile(int s, int fd, off_t off, size_t size, int flags)
+static ossl_inline ossl_ssize_t ktls_sendfile(int s, int fd, off_t off,
+                                              size_t size, int flags)
 {
     return sendfile(s, fd, &off, size);
 }

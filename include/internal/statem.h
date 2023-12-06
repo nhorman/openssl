@@ -10,11 +10,11 @@
 # define OSSL_INTERNAL_STATEM_H
 
 /*****************************************************************************
- *                                                                           *
- * These enums should be considered PRIVATE to the state machine. No         *
- * non-state machine code should need to use these                           *
- *                                                                           *
- *****************************************************************************/
+*                                                                           *
+* These enums should be considered PRIVATE to the state machine. No         *
+* non-state machine code should need to use these                           *
+*                                                                           *
+*****************************************************************************/
 /*
  * Valid return codes used for functions performing work prior to or after
  * sending or receiving a message
@@ -88,12 +88,12 @@ typedef int (*ossl_statem_mutate_handshake_cb)(const unsigned char *msgin,
 typedef void (*ossl_statem_finish_mutate_handshake_cb)(void *arg);
 
 /*****************************************************************************
- *                                                                           *
- * This structure should be considered "opaque" to anything outside of the   *
- * state machine. No non-state machine code should be accessing the members  *
- * of this structure.                                                        *
- *                                                                           *
- *****************************************************************************/
+*                                                                           *
+* This structure should be considered "opaque" to anything outside of the   *
+* state machine. No non-state machine code should be accessing the members  *
+* of this structure.                                                        *
+*                                                                           *
+*****************************************************************************/
 
 struct ossl_statem_st {
     MSG_FLOW_STATE state;
@@ -126,11 +126,11 @@ struct ossl_statem_st {
 typedef struct ossl_statem_st OSSL_STATEM;
 
 /*****************************************************************************
- *                                                                           *
- * The following macros/functions represent the libssl internal API to the   *
- * state machine. Any libssl code may call these functions/macros            *
- *                                                                           *
- *****************************************************************************/
+*                                                                           *
+* The following macros/functions represent the libssl internal API to the   *
+* state machine. Any libssl code may call these functions/macros            *
+*                                                                           *
+*****************************************************************************/
 
 typedef struct ssl_connection_st SSL_CONNECTION;
 
@@ -145,9 +145,9 @@ void ossl_statem_fatal(SSL_CONNECTION *s, int al, int reason,
 # define SSLfatal_alert(s, al) ossl_statem_send_fatal((s), (al))
 # define SSLfatal(s, al, r) SSLfatal_data((s), (al), (r), NULL)
 # define SSLfatal_data                                          \
-    (ERR_new(),                                                 \
-     ERR_set_debug(OPENSSL_FILE, OPENSSL_LINE, OPENSSL_FUNC),   \
-     ossl_statem_fatal)
+        (ERR_new(),                                                 \
+         ERR_set_debug(OPENSSL_FILE, OPENSSL_LINE, OPENSSL_FUNC),   \
+         ossl_statem_fatal)
 
 int ossl_statem_in_error(const SSL_CONNECTION *s);
 void ossl_statem_set_in_init(SSL_CONNECTION *s, int init);

@@ -288,7 +288,7 @@ void *ossl_thread_event_ctx_new(OSSL_LIB_CTX *libctx)
      */
 
     return tlocal;
- err:
+err:
     OPENSSL_free(hands);
     OPENSSL_free(tlocal);
     return NULL;

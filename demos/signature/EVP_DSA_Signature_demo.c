@@ -239,14 +239,16 @@ static int demo_verify(OSSL_LIB_CTX *libctx,
         goto end;
     if (EVP_PKEY_fromdata_init(pkey_ctx) != 1)
         goto end;
-    if (EVP_PKEY_fromdata(pkey_ctx, &pkey, EVP_PKEY_PUBLIC_KEY, public_key) != 1)
+    if (EVP_PKEY_fromdata(pkey_ctx, &pkey, EVP_PKEY_PUBLIC_KEY,
+                          public_key) != 1)
         goto end;
 
     ctx = EVP_MD_CTX_create();
     if(ctx == NULL)
         goto end;
 
-    if (EVP_DigestVerifyInit_ex(ctx, NULL, DIGEST, libctx, NULL, pkey, NULL) != 1)
+    if (EVP_DigestVerifyInit_ex(ctx, NULL, DIGEST, libctx, NULL, pkey,
+                                NULL) != 1)
         goto end;
 
     if (EVP_DigestVerifyUpdate(ctx, hamlet_1, sizeof(hamlet_1)) != 1)

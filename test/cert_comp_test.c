@@ -53,11 +53,11 @@ static int client_cert_cb(SSL *ssl, X509 **x509, EVP_PKEY **pkey)
         return 0;
 
     if (!TEST_ptr(xcert = X509_new_ex(NULL, NULL))
-            || !TEST_ptr(PEM_read_bio_X509(in, &xcert, NULL, NULL))
-            || !TEST_ptr(priv_in = BIO_new_file(privkey, "r"))
-            || !TEST_ptr(privpkey = PEM_read_bio_PrivateKey_ex(priv_in, NULL,
-                                                               NULL, NULL,
-                                                               NULL, NULL)))
+        || !TEST_ptr(PEM_read_bio_X509(in, &xcert, NULL, NULL))
+        || !TEST_ptr(priv_in = BIO_new_file(privkey, "r"))
+        || !TEST_ptr(privpkey = PEM_read_bio_PrivateKey_ex(priv_in, NULL,
+                                                           NULL, NULL,
+                                                           NULL, NULL)))
         goto err;
 
     *x509 = xcert;
@@ -92,14 +92,17 @@ static int ssl_comp_cert(SSL *ssl, int alg)
     size_t orig_len = 0;
     int retval = 0;
 
-    if (!TEST_size_t_gt(comp_len = SSL_get1_compressed_cert(ssl, alg, &comp_data, &orig_len), 0))
+    if (!TEST_size_t_gt(comp_len =
+                            SSL_get1_compressed_cert(ssl, alg, &comp_data,
+                                                     &orig_len), 0))
         goto err;
 
-    if (!TEST_true(SSL_set1_compressed_cert(ssl, alg, comp_data, comp_len, orig_len)))
+    if (!TEST_true(SSL_set1_compressed_cert(ssl, alg, comp_data, comp_len,
+                                            orig_len)))
         goto err;
     retval = alg;
 
- err:
+err:
     OPENSSL_free(comp_data);
     return retval;
 }
@@ -129,9 +132,11 @@ static int test_ssl_cert_comp(int test)
     int client_seen = 0;
     int server_seen = 0;
     /* reverse default order */
-    int server_pref[] = { TLSEXT_comp_cert_zstd, TLSEXT_comp_cert_zlib, TLSEXT_comp_cert_brotli };
+    int server_pref[] =
+    { TLSEXT_comp_cert_zstd, TLSEXT_comp_cert_zlib, TLSEXT_comp_cert_brotli };
     /* default order */
-    int client_pref[] = { TLSEXT_comp_cert_brotli, TLSEXT_comp_cert_zlib, TLSEXT_comp_cert_zstd };
+    int client_pref[] =
+    { TLSEXT_comp_cert_brotli, TLSEXT_comp_cert_zlib, TLSEXT_comp_cert_zstd };
 
     /* one of these *must* be defined! */
 #ifndef OPENSSL_NO_BROTLI
@@ -173,15 +178,21 @@ static int test_ssl_cert_comp(int test)
         if (!TEST_true(SSL_CTX_set1_cert_comp_preference(cctx, client_pref, 1)))
             goto end;
     } else {
-        if (!TEST_true(SSL_CTX_set1_cert_comp_preference(sctx, server_pref, OSSL_NELEM(server_pref))))
+        if (!TEST_true(SSL_CTX_set1_cert_comp_preference(sctx, server_pref,
+                                                         OSSL_NELEM(
+                                                             server_pref))))
             goto end;
-        if (!TEST_true(SSL_CTX_set1_cert_comp_preference(cctx, client_pref, OSSL_NELEM(client_pref))))
+        if (!TEST_true(SSL_CTX_set1_cert_comp_preference(cctx, client_pref,
+                                                         OSSL_NELEM(
+                                                             client_pref))))
             goto end;
     }
     if (test == 2) {
         /* Use callbacks from test_client_cert_cb() */
         SSL_CTX_set_client_cert_cb(cctx, client_cert_cb);
-        SSL_CTX_set_verify(sctx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, verify_cb);
+        SSL_CTX_set_verify(sctx,
+                           SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT,
+                           verify_cb);
     }
 
     if (test == 1 || test== 2 || test == 3) {
@@ -201,7 +212,8 @@ static int test_ssl_cert_comp(int test)
     SSL_set_info_callback(serverssl, cert_comp_info_cb);
 
     if (test == 0) {
-        if (!TEST_int_eq(ssl_comp_cert(serverssl, expected_server), expected_server))
+        if (!TEST_int_eq(ssl_comp_cert(serverssl, expected_server),
+                         expected_server))
             goto end;
     }
 
@@ -235,7 +247,7 @@ static int test_ssl_cert_comp(int test)
 
     testresult = 1;
 
- end:
+end:
     SSL_free(serverssl);
     SSL_free(clientssl);
     SSL_CTX_free(sctx);
@@ -269,7 +281,7 @@ int setup_tests(void)
     ADD_ALL_TESTS(test_ssl_cert_comp, 4);
     return 1;
 
- err:
+err:
     OPENSSL_free(cert);
     OPENSSL_free(privkey);
     return 0;

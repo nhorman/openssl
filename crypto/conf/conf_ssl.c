@@ -124,7 +124,7 @@ static int ssl_module_init(CONF_IMODULE *md, const CONF *cnf)
 
     }
     rv = 1;
- err:
+err:
     if (rv == 0)
         ssl_module_free(md);
     return rv;

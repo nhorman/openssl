@@ -66,8 +66,8 @@ typedef struct {
     int cofactor_mode;
 
     /************
-     * ECDH KDF *
-     ************/
+    * ECDH KDF *
+    ************/
     /* KDF (if any) to use for ECDH */
     enum kdf_type kdf_type;
     /* Message digest to use for key derivation */
@@ -104,9 +104,9 @@ int ecdh_init(void *vpecdhctx, void *vecdh, const OSSL_PARAM params[])
     PROV_ECDH_CTX *pecdhctx = (PROV_ECDH_CTX *)vpecdhctx;
 
     if (!ossl_prov_is_running()
-            || pecdhctx == NULL
-            || vecdh == NULL
-            || !EC_KEY_up_ref(vecdh))
+        || pecdhctx == NULL
+        || vecdh == NULL
+        || !EC_KEY_up_ref(vecdh))
         return 0;
     EC_KEY_free(pecdhctx->k);
     pecdhctx->k = vecdh;
@@ -144,11 +144,11 @@ int ecdh_set_peer(void *vpecdhctx, void *vecdh)
     PROV_ECDH_CTX *pecdhctx = (PROV_ECDH_CTX *)vpecdhctx;
 
     if (!ossl_prov_is_running()
-            || pecdhctx == NULL
-            || vecdh == NULL
-            || !ecdh_match_params(pecdhctx->k, vecdh)
-            || !ossl_ec_check_key(pecdhctx->libctx, vecdh, 1)
-            || !EC_KEY_up_ref(vecdh))
+        || pecdhctx == NULL
+        || vecdh == NULL
+        || !ecdh_match_params(pecdhctx->k, vecdh)
+        || !ossl_ec_check_key(pecdhctx->libctx, vecdh, 1)
+        || !EC_KEY_up_ref(vecdh))
         return 0;
 
     EC_KEY_free(pecdhctx->peerk);
@@ -219,7 +219,7 @@ void *ecdh_dupctx(void *vpecdhctx)
 
     return dstctx;
 
- err:
+err:
     ecdh_freectx(dstctx);
     return NULL;
 }
@@ -237,7 +237,8 @@ int ecdh_set_ctx_params(void *vpecdhctx, const OSSL_PARAM params[])
     if (params == NULL)
         return 1;
 
-    p = OSSL_PARAM_locate_const(params, OSSL_EXCHANGE_PARAM_EC_ECDH_COFACTOR_MODE);
+    p = OSSL_PARAM_locate_const(params,
+                                OSSL_EXCHANGE_PARAM_EC_ECDH_COFACTOR_MODE);
     if (p != NULL) {
         int mode;
 
@@ -376,7 +377,7 @@ int ecdh_get_ctx_params(void *vpecdhctx, OSSL_PARAM params[])
 
     p = OSSL_PARAM_locate(params, OSSL_EXCHANGE_PARAM_KDF_DIGEST);
     if (p != NULL
-            && !OSSL_PARAM_set_utf8_string(p, pectx->kdf_md == NULL
+        && !OSSL_PARAM_set_utf8_string(p, pectx->kdf_md == NULL
                                            ? ""
                                            : EVP_MD_get0_name(pectx->kdf_md))) {
         return 0;
@@ -418,7 +419,7 @@ size_t ecdh_size(const EC_KEY *k)
     const EC_GROUP *group;
 
     if (k == NULL
-            || (group = EC_KEY_get0_group(k)) == NULL)
+        || (group = EC_KEY_get0_group(k)) == NULL)
         return 0;
 
     degree = EC_GROUP_get_degree(group);
@@ -451,7 +452,7 @@ int ecdh_plain_derive(void *vpecdhctx, unsigned char *secret,
     }
 
     if ((group = EC_KEY_get0_group(pecdhctx->k)) == NULL
-            || (cofactor = EC_GROUP_get0_cofactor(group)) == NULL)
+        || (cofactor = EC_GROUP_get0_cofactor(group)) == NULL)
         return 0;
 
     /*
@@ -475,8 +476,8 @@ int ecdh_plain_derive(void *vpecdhctx, unsigned char *secret,
     key_cofactor_mode =
         (EC_KEY_get_flags(pecdhctx->k) & EC_FLAG_COFACTOR_ECDH) ? 1 : 0;
     if (pecdhctx->cofactor_mode != -1
-            && pecdhctx->cofactor_mode != key_cofactor_mode
-            && !BN_is_one(cofactor)) {
+        && pecdhctx->cofactor_mode != key_cofactor_mode
+        && !BN_is_one(cofactor)) {
         if ((privk = EC_KEY_dup(pecdhctx->k)) == NULL)
             return 0;
 
@@ -498,7 +499,7 @@ int ecdh_plain_derive(void *vpecdhctx, unsigned char *secret,
     *psecretlen = retlen;
     ret = 1;
 
- end:
+end:
     if (privk != pecdhctx->k)
         EC_KEY_free(privk);
     return ret;
@@ -540,7 +541,7 @@ int ecdh_X9_63_kdf_derive(void *vpecdhctx, unsigned char *secret,
     *psecretlen = pecdhctx->kdf_outlen;
     ret = 1;
 
- err:
+err:
     OPENSSL_secure_clear_free(stmp, stmplen);
     return ret;
 }
@@ -563,17 +564,17 @@ int ecdh_derive(void *vpecdhctx, unsigned char *secret,
 }
 
 const OSSL_DISPATCH ossl_ecdh_keyexch_functions[] = {
-    { OSSL_FUNC_KEYEXCH_NEWCTX, (void (*)(void))ecdh_newctx },
-    { OSSL_FUNC_KEYEXCH_INIT, (void (*)(void))ecdh_init },
-    { OSSL_FUNC_KEYEXCH_DERIVE, (void (*)(void))ecdh_derive },
-    { OSSL_FUNC_KEYEXCH_SET_PEER, (void (*)(void))ecdh_set_peer },
-    { OSSL_FUNC_KEYEXCH_FREECTX, (void (*)(void))ecdh_freectx },
-    { OSSL_FUNC_KEYEXCH_DUPCTX, (void (*)(void))ecdh_dupctx },
-    { OSSL_FUNC_KEYEXCH_SET_CTX_PARAMS, (void (*)(void))ecdh_set_ctx_params },
+    { OSSL_FUNC_KEYEXCH_NEWCTX, (void (*)(void)) ecdh_newctx },
+    { OSSL_FUNC_KEYEXCH_INIT, (void (*)(void)) ecdh_init },
+    { OSSL_FUNC_KEYEXCH_DERIVE, (void (*)(void)) ecdh_derive },
+    { OSSL_FUNC_KEYEXCH_SET_PEER, (void (*)(void)) ecdh_set_peer },
+    { OSSL_FUNC_KEYEXCH_FREECTX, (void (*)(void)) ecdh_freectx },
+    { OSSL_FUNC_KEYEXCH_DUPCTX, (void (*)(void)) ecdh_dupctx },
+    { OSSL_FUNC_KEYEXCH_SET_CTX_PARAMS, (void (*)(void)) ecdh_set_ctx_params },
     { OSSL_FUNC_KEYEXCH_SETTABLE_CTX_PARAMS,
-      (void (*)(void))ecdh_settable_ctx_params },
-    { OSSL_FUNC_KEYEXCH_GET_CTX_PARAMS, (void (*)(void))ecdh_get_ctx_params },
+      (void (*)(void)) ecdh_settable_ctx_params },
+    { OSSL_FUNC_KEYEXCH_GET_CTX_PARAMS, (void (*)(void)) ecdh_get_ctx_params },
     { OSSL_FUNC_KEYEXCH_GETTABLE_CTX_PARAMS,
-      (void (*)(void))ecdh_gettable_ctx_params },
+      (void (*)(void)) ecdh_gettable_ctx_params },
     OSSL_DISPATCH_END
 };

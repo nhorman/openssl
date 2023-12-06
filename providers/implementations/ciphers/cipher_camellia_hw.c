@@ -33,11 +33,11 @@ static int cipher_hw_camellia_initkey(PROV_CIPHER_CTX *dat,
     if (dat->enc || (mode != EVP_CIPH_ECB_MODE && mode != EVP_CIPH_CBC_MODE)) {
         dat->block = (block128_f) Camellia_encrypt;
         dat->stream.cbc = mode == EVP_CIPH_CBC_MODE ?
-            (cbc128_f) Camellia_cbc_encrypt : NULL;
+                          (cbc128_f) Camellia_cbc_encrypt : NULL;
     } else {
         dat->block = (block128_f) Camellia_decrypt;
         dat->stream.cbc = mode == EVP_CIPH_CBC_MODE ?
-            (cbc128_f) Camellia_cbc_encrypt : NULL;
+                          (cbc128_f) Camellia_cbc_encrypt : NULL;
     }
     return 1;
 }
@@ -53,17 +53,18 @@ IMPLEMENT_CIPHER_HW_COPYCTX(cipher_hw_camellia_copyctx, PROV_CAMELLIA_CTX)
 # endif /* SPARC_CMLL_CAPABLE */
 
 #define PROV_CIPHER_HW_camellia_mode(mode)                                     \
-static const PROV_CIPHER_HW camellia_##mode = {                                \
-    cipher_hw_camellia_initkey,                                                \
-    ossl_cipher_hw_generic_##mode,                                             \
-    cipher_hw_camellia_copyctx                                                 \
-};                                                                             \
-PROV_CIPHER_HW_declare(mode)                                                   \
-const PROV_CIPHER_HW *ossl_prov_cipher_hw_camellia_##mode(size_t keybits)      \
-{                                                                              \
-    PROV_CIPHER_HW_select(mode)                                                \
-    return &camellia_##mode;                                                   \
-}
+        static const PROV_CIPHER_HW camellia_ ## mode = {                                \
+            cipher_hw_camellia_initkey,                                                \
+            ossl_cipher_hw_generic_ ## mode,                                             \
+            cipher_hw_camellia_copyctx                                                 \
+        };                                                                             \
+        PROV_CIPHER_HW_declare(mode)                                                   \
+        const PROV_CIPHER_HW *ossl_prov_cipher_hw_camellia_ ## mode( \
+            size_t keybits)      \
+        {                                                                              \
+            PROV_CIPHER_HW_select(mode)                                                \
+            return &camellia_ ## mode;                                                   \
+        }
 
 PROV_CIPHER_HW_camellia_mode(cbc)
 PROV_CIPHER_HW_camellia_mode(ecb)

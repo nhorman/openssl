@@ -1,11 +1,11 @@
 /*
-* Copyright 2022-2023 The OpenSSL Project Authors. All Rights Reserved.
-*
-* Licensed under the Apache License 2.0 (the "License").  You may not use
-* this file except in compliance with the License.  You can obtain a copy
-* in the file LICENSE in the source distribution or at
-* https://www.openssl.org/source/license.html
-*/
+ * Copyright 2022-2023 The OpenSSL Project Authors. All Rights Reserved.
+ *
+ * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * this file except in compliance with the License.  You can obtain a copy
+ * in the file LICENSE in the source distribution or at
+ * https://www.openssl.org/source/license.html
+ */
 
 #ifndef OSSL_INTERNAL_QUIC_WIRE_H
 # define OSSL_INTERNAL_QUIC_WIRE_H
@@ -50,42 +50,43 @@
 /* Low 3 bits of the type contain flags */
 #  define OSSL_QUIC_FRAME_TYPE_STREAM             0x08             /* base ID */
 #  define OSSL_QUIC_FRAME_TYPE_STREAM_FIN         \
-    (OSSL_QUIC_FRAME_TYPE_STREAM |                \
-     OSSL_QUIC_FRAME_FLAG_STREAM_FIN)
+        (OSSL_QUIC_FRAME_TYPE_STREAM |                \
+         OSSL_QUIC_FRAME_FLAG_STREAM_FIN)
 #  define OSSL_QUIC_FRAME_TYPE_STREAM_LEN         \
-    (OSSL_QUIC_FRAME_TYPE_STREAM |                \
-     OSSL_QUIC_FRAME_FLAG_STREAM_LEN)
+        (OSSL_QUIC_FRAME_TYPE_STREAM |                \
+         OSSL_QUIC_FRAME_FLAG_STREAM_LEN)
 #  define OSSL_QUIC_FRAME_TYPE_STREAM_LEN_FIN     \
-    (OSSL_QUIC_FRAME_TYPE_STREAM |                \
-     OSSL_QUIC_FRAME_FLAG_STREAM_LEN |            \
-     OSSL_QUIC_FRAME_FLAG_STREAM_FIN)
+        (OSSL_QUIC_FRAME_TYPE_STREAM |                \
+         OSSL_QUIC_FRAME_FLAG_STREAM_LEN |            \
+         OSSL_QUIC_FRAME_FLAG_STREAM_FIN)
 #  define OSSL_QUIC_FRAME_TYPE_STREAM_OFF         \
-    (OSSL_QUIC_FRAME_TYPE_STREAM |                \
-     OSSL_QUIC_FRAME_FLAG_STREAM_OFF)
+        (OSSL_QUIC_FRAME_TYPE_STREAM |                \
+         OSSL_QUIC_FRAME_FLAG_STREAM_OFF)
 #  define OSSL_QUIC_FRAME_TYPE_STREAM_OFF_FIN     \
-    (OSSL_QUIC_FRAME_TYPE_STREAM |                \
-     OSSL_QUIC_FRAME_FLAG_STREAM_OFF |            \
-     OSSL_QUIC_FRAME_FLAG_STREAM_FIN)
+        (OSSL_QUIC_FRAME_TYPE_STREAM |                \
+         OSSL_QUIC_FRAME_FLAG_STREAM_OFF |            \
+         OSSL_QUIC_FRAME_FLAG_STREAM_FIN)
 #  define OSSL_QUIC_FRAME_TYPE_STREAM_OFF_LEN     \
-    (OSSL_QUIC_FRAME_TYPE_STREAM |                \
-     OSSL_QUIC_FRAME_FLAG_STREAM_OFF |            \
-     OSSL_QUIC_FRAME_FLAG_STREAM_LEN)
+        (OSSL_QUIC_FRAME_TYPE_STREAM |                \
+         OSSL_QUIC_FRAME_FLAG_STREAM_OFF |            \
+         OSSL_QUIC_FRAME_FLAG_STREAM_LEN)
 #  define OSSL_QUIC_FRAME_TYPE_STREAM_OFF_LEN_FIN \
-    (OSSL_QUIC_FRAME_TYPE_STREAM |                \
-     OSSL_QUIC_FRAME_FLAG_STREAM_OFF |            \
-     OSSL_QUIC_FRAME_FLAG_STREAM_LEN |            \
-     OSSL_QUIC_FRAME_FLAG_STREAM_FIN)
+        (OSSL_QUIC_FRAME_TYPE_STREAM |                \
+         OSSL_QUIC_FRAME_FLAG_STREAM_OFF |            \
+         OSSL_QUIC_FRAME_FLAG_STREAM_LEN |            \
+         OSSL_QUIC_FRAME_FLAG_STREAM_FIN)
 
 #  define OSSL_QUIC_FRAME_TYPE_IS_STREAM(x) \
-    (((x) & ~OSSL_QUIC_FRAME_FLAG_STREAM_MASK) == OSSL_QUIC_FRAME_TYPE_STREAM)
+        (((x) & ~OSSL_QUIC_FRAME_FLAG_STREAM_MASK) == \
+         OSSL_QUIC_FRAME_TYPE_STREAM)
 #  define OSSL_QUIC_FRAME_TYPE_IS_ACK(x) \
-    (((x) & ~(uint64_t)1) == OSSL_QUIC_FRAME_TYPE_ACK_WITHOUT_ECN)
+        (((x) & ~(uint64_t)1) == OSSL_QUIC_FRAME_TYPE_ACK_WITHOUT_ECN)
 #  define OSSL_QUIC_FRAME_TYPE_IS_MAX_STREAMS(x) \
-    (((x) & ~(uint64_t)1) == OSSL_QUIC_FRAME_TYPE_MAX_STREAMS_BIDI)
+        (((x) & ~(uint64_t)1) == OSSL_QUIC_FRAME_TYPE_MAX_STREAMS_BIDI)
 #  define OSSL_QUIC_FRAME_TYPE_IS_STREAMS_BLOCKED(x) \
-    (((x) & ~(uint64_t)1) == OSSL_QUIC_FRAME_TYPE_STREAMS_BLOCKED_BIDI)
+        (((x) & ~(uint64_t)1) == OSSL_QUIC_FRAME_TYPE_STREAMS_BLOCKED_BIDI)
 #  define OSSL_QUIC_FRAME_TYPE_IS_CONN_CLOSE(x) \
-    (((x) & ~(uint64_t)1) == OSSL_QUIC_FRAME_TYPE_CONN_CLOSE_TRANSPORT)
+        (((x) & ~(uint64_t)1) == OSSL_QUIC_FRAME_TYPE_CONN_CLOSE_TRANSPORT)
 
 const char *ossl_quic_frame_type_to_string(uint64_t frame_type);
 
@@ -93,14 +94,14 @@ static ossl_unused ossl_inline int
 ossl_quic_frame_type_is_ack_eliciting(uint64_t frame_type)
 {
     switch (frame_type) {
-    case OSSL_QUIC_FRAME_TYPE_PADDING:
-    case OSSL_QUIC_FRAME_TYPE_ACK_WITHOUT_ECN:
-    case OSSL_QUIC_FRAME_TYPE_ACK_WITH_ECN:
-    case OSSL_QUIC_FRAME_TYPE_CONN_CLOSE_TRANSPORT:
-    case OSSL_QUIC_FRAME_TYPE_CONN_CLOSE_APP:
-        return 0;
-    default:
-        return 1;
+        case OSSL_QUIC_FRAME_TYPE_PADDING:
+        case OSSL_QUIC_FRAME_TYPE_ACK_WITHOUT_ECN:
+        case OSSL_QUIC_FRAME_TYPE_ACK_WITH_ECN:
+        case OSSL_QUIC_FRAME_TYPE_CONN_CLOSE_TRANSPORT:
+        case OSSL_QUIC_FRAME_TYPE_CONN_CLOSE_APP:
+            return 0;
+        default:
+            return 1;
     }
 }
 
@@ -154,11 +155,11 @@ typedef struct ossl_quic_frame_ack_st {
      * acknowledge at least one packet number.
      */
     OSSL_QUIC_ACK_RANGE        *ack_ranges;
-    size_t                      num_ack_ranges;
+    size_t num_ack_ranges;
 
-    OSSL_TIME                   delay_time;
-    uint64_t                    ect0, ect1, ecnce;
-    unsigned int                ecn_present : 1;
+    OSSL_TIME delay_time;
+    uint64_t ect0, ect1, ecnce;
+    unsigned int ecn_present : 1;
 } OSSL_QUIC_FRAME_ACK;
 
 /* Returns 1 if the given frame contains the given PN. */
@@ -166,9 +167,9 @@ int ossl_quic_frame_ack_contains_pn(const OSSL_QUIC_FRAME_ACK *ack, QUIC_PN pn);
 
 /* QUIC Frame: STREAM */
 typedef struct ossl_quic_frame_stream_st {
-    uint64_t                stream_id;  /* Stream ID */
-    uint64_t                offset;     /* Logical offset in stream */
-    uint64_t                len;        /* Length of data in bytes */
+    uint64_t stream_id;                 /* Stream ID */
+    uint64_t offset;                    /* Logical offset in stream */
+    uint64_t len;                       /* Length of data in bytes */
     const unsigned char    *data;
 
     /*
@@ -180,47 +181,47 @@ typedef struct ossl_quic_frame_stream_st {
      * length. If not set, the frame runs to the end of the packet and len has
      * been set accordingly.
      */
-    unsigned int            has_explicit_len : 1;
+    unsigned int has_explicit_len : 1;
 
     /* 1 if this is the end of the stream */
-    unsigned int            is_fin : 1;
+    unsigned int is_fin : 1;
 } OSSL_QUIC_FRAME_STREAM;
 
 /* QUIC Frame: CRYPTO */
 typedef struct ossl_quic_frame_crypto_st {
-    uint64_t                offset; /* Logical offset in stream */
-    uint64_t                len;    /* Length of the data in bytes */
+    uint64_t offset;                /* Logical offset in stream */
+    uint64_t len;                   /* Length of the data in bytes */
     const unsigned char    *data;
 } OSSL_QUIC_FRAME_CRYPTO;
 
 /* QUIC Frame: RESET_STREAM */
 typedef struct ossl_quic_frame_reset_stream_st {
-    uint64_t    stream_id;
-    uint64_t    app_error_code;
-    uint64_t    final_size;
+    uint64_t stream_id;
+    uint64_t app_error_code;
+    uint64_t final_size;
 } OSSL_QUIC_FRAME_RESET_STREAM;
 
 /* QUIC Frame: STOP_SENDING */
 typedef struct ossl_quic_frame_stop_sending_st {
-    uint64_t    stream_id;
-    uint64_t    app_error_code;
+    uint64_t stream_id;
+    uint64_t app_error_code;
 } OSSL_QUIC_FRAME_STOP_SENDING;
 
 /* QUIC Frame: NEW_CONNECTION_ID */
 typedef struct ossl_quic_frame_new_conn_id_st {
-    uint64_t                    seq_num;
-    uint64_t                    retire_prior_to;
-    QUIC_CONN_ID                conn_id;
-    QUIC_STATELESS_RESET_TOKEN  stateless_reset;
+    uint64_t seq_num;
+    uint64_t retire_prior_to;
+    QUIC_CONN_ID conn_id;
+    QUIC_STATELESS_RESET_TOKEN stateless_reset;
 } OSSL_QUIC_FRAME_NEW_CONN_ID;
 
 /* QUIC Frame: CONNECTION_CLOSE */
 typedef struct ossl_quic_frame_conn_close_st {
-    unsigned int    is_app : 1; /* 0: transport error, 1: app error */
-    uint64_t        error_code; /* 62-bit transport or app error code */
-    uint64_t        frame_type; /* transport errors only */
+    unsigned int is_app : 1;    /* 0: transport error, 1: app error */
+    uint64_t error_code;        /* 62-bit transport or app error code */
+    uint64_t frame_type;        /* transport errors only */
     char            *reason;    /* UTF-8 string, not necessarily zero-terminated */
-    size_t          reason_len; /* Length of reason in bytes */
+    size_t reason_len;          /* Length of reason in bytes */
 } OSSL_QUIC_FRAME_CONN_CLOSE;
 
 /*
@@ -240,7 +241,7 @@ int ossl_quic_wire_encode_padding(WPACKET *pkt, size_t num_bytes);
 /*
  * Encodes a QUIC PING frame to the packet writer. This frame type takes
  * no arguments.
-*/
+ */
 int ossl_quic_wire_encode_frame_ping(WPACKET *pkt);
 
 /*
@@ -289,7 +290,8 @@ int ossl_quic_wire_encode_frame_crypto_hdr(WPACKET *hdr,
  * CRYPTO frame header. Does not include the payload bytes in the count.
  * Returns 0 if input is invalid.
  */
-size_t ossl_quic_wire_get_encoded_frame_len_crypto_hdr(const OSSL_QUIC_FRAME_CRYPTO *f);
+size_t ossl_quic_wire_get_encoded_frame_len_crypto_hdr(
+    const OSSL_QUIC_FRAME_CRYPTO *f);
 
 /*
  * Encodes a QUIC CRYPTO frame to the packet writer.
@@ -332,7 +334,8 @@ int ossl_quic_wire_encode_frame_stream_hdr(WPACKET *pkt,
  * STREAM frame header. Does not include the payload bytes in the count.
  * Returns 0 if input is invalid.
  */
-size_t ossl_quic_wire_get_encoded_frame_len_stream_hdr(const OSSL_QUIC_FRAME_STREAM *f);
+size_t ossl_quic_wire_get_encoded_frame_len_stream_hdr(
+    const OSSL_QUIC_FRAME_STREAM *f);
 
 /*
  * Functions similarly to ossl_quic_wire_encode_frame_stream_hdr, but it also
@@ -368,7 +371,7 @@ int ossl_quic_wire_encode_frame_max_stream_data(WPACKET *pkt,
  * streams.
  */
 int ossl_quic_wire_encode_frame_max_streams(WPACKET *pkt,
-                                            char     is_uni,
+                                            char is_uni,
                                             uint64_t max_streams);
 
 /*
@@ -623,7 +626,7 @@ int ossl_quic_wire_decode_frame_max_data(PACKET *pkt,
  */
 int ossl_quic_wire_decode_frame_max_stream_data(PACKET *pkt,
                                                 uint64_t *stream_id,
-                                          uint64_t *max_stream_data);
+                                                uint64_t *max_stream_data);
 /*
  * Decodes a QUIC MAX_STREAMS frame. The Maximum Streams field is written to
  * *max_streams.
@@ -770,10 +773,10 @@ int ossl_quic_wire_decode_transport_param_cid(PACKET *pkt,
  * Decodes a QUIC transport parameter TLV containing a preferred_address.
  */
 typedef struct quic_preferred_addr_st {
-    uint16_t                    ipv4_port, ipv6_port;
-    unsigned char               ipv4[4], ipv6[16];
-    QUIC_STATELESS_RESET_TOKEN  stateless_reset;
-    QUIC_CONN_ID                cid;
+    uint16_t ipv4_port, ipv6_port;
+    unsigned char ipv4[4], ipv6[16];
+    QUIC_STATELESS_RESET_TOKEN stateless_reset;
+    QUIC_CONN_ID cid;
 } QUIC_PREFERRED_ADDR;
 
 int ossl_quic_wire_decode_transport_param_preferred_addr(PACKET *pkt,

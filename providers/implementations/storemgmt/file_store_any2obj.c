@@ -156,7 +156,7 @@ static int msblob2obj_decode(void *provctx, OSSL_CORE_BIO *cin, int selection,
     mem_len += mem_want;
     ERR_pop_to_mark();
 
- next:
+next:
     /* Free resources we no longer need. */
     BIO_free(in);
     if (!ok && mem != NULL) {
@@ -168,7 +168,7 @@ static int msblob2obj_decode(void *provctx, OSSL_CORE_BIO *cin, int selection,
     return any2obj_decode_final(provctx, OSSL_OBJECT_PKEY, mem,
                                 data_cb, data_cbarg);
 
- err:
+err:
     BIO_free(in);
     BUF_MEM_free(mem);
     return 0;
@@ -176,8 +176,8 @@ static int msblob2obj_decode(void *provctx, OSSL_CORE_BIO *cin, int selection,
 
 static OSSL_FUNC_decoder_decode_fn pvk2obj_decode;
 static int pvk2obj_decode(void *provctx, OSSL_CORE_BIO *cin, int selection,
-                             OSSL_CALLBACK *data_cb, void *data_cbarg,
-                             OSSL_PASSPHRASE_CALLBACK *pw_cb, void *pw_cbarg)
+                          OSSL_CALLBACK *data_cb, void *data_cbarg,
+                          OSSL_PASSPHRASE_CALLBACK *pw_cb, void *pw_cbarg)
 {
     BIO *in = ossl_bio_new_from_core_bio(provctx, cin);
     BUF_MEM *mem = NULL;
@@ -223,7 +223,7 @@ static int pvk2obj_decode(void *provctx, OSSL_CORE_BIO *cin, int selection,
     mem_len += mem_want;
     ERR_pop_to_mark();
 
- next:
+next:
     /* Free resources we no longer need. */
     BIO_free(in);
     if (!ok && mem != NULL) {
@@ -235,19 +235,20 @@ static int pvk2obj_decode(void *provctx, OSSL_CORE_BIO *cin, int selection,
     return any2obj_decode_final(provctx, OSSL_OBJECT_PKEY, mem,
                                 data_cb, data_cbarg);
 
- err:
+err:
     BIO_free(in);
     BUF_MEM_free(mem);
     return 0;
 }
 
 #define MAKE_DECODER(fromtype, objtype)                                      \
-    static const OSSL_DISPATCH fromtype##_to_obj_decoder_functions[] = {     \
-        { OSSL_FUNC_DECODER_NEWCTX, (void (*)(void))any2obj_newctx },        \
-        { OSSL_FUNC_DECODER_FREECTX, (void (*)(void))any2obj_freectx },      \
-        { OSSL_FUNC_DECODER_DECODE, (void (*)(void))fromtype##2obj_decode }, \
-        OSSL_DISPATCH_END                                                    \
-    }
+        static const OSSL_DISPATCH fromtype ## _to_obj_decoder_functions[] = {     \
+            { OSSL_FUNC_DECODER_NEWCTX, (void (*)(void)) any2obj_newctx },        \
+            { OSSL_FUNC_DECODER_FREECTX, (void (*)(void)) any2obj_freectx },      \
+            { OSSL_FUNC_DECODER_DECODE, \
+              (void (*)(void)) fromtype ## 2obj_decode }, \
+            OSSL_DISPATCH_END                                                    \
+        }
 
 MAKE_DECODER(der, OSSL_OBJECT_UNKNOWN);
 MAKE_DECODER(msblob, OSSL_OBJECT_PKEY);

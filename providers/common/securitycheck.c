@@ -33,13 +33,13 @@ int ossl_rsa_check_key(OSSL_LIB_CTX *ctx, const RSA *rsa, int operation)
     switch (operation) {
         case EVP_PKEY_OP_SIGN:
             protect = 1;
-            /* fallthrough */
+        /* fallthrough */
         case EVP_PKEY_OP_VERIFY:
             break;
         case EVP_PKEY_OP_ENCAPSULATE:
         case EVP_PKEY_OP_ENCRYPT:
             protect = 1;
-            /* fallthrough */
+        /* fallthrough */
         case EVP_PKEY_OP_VERIFYRECOVER:
         case EVP_PKEY_OP_DECAPSULATE:
         case EVP_PKEY_OP_DECRYPT:
@@ -182,7 +182,7 @@ int ossl_dsa_check_key(OSSL_LIB_CTX *ctx, const DSA *dsa, int sign)
                 return 1;
         }
 
-         /* Valid sizes for both sign and verify */
+        /* Valid sizes for both sign and verify */
         if (L == 2048 && (N == 224 || N == 256))    /* 112 bits */
             return 1;
         return (L == 3072 && N == 256);             /* 128 bits */

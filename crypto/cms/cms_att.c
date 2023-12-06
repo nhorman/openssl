@@ -41,27 +41,27 @@ static const struct {
 } cms_attribute_properties[] = {
     /* See RFC Section 11 */
     { NID_pkcs9_contentType, CMS_ATTR_F_SIGNED
-                             | CMS_ATTR_F_ONLY_ONE
-                             | CMS_ATTR_F_ONE_ATTR_VALUE
-                             | CMS_ATTR_F_REQUIRED_COND },
+      | CMS_ATTR_F_ONLY_ONE
+      | CMS_ATTR_F_ONE_ATTR_VALUE
+      | CMS_ATTR_F_REQUIRED_COND },
     { NID_pkcs9_messageDigest, CMS_ATTR_F_SIGNED
-                               | CMS_ATTR_F_ONLY_ONE
-                               | CMS_ATTR_F_ONE_ATTR_VALUE
-                               | CMS_ATTR_F_REQUIRED_COND },
+      | CMS_ATTR_F_ONLY_ONE
+      | CMS_ATTR_F_ONE_ATTR_VALUE
+      | CMS_ATTR_F_REQUIRED_COND },
     { NID_pkcs9_signingTime, CMS_ATTR_F_SIGNED
-                             | CMS_ATTR_F_ONLY_ONE
-                             | CMS_ATTR_F_ONE_ATTR_VALUE },
+      | CMS_ATTR_F_ONLY_ONE
+      | CMS_ATTR_F_ONE_ATTR_VALUE },
     { NID_pkcs9_countersignature, CMS_ATTR_F_UNSIGNED },
     /* ESS */
     { NID_id_smime_aa_signingCertificate, CMS_ATTR_F_SIGNED
-                                          | CMS_ATTR_F_ONLY_ONE
-                                          | CMS_ATTR_F_ONE_ATTR_VALUE },
+      | CMS_ATTR_F_ONLY_ONE
+      | CMS_ATTR_F_ONE_ATTR_VALUE },
     { NID_id_smime_aa_signingCertificateV2, CMS_ATTR_F_SIGNED
-                                            | CMS_ATTR_F_ONLY_ONE
-                                            | CMS_ATTR_F_ONE_ATTR_VALUE },
+      | CMS_ATTR_F_ONLY_ONE
+      | CMS_ATTR_F_ONE_ATTR_VALUE },
     { NID_id_smime_aa_receiptRequest, CMS_ATTR_F_SIGNED
-                                      | CMS_ATTR_F_ONLY_ONE
-                                      | CMS_ATTR_F_ONE_ATTR_VALUE }
+      | CMS_ATTR_F_ONLY_ONE
+      | CMS_ATTR_F_ONE_ATTR_VALUE }
 };
 
 /* CMS SignedData Attribute utilities */
@@ -242,7 +242,7 @@ static int cms_check_attribute(int nid, int flags, int type,
                 && count != 1)
             /* There should be at least one value */
             || count == 0)
-        return 0;
+            return 0;
     } else {
         /* fail if a required attribute is missing */
         if (have_attrs

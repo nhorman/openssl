@@ -190,8 +190,8 @@ const char *LP_find_file(LP_DIR_CTX **ctx, const char *directory)
                                  (*ctx)->entry_name,
                                  sizeof((*ctx)->entry_name), NULL, 0))
 #endif
-            for (index = 0; index < len_0; index++)
-                (*ctx)->entry_name[index] = (char)wdir[index];
+        for (index = 0; index < len_0; index++)
+            (*ctx)->entry_name[index] = (char)wdir[index];
     } else
         strncpy((*ctx)->entry_name, (const char *)(*ctx)->ctx.cFileName,
                 sizeof((*ctx)->entry_name) - 1);

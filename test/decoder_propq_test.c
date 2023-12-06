@@ -64,14 +64,16 @@ static int test_decode_nonfipsalg(void)
      * If NULL is passed as the propq here it uses the global property "fips=true",
      * Which we expect to fail if the decode uses a non FIPS algorithm
      */
-    if (!TEST_ptr_null(PEM_read_bio_PrivateKey_ex(bio, &privkey, &passcb, NULL, libctx, NULL)))
+    if (!TEST_ptr_null(PEM_read_bio_PrivateKey_ex(bio, &privkey, &passcb, NULL,
+                                                  libctx, NULL)))
         goto err;
 
     /*
      * Pass if we override the libctx global prop query to optionally use fips=true
      * This assumes that the libctx contains the default provider
      */
-    if (!TEST_ptr_null(PEM_read_bio_PrivateKey_ex(bio, &privkey, &passcb, NULL, libctx, "?fips=true")))
+    if (!TEST_ptr_null(PEM_read_bio_PrivateKey_ex(bio, &privkey, &passcb, NULL,
+                                                  libctx, "?fips=true")))
         goto err;
 
     ret = 1;
@@ -89,17 +91,17 @@ int setup_tests(void)
 
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_PROVIDER_NAME:
-            prov_name = opt_arg();
-            break;
-        case OPT_CONFIG_FILE:
-            config_file = opt_arg();
-            break;
-        case OPT_TEST_CASES:
-           break;
-        default:
-        case OPT_ERR:
-            return 0;
+            case OPT_PROVIDER_NAME:
+                prov_name = opt_arg();
+                break;
+            case OPT_CONFIG_FILE:
+                config_file = opt_arg();
+                break;
+            case OPT_TEST_CASES:
+                break;
+            default:
+            case OPT_ERR:
+                return 0;
         }
     }
 

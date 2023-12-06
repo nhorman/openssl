@@ -58,42 +58,42 @@ int sess_id_main(int argc, char **argv)
     prog = opt_init(argc, argv, sess_id_options);
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_EOF:
-        case OPT_ERR:
- opthelp:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto end;
-        case OPT_HELP:
-            opt_help(sess_id_options);
-            ret = 0;
-            goto end;
-        case OPT_INFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &informat))
-                goto opthelp;
-            break;
-        case OPT_OUTFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_PEMDER | OPT_FMT_NSS,
-                            &outformat))
-                goto opthelp;
-            break;
-        case OPT_IN:
-            infile = opt_arg();
-            break;
-        case OPT_OUT:
-            outfile = opt_arg();
-            break;
-        case OPT_TEXT:
-            text = ++num;
-            break;
-        case OPT_CERT:
-            cert = ++num;
-            break;
-        case OPT_NOOUT:
-            noout = ++num;
-            break;
-        case OPT_CONTEXT:
-            context = opt_arg();
-            break;
+            case OPT_EOF:
+            case OPT_ERR:
+opthelp:
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
+                goto end;
+            case OPT_HELP:
+                opt_help(sess_id_options);
+                ret = 0;
+                goto end;
+            case OPT_INFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &informat))
+                    goto opthelp;
+                break;
+            case OPT_OUTFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_PEMDER | OPT_FMT_NSS,
+                                &outformat))
+                    goto opthelp;
+                break;
+            case OPT_IN:
+                infile = opt_arg();
+                break;
+            case OPT_OUT:
+                outfile = opt_arg();
+                break;
+            case OPT_TEXT:
+                text = ++num;
+                break;
+            case OPT_CERT:
+                cert = ++num;
+                break;
+            case OPT_NOOUT:
+                noout = ++num;
+                break;
+            case OPT_CONTEXT:
+                context = opt_arg();
+                break;
         }
     }
 
@@ -167,7 +167,7 @@ int sess_id_main(int argc, char **argv)
         }
     }
     ret = 0;
- end:
+end:
     BIO_free_all(out);
     SSL_SESSION_free(x);
     return ret;
@@ -191,7 +191,7 @@ static SSL_SESSION *load_sess_id(char *infile, int format)
         goto end;
     }
 
- end:
+end:
     BIO_free(in);
     return x;
 }

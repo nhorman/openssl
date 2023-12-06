@@ -276,11 +276,11 @@ unsigned char *EVP_Q_mac(OSSL_LIB_CTX *libctx,
     if (key == NULL && keylen == 0)
         key = data;
     if ((ctx = EVP_MAC_CTX_new(mac)) != NULL
-            && EVP_MAC_CTX_set_params(ctx, subalg_param)
-            && EVP_MAC_CTX_set_params(ctx, params)
-            && EVP_MAC_init(ctx, key, keylen, params)
-            && EVP_MAC_update(ctx, data, datalen)
-            && EVP_MAC_final(ctx, out, &len, outsize)) {
+        && EVP_MAC_CTX_set_params(ctx, subalg_param)
+        && EVP_MAC_CTX_set_params(ctx, params)
+        && EVP_MAC_init(ctx, key, keylen, params)
+        && EVP_MAC_update(ctx, data, datalen)
+        && EVP_MAC_final(ctx, out, &len, outsize)) {
         if (out == NULL) {
             out = OPENSSL_malloc(len);
             if (out != NULL && !EVP_MAC_final(ctx, out, NULL, len)) {
@@ -293,7 +293,7 @@ unsigned char *EVP_Q_mac(OSSL_LIB_CTX *libctx,
             *outlen = len;
     }
 
- err:
+err:
     EVP_MAC_CTX_free(ctx);
     EVP_MAC_free(mac);
     return res;

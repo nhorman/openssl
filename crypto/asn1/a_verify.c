@@ -60,7 +60,7 @@ int ASN1_verify(i2d_of_void *i2d, X509_ALGOR *a, ASN1_BIT_STRING *signature,
 
     i2d(data, &p);
     ret = EVP_VerifyInit_ex(ctx, type, NULL)
-        && EVP_VerifyUpdate(ctx, (unsigned char *)buf_in, inl);
+          && EVP_VerifyUpdate(ctx, (unsigned char *)buf_in, inl);
 
     OPENSSL_clear_free(buf_in, (unsigned int)inl);
 
@@ -77,7 +77,7 @@ int ASN1_verify(i2d_of_void *i2d, X509_ALGOR *a, ASN1_BIT_STRING *signature,
         goto err;
     }
     ret = 1;
- err:
+err:
     EVP_MD_CTX_free(ctx);
     return ret;
 }
@@ -88,7 +88,8 @@ int ASN1_item_verify(const ASN1_ITEM *it, const X509_ALGOR *alg,
                      const ASN1_BIT_STRING *signature, const void *data,
                      EVP_PKEY *pkey)
 {
-    return ASN1_item_verify_ex(it, alg, signature, data, NULL, pkey, NULL, NULL);
+    return ASN1_item_verify_ex(it, alg, signature, data, NULL, pkey, NULL,
+                               NULL);
 }
 
 int ASN1_item_verify_ex(const ASN1_ITEM *it, const X509_ALGOR *alg,
@@ -161,7 +162,8 @@ int ASN1_item_verify_ctx(const ASN1_ITEM *it, const X509_ALGOR *alg,
          * future version of OpenSSL we should push this to the provider.
          */
         if (mdnid == NID_undef && pknid == EVP_PKEY_RSA_PSS) {
-            if (!EVP_PKEY_is_a(pkey, "RSA") && !EVP_PKEY_is_a(pkey, "RSA-PSS")) {
+            if (!EVP_PKEY_is_a(pkey,
+                               "RSA") && !EVP_PKEY_is_a(pkey, "RSA-PSS")) {
                 ERR_raise(ERR_LIB_ASN1, ASN1_R_WRONG_PUBLIC_KEY_TYPE);
                 goto err;
             }
@@ -217,7 +219,7 @@ int ASN1_item_verify_ctx(const ASN1_ITEM *it, const X509_ALGOR *alg,
         goto err;
     }
     ret = 1;
- err:
+err:
     OPENSSL_clear_free(buf_in, inll);
     return ret;
 }

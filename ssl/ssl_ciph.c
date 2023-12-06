@@ -126,7 +126,7 @@ static int ssl_cipher_info_find(const ssl_cipher_table *table,
 }
 
 #define ssl_cipher_info_lookup(table, x) \
-    ssl_cipher_info_find(table, OSSL_NELEM(table), x)
+        ssl_cipher_info_find(table, OSSL_NELEM(table), x)
 
 /*
  * PKEY_TYPE for GOST89MAC is known in advance, but, because implementation
@@ -244,7 +244,8 @@ static const SSL_CIPHER cipher_aliases[] = {
     {0, SSL_TXT_CAMELLIA256, NULL, 0, 0, 0, SSL_CAMELLIA256},
     {0, SSL_TXT_CAMELLIA, NULL, 0, 0, 0, SSL_CAMELLIA},
     {0, SSL_TXT_CHACHA20, NULL, 0, 0, 0, SSL_CHACHA20},
-    {0, SSL_TXT_GOST2012_GOST8912_GOST8912, NULL, 0, 0, 0, SSL_eGOST2814789CNT12},
+    {0, SSL_TXT_GOST2012_GOST8912_GOST8912, NULL, 0, 0, 0,
+     SSL_eGOST2814789CNT12},
 
     {0, SSL_TXT_ARIA, NULL, 0, 0, 0, SSL_ARIA},
     {0, SSL_TXT_ARIA_GCM, NULL, 0, 0, 0, SSL_ARIA128GCM | SSL_ARIA256GCM},
@@ -482,7 +483,8 @@ static int load_builtin_compressions(void)
 int ssl_cipher_get_evp_cipher(SSL_CTX *ctx, const SSL_CIPHER *sslc,
                               const EVP_CIPHER **enc)
 {
-    int i = ssl_cipher_info_lookup(ssl_cipher_table_cipher, sslc->algorithm_enc);
+    int i =
+        ssl_cipher_info_lookup(ssl_cipher_table_cipher, sslc->algorithm_enc);
 
     if (i == -1) {
         *enc = NULL;
@@ -500,7 +502,7 @@ int ssl_cipher_get_evp_cipher(SSL_CTX *ctx, const SSL_CIPHER *sslc,
             const EVP_CIPHER *cipher = ctx->ssl_cipher_methods[i];
 
             if (cipher == NULL
-                    || !ssl_evp_cipher_up_ref(cipher))
+                || !ssl_evp_cipher_up_ref(cipher))
                 return 0;
             *enc = ctx->ssl_cipher_methods[i];
         }
@@ -560,7 +562,7 @@ int ssl_cipher_get_evp(SSL_CTX *ctx, const SSL_SESSION *s,
         const EVP_MD *digest = ctx->ssl_digest_methods[i];
 
         if (digest == NULL
-                || !ssl_evp_md_up_ref(digest)) {
+            || !ssl_evp_md_up_ref(digest)) {
             ssl_evp_cipher_free(*enc);
             return 0;
         }
@@ -572,37 +574,37 @@ int ssl_cipher_get_evp(SSL_CTX *ctx, const SSL_SESSION *s,
     }
 
     if ((*enc != NULL)
-        && (*md != NULL 
+        && (*md != NULL
             || (EVP_CIPHER_get_flags(*enc) & EVP_CIPH_FLAG_AEAD_CIPHER))
         && (!mac_pkey_type || *mac_pkey_type != NID_undef)) {
         const EVP_CIPHER *evp = NULL;
 
         if (use_etm
-                || s->ssl_version >> 8 != TLS1_VERSION_MAJOR
-                || s->ssl_version < TLS1_VERSION)
+            || s->ssl_version >> 8 != TLS1_VERSION_MAJOR
+            || s->ssl_version < TLS1_VERSION)
             return 1;
 
         if (c->algorithm_enc == SSL_RC4
-                && c->algorithm_mac == SSL_MD5)
+            && c->algorithm_mac == SSL_MD5)
             evp = ssl_evp_cipher_fetch(ctx->libctx, NID_rc4_hmac_md5,
                                        ctx->propq);
         else if (c->algorithm_enc == SSL_AES128
-                    && c->algorithm_mac == SSL_SHA1)
+                 && c->algorithm_mac == SSL_SHA1)
             evp = ssl_evp_cipher_fetch(ctx->libctx,
                                        NID_aes_128_cbc_hmac_sha1,
                                        ctx->propq);
         else if (c->algorithm_enc == SSL_AES256
-                    && c->algorithm_mac == SSL_SHA1)
-             evp = ssl_evp_cipher_fetch(ctx->libctx,
-                                        NID_aes_256_cbc_hmac_sha1,
-                                        ctx->propq);
+                 && c->algorithm_mac == SSL_SHA1)
+            evp = ssl_evp_cipher_fetch(ctx->libctx,
+                                       NID_aes_256_cbc_hmac_sha1,
+                                       ctx->propq);
         else if (c->algorithm_enc == SSL_AES128
-                    && c->algorithm_mac == SSL_SHA256)
+                 && c->algorithm_mac == SSL_SHA256)
             evp = ssl_evp_cipher_fetch(ctx->libctx,
                                        NID_aes_128_cbc_hmac_sha256,
                                        ctx->propq);
         else if (c->algorithm_enc == SSL_AES256
-                    && c->algorithm_mac == SSL_SHA256)
+                 && c->algorithm_mac == SSL_SHA256)
             evp = ssl_evp_cipher_fetch(ctx->libctx,
                                        NID_aes_256_cbc_hmac_sha256,
                                        ctx->propq);
@@ -1053,7 +1055,8 @@ static int ssl_cipher_process_rulestr(const char *rule_str,
                    ((ch >= 'a') && (ch <= 'z')) ||
                    (ch == '-') || (ch == '_') || (ch == '.') || (ch == '='))
 #else
-            while (isalnum((unsigned char)ch) || (ch == '-') || (ch == '_') || (ch == '.')
+            while (isalnum((unsigned char)ch) || (ch == '-') || (ch == '_') ||
+                   (ch == '.')
                    || (ch == '='))
 #endif
             {
@@ -1225,7 +1228,8 @@ static int ssl_cipher_process_rulestr(const char *rule_str,
             ok = 0;
             if ((buflen == 8) && HAS_PREFIX(buf, "STRENGTH")) {
                 ok = ssl_cipher_strength_sort(head_p, tail_p);
-            } else if (buflen == 10 && CHECK_AND_SKIP_PREFIX(buf, "SECLEVEL=")) {
+            } else if (buflen == 10 &&
+                       CHECK_AND_SKIP_PREFIX(buf, "SECLEVEL=")) {
                 int level = *buf - '0';
                 if (level < 0 || level > 5) {
                     ERR_raise(ERR_LIB_SSL, SSL_R_INVALID_COMMAND);
@@ -1294,26 +1298,26 @@ static int check_suiteb_cipher_list(const SSL_METHOD *meth, CERT *c,
     }
 
     switch (suiteb_flags) {
-    case SSL_CERT_FLAG_SUITEB_128_LOS:
-        if (suiteb_comb2)
+        case SSL_CERT_FLAG_SUITEB_128_LOS:
+            if (suiteb_comb2)
+                *prule_str = "ECDHE-ECDSA-AES256-GCM-SHA384";
+            else
+                *prule_str =
+                    "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384";
+            break;
+        case SSL_CERT_FLAG_SUITEB_128_LOS_ONLY:
+            *prule_str = "ECDHE-ECDSA-AES128-GCM-SHA256";
+            break;
+        case SSL_CERT_FLAG_SUITEB_192_LOS:
             *prule_str = "ECDHE-ECDSA-AES256-GCM-SHA384";
-        else
-            *prule_str =
-                "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384";
-        break;
-    case SSL_CERT_FLAG_SUITEB_128_LOS_ONLY:
-        *prule_str = "ECDHE-ECDSA-AES128-GCM-SHA256";
-        break;
-    case SSL_CERT_FLAG_SUITEB_192_LOS:
-        *prule_str = "ECDHE-ECDSA-AES256-GCM-SHA384";
-        break;
+            break;
     }
     return 1;
 }
 
 static int ciphersuite_cb(const char *elem, int len, void *arg)
 {
-    STACK_OF(SSL_CIPHER) *ciphersuites = (STACK_OF(SSL_CIPHER) *)arg;
+    STACK_OF(SSL_CIPHER) *ciphersuites = (STACK_OF(SSL_CIPHER) *) arg;
     const SSL_CIPHER *cipher;
     /* Arbitrary sized temp buffer for the cipher name. Should be big enough */
     char name[80];
@@ -1338,7 +1342,8 @@ static int ciphersuite_cb(const char *elem, int len, void *arg)
     return 1;
 }
 
-static __owur int set_ciphersuites(STACK_OF(SSL_CIPHER) **currciphers, const char *str)
+static __owur int set_ciphersuites(STACK_OF(SSL_CIPHER) **currciphers,
+                                   const char *str)
 {
     STACK_OF(SSL_CIPHER) *newciphers = sk_SSL_CIPHER_new_null();
 
@@ -1347,8 +1352,8 @@ static __owur int set_ciphersuites(STACK_OF(SSL_CIPHER) **currciphers, const cha
 
     /* Parse the list. We explicitly allow an empty list */
     if (*str != '\0'
-            && (CONF_parse_list(str, ':', 1, ciphersuite_cb, newciphers) <= 0
-                || sk_SSL_CIPHER_num(newciphers) == 0)) {
+        && (CONF_parse_list(str, ':', 1, ciphersuite_cb, newciphers) <= 0
+            || sk_SSL_CIPHER_num(newciphers) == 0)) {
         ERR_raise(ERR_LIB_SSL, SSL_R_NO_CIPHER_MATCH);
         sk_SSL_CIPHER_free(newciphers);
         return 0;
@@ -1394,7 +1399,7 @@ static int update_cipher_list(SSL_CTX *ctx,
      */
     while (sk_SSL_CIPHER_num(tmp_cipher_list) > 0
            && sk_SSL_CIPHER_value(tmp_cipher_list, 0)->min_tls
-              == TLS1_3_VERSION)
+           == TLS1_3_VERSION)
         (void)sk_SSL_CIPHER_delete(tmp_cipher_list, 0);
 
     /* Insert the new TLSv1.3 ciphersuites */
@@ -1403,9 +1408,9 @@ static int update_cipher_list(SSL_CTX *ctx,
 
         /* Don't include any TLSv1.3 ciphersuites that are disabled */
         if ((sslc->algorithm_enc & ctx->disabled_enc_mask) == 0
-                && (ssl_cipher_table_mac[sslc->algorithm2
-                                         & SSL_HANDSHAKE_MAC_MASK].mask
-                    & ctx->disabled_mac_mask) == 0) {
+            && (ssl_cipher_table_mac[sslc->algorithm2
+                                     & SSL_HANDSHAKE_MAC_MASK].mask
+                & ctx->disabled_mac_mask) == 0) {
             sk_SSL_CIPHER_unshift(tmp_cipher_list, sslc);
         }
     }
@@ -1426,7 +1431,8 @@ int SSL_CTX_set_ciphersuites(SSL_CTX *ctx, const char *str)
     int ret = set_ciphersuites(&(ctx->tls13_ciphersuites), str);
 
     if (ret && ctx->cipher_list != NULL)
-        return update_cipher_list(ctx, &ctx->cipher_list, &ctx->cipher_list_by_id,
+        return update_cipher_list(ctx, &ctx->cipher_list,
+                                  &ctx->cipher_list_by_id,
                                   ctx->tls13_ciphersuites);
 
     return ret;
@@ -1456,9 +1462,11 @@ int SSL_set_ciphersuites(SSL *s, const char *str)
 }
 
 STACK_OF(SSL_CIPHER) *ssl_create_cipher_list(SSL_CTX *ctx,
-                                             STACK_OF(SSL_CIPHER) *tls13_ciphersuites,
+                                             STACK_OF(
+                                                 SSL_CIPHER) *tls13_ciphersuites,
                                              STACK_OF(SSL_CIPHER) **cipher_list,
-                                             STACK_OF(SSL_CIPHER) **cipher_list_by_id,
+                                             STACK_OF(
+                                                 SSL_CIPHER) **cipher_list_by_id,
                                              const char *rule_str,
                                              CERT *c)
 {
@@ -1656,9 +1664,9 @@ STACK_OF(SSL_CIPHER) *ssl_create_cipher_list(SSL_CTX *ctx,
 
         /* Don't include any TLSv1.3 ciphers that are disabled */
         if ((sslc->algorithm_enc & disabled_enc) != 0
-                || (ssl_cipher_table_mac[sslc->algorithm2
-                                         & SSL_HANDSHAKE_MAC_MASK].mask
-                    & ctx->disabled_mac_mask) != 0) {
+            || (ssl_cipher_table_mac[sslc->algorithm2
+                                     & SSL_HANDSHAKE_MAC_MASK].mask
+                & ctx->disabled_mac_mask) != 0) {
             sk_SSL_CIPHER_delete(tls13_ciphersuites, i);
             i--;
             continue;
@@ -1708,7 +1716,8 @@ char *SSL_CIPHER_description(const SSL_CIPHER *cipher, char *buf, int len)
     const char *ver;
     const char *kx, *au, *enc, *mac;
     uint32_t alg_mkey, alg_auth, alg_enc, alg_mac;
-    static const char *format = "%-30s %-7s Kx=%-8s Au=%-5s Enc=%-22s Mac=%-4s\n";
+    static const char *format =
+        "%-30s %-7s Kx=%-8s Au=%-5s Enc=%-22s Mac=%-4s\n";
 
     if (buf == NULL) {
         len = 128;
@@ -1726,183 +1735,183 @@ char *SSL_CIPHER_description(const SSL_CIPHER *cipher, char *buf, int len)
     ver = ssl_protocol_to_string(cipher->min_tls);
 
     switch (alg_mkey) {
-    case SSL_kRSA:
-        kx = "RSA";
-        break;
-    case SSL_kDHE:
-        kx = "DH";
-        break;
-    case SSL_kECDHE:
-        kx = "ECDH";
-        break;
-    case SSL_kPSK:
-        kx = "PSK";
-        break;
-    case SSL_kRSAPSK:
-        kx = "RSAPSK";
-        break;
-    case SSL_kECDHEPSK:
-        kx = "ECDHEPSK";
-        break;
-    case SSL_kDHEPSK:
-        kx = "DHEPSK";
-        break;
-    case SSL_kSRP:
-        kx = "SRP";
-        break;
-    case SSL_kGOST:
-        kx = "GOST";
-        break;
-    case SSL_kGOST18:
-        kx = "GOST18";
-        break;
-    case SSL_kANY:
-        kx = "any";
-        break;
-    default:
-        kx = "unknown";
+        case SSL_kRSA:
+            kx = "RSA";
+            break;
+        case SSL_kDHE:
+            kx = "DH";
+            break;
+        case SSL_kECDHE:
+            kx = "ECDH";
+            break;
+        case SSL_kPSK:
+            kx = "PSK";
+            break;
+        case SSL_kRSAPSK:
+            kx = "RSAPSK";
+            break;
+        case SSL_kECDHEPSK:
+            kx = "ECDHEPSK";
+            break;
+        case SSL_kDHEPSK:
+            kx = "DHEPSK";
+            break;
+        case SSL_kSRP:
+            kx = "SRP";
+            break;
+        case SSL_kGOST:
+            kx = "GOST";
+            break;
+        case SSL_kGOST18:
+            kx = "GOST18";
+            break;
+        case SSL_kANY:
+            kx = "any";
+            break;
+        default:
+            kx = "unknown";
     }
 
     switch (alg_auth) {
-    case SSL_aRSA:
-        au = "RSA";
-        break;
-    case SSL_aDSS:
-        au = "DSS";
-        break;
-    case SSL_aNULL:
-        au = "None";
-        break;
-    case SSL_aECDSA:
-        au = "ECDSA";
-        break;
-    case SSL_aPSK:
-        au = "PSK";
-        break;
-    case SSL_aSRP:
-        au = "SRP";
-        break;
-    case SSL_aGOST01:
-        au = "GOST01";
-        break;
-    /* New GOST ciphersuites have both SSL_aGOST12 and SSL_aGOST01 bits */
-    case (SSL_aGOST12 | SSL_aGOST01):
-        au = "GOST12";
-        break;
-    case SSL_aANY:
-        au = "any";
-        break;
-    default:
-        au = "unknown";
-        break;
+        case SSL_aRSA:
+            au = "RSA";
+            break;
+        case SSL_aDSS:
+            au = "DSS";
+            break;
+        case SSL_aNULL:
+            au = "None";
+            break;
+        case SSL_aECDSA:
+            au = "ECDSA";
+            break;
+        case SSL_aPSK:
+            au = "PSK";
+            break;
+        case SSL_aSRP:
+            au = "SRP";
+            break;
+        case SSL_aGOST01:
+            au = "GOST01";
+            break;
+        /* New GOST ciphersuites have both SSL_aGOST12 and SSL_aGOST01 bits */
+        case (SSL_aGOST12 | SSL_aGOST01):
+            au = "GOST12";
+            break;
+        case SSL_aANY:
+            au = "any";
+            break;
+        default:
+            au = "unknown";
+            break;
     }
 
     switch (alg_enc) {
-    case SSL_DES:
-        enc = "DES(56)";
-        break;
-    case SSL_3DES:
-        enc = "3DES(168)";
-        break;
-    case SSL_RC4:
-        enc = "RC4(128)";
-        break;
-    case SSL_RC2:
-        enc = "RC2(128)";
-        break;
-    case SSL_IDEA:
-        enc = "IDEA(128)";
-        break;
-    case SSL_eNULL:
-        enc = "None";
-        break;
-    case SSL_AES128:
-        enc = "AES(128)";
-        break;
-    case SSL_AES256:
-        enc = "AES(256)";
-        break;
-    case SSL_AES128GCM:
-        enc = "AESGCM(128)";
-        break;
-    case SSL_AES256GCM:
-        enc = "AESGCM(256)";
-        break;
-    case SSL_AES128CCM:
-        enc = "AESCCM(128)";
-        break;
-    case SSL_AES256CCM:
-        enc = "AESCCM(256)";
-        break;
-    case SSL_AES128CCM8:
-        enc = "AESCCM8(128)";
-        break;
-    case SSL_AES256CCM8:
-        enc = "AESCCM8(256)";
-        break;
-    case SSL_CAMELLIA128:
-        enc = "Camellia(128)";
-        break;
-    case SSL_CAMELLIA256:
-        enc = "Camellia(256)";
-        break;
-    case SSL_ARIA128GCM:
-        enc = "ARIAGCM(128)";
-        break;
-    case SSL_ARIA256GCM:
-        enc = "ARIAGCM(256)";
-        break;
-    case SSL_SEED:
-        enc = "SEED(128)";
-        break;
-    case SSL_eGOST2814789CNT:
-    case SSL_eGOST2814789CNT12:
-        enc = "GOST89(256)";
-        break;
-    case SSL_MAGMA:
-        enc = "MAGMA";
-        break;
-    case SSL_KUZNYECHIK:
-        enc = "KUZNYECHIK";
-        break;
-    case SSL_CHACHA20POLY1305:
-        enc = "CHACHA20/POLY1305(256)";
-        break;
-    default:
-        enc = "unknown";
-        break;
+        case SSL_DES:
+            enc = "DES(56)";
+            break;
+        case SSL_3DES:
+            enc = "3DES(168)";
+            break;
+        case SSL_RC4:
+            enc = "RC4(128)";
+            break;
+        case SSL_RC2:
+            enc = "RC2(128)";
+            break;
+        case SSL_IDEA:
+            enc = "IDEA(128)";
+            break;
+        case SSL_eNULL:
+            enc = "None";
+            break;
+        case SSL_AES128:
+            enc = "AES(128)";
+            break;
+        case SSL_AES256:
+            enc = "AES(256)";
+            break;
+        case SSL_AES128GCM:
+            enc = "AESGCM(128)";
+            break;
+        case SSL_AES256GCM:
+            enc = "AESGCM(256)";
+            break;
+        case SSL_AES128CCM:
+            enc = "AESCCM(128)";
+            break;
+        case SSL_AES256CCM:
+            enc = "AESCCM(256)";
+            break;
+        case SSL_AES128CCM8:
+            enc = "AESCCM8(128)";
+            break;
+        case SSL_AES256CCM8:
+            enc = "AESCCM8(256)";
+            break;
+        case SSL_CAMELLIA128:
+            enc = "Camellia(128)";
+            break;
+        case SSL_CAMELLIA256:
+            enc = "Camellia(256)";
+            break;
+        case SSL_ARIA128GCM:
+            enc = "ARIAGCM(128)";
+            break;
+        case SSL_ARIA256GCM:
+            enc = "ARIAGCM(256)";
+            break;
+        case SSL_SEED:
+            enc = "SEED(128)";
+            break;
+        case SSL_eGOST2814789CNT:
+        case SSL_eGOST2814789CNT12:
+            enc = "GOST89(256)";
+            break;
+        case SSL_MAGMA:
+            enc = "MAGMA";
+            break;
+        case SSL_KUZNYECHIK:
+            enc = "KUZNYECHIK";
+            break;
+        case SSL_CHACHA20POLY1305:
+            enc = "CHACHA20/POLY1305(256)";
+            break;
+        default:
+            enc = "unknown";
+            break;
     }
 
     switch (alg_mac) {
-    case SSL_MD5:
-        mac = "MD5";
-        break;
-    case SSL_SHA1:
-        mac = "SHA1";
-        break;
-    case SSL_SHA256:
-        mac = "SHA256";
-        break;
-    case SSL_SHA384:
-        mac = "SHA384";
-        break;
-    case SSL_AEAD:
-        mac = "AEAD";
-        break;
-    case SSL_GOST89MAC:
-    case SSL_GOST89MAC12:
-        mac = "GOST89";
-        break;
-    case SSL_GOST94:
-        mac = "GOST94";
-        break;
-    case SSL_GOST12_256:
-    case SSL_GOST12_512:
-        mac = "GOST2012";
-        break;
-    default:
-        mac = "unknown";
-        break;
+        case SSL_MD5:
+            mac = "MD5";
+            break;
+        case SSL_SHA1:
+            mac = "SHA1";
+            break;
+        case SSL_SHA256:
+            mac = "SHA256";
+            break;
+        case SSL_SHA384:
+            mac = "SHA384";
+            break;
+        case SSL_AEAD:
+            mac = "AEAD";
+            break;
+        case SSL_GOST89MAC:
+        case SSL_GOST89MAC12:
+            mac = "GOST89";
+            break;
+        case SSL_GOST94:
+            mac = "GOST94";
+            break;
+        case SSL_GOST12_256:
+        case SSL_GOST12_512:
+            mac = "GOST2012";
+            break;
+        default:
+            mac = "unknown";
+            break;
     }
 
     BIO_snprintf(buf, len, format, cipher->name, ver, kx, au, enc, mac);
@@ -2106,7 +2115,8 @@ const SSL_CIPHER *ssl_get_cipher_by_char(SSL_CONNECTION *s,
                                          const unsigned char *ptr,
                                          int all)
 {
-    const SSL_CIPHER *c = SSL_CONNECTION_GET_SSL(s)->method->get_cipher_by_char(ptr);
+    const SSL_CIPHER *c = SSL_CONNECTION_GET_SSL(s)->method->get_cipher_by_char(
+        ptr);
 
     if (c == NULL || (!all && c->valid == 0))
         return NULL;

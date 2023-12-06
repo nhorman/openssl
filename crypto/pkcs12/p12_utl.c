@@ -192,7 +192,7 @@ char *OPENSSL_uni2utf8(const unsigned char *uni, int unilen)
          */
         if (j < 0) return OPENSSL_uni2asc(uni, unilen);
         if (j == 4) i += 4;
-        else        i += 2;
+        else i += 2;
         asclen += j;
     }
 
@@ -207,7 +207,7 @@ char *OPENSSL_uni2utf8(const unsigned char *uni, int unilen)
     for (asclen = 0, i = 0; i < unilen; ) {
         j = bmp_to_utf8(asctmp+asclen, uni+i, unilen-i);
         if (j == 4) i += 4;
-        else        i += 2;
+        else i += 2;
         asclen += j;
     }
 

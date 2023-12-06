@@ -54,7 +54,7 @@ static int s390x_mod_exp_hw(BIGNUM *r, const BIGNUM *a, const BIGNUM *p,
          */
         OPENSSL_s390xcex = -1;
     }
- dealloc:
+dealloc:
     OPENSSL_clear_free(buffer, 4 * size);
     return res;
 }
@@ -122,7 +122,7 @@ int s390x_crt(BIGNUM *r, const BIGNUM *i, const BIGNUM *p, const BIGNUM *q,
          */
         OPENSSL_s390xcex = -1;
     }
- dealloc:
+dealloc:
     OPENSSL_clear_free(buffer, 9 * size + 24);
     return res;
 }

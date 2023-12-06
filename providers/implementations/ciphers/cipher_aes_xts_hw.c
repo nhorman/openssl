@@ -18,21 +18,21 @@
 #define XTS_SET_KEY_FN(fn_set_enc_key, fn_set_dec_key,                         \
                        fn_block_enc, fn_block_dec,                             \
                        fn_stream_enc, fn_stream_dec) {                         \
-    size_t bytes = keylen / 2;                                                 \
-    size_t bits = bytes * 8;                                                   \
+            size_t bytes = keylen / 2;                                                 \
+            size_t bits = bytes * 8;                                                   \
                                                                                \
-    if (ctx->enc) {                                                            \
-        fn_set_enc_key(key, bits, &xctx->ks1.ks);                              \
-        xctx->xts.block1 = (block128_f)fn_block_enc;                           \
-    } else {                                                                   \
-        fn_set_dec_key(key, bits, &xctx->ks1.ks);                              \
-        xctx->xts.block1 = (block128_f)fn_block_dec;                           \
-    }                                                                          \
-    fn_set_enc_key(key + bytes, bits, &xctx->ks2.ks);                          \
-    xctx->xts.block2 = (block128_f)fn_block_enc;                               \
-    xctx->xts.key1 = &xctx->ks1;                                               \
-    xctx->xts.key2 = &xctx->ks2;                                               \
-    xctx->stream = ctx->enc ? fn_stream_enc : fn_stream_dec;                   \
+            if (ctx->enc) {                                                            \
+                fn_set_enc_key(key, bits, &xctx->ks1.ks);                              \
+                xctx->xts.block1 = (block128_f)fn_block_enc;                           \
+            } else {                                                                   \
+                fn_set_dec_key(key, bits, &xctx->ks1.ks);                              \
+                xctx->xts.block1 = (block128_f)fn_block_dec;                           \
+            }                                                                          \
+            fn_set_enc_key(key + bytes, bits, &xctx->ks2.ks);                          \
+            xctx->xts.block2 = (block128_f)fn_block_enc;                               \
+            xctx->xts.key1 = &xctx->ks1;                                               \
+            xctx->xts.key2 = &xctx->ks2;                                               \
+            xctx->stream = ctx->enc ? fn_stream_enc : fn_stream_dec;                   \
 }
 
 static int cipher_hw_aes_xts_generic_initkey(PROV_CIPHER_CTX *ctx,
@@ -111,14 +111,14 @@ static int cipher_hw_aesni_xts_initkey(PROV_CIPHER_CTX *ctx,
 }
 
 # define PROV_CIPHER_HW_declare_xts()                                          \
-static const PROV_CIPHER_HW aesni_xts = {                                      \
-    cipher_hw_aesni_xts_initkey,                                               \
-    NULL,                                                                      \
-    cipher_hw_aes_xts_copyctx                                                  \
-};
+        static const PROV_CIPHER_HW aesni_xts = {                                      \
+            cipher_hw_aesni_xts_initkey,                                               \
+            NULL,                                                                      \
+            cipher_hw_aes_xts_copyctx                                                  \
+        };
 # define PROV_CIPHER_HW_select_xts()                                           \
-if (AESNI_CAPABLE)                                                             \
-    return &aesni_xts;
+        if (AESNI_CAPABLE)                                                             \
+        return &aesni_xts;
 
 # elif defined(SPARC_AES_CAPABLE)
 
@@ -131,16 +131,16 @@ static int cipher_hw_aes_xts_t4_initkey(PROV_CIPHER_CTX *ctx,
 
     /* Note: keylen is the size of 2 keys */
     switch (keylen) {
-    case 32:
-        stream_enc = aes128_t4_xts_encrypt;
-        stream_dec = aes128_t4_xts_decrypt;
-        break;
-    case 64:
-        stream_enc = aes256_t4_xts_encrypt;
-        stream_dec = aes256_t4_xts_decrypt;
-        break;
-    default:
-        return 0;
+        case 32:
+            stream_enc = aes128_t4_xts_encrypt;
+            stream_dec = aes128_t4_xts_decrypt;
+            break;
+        case 64:
+            stream_enc = aes256_t4_xts_encrypt;
+            stream_dec = aes256_t4_xts_decrypt;
+            break;
+        default:
+            return 0;
     }
 
     XTS_SET_KEY_FN(aes_t4_set_encrypt_key, aes_t4_set_decrypt_key,
@@ -150,14 +150,14 @@ static int cipher_hw_aes_xts_t4_initkey(PROV_CIPHER_CTX *ctx,
 }
 
 # define PROV_CIPHER_HW_declare_xts()                                          \
-static const PROV_CIPHER_HW aes_xts_t4 = {                                     \
-    cipher_hw_aes_xts_t4_initkey,                                              \
-    NULL,                                                                      \
-    cipher_hw_aes_xts_copyctx                                                  \
-};
+        static const PROV_CIPHER_HW aes_xts_t4 = {                                     \
+            cipher_hw_aes_xts_t4_initkey,                                              \
+            NULL,                                                                      \
+            cipher_hw_aes_xts_copyctx                                                  \
+        };
 # define PROV_CIPHER_HW_select_xts()                                           \
-if (SPARC_AES_CAPABLE)                                                         \
-    return &aes_xts_t4;
+        if (SPARC_AES_CAPABLE)                                                         \
+        return &aes_xts_t4;
 
 #elif defined(__riscv) && __riscv_xlen == 64
 
@@ -220,30 +220,30 @@ static int cipher_hw_aes_xts_rv64i_zvkned_initkey(PROV_CIPHER_CTX *ctx,
 }
 
 # define PROV_CIPHER_HW_declare_xts()                                          \
-static const PROV_CIPHER_HW aes_xts_rv64i_zknd_zkne = {                        \
-    cipher_hw_aes_xts_rv64i_zknd_zkne_initkey,                                 \
-    NULL,                                                                      \
-    cipher_hw_aes_xts_copyctx                                                  \
-};                                                                             \
-static const PROV_CIPHER_HW aes_xts_rv64i_zvkned = {                           \
-    cipher_hw_aes_xts_rv64i_zvkned_initkey,                                    \
-    NULL,                                                                      \
-    cipher_hw_aes_xts_copyctx                                                  \
-};                                                                             \
-static const PROV_CIPHER_HW aes_xts_rv64i_zvbb_zvkg_zvkned = {                 \
-    cipher_hw_aes_xts_rv64i_zvbb_zvkg_zvkned_initkey,                          \
-    NULL,                                                                      \
-    cipher_hw_aes_xts_copyctx                                                  \
-};
+        static const PROV_CIPHER_HW aes_xts_rv64i_zknd_zkne = {                        \
+            cipher_hw_aes_xts_rv64i_zknd_zkne_initkey,                                 \
+            NULL,                                                                      \
+            cipher_hw_aes_xts_copyctx                                                  \
+        };                                                                             \
+        static const PROV_CIPHER_HW aes_xts_rv64i_zvkned = {                           \
+            cipher_hw_aes_xts_rv64i_zvkned_initkey,                                    \
+            NULL,                                                                      \
+            cipher_hw_aes_xts_copyctx                                                  \
+        };                                                                             \
+        static const PROV_CIPHER_HW aes_xts_rv64i_zvbb_zvkg_zvkned = {                 \
+            cipher_hw_aes_xts_rv64i_zvbb_zvkg_zvkned_initkey,                          \
+            NULL,                                                                      \
+            cipher_hw_aes_xts_copyctx                                                  \
+        };
 
 # define PROV_CIPHER_HW_select_xts()                                           \
-if (RISCV_HAS_ZVBB() && RISCV_HAS_ZVKG() && RISCV_HAS_ZVKNED() &&              \
-    riscv_vlen() >= 128)                                                       \
-    return &aes_xts_rv64i_zvbb_zvkg_zvkned;                                    \
-if (RISCV_HAS_ZVKNED() && riscv_vlen() >= 128)                                 \
-    return &aes_xts_rv64i_zvkned;                                              \
-else if (RISCV_HAS_ZKND_AND_ZKNE())                                            \
-    return &aes_xts_rv64i_zknd_zkne;
+        if (RISCV_HAS_ZVBB() && RISCV_HAS_ZVKG() && RISCV_HAS_ZVKNED() &&              \
+            riscv_vlen() >= 128)                                                       \
+        return &aes_xts_rv64i_zvbb_zvkg_zvkned;                                    \
+        if (RISCV_HAS_ZVKNED() && riscv_vlen() >= 128)                                 \
+        return &aes_xts_rv64i_zvkned;                                              \
+        else if (RISCV_HAS_ZKND_AND_ZKNE())                                            \
+        return &aes_xts_rv64i_zknd_zkne;
 
 #elif defined(__riscv) && __riscv_xlen == 32
 
@@ -260,33 +260,34 @@ static int cipher_hw_aes_xts_rv32i_zknd_zkne_initkey(PROV_CIPHER_CTX *ctx,
 }
 
 static int cipher_hw_aes_xts_rv32i_zbkb_zknd_zkne_initkey(PROV_CIPHER_CTX *ctx,
-                                                         const unsigned char *key,
-                                                         size_t keylen)
+                                                          const unsigned char *key,
+                                                          size_t keylen)
 {
     PROV_AES_XTS_CTX *xctx = (PROV_AES_XTS_CTX *)ctx;
 
-    XTS_SET_KEY_FN(rv32i_zbkb_zkne_set_encrypt_key, rv32i_zbkb_zknd_zkne_set_decrypt_key,
+    XTS_SET_KEY_FN(rv32i_zbkb_zkne_set_encrypt_key,
+                   rv32i_zbkb_zknd_zkne_set_decrypt_key,
                    rv32i_zkne_encrypt, rv32i_zknd_decrypt,
                    NULL, NULL);
     return 1;
 }
 
 # define PROV_CIPHER_HW_declare_xts()                                          \
-static const PROV_CIPHER_HW aes_xts_rv32i_zknd_zkne = {                        \
-    cipher_hw_aes_xts_rv32i_zknd_zkne_initkey,                                 \
-    NULL,                                                                      \
-    cipher_hw_aes_xts_copyctx                                                  \
-};                                                                             \
-static const PROV_CIPHER_HW aes_xts_rv32i_zbkb_zknd_zkne = {                   \
-    cipher_hw_aes_xts_rv32i_zbkb_zknd_zkne_initkey,                            \
-    NULL,                                                                      \
-    cipher_hw_aes_xts_copyctx                                                  \
-};
+        static const PROV_CIPHER_HW aes_xts_rv32i_zknd_zkne = {                        \
+            cipher_hw_aes_xts_rv32i_zknd_zkne_initkey,                                 \
+            NULL,                                                                      \
+            cipher_hw_aes_xts_copyctx                                                  \
+        };                                                                             \
+        static const PROV_CIPHER_HW aes_xts_rv32i_zbkb_zknd_zkne = {                   \
+            cipher_hw_aes_xts_rv32i_zbkb_zknd_zkne_initkey,                            \
+            NULL,                                                                      \
+            cipher_hw_aes_xts_copyctx                                                  \
+        };
 # define PROV_CIPHER_HW_select_xts()                                           \
-if (RISCV_HAS_ZBKB_AND_ZKND_AND_ZKNE())                                        \
-    return &aes_xts_rv32i_zbkb_zknd_zkne;                                      \
-if (RISCV_HAS_ZKND_ZKNE())                                                     \
-    return &aes_xts_rv32i_zknd_zkne;
+        if (RISCV_HAS_ZBKB_AND_ZKND_AND_ZKNE())                                        \
+        return &aes_xts_rv32i_zbkb_zknd_zkne;                                      \
+        if (RISCV_HAS_ZKND_ZKNE())                                                     \
+        return &aes_xts_rv32i_zknd_zkne;
 # else
 /* The generic case */
 # define PROV_CIPHER_HW_declare_xts()

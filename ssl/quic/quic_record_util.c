@@ -184,14 +184,14 @@ static const struct suite_info suite_aes128gcm = {
     "AES-128-GCM", "SHA256", 32, 16, 12, 16, 16,
     QUIC_HDR_PROT_CIPHER_AES_128,
     ((uint64_t)1) << 23, /* Limits as prescribed by RFC 9001 */
-    ((uint64_t)1) << 52,
+        ((uint64_t)1) << 52,
 };
 
 static const struct suite_info suite_aes256gcm = {
     "AES-256-GCM", "SHA384", 48, 32, 12, 16, 32,
     QUIC_HDR_PROT_CIPHER_AES_256,
     ((uint64_t)1) << 23, /* Limits as prescribed by RFC 9001 */
-    ((uint64_t)1) << 52,
+        ((uint64_t)1) << 52,
 };
 
 static const struct suite_info suite_chacha20poly1305 = {

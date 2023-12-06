@@ -39,7 +39,8 @@ static int test_sanity_enum_size(void)
         a08, b08, c08, d08, e08, f08, g08, h08, i08, j08,
         a09, b09, c09, d09, e09, f09, g09, h09, i09, j09,
         a10, b10, c10, d10, e10, f10, g10, h10, i10, j10,
-        xxx };
+        xxx
+    };
 
     /* Enum size */
     if (!TEST_size_t_eq(sizeof(enum smallchoices), sizeof(int))
@@ -80,24 +81,24 @@ static int test_sanity_range(void)
 {
     /* Verify some types are the correct size */
     if (!TEST_size_t_eq(sizeof(int8_t), 1)
-            || !TEST_size_t_eq(sizeof(uint8_t), 1)
-            || !TEST_size_t_eq(sizeof(int16_t), 2)
-            || !TEST_size_t_eq(sizeof(uint16_t), 2)
-            || !TEST_size_t_eq(sizeof(int32_t), 4)
-            || !TEST_size_t_eq(sizeof(uint32_t), 4)
-            || !TEST_size_t_eq(sizeof(int64_t), 8)
-            || !TEST_size_t_eq(sizeof(uint64_t), 8)
+        || !TEST_size_t_eq(sizeof(uint8_t), 1)
+        || !TEST_size_t_eq(sizeof(int16_t), 2)
+        || !TEST_size_t_eq(sizeof(uint16_t), 2)
+        || !TEST_size_t_eq(sizeof(int32_t), 4)
+        || !TEST_size_t_eq(sizeof(uint32_t), 4)
+        || !TEST_size_t_eq(sizeof(int64_t), 8)
+        || !TEST_size_t_eq(sizeof(uint64_t), 8)
 #ifdef UINT128_MAX
-            || !TEST_size_t_eq(sizeof(int128_t), 16)
-            || !TEST_size_t_eq(sizeof(uint128_t), 16)
+        || !TEST_size_t_eq(sizeof(int128_t), 16)
+        || !TEST_size_t_eq(sizeof(uint128_t), 16)
 #endif
-            || !TEST_size_t_eq(sizeof(char), 1)
-            || !TEST_size_t_eq(sizeof(unsigned char), 1))
+        || !TEST_size_t_eq(sizeof(char), 1)
+        || !TEST_size_t_eq(sizeof(unsigned char), 1))
         return 0;
 
     /* We want our long longs to be at least 64 bits */
     if (!TEST_size_t_ge(sizeof(long long int), 8)
-            || !TEST_size_t_ge(sizeof(unsigned long long int), 8))
+        || !TEST_size_t_ge(sizeof(unsigned long long int), 8))
         return 0;
 
     /*
@@ -106,8 +107,8 @@ static int test_sanity_range(void)
      * an int128_t, so this check is for at least 64 bits.
      */
     if (!TEST_size_t_ge(sizeof(ossl_intmax_t), 8)
-            || !TEST_size_t_ge(sizeof(ossl_uintmax_t), 8)
-            || !TEST_size_t_ge(sizeof(ossl_uintmax_t), sizeof(size_t)))
+        || !TEST_size_t_ge(sizeof(ossl_uintmax_t), 8)
+        || !TEST_size_t_ge(sizeof(ossl_uintmax_t), sizeof(size_t)))
         return 0;
 
     /* This isn't possible to check using the framework functions */
@@ -145,7 +146,7 @@ static int test_sanity_sleep(void)
     seconds = ossl_time2seconds(ossl_time_subtract(ossl_time_now(), start));
 
     if (!TEST_uint64_t_ge(seconds, 1) || !TEST_uint64_t_le(seconds, 20))
-       return 0;
+        return 0;
     return 1;
 }
 

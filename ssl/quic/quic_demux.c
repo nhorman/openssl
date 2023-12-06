@@ -26,7 +26,7 @@ typedef struct quic_demux_conn_st QUIC_DEMUX_CONN;
 
 struct quic_demux_conn_st {
     QUIC_DEMUX_CONN                 *next; /* used when unregistering only */
-    QUIC_CONN_ID                    dst_conn_id;
+    QUIC_CONN_ID dst_conn_id;
     ossl_quic_demux_cb_fn           *cb;
     void                            *cb_arg;
 };
@@ -61,16 +61,16 @@ struct quic_demux_st {
      * therefore it must be known contextually. The demuxer requires connection
      * IDs of the same length to be used for all incoming packets.
      */
-    size_t                      short_conn_id_len;
+    size_t short_conn_id_len;
 
     /*
      * Our current understanding of the upper bound on an incoming datagram size
      * in bytes.
      */
-    size_t                      mtu;
+    size_t mtu;
 
     /* Time retrieval callback. */
-    OSSL_TIME                 (*now)(void *arg);
+    OSSL_TIME (*now)(void *arg);
     void                       *now_arg;
 
     /* Hashtable mapping connection IDs to QUIC_DEMUX_CONN structures. */
@@ -88,7 +88,7 @@ struct quic_demux_st {
      * List of URXEs which are not currently in use (i.e., not filled with
      * unconsumed data). These are moved to the pending list as they are filled.
      */
-    QUIC_URXE_LIST              urx_free;
+    QUIC_URXE_LIST urx_free;
 
     /*
      * List of URXEs which are filled with received encrypted data. These are
@@ -97,10 +97,10 @@ struct quic_demux_st {
      * user calls ossl_quic_demux_release_urxe to return the URXE to us, at
      * which point we add it to the free list.
      */
-    QUIC_URXE_LIST              urx_pending;
+    QUIC_URXE_LIST urx_pending;
 
     /* Whether to use local address support. */
-    char                        use_local_addr;
+    char use_local_addr;
 };
 
 QUIC_DEMUX *ossl_quic_demux_new(BIO *net_bio,
@@ -302,8 +302,8 @@ void ossl_quic_demux_set_default_handler(QUIC_DEMUX *demux,
 }
 
 void ossl_quic_demux_set_stateless_reset_handler(
-        QUIC_DEMUX *demux,
-        ossl_quic_stateless_reset_cb_fn *cb, void *cb_arg)
+    QUIC_DEMUX *demux,
+    ossl_quic_stateless_reset_cb_fn *cb, void *cb_arg)
 {
     demux->reset_token_cb       = cb;
     demux->reset_token_cb_arg   = cb_arg;
@@ -361,7 +361,8 @@ static QUIC_URXE *demux_resize_urxe(QUIC_DEMUX *demux, QUIC_URXE *e,
 static QUIC_URXE *demux_reserve_urxe(QUIC_DEMUX *demux, QUIC_URXE *e,
                                      size_t alloc_len)
 {
-    return e->alloc_len < alloc_len ? demux_resize_urxe(demux, e, alloc_len) : e;
+    return e->alloc_len <
+           alloc_len ? demux_resize_urxe(demux, e, alloc_len) : e;
 }
 
 static int demux_ensure_free_urxe(QUIC_DEMUX *demux, size_t min_num_free)
@@ -410,7 +411,7 @@ static int demux_recv(QUIC_DEMUX *demux)
      * syscall, determined by how many free URXEs are available.
      */
     for (i = 0; i < (ossl_ssize_t)OSSL_NELEM(msg);
-            ++i, urxe = ossl_list_urxe_next(urxe)) {
+         ++i, urxe = ossl_list_urxe_next(urxe)) {
         if (urxe == NULL) {
             /* We need at least one URXE to receive into. */
             if (!ossl_assert(i > 0))

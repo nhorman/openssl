@@ -101,70 +101,76 @@ int DSA_meth_set0_app_data(DSA_METHOD *dsam, void *app_data)
 }
 
 DSA_SIG *(*DSA_meth_get_sign(const DSA_METHOD *dsam))
-        (const unsigned char *, int, DSA *)
+    (const unsigned char *, int, DSA *)
 {
     return dsam->dsa_do_sign;
 }
 
 int DSA_meth_set_sign(DSA_METHOD *dsam,
-                       DSA_SIG *(*sign) (const unsigned char *, int, DSA *))
+                      DSA_SIG *(*sign) (const unsigned char *, int, DSA *))
 {
     dsam->dsa_do_sign = sign;
     return 1;
 }
 
 int (*DSA_meth_get_sign_setup(const DSA_METHOD *dsam))
-        (DSA *, BN_CTX *, BIGNUM **, BIGNUM **)
+(DSA *, BN_CTX *, BIGNUM **, BIGNUM **)
 {
     return dsam->dsa_sign_setup;
 }
 
 int DSA_meth_set_sign_setup(DSA_METHOD *dsam,
-        int (*sign_setup) (DSA *, BN_CTX *, BIGNUM **, BIGNUM **))
+                            int (*sign_setup) (DSA *, BN_CTX *, BIGNUM **,
+                                               BIGNUM **))
 {
     dsam->dsa_sign_setup = sign_setup;
     return 1;
 }
 
 int (*DSA_meth_get_verify(const DSA_METHOD *dsam))
-        (const unsigned char *, int, DSA_SIG *, DSA *)
+(const unsigned char *, int, DSA_SIG *, DSA *)
 {
     return dsam->dsa_do_verify;
 }
 
 int DSA_meth_set_verify(DSA_METHOD *dsam,
-    int (*verify) (const unsigned char *, int, DSA_SIG *, DSA *))
+                        int (*verify) (const unsigned char *, int, DSA_SIG *,
+                                       DSA *))
 {
     dsam->dsa_do_verify = verify;
     return 1;
 }
 
 int (*DSA_meth_get_mod_exp(const DSA_METHOD *dsam))
-        (DSA *, BIGNUM *, const BIGNUM *, const BIGNUM *, const BIGNUM *,
-         const BIGNUM *, const BIGNUM *, BN_CTX *, BN_MONT_CTX *)
+(DSA *, BIGNUM *, const BIGNUM *, const BIGNUM *, const BIGNUM *,
+ const BIGNUM *, const BIGNUM *, BN_CTX *, BN_MONT_CTX *)
 {
     return dsam->dsa_mod_exp;
 }
 
 int DSA_meth_set_mod_exp(DSA_METHOD *dsam,
-    int (*mod_exp) (DSA *, BIGNUM *, const BIGNUM *, const BIGNUM *,
-                    const BIGNUM *, const BIGNUM *, const BIGNUM *, BN_CTX *,
-                    BN_MONT_CTX *))
+                         int (*mod_exp) (DSA *, BIGNUM *, const BIGNUM *,
+                                         const BIGNUM *,
+                                         const BIGNUM *, const BIGNUM *,
+                                         const BIGNUM *, BN_CTX *,
+                                         BN_MONT_CTX *))
 {
     dsam->dsa_mod_exp = mod_exp;
     return 1;
 }
 
 int (*DSA_meth_get_bn_mod_exp(const DSA_METHOD *dsam))
-    (DSA *, BIGNUM *, const BIGNUM *, const BIGNUM *, const BIGNUM *, BN_CTX *,
-     BN_MONT_CTX *)
+(DSA *, BIGNUM *, const BIGNUM *, const BIGNUM *, const BIGNUM *, BN_CTX *,
+ BN_MONT_CTX *)
 {
     return dsam->bn_mod_exp;
 }
 
 int DSA_meth_set_bn_mod_exp(DSA_METHOD *dsam,
-    int (*bn_mod_exp) (DSA *, BIGNUM *, const BIGNUM *, const BIGNUM *,
-                       const BIGNUM *, BN_CTX *, BN_MONT_CTX *))
+                            int (*bn_mod_exp) (DSA *, BIGNUM *, const BIGNUM *,
+                                               const BIGNUM *,
+                                               const BIGNUM *, BN_CTX *,
+                                               BN_MONT_CTX *))
 {
     dsam->bn_mod_exp = bn_mod_exp;
     return 1;
@@ -193,15 +199,16 @@ int DSA_meth_set_finish(DSA_METHOD *dsam, int (*finish) (DSA *))
 }
 
 int (*DSA_meth_get_paramgen(const DSA_METHOD *dsam))
-        (DSA *, int, const unsigned char *, int, int *, unsigned long *,
-         BN_GENCB *)
+(DSA *, int, const unsigned char *, int, int *, unsigned long *,
+ BN_GENCB *)
 {
     return dsam->dsa_paramgen;
 }
 
 int DSA_meth_set_paramgen(DSA_METHOD *dsam,
-        int (*paramgen) (DSA *, int, const unsigned char *, int, int *,
-                         unsigned long *, BN_GENCB *))
+                          int (*paramgen) (DSA *, int, const unsigned char *,
+                                           int, int *,
+                                           unsigned long *, BN_GENCB *))
 {
     dsam->dsa_paramgen = paramgen;
     return 1;

@@ -195,8 +195,8 @@ static int test_bi_ige_vectors(int n)
     AES_KEY key2;
     unsigned char buf[MAX_VECTOR_SIZE];
 
-        if (!TEST_int_le(v->length, MAX_VECTOR_SIZE))
-            return 0;
+    if (!TEST_int_le(v->length, MAX_VECTOR_SIZE))
+        return 0;
 
     if (v->encrypt == AES_ENCRYPT) {
         AES_set_encrypt_key(v->key1, 8 * v->keysize, &key1);

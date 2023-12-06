@@ -75,7 +75,8 @@ void ossl_polyval_ghash_init(u128 Htable[16], const uint64_t H[2])
 }
 
 /* Implementation of POLYVAL via existing GHASH implementation */
-void ossl_polyval_ghash_hash(const u128 Htable[16], uint8_t *tag, const uint8_t *inp, size_t len)
+void ossl_polyval_ghash_hash(const u128 Htable[16], uint8_t *tag,
+                             const uint8_t *inp, size_t len)
 {
     uint64_t out[2];
     uint64_t tmp[2];

@@ -24,12 +24,12 @@ static TLS_FEATURE *v2i_TLS_FEATURE(const X509V3_EXT_METHOD *method,
                                     STACK_OF(CONF_VALUE) *nval);
 
 ASN1_ITEM_TEMPLATE(TLS_FEATURE) =
-        ASN1_EX_TEMPLATE_TYPE(ASN1_TFLG_SEQUENCE_OF, 0, TLS_FEATURE, ASN1_INTEGER)
-static_ASN1_ITEM_TEMPLATE_END(TLS_FEATURE)
+    ASN1_EX_TEMPLATE_TYPE(ASN1_TFLG_SEQUENCE_OF, 0, TLS_FEATURE, ASN1_INTEGER)
+    static_ASN1_ITEM_TEMPLATE_END(TLS_FEATURE)
 
-IMPLEMENT_ASN1_ALLOC_FUNCTIONS(TLS_FEATURE)
+    IMPLEMENT_ASN1_ALLOC_FUNCTIONS(TLS_FEATURE)
 
-const X509V3_EXT_METHOD ossl_v3_tls_feature = {
+    const X509V3_EXT_METHOD ossl_v3_tls_feature = {
     NID_tlsfeature, 0,
     ASN1_ITEM_ref(TLS_FEATURE),
     0, 0, 0, 0,
@@ -123,8 +123,8 @@ static TLS_FEATURE *v2i_TLS_FEATURE(const X509V3_EXT_METHOD *method,
         }
 
         if ((ai = ASN1_INTEGER_new()) == NULL
-                || !ASN1_INTEGER_set(ai, tlsextid)
-                || sk_ASN1_INTEGER_push(tlsf, ai) <= 0) {
+            || !ASN1_INTEGER_set(ai, tlsextid)
+            || sk_ASN1_INTEGER_push(tlsf, ai) <= 0) {
             ERR_raise(ERR_LIB_X509V3, ERR_R_ASN1_LIB);
             goto err;
         }
@@ -133,7 +133,7 @@ static TLS_FEATURE *v2i_TLS_FEATURE(const X509V3_EXT_METHOD *method,
     }
     return tlsf;
 
- err:
+err:
     sk_ASN1_INTEGER_pop_free(tlsf, ASN1_INTEGER_free);
     ASN1_INTEGER_free(ai);
     return NULL;

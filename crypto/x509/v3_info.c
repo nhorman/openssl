@@ -17,7 +17,8 @@
 
 static STACK_OF(CONF_VALUE) *i2v_AUTHORITY_INFO_ACCESS(X509V3_EXT_METHOD
                                                        *method, AUTHORITY_INFO_ACCESS
-                                                       *ainfo, STACK_OF(CONF_VALUE)
+                                                       *ainfo, STACK_OF(
+                                                           CONF_VALUE)
                                                        *ret);
 static AUTHORITY_INFO_ACCESS *v2i_AUTHORITY_INFO_ACCESS(X509V3_EXT_METHOD
                                                         *method,
@@ -26,41 +27,45 @@ static AUTHORITY_INFO_ACCESS *v2i_AUTHORITY_INFO_ACCESS(X509V3_EXT_METHOD
                                                         *nval);
 
 const X509V3_EXT_METHOD ossl_v3_info = { NID_info_access, X509V3_EXT_MULTILINE,
-    ASN1_ITEM_ref(AUTHORITY_INFO_ACCESS),
-    0, 0, 0, 0,
-    0, 0,
-    (X509V3_EXT_I2V) i2v_AUTHORITY_INFO_ACCESS,
-    (X509V3_EXT_V2I)v2i_AUTHORITY_INFO_ACCESS,
-    0, 0,
-    NULL
-};
+                                         ASN1_ITEM_ref(AUTHORITY_INFO_ACCESS),
+                                         0, 0, 0, 0,
+                                         0, 0,
+                                         (X509V3_EXT_I2V)
+                                         i2v_AUTHORITY_INFO_ACCESS,
+                                         (X509V3_EXT_V2I)
+                                         v2i_AUTHORITY_INFO_ACCESS,
+                                         0, 0,
+                                         NULL};
 
-const X509V3_EXT_METHOD ossl_v3_sinfo = { NID_sinfo_access, X509V3_EXT_MULTILINE,
-    ASN1_ITEM_ref(AUTHORITY_INFO_ACCESS),
-    0, 0, 0, 0,
-    0, 0,
-    (X509V3_EXT_I2V) i2v_AUTHORITY_INFO_ACCESS,
-    (X509V3_EXT_V2I)v2i_AUTHORITY_INFO_ACCESS,
-    0, 0,
-    NULL
-};
+const X509V3_EXT_METHOD ossl_v3_sinfo =
+{ NID_sinfo_access, X509V3_EXT_MULTILINE,
+  ASN1_ITEM_ref(AUTHORITY_INFO_ACCESS),
+  0, 0, 0, 0,
+  0, 0,
+  (X509V3_EXT_I2V)
+  i2v_AUTHORITY_INFO_ACCESS,
+  (X509V3_EXT_V2I)
+  v2i_AUTHORITY_INFO_ACCESS,
+  0, 0,
+  NULL};
 
 ASN1_SEQUENCE(ACCESS_DESCRIPTION) = {
-        ASN1_SIMPLE(ACCESS_DESCRIPTION, method, ASN1_OBJECT),
-        ASN1_SIMPLE(ACCESS_DESCRIPTION, location, GENERAL_NAME)
+    ASN1_SIMPLE(ACCESS_DESCRIPTION, method, ASN1_OBJECT),
+    ASN1_SIMPLE(ACCESS_DESCRIPTION, location, GENERAL_NAME)
 } ASN1_SEQUENCE_END(ACCESS_DESCRIPTION)
 
 IMPLEMENT_ASN1_FUNCTIONS(ACCESS_DESCRIPTION)
 
 ASN1_ITEM_TEMPLATE(AUTHORITY_INFO_ACCESS) =
-        ASN1_EX_TEMPLATE_TYPE(ASN1_TFLG_SEQUENCE_OF, 0, GeneralNames, ACCESS_DESCRIPTION)
-ASN1_ITEM_TEMPLATE_END(AUTHORITY_INFO_ACCESS)
+    ASN1_EX_TEMPLATE_TYPE(ASN1_TFLG_SEQUENCE_OF, 0, GeneralNames,
+                          ACCESS_DESCRIPTION)
+    ASN1_ITEM_TEMPLATE_END(AUTHORITY_INFO_ACCESS)
 
-IMPLEMENT_ASN1_FUNCTIONS(AUTHORITY_INFO_ACCESS)
+    IMPLEMENT_ASN1_FUNCTIONS(AUTHORITY_INFO_ACCESS)
 
-static STACK_OF(CONF_VALUE) *i2v_AUTHORITY_INFO_ACCESS(
-    X509V3_EXT_METHOD *method, AUTHORITY_INFO_ACCESS *ainfo,
-    STACK_OF(CONF_VALUE) *ret)
+    static STACK_OF(CONF_VALUE) *i2v_AUTHORITY_INFO_ACCESS(
+        X509V3_EXT_METHOD *method, AUTHORITY_INFO_ACCESS *ainfo,
+        STACK_OF(CONF_VALUE) *ret)
 {
     ACCESS_DESCRIPTION *desc;
     int i, nlen;
@@ -92,7 +97,7 @@ static STACK_OF(CONF_VALUE) *i2v_AUTHORITY_INFO_ACCESS(
         return sk_CONF_VALUE_new_null();
 
     return tret;
- err:
+err:
     if (ret == NULL && tret != NULL)
         sk_CONF_VALUE_pop_free(tret, X509V3_conf_free);
     return NULL;
@@ -143,7 +148,7 @@ static AUTHORITY_INFO_ACCESS *v2i_AUTHORITY_INFO_ACCESS(X509V3_EXT_METHOD
         OPENSSL_free(objtmp);
     }
     return ainfo;
- err:
+err:
     sk_ACCESS_DESCRIPTION_pop_free(ainfo, ACCESS_DESCRIPTION_free);
     return NULL;
 }

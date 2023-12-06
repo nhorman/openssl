@@ -106,7 +106,7 @@ OSSL_CRMF_PBMPARAMETER *OSSL_CRMF_pbmp_new(OSSL_LIB_CTX *libctx, size_t slen,
 
     OPENSSL_free(salt);
     return pbm;
- err:
+err:
     OPENSSL_free(salt);
     OSSL_CRMF_PBMPARAMETER_free(pbm);
     return NULL;
@@ -142,7 +142,7 @@ int OSSL_CRMF_pbm_new(OSSL_LIB_CTX *libctx, const char *propq,
     int ok = 0;
 
     if (out == NULL || pbmp == NULL || pbmp->mac == NULL
-            || pbmp->mac->algorithm == NULL || msg == NULL || sec == NULL) {
+        || pbmp->mac->algorithm == NULL || msg == NULL || sec == NULL) {
         ERR_raise(ERR_LIB_CRMF, CRMF_R_NULL_ARGUMENT);
         goto err;
     }
@@ -175,8 +175,8 @@ int OSSL_CRMF_pbm_new(OSSL_LIB_CTX *libctx, const char *propq,
     if (!EVP_DigestFinal_ex(ctx, basekey, &bklen))
         goto err;
     if (!ASN1_INTEGER_get_int64(&iterations, pbmp->iterationCount)
-            || iterations < 100 /* min from RFC */
-            || iterations > OSSL_CRMF_PBM_MAX_ITERATION_COUNT) {
+        || iterations < 100     /* min from RFC */
+        || iterations > OSSL_CRMF_PBM_MAX_ITERATION_COUNT) {
         ERR_raise(ERR_LIB_CRMF, CRMF_R_BAD_PBM_ITERATIONCOUNT);
         goto err;
     }
@@ -211,7 +211,7 @@ int OSSL_CRMF_pbm_new(OSSL_LIB_CTX *libctx, const char *propq,
 
     ok = 1;
 
- err:
+err:
     OPENSSL_cleanse(basekey, bklen);
     EVP_MD_free(owf);
     EVP_MD_CTX_free(ctx);

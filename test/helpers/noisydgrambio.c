@@ -29,10 +29,10 @@ static long noisy_dgram_ctrl(BIO *bio, int cmd, long num, void *ptr)
         return 0;
 
     switch (cmd) {
-    case BIO_CTRL_DUP:
-        ret = 0L;
-        break;
-    case BIO_CTRL_NOISE_BACK_OFF: {
+        case BIO_CTRL_DUP:
+            ret = 0L;
+            break;
+        case BIO_CTRL_NOISE_BACK_OFF: {
             struct noisy_dgram_st *data;
 
             data = BIO_get_data(bio);
@@ -42,9 +42,9 @@ static long noisy_dgram_ctrl(BIO *bio, int cmd, long num, void *ptr)
             ret = 1;
             break;
         }
-    default:
-        ret = BIO_ctrl(next, cmd, num, ptr);
-        break;
+        default:
+            ret = BIO_ctrl(next, cmd, num, ptr);
+            break;
     }
     return ret;
 }
@@ -156,7 +156,7 @@ static void flip_bits(unsigned char *msg, size_t msg_len, uint16_t flip,
 
 #ifdef OSSL_NOISY_DGRAM_DEBUG
     printf("**Flipping bits in a datagram at offset %u\n",
-            (unsigned int)flip_offset);
+           (unsigned int)flip_offset);
     BIO_dump_fp(stdout, msg, msg_len);
     printf("\n");
 #endif
@@ -224,7 +224,7 @@ static int noisy_dgram_recvmmsg(BIO *bio, BIO_MSG *msg, size_t stride,
 
         /* If we have a message to reinject then insert it now */
         if (data->reinject_dgram > 0
-                && data->reinject_dgram == data->this_dgram) {
+            && data->reinject_dgram == data->this_dgram) {
             if (msg_cnt < num_msg) {
                 /* Make space for the injected message */
                 for (j = msg_cnt; j > i; j--) {
@@ -345,8 +345,8 @@ static int noisy_dgram_new(BIO *bio)
     data->msg.peer = BIO_ADDR_new();
     data->msg.local = BIO_ADDR_new();
     if (data->msg.data == NULL
-            || data->msg.peer == NULL
-            || data->msg.local == NULL) {
+        || data->msg.peer == NULL
+        || data->msg.local == NULL) {
         data_free(data);
         return 0;
     }

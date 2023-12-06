@@ -101,7 +101,7 @@ static void test_fail_string_common(const char *prefix, const char *file,
             else if (n1 > 0)
                 test_printf_stderr("%4u:- '%s'\n", cnt, b1);
             if (cnt == 0 && (m2 == NULL || *m2 == '\0'))
-               test_string_null_empty(m2, '+');
+                test_string_null_empty(m2, '+');
             else if (n2 > 0)
                 test_printf_stderr("%4u:+ '%s'\n", cnt, b2);
             if (diff && i > 0)
@@ -241,7 +241,7 @@ static int convert_bn_memory(const unsigned char *in, size_t bytes,
                 }
             }
         }
-       return n;
+        return n;
     }
 
     for (i = 0; i < n; i++) {
@@ -343,7 +343,7 @@ static void test_fail_bignum_common(const char *prefix, const char *file,
             else if (cnt == 0 || n2 > 0)
                 test_printf_stderr("+%s:% 5d\n", b2, cnt);
             if (real_diff && (cnt == 0 || (n1 > 0 && n2 > 0))
-                    && bn1 != NULL && bn2 != NULL)
+                && bn1 != NULL && bn2 != NULL)
                 test_printf_stderr(" %s\n", bdiff);
         }
         if (m1 != NULL)
@@ -369,7 +369,8 @@ void test_fail_bignum_message(const char *prefix, const char *file,
                               const char *op,
                               const BIGNUM *bn1, const BIGNUM *bn2)
 {
-    test_fail_bignum_common(prefix, file, line, type, left, right, op, bn1, bn2);
+    test_fail_bignum_common(prefix, file, line, type, left, right, op, bn1,
+                            bn2);
     test_printf_stderr("\n");
 }
 

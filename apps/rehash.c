@@ -118,8 +118,8 @@ static int bit_isset(unsigned char *set, unsigned int bit)
  * Process an entry; return number of errors.
  */
 static int add_entry(enum Type type, unsigned int hash, const char *filename,
-                      const unsigned char *digest, int need_symlink,
-                      unsigned short old_id)
+                     const unsigned char *digest, int need_symlink,
+                     unsigned short old_id)
 {
     static BUCKET nilbucket;
     static HENTRY nilhentry;
@@ -381,7 +381,7 @@ static int do_dir(const char *dirname, enum Hash h)
         size_t fname_len = strlen(filename);
 
         if ((copy = OPENSSL_strdup(filename)) == NULL
-                || sk_OPENSSL_STRING_push(files, copy) == 0) {
+            || sk_OPENSSL_STRING_push(files, copy) == 0) {
             OPENSSL_free(copy);
             BIO_puts(bio_err, "out of memory\n");
             errs = 1;
@@ -475,7 +475,7 @@ static int do_dir(const char *dirname, enum Hash h)
         hash_table[i] = NULL;
     }
 
- err:
+err:
     sk_OPENSSL_STRING_pop_free(files, str_free);
     OPENSSL_free(buf);
     return errs;
@@ -519,29 +519,29 @@ int rehash_main(int argc, char **argv)
     prog = opt_init(argc, argv, rehash_options);
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_EOF:
-        case OPT_ERR:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto end;
-        case OPT_HELP:
-            opt_help(rehash_options);
-            goto end;
-        case OPT_COMPAT:
-            h = HASH_BOTH;
-            break;
-        case OPT_OLD:
-            h = HASH_OLD;
-            break;
-        case OPT_N:
-            remove_links = 0;
-            break;
-        case OPT_VERBOSE:
-            verbose = 1;
-            break;
-        case OPT_PROV_CASES:
-            if (!opt_provider(o))
+            case OPT_EOF:
+            case OPT_ERR:
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
                 goto end;
-            break;
+            case OPT_HELP:
+                opt_help(rehash_options);
+                goto end;
+            case OPT_COMPAT:
+                h = HASH_BOTH;
+                break;
+            case OPT_OLD:
+                h = HASH_OLD;
+                break;
+            case OPT_N:
+                remove_links = 0;
+                break;
+            case OPT_VERBOSE:
+                verbose = 1;
+                break;
+            case OPT_PROV_CASES:
+                if (!opt_provider(o))
+                    goto end;
+                break;
         }
     }
 
@@ -565,7 +565,7 @@ int rehash_main(int argc, char **argv)
         errs += do_dir(X509_get_default_cert_dir(), h);
     }
 
- end:
+end:
     return errs;
 }
 

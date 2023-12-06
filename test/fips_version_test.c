@@ -49,14 +49,14 @@ int setup_tests(void)
 
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_CONFIG_FILE:
-            config_file = opt_arg();
-            break;
-        case OPT_TEST_CASES:
-           break;
-        default:
-        case OPT_ERR:
-            return 0;
+            case OPT_CONFIG_FILE:
+                config_file = opt_arg();
+                break;
+            case OPT_TEST_CASES:
+                break;
+            default:
+            case OPT_ERR:
+                return 0;
         }
     }
 

@@ -61,7 +61,7 @@ int ASYNC_WAIT_CTX_set_wait_fd(ASYNC_WAIT_CTX *ctx, const void *key,
                                void (*cleanup)(ASYNC_WAIT_CTX *, const void *,
                                                OSSL_ASYNC_FD, void *));
 int ASYNC_WAIT_CTX_get_fd(ASYNC_WAIT_CTX *ctx, const void *key,
-                        OSSL_ASYNC_FD *fd, void **custom_data);
+                          OSSL_ASYNC_FD *fd, void **custom_data);
 int ASYNC_WAIT_CTX_get_all_fds(ASYNC_WAIT_CTX *ctx, OSSL_ASYNC_FD *fd,
                                size_t *numfds);
 int ASYNC_WAIT_CTX_get_callback(ASYNC_WAIT_CTX *ctx,

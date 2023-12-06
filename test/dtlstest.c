@@ -89,8 +89,8 @@ static int test_dtls_unprocessed(int testidx)
 #else
     /* Default sigalgs are SHA1 based in <DTLS1.2 which is in security level 0 */
     if (!TEST_true(SSL_CTX_set_cipher_list(sctx, "AES128-SHA:@SECLEVEL=0"))
-            || !TEST_true(SSL_CTX_set_cipher_list(cctx,
-                                                  "AES128-SHA:@SECLEVEL=0")))
+        || !TEST_true(SSL_CTX_set_cipher_list(cctx,
+                                              "AES128-SHA:@SECLEVEL=0")))
         goto end;
 #endif
 
@@ -134,7 +134,7 @@ static int test_dtls_unprocessed(int testidx)
     }
 
     testresult = 1;
- end:
+end:
     SSL_free(serverssl1);
     SSL_free(clientssl1);
     SSL_CTX_free(sctx);
@@ -168,18 +168,18 @@ static int test_dtls_unprocessed(int testidx)
 #endif
 #define SRV_TO_CLI_EPOCH_1_RECS 1
 #define TOTAL_FULL_HAND_RECORDS \
-            (CLI_TO_SRV_COOKIE_EXCH + SRV_TO_CLI_COOKIE_EXCH + \
-             CLI_TO_SRV_EPOCH_0_RECS + CLI_TO_SRV_EPOCH_1_RECS + \
-             SRV_TO_CLI_EPOCH_0_RECS + SRV_TO_CLI_EPOCH_1_RECS)
+        (CLI_TO_SRV_COOKIE_EXCH + SRV_TO_CLI_COOKIE_EXCH + \
+         CLI_TO_SRV_EPOCH_0_RECS + CLI_TO_SRV_EPOCH_1_RECS + \
+         SRV_TO_CLI_EPOCH_0_RECS + SRV_TO_CLI_EPOCH_1_RECS)
 
 #define CLI_TO_SRV_RESUME_EPOCH_0_RECS 3
 #define CLI_TO_SRV_RESUME_EPOCH_1_RECS 1
 #define SRV_TO_CLI_RESUME_EPOCH_0_RECS 2
 #define SRV_TO_CLI_RESUME_EPOCH_1_RECS 1
 #define TOTAL_RESUME_HAND_RECORDS \
-            (CLI_TO_SRV_RESUME_COOKIE_EXCH + SRV_TO_CLI_COOKIE_EXCH + \
-             CLI_TO_SRV_RESUME_EPOCH_0_RECS + CLI_TO_SRV_RESUME_EPOCH_1_RECS + \
-             SRV_TO_CLI_RESUME_EPOCH_0_RECS + SRV_TO_CLI_RESUME_EPOCH_1_RECS)
+        (CLI_TO_SRV_RESUME_COOKIE_EXCH + SRV_TO_CLI_COOKIE_EXCH + \
+         CLI_TO_SRV_RESUME_EPOCH_0_RECS + CLI_TO_SRV_RESUME_EPOCH_1_RECS + \
+         SRV_TO_CLI_RESUME_EPOCH_0_RECS + SRV_TO_CLI_RESUME_EPOCH_1_RECS)
 
 #define TOTAL_RECORDS (TOTAL_FULL_HAND_RECORDS + TOTAL_RESUME_HAND_RECORDS)
 
@@ -208,8 +208,8 @@ static int test_dtls_drop_records(int idx)
 #ifdef OPENSSL_NO_DTLS1_2
     /* Default sigalgs are SHA1 based in <DTLS1.2 which is in security level 0 */
     if (!TEST_true(SSL_CTX_set_cipher_list(sctx, "DEFAULT:@SECLEVEL=0"))
-            || !TEST_true(SSL_CTX_set_cipher_list(cctx,
-                                                  "DEFAULT:@SECLEVEL=0")))
+        || !TEST_true(SSL_CTX_set_cipher_list(cctx,
+                                              "DEFAULT:@SECLEVEL=0")))
         goto end;
 #endif
 
@@ -224,9 +224,9 @@ static int test_dtls_drop_records(int idx)
         /* We're going to do a resumption handshake. Get a session first. */
         if (!TEST_true(create_ssl_objects(sctx, cctx, &serverssl, &clientssl,
                                           NULL, NULL))
-                || !TEST_true(create_ssl_connection(serverssl, clientssl,
-                              SSL_ERROR_NONE))
-                || !TEST_ptr(sess = SSL_get1_session(clientssl)))
+            || !TEST_true(create_ssl_connection(serverssl, clientssl,
+                                                SSL_ERROR_NONE))
+            || !TEST_ptr(sess = SSL_get1_session(clientssl)))
             goto end;
 
         SSL_shutdown(clientssl);
@@ -278,7 +278,7 @@ static int test_dtls_drop_records(int idx)
             epoch = 1;
             idx -= cli_to_srv_cookie + cli_to_srv_epoch0;
         }
-         mempackbio = BIO_next(mempackbio);
+        mempackbio = BIO_next(mempackbio);
     }
     BIO_ctrl(mempackbio, MEMPACKET_CTRL_SET_DROP_EPOCH, epoch, NULL);
     BIO_ctrl(mempackbio, MEMPACKET_CTRL_SET_DROP_REC, idx, NULL);
@@ -295,7 +295,7 @@ static int test_dtls_drop_records(int idx)
         goto end;
 
     testresult = 1;
- end:
+end:
     SSL_SESSION_free(sess);
     SSL_free(serverssl);
     SSL_free(clientssl);
@@ -325,19 +325,19 @@ static int test_cookie(void)
 #ifdef OPENSSL_NO_DTLS1_2
     /* Default sigalgs are SHA1 based in <DTLS1.2 which is in security level 0 */
     if (!TEST_true(SSL_CTX_set_cipher_list(sctx, "DEFAULT:@SECLEVEL=0"))
-            || !TEST_true(SSL_CTX_set_cipher_list(cctx,
-                                                  "DEFAULT:@SECLEVEL=0")))
+        || !TEST_true(SSL_CTX_set_cipher_list(cctx,
+                                              "DEFAULT:@SECLEVEL=0")))
         goto end;
 #endif
 
     if (!TEST_true(create_ssl_objects(sctx, cctx, &serverssl, &clientssl,
                                       NULL, NULL))
-            || !TEST_true(create_ssl_connection(serverssl, clientssl,
-                                                SSL_ERROR_NONE)))
+        || !TEST_true(create_ssl_connection(serverssl, clientssl,
+                                            SSL_ERROR_NONE)))
         goto end;
 
     testresult = 1;
- end:
+end:
     SSL_free(serverssl);
     SSL_free(clientssl);
     SSL_CTX_free(sctx);
@@ -361,8 +361,8 @@ static int test_dtls_duplicate_records(void)
 #ifdef OPENSSL_NO_DTLS1_2
     /* Default sigalgs are SHA1 based in <DTLS1.2 which is in security level 0 */
     if (!TEST_true(SSL_CTX_set_cipher_list(sctx, "DEFAULT:@SECLEVEL=0"))
-            || !TEST_true(SSL_CTX_set_cipher_list(cctx,
-                                                  "DEFAULT:@SECLEVEL=0")))
+        || !TEST_true(SSL_CTX_set_cipher_list(cctx,
+                                              "DEFAULT:@SECLEVEL=0")))
         goto end;
 #endif
 
@@ -373,14 +373,16 @@ static int test_dtls_duplicate_records(void)
     DTLS_set_timer_cb(clientssl, timer_cb);
     DTLS_set_timer_cb(serverssl, timer_cb);
 
-    BIO_ctrl(SSL_get_wbio(clientssl), MEMPACKET_CTRL_SET_DUPLICATE_REC, 1, NULL);
-    BIO_ctrl(SSL_get_wbio(serverssl), MEMPACKET_CTRL_SET_DUPLICATE_REC, 1, NULL);
+    BIO_ctrl(SSL_get_wbio(clientssl), MEMPACKET_CTRL_SET_DUPLICATE_REC, 1,
+             NULL);
+    BIO_ctrl(SSL_get_wbio(serverssl), MEMPACKET_CTRL_SET_DUPLICATE_REC, 1,
+             NULL);
 
     if (!TEST_true(create_ssl_connection(serverssl, clientssl, SSL_ERROR_NONE)))
         goto end;
 
     testresult = 1;
- end:
+end:
     SSL_free(serverssl);
     SSL_free(clientssl);
     SSL_CTX_free(sctx);
@@ -459,7 +461,7 @@ static int test_just_finished(void)
         goto end;
 
     testresult = 1;
- end:
+end:
     BIO_free(rbio);
     BIO_free(wbio);
     SSL_free(serverssl);
@@ -496,8 +498,8 @@ static int test_swap_records(int idx)
 #else
     /* Default sigalgs are SHA1 based in <DTLS1.2 which is in security level 0 */
     if (!TEST_true(SSL_CTX_set_cipher_list(sctx, "AES128-SHA:@SECLEVEL=0"))
-            || !TEST_true(SSL_CTX_set_cipher_list(cctx,
-                                                  "AES128-SHA:@SECLEVEL=0")))
+        || !TEST_true(SSL_CTX_set_cipher_list(cctx,
+                                              "AES128-SHA:@SECLEVEL=0")))
         goto end;
 #endif
 
@@ -521,7 +523,7 @@ static int test_swap_records(int idx)
         /* Swap Finished and CCS within the datagram */
         bio = SSL_get_wbio(cssl);
         if (!TEST_ptr(bio)
-                || !TEST_true(mempacket_swap_epoch(bio)))
+            || !TEST_true(mempacket_swap_epoch(bio)))
             goto end;
     }
 
@@ -561,24 +563,24 @@ static int test_swap_records(int idx)
     if (idx == 0 || idx == 1) {
         /* App data was not received early, so it should not be pending */
         if (!TEST_int_eq(SSL_pending(cssl), 0)
-                || !TEST_false(SSL_has_pending(cssl)))
+            || !TEST_false(SSL_has_pending(cssl)))
             goto end;
 
     } else {
         /* We received the app data early so it should be buffered already */
         if (!TEST_int_eq(SSL_pending(cssl), (int)sizeof(msg))
-                || !TEST_true(SSL_has_pending(cssl)))
+            || !TEST_true(SSL_has_pending(cssl)))
             goto end;
     }
 
     /*
-    * Recv flight 5 (app data)
-    */
+     * Recv flight 5 (app data)
+     */
     if (!TEST_int_eq(SSL_read(cssl, buf, sizeof(buf)), (int)sizeof(msg)))
         goto end;
 
     testresult = 1;
- end:
+end:
     SSL_free(cssl);
     SSL_free(sssl);
     SSL_CTX_free(cctx);
@@ -603,8 +605,8 @@ static int test_listen(void)
 #ifdef OPENSSL_NO_DTLS1_2
     /* Default sigalgs are SHA1 based in <DTLS1.2 which is in security level 0 */
     if (!TEST_true(SSL_CTX_set_cipher_list(sctx, "DEFAULT:@SECLEVEL=0"))
-            || !TEST_true(SSL_CTX_set_cipher_list(cctx,
-                                                  "DEFAULT:@SECLEVEL=0")))
+        || !TEST_true(SSL_CTX_set_cipher_list(cctx,
+                                              "DEFAULT:@SECLEVEL=0")))
         goto end;
 #endif
 
@@ -627,7 +629,7 @@ static int test_listen(void)
         goto end;
 
     testresult = 1;
- end:
+end:
     SSL_free(serverssl);
     SSL_free(clientssl);
     SSL_CTX_free(sctx);
@@ -646,7 +648,7 @@ int setup_tests(void)
     }
 
     if (!TEST_ptr(cert = test_get_argument(0))
-            || !TEST_ptr(privkey = test_get_argument(1)))
+        || !TEST_ptr(privkey = test_get_argument(1)))
         return 0;
 
     ADD_ALL_TESTS(test_dtls_unprocessed, NUM_TESTS);

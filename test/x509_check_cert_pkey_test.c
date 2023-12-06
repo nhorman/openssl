@@ -69,31 +69,32 @@ static int test_x509_check_cert_pkey(void)
         goto failed;
 
     switch (type) {
-    case 1:
-        x509 = PEM_read_bio_X509(bio, NULL, NULL, NULL);
-        if (x509 == NULL) {
-            TEST_error("read PEM x509 failed");
-            goto failed;
-        }
+        case 1:
+            x509 = PEM_read_bio_X509(bio, NULL, NULL, NULL);
+            if (x509 == NULL) {
+                TEST_error("read PEM x509 failed");
+                goto failed;
+            }
 
-        result = X509_check_private_key(x509, pkey);
-        break;
-    case 2:
-        x509_req = PEM_read_bio_X509_REQ(bio, NULL, NULL, NULL);
-        if (x509_req == NULL) {
-            TEST_error("read PEM x509 req failed");
-            goto failed;
-        }
+            result = X509_check_private_key(x509, pkey);
+            break;
+        case 2:
+            x509_req = PEM_read_bio_X509_REQ(bio, NULL, NULL, NULL);
+            if (x509_req == NULL) {
+                TEST_error("read PEM x509 req failed");
+                goto failed;
+            }
 
-        result = X509_REQ_check_private_key(x509_req, pkey);
-        break;
-    default:
-        /* should never be here */
-        break;
+            result = X509_REQ_check_private_key(x509_req, pkey);
+            break;
+        default:
+            /* should never be here */
+            break;
     }
 
     if (!TEST_int_eq(result, expected)) {
-        TEST_error("check private key: expected: %d, got: %d", expected, result);
+        TEST_error("check private key: expected: %d, got: %d", expected,
+                   result);
         goto failed;
     }
 
@@ -142,9 +143,12 @@ const OPTIONS *test_get_options(void)
         { OPT_HELP_STR, 1, '-', "cert\tcertificate or CSR filename in PEM\n" },
         { OPT_HELP_STR, 1, '-', "key\tprivate key filename in PEM\n" },
         { OPT_HELP_STR, 1, '-', "type\t\tvalue must be 'cert' or 'req'\n" },
-        { OPT_HELP_STR, 1, '-', "expected\tthe expected return value, either 'ok' or 'failed'\n" },
-        { OPT_HELP_STR, 1, '-', "file\tPEM format file containing certs, keys, and/OR CRLs\n" },
-        { OPT_HELP_STR, 1, '-', "num\texpected number of credentials to be loaded from file\n" },
+        { OPT_HELP_STR, 1, '-',
+          "expected\tthe expected return value, either 'ok' or 'failed'\n" },
+        { OPT_HELP_STR, 1, '-',
+          "file\tPEM format file containing certs, keys, and/OR CRLs\n" },
+        { OPT_HELP_STR, 1, '-',
+          "num\texpected number of credentials to be loaded from file\n" },
         { NULL }
     };
     return test_options;
@@ -161,7 +165,7 @@ int setup_tests(void)
         const char *num;  /* expected number of certs/CRLs/keys included */
 
         if (!TEST_ptr(file = test_get_argument(0))
-                || !TEST_ptr(num = test_get_argument(1)))
+            || !TEST_ptr(num = test_get_argument(1)))
             return 0;
         if (!TEST_int_eq(sscanf(num, "%d", &expected), 1))
             return 0;
@@ -170,9 +174,9 @@ int setup_tests(void)
     }
 
     if (!TEST_ptr(c = test_get_argument(0))
-            || !TEST_ptr(k = test_get_argument(1))
-            || !TEST_ptr(t = test_get_argument(2))
-            || !TEST_ptr(e = test_get_argument(3))) {
+        || !TEST_ptr(k = test_get_argument(1))
+        || !TEST_ptr(t = test_get_argument(2))
+        || !TEST_ptr(e = test_get_argument(3))) {
         return 0;
     }
 

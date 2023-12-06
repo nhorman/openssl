@@ -98,7 +98,8 @@ static int test_ncid_frame(int fail)
                                                          add_ncid_frame_cb,
                                                          NULL)))
         goto err;
-    if (!fail && !TEST_true(ossl_quic_tserver_set_new_local_cid(qtserv, &conn_id)))
+    if (!fail &&
+        !TEST_true(ossl_quic_tserver_set_new_local_cid(qtserv, &conn_id)))
         goto err;
     if (!TEST_true(ossl_quic_tserver_write(qtserv, 0,
                                            (unsigned char *)msg, msglen,
@@ -138,7 +139,7 @@ static int test_ncid_frame(int fail)
     }
 
     testresult = 1;
- err:
+err:
     qtest_fault_free(fault);
     SSL_free(cssl);
     ossl_quic_tserver_free(qtserv);
@@ -172,7 +173,7 @@ int setup_tests(void)
 
     return 1;
 
- err:
+err:
     OPENSSL_free(cert);
     OPENSSL_free(privkey);
     return 0;

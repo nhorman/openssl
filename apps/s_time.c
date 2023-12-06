@@ -86,7 +86,8 @@ const OPTIONS s_time_options[] = {
     {"www", OPT_WWW, 's', "Fetch specified page from the site"},
 
     OPT_SECTION("Certificate"),
-    {"nameopt", OPT_NAMEOPT, 's', "Certificate subject/issuer name printing options"},
+    {"nameopt", OPT_NAMEOPT, 's',
+     "Certificate subject/issuer name printing options"},
     {"cert", OPT_CERT, '<', "Cert file to use, PEM format assumed"},
     {"key", OPT_KEY, '<', "File with key, PEM; default is -cert file"},
     {"cafile", OPT_CAFILE, '<', "PEM format file of CA's"},
@@ -135,101 +136,101 @@ int s_time_main(int argc, char **argv)
     prog = opt_init(argc, argv, s_time_options);
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_EOF:
-        case OPT_ERR:
- opthelp:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto end;
-        case OPT_HELP:
-            opt_help(s_time_options);
-            ret = 0;
-            goto end;
-        case OPT_CONNECT:
-            host = opt_arg();
-            break;
-        case OPT_REUSE:
-            perform = 2;
-            break;
-        case OPT_NEW:
-            perform = 1;
-            break;
-        case OPT_VERIFY:
-            verify_args.depth = opt_int_arg();
-            BIO_printf(bio_err, "%s: verify depth is %d\n",
-                       prog, verify_args.depth);
-            break;
-        case OPT_CERT:
-            certfile = opt_arg();
-            break;
-        case OPT_NAMEOPT:
-            if (!set_nameopt(opt_arg()))
+            case OPT_EOF:
+            case OPT_ERR:
+opthelp:
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
                 goto end;
-            break;
-        case OPT_KEY:
-            keyfile = opt_arg();
-            break;
-        case OPT_CAPATH:
-            CApath = opt_arg();
-            break;
-        case OPT_CAFILE:
-            CAfile = opt_arg();
-            break;
-        case OPT_NOCAPATH:
-            noCApath = 1;
-            break;
-        case OPT_NOCAFILE:
-            noCAfile = 1;
-            break;
-        case OPT_CASTORE:
-            CAstore = opt_arg();
-            break;
-        case OPT_NOCASTORE:
-            noCAstore = 1;
-            break;
-        case OPT_CIPHER:
-            cipher = opt_arg();
-            break;
-        case OPT_CIPHERSUITES:
-            ciphersuites = opt_arg();
-            break;
-        case OPT_BUGS:
-            st_bugs = 1;
-            break;
-        case OPT_TIME:
-            maxtime = opt_int_arg();
-            break;
-        case OPT_WWW:
-            www_path = opt_arg();
-            buf_size = strlen(www_path) + fmt_http_get_cmd_size;
-            if (buf_size > sizeof(buf)) {
-                BIO_printf(bio_err, "%s: -www option is too long\n", prog);
+            case OPT_HELP:
+                opt_help(s_time_options);
+                ret = 0;
                 goto end;
-            }
-            break;
-        case OPT_SSL3:
-            min_version = SSL3_VERSION;
-            max_version = SSL3_VERSION;
-            break;
-        case OPT_TLS1:
-            min_version = TLS1_VERSION;
-            max_version = TLS1_VERSION;
-            break;
-        case OPT_TLS1_1:
-            min_version = TLS1_1_VERSION;
-            max_version = TLS1_1_VERSION;
-            break;
-        case OPT_TLS1_2:
-            min_version = TLS1_2_VERSION;
-            max_version = TLS1_2_VERSION;
-            break;
-        case OPT_TLS1_3:
-            min_version = TLS1_3_VERSION;
-            max_version = TLS1_3_VERSION;
-            break;
-        case OPT_PROV_CASES:
-            if (!opt_provider(o))
-                goto end;
-            break;
+            case OPT_CONNECT:
+                host = opt_arg();
+                break;
+            case OPT_REUSE:
+                perform = 2;
+                break;
+            case OPT_NEW:
+                perform = 1;
+                break;
+            case OPT_VERIFY:
+                verify_args.depth = opt_int_arg();
+                BIO_printf(bio_err, "%s: verify depth is %d\n",
+                           prog, verify_args.depth);
+                break;
+            case OPT_CERT:
+                certfile = opt_arg();
+                break;
+            case OPT_NAMEOPT:
+                if (!set_nameopt(opt_arg()))
+                    goto end;
+                break;
+            case OPT_KEY:
+                keyfile = opt_arg();
+                break;
+            case OPT_CAPATH:
+                CApath = opt_arg();
+                break;
+            case OPT_CAFILE:
+                CAfile = opt_arg();
+                break;
+            case OPT_NOCAPATH:
+                noCApath = 1;
+                break;
+            case OPT_NOCAFILE:
+                noCAfile = 1;
+                break;
+            case OPT_CASTORE:
+                CAstore = opt_arg();
+                break;
+            case OPT_NOCASTORE:
+                noCAstore = 1;
+                break;
+            case OPT_CIPHER:
+                cipher = opt_arg();
+                break;
+            case OPT_CIPHERSUITES:
+                ciphersuites = opt_arg();
+                break;
+            case OPT_BUGS:
+                st_bugs = 1;
+                break;
+            case OPT_TIME:
+                maxtime = opt_int_arg();
+                break;
+            case OPT_WWW:
+                www_path = opt_arg();
+                buf_size = strlen(www_path) + fmt_http_get_cmd_size;
+                if (buf_size > sizeof(buf)) {
+                    BIO_printf(bio_err, "%s: -www option is too long\n", prog);
+                    goto end;
+                }
+                break;
+            case OPT_SSL3:
+                min_version = SSL3_VERSION;
+                max_version = SSL3_VERSION;
+                break;
+            case OPT_TLS1:
+                min_version = TLS1_VERSION;
+                max_version = TLS1_VERSION;
+                break;
+            case OPT_TLS1_1:
+                min_version = TLS1_1_VERSION;
+                max_version = TLS1_1_VERSION;
+                break;
+            case OPT_TLS1_2:
+                min_version = TLS1_2_VERSION;
+                max_version = TLS1_2_VERSION;
+                break;
+            case OPT_TLS1_3:
+                min_version = TLS1_3_VERSION;
+                max_version = TLS1_3_VERSION;
+                break;
+            case OPT_PROV_CASES:
+                if (!opt_provider(o))
+                    goto end;
+                break;
         }
     }
 
@@ -312,18 +313,19 @@ int s_time_main(int argc, char **argv)
 
     i = (int)((long)time(NULL) - finishtime + maxtime);
     printf
-        ("\n\n%d connections in %.2fs; %.2f connections/user sec, bytes read %ld\n",
-         nConn, totalTime, ((double)nConn / totalTime), bytes_read);
+    (
+        "\n\n%d connections in %.2fs; %.2f connections/user sec, bytes read %ld\n",
+        nConn, totalTime, ((double)nConn / totalTime), bytes_read);
     printf
         ("%d connections in %ld real seconds, %ld bytes read per connection\n",
-         nConn, (long)time(NULL) - finishtime + maxtime,
-         nConn > 0 ? bytes_read / nConn : 0l);
+        nConn, (long)time(NULL) - finishtime + maxtime,
+        nConn > 0 ? bytes_read / nConn : 0l);
 
     /*
      * Now loop and time connections using the same session id over and over
      */
 
- next:
+next:
     if (!(perform & 2))
         goto end;
     printf("\n\nNow timing with session id reuse.\n");
@@ -391,18 +393,20 @@ int s_time_main(int argc, char **argv)
     totalTime += tm_Time_F(STOP); /* Add the time for this iteration */
 
     printf
-        ("\n\n%d connections in %.2fs; %.2f connections/user sec, bytes read %ld\n",
-         nConn, totalTime, ((double)nConn / totalTime), bytes_read);
+    (
+        "\n\n%d connections in %.2fs; %.2f connections/user sec, bytes read %ld\n",
+        nConn, totalTime, ((double)nConn / totalTime), bytes_read);
     if (nConn > 0)
         printf
-            ("%d connections in %ld real seconds, %ld bytes read per connection\n",
-             nConn, (long)time(NULL) - finishtime + maxtime, bytes_read / nConn);
+        (
+            "%d connections in %ld real seconds, %ld bytes read per connection\n",
+            nConn, (long)time(NULL) - finishtime + maxtime, bytes_read / nConn);
     else
         printf("0 connections in %ld real seconds\n",
                (long)time(NULL) - finishtime + maxtime);
     ret = 0;
 
- end:
+end:
     SSL_free(scon);
     SSL_CTX_free(ctx);
     return ret;
@@ -421,7 +425,7 @@ static SSL *doConnection(SSL *scon, const char *host, SSL_CTX *ctx)
         return NULL;
 
     if (BIO_set_conn_hostname(conn, host) <= 0
-            || BIO_set_conn_mode(conn, BIO_SOCK_NODELAY) <= 0) {
+        || BIO_set_conn_mode(conn, BIO_SOCK_NODELAY) <= 0) {
         BIO_free(conn);
         return NULL;
     }

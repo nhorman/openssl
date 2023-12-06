@@ -85,7 +85,9 @@ mask_t gf_deserialize(gf x, const uint8_t serial[SER_BYTES], int with_hibit,
             j++;
         }
         x->limb[LIMBPERM(i)] = (word_t)
-            ((i < NLIMBS - 1) ? buffer & LIMB_MASK(LIMBPERM(i)) : buffer);
+                               ((i <
+                                 NLIMBS - 1) ? buffer &
+                                LIMB_MASK(LIMBPERM(i)) : buffer);
         fill -= LIMB_PLACE_VALUE(LIMBPERM(i));
         buffer >>= LIMB_PLACE_VALUE(LIMBPERM(i));
         scarry =

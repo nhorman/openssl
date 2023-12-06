@@ -64,12 +64,12 @@ int SCT_set_log_entry_type(SCT *sct, ct_log_entry_type_t entry_type)
     sct->validation_status = SCT_VALIDATION_STATUS_NOT_SET;
 
     switch (entry_type) {
-    case CT_LOG_ENTRY_TYPE_X509:
-    case CT_LOG_ENTRY_TYPE_PRECERT:
-        sct->entry_type = entry_type;
-        return 1;
-    case CT_LOG_ENTRY_TYPE_NOT_SET:
-        break;
+        case CT_LOG_ENTRY_TYPE_X509:
+        case CT_LOG_ENTRY_TYPE_PRECERT:
+            sct->entry_type = entry_type;
+            return 1;
+        case CT_LOG_ENTRY_TYPE_NOT_SET:
+            break;
     }
     ERR_raise(ERR_LIB_CT, CT_R_UNSUPPORTED_ENTRY_TYPE);
     return 0;
@@ -120,19 +120,19 @@ void SCT_set_timestamp(SCT *sct, uint64_t timestamp)
 int SCT_set_signature_nid(SCT *sct, int nid)
 {
     switch (nid) {
-    case NID_sha256WithRSAEncryption:
-        sct->hash_alg = TLSEXT_hash_sha256;
-        sct->sig_alg = TLSEXT_signature_rsa;
-        sct->validation_status = SCT_VALIDATION_STATUS_NOT_SET;
-        return 1;
-    case NID_ecdsa_with_SHA256:
-        sct->hash_alg = TLSEXT_hash_sha256;
-        sct->sig_alg = TLSEXT_signature_ecdsa;
-        sct->validation_status = SCT_VALIDATION_STATUS_NOT_SET;
-        return 1;
-    default:
-        ERR_raise(ERR_LIB_CT, CT_R_UNRECOGNIZED_SIGNATURE_NID);
-        return 0;
+        case NID_sha256WithRSAEncryption:
+            sct->hash_alg = TLSEXT_hash_sha256;
+            sct->sig_alg = TLSEXT_signature_rsa;
+            sct->validation_status = SCT_VALIDATION_STATUS_NOT_SET;
+            return 1;
+        case NID_ecdsa_with_SHA256:
+            sct->hash_alg = TLSEXT_hash_sha256;
+            sct->sig_alg = TLSEXT_signature_ecdsa;
+            sct->validation_status = SCT_VALIDATION_STATUS_NOT_SET;
+            return 1;
+        default:
+            ERR_raise(ERR_LIB_CT, CT_R_UNRECOGNIZED_SIGNATURE_NID);
+            return 0;
     }
 }
 
@@ -210,12 +210,12 @@ int SCT_get_signature_nid(const SCT *sct)
     if (sct->version == SCT_VERSION_V1) {
         if (sct->hash_alg == TLSEXT_hash_sha256) {
             switch (sct->sig_alg) {
-            case TLSEXT_signature_ecdsa:
-                return NID_ecdsa_with_SHA256;
-            case TLSEXT_signature_rsa:
-                return NID_sha256WithRSAEncryption;
-            default:
-                return NID_undef;
+                case TLSEXT_signature_ecdsa:
+                    return NID_ecdsa_with_SHA256;
+                case TLSEXT_signature_rsa:
+                    return NID_sha256WithRSAEncryption;
+                default:
+                    return NID_undef;
             }
         }
     }
@@ -237,19 +237,19 @@ size_t SCT_get0_signature(const SCT *sct, unsigned char **sig)
 int SCT_is_complete(const SCT *sct)
 {
     switch (sct->version) {
-    case SCT_VERSION_NOT_SET:
-        return 0;
-    case SCT_VERSION_V1:
-        return sct->log_id != NULL && SCT_signature_is_complete(sct);
-    default:
-        return sct->sct != NULL; /* Just need cached encoding */
+        case SCT_VERSION_NOT_SET:
+            return 0;
+        case SCT_VERSION_V1:
+            return sct->log_id != NULL && SCT_signature_is_complete(sct);
+        default:
+            return sct->sct != NULL; /* Just need cached encoding */
     }
 }
 
 int SCT_signature_is_complete(const SCT *sct)
 {
     return SCT_get_signature_nid(sct) != NID_undef &&
-        sct->sig != NULL && sct->sig_len > 0;
+           sct->sig != NULL && sct->sig_len > 0;
 }
 
 sct_source_t SCT_get_source(const SCT *sct)
@@ -262,13 +262,13 @@ int SCT_set_source(SCT *sct, sct_source_t source)
     sct->source = source;
     sct->validation_status = SCT_VALIDATION_STATUS_NOT_SET;
     switch (source) {
-    case SCT_SOURCE_TLS_EXTENSION:
-    case SCT_SOURCE_OCSP_STAPLED_RESPONSE:
-        return SCT_set_log_entry_type(sct, CT_LOG_ENTRY_TYPE_X509);
-    case SCT_SOURCE_X509V3_EXTENSION:
-        return SCT_set_log_entry_type(sct, CT_LOG_ENTRY_TYPE_PRECERT);
-    case SCT_SOURCE_UNKNOWN:
-        break;
+        case SCT_SOURCE_TLS_EXTENSION:
+        case SCT_SOURCE_OCSP_STAPLED_RESPONSE:
+            return SCT_set_log_entry_type(sct, CT_LOG_ENTRY_TYPE_X509);
+        case SCT_SOURCE_X509V3_EXTENSION:
+            return SCT_set_log_entry_type(sct, CT_LOG_ENTRY_TYPE_PRECERT);
+        case SCT_SOURCE_UNKNOWN:
+            break;
     }
     /* if we aren't sure, leave the log entry type alone */
     return 1;
@@ -353,7 +353,8 @@ int SCT_validate(SCT *sct, const CT_POLICY_EVAL_CTX *ctx)
         sct->validation_status = SCT_VALIDATION_STATUS_UNVERIFIED;
     else
         sct->validation_status = SCT_CTX_verify(sctx, sct) == 1 ?
-            SCT_VALIDATION_STATUS_VALID : SCT_VALIDATION_STATUS_INVALID;
+                                 SCT_VALIDATION_STATUS_VALID :
+                                 SCT_VALIDATION_STATUS_INVALID;
 
 end:
     is_sct_valid = sct->validation_status == SCT_VALIDATION_STATUS_VALID;

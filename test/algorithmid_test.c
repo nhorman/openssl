@@ -76,7 +76,8 @@ static int test_spki_aid(X509_PUBKEY *pubkey, const char *filename)
     }
 
     if (!TEST_ptr(gettable_params = EVP_KEYMGMT_gettable_params(keymgmt))
-        || !TEST_ptr(OSSL_PARAM_locate_const(gettable_params, ALGORITHMID_NAME))) {
+        || !TEST_ptr(OSSL_PARAM_locate_const(gettable_params,
+                                             ALGORITHMID_NAME))) {
         TEST_info("The %s provider keymgmt appears to lack support for algorithm-id."
                   "  Skipping...",
                   name);
@@ -94,7 +95,7 @@ static int test_spki_aid(X509_PUBKEY *pubkey, const char *filename)
                     algid_prov, algid_prov_len))
         ret = 1;
 
- end:
+end:
     EVP_KEYMGMT_free(keymgmt);
     OPENSSL_free(algid_legacy);
     return ret;
@@ -141,7 +142,8 @@ static int test_x509_sig_aid(X509 *eecert, const char *ee_filename,
         TEST_info("The '%s' pubkey can't be used to verify the '%s' signature",
                   ca_filename, ee_filename);
         TEST_info("Signature algorithm is %s (pkey type %s, hash type %s)",
-                  OBJ_nid2sn(sig_nid), OBJ_nid2sn(pkey_nid), OBJ_nid2sn(dig_nid));
+                  OBJ_nid2sn(sig_nid), OBJ_nid2sn(pkey_nid),
+                  OBJ_nid2sn(dig_nid));
         TEST_info("Pkey key type is %s", EVP_PKEY_get0_type_name(pkey));
         goto end;
     }
@@ -160,10 +162,12 @@ static int test_x509_sig_aid(X509 *eecert, const char *ee_filename,
     }
 
     if (!TEST_ptr(gettable_params = EVP_PKEY_CTX_gettable_params(pctx))
-        || !TEST_ptr(OSSL_PARAM_locate_const(gettable_params, ALGORITHMID_NAME))) {
+        || !TEST_ptr(OSSL_PARAM_locate_const(gettable_params,
+                                             ALGORITHMID_NAME))) {
         TEST_info("The %s provider keymgmt appears to lack support for algorithm-id"
                   "  Skipping...",
-                  OBJ_nid2sn(pkey_nid));
+                  OBJ_nid2sn(
+                      pkey_nid));
         ret = 1;
         goto end;
     }
@@ -178,7 +182,7 @@ static int test_x509_sig_aid(X509 *eecert, const char *ee_filename,
                     algid_prov, algid_prov_len))
         ret = 1;
 
- end:
+end:
     EVP_MD_CTX_free(mdctx);
     /* pctx is free by EVP_MD_CTX_free() */
     OPENSSL_free(algid_legacy);
@@ -198,14 +202,15 @@ static int test_spki_file(void)
     }
 
     if ((pubkey = PEM_read_bio_X509_PUBKEY(b, NULL, NULL, NULL)) == NULL) {
-        TEST_error("'%s' doesn't appear to be a SubjectPublicKeyInfo in PEM format\n",
-                   pubkey_filename);
+        TEST_error(
+            "'%s' doesn't appear to be a SubjectPublicKeyInfo in PEM format\n",
+            pubkey_filename);
         TEST_openssl_errors();
         goto end;
     }
 
     ret = test_spki_aid(pubkey, pubkey_filename);
- end:
+end:
     BIO_free(b);
     X509_PUBKEY_free(pubkey);
     return ret;
@@ -229,22 +234,24 @@ static int test_x509_files(void)
     }
 
     if ((eecert = PEM_read_bio_X509(bee, NULL, NULL, NULL)) == NULL) {
-        TEST_error("'%s' doesn't appear to be a X.509 certificate in PEM format\n",
-                   eecert_filename);
+        TEST_error(
+            "'%s' doesn't appear to be a X.509 certificate in PEM format\n",
+            eecert_filename);
         TEST_openssl_errors();
         goto end;
     }
     if ((cacert = PEM_read_bio_X509(bca, NULL, NULL, NULL)) == NULL) {
-        TEST_error("'%s' doesn't appear to be a X.509 certificate in PEM format\n",
-                   cacert_filename);
+        TEST_error(
+            "'%s' doesn't appear to be a X.509 certificate in PEM format\n",
+            cacert_filename);
         TEST_openssl_errors();
         goto end;
     }
 
     ret = test_x509_sig_aid(eecert, eecert_filename, cacert, cacert_filename)
-        & test_x509_spki_aid(eecert, eecert_filename)
-        & test_x509_spki_aid(cacert, cacert_filename);
- end:
+          & test_x509_spki_aid(eecert, eecert_filename)
+          & test_x509_spki_aid(cacert, cacert_filename);
+end:
     BIO_free(bee);
     BIO_free(bca);
     X509_free(eecert);
@@ -264,8 +271,10 @@ const OPTIONS *test_get_options(void)
 {
     static const OPTIONS test_options[] = {
         OPT_TEST_OPTIONS_WITH_EXTRA_USAGE("file...\n"),
-        { "x509", OPT_X509, '-', "Test X.509 certificates.  Requires two files" },
-        { "spki", OPT_SPKI, '-', "Test public keys in SubjectPublicKeyInfo form.  Requires one file" },
+        { "x509", OPT_X509, '-',
+          "Test X.509 certificates.  Requires two files" },
+        { "spki", OPT_SPKI, '-',
+          "Test public keys in SubjectPublicKeyInfo form.  Requires one file" },
         { OPT_HELP_STR, 1, '-',
           "file...\tFile(s) to run tests on.  All files must be PEM encoded.\n" },
         { NULL }
@@ -280,17 +289,17 @@ int setup_tests(void)
 
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_X509:
-            x509 = 1;
-            break;
-        case OPT_SPKI:
-            spki = 1;
-            break;
-        case OPT_TEST_CASES:
-           break;
-        default:
-        case OPT_ERR:
-            return 0;
+            case OPT_X509:
+                x509 = 1;
+                break;
+            case OPT_SPKI:
+                spki = 1;
+                break;
+            case OPT_TEST_CASES:
+                break;
+            default:
+            case OPT_ERR:
+                return 0;
         }
     }
 

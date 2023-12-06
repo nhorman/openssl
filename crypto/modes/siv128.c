@@ -86,8 +86,10 @@ static ossl_inline void siv128_dbl(SIV_BLOCK *b)
     siv128_putword(b, 1, low);
 }
 
-__owur static ossl_inline int siv128_do_s2v_p(SIV128_CONTEXT *ctx, SIV_BLOCK *out,
-                                              unsigned char const* in, size_t len)
+__owur static ossl_inline int siv128_do_s2v_p(SIV128_CONTEXT *ctx,
+                                              SIV_BLOCK *out,
+                                              unsigned char const* in,
+                                              size_t len)
 {
     SIV_BLOCK t;
     size_t out_len = sizeof(out->byte);
@@ -126,9 +128,11 @@ err:
 }
 
 
-__owur static ossl_inline int siv128_do_encrypt(EVP_CIPHER_CTX *ctx, unsigned char *out,
-                                             unsigned char const *in, size_t len,
-                                             SIV_BLOCK *icv)
+__owur static ossl_inline int siv128_do_encrypt(EVP_CIPHER_CTX *ctx,
+                                                unsigned char *out,
+                                                unsigned char const *in,
+                                                size_t len,
+                                                SIV_BLOCK *icv)
 {
     int out_len = (int)len;
 
@@ -141,8 +145,8 @@ __owur static ossl_inline int siv128_do_encrypt(EVP_CIPHER_CTX *ctx, unsigned ch
  * Create a new SIV128_CONTEXT
  */
 SIV128_CONTEXT *ossl_siv128_new(const unsigned char *key, int klen,
-                                  EVP_CIPHER *cbc, EVP_CIPHER *ctr,
-                                  OSSL_LIB_CTX *libctx, const char *propq)
+                                EVP_CIPHER *cbc, EVP_CIPHER *ctr,
+                                OSSL_LIB_CTX *libctx, const char *propq)
 {
     SIV128_CONTEXT *ctx;
     int ret;
@@ -161,8 +165,8 @@ SIV128_CONTEXT *ossl_siv128_new(const unsigned char *key, int klen,
  * Initialise an existing SIV128_CONTEXT
  */
 int ossl_siv128_init(SIV128_CONTEXT *ctx, const unsigned char *key, int klen,
-                       const EVP_CIPHER *cbc, const EVP_CIPHER *ctr,
-                       OSSL_LIB_CTX *libctx, const char *propq)
+                     const EVP_CIPHER *cbc, const EVP_CIPHER *ctr,
+                     OSSL_LIB_CTX *libctx, const char *propq)
 {
     static const unsigned char zero[SIV_LEN] = { 0 };
     size_t out_len = SIV_LEN;
@@ -192,15 +196,15 @@ int ossl_siv128_init(SIV128_CONTEXT *ctx, const unsigned char *key, int klen,
     params[2] = OSSL_PARAM_construct_end();
 
     if ((ctx->cipher_ctx = EVP_CIPHER_CTX_new()) == NULL
-            || (ctx->mac =
+        || (ctx->mac =
                 EVP_MAC_fetch(libctx, OSSL_MAC_NAME_CMAC, propq)) == NULL
-            || (ctx->mac_ctx_init = EVP_MAC_CTX_new(ctx->mac)) == NULL
-            || !EVP_MAC_CTX_set_params(ctx->mac_ctx_init, params)
-            || !EVP_EncryptInit_ex(ctx->cipher_ctx, ctr, NULL, key + klen, NULL)
-            || (mac_ctx = EVP_MAC_CTX_dup(ctx->mac_ctx_init)) == NULL
-            || !EVP_MAC_update(mac_ctx, zero, sizeof(zero))
-            || !EVP_MAC_final(mac_ctx, ctx->d.byte, &out_len,
-                              sizeof(ctx->d.byte))) {
+        || (ctx->mac_ctx_init = EVP_MAC_CTX_new(ctx->mac)) == NULL
+        || !EVP_MAC_CTX_set_params(ctx->mac_ctx_init, params)
+        || !EVP_EncryptInit_ex(ctx->cipher_ctx, ctr, NULL, key + klen, NULL)
+        || (mac_ctx = EVP_MAC_CTX_dup(ctx->mac_ctx_init)) == NULL
+        || !EVP_MAC_update(mac_ctx, zero, sizeof(zero))
+        || !EVP_MAC_final(mac_ctx, ctx->d.byte, &out_len,
+                          sizeof(ctx->d.byte))) {
         EVP_CIPHER_CTX_free(ctx->cipher_ctx);
         EVP_MAC_CTX_free(ctx->mac_ctx_init);
         EVP_MAC_CTX_free(mac_ctx);
@@ -244,7 +248,7 @@ int ossl_siv128_copy_ctx(SIV128_CONTEXT *dest, SIV128_CONTEXT *src)
  * is the nonce, but it's not treated special
  */
 int ossl_siv128_aad(SIV128_CONTEXT *ctx, const unsigned char *aad,
-                      size_t len)
+                    size_t len)
 {
     SIV_BLOCK mac_out;
     size_t out_len = SIV_LEN;
@@ -271,8 +275,8 @@ int ossl_siv128_aad(SIV128_CONTEXT *ctx, const unsigned char *aad,
  * Provide any data to be encrypted. This can be called once.
  */
 int ossl_siv128_encrypt(SIV128_CONTEXT *ctx,
-                          const unsigned char *in, unsigned char *out,
-                          size_t len)
+                        const unsigned char *in, unsigned char *out,
+                        size_t len)
 {
     SIV_BLOCK q;
 
@@ -298,8 +302,8 @@ int ossl_siv128_encrypt(SIV128_CONTEXT *ctx,
  * Provide any data to be decrypted. This can be called once.
  */
 int ossl_siv128_decrypt(SIV128_CONTEXT *ctx,
-                          const unsigned char *in, unsigned char *out,
-                          size_t len)
+                        const unsigned char *in, unsigned char *out,
+                        size_t len)
 {
     unsigned char* p;
     SIV_BLOCK t, q;
@@ -341,7 +345,8 @@ int ossl_siv128_finish(SIV128_CONTEXT *ctx)
 /*
  * Set the tag
  */
-int ossl_siv128_set_tag(SIV128_CONTEXT *ctx, const unsigned char *tag, size_t len)
+int ossl_siv128_set_tag(SIV128_CONTEXT *ctx, const unsigned char *tag,
+                        size_t len)
 {
     if (len != SIV_LEN)
         return 0;

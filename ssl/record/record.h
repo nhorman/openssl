@@ -11,11 +11,11 @@
 #include "internal/recordmethod.h"
 
 /*****************************************************************************
- *                                                                           *
- * These structures should be considered PRIVATE to the record layer. No     *
- * non-record layer code should be using these structures in any way.        *
- *                                                                           *
- *****************************************************************************/
+*                                                                           *
+* These structures should be considered PRIVATE to the record layer. No     *
+* non-record layer code should be using these structures in any way.        *
+*                                                                           *
+*****************************************************************************/
 
 #define SEQ_NUM_SIZE                            8
 
@@ -66,12 +66,12 @@ typedef struct dtls_record_layer_st {
 } DTLS_RECORD_LAYER;
 
 /*****************************************************************************
- *                                                                           *
- * This structure should be considered "opaque" to anything outside of the   *
- * record layer. No non-record layer code should be accessing the members of *
- * this structure.                                                           *
- *                                                                           *
- *****************************************************************************/
+*                                                                           *
+* This structure should be considered "opaque" to anything outside of the   *
+* record layer. No non-record layer code should be accessing the members of *
+* this structure.                                                           *
+*                                                                           *
+*****************************************************************************/
 
 typedef struct record_layer_st {
     /* The parent SSL_CONNECTION structure */
@@ -131,11 +131,11 @@ typedef struct record_layer_st {
 } RECORD_LAYER;
 
 /*****************************************************************************
- *                                                                           *
- * The following macros/functions represent the libssl internal API to the   *
- * record layer. Any libssl code may call these functions/macros             *
- *                                                                           *
- *****************************************************************************/
+*                                                                           *
+* The following macros/functions represent the libssl internal API to the   *
+* record layer. Any libssl code may call these functions/macros             *
+*                                                                           *
+*****************************************************************************/
 
 #define RECORD_LAYER_set_read_ahead(rl, ra)     ((rl)->read_ahead = (ra))
 #define RECORD_LAYER_get_read_ahead(rl)         ((rl)->read_ahead)
@@ -168,10 +168,10 @@ void dtls1_increment_epoch(SSL_CONNECTION *s, int rw);
 int ssl_release_record(SSL_CONNECTION *s, TLS_RECORD *rr, size_t length);
 
 # define HANDLE_RLAYER_READ_RETURN(s, ret) \
-    ossl_tls_handle_rlayer_return(s, 0, ret, OPENSSL_FILE, OPENSSL_LINE)
+        ossl_tls_handle_rlayer_return(s, 0, ret, OPENSSL_FILE, OPENSSL_LINE)
 
 # define HANDLE_RLAYER_WRITE_RETURN(s, ret) \
-    ossl_tls_handle_rlayer_return(s, 1, ret, OPENSSL_FILE, OPENSSL_LINE)
+        ossl_tls_handle_rlayer_return(s, 1, ret, OPENSSL_FILE, OPENSSL_LINE)
 
 int ossl_tls_handle_rlayer_return(SSL_CONNECTION *s, int writing, int ret,
                                   char *file, int line);

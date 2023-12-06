@@ -64,7 +64,7 @@ static int test_store_search_by_key_fingerprint_fail(void)
     OSSL_STORE_SEARCH *search = NULL;
 
     ret = TEST_ptr_null(search = OSSL_STORE_SEARCH_by_key_fingerprint(
-                                     EVP_sha256(), NULL, 0));
+                            EVP_sha256(), NULL, 0));
     OSSL_STORE_SEARCH_free(search);
     return ret;
 }
@@ -81,8 +81,8 @@ static int get_params(const char *uri, const char *type)
         goto err;
 
     while (!OSSL_STORE_eof(ctx)
-            && (info = OSSL_STORE_load(ctx)) != NULL
-            && pkey == NULL) {
+           && (info = OSSL_STORE_load(ctx)) != NULL
+           && pkey == NULL) {
         if (OSSL_STORE_INFO_get_type(info) == OSSL_STORE_INFO_PARAMS) {
             pkey = OSSL_STORE_INFO_get1_PARAMS(info);
         }
@@ -94,7 +94,7 @@ static int get_params(const char *uri, const char *type)
         ret = EVP_PKEY_is_a(pkey, type);
     EVP_PKEY_free(pkey);
 
- err:
+err:
     OSSL_STORE_close(ctx);
     return ret;
 }
@@ -107,27 +107,27 @@ static int test_store_get_params(int idx)
 
     switch (idx) {
 #ifndef OPENSSL_NO_DH
-    case 0:
-        type = "DH";
-        break;
-    case 1:
-        type = "DHX";
-        break;
+        case 0:
+            type = "DH";
+            break;
+        case 1:
+            type = "DHX";
+            break;
 #else
-    case 0:
-    case 1:
-        return 1;
+        case 0:
+        case 1:
+            return 1;
 #endif
-    case 2:
+        case 2:
 #ifndef OPENSSL_NO_DSA
-        type = "DSA";
-        break;
+            type = "DSA";
+            break;
 #else
-        return 1;
+            return 1;
 #endif
-    default:
-        TEST_error("Invalid test index");
-        return 0;
+        default:
+            TEST_error("Invalid test index");
+            return 0;
     }
 
     urifmt = "%s/%s-params.pem";
@@ -167,7 +167,8 @@ static int test_store_attach_unregistered_scheme(void)
           && TEST_ptr(provider = OSSL_PROVIDER_load(libctx, "default"))
           && TEST_ptr(bio = BIO_new_file(input, "r"))
           && TEST_ptr(store_ctx = OSSL_STORE_attach(bio, "file", libctx, NULL,
-                                                    NULL, NULL, NULL, NULL, NULL))
+                                                    NULL, NULL, NULL, NULL,
+                                                    NULL))
           && TEST_int_ne(ERR_GET_LIB(ERR_peek_error()), ERR_LIB_OSSL_STORE)
           && TEST_int_ne(ERR_GET_REASON(ERR_peek_error()),
                          OSSL_STORE_R_UNREGISTERED_SCHEME);
@@ -199,23 +200,23 @@ int setup_tests(void)
 
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_INPUTDIR:
-            inputdir = opt_arg();
-            break;
-        case OPT_INFILE:
-            infile = opt_arg();
-            break;
-        case OPT_SM2FILE:
-            sm2file = opt_arg();
-            break;
-        case OPT_DATADIR:
-            datadir = opt_arg();
-            break;
-        case OPT_TEST_CASES:
-           break;
-        default:
-        case OPT_ERR:
-            return 0;
+            case OPT_INPUTDIR:
+                inputdir = opt_arg();
+                break;
+            case OPT_INFILE:
+                infile = opt_arg();
+                break;
+            case OPT_SM2FILE:
+                sm2file = opt_arg();
+                break;
+            case OPT_DATADIR:
+                datadir = opt_arg();
+                break;
+            case OPT_TEST_CASES:
+                break;
+            default:
+            case OPT_ERR:
+                return 0;
         }
     }
 

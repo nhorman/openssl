@@ -48,7 +48,7 @@ const OPTIONS fipsinstall_options[] = {
     {"help", OPT_HELP, '-', "Display this summary"},
     {"pedantic", OPT_PEDANTIC, '-', "Set options for strict FIPS compliance"},
     {"verify", OPT_VERIFY, '-',
-        "Verify a config file instead of generating one"},
+     "Verify a config file instead of generating one"},
     {"module", OPT_MODULE, '<', "File name of the provider module"},
     {"provider_name", OPT_PROV_NAME, 's', "FIPS provider name"},
     {"section_name", OPT_SECTION_NAME, 's',
@@ -75,7 +75,8 @@ const OPTIONS fipsinstall_options[] = {
     {"macopt", OPT_MACOPT, 's', "MAC algorithm parameters in n:v form."},
     {OPT_MORE_STR, 0, 0, "See 'PARAMETER NAMES' in the EVP_MAC_ docs"},
     {"noout", OPT_NO_LOG, '-', "Disable logging of self test events"},
-    {"corrupt_desc", OPT_CORRUPT_DESC, 's', "Corrupt a self test by description"},
+    {"corrupt_desc", OPT_CORRUPT_DESC, 's',
+     "Corrupt a self test by description"},
     {"corrupt_type", OPT_CORRUPT_TYPE, 's', "Corrupt a self test by type"},
     {"config", OPT_CONFIG, '<', "The parent config to verify"},
     {"quiet", OPT_QUIET, '-', "No messages, just exit status"},
@@ -238,7 +239,7 @@ static int write_config_fips_section(BIO *out, const char *section,
                        install_mac_len)
             || BIO_printf(out, "%s = %s\n", OSSL_PROV_FIPS_PARAM_INSTALL_STATUS,
                           INSTALL_STATUS_VAL) <= 0)
-        goto end;
+            goto end;
     }
     ret = 1;
 end:
@@ -258,9 +259,9 @@ static CONF *generate_config_and_load(const char *prov_name,
     if (mem_bio  == NULL)
         return 0;
     if (!write_config_header(mem_bio, prov_name, section)
-         || !write_config_fips_section(mem_bio, section,
-                                       module_mac, module_mac_len,
-                                       opts, NULL, 0))
+        || !write_config_fips_section(mem_bio, section,
+                                      module_mac, module_mac_len,
+                                      opts, NULL, 0))
         goto end;
 
     conf = app_load_config_bio(mem_bio, NULL);
@@ -321,13 +322,15 @@ static int verify_config(const char *infile, const char *section,
     }
     buf1 = OPENSSL_hexstr2buf(s, &len);
     if (buf1 == NULL
-            || (size_t)len != module_mac_len
-            || memcmp(module_mac, buf1, module_mac_len) != 0) {
+        || (size_t)len != module_mac_len
+        || memcmp(module_mac, buf1, module_mac_len) != 0) {
         BIO_printf(bio_err, "Module integrity mismatch\n");
         goto end;
     }
     if (install_mac != NULL && install_mac_len > 0) {
-        s = NCONF_get_string(conf, section, OSSL_PROV_FIPS_PARAM_INSTALL_STATUS);
+        s =
+            NCONF_get_string(conf, section,
+                             OSSL_PROV_FIPS_PARAM_INSTALL_STATUS);
         if (s == NULL || strcmp(s, INSTALL_STATUS_VAL) != 0) {
             BIO_printf(bio_err, "install status not found\n");
             goto end;
@@ -339,8 +342,8 @@ static int verify_config(const char *infile, const char *section,
         }
         buf2 = OPENSSL_hexstr2buf(s, &len);
         if (buf2 == NULL
-                || (size_t)len != install_mac_len
-                || memcmp(install_mac, buf2, install_mac_len) != 0) {
+            || (size_t)len != install_mac_len
+            || memcmp(install_mac, buf2, install_mac_len) != 0) {
             BIO_printf(bio_err, "Install indicator status mismatch\n");
             goto end;
         }
@@ -380,87 +383,87 @@ int fipsinstall_main(int argc, char **argv)
     prog = opt_init(argc, argv, fipsinstall_options);
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_EOF:
-        case OPT_ERR:
+            case OPT_EOF:
+            case OPT_ERR:
 opthelp:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto cleanup;
-        case OPT_HELP:
-            opt_help(fipsinstall_options);
-            ret = 0;
-            goto end;
-        case OPT_IN:
-            in_fname = opt_arg();
-            break;
-        case OPT_OUT:
-            out_fname = opt_arg();
-            break;
-        case OPT_PEDANTIC:
-            fips_opts = pedantic_opts;
-            pedantic = 1;
-            break;
-        case OPT_NO_CONDITIONAL_ERRORS:
-            if (!check_non_pedantic_fips(pedantic, "no_conditional_errors"))
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
+                goto cleanup;
+            case OPT_HELP:
+                opt_help(fipsinstall_options);
+                ret = 0;
                 goto end;
-            fips_opts.conditional_errors = 0;
-            break;
-        case OPT_NO_SECURITY_CHECKS:
-            if (!check_non_pedantic_fips(pedantic, "no_security_checks"))
-                goto end;
-            fips_opts.security_checks = 0;
-            break;
-        case OPT_TLS_PRF_EMS_CHECK:
-            fips_opts.tls_prf_ems_check = 1;
-            break;
-        case OPT_DISALLOW_DRGB_TRUNC_DIGEST:
-            fips_opts.drgb_no_trunc_dgst = 1;
-            break;
-        case OPT_QUIET:
-            quiet = 1;
+            case OPT_IN:
+                in_fname = opt_arg();
+                break;
+            case OPT_OUT:
+                out_fname = opt_arg();
+                break;
+            case OPT_PEDANTIC:
+                fips_opts = pedantic_opts;
+                pedantic = 1;
+                break;
+            case OPT_NO_CONDITIONAL_ERRORS:
+                if (!check_non_pedantic_fips(pedantic, "no_conditional_errors"))
+                    goto end;
+                fips_opts.conditional_errors = 0;
+                break;
+            case OPT_NO_SECURITY_CHECKS:
+                if (!check_non_pedantic_fips(pedantic, "no_security_checks"))
+                    goto end;
+                fips_opts.security_checks = 0;
+                break;
+            case OPT_TLS_PRF_EMS_CHECK:
+                fips_opts.tls_prf_ems_check = 1;
+                break;
+            case OPT_DISALLOW_DRGB_TRUNC_DIGEST:
+                fips_opts.drgb_no_trunc_dgst = 1;
+                break;
+            case OPT_QUIET:
+                quiet = 1;
             /* FALLTHROUGH */
-        case OPT_NO_LOG:
-            self_test_log = 0;
-            break;
-        case OPT_CORRUPT_DESC:
-            self_test_corrupt_desc = opt_arg();
-            break;
-        case OPT_CORRUPT_TYPE:
-            self_test_corrupt_type = opt_arg();
-            break;
-        case OPT_PROV_NAME:
-            prov_name = opt_arg();
-            break;
-        case OPT_MODULE:
-            module_fname = opt_arg();
-            break;
-        case OPT_SECTION_NAME:
-            section_name = opt_arg();
-            break;
-        case OPT_MAC_NAME:
-            mac_name = opt_arg();
-            break;
-        case OPT_CONFIG:
-            parent_config = opt_arg();
-            break;
-        case OPT_MACOPT:
-            if (!sk_OPENSSL_STRING_push(opts, opt_arg()))
-                goto opthelp;
-            if (HAS_PREFIX(opt_arg(), "hexkey:"))
-                gotkey = 1;
-            else if (HAS_PREFIX(opt_arg(), "digest:"))
-                gotdigest = 1;
-            break;
-        case OPT_VERIFY:
-            verify = 1;
-            break;
-        case OPT_SELF_TEST_ONLOAD:
-            fips_opts.self_test_onload = 1;
-            break;
-        case OPT_SELF_TEST_ONINSTALL:
-            if (!check_non_pedantic_fips(pedantic, "self_test_oninstall"))
-                goto end;
-            fips_opts.self_test_onload = 0;
-            break;
+            case OPT_NO_LOG:
+                self_test_log = 0;
+                break;
+            case OPT_CORRUPT_DESC:
+                self_test_corrupt_desc = opt_arg();
+                break;
+            case OPT_CORRUPT_TYPE:
+                self_test_corrupt_type = opt_arg();
+                break;
+            case OPT_PROV_NAME:
+                prov_name = opt_arg();
+                break;
+            case OPT_MODULE:
+                module_fname = opt_arg();
+                break;
+            case OPT_SECTION_NAME:
+                section_name = opt_arg();
+                break;
+            case OPT_MAC_NAME:
+                mac_name = opt_arg();
+                break;
+            case OPT_CONFIG:
+                parent_config = opt_arg();
+                break;
+            case OPT_MACOPT:
+                if (!sk_OPENSSL_STRING_push(opts, opt_arg()))
+                    goto opthelp;
+                if (HAS_PREFIX(opt_arg(), "hexkey:"))
+                    gotkey = 1;
+                else if (HAS_PREFIX(opt_arg(), "digest:"))
+                    gotdigest = 1;
+                break;
+            case OPT_VERIFY:
+                verify = 1;
+                break;
+            case OPT_SELF_TEST_ONLOAD:
+                fips_opts.self_test_onload = 1;
+                break;
+            case OPT_SELF_TEST_ONINSTALL:
+                if (!check_non_pedantic_fips(pedantic, "self_test_oninstall"))
+                    goto end;
+                fips_opts.self_test_onload = 0;
+                break;
         }
     }
 
@@ -497,8 +500,8 @@ opthelp:
     }
 
     if (self_test_log
-            || self_test_corrupt_desc != NULL
-            || self_test_corrupt_type != NULL)
+        || self_test_corrupt_desc != NULL
+        || self_test_corrupt_type != NULL)
         OSSL_SELF_TEST_set_callback(NULL, self_test_events, NULL);
 
     /* Use the default FIPS HMAC digest and key if not specified. */
@@ -654,13 +657,13 @@ static int self_test_events(const OSSL_PARAM params[], void *arg)
      * error is returned during the corrupt phase.
      */
     if (strcmp(phase, OSSL_SELF_TEST_PHASE_CORRUPT) == 0
-            && (self_test_corrupt_desc != NULL
-                || self_test_corrupt_type != NULL)) {
+        && (self_test_corrupt_desc != NULL
+            || self_test_corrupt_type != NULL)) {
         if (self_test_corrupt_desc != NULL
-                && strcmp(self_test_corrupt_desc, desc) != 0)
+            && strcmp(self_test_corrupt_desc, desc) != 0)
             goto end;
         if (self_test_corrupt_type != NULL
-                && strcmp(self_test_corrupt_type, type) != 0)
+            && strcmp(self_test_corrupt_type, type) != 0)
             goto end;
         BIO_printf(bio_err, "%s ", phase);
         goto err;

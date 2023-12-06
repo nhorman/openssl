@@ -152,7 +152,8 @@ int EVP_PKEY_CTX_set_rsa_mgf1_md_name(EVP_PKEY_CTX *ctx, const char *mdname,
 int EVP_PKEY_CTX_get_rsa_mgf1_md(EVP_PKEY_CTX *ctx, const EVP_MD **md);
 int EVP_PKEY_CTX_get_rsa_mgf1_md_name(EVP_PKEY_CTX *ctx, char *name,
                                       size_t namelen);
-int EVP_PKEY_CTX_set_rsa_pss_keygen_mgf1_md(EVP_PKEY_CTX *ctx, const EVP_MD *md);
+int EVP_PKEY_CTX_set_rsa_pss_keygen_mgf1_md(EVP_PKEY_CTX *ctx,
+                                            const EVP_MD *md);
 int EVP_PKEY_CTX_set_rsa_pss_keygen_mgf1_md_name(EVP_PKEY_CTX *ctx,
                                                  const char *mdname);
 
@@ -257,7 +258,7 @@ OSSL_DEPRECATEDIN_3_0 ENGINE *RSA_get0_engine(const RSA *r);
 # endif  /* !OPENSSL_NO_DEPRECATED_3_0 */
 
 # define EVP_RSA_gen(bits) \
-    EVP_PKEY_Q_keygen(NULL, NULL, "RSA", (size_t)(0 + (bits)))
+        EVP_PKEY_Q_keygen(NULL, NULL, "RSA", (size_t)(0 + (bits)))
 
 /* Deprecated version */
 # ifndef OPENSSL_NO_DEPRECATED_0_9_8
@@ -288,7 +289,7 @@ OSSL_DEPRECATEDIN_3_0 int RSA_X931_generate_key_ex(RSA *rsa, int bits,
 
 OSSL_DEPRECATEDIN_3_0 int RSA_check_key(const RSA *);
 OSSL_DEPRECATEDIN_3_0 int RSA_check_key_ex(const RSA *, BN_GENCB *cb);
-        /* next 4 return -1 on error */
+/* next 4 return -1 on error */
 OSSL_DEPRECATEDIN_3_0
 int RSA_public_encrypt(int flen, const unsigned char *from, unsigned char *to,
                        RSA *rsa, int padding);
@@ -452,7 +453,7 @@ int RSA_padding_add_PKCS1_PSS_mgf1(RSA *rsa, unsigned char *EM,
                                    int sLen);
 
 # define RSA_get_ex_new_index(l, p, newf, dupf, freef) \
-    CRYPTO_get_ex_new_index(CRYPTO_EX_INDEX_RSA, l, p, newf, dupf, freef)
+        CRYPTO_get_ex_new_index(CRYPTO_EX_INDEX_RSA, l, p, newf, dupf, freef)
 OSSL_DEPRECATEDIN_3_0 int RSA_set_ex_data(RSA *r, int idx, void *arg);
 OSSL_DEPRECATEDIN_3_0 void *RSA_get_ex_data(const RSA *r, int idx);
 

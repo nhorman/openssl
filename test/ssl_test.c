@@ -78,7 +78,8 @@ static int check_alerts(HANDSHAKE_RESULT *result, SSL_TEST_CTX *test_ctx)
          * (s->s3->send_alert[0] << 8) | s->s3->send_alert[1]
          * where the low byte is the alert code and the high byte is other stuff.
          */
-        && (result->client_alert_sent & 0xff) != test_ctx->expected_client_alert) {
+        && (result->client_alert_sent & 0xff) !=
+        test_ctx->expected_client_alert) {
         TEST_error("ClientAlert mismatch: expected %s, got %s.",
                    print_alert(test_ctx->expected_client_alert),
                    print_alert(result->client_alert_sent));
@@ -86,7 +87,8 @@ static int check_alerts(HANDSHAKE_RESULT *result, SSL_TEST_CTX *test_ctx)
     }
 
     if (test_ctx->expected_server_alert
-        && (result->server_alert_sent & 0xff) != test_ctx->expected_server_alert) {
+        && (result->server_alert_sent & 0xff) !=
+        test_ctx->expected_server_alert) {
         TEST_error("ServerAlert mismatch: expected %s, got %s.",
                    print_alert(test_ctx->expected_server_alert),
                    print_alert(result->server_alert_sent));
@@ -124,15 +126,16 @@ static int check_protocol(HANDSHAKE_RESULT *result, SSL_TEST_CTX *test_ctx)
 static int check_servername(HANDSHAKE_RESULT *result, SSL_TEST_CTX *test_ctx)
 {
     if (!TEST_int_eq(result->servername, test_ctx->expected_servername)) {
-      TEST_info("Client ServerName mismatch, expected %s, got %s.",
-                ssl_servername_name(test_ctx->expected_servername),
-                ssl_servername_name(result->servername));
-      return 0;
+        TEST_info("Client ServerName mismatch, expected %s, got %s.",
+                  ssl_servername_name(test_ctx->expected_servername),
+                  ssl_servername_name(result->servername));
+        return 0;
     }
-  return 1;
+    return 1;
 }
 
-static int check_session_ticket(HANDSHAKE_RESULT *result, SSL_TEST_CTX *test_ctx)
+static int check_session_ticket(HANDSHAKE_RESULT *result,
+                                SSL_TEST_CTX *test_ctx)
 {
     if (test_ctx->session_ticket_expected == SSL_TEST_SESSION_TICKET_IGNORE)
         return 1;
@@ -152,8 +155,8 @@ static int check_session_id(HANDSHAKE_RESULT *result, SSL_TEST_CTX *test_ctx)
         return 1;
     if (!TEST_int_eq(result->session_id, test_ctx->session_id_expected)) {
         TEST_info("Client SessionIdExpected mismatch, expected %s, got %s\n.",
-                ssl_session_id_name(test_ctx->session_id_expected),
-                ssl_session_id_name(result->session_id));
+                  ssl_session_id_name(test_ctx->session_id_expected),
+                  ssl_session_id_name(result->session_id));
         return 0;
     }
     return 1;
@@ -395,7 +398,7 @@ static int test_handshake(int idx)
 {
     int ret = 0;
     SSL_CTX *server_ctx = NULL, *server2_ctx = NULL, *client_ctx = NULL,
-        *resume_server_ctx = NULL, *resume_client_ctx = NULL;
+            *resume_server_ctx = NULL, *resume_client_ctx = NULL;
     SSL_TEST_CTX *test_ctx = NULL;
     HANDSHAKE_RESULT *result = NULL;
     char test_app[MAX_TESTCASE_NAME_LENGTH];
@@ -408,24 +411,25 @@ static int test_handshake(int idx)
 
     /* Verify that the FIPS provider supports this test */
     if (test_ctx->fips_version != NULL
-                && !fips_provider_version_match(libctx, test_ctx->fips_version)) {
-            ret = TEST_skip("FIPS provider unable to run this test");
-            goto err;
+        && !fips_provider_version_match(libctx, test_ctx->fips_version)) {
+        ret = TEST_skip("FIPS provider unable to run this test");
+        goto err;
     }
 
 #ifndef OPENSSL_NO_DTLS
     if (test_ctx->method == SSL_TEST_METHOD_DTLS) {
         server_ctx = SSL_CTX_new_ex(libctx, NULL, DTLS_server_method());
         if (!TEST_true(SSL_CTX_set_options(server_ctx,
-                        SSL_OP_ALLOW_CLIENT_RENEGOTIATION))
-                || !TEST_true(SSL_CTX_set_max_proto_version(server_ctx, 0)))
+                                           SSL_OP_ALLOW_CLIENT_RENEGOTIATION))
+            || !TEST_true(SSL_CTX_set_max_proto_version(server_ctx, 0)))
             goto err;
         if (test_ctx->extra.server.servername_callback !=
             SSL_TEST_SERVERNAME_CB_NONE) {
             if (!TEST_ptr(server2_ctx =
-                            SSL_CTX_new_ex(libctx, NULL, DTLS_server_method()))
-                    || !TEST_true(SSL_CTX_set_options(server2_ctx,
-                            SSL_OP_ALLOW_CLIENT_RENEGOTIATION)))
+                              SSL_CTX_new_ex(libctx, NULL,
+                                             DTLS_server_method()))
+                || !TEST_true(SSL_CTX_set_options(server2_ctx,
+                                                  SSL_OP_ALLOW_CLIENT_RENEGOTIATION)))
                 goto err;
         }
         client_ctx = SSL_CTX_new_ex(libctx, NULL, DTLS_client_method());
@@ -435,23 +439,23 @@ static int test_handshake(int idx)
             resume_server_ctx = SSL_CTX_new_ex(libctx, NULL,
                                                DTLS_server_method());
             if (!TEST_true(SSL_CTX_set_max_proto_version(resume_server_ctx, 0))
-                    || !TEST_true(SSL_CTX_set_options(resume_server_ctx,
-                            SSL_OP_ALLOW_CLIENT_RENEGOTIATION)))
+                || !TEST_true(SSL_CTX_set_options(resume_server_ctx,
+                                                  SSL_OP_ALLOW_CLIENT_RENEGOTIATION)))
                 goto err;
             resume_client_ctx = SSL_CTX_new_ex(libctx, NULL,
                                                DTLS_client_method());
             if (!TEST_true(SSL_CTX_set_max_proto_version(resume_client_ctx, 0)))
                 goto err;
             if (!TEST_ptr(resume_server_ctx)
-                    || !TEST_ptr(resume_client_ctx))
+                || !TEST_ptr(resume_client_ctx))
                 goto err;
         }
     }
 #endif
     if (test_ctx->method == SSL_TEST_METHOD_TLS) {
 #if !defined(OPENSSL_NO_TLS1_3) \
-    && defined(OPENSSL_NO_EC) \
-    && defined(OPENSSL_NO_DH)
+        && defined(OPENSSL_NO_EC) \
+        && defined(OPENSSL_NO_DH)
         /* Without ec or dh there are no built-in groups for TLSv1.3 */
         int maxversion = TLS1_2_VERSION;
 #else
@@ -460,16 +464,16 @@ static int test_handshake(int idx)
 
         server_ctx = SSL_CTX_new_ex(libctx, NULL, TLS_server_method());
         if (!TEST_true(SSL_CTX_set_max_proto_version(server_ctx, maxversion))
-                || !TEST_true(SSL_CTX_set_options(server_ctx,
-                            SSL_OP_ALLOW_CLIENT_RENEGOTIATION)))
+            || !TEST_true(SSL_CTX_set_options(server_ctx,
+                                              SSL_OP_ALLOW_CLIENT_RENEGOTIATION)))
             goto err;
         /* SNI on resumption isn't supported/tested yet. */
         if (test_ctx->extra.server.servername_callback !=
             SSL_TEST_SERVERNAME_CB_NONE) {
             if (!TEST_ptr(server2_ctx =
-                            SSL_CTX_new_ex(libctx, NULL, TLS_server_method()))
-                    || !TEST_true(SSL_CTX_set_options(server2_ctx,
-                            SSL_OP_ALLOW_CLIENT_RENEGOTIATION)))
+                              SSL_CTX_new_ex(libctx, NULL, TLS_server_method()))
+                || !TEST_true(SSL_CTX_set_options(server2_ctx,
+                                                  SSL_OP_ALLOW_CLIENT_RENEGOTIATION)))
                 goto err;
             if (!TEST_true(SSL_CTX_set_max_proto_version(server2_ctx,
                                                          maxversion)))
@@ -484,8 +488,8 @@ static int test_handshake(int idx)
                                                TLS_server_method());
             if (!TEST_true(SSL_CTX_set_max_proto_version(resume_server_ctx,
                                                          maxversion))
-                    || !TEST_true(SSL_CTX_set_options(resume_server_ctx,
-                            SSL_OP_ALLOW_CLIENT_RENEGOTIATION)))
+                || !TEST_true(SSL_CTX_set_options(resume_server_ctx,
+                                                  SSL_OP_ALLOW_CLIENT_RENEGOTIATION)))
                 goto err;
             resume_client_ctx = SSL_CTX_new_ex(libctx, NULL,
                                                TLS_client_method());
@@ -493,7 +497,7 @@ static int test_handshake(int idx)
                                                          maxversion)))
                 goto err;
             if (!TEST_ptr(resume_server_ctx)
-                    || !TEST_ptr(resume_client_ctx))
+                || !TEST_ptr(resume_client_ctx))
                 goto err;
         }
     }
@@ -504,8 +508,8 @@ static int test_handshake(int idx)
 #endif
 
     if (!TEST_ptr(server_ctx)
-            || !TEST_ptr(client_ctx)
-            || !TEST_int_gt(CONF_modules_load(conf, test_app, 0),  0))
+        || !TEST_ptr(client_ctx)
+        || !TEST_int_gt(CONF_modules_load(conf, test_app, 0),  0))
         goto err;
 
     if (!SSL_CTX_config(server_ctx, "server")
@@ -553,10 +557,10 @@ int setup_tests(void)
     }
 
     if (!TEST_ptr(conf = NCONF_new(NULL))
-            /* argv[1] should point to the test conf file */
-            || !TEST_int_gt(NCONF_load(conf, test_get_argument(0), NULL), 0)
-            || !TEST_int_ne(NCONF_get_number_e(conf, NULL, "num_tests",
-                                               &num_tests), 0)) {
+        /* argv[1] should point to the test conf file */
+        || !TEST_int_gt(NCONF_load(conf, test_get_argument(0), NULL), 0)
+        || !TEST_int_ne(NCONF_get_number_e(conf, NULL, "num_tests",
+                                           &num_tests), 0)) {
         TEST_error("usage: ssl_test %s", USAGE);
         return 0;
     }

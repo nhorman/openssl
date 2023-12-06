@@ -43,14 +43,14 @@ static int test_namemap(OSSL_NAMEMAP *nm)
     int false1 = ossl_namemap_name2num(nm, "cookie");
 
     return TEST_int_ne(num1, 0)
-        && TEST_int_ne(num2, 0)
-        && TEST_int_eq(num1, num3)
-        && TEST_int_eq(num3, num4)
-        && TEST_int_eq(num1, check1)
-        && TEST_int_eq(num2, check2)
-        && TEST_int_eq(num3, check3)
-        && TEST_int_eq(num4, check4)
-        && TEST_int_eq(false1, 0);
+           && TEST_int_ne(num2, 0)
+           && TEST_int_eq(num1, num3)
+           && TEST_int_eq(num3, num4)
+           && TEST_int_eq(num1, check1)
+           && TEST_int_eq(num2, check2)
+           && TEST_int_eq(num3, check3)
+           && TEST_int_eq(num4, check4)
+           && TEST_int_eq(false1, 0);
 }
 
 static int test_namemap_independent(void)
@@ -67,7 +67,7 @@ static int test_namemap_stored(void)
     OSSL_NAMEMAP *nm = ossl_namemap_stored(NULL);
 
     return TEST_ptr(nm)
-        && test_namemap(nm);
+           && test_namemap(nm);
 }
 
 /*

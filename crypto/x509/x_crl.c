@@ -20,9 +20,9 @@ static int X509_REVOKED_cmp(const X509_REVOKED *const *a,
 static int setup_idp(X509_CRL *crl, ISSUING_DIST_POINT *idp);
 
 ASN1_SEQUENCE(X509_REVOKED) = {
-        ASN1_EMBED(X509_REVOKED, serialNumber, ASN1_INTEGER),
-        ASN1_SIMPLE(X509_REVOKED, revocationDate, ASN1_TIME),
-        ASN1_SEQUENCE_OF_OPT(X509_REVOKED, extensions, X509_EXTENSION)
+    ASN1_EMBED(X509_REVOKED, serialNumber, ASN1_INTEGER),
+    ASN1_SIMPLE(X509_REVOKED, revocationDate, ASN1_TIME),
+    ASN1_SEQUENCE_OF_OPT(X509_REVOKED, extensions, X509_EXTENSION)
 } ASN1_SEQUENCE_END(X509_REVOKED)
 
 static int def_crl_verify(X509_CRL *crl, EVP_PKEY *r);
@@ -56,22 +56,22 @@ static int crl_inf_cb(int operation, ASN1_VALUE **pval, const ASN1_ITEM *it,
          * Just set cmp function here. We don't sort because that would
          * affect the output of X509_CRL_print().
          */
-    case ASN1_OP_D2I_POST:
-        (void)sk_X509_REVOKED_set_cmp_func(a->revoked, X509_REVOKED_cmp);
-        break;
+        case ASN1_OP_D2I_POST:
+            (void)sk_X509_REVOKED_set_cmp_func(a->revoked, X509_REVOKED_cmp);
+            break;
     }
     return 1;
 }
 
 
 ASN1_SEQUENCE_enc(X509_CRL_INFO, enc, crl_inf_cb) = {
-        ASN1_OPT(X509_CRL_INFO, version, ASN1_INTEGER),
-        ASN1_EMBED(X509_CRL_INFO, sig_alg, X509_ALGOR),
-        ASN1_SIMPLE(X509_CRL_INFO, issuer, X509_NAME),
-        ASN1_SIMPLE(X509_CRL_INFO, lastUpdate, ASN1_TIME),
-        ASN1_OPT(X509_CRL_INFO, nextUpdate, ASN1_TIME),
-        ASN1_SEQUENCE_OF_OPT(X509_CRL_INFO, revoked, X509_REVOKED),
-        ASN1_EXP_SEQUENCE_OF_OPT(X509_CRL_INFO, extensions, X509_EXTENSION, 0)
+    ASN1_OPT(X509_CRL_INFO, version, ASN1_INTEGER),
+    ASN1_EMBED(X509_CRL_INFO, sig_alg, X509_ALGOR),
+    ASN1_SIMPLE(X509_CRL_INFO, issuer, X509_NAME),
+    ASN1_SIMPLE(X509_CRL_INFO, lastUpdate, ASN1_TIME),
+    ASN1_OPT(X509_CRL_INFO, nextUpdate, ASN1_TIME),
+    ASN1_SEQUENCE_OF_OPT(X509_CRL_INFO, revoked, X509_REVOKED),
+    ASN1_EXP_SEQUENCE_OF_OPT(X509_CRL_INFO, extensions, X509_EXTENSION, 0)
 } ASN1_SEQUENCE_END_enc(X509_CRL_INFO, X509_CRL_INFO)
 
 /*
@@ -164,115 +164,115 @@ static int crl_cb(int operation, ASN1_VALUE **pval, const ASN1_ITEM *it,
     int idx, i;
 
     switch (operation) {
-    case ASN1_OP_D2I_PRE:
-        if (crl->meth->crl_free) {
-            if (!crl->meth->crl_free(crl))
-                return 0;
-        }
-        AUTHORITY_KEYID_free(crl->akid);
-        ISSUING_DIST_POINT_free(crl->idp);
-        ASN1_INTEGER_free(crl->crl_number);
-        ASN1_INTEGER_free(crl->base_crl_number);
-        sk_GENERAL_NAMES_pop_free(crl->issuers, GENERAL_NAMES_free);
+        case ASN1_OP_D2I_PRE:
+            if (crl->meth->crl_free) {
+                if (!crl->meth->crl_free(crl))
+                    return 0;
+            }
+            AUTHORITY_KEYID_free(crl->akid);
+            ISSUING_DIST_POINT_free(crl->idp);
+            ASN1_INTEGER_free(crl->crl_number);
+            ASN1_INTEGER_free(crl->base_crl_number);
+            sk_GENERAL_NAMES_pop_free(crl->issuers, GENERAL_NAMES_free);
         /* fall through */
 
-    case ASN1_OP_NEW_POST:
-        crl->idp = NULL;
-        crl->akid = NULL;
-        crl->flags = 0;
-        crl->idp_flags = 0;
-        crl->idp_reasons = CRLDP_ALL_REASONS;
-        crl->meth = default_crl_method;
-        crl->meth_data = NULL;
-        crl->issuers = NULL;
-        crl->crl_number = NULL;
-        crl->base_crl_number = NULL;
-        break;
+        case ASN1_OP_NEW_POST:
+            crl->idp = NULL;
+            crl->akid = NULL;
+            crl->flags = 0;
+            crl->idp_flags = 0;
+            crl->idp_reasons = CRLDP_ALL_REASONS;
+            crl->meth = default_crl_method;
+            crl->meth_data = NULL;
+            crl->issuers = NULL;
+            crl->crl_number = NULL;
+            crl->base_crl_number = NULL;
+            break;
 
-    case ASN1_OP_D2I_POST:
-        if (!X509_CRL_digest(crl, EVP_sha1(), crl->sha1_hash, NULL))
-            crl->flags |= EXFLAG_NO_FINGERPRINT;
-        crl->idp = X509_CRL_get_ext_d2i(crl,
-                                        NID_issuing_distribution_point, &i,
-                                        NULL);
-        if (crl->idp != NULL) {
-            if (!setup_idp(crl, crl->idp))
-                crl->flags |= EXFLAG_INVALID;
-        }
-        else if (i != -1) {
-            crl->flags |= EXFLAG_INVALID;
-        }
-
-        crl->akid = X509_CRL_get_ext_d2i(crl,
-                                         NID_authority_key_identifier, &i,
-                                         NULL);
-        if (crl->akid == NULL && i != -1)
-            crl->flags |= EXFLAG_INVALID;
-
-        crl->crl_number = X509_CRL_get_ext_d2i(crl,
-                                               NID_crl_number, &i, NULL);
-        if (crl->crl_number == NULL && i != -1)
-            crl->flags |= EXFLAG_INVALID;
-
-        crl->base_crl_number = X509_CRL_get_ext_d2i(crl,
-                                                    NID_delta_crl, &i,
-                                                    NULL);
-        if (crl->base_crl_number == NULL && i != -1)
-            crl->flags |= EXFLAG_INVALID;
-        /* Delta CRLs must have CRL number */
-        if (crl->base_crl_number && !crl->crl_number)
-            crl->flags |= EXFLAG_INVALID;
-
-        /*
-         * See if we have any unhandled critical CRL extensions and indicate
-         * this in a flag. We only currently handle IDP so anything else
-         * critical sets the flag. This code accesses the X509_CRL structure
-         * directly: applications shouldn't do this.
-         */
-
-        exts = crl->crl.extensions;
-
-        for (idx = 0; idx < sk_X509_EXTENSION_num(exts); idx++) {
-            int nid;
-            ext = sk_X509_EXTENSION_value(exts, idx);
-            nid = OBJ_obj2nid(X509_EXTENSION_get_object(ext));
-            if (nid == NID_freshest_crl)
-                crl->flags |= EXFLAG_FRESHEST;
-            if (X509_EXTENSION_get_critical(ext)) {
-                /* We handle IDP and deltas */
-                if ((nid == NID_issuing_distribution_point)
-                    || (nid == NID_authority_key_identifier)
-                    || (nid == NID_delta_crl))
-                    continue;
-                crl->flags |= EXFLAG_CRITICAL;
-                break;
+        case ASN1_OP_D2I_POST:
+            if (!X509_CRL_digest(crl, EVP_sha1(), crl->sha1_hash, NULL))
+                crl->flags |= EXFLAG_NO_FINGERPRINT;
+            crl->idp = X509_CRL_get_ext_d2i(crl,
+                                            NID_issuing_distribution_point, &i,
+                                            NULL);
+            if (crl->idp != NULL) {
+                if (!setup_idp(crl, crl->idp))
+                    crl->flags |= EXFLAG_INVALID;
             }
-        }
+            else if (i != -1) {
+                crl->flags |= EXFLAG_INVALID;
+            }
 
-        if (!crl_set_issuers(crl))
-            return 0;
+            crl->akid = X509_CRL_get_ext_d2i(crl,
+                                             NID_authority_key_identifier, &i,
+                                             NULL);
+            if (crl->akid == NULL && i != -1)
+                crl->flags |= EXFLAG_INVALID;
 
-        if (crl->meth->crl_init) {
-            if (crl->meth->crl_init(crl) == 0)
+            crl->crl_number = X509_CRL_get_ext_d2i(crl,
+                                                   NID_crl_number, &i, NULL);
+            if (crl->crl_number == NULL && i != -1)
+                crl->flags |= EXFLAG_INVALID;
+
+            crl->base_crl_number = X509_CRL_get_ext_d2i(crl,
+                                                        NID_delta_crl, &i,
+                                                        NULL);
+            if (crl->base_crl_number == NULL && i != -1)
+                crl->flags |= EXFLAG_INVALID;
+            /* Delta CRLs must have CRL number */
+            if (crl->base_crl_number && !crl->crl_number)
+                crl->flags |= EXFLAG_INVALID;
+
+            /*
+             * See if we have any unhandled critical CRL extensions and indicate
+             * this in a flag. We only currently handle IDP so anything else
+             * critical sets the flag. This code accesses the X509_CRL structure
+             * directly: applications shouldn't do this.
+             */
+
+            exts = crl->crl.extensions;
+
+            for (idx = 0; idx < sk_X509_EXTENSION_num(exts); idx++) {
+                int nid;
+                ext = sk_X509_EXTENSION_value(exts, idx);
+                nid = OBJ_obj2nid(X509_EXTENSION_get_object(ext));
+                if (nid == NID_freshest_crl)
+                    crl->flags |= EXFLAG_FRESHEST;
+                if (X509_EXTENSION_get_critical(ext)) {
+                    /* We handle IDP and deltas */
+                    if ((nid == NID_issuing_distribution_point)
+                        || (nid == NID_authority_key_identifier)
+                        || (nid == NID_delta_crl))
+                        continue;
+                    crl->flags |= EXFLAG_CRITICAL;
+                    break;
+                }
+            }
+
+            if (!crl_set_issuers(crl))
                 return 0;
-        }
 
-        crl->flags |= EXFLAG_SET;
-        break;
+            if (crl->meth->crl_init) {
+                if (crl->meth->crl_init(crl) == 0)
+                    return 0;
+            }
 
-    case ASN1_OP_FREE_POST:
-        if (crl->meth != NULL && crl->meth->crl_free != NULL) {
-            if (!crl->meth->crl_free(crl))
-                return 0;
-        }
-        AUTHORITY_KEYID_free(crl->akid);
-        ISSUING_DIST_POINT_free(crl->idp);
-        ASN1_INTEGER_free(crl->crl_number);
-        ASN1_INTEGER_free(crl->base_crl_number);
-        sk_GENERAL_NAMES_pop_free(crl->issuers, GENERAL_NAMES_free);
-        OPENSSL_free(crl->propq);
-        break;
-    case ASN1_OP_DUP_POST:
+            crl->flags |= EXFLAG_SET;
+            break;
+
+        case ASN1_OP_FREE_POST:
+            if (crl->meth != NULL && crl->meth->crl_free != NULL) {
+                if (!crl->meth->crl_free(crl))
+                    return 0;
+            }
+            AUTHORITY_KEYID_free(crl->akid);
+            ISSUING_DIST_POINT_free(crl->idp);
+            ASN1_INTEGER_free(crl->crl_number);
+            ASN1_INTEGER_free(crl->base_crl_number);
+            sk_GENERAL_NAMES_pop_free(crl->issuers, GENERAL_NAMES_free);
+            OPENSSL_free(crl->propq);
+            break;
+        case ASN1_OP_DUP_POST:
         {
             X509_CRL *old = exarg;
 
@@ -324,9 +324,9 @@ static int setup_idp(X509_CRL *crl, ISSUING_DIST_POINT *idp)
 }
 
 ASN1_SEQUENCE_ref(X509_CRL, crl_cb) = {
-        ASN1_EMBED(X509_CRL, crl, X509_CRL_INFO),
-        ASN1_EMBED(X509_CRL, sig_alg, X509_ALGOR),
-        ASN1_EMBED(X509_CRL, signature, ASN1_BIT_STRING)
+    ASN1_EMBED(X509_CRL, crl, X509_CRL_INFO),
+    ASN1_EMBED(X509_CRL, sig_alg, X509_ALGOR),
+    ASN1_EMBED(X509_CRL, signature, ASN1_BIT_STRING)
 } ASN1_SEQUENCE_END_ref(X509_CRL, X509_CRL)
 
 IMPLEMENT_ASN1_FUNCTIONS(X509_REVOKED)

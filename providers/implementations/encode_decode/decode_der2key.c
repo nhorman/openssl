@@ -107,7 +107,8 @@ static void *der2key_decode_p8(const unsigned char **input_der,
     const X509_ALGOR *alg = NULL;
     void *key = NULL;
 
-    if ((p8inf = d2i_PKCS8_PRIV_KEY_INFO(NULL, input_der, input_der_len)) != NULL
+    if ((p8inf =
+             d2i_PKCS8_PRIV_KEY_INFO(NULL, input_der, input_der_len)) != NULL
         && PKCS8_pkey_get0(NULL, NULL, NULL, &alg, p8inf)
         && OBJ_obj2nid(alg->algorithm) == ctx->desc->evp_type)
         key = key_from_pkcs8(p8inf, PROV_LIBCTX_OF(ctx->provctx), ctx->propq);
@@ -291,7 +292,7 @@ static int der2key_decode(void *vctx, OSSL_CORE_BIO *cin, int selection,
     if (key != NULL && ctx->desc->adjust_key != NULL)
         ctx->desc->adjust_key(key, ctx);
 
- next:
+next:
     /*
      * Indicated that we successfully decoded something, or not at all.
      * Ending up "empty handed" is not an error.
@@ -325,7 +326,7 @@ static int der2key_decode(void *vctx, OSSL_CORE_BIO *cin, int selection,
         ok = data_cb(params, data_cbarg);
     }
 
- end:
+end:
     ctx->desc->free_key(key);
     OPENSSL_free(der);
 
@@ -545,10 +546,10 @@ static void *rsa_d2i_PKCS8(void **key, const unsigned char **der, long der_len,
 static int rsa_check(void *key, struct der2key_ctx_st *ctx)
 {
     switch (RSA_test_flags(key, RSA_FLAG_TYPE_MASK)) {
-    case RSA_FLAG_TYPE_RSA:
-        return ctx->desc->evp_type == EVP_PKEY_RSA;
-    case RSA_FLAG_TYPE_RSASSAPSS:
-        return ctx->desc->evp_type == EVP_PKEY_RSA_PSS;
+        case RSA_FLAG_TYPE_RSA:
+            return ctx->desc->evp_type == EVP_PKEY_RSA;
+        case RSA_FLAG_TYPE_RSASSAPSS:
+            return ctx->desc->evp_type == EVP_PKEY_RSA_PSS;
     }
 
     /* Currently unsupported RSA key type */
@@ -577,162 +578,162 @@ static void rsa_adjust(void *key, struct der2key_ctx_st *ctx)
  * for each kind of object we want to decode.
  */
 #define DO_type_specific_keypair(keytype)               \
-    "type-specific", keytype##_evp_type,                \
+        "type-specific", keytype ## _evp_type,                \
         ( OSSL_KEYMGMT_SELECT_KEYPAIR ),                \
-        keytype##_d2i_private_key,                      \
-        keytype##_d2i_public_key,                       \
+        keytype ## _d2i_private_key,                      \
+        keytype ## _d2i_public_key,                       \
         NULL,                                           \
         NULL,                                           \
         NULL,                                           \
-        keytype##_check,                                \
-        keytype##_adjust,                               \
-        keytype##_free
+        keytype ## _check,                                \
+        keytype ## _adjust,                               \
+        keytype ## _free
 
 #define DO_type_specific_pub(keytype)                   \
-    "type-specific", keytype##_evp_type,                \
+        "type-specific", keytype ## _evp_type,                \
         ( OSSL_KEYMGMT_SELECT_PUBLIC_KEY ),             \
         NULL,                                           \
-        keytype##_d2i_public_key,                       \
+        keytype ## _d2i_public_key,                       \
         NULL,                                           \
         NULL,                                           \
         NULL,                                           \
-        keytype##_check,                                \
-        keytype##_adjust,                               \
-        keytype##_free
+        keytype ## _check,                                \
+        keytype ## _adjust,                               \
+        keytype ## _free
 
 #define DO_type_specific_priv(keytype)                  \
-    "type-specific", keytype##_evp_type,                \
+        "type-specific", keytype ## _evp_type,                \
         ( OSSL_KEYMGMT_SELECT_PRIVATE_KEY ),            \
-        keytype##_d2i_private_key,                      \
+        keytype ## _d2i_private_key,                      \
         NULL,                                           \
         NULL,                                           \
         NULL,                                           \
         NULL,                                           \
-        keytype##_check,                                \
-        keytype##_adjust,                               \
-        keytype##_free
+        keytype ## _check,                                \
+        keytype ## _adjust,                               \
+        keytype ## _free
 
 #define DO_type_specific_params(keytype)                \
-    "type-specific", keytype##_evp_type,                \
+        "type-specific", keytype ## _evp_type,                \
         ( OSSL_KEYMGMT_SELECT_ALL_PARAMETERS ),         \
         NULL,                                           \
         NULL,                                           \
-        keytype##_d2i_key_params,                       \
+        keytype ## _d2i_key_params,                       \
         NULL,                                           \
         NULL,                                           \
-        keytype##_check,                                \
-        keytype##_adjust,                               \
-        keytype##_free
+        keytype ## _check,                                \
+        keytype ## _adjust,                               \
+        keytype ## _free
 
 #define DO_type_specific(keytype)                       \
-    "type-specific", keytype##_evp_type,                \
+        "type-specific", keytype ## _evp_type,                \
         ( OSSL_KEYMGMT_SELECT_ALL ),                    \
-        keytype##_d2i_private_key,                      \
-        keytype##_d2i_public_key,                       \
-        keytype##_d2i_key_params,                       \
+        keytype ## _d2i_private_key,                      \
+        keytype ## _d2i_public_key,                       \
+        keytype ## _d2i_key_params,                       \
         NULL,                                           \
         NULL,                                           \
-        keytype##_check,                                \
-        keytype##_adjust,                               \
-        keytype##_free
+        keytype ## _check,                                \
+        keytype ## _adjust,                               \
+        keytype ## _free
 
 #define DO_type_specific_no_pub(keytype)                \
-    "type-specific", keytype##_evp_type,                \
+        "type-specific", keytype ## _evp_type,                \
         ( OSSL_KEYMGMT_SELECT_PRIVATE_KEY               \
           | OSSL_KEYMGMT_SELECT_ALL_PARAMETERS ),       \
-        keytype##_d2i_private_key,                      \
+        keytype ## _d2i_private_key,                      \
         NULL,                                           \
-        keytype##_d2i_key_params,                       \
+        keytype ## _d2i_key_params,                       \
         NULL,                                           \
         NULL,                                           \
-        keytype##_check,                                \
-        keytype##_adjust,                               \
-        keytype##_free
+        keytype ## _check,                                \
+        keytype ## _adjust,                               \
+        keytype ## _free
 
 #define DO_PrivateKeyInfo(keytype)                      \
-    "PrivateKeyInfo", keytype##_evp_type,               \
+        "PrivateKeyInfo", keytype ## _evp_type,               \
         ( OSSL_KEYMGMT_SELECT_PRIVATE_KEY ),            \
         NULL,                                           \
         NULL,                                           \
         NULL,                                           \
-        keytype##_d2i_PKCS8,                            \
+        keytype ## _d2i_PKCS8,                            \
         NULL,                                           \
-        keytype##_check,                                \
-        keytype##_adjust,                               \
-        keytype##_free
+        keytype ## _check,                                \
+        keytype ## _adjust,                               \
+        keytype ## _free
 
 #define DO_SubjectPublicKeyInfo(keytype)                \
-    "SubjectPublicKeyInfo", keytype##_evp_type,         \
+        "SubjectPublicKeyInfo", keytype ## _evp_type,         \
         ( OSSL_KEYMGMT_SELECT_PUBLIC_KEY ),             \
         NULL,                                           \
         NULL,                                           \
         NULL,                                           \
         NULL,                                           \
-        keytype##_d2i_PUBKEY,                           \
-        keytype##_check,                                \
-        keytype##_adjust,                               \
-        keytype##_free
+        keytype ## _d2i_PUBKEY,                           \
+        keytype ## _check,                                \
+        keytype ## _adjust,                               \
+        keytype ## _free
 
 #define DO_DH(keytype)                                  \
-    "DH", keytype##_evp_type,                           \
+        "DH", keytype ## _evp_type,                           \
         ( OSSL_KEYMGMT_SELECT_ALL_PARAMETERS ),         \
         NULL,                                           \
         NULL,                                           \
-        keytype##_d2i_key_params,                       \
+        keytype ## _d2i_key_params,                       \
         NULL,                                           \
         NULL,                                           \
-        keytype##_check,                                \
-        keytype##_adjust,                               \
-        keytype##_free
+        keytype ## _check,                                \
+        keytype ## _adjust,                               \
+        keytype ## _free
 
 #define DO_DHX(keytype)                                 \
-    "DHX", keytype##_evp_type,                          \
+        "DHX", keytype ## _evp_type,                          \
         ( OSSL_KEYMGMT_SELECT_ALL_PARAMETERS ),         \
         NULL,                                           \
         NULL,                                           \
-        keytype##_d2i_key_params,                       \
+        keytype ## _d2i_key_params,                       \
         NULL,                                           \
         NULL,                                           \
-        keytype##_check,                                \
-        keytype##_adjust,                               \
-        keytype##_free
+        keytype ## _check,                                \
+        keytype ## _adjust,                               \
+        keytype ## _free
 
 #define DO_DSA(keytype)                                 \
-    "DSA", keytype##_evp_type,                          \
+        "DSA", keytype ## _evp_type,                          \
         ( OSSL_KEYMGMT_SELECT_ALL ),                    \
-        keytype##_d2i_private_key,                      \
-        keytype##_d2i_public_key,                       \
-        keytype##_d2i_key_params,                       \
+        keytype ## _d2i_private_key,                      \
+        keytype ## _d2i_public_key,                       \
+        keytype ## _d2i_key_params,                       \
         NULL,                                           \
         NULL,                                           \
-        keytype##_check,                                \
-        keytype##_adjust,                               \
-        keytype##_free
+        keytype ## _check,                                \
+        keytype ## _adjust,                               \
+        keytype ## _free
 
 #define DO_EC(keytype)                                  \
-    "EC", keytype##_evp_type,                           \
+        "EC", keytype ## _evp_type,                           \
         ( OSSL_KEYMGMT_SELECT_PRIVATE_KEY               \
           | OSSL_KEYMGMT_SELECT_ALL_PARAMETERS ),       \
-        keytype##_d2i_private_key,                      \
+        keytype ## _d2i_private_key,                      \
         NULL,                                           \
-        keytype##_d2i_key_params,                       \
+        keytype ## _d2i_key_params,                       \
         NULL,                                           \
         NULL,                                           \
-        keytype##_check,                                \
-        keytype##_adjust,                               \
-        keytype##_free
+        keytype ## _check,                                \
+        keytype ## _adjust,                               \
+        keytype ## _free
 
 #define DO_RSA(keytype)                                 \
-    "RSA", keytype##_evp_type,                          \
+        "RSA", keytype ## _evp_type,                          \
         ( OSSL_KEYMGMT_SELECT_KEYPAIR ),                \
-        keytype##_d2i_private_key,                      \
-        keytype##_d2i_public_key,                       \
+        keytype ## _d2i_private_key,                      \
+        keytype ## _d2i_public_key,                       \
         NULL,                                           \
         NULL,                                           \
         NULL,                                           \
-        keytype##_check,                                \
-        keytype##_adjust,                               \
-        keytype##_free
+        keytype ## _check,                                \
+        keytype ## _adjust,                               \
+        keytype ## _free
 
 /*
  * MAKE_DECODER is the single driver for creating OSSL_DISPATCH tables.
@@ -752,40 +753,40 @@ static void rsa_adjust(void *key, struct der2key_ctx_st *ctx)
  *              structure.
  */
 #define MAKE_DECODER(keytype_name, keytype, type, kind)                 \
-    static const struct keytype_desc_st kind##_##keytype##_desc =       \
-        { keytype_name, ossl_##keytype##_keymgmt_functions,             \
-          DO_##kind(keytype) };                                         \
+        static const struct keytype_desc_st kind ## _ ## keytype ## _desc =       \
+        { keytype_name, ossl_ ## keytype ## _keymgmt_functions,             \
+          DO_ ## kind(keytype) };                                         \
                                                                         \
-    static OSSL_FUNC_decoder_newctx_fn kind##_der2##keytype##_newctx;   \
+        static OSSL_FUNC_decoder_newctx_fn kind ## _der2 ## keytype ## _newctx;   \
                                                                         \
-    static void *kind##_der2##keytype##_newctx(void *provctx)           \
-    {                                                                   \
-        return der2key_newctx(provctx, &kind##_##keytype##_desc);       \
-    }                                                                   \
-    static int kind##_der2##keytype##_does_selection(void *provctx,     \
-                                                     int selection)     \
-    {                                                                   \
-        return der2key_check_selection(selection,                       \
-                                       &kind##_##keytype##_desc);       \
-    }                                                                   \
-    const OSSL_DISPATCH                                                 \
-    ossl_##kind##_der_to_##keytype##_decoder_functions[] = {            \
-        { OSSL_FUNC_DECODER_NEWCTX,                                     \
-          (void (*)(void))kind##_der2##keytype##_newctx },              \
-        { OSSL_FUNC_DECODER_FREECTX,                                    \
-          (void (*)(void))der2key_freectx },                            \
-        { OSSL_FUNC_DECODER_DOES_SELECTION,                             \
-          (void (*)(void))kind##_der2##keytype##_does_selection },      \
-        { OSSL_FUNC_DECODER_DECODE,                                     \
-          (void (*)(void))der2key_decode },                             \
-        { OSSL_FUNC_DECODER_EXPORT_OBJECT,                              \
-          (void (*)(void))der2key_export_object },                      \
-        { OSSL_FUNC_DECODER_SETTABLE_CTX_PARAMS,                        \
-          (void (*)(void))der2key_settable_ctx_params },                \
-        { OSSL_FUNC_DECODER_SET_CTX_PARAMS,                             \
-          (void (*)(void))der2key_set_ctx_params },                     \
-        OSSL_DISPATCH_END                                               \
-    }
+        static void *kind ## _der2 ## keytype ## _newctx(void *provctx)           \
+        {                                                                   \
+            return der2key_newctx(provctx, &kind ## _ ## keytype ## _desc);       \
+        }                                                                   \
+        static int kind ## _der2 ## keytype ## _does_selection(void *provctx,     \
+                                                               int selection)     \
+        {                                                                   \
+            return der2key_check_selection(selection,                       \
+                                           &kind ## _ ## keytype ## _desc);       \
+        }                                                                   \
+        const OSSL_DISPATCH                                                 \
+        ossl_ ## kind ## _der_to_ ## keytype ## _decoder_functions[] = {            \
+            { OSSL_FUNC_DECODER_NEWCTX,                                     \
+              (void (*)(void)) kind ## _der2 ## keytype ## _newctx },              \
+            { OSSL_FUNC_DECODER_FREECTX,                                    \
+              (void (*)(void)) der2key_freectx },                            \
+            { OSSL_FUNC_DECODER_DOES_SELECTION,                             \
+              (void (*)(void)) kind ## _der2 ## keytype ## _does_selection },      \
+            { OSSL_FUNC_DECODER_DECODE,                                     \
+              (void (*)(void)) der2key_decode },                             \
+            { OSSL_FUNC_DECODER_EXPORT_OBJECT,                              \
+              (void (*)(void)) der2key_export_object },                      \
+            { OSSL_FUNC_DECODER_SETTABLE_CTX_PARAMS,                        \
+              (void (*)(void)) der2key_settable_ctx_params },                \
+            { OSSL_FUNC_DECODER_SET_CTX_PARAMS,                             \
+              (void (*)(void)) der2key_set_ctx_params },                     \
+            OSSL_DISPATCH_END                                               \
+        }
 
 #ifndef OPENSSL_NO_DH
 MAKE_DECODER("DH", dh, dh, PrivateKeyInfo);

@@ -55,7 +55,7 @@ static int aes_xts_check_keys_differ(const unsigned char *key, size_t bytes,
                                      int enc)
 {
     if ((!ossl_aes_xts_allow_insecure_decrypt || enc)
-            && CRYPTO_memcmp(key, key + bytes, bytes) == 0) {
+        && CRYPTO_memcmp(key, key + bytes, bytes) == 0) {
         ERR_raise(ERR_LIB_PROV, PROV_R_XTS_DUPLICATED_KEYS);
         return 0;
     }
@@ -158,12 +158,12 @@ static int aes_xts_cipher(void *vctx, unsigned char *out, size_t *outl,
     PROV_AES_XTS_CTX *ctx = (PROV_AES_XTS_CTX *)vctx;
 
     if (!ossl_prov_is_running()
-            || ctx->xts.key1 == NULL
-            || ctx->xts.key2 == NULL
-            || !ctx->base.iv_set
-            || out == NULL
-            || in == NULL
-            || inl < AES_BLOCK_SIZE)
+        || ctx->xts.key1 == NULL
+        || ctx->xts.key2 == NULL
+        || !ctx->base.iv_set
+        || out == NULL
+        || in == NULL
+        || inl < AES_BLOCK_SIZE)
         return 0;
 
     /*
@@ -178,7 +178,8 @@ static int aes_xts_cipher(void *vctx, unsigned char *out, size_t *outl,
     }
 
     if (ctx->stream != NULL)
-        (*ctx->stream)(in, out, inl, ctx->xts.key1, ctx->xts.key2, ctx->base.iv);
+        (*ctx->stream)(in, out, inl, ctx->xts.key1, ctx->xts.key2,
+                       ctx->base.iv);
     else if (CRYPTO_xts128_encrypt(&ctx->xts, ctx->base.iv, in, out, inl,
                                    ctx->base.enc))
         return 0;
@@ -251,42 +252,48 @@ static int aes_xts_set_ctx_params(void *vctx, const OSSL_PARAM params[])
 }
 
 #define IMPLEMENT_cipher(lcmode, UCMODE, kbits, flags)                         \
-static OSSL_FUNC_cipher_get_params_fn aes_##kbits##_##lcmode##_get_params;     \
-static int aes_##kbits##_##lcmode##_get_params(OSSL_PARAM params[])            \
-{                                                                              \
-    return ossl_cipher_generic_get_params(params, EVP_CIPH_##UCMODE##_MODE,    \
-                                     flags, 2 * kbits, AES_XTS_BLOCK_BITS,     \
-                                     AES_XTS_IV_BITS);                         \
-}                                                                              \
-static OSSL_FUNC_cipher_newctx_fn aes_##kbits##_xts_newctx;                    \
-static void *aes_##kbits##_xts_newctx(void *provctx)                           \
-{                                                                              \
-    return aes_xts_newctx(provctx, EVP_CIPH_##UCMODE##_MODE, flags, 2 * kbits, \
-                          AES_XTS_BLOCK_BITS, AES_XTS_IV_BITS);                \
-}                                                                              \
-const OSSL_DISPATCH ossl_aes##kbits##xts_functions[] = {                       \
-    { OSSL_FUNC_CIPHER_NEWCTX, (void (*)(void))aes_##kbits##_xts_newctx },     \
-    { OSSL_FUNC_CIPHER_ENCRYPT_INIT, (void (*)(void))aes_xts_einit },          \
-    { OSSL_FUNC_CIPHER_DECRYPT_INIT, (void (*)(void))aes_xts_dinit },          \
-    { OSSL_FUNC_CIPHER_UPDATE, (void (*)(void))aes_xts_stream_update },        \
-    { OSSL_FUNC_CIPHER_FINAL, (void (*)(void))aes_xts_stream_final },          \
-    { OSSL_FUNC_CIPHER_CIPHER, (void (*)(void))aes_xts_cipher },               \
-    { OSSL_FUNC_CIPHER_FREECTX, (void (*)(void))aes_xts_freectx },             \
-    { OSSL_FUNC_CIPHER_DUPCTX, (void (*)(void))aes_xts_dupctx },               \
-    { OSSL_FUNC_CIPHER_GET_PARAMS,                                             \
-      (void (*)(void))aes_##kbits##_##lcmode##_get_params },                   \
-    { OSSL_FUNC_CIPHER_GETTABLE_PARAMS,                                        \
-      (void (*)(void))ossl_cipher_generic_gettable_params },                   \
-    { OSSL_FUNC_CIPHER_GET_CTX_PARAMS,                                         \
-      (void (*)(void))ossl_cipher_generic_get_ctx_params },                    \
-    { OSSL_FUNC_CIPHER_GETTABLE_CTX_PARAMS,                                    \
-      (void (*)(void))ossl_cipher_generic_gettable_ctx_params },               \
-    { OSSL_FUNC_CIPHER_SET_CTX_PARAMS,                                         \
-      (void (*)(void))aes_xts_set_ctx_params },                                \
-    { OSSL_FUNC_CIPHER_SETTABLE_CTX_PARAMS,                                    \
-     (void (*)(void))aes_xts_settable_ctx_params },                            \
-    OSSL_DISPATCH_END                                                          \
-}
+        static OSSL_FUNC_cipher_get_params_fn aes_ ## kbits ## _ ## lcmode ## \
+        _get_params;     \
+        static int aes_ ## kbits ## _ ## lcmode ## _get_params( \
+            OSSL_PARAM params[])            \
+        {                                                                              \
+            return ossl_cipher_generic_get_params(params, \
+                                                  EVP_CIPH_ ## UCMODE ## _MODE,    \
+                                                  flags, 2 * kbits, \
+                                                  AES_XTS_BLOCK_BITS,     \
+                                                  AES_XTS_IV_BITS);                         \
+        }                                                                              \
+        static OSSL_FUNC_cipher_newctx_fn aes_ ## kbits ## _xts_newctx;                    \
+        static void *aes_ ## kbits ## _xts_newctx(void *provctx)                           \
+        {                                                                              \
+            return aes_xts_newctx(provctx, EVP_CIPH_ ## UCMODE ## _MODE, flags, \
+                                  2 * kbits, \
+                                  AES_XTS_BLOCK_BITS, AES_XTS_IV_BITS);                \
+        }                                                                              \
+        const OSSL_DISPATCH ossl_aes ## kbits ## xts_functions[] = {                       \
+            { OSSL_FUNC_CIPHER_NEWCTX, \
+              (void (*)(void)) aes_ ## kbits ## _xts_newctx },     \
+            { OSSL_FUNC_CIPHER_ENCRYPT_INIT, (void (*)(void)) aes_xts_einit },          \
+            { OSSL_FUNC_CIPHER_DECRYPT_INIT, (void (*)(void)) aes_xts_dinit },          \
+            { OSSL_FUNC_CIPHER_UPDATE, (void (*)(void)) aes_xts_stream_update },        \
+            { OSSL_FUNC_CIPHER_FINAL, (void (*)(void)) aes_xts_stream_final },          \
+            { OSSL_FUNC_CIPHER_CIPHER, (void (*)(void)) aes_xts_cipher },               \
+            { OSSL_FUNC_CIPHER_FREECTX, (void (*)(void)) aes_xts_freectx },             \
+            { OSSL_FUNC_CIPHER_DUPCTX, (void (*)(void)) aes_xts_dupctx },               \
+            { OSSL_FUNC_CIPHER_GET_PARAMS,                                             \
+              (void (*)(void)) aes_ ## kbits ## _ ## lcmode ## _get_params },                   \
+            { OSSL_FUNC_CIPHER_GETTABLE_PARAMS,                                        \
+              (void (*)(void)) ossl_cipher_generic_gettable_params },                   \
+            { OSSL_FUNC_CIPHER_GET_CTX_PARAMS,                                         \
+              (void (*)(void)) ossl_cipher_generic_get_ctx_params },                    \
+            { OSSL_FUNC_CIPHER_GETTABLE_CTX_PARAMS,                                    \
+              (void (*)(void)) ossl_cipher_generic_gettable_ctx_params },               \
+            { OSSL_FUNC_CIPHER_SET_CTX_PARAMS,                                         \
+              (void (*)(void)) aes_xts_set_ctx_params },                                \
+            { OSSL_FUNC_CIPHER_SETTABLE_CTX_PARAMS,                                    \
+              (void (*)(void)) aes_xts_settable_ctx_params },                            \
+            OSSL_DISPATCH_END                                                          \
+        }
 
 IMPLEMENT_cipher(xts, XTS, 256, AES_XTS_FLAGS);
 IMPLEMENT_cipher(xts, XTS, 128, AES_XTS_FLAGS);

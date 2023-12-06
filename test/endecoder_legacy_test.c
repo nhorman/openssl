@@ -248,7 +248,8 @@ static EVP_PKEY *make_key(const char *type,
         && ((ctx = EVP_PKEY_CTX_new_from_name(NULL, type, NULL)) == NULL
             || EVP_PKEY_paramgen_init(ctx) <= 0
             || (gen_template_params[0].key != NULL
-                && EVP_PKEY_CTX_set_params(ctx, gen_template_params_noconst) <= 0)
+                && EVP_PKEY_CTX_set_params(ctx,
+                                           gen_template_params_noconst) <= 0)
             || EVP_PKEY_generate(ctx, &template) <= 0))
         goto end;
     EVP_PKEY_CTX_free(ctx);
@@ -266,7 +267,7 @@ static EVP_PKEY *make_key(const char *type,
            && EVP_PKEY_keygen_init(ctx) > 0
            && EVP_PKEY_keygen(ctx, &pkey) > 0);
 
- end:
+end:
     EVP_PKEY_free(template);
     EVP_PKEY_CTX_free(ctx);
     return pkey;
@@ -319,12 +320,12 @@ static int test_protected_PEM(const char *keytype, int evp_type,
         goto end;
 
     if (!TEST_ptr(ectx =
-                  OSSL_ENCODER_CTX_new_for_pkey(provided_pkey, selection,
-                                                "PEM", structure,
-                                                NULL))
+                      OSSL_ENCODER_CTX_new_for_pkey(provided_pkey, selection,
+                                                    "PEM", structure,
+                                                    NULL))
         || !TEST_true(OSSL_ENCODER_to_bio(ectx, membio_provided))
         || !TEST_true(pem_write_bio(membio_legacy, legacy_key,
-                                   NULL, NULL, 0, NULL, NULL))
+                                    NULL, NULL, 0, NULL, NULL))
         || !test_membio_str_eq(membio_provided, membio_legacy))
         goto end;
 
@@ -333,13 +334,14 @@ static int test_protected_PEM(const char *keytype, int evp_type,
 
         if (!TEST_ptr(decoded_legacy_pkey = EVP_PKEY_new())
             || !TEST_ptr(dctx =
-                         OSSL_DECODER_CTX_new_for_pkey(&decoded_provided_pkey,
-                                                       "PEM", structure,
-                                                       keytype, selection,
-                                                       NULL, NULL))
+                             OSSL_DECODER_CTX_new_for_pkey(&
+                                                           decoded_provided_pkey,
+                                                           "PEM", structure,
+                                                           keytype, selection,
+                                                           NULL, NULL))
             || !TEST_true(OSSL_DECODER_from_bio(dctx, membio_provided))
             || !TEST_ptr(decoded_legacy_key =
-                         pem_read_bio(membio_legacy, NULL, NULL, NULL))
+                             pem_read_bio(membio_legacy, NULL, NULL, NULL))
             || !TEST_true(EVP_PKEY_assign(decoded_legacy_pkey, evp_type,
                                           decoded_legacy_key)))
             goto end;
@@ -353,7 +355,7 @@ static int test_protected_PEM(const char *keytype, int evp_type,
         }
     }
     ok = 1;
- end:
+end:
     EVP_PKEY_free(decoded_legacy_pkey);
     EVP_PKEY_free(decoded_provided_pkey);
     OSSL_ENCODER_CTX_free(ectx);
@@ -387,9 +389,9 @@ static int test_unprotected_PEM(const char *keytype, int evp_type,
         goto end;
 
     if (!TEST_ptr(ectx =
-                  OSSL_ENCODER_CTX_new_for_pkey(provided_pkey, selection,
-                                                "PEM", structure,
-                                                NULL))
+                      OSSL_ENCODER_CTX_new_for_pkey(provided_pkey, selection,
+                                                    "PEM", structure,
+                                                    NULL))
         || !TEST_true(OSSL_ENCODER_to_bio(ectx, membio_provided))
         || !TEST_true(pem_write_bio(membio_legacy, legacy_key))
         || !test_membio_str_eq(membio_provided, membio_legacy))
@@ -400,13 +402,14 @@ static int test_unprotected_PEM(const char *keytype, int evp_type,
 
         if (!TEST_ptr(decoded_legacy_pkey = EVP_PKEY_new())
             || !TEST_ptr(dctx =
-                         OSSL_DECODER_CTX_new_for_pkey(&decoded_provided_pkey,
-                                                       "PEM", structure,
-                                                       keytype, selection,
-                                                       NULL, NULL))
+                             OSSL_DECODER_CTX_new_for_pkey(&
+                                                           decoded_provided_pkey,
+                                                           "PEM", structure,
+                                                           keytype, selection,
+                                                           NULL, NULL))
             || !TEST_true(OSSL_DECODER_from_bio(dctx, membio_provided))
             || !TEST_ptr(decoded_legacy_key =
-                         pem_read_bio(membio_legacy, NULL, NULL, NULL))
+                             pem_read_bio(membio_legacy, NULL, NULL, NULL))
             || !TEST_true(EVP_PKEY_assign(decoded_legacy_pkey, evp_type,
                                           decoded_legacy_key)))
             goto end;
@@ -420,7 +423,7 @@ static int test_unprotected_PEM(const char *keytype, int evp_type,
         }
     }
     ok = 1;
- end:
+end:
     EVP_PKEY_free(decoded_legacy_pkey);
     EVP_PKEY_free(decoded_provided_pkey);
     OSSL_ENCODER_CTX_free(ectx);
@@ -452,11 +455,11 @@ static int test_DER(const char *keytype, int evp_type,
     EVP_PKEY *decoded_provided_pkey = NULL;
 
     if (!TEST_ptr(ectx =
-                 OSSL_ENCODER_CTX_new_for_pkey(provided_pkey, selection,
-                                               "DER", structure,
-                                               NULL))
+                      OSSL_ENCODER_CTX_new_for_pkey(provided_pkey, selection,
+                                                    "DER", structure,
+                                                    NULL))
         || !TEST_true(OSSL_ENCODER_to_data(ectx,
-                                          &der_provided, &der_provided_len))
+                                           &der_provided, &der_provided_len))
         || !TEST_size_t_gt(der_legacy_len = i2d(legacy_key, &der_legacy), 0)
         || !TEST_mem_eq(der_provided, der_provided_len,
                         der_legacy, der_legacy_len))
@@ -467,10 +470,11 @@ static int test_DER(const char *keytype, int evp_type,
 
         if (!TEST_ptr(decoded_legacy_pkey = EVP_PKEY_new())
             || !TEST_ptr(dctx =
-                         OSSL_DECODER_CTX_new_for_pkey(&decoded_provided_pkey,
-                                                       "DER", structure,
-                                                       keytype, selection,
-                                                       NULL, NULL))
+                             OSSL_DECODER_CTX_new_for_pkey(&
+                                                           decoded_provided_pkey,
+                                                           "DER", structure,
+                                                           keytype, selection,
+                                                           NULL, NULL))
             || !TEST_true((pder_provided = der_provided,
                            tmp_size = der_provided_len,
                            OSSL_DECODER_from_data(dctx, &pder_provided,
@@ -491,7 +495,7 @@ static int test_DER(const char *keytype, int evp_type,
         }
     }
     ok = 1;
- end:
+end:
     EVP_PKEY_free(decoded_legacy_pkey);
     EVP_PKEY_free(decoded_provided_pkey);
     OSSL_ENCODER_CTX_free(ectx);
@@ -532,8 +536,9 @@ static int test_key(int idx)
         for (i = 0; i < OSSL_NELEM(test_stanza->structure); i++) {
             const char *structure = test_stanza->structure[i];
 
-            TEST_info("Test OSSL_ENCODER against PEM_write_bio_{TYPE}PrivateKey for %s, %s",
-                      test_stanza->keytype, structure);
+            TEST_info(
+                "Test OSSL_ENCODER against PEM_write_bio_{TYPE}PrivateKey for %s, %s",
+                test_stanza->keytype, structure);
             if (!test_protected_PEM(key->keytype, key->evp_type, legacy_obj,
                                     test_stanza->pem_write_bio_PrivateKey,
                                     test_stanza->pem_read_bio_PrivateKey,
@@ -552,8 +557,9 @@ static int test_key(int idx)
         for (i = 0; i < OSSL_NELEM(test_stanza->structure); i++) {
             const char *structure = test_stanza->structure[i];
 
-            TEST_info("Test OSSL_ENCODER against PEM_write_bio_{TYPE}PublicKey for %s, %s",
-                      test_stanza->keytype, structure);
+            TEST_info(
+                "Test OSSL_ENCODER against PEM_write_bio_{TYPE}PublicKey for %s, %s",
+                test_stanza->keytype, structure);
             if (!test_unprotected_PEM(key->keytype, key->evp_type, legacy_obj,
                                       test_stanza->pem_write_bio_PublicKey,
                                       test_stanza->pem_read_bio_PublicKey,
@@ -570,8 +576,9 @@ static int test_key(int idx)
         for (i = 0; i < OSSL_NELEM(test_stanza->structure); i++) {
             const char *structure = test_stanza->structure[i];
 
-            TEST_info("Test OSSL_ENCODER against PEM_write_bio_{TYPE}params for %s, %s",
-                      test_stanza->keytype, structure);
+            TEST_info(
+                "Test OSSL_ENCODER against PEM_write_bio_{TYPE}params for %s, %s",
+                test_stanza->keytype, structure);
             if (!test_unprotected_PEM(key->keytype, key->evp_type, legacy_obj,
                                       test_stanza->pem_write_bio_params,
                                       test_stanza->pem_read_bio_params,
@@ -589,8 +596,9 @@ static int test_key(int idx)
             | OSSL_KEYMGMT_SELECT_ALL_PARAMETERS;
         const char *structure = "SubjectPublicKeyInfo";
 
-        TEST_info("Test OSSL_ENCODER against PEM_write_bio_{TYPE}_PUBKEY for %s, %s",
-                  test_stanza->keytype, structure);
+        TEST_info(
+            "Test OSSL_ENCODER against PEM_write_bio_{TYPE}_PUBKEY for %s, %s",
+            test_stanza->keytype, structure);
         if (!test_unprotected_PEM(key->keytype, key->evp_type, legacy_obj,
                                   test_stanza->pem_write_bio_PUBKEY,
                                   test_stanza->pem_read_bio_PUBKEY,
@@ -607,8 +615,9 @@ static int test_key(int idx)
         for (i = 0; i < OSSL_NELEM(test_stanza->structure); i++) {
             const char *structure = test_stanza->structure[i];
 
-            TEST_info("Test OSSL_ENCODER against i2d_{TYPE}PrivateKey for %s, %s",
-                      test_stanza->keytype, structure);
+            TEST_info(
+                "Test OSSL_ENCODER against i2d_{TYPE}PrivateKey for %s, %s",
+                test_stanza->keytype, structure);
             if (!test_DER(key->keytype, key->evp_type, legacy_obj,
                           test_stanza->i2d_PrivateKey,
                           test_stanza->d2i_PrivateKey,
@@ -627,8 +636,9 @@ static int test_key(int idx)
         for (i = 0; i < OSSL_NELEM(test_stanza->structure); i++) {
             const char *structure = test_stanza->structure[i];
 
-            TEST_info("Test OSSL_ENCODER against i2d_{TYPE}PublicKey for %s, %s",
-                      test_stanza->keytype, structure);
+            TEST_info(
+                "Test OSSL_ENCODER against i2d_{TYPE}PublicKey for %s, %s",
+                test_stanza->keytype, structure);
             if (!test_DER(key->keytype, key->evp_type, legacy_obj,
                           test_stanza->i2d_PublicKey,
                           test_stanza->d2i_PublicKey,
@@ -670,7 +680,7 @@ static int test_key(int idx)
                       pkey, selection, structure))
             ok = 0;
     }
- end:
+end:
     EVP_PKEY_free(downgraded_pkey);
     return ok;
 }
@@ -697,22 +707,22 @@ int setup_tests(void)
 #ifndef OPENSSL_NO_DH
         if (strcmp(keys[i].keytype, "DH") == 0) {
             if (!TEST_ptr(keys[i].key =
-                          load_pkey_pem(test_get_argument(1), NULL)))
-                return  0;
+                              load_pkey_pem(test_get_argument(1), NULL)))
+                return 0;
             continue;
         }
 #endif
 #ifndef OPENSSL_NO_DEPRECATED_3_0
         if (strcmp(keys[i].keytype, "RSA") == 0) {
             if (!TEST_ptr(keys[i].key =
-                          load_pkey_pem(test_get_argument(0), NULL)))
-                return  0;
+                              load_pkey_pem(test_get_argument(0), NULL)))
+                return 0;
             continue;
         }
 #endif
         TEST_info("Generating %s key...", keys[i].keytype);
         if (!TEST_ptr(keys[i].key =
-                      make_key(keys[i].keytype, keys[i].template_params)))
+                          make_key(keys[i].keytype, keys[i].template_params)))
             return 0;
     }
 

@@ -118,8 +118,8 @@ static int aes_wrap_init(void *vctx, const unsigned char *key,
         int use_forward_transform;
 
         if (keylen != ctx->keylen) {
-           ERR_raise(ERR_LIB_PROV, PROV_R_INVALID_KEY_LENGTH);
-           return 0;
+            ERR_raise(ERR_LIB_PROV, PROV_R_INVALID_KEY_LENGTH);
+            return 0;
         }
         /*
          * See SP800-38F : Section 5.1
@@ -281,52 +281,73 @@ static int aes_wrap_set_ctx_params(void *vctx, const OSSL_PARAM params[])
 }
 
 #define IMPLEMENT_cipher(mode, fname, UCMODE, flags, kbits, blkbits, ivbits)   \
-    static OSSL_FUNC_cipher_get_params_fn aes_##kbits##_##fname##_get_params;  \
-    static int aes_##kbits##_##fname##_get_params(OSSL_PARAM params[])         \
-    {                                                                          \
-        return ossl_cipher_generic_get_params(params, EVP_CIPH_##UCMODE##_MODE,\
-                                              flags, kbits, blkbits, ivbits);  \
-    }                                                                          \
-    static OSSL_FUNC_cipher_newctx_fn aes_##kbits##fname##_newctx;             \
-    static void *aes_##kbits##fname##_newctx(void *provctx)                    \
-    {                                                                          \
-        return aes_##mode##_newctx(kbits, blkbits, ivbits,                     \
-                                   EVP_CIPH_##UCMODE##_MODE, flags);           \
-    }                                                                          \
-    const OSSL_DISPATCH ossl_##aes##kbits##fname##_functions[] = {             \
-        { OSSL_FUNC_CIPHER_NEWCTX,                                             \
-            (void (*)(void))aes_##kbits##fname##_newctx },                     \
-        { OSSL_FUNC_CIPHER_ENCRYPT_INIT, (void (*)(void))aes_##mode##_einit }, \
-        { OSSL_FUNC_CIPHER_DECRYPT_INIT, (void (*)(void))aes_##mode##_dinit }, \
-        { OSSL_FUNC_CIPHER_UPDATE, (void (*)(void))aes_##mode##_cipher },      \
-        { OSSL_FUNC_CIPHER_FINAL, (void (*)(void))aes_##mode##_final },        \
-        { OSSL_FUNC_CIPHER_FREECTX, (void (*)(void))aes_##mode##_freectx },    \
-        { OSSL_FUNC_CIPHER_DUPCTX, (void (*)(void))aes_##mode##_dupctx },      \
-        { OSSL_FUNC_CIPHER_GET_PARAMS,                                         \
-            (void (*)(void))aes_##kbits##_##fname##_get_params },              \
-        { OSSL_FUNC_CIPHER_GETTABLE_PARAMS,                                    \
-            (void (*)(void))ossl_cipher_generic_gettable_params },             \
-        { OSSL_FUNC_CIPHER_GET_CTX_PARAMS,                                     \
-            (void (*)(void))ossl_cipher_generic_get_ctx_params },              \
-        { OSSL_FUNC_CIPHER_SET_CTX_PARAMS,                                     \
-            (void (*)(void))aes_wrap_set_ctx_params },                         \
-        { OSSL_FUNC_CIPHER_GETTABLE_CTX_PARAMS,                                \
-            (void (*)(void))ossl_cipher_generic_gettable_ctx_params },         \
-        { OSSL_FUNC_CIPHER_SETTABLE_CTX_PARAMS,                                \
-            (void (*)(void))ossl_cipher_generic_settable_ctx_params },         \
-        OSSL_DISPATCH_END                                                      \
-    }
+        static OSSL_FUNC_cipher_get_params_fn aes_ ## kbits ## _ ## fname ## \
+        _get_params;  \
+        static int aes_ ## kbits ## _ ## fname ## _get_params( \
+            OSSL_PARAM params[])         \
+        {                                                                          \
+            return ossl_cipher_generic_get_params(params, \
+                                                  EVP_CIPH_ ## UCMODE ## _MODE, \
+                                                  flags, kbits, blkbits, \
+                                                  ivbits);  \
+        }                                                                          \
+        static OSSL_FUNC_cipher_newctx_fn aes_ ## kbits ## fname ## _newctx;             \
+        static void *aes_ ## kbits ## fname ## _newctx(void *provctx)                    \
+        {                                                                          \
+            return aes_ ## mode ## _newctx(kbits, blkbits, ivbits,                     \
+                                           EVP_CIPH_ ## UCMODE ## _MODE, flags);           \
+        }                                                                          \
+        const OSSL_DISPATCH ossl_ ## aes ## kbits ## fname ## _functions[] = {             \
+            { OSSL_FUNC_CIPHER_NEWCTX,                                             \
+              (void (*)(void)) aes_ ## kbits ## fname ## _newctx },                     \
+            { OSSL_FUNC_CIPHER_ENCRYPT_INIT, \
+              (void (*)(void)) aes_ ## mode ## _einit }, \
+            { OSSL_FUNC_CIPHER_DECRYPT_INIT, \
+              (void (*)(void)) aes_ ## mode ## _dinit }, \
+            { OSSL_FUNC_CIPHER_UPDATE, \
+              (void (*)(void)) aes_ ## mode ## _cipher },      \
+            { OSSL_FUNC_CIPHER_FINAL, (void (*)(void)) aes_ ## mode ## _final },        \
+            { OSSL_FUNC_CIPHER_FREECTX, \
+              (void (*)(void)) aes_ ## mode ## _freectx },    \
+            { OSSL_FUNC_CIPHER_DUPCTX, \
+              (void (*)(void)) aes_ ## mode ## _dupctx },      \
+            { OSSL_FUNC_CIPHER_GET_PARAMS,                                         \
+              (void (*)(void)) aes_ ## kbits ## _ ## fname ## _get_params },              \
+            { OSSL_FUNC_CIPHER_GETTABLE_PARAMS,                                    \
+              (void (*)(void)) ossl_cipher_generic_gettable_params },             \
+            { OSSL_FUNC_CIPHER_GET_CTX_PARAMS,                                     \
+              (void (*)(void)) ossl_cipher_generic_get_ctx_params },              \
+            { OSSL_FUNC_CIPHER_SET_CTX_PARAMS,                                     \
+              (void (*)(void)) aes_wrap_set_ctx_params },                         \
+            { OSSL_FUNC_CIPHER_GETTABLE_CTX_PARAMS,                                \
+              (void (*)(void)) ossl_cipher_generic_gettable_ctx_params },         \
+            { OSSL_FUNC_CIPHER_SETTABLE_CTX_PARAMS,                                \
+              (void (*)(void)) ossl_cipher_generic_settable_ctx_params },         \
+            OSSL_DISPATCH_END                                                      \
+        }
 
-IMPLEMENT_cipher(wrap, wrap, WRAP, WRAP_FLAGS, 256, 64, AES_WRAP_NOPAD_IVLEN * 8);
-IMPLEMENT_cipher(wrap, wrap, WRAP, WRAP_FLAGS, 192, 64, AES_WRAP_NOPAD_IVLEN * 8);
-IMPLEMENT_cipher(wrap, wrap, WRAP, WRAP_FLAGS, 128, 64, AES_WRAP_NOPAD_IVLEN * 8);
-IMPLEMENT_cipher(wrap, wrappad, WRAP, WRAP_FLAGS, 256, 64, AES_WRAP_PAD_IVLEN * 8);
-IMPLEMENT_cipher(wrap, wrappad, WRAP, WRAP_FLAGS, 192, 64, AES_WRAP_PAD_IVLEN * 8);
-IMPLEMENT_cipher(wrap, wrappad, WRAP, WRAP_FLAGS, 128, 64, AES_WRAP_PAD_IVLEN * 8);
+IMPLEMENT_cipher(wrap, wrap, WRAP, WRAP_FLAGS, 256, 64,
+                 AES_WRAP_NOPAD_IVLEN * 8);
+IMPLEMENT_cipher(wrap, wrap, WRAP, WRAP_FLAGS, 192, 64,
+                 AES_WRAP_NOPAD_IVLEN * 8);
+IMPLEMENT_cipher(wrap, wrap, WRAP, WRAP_FLAGS, 128, 64,
+                 AES_WRAP_NOPAD_IVLEN * 8);
+IMPLEMENT_cipher(wrap, wrappad, WRAP, WRAP_FLAGS, 256, 64,
+                 AES_WRAP_PAD_IVLEN * 8);
+IMPLEMENT_cipher(wrap, wrappad, WRAP, WRAP_FLAGS, 192, 64,
+                 AES_WRAP_PAD_IVLEN * 8);
+IMPLEMENT_cipher(wrap, wrappad, WRAP, WRAP_FLAGS, 128, 64,
+                 AES_WRAP_PAD_IVLEN * 8);
 
-IMPLEMENT_cipher(wrap, wrapinv, WRAP, WRAP_FLAGS_INV, 256, 64, AES_WRAP_NOPAD_IVLEN * 8);
-IMPLEMENT_cipher(wrap, wrapinv, WRAP, WRAP_FLAGS_INV, 192, 64, AES_WRAP_NOPAD_IVLEN * 8);
-IMPLEMENT_cipher(wrap, wrapinv, WRAP, WRAP_FLAGS_INV, 128, 64, AES_WRAP_NOPAD_IVLEN * 8);
-IMPLEMENT_cipher(wrap, wrappadinv, WRAP, WRAP_FLAGS_INV, 256, 64, AES_WRAP_PAD_IVLEN * 8);
-IMPLEMENT_cipher(wrap, wrappadinv, WRAP, WRAP_FLAGS_INV, 192, 64, AES_WRAP_PAD_IVLEN * 8);
-IMPLEMENT_cipher(wrap, wrappadinv, WRAP, WRAP_FLAGS_INV, 128, 64, AES_WRAP_PAD_IVLEN * 8);
+IMPLEMENT_cipher(wrap, wrapinv, WRAP, WRAP_FLAGS_INV, 256, 64,
+                 AES_WRAP_NOPAD_IVLEN * 8);
+IMPLEMENT_cipher(wrap, wrapinv, WRAP, WRAP_FLAGS_INV, 192, 64,
+                 AES_WRAP_NOPAD_IVLEN * 8);
+IMPLEMENT_cipher(wrap, wrapinv, WRAP, WRAP_FLAGS_INV, 128, 64,
+                 AES_WRAP_NOPAD_IVLEN * 8);
+IMPLEMENT_cipher(wrap, wrappadinv, WRAP, WRAP_FLAGS_INV, 256, 64,
+                 AES_WRAP_PAD_IVLEN * 8);
+IMPLEMENT_cipher(wrap, wrappadinv, WRAP, WRAP_FLAGS_INV, 192, 64,
+                 AES_WRAP_PAD_IVLEN * 8);
+IMPLEMENT_cipher(wrap, wrappadinv, WRAP, WRAP_FLAGS_INV, 128, 64,
+                 AES_WRAP_PAD_IVLEN * 8);

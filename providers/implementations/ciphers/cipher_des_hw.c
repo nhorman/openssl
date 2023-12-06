@@ -29,7 +29,7 @@ static int cipher_hw_des_initkey(PROV_CIPHER_CTX *ctx,
         if (ctx->mode == EVP_CIPH_CBC_MODE) {
             des_t4_key_expand(&deskey[0], ks);
             dctx->dstream.cbc = ctx->enc ? des_t4_cbc_encrypt :
-                                           des_t4_cbc_decrypt;
+                                des_t4_cbc_decrypt;
             return 1;
         }
     }
@@ -179,15 +179,15 @@ static int cipher_hw_des_cfb8_cipher(PROV_CIPHER_CTX *ctx, unsigned char *out,
 }
 
 #define PROV_CIPHER_HW_des_mode(mode)                                          \
-static const PROV_CIPHER_HW des_##mode = {                                     \
-    cipher_hw_des_initkey,                                                     \
-    cipher_hw_des_##mode##_cipher,                                             \
-    cipher_hw_des_copyctx                                                      \
-};                                                                             \
-const PROV_CIPHER_HW *ossl_prov_cipher_hw_des_##mode(void)                     \
-{                                                                              \
-    return &des_##mode;                                                        \
-}
+        static const PROV_CIPHER_HW des_ ## mode = {                                     \
+            cipher_hw_des_initkey,                                                     \
+            cipher_hw_des_ ## mode ## _cipher,                                             \
+            cipher_hw_des_copyctx                                                      \
+        };                                                                             \
+        const PROV_CIPHER_HW *ossl_prov_cipher_hw_des_ ## mode(void)                     \
+        {                                                                              \
+            return &des_ ## mode;                                                        \
+        }
 
 PROV_CIPHER_HW_des_mode(ecb)
 PROV_CIPHER_HW_des_mode(cbc)

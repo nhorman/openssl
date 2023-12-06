@@ -79,7 +79,8 @@ extern "C" {
 # endif
 
 /* Anything that tries to look like Microsoft is "Windows" */
-# if defined(OPENSSL_SYS_WIN32) || defined(OPENSSL_SYS_WIN64) || defined(OPENSSL_SYS_WINNT) || defined(OPENSSL_SYS_WINCE)
+# if defined(OPENSSL_SYS_WIN32) || defined(OPENSSL_SYS_WIN64) || \
+    defined(OPENSSL_SYS_WINNT) || defined(OPENSSL_SYS_WINCE)
 #  undef OPENSSL_SYS_UNIX
 #  define OPENSSL_SYS_WINDOWS
 #  ifndef OPENSSL_SYS_MSDOS
@@ -229,8 +230,8 @@ typedef UINT32 uint32_t;
 typedef INT64 int64_t;
 typedef UINT64 uint64_t;
 # elif (defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L) || \
-     defined(__osf__) || defined(__sgi) || defined(__hpux) || \
-     defined(OPENSSL_SYS_VMS) || defined (__OpenBSD__)
+    defined(__osf__) || defined(__sgi) || defined(__hpux) || \
+    defined(OPENSSL_SYS_VMS) || defined (__OpenBSD__)
 #  include <inttypes.h>
 #  undef OPENSSL_NO_INTTYPES_H
 /* Because the specs say that inttypes.h includes stdint.h if present */
@@ -268,16 +269,16 @@ typedef uint64_t ossl_uintmax_t;
 /* ossl_inline: portable inline definition usable in public headers */
 # if !defined(inline) && !defined(__cplusplus)
 #  if defined(__STDC_VERSION__) && __STDC_VERSION__>=199901L
-   /* just use inline */
+/* just use inline */
 #   define ossl_inline inline
 #  elif defined(__GNUC__) && __GNUC__>=2
 #   define ossl_inline __inline__
 #  elif defined(_MSC_VER)
-  /*
-   * Visual Studio: inline is available in C++ only, however
-   * __inline is available for C, see
-   * http://msdn.microsoft.com/en-us/library/z8y1yy88.aspx
-   */
+/*
+ * Visual Studio: inline is available in C++ only, however
+ * __inline is available for C, see
+ * http://msdn.microsoft.com/en-us/library/z8y1yy88.aspx
+ */
 #   define ossl_inline __inline
 #  else
 #   define ossl_inline
@@ -287,7 +288,7 @@ typedef uint64_t ossl_uintmax_t;
 # endif
 
 # if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && \
-     !defined(__cplusplus) 
+    !defined(__cplusplus)
 #  define ossl_noreturn _Noreturn
 # elif defined(__GNUC__) && __GNUC__ >= 2
 #  define ossl_noreturn __attribute__((noreturn))

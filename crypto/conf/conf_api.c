@@ -39,7 +39,7 @@ STACK_OF(CONF_VALUE) *_CONF_get_section_values(const CONF *conf,
     v = _CONF_get_section(conf, section);
     if (v == NULL)
         return NULL;
-    return ((STACK_OF(CONF_VALUE) *)v->value);
+    return ((STACK_OF(CONF_VALUE) *) v->value);
 }
 
 int _CONF_add_string(CONF *conf, CONF_VALUE *section, CONF_VALUE *value)
@@ -47,7 +47,7 @@ int _CONF_add_string(CONF *conf, CONF_VALUE *section, CONF_VALUE *value)
     CONF_VALUE *v = NULL;
     STACK_OF(CONF_VALUE) *ts;
 
-    ts = (STACK_OF(CONF_VALUE) *)section->value;
+    ts = (STACK_OF(CONF_VALUE) *) section->value;
 
     value->section = section->section;
     if (!sk_CONF_VALUE_push(ts, value))
@@ -170,7 +170,7 @@ static void value_free_stack_doall(CONF_VALUE *a)
     if (a->name != NULL)
         return;
 
-    sk = (STACK_OF(CONF_VALUE) *)a->value;
+    sk = (STACK_OF(CONF_VALUE) *) a->value;
     for (i = sk_CONF_VALUE_num(sk) - 1; i >= 0; i--) {
         vv = sk_CONF_VALUE_value(sk, i);
         OPENSSL_free(vv->value);
@@ -205,7 +205,7 @@ CONF_VALUE *_CONF_new_section(CONF *conf, const char *section)
         goto err;
     return v;
 
- err:
+err:
     sk_CONF_VALUE_free(sk);
     if (v != NULL)
         OPENSSL_free(v->section);

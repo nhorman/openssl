@@ -225,7 +225,7 @@ int dtls1_read_bytes(SSL *s, uint8_t type, uint8_t *recvd_type,
             return -1;
     }
 
- start:
+start:
     sc->rwstate = SSL_NOTHING;
 
     /*
@@ -250,17 +250,44 @@ int dtls1_read_bytes(SSL *s, uint8_t type, uint8_t *recvd_type,
             rr = &sc->rlayer.tlsrecs[sc->rlayer.num_recs];
 
             ret = HANDLE_RLAYER_READ_RETURN(sc,
-                    sc->rlayer.rrlmethod->read_record(sc->rlayer.rrl,
-                                                      &rr->rechandle,
-                                                      &rr->version, &rr->type,
-                                                      &rr->data, &rr->length,
-                                                      &rr->epoch, rr->seq_num));
+                                            sc->rlayer.rrlmethod->read_record(sc
+                                                                              ->
+                                                                              rlayer
+                                                                              .
+                                                                              rrl,
+                                                                              &
+                                                                              rr
+                                                                              ->
+                                                                              rechandle,
+                                                                              &
+                                                                              rr
+                                                                              ->
+                                                                              version,
+                                                                              &
+                                                                              rr
+                                                                              ->
+                                                                              type,
+                                                                              &
+                                                                              rr
+                                                                              ->
+                                                                              data,
+                                                                              &
+                                                                              rr
+                                                                              ->
+                                                                              length,
+                                                                              &
+                                                                              rr
+                                                                              ->
+                                                                              epoch,
+                                                                              rr
+                                                                              ->
+                                                                              seq_num));
             if (ret <= 0) {
                 ret = dtls1_read_failed(sc, ret);
                 /*
-                * Anything other than a timeout is an error. SSLfatal() already
-                * called if appropriate.
-                */
+                 * Anything other than a timeout is an error. SSLfatal() already
+                 * called if appropriate.
+                 */
                 if (ret <= 0)
                     return ret;
                 else
@@ -283,7 +310,7 @@ int dtls1_read_bytes(SSL *s, uint8_t type, uint8_t *recvd_type,
     /* we now have a packet which can be read and processed */
 
     if (sc->s3.change_cipher_spec /* set when we receive ChangeCipherSpec,
-                                  * reset by ssl3_get_finished */
+                                   * reset by ssl3_get_finished */
         && (rr->type != SSL3_RT_HANDSHAKE)) {
         /*
          * We now have application data between CCS and Finished. Most likely
@@ -323,7 +350,7 @@ int dtls1_read_bytes(SSL *s, uint8_t type, uint8_t *recvd_type,
          * doing a handshake for the first time
          */
         if (SSL_in_init(s) && (type == SSL3_RT_APPLICATION_DATA)
-                && (SSL_IS_FIRST_HANDSHAKE(sc))) {
+            && (SSL_IS_FIRST_HANDSHAKE(sc))) {
             SSLfatal(sc, SSL_AD_UNEXPECTED_MESSAGE,
                      SSL_R_APP_DATA_IN_HANDSHAKE);
             return -1;
@@ -384,9 +411,9 @@ int dtls1_read_bytes(SSL *s, uint8_t type, uint8_t *recvd_type,
         PACKET alert;
 
         if (!PACKET_buf_init(&alert, alert_bytes, rr->length)
-                || !PACKET_get_1(&alert, &alert_level)
-                || !PACKET_get_1(&alert, &alert_descr)
-                || PACKET_remaining(&alert) != 0) {
+            || !PACKET_get_1(&alert, &alert_level)
+            || !PACKET_get_1(&alert, &alert_descr)
+            || PACKET_remaining(&alert) != 0) {
             SSLfatal(sc, SSL_AD_UNEXPECTED_MESSAGE, SSL_R_INVALID_ALERT);
             return -1;
         }
@@ -456,7 +483,7 @@ int dtls1_read_bytes(SSL *s, uint8_t type, uint8_t *recvd_type,
     }
 
     if (sc->shutdown & SSL_SENT_SHUTDOWN) { /* but we have not received a
-                                            * shutdown */
+                                             * shutdown */
         sc->rwstate = SSL_NOTHING;
         if (!ssl_release_record(sc, rr, 0))
             return -1;
@@ -484,7 +511,7 @@ int dtls1_read_bytes(SSL *s, uint8_t type, uint8_t *recvd_type,
          * at least enough record bytes for a message header
          */
         if (rr->epoch != sc->rlayer.d->r_epoch
-                || rr->length < DTLS1_HM_HEADER_LENGTH) {
+            || rr->length < DTLS1_HM_HEADER_LENGTH) {
             if (!ssl_release_record(sc, rr, 0))
                 return -1;
             goto start;
@@ -510,7 +537,8 @@ int dtls1_read_bytes(SSL *s, uint8_t type, uint8_t *recvd_type,
             if (!ssl_release_record(sc, rr, 0))
                 return -1;
             if (!(sc->mode & SSL_MODE_AUTO_RETRY)) {
-                if (!sc->rlayer.rrlmethod->unprocessed_read_pending(sc->rlayer.rrl)) {
+                if (!sc->rlayer.rrlmethod->unprocessed_read_pending(sc->rlayer.
+                                                                    rrl)) {
                     /* no read-ahead left? */
                     BIO *bio;
 
@@ -546,7 +574,8 @@ int dtls1_read_bytes(SSL *s, uint8_t type, uint8_t *recvd_type,
             return -1;
 
         if (!(sc->mode & SSL_MODE_AUTO_RETRY)) {
-            if (!sc->rlayer.rrlmethod->unprocessed_read_pending(sc->rlayer.rrl)) {
+            if (!sc->rlayer.rrlmethod->unprocessed_read_pending(sc->rlayer.rrl))
+            {
                 /* no read-ahead left? */
                 BIO *bio;
                 /*
@@ -566,36 +595,37 @@ int dtls1_read_bytes(SSL *s, uint8_t type, uint8_t *recvd_type,
     }
 
     switch (rr->type) {
-    default:
-        SSLfatal(sc, SSL_AD_UNEXPECTED_MESSAGE, SSL_R_UNEXPECTED_RECORD);
-        return -1;
-    case SSL3_RT_CHANGE_CIPHER_SPEC:
-    case SSL3_RT_ALERT:
-    case SSL3_RT_HANDSHAKE:
-        /*
-         * we already handled all of these, with the possible exception of
-         * SSL3_RT_HANDSHAKE when ossl_statem_get_in_handshake(s) is true, but
-         * that should not happen when type != rr->type
-         */
-        SSLfatal(sc, SSL_AD_UNEXPECTED_MESSAGE, ERR_R_INTERNAL_ERROR);
-        return -1;
-    case SSL3_RT_APPLICATION_DATA:
-        /*
-         * At this point, we were expecting handshake data, but have
-         * application data.  If the library was running inside ssl3_read()
-         * (i.e. in_read_app_data is set) and it makes sense to read
-         * application data at this point (session renegotiation not yet
-         * started), we will indulge it.
-         */
-        if (sc->s3.in_read_app_data &&
-            (sc->s3.total_renegotiations != 0) &&
-            ossl_statem_app_data_allowed(sc)) {
-            sc->s3.in_read_app_data = 2;
-            return -1;
-        } else {
+        default:
             SSLfatal(sc, SSL_AD_UNEXPECTED_MESSAGE, SSL_R_UNEXPECTED_RECORD);
             return -1;
-        }
+        case SSL3_RT_CHANGE_CIPHER_SPEC:
+        case SSL3_RT_ALERT:
+        case SSL3_RT_HANDSHAKE:
+            /*
+             * we already handled all of these, with the possible exception of
+             * SSL3_RT_HANDSHAKE when ossl_statem_get_in_handshake(s) is true, but
+             * that should not happen when type != rr->type
+             */
+            SSLfatal(sc, SSL_AD_UNEXPECTED_MESSAGE, ERR_R_INTERNAL_ERROR);
+            return -1;
+        case SSL3_RT_APPLICATION_DATA:
+            /*
+             * At this point, we were expecting handshake data, but have
+             * application data.  If the library was running inside ssl3_read()
+             * (i.e. in_read_app_data is set) and it makes sense to read
+             * application data at this point (session renegotiation not yet
+             * started), we will indulge it.
+             */
+            if (sc->s3.in_read_app_data &&
+                (sc->s3.total_renegotiations != 0) &&
+                ossl_statem_app_data_allowed(sc)) {
+                sc->s3.in_read_app_data = 2;
+                return -1;
+            } else {
+                SSLfatal(sc, SSL_AD_UNEXPECTED_MESSAGE,
+                         SSL_R_UNEXPECTED_RECORD);
+                return -1;
+            }
     }
     /* not reached */
 }
@@ -649,7 +679,7 @@ int do_dtls1_write(SSL_CONNECTION *sc, uint8_t type, const unsigned char *buf,
      * header: otherwise some clients will ignore it.
      */
     if (s->method->version == DTLS_ANY_VERSION
-            && sc->max_proto_version != DTLS1_BAD_VER)
+        && sc->max_proto_version != DTLS1_BAD_VER)
         tmpl.version = DTLS1_VERSION;
     else
         tmpl.version = sc->version;
@@ -657,7 +687,11 @@ int do_dtls1_write(SSL_CONNECTION *sc, uint8_t type, const unsigned char *buf,
     tmpl.buflen = len;
 
     ret = HANDLE_RLAYER_WRITE_RETURN(sc,
-              sc->rlayer.wrlmethod->write_records(sc->rlayer.wrl, &tmpl, 1));
+                                     sc->rlayer.wrlmethod->write_records(sc->
+                                                                         rlayer.
+                                                                         wrl,
+                                                                         &tmpl,
+                                                                         1));
 
     if (ret > 0)
         *written = (int)len;

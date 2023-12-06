@@ -89,7 +89,8 @@ int SSL_SESSION_print(BIO *bp, const SSL_SESSION *x)
     if (BIO_puts(bp, "\n    PSK identity hint: ") <= 0)
         goto err;
     if (BIO_printf
-        (bp, "%s", x->psk_identity_hint ? x->psk_identity_hint : "None") <= 0)
+            (bp, "%s",
+            x->psk_identity_hint ? x->psk_identity_hint : "None") <= 0)
         goto err;
 #endif
 #ifndef OPENSSL_NO_SRP
@@ -108,7 +109,7 @@ int SSL_SESSION_print(BIO *bp, const SSL_SESSION *x)
         if (BIO_puts(bp, "\n    TLS session ticket:\n") <= 0)
             goto err;
         if (BIO_dump_indent
-            (bp, (const char *)x->ext.tick, (int)x->ext.ticklen, 4)
+                (bp, (const char *)x->ext.tick, (int)x->ext.ticklen, 4)
             <= 0)
             goto err;
     }
@@ -158,7 +159,7 @@ int SSL_SESSION_print(BIO *bp, const SSL_SESSION *x)
     }
 
     return 1;
- err:
+err:
     return 0;
 }
 
@@ -199,6 +200,6 @@ int SSL_SESSION_print_keylog(BIO *bp, const SSL_SESSION *x)
         goto err;
 
     return 1;
- err:
+err:
     return 0;
 }

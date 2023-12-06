@@ -268,7 +268,8 @@ int ossl_a2ulabel(const char *in, char *out, size_t outlen)
 
     while (1) {
         char *tmpptr = strchr(inptr, '.');
-        size_t delta = tmpptr != NULL ? (size_t)(tmpptr - inptr) : strlen(inptr);
+        size_t delta = tmpptr !=
+                       NULL ? (size_t)(tmpptr - inptr) : strlen(inptr);
 
         if (!HAS_PREFIX(inptr, "xn--")) {
             if (!WPACKET_memcpy(&pkt, inptr, delta))
@@ -276,7 +277,8 @@ int ossl_a2ulabel(const char *in, char *out, size_t outlen)
         } else {
             unsigned int bufsize = LABEL_BUF_SIZE;
 
-            if (ossl_punycode_decode(inptr + 4, delta - 4, buf, &bufsize) <= 0) {
+            if (ossl_punycode_decode(inptr + 4, delta - 4, buf,
+                                     &bufsize) <= 0) {
                 result = -1;
                 goto end;
             }
@@ -306,7 +308,7 @@ int ossl_a2ulabel(const char *in, char *out, size_t outlen)
 
     if (!WPACKET_put_bytes_u8(&pkt, '\0'))
         result = 0;
- end:
+end:
     WPACKET_cleanup(&pkt);
     return result;
 }

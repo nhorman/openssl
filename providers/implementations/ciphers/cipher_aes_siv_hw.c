@@ -31,20 +31,20 @@ static int aes_siv_initkey(void *vctx, const unsigned char *key, size_t keylen)
     ctx->ctr = NULL;
 
     switch (klen) {
-    case 16:
-        ctx->cbc = EVP_CIPHER_fetch(libctx, "AES-128-CBC", propq);
-        ctx->ctr = EVP_CIPHER_fetch(libctx, "AES-128-CTR", propq);
-        break;
-    case 24:
-        ctx->cbc = EVP_CIPHER_fetch(libctx, "AES-192-CBC", propq);
-        ctx->ctr = EVP_CIPHER_fetch(libctx, "AES-192-CTR", propq);
-        break;
-    case 32:
-        ctx->cbc = EVP_CIPHER_fetch(libctx, "AES-256-CBC", propq);
-        ctx->ctr = EVP_CIPHER_fetch(libctx, "AES-256-CTR", propq);
-        break;
-    default:
-        break;
+        case 16:
+            ctx->cbc = EVP_CIPHER_fetch(libctx, "AES-128-CBC", propq);
+            ctx->ctr = EVP_CIPHER_fetch(libctx, "AES-128-CTR", propq);
+            break;
+        case 24:
+            ctx->cbc = EVP_CIPHER_fetch(libctx, "AES-192-CBC", propq);
+            ctx->ctr = EVP_CIPHER_fetch(libctx, "AES-192-CTR", propq);
+            break;
+        case 32:
+            ctx->cbc = EVP_CIPHER_fetch(libctx, "AES-256-CBC", propq);
+            ctx->ctr = EVP_CIPHER_fetch(libctx, "AES-256-CTR", propq);
+            break;
+        default:
+            break;
     }
     if (ctx->cbc == NULL || ctx->ctr == NULL)
         return 0;
@@ -53,7 +53,7 @@ static int aes_siv_initkey(void *vctx, const unsigned char *key, size_t keylen)
      * which should be twice as long
      */
     return ossl_siv128_init(sctx, key, klen, ctx->cbc, ctx->ctr, libctx,
-                              propq);
+                            propq);
 }
 
 static int aes_siv_dupctx(void *in_vctx, void *out_vctx)

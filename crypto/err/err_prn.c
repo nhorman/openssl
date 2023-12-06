@@ -33,7 +33,8 @@ void ERR_print_errors_cb(int (*cb) (const char *str, size_t len, void *u),
         if ((flags & ERR_TXT_STRING) == 0)
             data = "";
 
-        hex = ossl_buf2hexstr_sep((const unsigned char *)&tid, sizeof(tid), '\0');
+        hex =
+            ossl_buf2hexstr_sep((const unsigned char *)&tid, sizeof(tid), '\0');
         BIO_snprintf(buf, sizeof(buf), "%s:", hex == NULL ? "<null>" : hex);
         offset = strlen(buf);
         ossl_err_string_int(l, func, buf + offset, sizeof(buf) - offset);
@@ -87,7 +88,7 @@ void ERR_add_error_txt(const char *separator, const char *txt)
 
         /* workaround for limit of ERR_print_errors_cb() */
         if (data_len >= MAX_DATA_LEN
-                || strlen(separator) >= (size_t)(MAX_DATA_LEN - data_len))
+            || strlen(separator) >= (size_t)(MAX_DATA_LEN - data_len))
             available_len = 0;
         else
             available_len = MAX_DATA_LEN - data_len - strlen(separator) - 1;

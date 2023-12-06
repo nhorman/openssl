@@ -1,11 +1,11 @@
 /*
-* Copyright 2022-2023 The OpenSSL Project Authors. All Rights Reserved.
-*
-* Licensed under the Apache License 2.0 (the "License").  You may not use
-* this file except in compliance with the License.  You can obtain a copy
-* in the file LICENSE in the source distribution or at
-* https://www.openssl.org/source/license.html
-*/
+ * Copyright 2022-2023 The OpenSSL Project Authors. All Rights Reserved.
+ *
+ * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * this file except in compliance with the License.  You can obtain a copy
+ * in the file LICENSE in the source distribution or at
+ * https://www.openssl.org/source/license.html
+ */
 
 #ifndef OSSL_INTERNAL_QUIC_VLINT_H
 # define OSSL_INTERNAL_QUIC_VLINT_H
@@ -94,7 +94,8 @@ void ossl_quic_vlint_encode_n(unsigned char *buf, uint64_t v, int n);
  * the number of bytes comprising the encoded integer, including the first
  * byte.
  */
-static ossl_unused ossl_inline size_t ossl_quic_vlint_decode_len(uint8_t first_byte)
+static ossl_unused ossl_inline size_t ossl_quic_vlint_decode_len(
+    uint8_t first_byte)
 {
     return 1U << ((first_byte & 0xC0) >> 6);
 }
@@ -120,7 +121,8 @@ uint64_t ossl_quic_vlint_decode_unchecked(const unsigned char *buf);
  * Precondition: buf is at least buf_len bytes in size
  * Precondition: v (unchecked)
  */
-int ossl_quic_vlint_decode(const unsigned char *buf, size_t buf_len, uint64_t *v);
+int ossl_quic_vlint_decode(const unsigned char *buf, size_t buf_len,
+                           uint64_t *v);
 
 # endif
 

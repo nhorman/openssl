@@ -122,7 +122,8 @@ int ossl_rsa_fips186_4_gen_prob_primes(RSA *rsa, RSA_ACVP_TEST *test,
     BN_set_flags(rsa->q, BN_FLG_CONSTTIME);
 
     /* (Step 4) Generate p, Xp */
-    if (!ossl_bn_rsa_fips186_4_gen_prob_primes(rsa->p, Xpo, p1, p2, Xp, Xp1, Xp2,
+    if (!ossl_bn_rsa_fips186_4_gen_prob_primes(rsa->p, Xpo, p1, p2, Xp, Xp1,
+                                               Xp2,
                                                nbits, e, ctx, cb))
         goto err;
     for (;;) {
@@ -200,7 +201,8 @@ static int rsa_validate_rng_strength(EVP_RAND_CTX *rng, int nbits)
      * This should become mainstream once similar tests are added to the other
      * key generations and once there is a way to disable these checks.
      */
-    if (EVP_RAND_get_strength(rng) < ossl_ifc_ffc_compute_security_bits(nbits)) {
+    if (EVP_RAND_get_strength(rng) <
+        ossl_ifc_ffc_compute_security_bits(nbits)) {
         ERR_raise(ERR_LIB_RSA,
                   RSA_R_RANDOMNESS_SOURCE_STRENGTH_INSUFFICIENT);
         return 0;
@@ -372,7 +374,7 @@ int ossl_rsa_sp800_56b_generate_key(RSA *rsa, int nbits, const BIGNUM *efixed,
         return 0;
 
     /* Check that the RNG is capable of generating a key this large */
-   if (!rsa_validate_rng_strength(RAND_get0_private(rsa->libctx), nbits))
+    if (!rsa_validate_rng_strength(RAND_get0_private(rsa->libctx), nbits))
         return 0;
 
     ctx = BN_CTX_new_ex(rsa->libctx);

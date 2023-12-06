@@ -40,11 +40,11 @@
 #   define getservbyname _masked_declaration_getservbyname
 #  endif
 #  if !defined(IPPROTO_IP)
-    /* winsock[2].h was included already? */
+/* winsock[2].h was included already? */
 #   include <winsock.h>
 #  endif
 #  ifdef getservbyname
-     /* this is used to be wcecompat/include/winsock_extras.h */
+/* this is used to be wcecompat/include/winsock_extras.h */
 #   undef getservbyname
 struct servent *PASCAL getservbyname(const char *, const char *);
 #  endif
@@ -74,10 +74,10 @@ struct servent *PASCAL getservbyname(const char *, const char *);
 
 # else
 #  if defined(__APPLE__)
-    /*
-     * This must be defined before including <netinet/in6.h> to get
-     * IPV6_RECVPKTINFO
-     */
+/*
+ * This must be defined before including <netinet/in6.h> to get
+ * IPV6_RECVPKTINFO
+ */
 #   define __APPLE_USE_RFC_3542
 #  endif
 
@@ -98,7 +98,8 @@ typedef size_t socklen_t;        /* Currently appears to be missing on VMS */
 #   include <inet.h>
 #  else
 #   include <sys/socket.h>
-#   if !defined(NO_SYS_UN_H) && defined(AF_UNIX) && !defined(OPENSSL_NO_UNIX_SOCK)
+#   if !defined(NO_SYS_UN_H) && defined(AF_UNIX) && \
+    !defined(OPENSSL_NO_UNIX_SOCK)
 #    include <sys/un.h>
 #    ifndef UNIX_PATH_MAX
 #     define UNIX_PATH_MAX sizeof(((struct sockaddr_un *)NULL)->sun_path)
@@ -126,8 +127,9 @@ typedef size_t socklen_t;        /* Currently appears to be missing on VMS */
 #  ifndef VMS
 #   include <sys/ioctl.h>
 #  else
-#   if !defined(TCPIP_TYPE_SOCKETSHR) && defined(__VMS_VER) && (__VMS_VER > 70000000)
-     /* ioctl is only in VMS > 7.0 and when socketshr is not used */
+#   if !defined(TCPIP_TYPE_SOCKETSHR) && defined(__VMS_VER) && \
+    (__VMS_VER > 70000000)
+/* ioctl is only in VMS > 7.0 and when socketshr is not used */
 #    include <sys/ioctl.h>
 #   endif
 #   include <unixio.h>

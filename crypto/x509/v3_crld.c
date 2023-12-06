@@ -123,7 +123,7 @@ static int set_dist_point_name(DIST_POINT_NAME **pdp, X509V3_CTX *ctx,
 
     return 1;
 
- err:
+err:
     sk_GENERAL_NAME_pop_free(fnm, GENERAL_NAME_free);
     sk_X509_NAME_ENTRY_pop_free(rnm, X509_NAME_ENTRY_free);
     return -1;
@@ -172,7 +172,7 @@ static int set_reasons(ASN1_BIT_STRING **preas, char *value)
     }
     ret = 1;
 
- err:
+err:
     sk_CONF_VALUE_pop_free(rsk, X509V3_conf_free);
     return ret;
 }
@@ -228,7 +228,7 @@ static DIST_POINT *crldp_from_section(X509V3_CTX *ctx,
 
     return point;
 
- err:
+err:
     DIST_POINT_free(point);
     return NULL;
 }
@@ -290,7 +290,7 @@ static void *v2i_crld(const X509V3_EXT_METHOD *method,
     }
     return crld;
 
- err:
+err:
     GENERAL_NAME_free(gen);
     GENERAL_NAMES_free(gens);
     sk_DIST_POINT_pop_free(crld, DIST_POINT_free);
@@ -303,47 +303,48 @@ static int dpn_cb(int operation, ASN1_VALUE **pval, const ASN1_ITEM *it,
     DIST_POINT_NAME *dpn = (DIST_POINT_NAME *)*pval;
 
     switch (operation) {
-    case ASN1_OP_NEW_POST:
-        dpn->dpname = NULL;
-        break;
+        case ASN1_OP_NEW_POST:
+            dpn->dpname = NULL;
+            break;
 
-    case ASN1_OP_FREE_POST:
-        X509_NAME_free(dpn->dpname);
-        break;
+        case ASN1_OP_FREE_POST:
+            X509_NAME_free(dpn->dpname);
+            break;
     }
     return 1;
 }
 
 
 ASN1_CHOICE_cb(DIST_POINT_NAME, dpn_cb) = {
-        ASN1_IMP_SEQUENCE_OF(DIST_POINT_NAME, name.fullname, GENERAL_NAME, 0),
-        ASN1_IMP_SET_OF(DIST_POINT_NAME, name.relativename, X509_NAME_ENTRY, 1)
+    ASN1_IMP_SEQUENCE_OF(DIST_POINT_NAME, name.fullname, GENERAL_NAME, 0),
+    ASN1_IMP_SET_OF(DIST_POINT_NAME, name.relativename, X509_NAME_ENTRY, 1)
 } ASN1_CHOICE_END_cb(DIST_POINT_NAME, DIST_POINT_NAME, type)
 
 
 IMPLEMENT_ASN1_FUNCTIONS(DIST_POINT_NAME)
 
 ASN1_SEQUENCE(DIST_POINT) = {
-        ASN1_EXP_OPT(DIST_POINT, distpoint, DIST_POINT_NAME, 0),
-        ASN1_IMP_OPT(DIST_POINT, reasons, ASN1_BIT_STRING, 1),
-        ASN1_IMP_SEQUENCE_OF_OPT(DIST_POINT, CRLissuer, GENERAL_NAME, 2)
+    ASN1_EXP_OPT(DIST_POINT, distpoint, DIST_POINT_NAME, 0),
+    ASN1_IMP_OPT(DIST_POINT, reasons, ASN1_BIT_STRING, 1),
+    ASN1_IMP_SEQUENCE_OF_OPT(DIST_POINT, CRLissuer, GENERAL_NAME, 2)
 } ASN1_SEQUENCE_END(DIST_POINT)
 
 IMPLEMENT_ASN1_FUNCTIONS(DIST_POINT)
 
 ASN1_ITEM_TEMPLATE(CRL_DIST_POINTS) =
-        ASN1_EX_TEMPLATE_TYPE(ASN1_TFLG_SEQUENCE_OF, 0, CRLDistributionPoints, DIST_POINT)
-ASN1_ITEM_TEMPLATE_END(CRL_DIST_POINTS)
+    ASN1_EX_TEMPLATE_TYPE(ASN1_TFLG_SEQUENCE_OF, 0, CRLDistributionPoints,
+                          DIST_POINT)
+    ASN1_ITEM_TEMPLATE_END(CRL_DIST_POINTS)
 
-IMPLEMENT_ASN1_FUNCTIONS(CRL_DIST_POINTS)
+    IMPLEMENT_ASN1_FUNCTIONS(CRL_DIST_POINTS)
 
-ASN1_SEQUENCE(ISSUING_DIST_POINT) = {
-        ASN1_EXP_OPT(ISSUING_DIST_POINT, distpoint, DIST_POINT_NAME, 0),
-        ASN1_IMP_OPT(ISSUING_DIST_POINT, onlyuser, ASN1_FBOOLEAN, 1),
-        ASN1_IMP_OPT(ISSUING_DIST_POINT, onlyCA, ASN1_FBOOLEAN, 2),
-        ASN1_IMP_OPT(ISSUING_DIST_POINT, onlysomereasons, ASN1_BIT_STRING, 3),
-        ASN1_IMP_OPT(ISSUING_DIST_POINT, indirectCRL, ASN1_FBOOLEAN, 4),
-        ASN1_IMP_OPT(ISSUING_DIST_POINT, onlyattr, ASN1_FBOOLEAN, 5)
+    ASN1_SEQUENCE(ISSUING_DIST_POINT) = {
+    ASN1_EXP_OPT(ISSUING_DIST_POINT, distpoint, DIST_POINT_NAME, 0),
+    ASN1_IMP_OPT(ISSUING_DIST_POINT, onlyuser, ASN1_FBOOLEAN, 1),
+    ASN1_IMP_OPT(ISSUING_DIST_POINT, onlyCA, ASN1_FBOOLEAN, 2),
+    ASN1_IMP_OPT(ISSUING_DIST_POINT, onlysomereasons, ASN1_BIT_STRING, 3),
+    ASN1_IMP_OPT(ISSUING_DIST_POINT, indirectCRL, ASN1_FBOOLEAN, 4),
+    ASN1_IMP_OPT(ISSUING_DIST_POINT, onlyattr, ASN1_FBOOLEAN, 5)
 } ASN1_SEQUENCE_END(ISSUING_DIST_POINT)
 
 IMPLEMENT_ASN1_FUNCTIONS(ISSUING_DIST_POINT)
@@ -408,7 +409,7 @@ static void *v2i_idp(const X509V3_EXT_METHOD *method, X509V3_CTX *ctx,
     }
     return idp;
 
- err:
+err:
     ISSUING_DIST_POINT_free(idp);
     return NULL;
 }
@@ -509,7 +510,7 @@ int DIST_POINT_set_dpname(DIST_POINT_NAME *dpn, const X509_NAME *iname)
     if (i2d_X509_NAME(dpn->dpname, NULL) >= 0)
         return 1;
 
- err:
+err:
     X509_NAME_free(dpn->dpname);
     dpn->dpname = NULL;
     return 0;

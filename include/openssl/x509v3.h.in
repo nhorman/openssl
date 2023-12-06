@@ -46,9 +46,9 @@ typedef void *(*X509V3_EXT_NEW)(void);
 typedef void (*X509V3_EXT_FREE) (void *);
 typedef void *(*X509V3_EXT_D2I)(void *, const unsigned char **, long);
 typedef int (*X509V3_EXT_I2D) (const void *, unsigned char **);
-typedef STACK_OF(CONF_VALUE) *
-    (*X509V3_EXT_I2V) (const struct v3_ext_method *method, void *ext,
-                       STACK_OF(CONF_VALUE) *extlist);
+typedef STACK_OF (CONF_VALUE) *
+(*X509V3_EXT_I2V) (const struct v3_ext_method *method, void *ext,
+                   STACK_OF(CONF_VALUE) *extlist);
 typedef void *(*X509V3_EXT_V2I)(const struct v3_ext_method *method,
                                 struct v3_ext_ctx *ctx,
                                 STACK_OF(CONF_VALUE) *values);
@@ -89,7 +89,7 @@ typedef struct X509V3_CONF_METHOD_st {
     char *(*get_string) (void *db, const char *section, const char *value);
     STACK_OF(CONF_VALUE) *(*get_section) (void *db, const char *section);
     void (*free_string) (void *db, char *string);
-    void (*free_section) (void *db, STACK_OF(CONF_VALUE) *section);
+    void (*free_section) (void *db, STACK_OF (CONF_VALUE) *section);
 } X509V3_CONF_METHOD;
 
 /* Context specific info for producing X509 v3 extensions*/
@@ -379,34 +379,35 @@ struct ISSUING_DIST_POINT_st {
 # define IDP_REASONS     0x40
 
 # define X509V3_conf_err(val) ERR_add_error_data(6, \
-                        "section:", (val)->section, \
-                        ",name:", (val)->name, ",value:", (val)->value)
+                                                 "section:", (val)->section, \
+                                                 ",name:", (val)->name, \
+                                                 ",value:", (val)->value)
 
 # define X509V3_set_ctx_test(ctx) \
-    X509V3_set_ctx(ctx, NULL, NULL, NULL, NULL, X509V3_CTX_TEST)
+        X509V3_set_ctx(ctx, NULL, NULL, NULL, NULL, X509V3_CTX_TEST)
 # define X509V3_set_ctx_nodb(ctx) (ctx)->db = NULL;
 
 # define EXT_BITSTRING(nid, table) { nid, 0, ASN1_ITEM_ref(ASN1_BIT_STRING), \
-                        0,0,0,0, \
-                        0,0, \
-                        (X509V3_EXT_I2V)i2v_ASN1_BIT_STRING, \
-                        (X509V3_EXT_V2I)v2i_ASN1_BIT_STRING, \
-                        NULL, NULL, \
-                        table}
+                                     0,0,0,0, \
+                                     0,0, \
+                                     (X509V3_EXT_I2V)i2v_ASN1_BIT_STRING, \
+                                     (X509V3_EXT_V2I)v2i_ASN1_BIT_STRING, \
+                                     NULL, NULL, \
+                                     table}
 
 # define EXT_IA5STRING(nid) { nid, 0, ASN1_ITEM_ref(ASN1_IA5STRING), \
-                        0,0,0,0, \
-                        (X509V3_EXT_I2S)i2s_ASN1_IA5STRING, \
-                        (X509V3_EXT_S2I)s2i_ASN1_IA5STRING, \
-                        0,0,0,0, \
-                        NULL}
+                              0,0,0,0, \
+                              (X509V3_EXT_I2S)i2s_ASN1_IA5STRING, \
+                              (X509V3_EXT_S2I)s2i_ASN1_IA5STRING, \
+                              0,0,0,0, \
+                              NULL}
 
 #define EXT_UTF8STRING(nid) { nid, 0, ASN1_ITEM_ref(ASN1_UTF8STRING), \
-                        0,0,0,0, \
-                        (X509V3_EXT_I2S)i2s_ASN1_UTF8STRING, \
-                        (X509V3_EXT_S2I)s2i_ASN1_UTF8STRING, \
-                        0,0,0,0, \
-                        NULL}
+                              0,0,0,0, \
+                              (X509V3_EXT_I2S)i2s_ASN1_UTF8STRING, \
+                              (X509V3_EXT_S2I)s2i_ASN1_UTF8STRING, \
+                              0,0,0,0, \
+                              NULL}
 
 # define EXT_END { -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 
@@ -528,7 +529,8 @@ DECLARE_ASN1_FUNCTIONS(SXNETID)
 
 DECLARE_ASN1_FUNCTIONS(ISSUER_SIGN_TOOL)
 
-int SXNET_add_id_asc(SXNET **psx, const char *zone, const char *user, int userlen);
+int SXNET_add_id_asc(SXNET **psx, const char *zone, const char *user,
+                     int userlen);
 int SXNET_add_id_ulong(SXNET **psx, unsigned long lzone, const char *user,
                        int userlen);
 int SXNET_add_id_INTEGER(SXNET **psx, ASN1_INTEGER *izone, const char *user,
@@ -557,7 +559,7 @@ ASN1_IA5STRING *s2i_ASN1_IA5STRING(X509V3_EXT_METHOD *method,
                                    X509V3_CTX *ctx, const char *str);
 char *i2s_ASN1_UTF8STRING(X509V3_EXT_METHOD *method, ASN1_UTF8STRING *utf8);
 ASN1_UTF8STRING *s2i_ASN1_UTF8STRING(X509V3_EXT_METHOD *method,
-                                   X509V3_CTX *ctx, const char *str);
+                                     X509V3_CTX *ctx, const char *str);
 
 STACK_OF(CONF_VALUE) *i2v_GENERAL_NAME(X509V3_EXT_METHOD *method,
                                        GENERAL_NAME *gen,
@@ -997,11 +999,11 @@ const ASN1_IA5STRING *NAMING_AUTHORITY_get0_authorityURL(
 const ASN1_STRING *NAMING_AUTHORITY_get0_authorityText(
     const NAMING_AUTHORITY *n);
 void NAMING_AUTHORITY_set0_authorityId(NAMING_AUTHORITY *n,
-    ASN1_OBJECT* namingAuthorityId);
+                                       ASN1_OBJECT* namingAuthorityId);
 void NAMING_AUTHORITY_set0_authorityURL(NAMING_AUTHORITY *n,
-    ASN1_IA5STRING* namingAuthorityUrl);
+                                        ASN1_IA5STRING* namingAuthorityUrl);
 void NAMING_AUTHORITY_set0_authorityText(NAMING_AUTHORITY *n,
-    ASN1_STRING* namingAuthorityText);
+                                         ASN1_STRING* namingAuthorityText);
 
 const GENERAL_NAME *ADMISSION_SYNTAX_get0_admissionAuthority(
     const ADMISSION_SYNTAX *as);

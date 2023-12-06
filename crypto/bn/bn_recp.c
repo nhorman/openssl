@@ -73,7 +73,7 @@ int BN_mod_mul_reciprocal(BIGNUM *r, const BIGNUM *x, const BIGNUM *y,
         ca = x;                 /* Just do the mod */
 
     ret = BN_div_recp(NULL, r, ca, recp, ctx);
- err:
+err:
     BN_CTX_end(ctx);
     bn_check_top(r);
     return ret;
@@ -156,7 +156,7 @@ int BN_div_recp(BIGNUM *dv, BIGNUM *rem, const BIGNUM *m,
     r->neg = BN_is_zero(r) ? 0 : m->neg;
     d->neg = m->neg ^ recp->N.neg;
     ret = 1;
- err:
+err:
     BN_CTX_end(ctx);
     bn_check_top(dv);
     bn_check_top(rem);
@@ -185,7 +185,7 @@ int BN_reciprocal(BIGNUM *r, const BIGNUM *m, int len, BN_CTX *ctx)
         goto err;
 
     ret = len;
- err:
+err:
     bn_check_top(r);
     BN_CTX_end(ctx);
     return ret;

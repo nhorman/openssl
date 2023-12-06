@@ -61,7 +61,7 @@ X509 *X509_REQ_to_X509(X509_REQ *r, int days, EVP_PKEY *pkey)
         goto err;
     return ret;
 
- err:
+err:
     X509_free(ret);
     return NULL;
 }

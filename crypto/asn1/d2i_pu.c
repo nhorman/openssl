@@ -55,42 +55,42 @@ EVP_PKEY *d2i_PublicKey(int type, EVP_PKEY **a, const unsigned char **pp,
     }
 
     switch (EVP_PKEY_get_base_id(ret)) {
-    case EVP_PKEY_RSA:
-        if ((ret->pkey.rsa = d2i_RSAPublicKey(NULL, pp, length)) == NULL) {
-            ERR_raise(ERR_LIB_ASN1, ERR_R_ASN1_LIB);
-            goto err;
-        }
-        break;
+        case EVP_PKEY_RSA:
+            if ((ret->pkey.rsa = d2i_RSAPublicKey(NULL, pp, length)) == NULL) {
+                ERR_raise(ERR_LIB_ASN1, ERR_R_ASN1_LIB);
+                goto err;
+            }
+            break;
 #ifndef OPENSSL_NO_DSA
-    case EVP_PKEY_DSA:
-        if (!d2i_DSAPublicKey(&ret->pkey.dsa, pp, length)) {
-            ERR_raise(ERR_LIB_ASN1, ERR_R_ASN1_LIB);
-            goto err;
-        }
-        break;
+        case EVP_PKEY_DSA:
+            if (!d2i_DSAPublicKey(&ret->pkey.dsa, pp, length)) {
+                ERR_raise(ERR_LIB_ASN1, ERR_R_ASN1_LIB);
+                goto err;
+            }
+            break;
 #endif
 #ifndef OPENSSL_NO_EC
-    case EVP_PKEY_EC:
-        if (copy != NULL) {
-            /* use downgraded parameters from copy */
-            ret->pkey.ec = copy->pkey.ec;
-            copy->pkey.ec = NULL;
-        }
-        if (!o2i_ECPublicKey(&ret->pkey.ec, pp, length)) {
-            ERR_raise(ERR_LIB_ASN1, ERR_R_ASN1_LIB);
-            goto err;
-        }
-        break;
+        case EVP_PKEY_EC:
+            if (copy != NULL) {
+                /* use downgraded parameters from copy */
+                ret->pkey.ec = copy->pkey.ec;
+                copy->pkey.ec = NULL;
+            }
+            if (!o2i_ECPublicKey(&ret->pkey.ec, pp, length)) {
+                ERR_raise(ERR_LIB_ASN1, ERR_R_ASN1_LIB);
+                goto err;
+            }
+            break;
 #endif
-    default:
-        ERR_raise(ERR_LIB_ASN1, ASN1_R_UNKNOWN_PUBLIC_KEY_TYPE);
-        goto err;
+        default:
+            ERR_raise(ERR_LIB_ASN1, ASN1_R_UNKNOWN_PUBLIC_KEY_TYPE);
+            goto err;
     }
     if (a != NULL)
         (*a) = ret;
     EVP_PKEY_free(copy);
     return ret;
- err:
+err:
     if (a == NULL || *a != ret)
         EVP_PKEY_free(ret);
     EVP_PKEY_free(copy);

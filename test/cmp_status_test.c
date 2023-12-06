@@ -51,14 +51,15 @@ static int execute_PKISI_test(CMP_STATUS_TEST_FIXTURE *fixture)
 
     status = ossl_cmp_pkisi_get_status(si);
     if (!TEST_int_eq(fixture->pkistatus, status)
-            || !TEST_str_eq(fixture->str, ossl_cmp_PKIStatus_to_string(status)))
+        || !TEST_str_eq(fixture->str, ossl_cmp_PKIStatus_to_string(status)))
         goto end;
 
     if (!TEST_ptr(statusString =
-                  sk_ASN1_UTF8STRING_value(ossl_cmp_pkisi_get0_statusString(si),
-                                           0))
-            || !TEST_mem_eq(fixture->text, strlen(fixture->text),
-                            (char *)statusString->data, statusString->length))
+                      sk_ASN1_UTF8STRING_value(ossl_cmp_pkisi_get0_statusString(
+                                                   si),
+                                               0))
+        || !TEST_mem_eq(fixture->text, strlen(fixture->text),
+                        (char *)statusString->data, statusString->length))
         goto end;
 
     if (!TEST_int_eq(fixture->pkifailure,
@@ -71,7 +72,7 @@ static int execute_PKISI_test(CMP_STATUS_TEST_FIXTURE *fixture)
 
     res = 1;
 
- end:
+end:
     OSSL_CMP_PKISI_free(si);
     return res;
 }
@@ -80,10 +81,11 @@ static int test_PKISI(void)
 {
     SETUP_TEST_FIXTURE(CMP_STATUS_TEST_FIXTURE, set_up);
     fixture->pkistatus = OSSL_CMP_PKISTATUS_revocationNotification;
-    fixture->str = "PKIStatus: revocation notification - a revocation of the cert has occurred";
+    fixture->str =
+        "PKIStatus: revocation notification - a revocation of the cert has occurred";
     fixture->text = "this is an additional text describing the failure";
     fixture->pkifailure = OSSL_CMP_CTX_FAILINFO_unsupportedVersion |
-        OSSL_CMP_CTX_FAILINFO_badDataFormat;
+                          OSSL_CMP_CTX_FAILINFO_badDataFormat;
     EXECUTE_TEST(execute_PKISI_test, tear_down);
     return result;
 }

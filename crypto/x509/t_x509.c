@@ -77,7 +77,8 @@ int X509_print_ex(BIO *bp, X509 *x, unsigned long nmflags,
     if (!(cflag & X509_FLAG_NO_VERSION)) {
         l = X509_get_version(x);
         if (l >= X509_VERSION_1 && l <= X509_VERSION_3) {
-            if (BIO_printf(bp, "%8sVersion: %ld (0x%lx)\n", "", l + 1, (unsigned long)l) <= 0)
+            if (BIO_printf(bp, "%8sVersion: %ld (0x%lx)\n", "", l + 1,
+                           (unsigned long)l) <= 0)
                 goto err;
         } else {
             if (BIO_printf(bp, "%8sVersion: Unknown (%ld)\n", "", l) <= 0)
@@ -91,9 +92,9 @@ int X509_print_ex(BIO *bp, X509 *x, unsigned long nmflags,
             goto err;
 
         if (bs->length <= (int)sizeof(long)) {
-                ERR_set_mark();
-                l = ASN1_INTEGER_get(bs);
-                ERR_pop_to_mark();
+            ERR_set_mark();
+            l = ASN1_INTEGER_get(bs);
+            ERR_pop_to_mark();
         } else {
             l = -1;
         }
@@ -145,11 +146,13 @@ int X509_print_ex(BIO *bp, X509 *x, unsigned long nmflags,
             goto err;
         if (BIO_write(bp, "            Not Before: ", 24) <= 0)
             goto err;
-        if (ossl_asn1_time_print_ex(bp, X509_get0_notBefore(x), ASN1_DTFLGS_RFC822) == 0)
+        if (ossl_asn1_time_print_ex(bp, X509_get0_notBefore(x),
+                                    ASN1_DTFLGS_RFC822) == 0)
             goto err;
         if (BIO_write(bp, "\n            Not After : ", 25) <= 0)
             goto err;
-        if (ossl_asn1_time_print_ex(bp, X509_get0_notAfter(x), ASN1_DTFLGS_RFC822) == 0)
+        if (ossl_asn1_time_print_ex(bp, X509_get0_notAfter(x),
+                                    ASN1_DTFLGS_RFC822) == 0)
             goto err;
         if (BIO_write(bp, "\n", 1) <= 0)
             goto err;
@@ -158,7 +161,7 @@ int X509_print_ex(BIO *bp, X509 *x, unsigned long nmflags,
         if (BIO_printf(bp, "        Subject:%c", mlch) <= 0)
             goto err;
         if (X509_NAME_print_ex
-            (bp, X509_get_subject_name(x), nmindent, nmflags) < printok)
+                (bp, X509_get_subject_name(x), nmindent, nmflags) < printok)
             goto err;
         if (BIO_write(bp, "\n", 1) <= 0)
             goto err;
@@ -219,7 +222,7 @@ int X509_print_ex(BIO *bp, X509 *x, unsigned long nmflags,
             goto err;
     }
     ret = 1;
- err:
+err:
     return ret;
 }
 
@@ -283,7 +286,7 @@ int X509_ocspid_print(BIO *bp, X509 *x)
     EVP_MD_free(md);
 
     return 1;
- err:
+err:
     OPENSSL_free(der);
     EVP_MD_free(md);
     return 0;
@@ -402,12 +405,12 @@ int X509_aux_print(BIO *out, X509 *x, int indent)
 int ossl_x509_print_ex_brief(BIO *bio, X509 *cert, unsigned long neg_cflags)
 {
     unsigned long flags = ASN1_STRFLGS_RFC2253 | ASN1_STRFLGS_ESC_QUOTE |
-        XN_FLAG_SEP_CPLUS_SPC | XN_FLAG_FN_SN;
+                          XN_FLAG_SEP_CPLUS_SPC | XN_FLAG_FN_SN;
 
     if (cert == NULL)
         return BIO_printf(bio, "    (no certificate)\n") > 0;
     if (BIO_printf(bio, "    certificate\n") <= 0
-            || !X509_print_ex(bio, cert, flags, ~X509_FLAG_NO_SUBJECT))
+        || !X509_print_ex(bio, cert, flags, ~X509_FLAG_NO_SUBJECT))
         return 0;
     if (X509_check_issued((X509 *)cert, cert) == X509_V_OK) {
         if (BIO_printf(bio, "        self-issued\n") <= 0)
@@ -447,7 +450,7 @@ static int print_certs(BIO *bio, const STACK_OF(X509) *certs)
                                          X509_get0_extensions(cert),
                                          X509_FLAG_EXTENSIONS_ONLY_KID, 8))
                 return 0;
-            }
+        }
     }
     return 1;
 }
@@ -487,25 +490,27 @@ int X509_STORE_CTX_print_verify_cb(int ok, X509_STORE_CTX *ctx)
             int idx = 0;
 
             switch (cert_error) {
-            case X509_V_ERR_HOSTNAME_MISMATCH:
-                BIO_printf(bio, "Expected hostname(s) = ");
-                while ((str = X509_VERIFY_PARAM_get0_host(vpm, idx++)) != NULL)
-                    BIO_printf(bio, "%s%s", idx == 1 ? "" : ", ", str);
-                BIO_printf(bio, "\n");
-                break;
-            case X509_V_ERR_EMAIL_MISMATCH:
-                str = X509_VERIFY_PARAM_get0_email(vpm);
-                if (str != NULL)
-                    BIO_printf(bio, "Expected email address = %s\n", str);
-                break;
-            case X509_V_ERR_IP_ADDRESS_MISMATCH:
-                str = X509_VERIFY_PARAM_get1_ip_asc(vpm);
-                if (str != NULL)
-                    BIO_printf(bio, "Expected IP address = %s\n", str);
-                OPENSSL_free(str);
-                break;
-            default:
-                break;
+                case X509_V_ERR_HOSTNAME_MISMATCH:
+                    BIO_printf(bio, "Expected hostname(s) = ");
+                    while ((str =
+                                X509_VERIFY_PARAM_get0_host(vpm,
+                                                            idx++)) != NULL)
+                        BIO_printf(bio, "%s%s", idx == 1 ? "" : ", ", str);
+                    BIO_printf(bio, "\n");
+                    break;
+                case X509_V_ERR_EMAIL_MISMATCH:
+                    str = X509_VERIFY_PARAM_get0_email(vpm);
+                    if (str != NULL)
+                        BIO_printf(bio, "Expected email address = %s\n", str);
+                    break;
+                case X509_V_ERR_IP_ADDRESS_MISMATCH:
+                    str = X509_VERIFY_PARAM_get1_ip_asc(vpm);
+                    if (str != NULL)
+                        BIO_printf(bio, "Expected IP address = %s\n", str);
+                    OPENSSL_free(str);
+                    break;
+                default:
+                    break;
             }
         }
 
@@ -513,12 +518,12 @@ int X509_STORE_CTX_print_verify_cb(int ok, X509_STORE_CTX *ctx)
         ossl_x509_print_ex_brief(bio, X509_STORE_CTX_get_current_cert(ctx),
                                  X509_FLAG_NO_EXTENSIONS);
         if (cert_error == X509_V_ERR_CERT_UNTRUSTED
-                || cert_error == X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT
-                || cert_error == X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN
-                || cert_error == X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT
-                || cert_error == X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY
-                || cert_error == X509_V_ERR_UNABLE_TO_GET_CRL_ISSUER
-                || cert_error == X509_V_ERR_STORE_LOOKUP) {
+            || cert_error == X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT
+            || cert_error == X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN
+            || cert_error == X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT
+            || cert_error == X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT_LOCALLY
+            || cert_error == X509_V_ERR_UNABLE_TO_GET_CRL_ISSUER
+            || cert_error == X509_V_ERR_STORE_LOOKUP) {
             BIO_printf(bio, "Non-trusted certs:\n");
             print_certs(bio, X509_STORE_CTX_get0_untrusted(ctx));
             BIO_printf(bio, "Certs in trust store:\n");

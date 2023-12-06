@@ -494,7 +494,8 @@ int FuzzerInitialize(int *argc, char ***argv)
     STACK_OF(SSL_COMP) *comp_methods;
 
     FuzzerSetRand();
-    OPENSSL_init_crypto(OPENSSL_INIT_LOAD_CRYPTO_STRINGS | OPENSSL_INIT_ASYNC, NULL);
+    OPENSSL_init_crypto(OPENSSL_INIT_LOAD_CRYPTO_STRINGS | OPENSSL_INIT_ASYNC,
+                        NULL);
     OPENSSL_init_ssl(OPENSSL_INIT_LOAD_SSL_STRINGS, NULL);
     ERR_clear_error();
     CRYPTO_free_ex_index(0, -1);
@@ -569,7 +570,9 @@ int FuzzerTestOneInput(const uint8_t *buf, size_t len)
 # ifndef OPENSSL_NO_DEPRECATED_3_0
     /* ECDSA */
     bio_buf = BIO_new(BIO_s_mem());
-    OPENSSL_assert((size_t)BIO_write(bio_buf, ECDSAPrivateKeyPEM, sizeof(ECDSAPrivateKeyPEM)) == sizeof(ECDSAPrivateKeyPEM));
+    OPENSSL_assert((size_t)BIO_write(bio_buf, ECDSAPrivateKeyPEM,
+                                     sizeof(ECDSAPrivateKeyPEM)) ==
+                   sizeof(ECDSAPrivateKeyPEM));
     ecdsakey = PEM_read_bio_ECPrivateKey(bio_buf, NULL, NULL, NULL);
     ERR_print_errors_fp(stderr);
     OPENSSL_assert(ecdsakey != NULL);
@@ -581,7 +584,9 @@ int FuzzerTestOneInput(const uint8_t *buf, size_t len)
     EVP_PKEY_free(pkey);
 # endif
     bio_buf = BIO_new(BIO_s_mem());
-    OPENSSL_assert((size_t)BIO_write(bio_buf, ECDSACertPEM, sizeof(ECDSACertPEM)) == sizeof(ECDSACertPEM));
+    OPENSSL_assert((size_t)BIO_write(bio_buf, ECDSACertPEM,
+                                     sizeof(ECDSACertPEM)) ==
+                   sizeof(ECDSACertPEM));
     cert = PEM_read_bio_X509(bio_buf, NULL, NULL, NULL);
     OPENSSL_assert(cert != NULL);
     BIO_free(bio_buf);
@@ -593,7 +598,9 @@ int FuzzerTestOneInput(const uint8_t *buf, size_t len)
 #if !defined(OPENSSL_NO_DSA) && !defined(OPENSSL_NO_DEPRECATED_3_0)
     /* DSA */
     bio_buf = BIO_new(BIO_s_mem());
-    OPENSSL_assert((size_t)BIO_write(bio_buf, DSAPrivateKeyPEM, sizeof(DSAPrivateKeyPEM)) == sizeof(DSAPrivateKeyPEM));
+    OPENSSL_assert((size_t)BIO_write(bio_buf, DSAPrivateKeyPEM,
+                                     sizeof(DSAPrivateKeyPEM)) ==
+                   sizeof(DSAPrivateKeyPEM));
     dsakey = PEM_read_bio_DSAPrivateKey(bio_buf, NULL, NULL, NULL);
     ERR_print_errors_fp(stderr);
     OPENSSL_assert(dsakey != NULL);
@@ -605,7 +612,8 @@ int FuzzerTestOneInput(const uint8_t *buf, size_t len)
     EVP_PKEY_free(pkey);
 
     bio_buf = BIO_new(BIO_s_mem());
-    OPENSSL_assert((size_t)BIO_write(bio_buf, DSACertPEM, sizeof(DSACertPEM)) == sizeof(DSACertPEM));
+    OPENSSL_assert((size_t)BIO_write(bio_buf, DSACertPEM,
+                                     sizeof(DSACertPEM)) == sizeof(DSACertPEM));
     cert = PEM_read_bio_X509(bio_buf, NULL, NULL, NULL);
     OPENSSL_assert(cert != NULL);
     BIO_free(bio_buf);
@@ -630,7 +638,8 @@ int FuzzerTestOneInput(const uint8_t *buf, size_t len)
         do {
             char early_buf[16384];
             size_t early_len;
-            ret = SSL_read_early_data(server, early_buf, sizeof(early_buf), &early_len);
+            ret = SSL_read_early_data(server, early_buf, sizeof(early_buf),
+                                      &early_len);
 
             if (ret != SSL_READ_EARLY_DATA_SUCCESS)
                 break;

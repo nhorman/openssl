@@ -70,11 +70,14 @@ typedef union { double d; u64 u; } elem64;
 # define U8TOU32(p)     (*(const u32 *)(p))
 # define U32TO8(p,v)    (*(u32 *)(p) = (v))
 #elif defined(__PPC__)
-# define U8TOU32(p)     ({u32 ret; asm ("lwbrx	%0,0,%1":"=r"(ret):"b"(p)); ret; })
-# define U32TO8(p,v)    asm ("stwbrx %0,0,%1"::"r"(v),"b"(p):"memory")
+# define U8TOU32(p)     ({u32 ret; asm ("lwbrx	%0,0,%1": "=r" (ret) : "b" (p)); \
+                          ret; })
+# define U32TO8(p,v)    asm ("stwbrx %0,0,%1" ::"r" (v),"b" (p) : "memory")
 #elif defined(__s390x__)
-# define U8TOU32(p)     ({u32 ret; asm ("lrv	%0,%1":"=d"(ret):"m"(*(u32 *)(p))); ret; })
-# define U32TO8(p,v)    asm ("strv	%1,%0":"=m"(*(u32 *)(p)):"d"(v))
+# define U8TOU32(p)     ({u32 ret; \
+                          asm ("lrv	%0,%1": "=d" (ret) : "m" (*(u32 *)(p))); \
+                          ret; })
+# define U32TO8(p,v)    asm ("strv	%1,%0": "=m" (*(u32 *)(p)) : "d" (v))
 #endif
 
 #ifndef U8TOU32
@@ -132,28 +135,28 @@ int poly1305_init(void *ctx, const unsigned char key[16])
 #if defined(__x86_64__)
         u32 mxcsr_orig;
 
-        asm volatile ("stmxcsr	%0":"=m"(mxcsr_orig));
-        asm volatile ("ldmxcsr	%0"::"m"(mxcsr));
+        asm volatile ("stmxcsr	%0": "=m" (mxcsr_orig));
+        asm volatile ("ldmxcsr	%0": : "m" (mxcsr));
 #elif defined(__PPC__)
         double fpscr_orig, fpscr = *(double *)&one;
 
-        asm volatile ("mffs	%0":"=f"(fpscr_orig));
-        asm volatile ("mtfsf	255,%0"::"f"(fpscr));
+        asm volatile ("mffs	%0": "=f" (fpscr_orig));
+        asm volatile ("mtfsf	255,%0": : "f" (fpscr));
 #elif defined(__s390x__)
         u32 fpc_orig;
 
-        asm volatile ("stfpc	%0":"=m"(fpc_orig));
-        asm volatile ("lfpc	%0"::"m"(fpc));
+        asm volatile ("stfpc	%0": "=m" (fpc_orig));
+        asm volatile ("lfpc	%0": : "m" (fpc));
 #elif defined(__sparc__)
         u64 fsr_orig;
 
-        asm volatile ("stx	%%fsr,%0":"=m"(fsr_orig));
-        asm volatile ("ldx	%0,%%fsr"::"m"(fsr));
+        asm volatile ("stx	%%fsr,%0": "=m" (fsr_orig));
+        asm volatile ("ldx	%0,%%fsr": : "m" (fsr));
 #elif defined(__mips__)
         u32 fcsr_orig;
 
-        asm volatile ("cfc1	%0,$31":"=r"(fcsr_orig));
-        asm volatile ("ctc1	%0,$31"::"r"(fcsr));
+        asm volatile ("cfc1	%0,$31": "=r" (fcsr_orig));
+        asm volatile ("ctc1	%0,$31": : "r" (fcsr));
 #endif
 
         /* r &= 0xffffffc0ffffffc0ffffffc0fffffff */
@@ -175,46 +178,46 @@ int poly1305_init(void *ctx, const unsigned char key[16])
          * base 2^32 -> base 2^16
          */
         st->r[1] = (st->r[0] + TWO(52)*TWO(16)*TWO0) -
-                               TWO(52)*TWO(16)*TWO0;
+                   TWO(52)*TWO(16)*TWO0;
         st->r[0] -= st->r[1];
 
         st->r[3] = (st->r[2] + TWO(52)*TWO(16)*TWO32) -
-                               TWO(52)*TWO(16)*TWO32;
+                   TWO(52)*TWO(16)*TWO32;
         st->r[2] -= st->r[3];
 
         st->r[5] = (st->r[4] + TWO(52)*TWO(16)*TWO64) -
-                               TWO(52)*TWO(16)*TWO64;
+                   TWO(52)*TWO(16)*TWO64;
         st->r[4] -= st->r[5];
 
         st->r[7] = (st->r[6] + TWO(52)*TWO(16)*TWO96) -
-                               TWO(52)*TWO(16)*TWO96;
+                   TWO(52)*TWO(16)*TWO96;
         st->r[6] -= st->r[7];
 
         st->s[1] = (st->s[0] + TWO(52)*TWO(16)*TWO0/TWO96) -
-                               TWO(52)*TWO(16)*TWO0/TWO96;
+                   TWO(52)*TWO(16)*TWO0/TWO96;
         st->s[0] -= st->s[1];
 
         st->s[3] = (st->s[2] + TWO(52)*TWO(16)*TWO32/TWO96) -
-                               TWO(52)*TWO(16)*TWO32/TWO96;
+                   TWO(52)*TWO(16)*TWO32/TWO96;
         st->s[2] -= st->s[3];
 
         st->s[5] = (st->s[4] + TWO(52)*TWO(16)*TWO64/TWO96) -
-                               TWO(52)*TWO(16)*TWO64/TWO96;
+                   TWO(52)*TWO(16)*TWO64/TWO96;
         st->s[4] -= st->s[5];
 
         /*
          * restore original FPU control register
          */
 #if defined(__x86_64__)
-        asm volatile ("ldmxcsr	%0"::"m"(mxcsr_orig));
+        asm volatile ("ldmxcsr	%0": : "m" (mxcsr_orig));
 #elif defined(__PPC__)
-        asm volatile ("mtfsf	255,%0"::"f"(fpscr_orig));
+        asm volatile ("mtfsf	255,%0": : "f" (fpscr_orig));
 #elif defined(__s390x__)
-        asm volatile ("lfpc	%0"::"m"(fpc_orig));
+        asm volatile ("lfpc	%0": : "m" (fpc_orig));
 #elif defined(__sparc__)
-        asm volatile ("ldx	%0,%%fsr"::"m"(fsr_orig));
+        asm volatile ("ldx	%0,%%fsr": : "m" (fsr_orig));
 #elif defined(__mips__)
-        asm volatile ("ctc1	%0,$31"::"r"(fcsr_orig));
+        asm volatile ("ctc1	%0,$31": : "r" (fcsr_orig));
 #endif
     }
 
@@ -254,28 +257,28 @@ void poly1305_blocks(void *ctx, const unsigned char *inp, size_t len,
 #if defined(__x86_64__)
     u32 mxcsr_orig;
 
-    asm volatile ("stmxcsr	%0":"=m"(mxcsr_orig));
-    asm volatile ("ldmxcsr	%0"::"m"(mxcsr));
+    asm volatile ("stmxcsr	%0": "=m" (mxcsr_orig));
+    asm volatile ("ldmxcsr	%0": : "m" (mxcsr));
 #elif defined(__PPC__)
     double fpscr_orig, fpscr = *(double *)&one;
 
-    asm volatile ("mffs		%0":"=f"(fpscr_orig));
-    asm volatile ("mtfsf	255,%0"::"f"(fpscr));
+    asm volatile ("mffs		%0": "=f" (fpscr_orig));
+    asm volatile ("mtfsf	255,%0": : "f" (fpscr));
 #elif defined(__s390x__)
     u32 fpc_orig;
 
-    asm volatile ("stfpc	%0":"=m"(fpc_orig));
-    asm volatile ("lfpc		%0"::"m"(fpc));
+    asm volatile ("stfpc	%0": "=m" (fpc_orig));
+    asm volatile ("lfpc		%0": : "m" (fpc));
 #elif defined(__sparc__)
     u64 fsr_orig;
 
-    asm volatile ("stx		%%fsr,%0":"=m"(fsr_orig));
-    asm volatile ("ldx		%0,%%fsr"::"m"(fsr));
+    asm volatile ("stx		%%fsr,%0": "=m" (fsr_orig));
+    asm volatile ("ldx		%0,%%fsr": : "m" (fsr));
 #elif defined(__mips__)
     u32 fcsr_orig;
 
-    asm volatile ("cfc1		%0,$31":"=r"(fcsr_orig));
-    asm volatile ("ctc1		%0,$31"::"r"(fcsr));
+    asm volatile ("cfc1		%0,$31": "=r" (fcsr_orig));
+    asm volatile ("ctc1		%0,$31": : "r" (fcsr));
 #endif
 
     /*
@@ -357,7 +360,7 @@ void poly1305_blocks(void *ctx, const unsigned char *inp, size_t len,
         x0 += (h0hi - c0hi) + c3hi * (5.0/TWO130);
 
 #ifndef __clang__
-    fast_entry:
+fast_entry:
 #endif
         /*
          * base 2^32 * base 2^16 = base 2^48
@@ -415,15 +418,15 @@ void poly1305_blocks(void *ctx, const unsigned char *inp, size_t len,
      * restore original FPU control register
      */
 #if defined(__x86_64__)
-    asm volatile ("ldmxcsr	%0"::"m"(mxcsr_orig));
+    asm volatile ("ldmxcsr	%0": : "m" (mxcsr_orig));
 #elif defined(__PPC__)
-    asm volatile ("mtfsf	255,%0"::"f"(fpscr_orig));
+    asm volatile ("mtfsf	255,%0": : "f" (fpscr_orig));
 #elif defined(__s390x__)
-    asm volatile ("lfpc		%0"::"m"(fpc_orig));
+    asm volatile ("lfpc		%0": : "m" (fpc_orig));
 #elif defined(__sparc__)
-    asm volatile ("ldx		%0,%%fsr"::"m"(fsr_orig));
+    asm volatile ("ldx		%0,%%fsr": : "m" (fsr_orig));
 #elif defined(__mips__)
-    asm volatile ("ctc1		%0,$31"::"r"(fcsr_orig));
+    asm volatile ("ctc1		%0,$31": : "r" (fcsr_orig));
 #endif
 }
 
@@ -447,7 +450,7 @@ void poly1305_emit(void *ctx, unsigned char mac[16], const u32 nonce[4])
      * can be partially reduced, so reduce...
      */
     h4 = h3>>32; h3 &= 0xffffffffU;
-    g4 = h4&-4;
+    g4 = h4& -4;
     h4 &= 3;
     g4 += g4>>2;
 

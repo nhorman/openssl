@@ -16,13 +16,13 @@
 
 # if defined(OPENSSL_THREADS) && !defined(OPENSSL_DEV_NO_ATOMICS)
 #  if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L \
-      && !defined(__STDC_NO_ATOMICS__)
+    && !defined(__STDC_NO_ATOMICS__)
 #   include <stdatomic.h>
 #   define HAVE_C11_ATOMICS
 #  endif
 
 #  if defined(HAVE_C11_ATOMICS) && defined(ATOMIC_INT_LOCK_FREE) \
-      && ATOMIC_INT_LOCK_FREE > 0
+    && ATOMIC_INT_LOCK_FREE > 0
 
 #   define HAVE_ATOMICS 1
 
@@ -60,7 +60,8 @@ static inline int CRYPTO_GET_REF(CRYPTO_REF_COUNT *refcnt, int *ret)
     return 1;
 }
 
-#  elif defined(__GNUC__) && defined(__ATOMIC_RELAXED) && __GCC_ATOMIC_INT_LOCK_FREE > 0
+#  elif defined(__GNUC__) && defined(__ATOMIC_RELAXED) && \
+    __GCC_ATOMIC_INT_LOCK_FREE > 0
 
 #   define HAVE_ATOMICS 1
 
@@ -121,7 +122,8 @@ typedef struct {
     volatile int val;
 } CRYPTO_REF_COUNT;
 
-#   if (defined(_M_ARM) && _M_ARM>=7 && !defined(_WIN32_WCE)) || defined(_M_ARM64)
+#   if (defined(_M_ARM) && _M_ARM>=7 && !defined(_WIN32_WCE)) || \
+    defined(_M_ARM64)
 #    include <intrin.h>
 #    if defined(_M_ARM64) && !defined(_ARM_BARRIER_ISH)
 #     define _ARM_BARRIER_ISH _ARM64_BARRIER_ISH
@@ -152,10 +154,10 @@ static __inline int CRYPTO_GET_REF(CRYPTO_REF_COUNT *refcnt, int *ret)
 #     pragma intrinsic(_InterlockedExchangeAdd)
 #    else
 #     if _WIN32_WCE >= 0x600
-       extern long __cdecl _InterlockedExchangeAdd(long volatile*, long);
+extern long __cdecl _InterlockedExchangeAdd(long volatile*, long);
 #     else
-       /* under Windows CE we still have old-style Interlocked* functions */
-       extern long __cdecl InterlockedExchangeAdd(long volatile*, long);
+/* under Windows CE we still have old-style Interlocked* functions */
+extern long __cdecl InterlockedExchangeAdd(long volatile*, long);
 #      define _InterlockedExchangeAdd InterlockedExchangeAdd
 #     endif
 #    endif
@@ -199,7 +201,7 @@ typedef struct {
 
 #  ifdef OPENSSL_THREADS
 
-static ossl_unused ossl_inline int CRYPTO_UP_REF(CRYPTO_REF_COUNT *refcnt, 
+static ossl_unused ossl_inline int CRYPTO_UP_REF(CRYPTO_REF_COUNT *refcnt,
                                                  int *ret)
 {
     return CRYPTO_atomic_add(&refcnt->val, 1, ret, refcnt->lock);
@@ -212,13 +214,14 @@ static ossl_unused ossl_inline int CRYPTO_DOWN_REF(CRYPTO_REF_COUNT *refcnt,
 }
 
 static ossl_unused ossl_inline int CRYPTO_GET_REF(CRYPTO_REF_COUNT *refcnt,
-                                                   int *ret)
+                                                  int *ret)
 {
     return CRYPTO_atomic_load_int(&refcnt->val, ret, refcnt->lock);
 }
 
 #   define CRYPTO_NEW_FREE_DEFINED  1
-static ossl_unused ossl_inline int CRYPTO_NEW_REF(CRYPTO_REF_COUNT *refcnt, int n)
+static ossl_unused ossl_inline int CRYPTO_NEW_REF(CRYPTO_REF_COUNT *refcnt,
+                                                  int n)
 {
     refcnt->val = n;
     refcnt->lock = CRYPTO_THREAD_lock_new();
@@ -230,14 +233,14 @@ static ossl_unused ossl_inline int CRYPTO_NEW_REF(CRYPTO_REF_COUNT *refcnt, int 
 }
 
 static ossl_unused ossl_inline void CRYPTO_FREE_REF(CRYPTO_REF_COUNT *refcnt)                                  \
-{
+    {
     if (refcnt != NULL)
         CRYPTO_THREAD_lock_free(refcnt->lock);
-}
+    }
 
 #  else     /* OPENSSL_THREADS */
 
-static ossl_unused ossl_inline int CRYPTO_UP_REF(CRYPTO_REF_COUNT *refcnt, 
+static ossl_unused ossl_inline int CRYPTO_UP_REF(CRYPTO_REF_COUNT *refcnt,
                                                  int *ret)
 {
     refcnt->val++;
@@ -254,7 +257,7 @@ static ossl_unused ossl_inline int CRYPTO_DOWN_REF(CRYPTO_REF_COUNT *refcnt,
 }
 
 static ossl_unused ossl_inline int CRYPTO_GET_REF(CRYPTO_REF_COUNT *refcnt,
-                                                   int *ret)
+                                                  int *ret)
 {
     *ret = refcnt->val;
     return 1;
@@ -264,28 +267,30 @@ static ossl_unused ossl_inline int CRYPTO_GET_REF(CRYPTO_REF_COUNT *refcnt,
 # endif
 
 # ifndef CRYPTO_NEW_FREE_DEFINED
-static ossl_unused ossl_inline int CRYPTO_NEW_REF(CRYPTO_REF_COUNT *refcnt, int n)
+static ossl_unused ossl_inline int CRYPTO_NEW_REF(CRYPTO_REF_COUNT *refcnt,
+                                                  int n)
 {
     refcnt->val = n;
     return 1;
 }
 
 static ossl_unused ossl_inline void CRYPTO_FREE_REF(CRYPTO_REF_COUNT *refcnt)                                  \
-{
-}
+    {
+    }
 # endif /* CRYPTO_NEW_FREE_DEFINED */
 #undef CRYPTO_NEW_FREE_DEFINED
 
 # if !defined(NDEBUG) && !defined(OPENSSL_NO_STDIO)
 #  define REF_ASSERT_ISNT(test) \
-    (void)((test) ? (OPENSSL_die("refcount error", __FILE__, __LINE__), 1) : 0)
+        (void)((test) ? (OPENSSL_die("refcount error", __FILE__, __LINE__), \
+                         1) : 0)
 # else
 #  define REF_ASSERT_ISNT(i)
 # endif
 
 # define REF_PRINT_EX(text, count, object) \
-    OSSL_TRACE3(REF_COUNT, "%p:%4d:%s\n", (object), (count), (text));
+        OSSL_TRACE3(REF_COUNT, "%p:%4d:%s\n", (object), (count), (text));
 # define REF_PRINT_COUNT(text, object) \
-    REF_PRINT_EX(text, object->references.val, (void *)object)
+        REF_PRINT_EX(text, object->references.val, (void *)object)
 
 #endif

@@ -32,7 +32,7 @@ DEFINE_LHASH_OF_EX(NAMENUM_ENTRY);
 
 struct ossl_namemap_st {
     /* Flags */
-    unsigned int stored:1; /* If 1, it's stored in a library context */
+    unsigned int stored : 1; /* If 1, it's stored in a library context */
 
     CRYPTO_RWLOCK *lock;
     LHASH_OF(NAMENUM_ENTRY) *namenum;  /* Name->number mapping */
@@ -269,7 +269,7 @@ static int namemap_add_name(OSSL_NAMEMAP *namemap, int number,
         goto err;
     return namenum->number;
 
- err:
+err:
     namenum_free(namenum);
     return 0;
 }
@@ -366,7 +366,7 @@ int ossl_namemap_add_names(OSSL_NAMEMAP *namemap, int number,
         }
     }
 
- end:
+end:
     CRYPTO_THREAD_unlock(namemap->lock);
     OPENSSL_free(tmp);
     return number;
@@ -432,12 +432,12 @@ static void get_legacy_pkey_meth_names(const EVP_PKEY_ASN1_METHOD *ameth,
     if (nid != NID_undef) {
         if ((flags & ASN1_PKEY_ALIAS) == 0) {
             switch (nid) {
-            case EVP_PKEY_DHX:
-                /* We know that the name "DHX" is used too */
-                get_legacy_evp_names(0, nid, "DHX", arg);
+                case EVP_PKEY_DHX:
+                    /* We know that the name "DHX" is used too */
+                    get_legacy_evp_names(0, nid, "DHX", arg);
                 /* FALLTHRU */
-            default:
-                get_legacy_evp_names(0, nid, pem_name, arg);
+                default:
+                    get_legacy_evp_names(0, nid, pem_name, arg);
             }
         } else {
             /*
@@ -446,16 +446,16 @@ static void get_legacy_pkey_meth_names(const EVP_PKEY_ASN1_METHOD *ameth,
              */
 
             switch (nid) {
-            case EVP_PKEY_SM2:
-                /*
-                 * SM2 is a separate keytype with providers, not an alias for
-                 * EC.
-                 */
-                get_legacy_evp_names(0, nid, pem_name, arg);
-                break;
-            default:
-                /* Use the short name of the base nid as the common reference */
-                get_legacy_evp_names(base_nid, nid, pem_name, arg);
+                case EVP_PKEY_SM2:
+                    /*
+                     * SM2 is a separate keytype with providers, not an alias for
+                     * EC.
+                     */
+                    get_legacy_evp_names(0, nid, pem_name, arg);
+                    break;
+                default:
+                    /* Use the short name of the base nid as the common reference */
+                    get_legacy_evp_names(base_nid, nid, pem_name, arg);
             }
         }
     }
@@ -515,7 +515,7 @@ OSSL_NAMEMAP *ossl_namemap_new(void)
     if ((namemap = OPENSSL_zalloc(sizeof(*namemap))) != NULL
         && (namemap->lock = CRYPTO_THREAD_lock_new()) != NULL
         && (namemap->namenum =
-            lh_NAMENUM_ENTRY_new(namenum_hash, namenum_cmp)) != NULL)
+                lh_NAMENUM_ENTRY_new(namenum_hash, namenum_cmp)) != NULL)
         return namemap;
 
     ossl_namemap_free(namemap);

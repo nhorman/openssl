@@ -66,8 +66,8 @@ static int test_handshake_rtt(int tst)
                                        (tst <= 1) ? TLS1_2_VERSION
                                                   : TLS1_3_VERSION,
                                        &sctx, &cctx, cert, privkey))
-            || !TEST_true(create_ssl_objects(sctx, cctx, &serverssl, &clientssl,
-                                             NULL, NULL)))
+        || !TEST_true(create_ssl_objects(sctx, cctx, &serverssl, &clientssl,
+                                         NULL, NULL)))
         goto end;
 
     s = SSL_CONNECTION_FROM_SSL(tst % 2 == 0 ? clientssl : serverssl);
@@ -76,41 +76,41 @@ static int test_handshake_rtt(int tst)
 
     /* implicitly set handshake rtt with a delay */
     switch (tst) {
-    case 0:
-        st->hand_state = TLS_ST_CW_CLNT_HELLO;
-        ossl_statem_client_write_transition(s);
-        OSSL_sleep(1);
-        st->hand_state = TLS_ST_CR_SRVR_DONE;
-        ossl_statem_client_write_transition(s);
-        break;
-    case 1:
-        st->hand_state = TLS_ST_SW_SRVR_DONE;
-        ossl_statem_server_write_transition(s);
-        OSSL_sleep(1);
-        st->hand_state = TLS_ST_SR_FINISHED;
-        ossl_statem_server_write_transition(s);
-        break;
-    case 2:
-        st->hand_state = TLS_ST_CW_CLNT_HELLO;
-        ossl_statem_client_write_transition(s);
-        OSSL_sleep(1);
-        st->hand_state = TLS_ST_CR_SRVR_DONE;
-        ossl_statem_client_write_transition(s);
-        break;
-    case 3:
-        st->hand_state = TLS_ST_SW_SRVR_DONE;
-        ossl_statem_server_write_transition(s);
-        OSSL_sleep(1);
-        st->hand_state = TLS_ST_SR_FINISHED;
-        ossl_statem_server_write_transition(s);
-        break;
-    case 4:
-        st->hand_state = TLS_ST_EARLY_DATA;
-        ossl_statem_client_write_transition(s);
-        OSSL_sleep(1);
-        st->hand_state = TLS_ST_CR_SRVR_DONE;
-        ossl_statem_client_write_transition(s);
-        break;
+        case 0:
+            st->hand_state = TLS_ST_CW_CLNT_HELLO;
+            ossl_statem_client_write_transition(s);
+            OSSL_sleep(1);
+            st->hand_state = TLS_ST_CR_SRVR_DONE;
+            ossl_statem_client_write_transition(s);
+            break;
+        case 1:
+            st->hand_state = TLS_ST_SW_SRVR_DONE;
+            ossl_statem_server_write_transition(s);
+            OSSL_sleep(1);
+            st->hand_state = TLS_ST_SR_FINISHED;
+            ossl_statem_server_write_transition(s);
+            break;
+        case 2:
+            st->hand_state = TLS_ST_CW_CLNT_HELLO;
+            ossl_statem_client_write_transition(s);
+            OSSL_sleep(1);
+            st->hand_state = TLS_ST_CR_SRVR_DONE;
+            ossl_statem_client_write_transition(s);
+            break;
+        case 3:
+            st->hand_state = TLS_ST_SW_SRVR_DONE;
+            ossl_statem_server_write_transition(s);
+            OSSL_sleep(1);
+            st->hand_state = TLS_ST_SR_FINISHED;
+            ossl_statem_server_write_transition(s);
+            break;
+        case 4:
+            st->hand_state = TLS_ST_EARLY_DATA;
+            ossl_statem_client_write_transition(s);
+            OSSL_sleep(1);
+            st->hand_state = TLS_ST_CR_SRVR_DONE;
+            ossl_statem_client_write_transition(s);
+            break;
     }
 
     if (!TEST_int_gt(SSL_get_handshake_rtt(SSL_CONNECTION_GET_SSL(s), &rtt), 0))
@@ -121,7 +121,7 @@ static int test_handshake_rtt(int tst)
 
     testresult = 1;
 
- end:
+end:
     SSL_free(serverssl);
     SSL_free(clientssl);
     SSL_CTX_free(sctx);

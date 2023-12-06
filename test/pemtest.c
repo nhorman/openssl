@@ -22,8 +22,10 @@ typedef struct {
 static TESTDATA b64_pem_data[] = {
     { "hello world",
       "aGVsbG8gd29ybGQ=" },
-    { "a very ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong input",
-      "YSB2ZXJ5IG9vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29uZyBpbnB1dA==" }
+    {
+        "a very ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong input",
+        "YSB2ZXJ5IG9vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29vb29uZyBpbnB1dA=="
+    }
 };
 
 static const char *pemtype = "PEMTESTDATA";
@@ -52,7 +54,7 @@ static int test_b64(int idx)
         || !TEST_int_eq(memcmp(data, raw, strlen(raw)), 0))
         goto err;
     ret = 1;
- err:
+err:
     BIO_free(b);
     OPENSSL_free(name);
     OPENSSL_free(header);
@@ -117,7 +119,7 @@ static int test_empty_payload(void)
         goto err;
 
     ret = 1;
- err:
+err:
     OPENSSL_free(name);
     OPENSSL_free(header);
     OPENSSL_free(data);
@@ -148,7 +150,7 @@ static int test_protected_params(void)
         goto err;
 
     ret = 1;
- err:
+err:
     EVP_PKEY_free(pkey);
     BIO_free(b);
     return ret;

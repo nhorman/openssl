@@ -108,7 +108,7 @@ int ossl_err_load_crypto_strings(void)
         || ossl_err_load_PROP_strings() == 0
         || ossl_err_load_PROV_strings() == 0
 #endif
-        )
+       )
         return 0;
 
     return 1;

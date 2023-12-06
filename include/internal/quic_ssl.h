@@ -28,11 +28,13 @@ __owur int ossl_quic_accept(SSL *s);
 __owur int ossl_quic_connect(SSL *s);
 __owur int ossl_quic_read(SSL *s, void *buf, size_t len, size_t *readbytes);
 __owur int ossl_quic_peek(SSL *s, void *buf, size_t len, size_t *readbytes);
-__owur int ossl_quic_write(SSL *s, const void *buf, size_t len, size_t *written);
+__owur int ossl_quic_write(SSL *s, const void *buf, size_t len,
+                           size_t *written);
 __owur long ossl_quic_ctrl(SSL *s, int cmd, long larg, void *parg);
 __owur long ossl_quic_ctx_ctrl(SSL_CTX *ctx, int cmd, long larg, void *parg);
 __owur long ossl_quic_callback_ctrl(SSL *s, int cmd, void (*fp) (void));
-__owur long ossl_quic_ctx_callback_ctrl(SSL_CTX *ctx, int cmd, void (*fp) (void));
+__owur long ossl_quic_ctx_callback_ctrl(SSL_CTX *ctx, int cmd, void (*fp) (
+                                            void));
 __owur size_t ossl_quic_pending(const SSL *s);
 __owur int ossl_quic_key_update(SSL *s, int update_type);
 __owur int ossl_quic_get_key_update_type(const SSL *s);

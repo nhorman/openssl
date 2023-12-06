@@ -41,7 +41,7 @@ static const unsigned char cts128_test_input[64] =
     "I would like the" " General Gau's C"
     "hicken, please, " "and wonton soup.";
 static const unsigned char cts128_test_iv[] =
-    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 static const unsigned char vector_17[17] = {
     0xc6, 0x35, 0x35, 0x68, 0xf2, 0xbf, 0x8c, 0xb4,
@@ -93,9 +93,9 @@ static const unsigned char vector_64[64] = {
 };
 
 #define CTS128_TEST_VECTOR(len)                 \
-    {                                           \
-        sizeof(vector_##len), vector_##len      \
-    }
+        {                                           \
+            sizeof(vector_ ## len), vector_ ## len      \
+        }
 static const SIZED_DATA aes_cts128_vectors[] = {
     CTS128_TEST_VECTOR(17),
     CTS128_TEST_VECTOR(31),
@@ -203,8 +203,8 @@ static int execute_cts128(const CTS128_FIXTURE *fixture, int num)
     if (!TEST_size_t_eq(fixture->encrypt_block(test_input, ciphertext, len,
                                                encrypt_key_schedule, iv,
                                                (block128_f)AES_encrypt), len)
-            || !TEST_mem_eq(ciphertext, len, vector, len)
-            || !TEST_mem_eq(iv, sizeof(iv), vector + len - tail, sizeof(iv)))
+        || !TEST_mem_eq(ciphertext, len, vector, len)
+        || !TEST_mem_eq(iv, sizeof(iv), vector + len - tail, sizeof(iv)))
         return 0;
 
     /* test block-based decryption */
@@ -213,8 +213,8 @@ static int execute_cts128(const CTS128_FIXTURE *fixture, int num)
                                   decrypt_key_schedule, iv,
                                   (block128_f)AES_decrypt);
     if (!TEST_true(len == size || len + 16 == size)
-            || !TEST_mem_eq(cleartext, len, test_input, len)
-            || !TEST_mem_eq(iv, sizeof(iv), vector + len - tail, sizeof(iv)))
+        || !TEST_mem_eq(cleartext, len, test_input, len)
+        || !TEST_mem_eq(iv, sizeof(iv), vector + len - tail, sizeof(iv)))
         return 0;
 
     /* test streamed encryption */
@@ -223,8 +223,8 @@ static int execute_cts128(const CTS128_FIXTURE *fixture, int num)
                                                 encrypt_key_schedule, iv,
                                                 (cbc128_f) AES_cbc_encrypt),
                         len)
-            || !TEST_mem_eq(ciphertext, len, vector, len)
-            || !TEST_mem_eq(iv, sizeof(iv), vector + len - tail, sizeof(iv)))
+        || !TEST_mem_eq(ciphertext, len, vector, len)
+        || !TEST_mem_eq(iv, sizeof(iv), vector + len - tail, sizeof(iv)))
         return 0;
 
     /* test streamed decryption */
@@ -233,8 +233,8 @@ static int execute_cts128(const CTS128_FIXTURE *fixture, int num)
                                                 decrypt_key_schedule, iv,
                                                 (cbc128_f)AES_cbc_encrypt),
                         len)
-            || !TEST_mem_eq(cleartext, len, test_input, len)
-            || !TEST_mem_eq(iv, sizeof(iv), vector + len - tail, sizeof(iv)))
+        || !TEST_mem_eq(cleartext, len, test_input, len)
+        || !TEST_mem_eq(iv, sizeof(iv), vector + len - tail, sizeof(iv)))
         return 0;
 
     return 1;
@@ -803,14 +803,14 @@ static const u8 T20[] = {
 };
 
 #define GCM128_TEST_VECTOR(n)                   \
-    {                                           \
-        {sizeof(K##n), K##n},                   \
-        {sizeof(IV##n), IV##n},                 \
-        {sizeof(A##n), A##n},                   \
-        {sizeof(P##n), P##n},                   \
-        {sizeof(C##n), C##n},                   \
-        {sizeof(T##n), T##n}                    \
-    }
+        {                                           \
+            {sizeof(K ## n), K ## n},                   \
+            {sizeof(IV ## n), IV ## n},                 \
+            {sizeof(A ## n), A ## n},                   \
+            {sizeof(P ## n), P ## n},                   \
+            {sizeof(C ## n), C ## n},                   \
+            {sizeof(T ## n), T ## n}                    \
+        }
 static struct gcm128_data {
     const SIZED_DATA K;
     const SIZED_DATA IV;
@@ -872,8 +872,8 @@ static int test_gcm128(int idx)
         if (!TEST_int_ge(CRYPTO_gcm128_encrypt(&ctx, P.data, out, P.size), 0))
             return 0;
     if (!TEST_false(CRYPTO_gcm128_finish(&ctx, T.data, 16))
-            || (C.data != NULL
-                    && !TEST_mem_eq(out, P.size, C.data, P.size)))
+        || (C.data != NULL
+            && !TEST_mem_eq(out, P.size, C.data, P.size)))
         return 0;
 
     CRYPTO_gcm128_setiv(&ctx, IV.data, IV.size);
@@ -883,8 +883,8 @@ static int test_gcm128(int idx)
     if (C.data != NULL)
         CRYPTO_gcm128_decrypt(&ctx, C.data, out, P.size);
     if (!TEST_false(CRYPTO_gcm128_finish(&ctx, T.data, 16))
-            || (P.data != NULL
-                    && !TEST_mem_eq(out, P.size, P.data, P.size)))
+        || (P.data != NULL
+            && !TEST_mem_eq(out, P.size, P.data, P.size)))
         return 0;
 
     return 1;

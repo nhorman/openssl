@@ -76,8 +76,9 @@ static void set_optional_params(OSSL_PARAM *p, const char *propq)
      * OAEP digest then it needs to be specified here.
      */
     if (propq != NULL)
-        *p++ = OSSL_PARAM_construct_utf8_string(OSSL_ASYM_CIPHER_PARAM_OAEP_DIGEST_PROPS,
-                                                (char *)propq, 0);
+        *p++ = OSSL_PARAM_construct_utf8_string(
+            OSSL_ASYM_CIPHER_PARAM_OAEP_DIGEST_PROPS,
+            (char *)propq, 0);
 
     /*
      * OSSL_ASYM_CIPHER_PARAM_MGF1_DIGEST and
@@ -151,7 +152,8 @@ cleanup:
     return ret;
 }
 
-static int do_decrypt(OSSL_LIB_CTX *libctx, const unsigned char *in, size_t in_len,
+static int do_decrypt(OSSL_LIB_CTX *libctx, const unsigned char *in,
+                      size_t in_len,
                       unsigned char **out, size_t *out_len)
 {
     int ret = 0, public = 0;

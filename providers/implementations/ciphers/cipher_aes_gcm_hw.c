@@ -18,7 +18,7 @@
 #include "cipher_aes_gcm.h"
 
 static int aes_gcm_initkey(PROV_GCM_CTX *ctx, const unsigned char *key,
-                                   size_t keylen)
+                           size_t keylen)
 {
     PROV_AES_GCM_CTX *actx = (PROV_AES_GCM_CTX *)ctx;
     AES_KEY *ks = &actx->ks.ks;
@@ -58,7 +58,8 @@ static int aes_gcm_initkey(PROV_GCM_CTX *ctx, const unsigned char *key,
     return 1;
 }
 
-static int generic_aes_gcm_cipher_update(PROV_GCM_CTX *ctx, const unsigned char *in,
+static int generic_aes_gcm_cipher_update(PROV_GCM_CTX *ctx,
+                                         const unsigned char *in,
                                          size_t len, unsigned char *out)
 {
     if (ctx->enc) {

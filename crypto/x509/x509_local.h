@@ -10,7 +10,7 @@
 #include "internal/refcount.h"
 
 #define X509V3_conf_add_error_name_value(val) \
-    ERR_add_error_data(4, "name=", (val)->name, ", value=", (val)->value)
+        ERR_add_error_data(4, "name=", (val)->name, ", value=", (val)->value)
 
 /*
  * This structure holds all parameters associated with a verify operation by

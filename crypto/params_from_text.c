@@ -44,82 +44,82 @@ static int prepare_from_text(const OSSL_PARAM *paramdefs, const char *key,
         return 0;
 
     switch (p->data_type) {
-    case OSSL_PARAM_INTEGER:
-    case OSSL_PARAM_UNSIGNED_INTEGER:
-        if (*ishex)
-            r = BN_hex2bn(tmpbn, value);
-        else
-            r = BN_asc2bn(tmpbn, value);
+        case OSSL_PARAM_INTEGER:
+        case OSSL_PARAM_UNSIGNED_INTEGER:
+            if (*ishex)
+                r = BN_hex2bn(tmpbn, value);
+            else
+                r = BN_asc2bn(tmpbn, value);
 
-        if (r == 0 || *tmpbn == NULL)
-            return 0;
+            if (r == 0 || *tmpbn == NULL)
+                return 0;
 
-        if (p->data_type == OSSL_PARAM_UNSIGNED_INTEGER
-            && BN_is_negative(*tmpbn)) {
-            ERR_raise(ERR_LIB_CRYPTO, CRYPTO_R_INVALID_NEGATIVE_VALUE);
-            return 0;
-        }
-
-        /*
-         * 2's complement negate, part 1
-         *
-         * BN_bn2nativepad puts the absolute value of the number in the
-         * buffer, i.e. if it's negative, we need to deal with it.  We do
-         * it by subtracting 1 here and inverting the bytes in
-         * construct_from_text() below.
-         * To subtract 1 from an absolute value of a negative number we
-         * actually have to add 1: -3 - 1 = -4, |-3| = 3 + 1 = 4.
-         */
-        if (p->data_type == OSSL_PARAM_INTEGER && BN_is_negative(*tmpbn)
-            && !BN_add_word(*tmpbn, 1)) {
-            return 0;
-        }
-
-        buf_bits = (size_t)BN_num_bits(*tmpbn);
-
-        /*
-         * Compensate for cases where the most significant bit in
-         * the resulting OSSL_PARAM buffer will be set after the
-         * BN_bn2nativepad() call, as the implied sign may not be
-         * correct after the second part of the 2's complement
-         * negation has been performed.
-         * We fix these cases by extending the buffer by one byte
-         * (8 bits), which will give some padding.  The second part
-         * of the 2's complement negation will do the rest.
-         */
-        if (p->data_type == OSSL_PARAM_INTEGER && buf_bits % 8 == 0)
-            buf_bits += 8;
-
-        *buf_n = (buf_bits + 7) / 8;
-
-        /*
-         * A zero data size means "arbitrary size", so only do the
-         * range checking if a size is specified.
-         */
-        if (p->data_size > 0) {
-            if (buf_bits > p->data_size * 8) {
-                ERR_raise(ERR_LIB_CRYPTO, CRYPTO_R_TOO_SMALL_BUFFER);
-                /* Since this is a different error, we don't break */
+            if (p->data_type == OSSL_PARAM_UNSIGNED_INTEGER
+                && BN_is_negative(*tmpbn)) {
+                ERR_raise(ERR_LIB_CRYPTO, CRYPTO_R_INVALID_NEGATIVE_VALUE);
                 return 0;
             }
-            /* Change actual size to become the desired size. */
-            *buf_n = p->data_size;
-        }
-        break;
-    case OSSL_PARAM_UTF8_STRING:
-        if (*ishex) {
-            ERR_raise(ERR_LIB_CRYPTO, ERR_R_PASSED_INVALID_ARGUMENT);
-            return 0;
-        }
-        *buf_n = strlen(value) + 1;
-        break;
-    case OSSL_PARAM_OCTET_STRING:
-        if (*ishex) {
-            *buf_n = strlen(value) >> 1;
-        } else {
-            *buf_n = value_n;
-        }
-        break;
+
+            /*
+             * 2's complement negate, part 1
+             *
+             * BN_bn2nativepad puts the absolute value of the number in the
+             * buffer, i.e. if it's negative, we need to deal with it.  We do
+             * it by subtracting 1 here and inverting the bytes in
+             * construct_from_text() below.
+             * To subtract 1 from an absolute value of a negative number we
+             * actually have to add 1: -3 - 1 = -4, |-3| = 3 + 1 = 4.
+             */
+            if (p->data_type == OSSL_PARAM_INTEGER && BN_is_negative(*tmpbn)
+                && !BN_add_word(*tmpbn, 1)) {
+                return 0;
+            }
+
+            buf_bits = (size_t)BN_num_bits(*tmpbn);
+
+            /*
+             * Compensate for cases where the most significant bit in
+             * the resulting OSSL_PARAM buffer will be set after the
+             * BN_bn2nativepad() call, as the implied sign may not be
+             * correct after the second part of the 2's complement
+             * negation has been performed.
+             * We fix these cases by extending the buffer by one byte
+             * (8 bits), which will give some padding.  The second part
+             * of the 2's complement negation will do the rest.
+             */
+            if (p->data_type == OSSL_PARAM_INTEGER && buf_bits % 8 == 0)
+                buf_bits += 8;
+
+            *buf_n = (buf_bits + 7) / 8;
+
+            /*
+             * A zero data size means "arbitrary size", so only do the
+             * range checking if a size is specified.
+             */
+            if (p->data_size > 0) {
+                if (buf_bits > p->data_size * 8) {
+                    ERR_raise(ERR_LIB_CRYPTO, CRYPTO_R_TOO_SMALL_BUFFER);
+                    /* Since this is a different error, we don't break */
+                    return 0;
+                }
+                /* Change actual size to become the desired size. */
+                *buf_n = p->data_size;
+            }
+            break;
+        case OSSL_PARAM_UTF8_STRING:
+            if (*ishex) {
+                ERR_raise(ERR_LIB_CRYPTO, ERR_R_PASSED_INVALID_ARGUMENT);
+                return 0;
+            }
+            *buf_n = strlen(value) + 1;
+            break;
+        case OSSL_PARAM_OCTET_STRING:
+            if (*ishex) {
+                *buf_n = strlen(value) >> 1;
+            } else {
+                *buf_n = value_n;
+            }
+            break;
     }
 
     return 1;
@@ -134,52 +134,52 @@ static int construct_from_text(OSSL_PARAM *to, const OSSL_PARAM *paramdef,
 
     if (buf_n > 0) {
         switch (paramdef->data_type) {
-        case OSSL_PARAM_INTEGER:
-        case OSSL_PARAM_UNSIGNED_INTEGER:
-            /*
-            {
-                if ((new_value = OPENSSL_malloc(new_value_n)) == NULL) {
-                    BN_free(a);
-                    break;
+            case OSSL_PARAM_INTEGER:
+            case OSSL_PARAM_UNSIGNED_INTEGER:
+                /*
+                   {
+                    if ((new_value = OPENSSL_malloc(new_value_n)) == NULL) {
+                        BN_free(a);
+                        break;
+                    }
+                 */
+
+                BN_bn2nativepad(tmpbn, buf, buf_n);
+
+                /*
+                 * 2's complement negation, part two.
+                 *
+                 * Because we did the first part on the BIGNUM itself, we can just
+                 * invert all the bytes here and be done with it.
+                 */
+                if (paramdef->data_type == OSSL_PARAM_INTEGER
+                    && BN_is_negative(tmpbn)) {
+                    unsigned char *cp;
+                    size_t i = buf_n;
+
+                    for (cp = buf; i-- > 0; cp++)
+                        *cp ^= 0xFF;
                 }
-            */
-
-            BN_bn2nativepad(tmpbn, buf, buf_n);
-
-            /*
-             * 2's complement negation, part two.
-             *
-             * Because we did the first part on the BIGNUM itself, we can just
-             * invert all the bytes here and be done with it.
-             */
-            if (paramdef->data_type == OSSL_PARAM_INTEGER
-                && BN_is_negative(tmpbn)) {
-                unsigned char *cp;
-                size_t i = buf_n;
-
-                for (cp = buf; i-- > 0; cp++)
-                    *cp ^= 0xFF;
-            }
-            break;
-        case OSSL_PARAM_UTF8_STRING:
+                break;
+            case OSSL_PARAM_UTF8_STRING:
 #ifdef CHARSET_EBCDIC
-            ebcdic2ascii(buf, value, buf_n);
+                ebcdic2ascii(buf, value, buf_n);
 #else
-            strncpy(buf, value, buf_n);
+                strncpy(buf, value, buf_n);
 #endif
-            /* Don't count the terminating NUL byte as data */
-            buf_n--;
-            break;
-        case OSSL_PARAM_OCTET_STRING:
-            if (ishex) {
-                size_t l = 0;
+                /* Don't count the terminating NUL byte as data */
+                buf_n--;
+                break;
+            case OSSL_PARAM_OCTET_STRING:
+                if (ishex) {
+                    size_t l = 0;
 
-                if (!OPENSSL_hexstr2buf_ex(buf, buf_n, &l, value, ':'))
-                    return 0;
-            } else {
-                memcpy(buf, value, buf_n);
-            }
-            break;
+                    if (!OPENSSL_hexstr2buf_ex(buf, buf_n, &l, value, ':'))
+                        return 0;
+                } else {
+                    memcpy(buf, value, buf_n);
+                }
+                break;
         }
     }
 
@@ -219,7 +219,7 @@ int OSSL_PARAM_allocate_from_text(OSSL_PARAM *to,
     if (!ok)
         OPENSSL_free(buf);
     return ok;
- err:
+err:
     BN_free(tmpbn);
     return 0;
 }

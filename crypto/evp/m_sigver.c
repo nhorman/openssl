@@ -144,20 +144,21 @@ static int do_sigver_init(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx,
         EVP_KEYMGMT_free(tmp_keymgmt);
 
         switch (iter) {
-        case 1:
-            signature = EVP_SIGNATURE_fetch(locpctx->libctx, supported_sig,
-                                            locpctx->propquery);
-            if (signature != NULL)
-                tmp_prov = EVP_SIGNATURE_get0_provider(signature);
-            break;
-        case 2:
-            tmp_prov = EVP_KEYMGMT_get0_provider(locpctx->keymgmt);
-            signature =
-                evp_signature_fetch_from_prov((OSSL_PROVIDER *)tmp_prov,
-                                              supported_sig, locpctx->propquery);
-            if (signature == NULL)
-                goto legacy;
-            break;
+            case 1:
+                signature = EVP_SIGNATURE_fetch(locpctx->libctx, supported_sig,
+                                                locpctx->propquery);
+                if (signature != NULL)
+                    tmp_prov = EVP_SIGNATURE_get0_provider(signature);
+                break;
+            case 2:
+                tmp_prov = EVP_KEYMGMT_get0_provider(locpctx->keymgmt);
+                signature =
+                    evp_signature_fetch_from_prov((OSSL_PROVIDER *)tmp_prov,
+                                                  supported_sig,
+                                                  locpctx->propquery);
+                if (signature == NULL)
+                    goto legacy;
+                break;
         }
         if (signature == NULL)
             continue;
@@ -177,8 +178,10 @@ static int do_sigver_init(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx,
                                         EVP_KEYMGMT_get0_name(locpctx->keymgmt),
                                         locpctx->propquery);
         if (tmp_keymgmt != NULL)
-            provkey = evp_pkey_export_to_provider(locpctx->pkey, locpctx->libctx,
-                                                  &tmp_keymgmt, locpctx->propquery);
+            provkey = evp_pkey_export_to_provider(locpctx->pkey,
+                                                  locpctx->libctx,
+                                                  &tmp_keymgmt,
+                                                  locpctx->propquery);
         if (tmp_keymgmt == NULL)
             EVP_KEYMGMT_free(tmp_keymgmt_tofree);
     }
@@ -204,7 +207,7 @@ static int do_sigver_init(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx,
         goto err;
     }
 
- reinitialize:
+reinitialize:
     if (pctx != NULL)
         *pctx = locpctx;
 
@@ -278,13 +281,13 @@ static int do_sigver_init(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx,
     if (type == NULL)   /* This check is redundant but clarifies matters */
         ERR_raise(ERR_LIB_EVP, EVP_R_NO_DEFAULT_DIGEST);
 
- err:
+err:
     evp_pkey_ctx_free_old_ops(locpctx);
     locpctx->operation = EVP_PKEY_OP_UNDEFINED;
     EVP_KEYMGMT_free(tmp_keymgmt);
     return 0;
 
- legacy:
+legacy:
     /*
      * If we don't have the full support we need with provided methods,
      * let's go see if legacy does.
@@ -356,7 +359,7 @@ static int do_sigver_init(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx,
 
     ret = 1;
 
- end:
+end:
 #ifndef FIPS_MODULE
     if (ret > 0)
         ret = evp_pkey_ctx_use_cached_data(locpctx);
@@ -409,9 +412,9 @@ int EVP_DigestSignUpdate(EVP_MD_CTX *ctx, const void *data, size_t dsize)
     }
 
     if (pctx == NULL
-            || pctx->operation != EVP_PKEY_OP_SIGNCTX
-            || pctx->op.sig.algctx == NULL
-            || pctx->op.sig.signature == NULL)
+        || pctx->operation != EVP_PKEY_OP_SIGNCTX
+        || pctx->op.sig.algctx == NULL
+        || pctx->op.sig.signature == NULL)
         goto legacy;
 
     if (pctx->op.sig.signature->digest_sign_update == NULL) {
@@ -422,7 +425,7 @@ int EVP_DigestSignUpdate(EVP_MD_CTX *ctx, const void *data, size_t dsize)
     return pctx->op.sig.signature->digest_sign_update(pctx->op.sig.algctx,
                                                       data, dsize);
 
- legacy:
+legacy:
     if (pctx != NULL) {
         /* do_sigver_init() checked that |digest_custom| is non-NULL */
         if (pctx->flag_call_digest_custom
@@ -444,9 +447,9 @@ int EVP_DigestVerifyUpdate(EVP_MD_CTX *ctx, const void *data, size_t dsize)
     }
 
     if (pctx == NULL
-            || pctx->operation != EVP_PKEY_OP_VERIFYCTX
-            || pctx->op.sig.algctx == NULL
-            || pctx->op.sig.signature == NULL)
+        || pctx->operation != EVP_PKEY_OP_VERIFYCTX
+        || pctx->op.sig.algctx == NULL
+        || pctx->op.sig.signature == NULL)
         goto legacy;
 
     if (pctx->op.sig.signature->digest_verify_update == NULL) {
@@ -457,7 +460,7 @@ int EVP_DigestVerifyUpdate(EVP_MD_CTX *ctx, const void *data, size_t dsize)
     return pctx->op.sig.signature->digest_verify_update(pctx->op.sig.algctx,
                                                         data, dsize);
 
- legacy:
+legacy:
     if (pctx != NULL) {
         /* do_sigver_init() checked that |digest_custom| is non-NULL */
         if (pctx->flag_call_digest_custom
@@ -482,9 +485,9 @@ int EVP_DigestSignFinal(EVP_MD_CTX *ctx, unsigned char *sigret,
     }
 
     if (pctx == NULL
-            || pctx->operation != EVP_PKEY_OP_SIGNCTX
-            || pctx->op.sig.algctx == NULL
-            || pctx->op.sig.signature == NULL)
+        || pctx->operation != EVP_PKEY_OP_SIGNCTX
+        || pctx->op.sig.algctx == NULL
+        || pctx->op.sig.signature == NULL)
         goto legacy;
 
     if (sigret != NULL && (ctx->flags & EVP_MD_CTX_FLAG_FINALISE) == 0) {
@@ -502,7 +505,7 @@ int EVP_DigestSignFinal(EVP_MD_CTX *ctx, unsigned char *sigret,
         EVP_PKEY_CTX_free(dctx);
     return r;
 
- legacy:
+legacy:
     if (pctx == NULL || pctx->pmeth == NULL) {
         ERR_raise(ERR_LIB_EVP, EVP_R_INITIALIZATION_ERROR);
         return 0;
@@ -587,9 +590,9 @@ int EVP_DigestSign(EVP_MD_CTX *ctx, unsigned char *sigret, size_t *siglen,
     }
 
     if (pctx != NULL
-            && pctx->operation == EVP_PKEY_OP_SIGNCTX
-            && pctx->op.sig.algctx != NULL
-            && pctx->op.sig.signature != NULL) {
+        && pctx->operation == EVP_PKEY_OP_SIGNCTX
+        && pctx->op.sig.algctx != NULL
+        && pctx->op.sig.signature != NULL) {
         if (pctx->op.sig.signature->digest_sign != NULL) {
             if (sigret != NULL)
                 ctx->flags |= EVP_MD_CTX_FLAG_FINALISED;
@@ -601,7 +604,8 @@ int EVP_DigestSign(EVP_MD_CTX *ctx, unsigned char *sigret, size_t *siglen,
     } else {
         /* legacy */
         if (ctx->pctx->pmeth != NULL && ctx->pctx->pmeth->digestsign != NULL)
-            return ctx->pctx->pmeth->digestsign(ctx, sigret, siglen, tbs, tbslen);
+            return ctx->pctx->pmeth->digestsign(ctx, sigret, siglen, tbs,
+                                                tbslen);
     }
 
     if (sigret != NULL && EVP_DigestSignUpdate(ctx, tbs, tbslen) <= 0)
@@ -624,9 +628,9 @@ int EVP_DigestVerifyFinal(EVP_MD_CTX *ctx, const unsigned char *sig,
     }
 
     if (pctx == NULL
-            || pctx->operation != EVP_PKEY_OP_VERIFYCTX
-            || pctx->op.sig.algctx == NULL
-            || pctx->op.sig.signature == NULL)
+        || pctx->operation != EVP_PKEY_OP_VERIFYCTX
+        || pctx->op.sig.algctx == NULL
+        || pctx->op.sig.signature == NULL)
         goto legacy;
 
     if ((ctx->flags & EVP_MD_CTX_FLAG_FINALISE) == 0) {
@@ -643,7 +647,7 @@ int EVP_DigestVerifyFinal(EVP_MD_CTX *ctx, const unsigned char *sig,
         EVP_PKEY_CTX_free(dctx);
     return r;
 
- legacy:
+legacy:
     if (pctx == NULL || pctx->pmeth == NULL) {
         ERR_raise(ERR_LIB_EVP, EVP_R_INITIALIZATION_ERROR);
         return 0;
@@ -696,9 +700,9 @@ int EVP_DigestVerify(EVP_MD_CTX *ctx, const unsigned char *sigret,
     }
 
     if (pctx != NULL
-            && pctx->operation == EVP_PKEY_OP_VERIFYCTX
-            && pctx->op.sig.algctx != NULL
-            && pctx->op.sig.signature != NULL) {
+        && pctx->operation == EVP_PKEY_OP_VERIFYCTX
+        && pctx->op.sig.algctx != NULL
+        && pctx->op.sig.signature != NULL) {
         if (pctx->op.sig.signature->digest_verify != NULL) {
             ctx->flags |= EVP_MD_CTX_FLAG_FINALISED;
             return pctx->op.sig.signature->digest_verify(pctx->op.sig.algctx,
@@ -708,7 +712,8 @@ int EVP_DigestVerify(EVP_MD_CTX *ctx, const unsigned char *sigret,
     } else {
         /* legacy */
         if (ctx->pctx->pmeth != NULL && ctx->pctx->pmeth->digestverify != NULL)
-            return ctx->pctx->pmeth->digestverify(ctx, sigret, siglen, tbs, tbslen);
+            return ctx->pctx->pmeth->digestverify(ctx, sigret, siglen, tbs,
+                                                  tbslen);
     }
 
     if (EVP_DigestVerifyUpdate(ctx, tbs, tbslen) <= 0)

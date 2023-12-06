@@ -128,7 +128,7 @@ static DH *dh_new_intern(ENGINE *engine, OSSL_LIB_CTX *libctx)
 
     return ret;
 
- err:
+err:
     DH_free(ret);
     return NULL;
 }

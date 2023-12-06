@@ -53,7 +53,7 @@ X509 *TS_CONF_load_cert(const char *file)
     if ((cert = BIO_new_file(file, "r")) == NULL)
         goto end;
     x = PEM_read_bio_X509_AUX(cert, NULL, NULL, NULL);
- end:
+end:
     if (x == NULL)
         ERR_raise(ERR_LIB_TS, TS_R_CANNOT_LOAD_CERT);
     BIO_free(cert);
@@ -85,7 +85,7 @@ STACK_OF(X509) *TS_CONF_load_certs(const char *file)
             xi->x509 = NULL;
         }
     }
- end:
+end:
     if (othercerts == NULL)
         ERR_raise(ERR_LIB_TS, TS_R_CANNOT_LOAD_CERT);
     sk_X509_INFO_pop_free(allcerts, X509_INFO_free);
@@ -101,7 +101,7 @@ EVP_PKEY *TS_CONF_load_key(const char *file, const char *pass)
     if ((key = BIO_new_file(file, "r")) == NULL)
         goto end;
     pkey = PEM_read_bio_PrivateKey(key, NULL, NULL, (char *)pass);
- end:
+end:
     if (pkey == NULL)
         ERR_raise(ERR_LIB_TS, TS_R_CANNOT_LOAD_KEY);
     BIO_free(key);
@@ -142,7 +142,7 @@ int TS_CONF_set_serial(CONF *conf, const char *section, TS_serial_cb cb,
     TS_RESP_CTX_set_serial_cb(ctx, cb, serial);
 
     ret = 1;
- err:
+err:
     return ret;
 }
 
@@ -161,7 +161,7 @@ int TS_CONF_set_crypto_device(CONF *conf, const char *section,
         goto err;
     }
     ret = 1;
- err:
+err:
     return ret;
 }
 
@@ -181,7 +181,7 @@ int TS_CONF_set_default_engine(const char *name)
         goto err;
     ret = 1;
 
- err:
+err:
     if (!ret)
         ERR_raise_data(ERR_LIB_TS, TS_R_COULD_NOT_SET_ENGINE,
                        "engine:%s", name);
@@ -210,7 +210,7 @@ int TS_CONF_set_signer_cert(CONF *conf, const char *section,
         goto err;
 
     ret = 1;
- err:
+err:
     X509_free(cert_obj);
     return ret;
 }
@@ -230,9 +230,9 @@ int TS_CONF_set_certs(CONF *conf, const char *section, const char *certs,
         goto err;
     if (!TS_RESP_CTX_set_certs(ctx, certs_obj))
         goto err;
- end:
+end:
     ret = 1;
- err:
+err:
     OSSL_STACK_OF_X509_free(certs_obj);
     return ret;
 }
@@ -255,7 +255,7 @@ int TS_CONF_set_signer_key(CONF *conf, const char *section,
         goto err;
 
     ret = 1;
- err:
+err:
     EVP_PKEY_free(key_obj);
     return ret;
 }
@@ -280,7 +280,7 @@ int TS_CONF_set_signer_digest(CONF *conf, const char *section,
         goto err;
 
     ret = 1;
- err:
+err:
     return ret;
 }
 
@@ -304,7 +304,7 @@ int TS_CONF_set_def_policy(CONF *conf, const char *section,
         goto err;
 
     ret = 1;
- err:
+err:
     ASN1_OBJECT_free(policy_obj);
     return ret;
 }
@@ -336,7 +336,7 @@ int TS_CONF_set_policies(CONF *conf, const char *section, TS_RESP_CTX *ctx)
     }
 
     ret = 1;
- err:
+err:
     sk_CONF_VALUE_pop_free(list, X509V3_conf_free);
     return ret;
 }
@@ -374,7 +374,7 @@ int TS_CONF_set_digests(CONF *conf, const char *section, TS_RESP_CTX *ctx)
     }
 
     ret = 1;
- err:
+err:
     sk_CONF_VALUE_pop_free(list, X509V3_conf_free);
     return ret;
 }
@@ -411,7 +411,7 @@ int TS_CONF_set_accuracy(CONF *conf, const char *section, TS_RESP_CTX *ctx)
         goto err;
 
     ret = 1;
- err:
+err:
     sk_CONF_VALUE_pop_free(list, X509V3_conf_free);
     return ret;
 }
@@ -435,7 +435,7 @@ int TS_CONF_set_clock_precision_digits(const CONF *conf, const char *section,
         goto err;
 
     return 1;
- err:
+err:
     return ret;
 }
 

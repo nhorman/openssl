@@ -46,17 +46,21 @@ static char *strip_ends(char *name);
 static char *strip_start(char *name);
 static char *strip_end(char *name);
 static MIME_HEADER *mime_hdr_new(const char *name, const char *value);
-static int mime_hdr_addparam(MIME_HEADER *mhdr, const char *name, const char *value);
+static int mime_hdr_addparam(MIME_HEADER *mhdr, const char *name,
+                             const char *value);
 static STACK_OF(MIME_HEADER) *mime_parse_hdr(BIO *bio);
 static int mime_hdr_cmp(const MIME_HEADER *const *a,
                         const MIME_HEADER *const *b);
 static int mime_param_cmp(const MIME_PARAM *const *a,
                           const MIME_PARAM *const *b);
 static void mime_param_free(MIME_PARAM *param);
-static int mime_bound_check(char *line, int linelen, const char *bound, int blen);
-static int multi_split(BIO *bio, int flags, const char *bound, STACK_OF(BIO) **ret);
+static int mime_bound_check(char *line, int linelen, const char *bound,
+                            int blen);
+static int multi_split(BIO *bio, int flags, const char *bound,
+                       STACK_OF(BIO) **ret);
 static int strip_eol(char *linebuf, int *plen, int flags);
-static MIME_HEADER *mime_hdr_find(STACK_OF(MIME_HEADER) *hdrs, const char *name);
+static MIME_HEADER *mime_hdr_find(STACK_OF(MIME_HEADER) *hdrs,
+                                  const char *name);
 static MIME_PARAM *mime_param_find(MIME_HEADER *hdr, const char *name);
 static void mime_hdr_free(MIME_HEADER *hdr);
 
@@ -182,52 +186,52 @@ static int asn1_write_micalg(BIO *out, STACK_OF(X509_ALGOR) *mdalgs)
                 goto err;
         }
         switch (md_nid) {
-        case NID_sha1:
-            BIO_puts(out, "sha1");
-            break;
+            case NID_sha1:
+                BIO_puts(out, "sha1");
+                break;
 
-        case NID_md5:
-            BIO_puts(out, "md5");
-            break;
+            case NID_md5:
+                BIO_puts(out, "md5");
+                break;
 
-        case NID_sha256:
-            BIO_puts(out, "sha-256");
-            break;
+            case NID_sha256:
+                BIO_puts(out, "sha-256");
+                break;
 
-        case NID_sha384:
-            BIO_puts(out, "sha-384");
-            break;
+            case NID_sha384:
+                BIO_puts(out, "sha-384");
+                break;
 
-        case NID_sha512:
-            BIO_puts(out, "sha-512");
-            break;
+            case NID_sha512:
+                BIO_puts(out, "sha-512");
+                break;
 
-        case NID_id_GostR3411_94:
-            BIO_puts(out, "gostr3411-94");
-            goto err;
+            case NID_id_GostR3411_94:
+                BIO_puts(out, "gostr3411-94");
+                goto err;
 
-        case NID_id_GostR3411_2012_256:
-            BIO_puts(out, "gostr3411-2012-256");
-            goto err;
+            case NID_id_GostR3411_2012_256:
+                BIO_puts(out, "gostr3411-2012-256");
+                goto err;
 
-        case NID_id_GostR3411_2012_512:
-            BIO_puts(out, "gostr3411-2012-512");
-            goto err;
+            case NID_id_GostR3411_2012_512:
+                BIO_puts(out, "gostr3411-2012-512");
+                goto err;
 
-        default:
-            if (have_unknown) {
-                write_comma = 0;
-            } else {
-                BIO_puts(out, "unknown");
-                have_unknown = 1;
-            }
-            break;
+            default:
+                if (have_unknown) {
+                    write_comma = 0;
+                } else {
+                    BIO_puts(out, "unknown");
+                    have_unknown = 1;
+                }
+                break;
 
         }
     }
 
     ret = 1;
- err:
+err:
 
     return ret;
 
@@ -605,7 +609,8 @@ int SMIME_text(BIO *in, BIO *out)
  * canonical parts in a STACK of bios
  */
 
-static int multi_split(BIO *bio, int flags, const char *bound, STACK_OF(BIO) **ret)
+static int multi_split(BIO *bio, int flags, const char *bound,
+                       STACK_OF(BIO) **ret)
 {
     char linebuf[MAX_SMLEN];
     int len, blen;
@@ -654,7 +659,7 @@ static int multi_split(BIO *bio, int flags, const char *bound, STACK_OF(BIO) **r
 #else
                     1
 #endif
-                        || (flags & SMIME_CRLFEOL) != 0)
+                    || (flags & SMIME_CRLFEOL) != 0)
                     BIO_write(bpart, "\r\n", 2);
                 else
                     BIO_write(bpart, "\n", 1);
@@ -707,72 +712,72 @@ static STACK_OF(MIME_HEADER) *mime_parse_hdr(BIO *bio)
              */
 
             switch (state) {
-            case MIME_START:
-                if (c == ':') {
-                    state = MIME_TYPE;
-                    *p = 0;
-                    ntmp = strip_ends(q);
-                    q = p + 1;
-                }
-                break;
+                case MIME_START:
+                    if (c == ':') {
+                        state = MIME_TYPE;
+                        *p = 0;
+                        ntmp = strip_ends(q);
+                        q = p + 1;
+                    }
+                    break;
 
-            case MIME_TYPE:
-                if (c == ';') {
-                    mime_debug("Found End Value\n");
-                    *p = 0;
-                    new_hdr = mime_hdr_new(ntmp, strip_ends(q));
-                    if (new_hdr == NULL)
-                        goto err;
-                    if (!sk_MIME_HEADER_push(headers, new_hdr))
-                        goto err;
-                    mhdr = new_hdr;
-                    new_hdr = NULL;
-                    ntmp = NULL;
-                    q = p + 1;
-                    state = MIME_NAME;
-                } else if (c == '(') {
-                    save_state = state;
-                    state = MIME_COMMENT;
-                }
-                break;
+                case MIME_TYPE:
+                    if (c == ';') {
+                        mime_debug("Found End Value\n");
+                        *p = 0;
+                        new_hdr = mime_hdr_new(ntmp, strip_ends(q));
+                        if (new_hdr == NULL)
+                            goto err;
+                        if (!sk_MIME_HEADER_push(headers, new_hdr))
+                            goto err;
+                        mhdr = new_hdr;
+                        new_hdr = NULL;
+                        ntmp = NULL;
+                        q = p + 1;
+                        state = MIME_NAME;
+                    } else if (c == '(') {
+                        save_state = state;
+                        state = MIME_COMMENT;
+                    }
+                    break;
 
-            case MIME_COMMENT:
-                if (c == ')') {
-                    state = save_state;
-                }
-                break;
+                case MIME_COMMENT:
+                    if (c == ')') {
+                        state = save_state;
+                    }
+                    break;
 
-            case MIME_NAME:
-                if (c == '=') {
-                    state = MIME_VALUE;
-                    *p = 0;
-                    ntmp = strip_ends(q);
-                    q = p + 1;
-                }
-                break;
+                case MIME_NAME:
+                    if (c == '=') {
+                        state = MIME_VALUE;
+                        *p = 0;
+                        ntmp = strip_ends(q);
+                        q = p + 1;
+                    }
+                    break;
 
-            case MIME_VALUE:
-                if (c == ';') {
-                    state = MIME_NAME;
-                    *p = 0;
-                    mime_hdr_addparam(mhdr, ntmp, strip_ends(q));
-                    ntmp = NULL;
-                    q = p + 1;
-                } else if (c == '"') {
-                    mime_debug("Found Quote\n");
-                    state = MIME_QUOTE;
-                } else if (c == '(') {
-                    save_state = state;
-                    state = MIME_COMMENT;
-                }
-                break;
+                case MIME_VALUE:
+                    if (c == ';') {
+                        state = MIME_NAME;
+                        *p = 0;
+                        mime_hdr_addparam(mhdr, ntmp, strip_ends(q));
+                        ntmp = NULL;
+                        q = p + 1;
+                    } else if (c == '"') {
+                        mime_debug("Found Quote\n");
+                        state = MIME_QUOTE;
+                    } else if (c == '(') {
+                        save_state = state;
+                        state = MIME_COMMENT;
+                    }
+                    break;
 
-            case MIME_QUOTE:
-                if (c == '"') {
-                    mime_debug("Found Match Quote\n");
-                    state = MIME_VALUE;
-                }
-                break;
+                case MIME_QUOTE:
+                    if (c == '"') {
+                        mime_debug("Found Match Quote\n");
+                        state = MIME_VALUE;
+                    }
+                    break;
             }
         }
 
@@ -795,11 +800,11 @@ static STACK_OF(MIME_HEADER) *mime_parse_hdr(BIO *bio)
     sk_MIME_HEADER_sort(headers);
     for (i = 0; i < sk_MIME_HEADER_num(headers); i++)
         if ((mhdr = sk_MIME_HEADER_value(headers, i)) != NULL
-                && mhdr->params != NULL)
+            && mhdr->params != NULL)
             sk_MIME_PARAM_sort(mhdr->params);
     return headers;
 
- err:
+err:
     mime_hdr_free(new_hdr);
     sk_MIME_HEADER_pop_free(headers, mime_hdr_free);
     return NULL;
@@ -878,14 +883,15 @@ static MIME_HEADER *mime_hdr_new(const char *name, const char *value)
         goto err;
     return mhdr;
 
- err:
+err:
     OPENSSL_free(tmpname);
     OPENSSL_free(tmpval);
     OPENSSL_free(mhdr);
     return NULL;
 }
 
-static int mime_hdr_addparam(MIME_HEADER *mhdr, const char *name, const char *value)
+static int mime_hdr_addparam(MIME_HEADER *mhdr, const char *name,
+                             const char *value)
 {
     char *tmpname = NULL, *tmpval = NULL, *p;
     MIME_PARAM *mparam = NULL;
@@ -911,7 +917,7 @@ static int mime_hdr_addparam(MIME_HEADER *mhdr, const char *name, const char *va
     if (!sk_MIME_PARAM_push(mhdr->params, mparam))
         goto err;
     return 1;
- err:
+err:
     OPENSSL_free(tmpname);
     OPENSSL_free(tmpval);
     OPENSSL_free(mparam);
@@ -985,7 +991,8 @@ static void mime_param_free(MIME_PARAM *param)
  * 1 : part boundary
  * 2 : final boundary
  */
-static int mime_bound_check(char *line, int linelen, const char *bound, int blen)
+static int mime_bound_check(char *line, int linelen, const char *bound,
+                            int blen)
 {
     if (linelen == -1)
         linelen = strlen(line);

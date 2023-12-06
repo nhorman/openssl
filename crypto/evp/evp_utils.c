@@ -25,36 +25,36 @@
  * use the same value, and other callers will have to compensate.
  */
 #define PARAM_CHECK(obj, func, errfunc)                                        \
-    if (obj == NULL)                                                           \
+        if (obj == NULL)                                                           \
         return 0;                                                              \
-    if (obj->prov == NULL)                                                     \
+        if (obj->prov == NULL)                                                     \
         return EVP_CTRL_RET_UNSUPPORTED;                                       \
-    if (obj->func == NULL) {                                                   \
-        errfunc();                                                             \
-        return 0;                                                              \
-    }
+        if (obj->func == NULL) {                                                   \
+            errfunc();                                                             \
+            return 0;                                                              \
+        }
 
 #define PARAM_FUNC(name, func, type, err)                                      \
-int name (const type *obj, OSSL_PARAM params[])                                \
-{                                                                              \
-    PARAM_CHECK(obj, func, err)                                                \
-    return obj->func(params);                                                  \
-}
+        int name (const type *obj, OSSL_PARAM params[])                                \
+        {                                                                              \
+            PARAM_CHECK(obj, func, err)                                                \
+            return obj->func(params);                                                  \
+        }
 
 #define PARAM_CTX_FUNC(name, func, type, err)                                  \
-int name (const type *obj, void *algctx, OSSL_PARAM params[])                  \
-{                                                                              \
-    PARAM_CHECK(obj, func, err)                                                \
-    return obj->func(algctx, params);                                          \
-}
+        int name (const type *obj, void *algctx, OSSL_PARAM params[])                  \
+        {                                                                              \
+            PARAM_CHECK(obj, func, err)                                                \
+            return obj->func(algctx, params);                                          \
+        }
 
 #define PARAM_FUNCTIONS(type,                                                  \
                         getname, getfunc,                                      \
                         getctxname, getctxfunc,                                \
                         setctxname, setctxfunc)                                \
-    PARAM_FUNC(getname, getfunc, type, geterr)                                 \
-    PARAM_CTX_FUNC(getctxname, getctxfunc, type, geterr)                       \
-    PARAM_CTX_FUNC(setctxname, setctxfunc, type, seterr)
+        PARAM_FUNC(getname, getfunc, type, geterr)                                 \
+        PARAM_CTX_FUNC(getctxname, getctxfunc, type, geterr)                       \
+        PARAM_CTX_FUNC(setctxname, setctxfunc, type, seterr)
 
 /*
  * These error functions are a workaround for the error scripts, which

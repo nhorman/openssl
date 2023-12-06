@@ -20,12 +20,12 @@ static long pkt_split_dgram_ctrl(BIO *bio, int cmd, long num, void *ptr)
         return 0;
 
     switch (cmd) {
-    case BIO_CTRL_DUP:
-        ret = 0L;
-        break;
-    default:
-        ret = BIO_ctrl(next, cmd, num, ptr);
-        break;
+        case BIO_CTRL_DUP:
+            ret = 0L;
+            break;
+        default:
+            ret = BIO_ctrl(next, cmd, num, ptr);
+            break;
     }
     return ret;
 }

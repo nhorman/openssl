@@ -40,7 +40,7 @@ typedef struct ossl_qrl_enc_level_st {
      * Cryptographic context used to apply and remove header protection from
      * packet headers.
      */
-    QUIC_HDR_PROTECTOR          hpr;
+    QUIC_HDR_PROTECTOR hpr;
 
     /* Hash function used for key derivation. */
     EVP_MD                     *md;
@@ -57,30 +57,30 @@ typedef struct ossl_qrl_enc_level_st {
      * The least significant bit of this is therefore by definition the current
      * Key Phase bit value.
      */
-    uint64_t                    key_epoch;
+    uint64_t key_epoch;
 
     /* Usage counter. The caller maintains this. Used by TX side only. */
-    uint64_t                    op_count;
+    uint64_t op_count;
 
     /* QRL_SUITE_* value. */
-    uint32_t                    suite_id;
+    uint32_t suite_id;
 
     /* Length of authentication tag. */
-    uint32_t                    tag_len;
+    uint32_t tag_len;
 
     /* Current EL state. */
-    unsigned char               state; /* QRL_EL_STATE_* */
+    unsigned char state;               /* QRL_EL_STATE_* */
 
     /* 1 if for TX, else RX. Initialised when secret provided. */
-    unsigned char               is_tx;
+    unsigned char is_tx;
 
     /* IV used to construct nonces used for AEAD packet body ciphering. */
-    unsigned char               iv[2][EVP_MAX_IV_LENGTH];
+    unsigned char iv[2][EVP_MAX_IV_LENGTH];
 
     /*
      * Secret for next key epoch.
      */
-    unsigned char               ku[EVP_MAX_KEY_LENGTH];
+    unsigned char ku[EVP_MAX_KEY_LENGTH];
 } OSSL_QRL_ENC_LEVEL;
 
 typedef struct ossl_qrl_enc_level_set_st {

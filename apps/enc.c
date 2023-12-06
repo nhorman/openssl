@@ -91,7 +91,8 @@ const OPTIONS enc_options[] = {
     {"K", OPT_UPPER_K, 's', "Raw key, in hex"},
     {"S", OPT_UPPER_S, 's', "Salt, in hex"},
     {"iv", OPT_IV, 's', "IV in hex"},
-    {"md", OPT_MD, 's', "Use specified digest to create a key from the passphrase"},
+    {"md", OPT_MD, 's',
+     "Use specified digest to create a key from the passphrase"},
     {"iter", OPT_ITER, 'p',
      "Specify the iteration count and force the use of PBKDF2"},
     {OPT_MORE_STR, 0, 0, "Default: " STR(PBKDF2_ITER_DEFAULT)},
@@ -173,151 +174,151 @@ int enc_main(int argc, char **argv)
     prog = opt_init(argc, argv, enc_options);
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_EOF:
-        case OPT_ERR:
- opthelp:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto end;
-        case OPT_HELP:
-            opt_help(enc_options);
-            ret = 0;
-            goto end;
-        case OPT_LIST:
-            BIO_printf(bio_out, "Supported ciphers:\n");
-            dec.bio = bio_out;
-            dec.n = 0;
-            OBJ_NAME_do_all_sorted(OBJ_NAME_TYPE_CIPHER_METH,
-                                   show_ciphers, &dec);
-            BIO_printf(bio_out, "\n");
-            ret = 0;
-            goto end;
-        case OPT_E:
-            enc = 1;
-            break;
-        case OPT_IN:
-            infile = opt_arg();
-            break;
-        case OPT_OUT:
-            outfile = opt_arg();
-            break;
-        case OPT_PASS:
-            passarg = opt_arg();
-            break;
-        case OPT_ENGINE:
-            e = setup_engine(opt_arg(), 0);
-            break;
-        case OPT_D:
-            enc = 0;
-            break;
-        case OPT_P:
-            printkey = 1;
-            break;
-        case OPT_V:
-            verbose = 1;
-            break;
-        case OPT_NOPAD:
-            nopad = 1;
-            break;
-        case OPT_SALT:
-            nosalt = 0;
-            break;
-        case OPT_NOSALT:
-            nosalt = 1;
-            break;
-        case OPT_DEBUG:
-            debug = 1;
-            break;
-        case OPT_UPPER_P:
-            printkey = 2;
-            break;
-        case OPT_UPPER_A:
-            olb64 = 1;
-            break;
-        case OPT_A:
-            base64 = 1;
-            break;
-        case OPT_Z:
+            case OPT_EOF:
+            case OPT_ERR:
+opthelp:
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
+                goto end;
+            case OPT_HELP:
+                opt_help(enc_options);
+                ret = 0;
+                goto end;
+            case OPT_LIST:
+                BIO_printf(bio_out, "Supported ciphers:\n");
+                dec.bio = bio_out;
+                dec.n = 0;
+                OBJ_NAME_do_all_sorted(OBJ_NAME_TYPE_CIPHER_METH,
+                                       show_ciphers, &dec);
+                BIO_printf(bio_out, "\n");
+                ret = 0;
+                goto end;
+            case OPT_E:
+                enc = 1;
+                break;
+            case OPT_IN:
+                infile = opt_arg();
+                break;
+            case OPT_OUT:
+                outfile = opt_arg();
+                break;
+            case OPT_PASS:
+                passarg = opt_arg();
+                break;
+            case OPT_ENGINE:
+                e = setup_engine(opt_arg(), 0);
+                break;
+            case OPT_D:
+                enc = 0;
+                break;
+            case OPT_P:
+                printkey = 1;
+                break;
+            case OPT_V:
+                verbose = 1;
+                break;
+            case OPT_NOPAD:
+                nopad = 1;
+                break;
+            case OPT_SALT:
+                nosalt = 0;
+                break;
+            case OPT_NOSALT:
+                nosalt = 1;
+                break;
+            case OPT_DEBUG:
+                debug = 1;
+                break;
+            case OPT_UPPER_P:
+                printkey = 2;
+                break;
+            case OPT_UPPER_A:
+                olb64 = 1;
+                break;
+            case OPT_A:
+                base64 = 1;
+                break;
+            case OPT_Z:
 #ifndef OPENSSL_NO_ZLIB
-            do_zlib = 1;
+                do_zlib = 1;
 #endif
-            break;
-        case OPT_BUFSIZE:
-            p = opt_arg();
-            i = (int)strlen(p) - 1;
-            k = i >= 1 && p[i] == 'k';
-            if (k)
-                p[i] = '\0';
-            if (!opt_long(opt_arg(), &n)
+                break;
+            case OPT_BUFSIZE:
+                p = opt_arg();
+                i = (int)strlen(p) - 1;
+                k = i >= 1 && p[i] == 'k';
+                if (k)
+                    p[i] = '\0';
+                if (!opt_long(opt_arg(), &n)
                     || n < 0 || (k && n >= LONG_MAX / 1024))
-                goto opthelp;
-            if (k)
-                n *= 1024;
-            bsize = (int)n;
-            break;
-        case OPT_K:
-            str = opt_arg();
-            break;
-        case OPT_KFILE:
-            in = bio_open_default(opt_arg(), 'r', FORMAT_TEXT);
-            if (in == NULL)
-                goto opthelp;
-            i = BIO_gets(in, buf, sizeof(buf));
-            BIO_free(in);
-            in = NULL;
-            if (i <= 0) {
-                BIO_printf(bio_err,
-                           "%s Can't read key from %s\n", prog, opt_arg());
-                goto opthelp;
-            }
-            while (--i > 0 && (buf[i] == '\r' || buf[i] == '\n'))
-                buf[i] = '\0';
-            if (i <= 0) {
-                BIO_printf(bio_err, "%s: zero length password\n", prog);
-                goto opthelp;
-            }
-            str = buf;
-            break;
-        case OPT_UPPER_K:
-            hkey = opt_arg();
-            break;
-        case OPT_UPPER_S:
-            hsalt = opt_arg();
-            break;
-        case OPT_IV:
-            hiv = opt_arg();
-            break;
-        case OPT_MD:
-            digestname = opt_arg();
-            break;
-        case OPT_CIPHER:
-            ciphername = opt_unknown();
-            break;
-        case OPT_ITER:
-            iter = opt_int_arg();
-            pbkdf2 = 1;
-            break;
-        case OPT_SALTLEN:
-            if (!opt_int(opt_arg(), &saltlen))
-                goto opthelp;
-            if (saltlen > (int)sizeof(salt))
-                saltlen = (int)sizeof(salt);
-            break;
-        case OPT_PBKDF2:
-            pbkdf2 = 1;
-            if (iter == 0)    /* do not overwrite a chosen value */
-                iter = PBKDF2_ITER_DEFAULT;
-            break;
-        case OPT_NONE:
-            cipher = NULL;
-            break;
-        case OPT_R_CASES:
-            if (!opt_rand(o))
-                goto end;
-            break;
-        case OPT_PROV_CASES:
-            if (!opt_provider(o))
-                goto end;
-            break;
+                    goto opthelp;
+                if (k)
+                    n *= 1024;
+                bsize = (int)n;
+                break;
+            case OPT_K:
+                str = opt_arg();
+                break;
+            case OPT_KFILE:
+                in = bio_open_default(opt_arg(), 'r', FORMAT_TEXT);
+                if (in == NULL)
+                    goto opthelp;
+                i = BIO_gets(in, buf, sizeof(buf));
+                BIO_free(in);
+                in = NULL;
+                if (i <= 0) {
+                    BIO_printf(bio_err,
+                               "%s Can't read key from %s\n", prog, opt_arg());
+                    goto opthelp;
+                }
+                while (--i > 0 && (buf[i] == '\r' || buf[i] == '\n'))
+                    buf[i] = '\0';
+                if (i <= 0) {
+                    BIO_printf(bio_err, "%s: zero length password\n", prog);
+                    goto opthelp;
+                }
+                str = buf;
+                break;
+            case OPT_UPPER_K:
+                hkey = opt_arg();
+                break;
+            case OPT_UPPER_S:
+                hsalt = opt_arg();
+                break;
+            case OPT_IV:
+                hiv = opt_arg();
+                break;
+            case OPT_MD:
+                digestname = opt_arg();
+                break;
+            case OPT_CIPHER:
+                ciphername = opt_unknown();
+                break;
+            case OPT_ITER:
+                iter = opt_int_arg();
+                pbkdf2 = 1;
+                break;
+            case OPT_SALTLEN:
+                if (!opt_int(opt_arg(), &saltlen))
+                    goto opthelp;
+                if (saltlen > (int)sizeof(salt))
+                    saltlen = (int)sizeof(salt);
+                break;
+            case OPT_PBKDF2:
+                pbkdf2 = 1;
+                if (iter == 0) /* do not overwrite a chosen value */
+                    iter = PBKDF2_ITER_DEFAULT;
+                break;
+            case OPT_NONE:
+                cipher = NULL;
+                break;
+            case OPT_R_CASES:
+                if (!opt_rand(o))
+                    goto end;
+                break;
+            case OPT_PROV_CASES:
+                if (!opt_provider(o))
+                    goto end;
+                break;
         }
     }
 
@@ -398,8 +399,8 @@ int enc_main(int argc, char **argv)
                 char prompt[200];
 
                 BIO_snprintf(prompt, sizeof(prompt), "enter %s %s password:",
-                        EVP_CIPHER_get0_name(cipher),
-                        (enc) ? "encryption" : "decryption");
+                             EVP_CIPHER_get0_name(cipher),
+                             (enc) ? "encryption" : "decryption");
                 strbuf[0] = '\0';
                 i = EVP_read_pw_string((char *)strbuf, SIZE, prompt, enc);
                 if (i == 0) {
@@ -523,7 +524,8 @@ int enc_main(int argc, char **argv)
                          */
                         if ((printkey != 2)
                             && (BIO_write(wbio, magic,
-                                          sizeof(magic) - 1) != sizeof(magic) - 1
+                                          sizeof(magic) - 1) !=
+                                sizeof(magic) - 1
                                 || BIO_write(wbio,
                                              (char *)salt,
                                              saltlen) != saltlen)) {
@@ -533,14 +535,16 @@ int enc_main(int argc, char **argv)
                     }
                 } else {    /* decryption */
                     if (hsalt == NULL) {
-                        if (BIO_read(rbio, mbuf, sizeof(mbuf)) != sizeof(mbuf)) {
+                        if (BIO_read(rbio, mbuf,
+                                     sizeof(mbuf)) != sizeof(mbuf)) {
                             BIO_printf(bio_err, "error reading input file\n");
                             goto end;
                         }
                         if (memcmp(mbuf, magic, sizeof(mbuf)) == 0) { /* file IS salted */
                             if (BIO_read(rbio, salt,
                                          saltlen) != saltlen) {
-                                BIO_printf(bio_err, "error reading input file\n");
+                                BIO_printf(bio_err,
+                                           "error reading input file\n");
                                 goto end;
                             }
                         } else { /* file is NOT salted, NO salt available */
@@ -554,9 +558,9 @@ int enc_main(int argc, char **argv)
 
             if (pbkdf2 == 1) {
                 /*
-                * derive key and default iv
-                * concatenated into a temporary buffer
-                */
+                 * derive key and default iv
+                 * concatenated into a temporary buffer
+                 */
                 unsigned char tmpkeyiv[EVP_MAX_KEY_LENGTH + EVP_MAX_IV_LENGTH];
                 int iklen = EVP_CIPHER_get_key_length(cipher);
                 int ivlen = EVP_CIPHER_get_iv_length(cipher);
@@ -573,8 +577,8 @@ int enc_main(int argc, char **argv)
                 memcpy(iv, tmpkeyiv+iklen, ivlen);
             } else {
                 BIO_printf(bio_err, "*** WARNING : "
-                                    "deprecated key derivation used.\n"
-                                    "Using -iter or -pbkdf2 would be better.\n");
+                           "deprecated key derivation used.\n"
+                           "Using -iter or -pbkdf2 would be better.\n");
                 if (!EVP_BytesToKey(cipher, dgst, sptr,
                                     (unsigned char *)str, str_len,
                                     1, key, iv)) {
@@ -713,7 +717,7 @@ int enc_main(int argc, char **argv)
         BIO_printf(bio_err, "bytes read   : %8ju\n", BIO_number_read(in));
         BIO_printf(bio_err, "bytes written: %8ju\n", BIO_number_written(out));
     }
- end:
+end:
     ERR_print_errors(bio_err);
     OPENSSL_free(strbuf);
     OPENSSL_free(buff);
@@ -744,8 +748,8 @@ static void show_ciphers(const OBJ_NAME *name, void *arg)
     /* Filter out ciphers that we cannot use */
     cipher = EVP_get_cipherbyname(name->name);
     if (cipher == NULL
-            || (EVP_CIPHER_get_flags(cipher) & EVP_CIPH_FLAG_AEAD_CIPHER) != 0
-            || EVP_CIPHER_get_mode(cipher) == EVP_CIPH_XTS_MODE)
+        || (EVP_CIPHER_get_flags(cipher) & EVP_CIPH_FLAG_AEAD_CIPHER) != 0
+        || EVP_CIPHER_get_mode(cipher) == EVP_CIPH_XTS_MODE)
         return;
 
     BIO_printf(dec->bio, "-%-25s", name->name);
@@ -767,7 +771,8 @@ static int set_hex(const char *in, unsigned char *out, int size)
         BIO_printf(bio_err, "hex string is too long, ignoring excess\n");
         n = i; /* ignore exceeding part */
     } else if (n < i) {
-        BIO_printf(bio_err, "hex string is too short, padding with zero bytes to length\n");
+        BIO_printf(bio_err,
+                   "hex string is too short, padding with zero bytes to length\n");
     }
 
     memset(out, 0, size);

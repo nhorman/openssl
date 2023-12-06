@@ -232,7 +232,7 @@ static OSSL_ENCODER_INSTANCE *ossl_encoder_instance_new(OSSL_ENCODER *encoder,
     encoder_inst->encoder = encoder;
     encoder_inst->encoderctx = encoderctx;
     return encoder_inst;
- err:
+err:
     ossl_encoder_instance_free(encoder_inst);
     return NULL;
 }
@@ -256,7 +256,7 @@ static int ossl_encoder_ctx_add_encoder_inst(OSSL_ENCODER_CTX *ctx,
 
     if (ctx->encoder_insts == NULL
         && (ctx->encoder_insts =
-            sk_OSSL_ENCODER_INSTANCE_new_null()) == NULL) {
+                sk_OSSL_ENCODER_INSTANCE_new_null()) == NULL) {
         ERR_raise(ERR_LIB_OSSL_ENCODER, ERR_R_CRYPTO_LIB);
         return 0;
     }
@@ -292,7 +292,7 @@ int OSSL_ENCODER_CTX_add_encoder(OSSL_ENCODER_CTX *ctx, OSSL_ENCODER *encoder)
 
     if ((encoderctx = encoder->newctx(provctx)) == NULL
         || (encoder_inst =
-            ossl_encoder_instance_new(encoder, encoderctx)) == NULL)
+                ossl_encoder_instance_new(encoder, encoderctx)) == NULL)
         goto err;
     /* Avoid double free of encoderctx on further errors */
     encoderctx = NULL;
@@ -301,7 +301,7 @@ int OSSL_ENCODER_CTX_add_encoder(OSSL_ENCODER_CTX *ctx, OSSL_ENCODER *encoder)
         goto err;
 
     return 1;
- err:
+err:
     ossl_encoder_instance_free(encoder_inst);
     if (encoderctx != NULL)
         encoder->freectx(encoderctx);
@@ -541,73 +541,78 @@ static int encoder_process(struct encoder_process_data_st *data)
         /* Preparations */
 
         switch (ok) {
-        case 0:
-            break;
-        case -1:
-            /*
-             * We have reached the beginning of the encoder instance sequence,
-             * so we prepare the object to be encoded.
-             */
-
-            /*
-             * |data->count_output_structure| is one of these values:
-             *
-             * -1       There is no desired output structure
-             *  0       There is a desired output structure, and it wasn't
-             *          matched by any of the encoder instances that were
-             *          considered
-             * >0       There is a desired output structure, and at least one
-             *          of the encoder instances matched it
-             */
-            if (data->count_output_structure == 0)
-                return 0;
-
-            original_data =
-                data->ctx->construct(current_encoder_inst,
-                                     data->ctx->construct_data);
-
-            /* Also set the data type, using the encoder implementation name */
-            data->data_type = OSSL_ENCODER_get0_name(current_encoder);
-
-            /* Assume that the constructor recorded an error */
-            if (original_data != NULL)
-                ok = 1;
-            else
-                ok = 0;
-            break;
-        case 1:
-            if (!ossl_assert(data->running_output != NULL)) {
-                ERR_raise(ERR_LIB_OSSL_ENCODER, ERR_R_INTERNAL_ERROR);
-                ok = 0;
+            case 0:
                 break;
-            }
-
-            {
+            case -1:
                 /*
-                 * Create an object abstraction from the latest output, which
-                 * was stolen from the previous round.
+                 * We have reached the beginning of the encoder instance sequence,
+                 * so we prepare the object to be encoded.
                  */
 
-                OSSL_PARAM *abstract_p = abstract;
-                const char *prev_output_structure =
-                    OSSL_ENCODER_INSTANCE_get_output_structure(data->prev_encoder_inst);
+                /*
+                 * |data->count_output_structure| is one of these values:
+                 *
+                 * -1       There is no desired output structure
+                 *  0       There is a desired output structure, and it wasn't
+                 *          matched by any of the encoder instances that were
+                 *          considered
+                 * >0       There is a desired output structure, and at least one
+                 *          of the encoder instances matched it
+                 */
+                if (data->count_output_structure == 0)
+                    return 0;
 
-                *abstract_p++ =
-                    OSSL_PARAM_construct_utf8_string(OSSL_OBJECT_PARAM_DATA_TYPE,
-                                                     (char *)data->data_type, 0);
-                if (prev_output_structure != NULL)
+                original_data =
+                    data->ctx->construct(current_encoder_inst,
+                                         data->ctx->construct_data);
+
+                /* Also set the data type, using the encoder implementation name */
+                data->data_type = OSSL_ENCODER_get0_name(current_encoder);
+
+                /* Assume that the constructor recorded an error */
+                if (original_data != NULL)
+                    ok = 1;
+                else
+                    ok = 0;
+                break;
+            case 1:
+                if (!ossl_assert(data->running_output != NULL)) {
+                    ERR_raise(ERR_LIB_OSSL_ENCODER, ERR_R_INTERNAL_ERROR);
+                    ok = 0;
+                    break;
+                }
+
+                {
+                    /*
+                     * Create an object abstraction from the latest output, which
+                     * was stolen from the previous round.
+                     */
+
+                    OSSL_PARAM *abstract_p = abstract;
+                    const char *prev_output_structure =
+                        OSSL_ENCODER_INSTANCE_get_output_structure(
+                            data->prev_encoder_inst);
+
                     *abstract_p++ =
-                        OSSL_PARAM_construct_utf8_string(OSSL_OBJECT_PARAM_DATA_STRUCTURE,
-                                                         (char *)prev_output_structure,
-                                                         0);
-                *abstract_p++ =
-                    OSSL_PARAM_construct_octet_string(OSSL_OBJECT_PARAM_DATA,
-                                                      data->running_output,
-                                                      data->running_output_length);
-                *abstract_p = OSSL_PARAM_construct_end();
-                current_abstract = abstract;
-            }
-            break;
+                        OSSL_PARAM_construct_utf8_string(
+                            OSSL_OBJECT_PARAM_DATA_TYPE,
+                            (char *)data->data_type,
+                            0);
+                    if (prev_output_structure != NULL)
+                        *abstract_p++ =
+                            OSSL_PARAM_construct_utf8_string(
+                                OSSL_OBJECT_PARAM_DATA_STRUCTURE,
+                                (char *)prev_output_structure,
+                                0);
+                    *abstract_p++ =
+                        OSSL_PARAM_construct_octet_string(
+                            OSSL_OBJECT_PARAM_DATA,
+                            data->running_output,
+                            data->running_output_length);
+                    *abstract_p = OSSL_PARAM_construct_end();
+                    current_abstract = abstract;
+                }
+                break;
         }
 
         /* Calling the encoder implementation */

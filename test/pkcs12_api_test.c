@@ -61,7 +61,8 @@ static int has_key = 0;
 static int has_cert = 0;
 static int has_ca = 0;
 
-static int changepass(PKCS12 *p12, EVP_PKEY *key, X509 *cert, STACK_OF(X509) *ca)
+static int changepass(PKCS12 *p12, EVP_PKEY *key, X509 *cert,
+                      STACK_OF(X509) *ca)
 {
     int ret = 0;
     PKCS12 *p12new = NULL;
@@ -76,7 +77,9 @@ static int changepass(PKCS12 *p12, EVP_PKEY *key, X509 *cert, STACK_OF(X509) *ca
         goto err;
     if (!TEST_true(i2d_PKCS12_bio(bio, p12)))
         goto err;
-    if (!TEST_ptr(p12new = PKCS12_init_ex(NID_pkcs7_data, testctx, "provider=default")))
+    if (!TEST_ptr(p12new =
+                      PKCS12_init_ex(NID_pkcs7_data, testctx,
+                                     "provider=default")))
         goto err;
     if (!TEST_ptr(d2i_PKCS12_bio(bio, &p12new)))
         goto err;
@@ -118,7 +121,8 @@ static int pkcs12_parse_test(void)
 
         if ((has_key && !TEST_ptr(key)) || (!has_key && !TEST_ptr_null(key)))
             goto err;
-        if ((has_cert && !TEST_ptr(cert)) || (!has_cert && !TEST_ptr_null(cert)))
+        if ((has_cert && !TEST_ptr(cert)) ||
+            (!has_cert && !TEST_ptr_null(cert)))
             goto err;
         if ((has_ca && !TEST_ptr(ca)) || (!has_ca && !TEST_ptr_null(ca)))
             goto err;
@@ -140,7 +144,8 @@ static int pkcs12_create_cb(PKCS12_SAFEBAG *bag, void *cbarg)
     return cb_ret;
 }
 
-static PKCS12 *pkcs12_create_ex2_setup(EVP_PKEY **key, X509 **cert, STACK_OF(X509) **ca)
+static PKCS12 *pkcs12_create_ex2_setup(EVP_PKEY **key, X509 **cert,
+                                       STACK_OF(X509) **ca)
 {
     PKCS12 *p12 = NULL;
     p12 = PKCS12_load("out6.p12");
@@ -201,7 +206,7 @@ static int pkcs12_create_ex2_test(int test)
                                 testctx, NULL,
                                 pkcs12_create_cb, (void*)&cb_ret);
         /* PKCS12 not created */
-       if (TEST_ptr(ptr))
+        if (TEST_ptr(ptr))
             goto err;
     } else if (test == 2) {
         /* Specified call back called - return failure */
@@ -244,9 +249,12 @@ const OPTIONS *test_get_options(void)
         OPT_TEST_OPTIONS_DEFAULT_USAGE,
         { "in",   OPT_IN_FILE,   '<', "PKCS12 input file" },
         { "pass",   OPT_IN_PASS,   's', "PKCS12 input file password" },
-        { "has-key",   OPT_IN_HAS_KEY,  'n', "Whether the input file does contain an user key" },
-        { "has-cert",   OPT_IN_HAS_CERT, 'n', "Whether the input file does contain an user certificate" },
-        { "has-ca",   OPT_IN_HAS_CA,   'n', "Whether the input file does contain other certificate" },
+        { "has-key",   OPT_IN_HAS_KEY,  'n',
+          "Whether the input file does contain an user key" },
+        { "has-cert",   OPT_IN_HAS_CERT, 'n',
+          "Whether the input file does contain an user certificate" },
+        { "has-ca",   OPT_IN_HAS_CA,   'n',
+          "Whether the input file does contain other certificate" },
         { "legacy",  OPT_LEGACY,  '-', "Test the legacy APIs" },
         { NULL }
     };
@@ -259,27 +267,27 @@ int setup_tests(void)
 
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_IN_FILE:
-            in_file = opt_arg();
-            break;
-        case OPT_IN_PASS:
-            in_pass = opt_arg();
-            break;
-        case OPT_LEGACY:
-            break;
-        case OPT_IN_HAS_KEY:
-            has_key = opt_int_arg();
-            break;
-        case OPT_IN_HAS_CERT:
-            has_cert = opt_int_arg();
-            break;
-        case OPT_IN_HAS_CA:
-            has_ca = opt_int_arg();
-            break;
-        case OPT_TEST_CASES:
-            break;
-        default:
-            return 0;
+            case OPT_IN_FILE:
+                in_file = opt_arg();
+                break;
+            case OPT_IN_PASS:
+                in_pass = opt_arg();
+                break;
+            case OPT_LEGACY:
+                break;
+            case OPT_IN_HAS_KEY:
+                has_key = opt_int_arg();
+                break;
+            case OPT_IN_HAS_CERT:
+                has_cert = opt_int_arg();
+                break;
+            case OPT_IN_HAS_CA:
+                has_ca = opt_int_arg();
+                break;
+            case OPT_TEST_CASES:
+                break;
+            default:
+                return 0;
         }
     }
 

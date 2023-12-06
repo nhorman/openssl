@@ -38,7 +38,7 @@ static int test_double_config(void)
         goto err;
 
     testresult = 1;
- err:
+err:
     EVP_MD_free(sha256);
     OSSL_LIB_CTX_free(ctx);
     return testresult;

@@ -55,14 +55,13 @@ static PROXY_CERT_INFO_EXTENSION *r2i_pci(X509V3_EXT_METHOD *method,
                                           X509V3_CTX *ctx, char *str);
 
 const X509V3_EXT_METHOD ossl_v3_pci =
-    { NID_proxyCertInfo, 0, ASN1_ITEM_ref(PROXY_CERT_INFO_EXTENSION),
-    0, 0, 0, 0,
-    0, 0,
-    NULL, NULL,
-    (X509V3_EXT_I2R)i2r_pci,
-    (X509V3_EXT_R2I)r2i_pci,
-    NULL,
-};
+{ NID_proxyCertInfo, 0, ASN1_ITEM_ref(PROXY_CERT_INFO_EXTENSION),
+  0, 0, 0, 0,
+  0, 0,
+  NULL, NULL,
+  (X509V3_EXT_I2R)i2r_pci,
+  (X509V3_EXT_R2I)r2i_pci,
+  NULL,};
 
 static int i2r_pci(X509V3_EXT_METHOD *method, PROXY_CERT_INFO_EXTENSION *pci,
                    BIO *out, int indent)
@@ -225,7 +224,7 @@ static int process_pci_value(CONF_VALUE *val,
         }
     }
     return 1;
- err:
+err:
     if (free_policy) {
         ASN1_OCTET_STRING_free(*policy);
         *policy = NULL;
@@ -304,7 +303,7 @@ static PROXY_CERT_INFO_EXTENSION *r2i_pci(X509V3_EXT_METHOD *method,
     pci->pcPathLengthConstraint = pathlen;
     pathlen = NULL;
     goto end;
- err:
+err:
     ASN1_OBJECT_free(language);
     ASN1_INTEGER_free(pathlen);
     pathlen = NULL;
@@ -312,7 +311,7 @@ static PROXY_CERT_INFO_EXTENSION *r2i_pci(X509V3_EXT_METHOD *method,
     policy = NULL;
     PROXY_CERT_INFO_EXTENSION_free(pci);
     pci = NULL;
- end:
+end:
     sk_CONF_VALUE_pop_free(vals, X509V3_conf_free);
     return pci;
 }

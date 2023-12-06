@@ -111,20 +111,20 @@ BN_ULONG bn_sub_part_words(BN_ULONG *r,
         if (dl > 0) {
             if (save_dl > dl) {
                 switch (save_dl - dl) {
-                case 1:
-                    r[1] = a[1];
-                    if (--dl <= 0)
-                        break;
+                    case 1:
+                        r[1] = a[1];
+                        if (--dl <= 0)
+                            break;
                     /* fall through */
-                case 2:
-                    r[2] = a[2];
-                    if (--dl <= 0)
-                        break;
+                    case 2:
+                        r[2] = a[2];
+                        if (--dl <= 0)
+                            break;
                     /* fall through */
-                case 3:
-                    r[3] = a[3];
-                    if (--dl <= 0)
-                        break;
+                    case 3:
+                        r[3] = a[3];
+                        if (--dl <= 0)
+                            break;
                 }
                 a += 4;
                 r += 4;
@@ -209,35 +209,35 @@ void bn_mul_recursive(BN_ULONG *r, BN_ULONG *a, BN_ULONG *b, int n2,
     c2 = bn_cmp_part_words(&(b[n]), b, tnb, tnb - n);
     zero = neg = 0;
     switch (c1 * 3 + c2) {
-    case -4:
-        bn_sub_part_words(t, &(a[n]), a, tna, tna - n); /* - */
-        bn_sub_part_words(&(t[n]), b, &(b[n]), tnb, n - tnb); /* - */
-        break;
-    case -3:
-        zero = 1;
-        break;
-    case -2:
-        bn_sub_part_words(t, &(a[n]), a, tna, tna - n); /* - */
-        bn_sub_part_words(&(t[n]), &(b[n]), b, tnb, tnb - n); /* + */
-        neg = 1;
-        break;
-    case -1:
-    case 0:
-    case 1:
-        zero = 1;
-        break;
-    case 2:
-        bn_sub_part_words(t, a, &(a[n]), tna, n - tna); /* + */
-        bn_sub_part_words(&(t[n]), b, &(b[n]), tnb, n - tnb); /* - */
-        neg = 1;
-        break;
-    case 3:
-        zero = 1;
-        break;
-    case 4:
-        bn_sub_part_words(t, a, &(a[n]), tna, n - tna);
-        bn_sub_part_words(&(t[n]), &(b[n]), b, tnb, tnb - n);
-        break;
+        case -4:
+            bn_sub_part_words(t, &(a[n]), a, tna, tna - n); /* - */
+            bn_sub_part_words(&(t[n]), b, &(b[n]), tnb, n - tnb); /* - */
+            break;
+        case -3:
+            zero = 1;
+            break;
+        case -2:
+            bn_sub_part_words(t, &(a[n]), a, tna, tna - n); /* - */
+            bn_sub_part_words(&(t[n]), &(b[n]), b, tnb, tnb - n); /* + */
+            neg = 1;
+            break;
+        case -1:
+        case 0:
+        case 1:
+            zero = 1;
+            break;
+        case 2:
+            bn_sub_part_words(t, a, &(a[n]), tna, n - tna); /* + */
+            bn_sub_part_words(&(t[n]), b, &(b[n]), tnb, n - tnb); /* - */
+            neg = 1;
+            break;
+        case 3:
+            zero = 1;
+            break;
+        case 4:
+            bn_sub_part_words(t, a, &(a[n]), tna, n - tna);
+            bn_sub_part_words(&(t[n]), &(b[n]), b, tnb, tnb - n);
+            break;
     }
 
 # ifdef BN_MUL_COMBA
@@ -336,29 +336,29 @@ void bn_mul_part_recursive(BN_ULONG *r, BN_ULONG *a, BN_ULONG *b, int n,
     c2 = bn_cmp_part_words(&(b[n]), b, tnb, tnb - n);
     neg = 0;
     switch (c1 * 3 + c2) {
-    case -4:
-        bn_sub_part_words(t, &(a[n]), a, tna, tna - n); /* - */
-        bn_sub_part_words(&(t[n]), b, &(b[n]), tnb, n - tnb); /* - */
-        break;
-    case -3:
-    case -2:
-        bn_sub_part_words(t, &(a[n]), a, tna, tna - n); /* - */
-        bn_sub_part_words(&(t[n]), &(b[n]), b, tnb, tnb - n); /* + */
-        neg = 1;
-        break;
-    case -1:
-    case 0:
-    case 1:
-    case 2:
-        bn_sub_part_words(t, a, &(a[n]), tna, n - tna); /* + */
-        bn_sub_part_words(&(t[n]), b, &(b[n]), tnb, n - tnb); /* - */
-        neg = 1;
-        break;
-    case 3:
-    case 4:
-        bn_sub_part_words(t, a, &(a[n]), tna, n - tna);
-        bn_sub_part_words(&(t[n]), &(b[n]), b, tnb, tnb - n);
-        break;
+        case -4:
+            bn_sub_part_words(t, &(a[n]), a, tna, tna - n); /* - */
+            bn_sub_part_words(&(t[n]), b, &(b[n]), tnb, n - tnb); /* - */
+            break;
+        case -3:
+        case -2:
+            bn_sub_part_words(t, &(a[n]), a, tna, tna - n); /* - */
+            bn_sub_part_words(&(t[n]), &(b[n]), b, tnb, tnb - n); /* + */
+            neg = 1;
+            break;
+        case -1:
+        case 0:
+        case 1:
+        case 2:
+            bn_sub_part_words(t, a, &(a[n]), tna, n - tna); /* + */
+            bn_sub_part_words(&(t[n]), b, &(b[n]), tnb, n - tnb); /* - */
+            neg = 1;
+            break;
+        case 3:
+        case 4:
+            bn_sub_part_words(t, a, &(a[n]), tna, n - tna);
+            bn_sub_part_words(&(t[n]), &(b[n]), b, tnb, tnb - n);
+            break;
     }
     /*
      * The zero case isn't yet implemented here. The speedup would probably
@@ -605,7 +605,7 @@ int bn_mul_fixed_top(BIGNUM *r, const BIGNUM *a, const BIGNUM *b, BN_CTX *ctx)
     bn_mul_normal(rr->d, a->d, al, b->d, bl);
 
 #if defined(BN_MUL_COMBA) || defined(BN_RECURSION)
- end:
+end:
 #endif
     rr->neg = a->neg ^ b->neg;
     rr->flags |= BN_FLG_FIXED_TOP;
@@ -613,7 +613,7 @@ int bn_mul_fixed_top(BIGNUM *r, const BIGNUM *a, const BIGNUM *b, BN_CTX *ctx)
         goto err;
 
     ret = 1;
- err:
+err:
     bn_check_top(r);
     BN_CTX_end(ctx);
     return ret;

@@ -51,10 +51,10 @@
  * little-endian order. The value of p is advanced by four.
  */
 # define u32toLE(n, p) \
-         (*((p)++) = (unsigned char)(n      ), \
-          *((p)++) = (unsigned char)(n >>  8), \
-          *((p)++) = (unsigned char)(n >> 16), \
-          *((p)++) = (unsigned char)(n >> 24))
+        (*((p)++) = (unsigned char)(n      ), \
+         *((p)++) = (unsigned char)(n >>  8), \
+         *((p)++) = (unsigned char)(n >> 16), \
+         *((p)++) = (unsigned char)(n >> 24))
 
 /*
  * These functions serialize the state of a hash and thus perform the
@@ -141,8 +141,8 @@ int ssl3_cbc_digest_record(const EVP_MD *md,
     void (*md_transform) (void *ctx, const unsigned char *block);
     size_t md_size, md_block_size = 64;
     size_t sslv3_pad_length = 40, header_length, variance_blocks,
-        len, max_mac_bytes, num_blocks,
-        num_starting_blocks, k, mac_end_offset, c, index_a, index_b;
+           len, max_mac_bytes, num_blocks,
+           num_starting_blocks, k, mac_end_offset, c, index_a, index_b;
     size_t bits;          /* at most 18 bits */
     unsigned char length_bytes[MAX_HASH_BIT_COUNT_BYTES];
     /* hmac_pad is the masked HMAC key. */
@@ -175,7 +175,7 @@ int ssl3_cbc_digest_record(const EVP_MD *md,
             return 0;
         md_final_raw = tls1_md5_final_raw;
         md_transform =
-            (void (*)(void *ctx, const unsigned char *block))MD5_Transform;
+            (void (*)(void *ctx, const unsigned char *block)) MD5_Transform;
         md_size = 16;
         sslv3_pad_length = 48;
         length_is_big_endian = 0;
@@ -185,28 +185,28 @@ int ssl3_cbc_digest_record(const EVP_MD *md,
             return 0;
         md_final_raw = tls1_sha1_final_raw;
         md_transform =
-            (void (*)(void *ctx, const unsigned char *block))SHA1_Transform;
+            (void (*)(void *ctx, const unsigned char *block)) SHA1_Transform;
         md_size = 20;
     } else if (EVP_MD_is_a(md, "SHA2-224")) {
         if (SHA224_Init((SHA256_CTX *)md_state.c) <= 0)
             return 0;
         md_final_raw = tls1_sha256_final_raw;
         md_transform =
-            (void (*)(void *ctx, const unsigned char *block))SHA256_Transform;
+            (void (*)(void *ctx, const unsigned char *block)) SHA256_Transform;
         md_size = 224 / 8;
     } else if (EVP_MD_is_a(md, "SHA2-256")) {
         if (SHA256_Init((SHA256_CTX *)md_state.c) <= 0)
             return 0;
         md_final_raw = tls1_sha256_final_raw;
         md_transform =
-            (void (*)(void *ctx, const unsigned char *block))SHA256_Transform;
+            (void (*)(void *ctx, const unsigned char *block)) SHA256_Transform;
         md_size = 32;
     } else if (EVP_MD_is_a(md, "SHA2-384")) {
         if (SHA384_Init((SHA512_CTX *)md_state.c) <= 0)
             return 0;
         md_final_raw = tls1_sha512_final_raw;
         md_transform =
-            (void (*)(void *ctx, const unsigned char *block))SHA512_Transform;
+            (void (*)(void *ctx, const unsigned char *block)) SHA512_Transform;
         md_size = 384 / 8;
         md_block_size = 128;
         md_length_size = 16;
@@ -215,7 +215,7 @@ int ssl3_cbc_digest_record(const EVP_MD *md,
             return 0;
         md_final_raw = tls1_sha512_final_raw;
         md_transform =
-            (void (*)(void *ctx, const unsigned char *block))SHA512_Transform;
+            (void (*)(void *ctx, const unsigned char *block)) SHA512_Transform;
         md_size = 64;
         md_block_size = 128;
         md_length_size = 16;
@@ -230,8 +230,8 @@ int ssl3_cbc_digest_record(const EVP_MD *md,
     }
 
     if (!ossl_assert(md_length_size <= MAX_HASH_BIT_COUNT_BYTES)
-            || !ossl_assert(md_block_size <= MAX_HASH_BLOCK_SIZE)
-            || !ossl_assert(md_size <= EVP_MAX_MD_SIZE))
+        || !ossl_assert(md_block_size <= MAX_HASH_BLOCK_SIZE)
+        || !ossl_assert(md_size <= EVP_MAX_MD_SIZE))
         return 0;
 
     header_length = 13;
@@ -480,7 +480,7 @@ int ssl3_cbc_digest_record(const EVP_MD *md,
         *md_out_size = md_out_size_u;
 
     ret = 1;
- err:
+err:
     EVP_MD_CTX_free(md_ctx);
     return ret;
 }

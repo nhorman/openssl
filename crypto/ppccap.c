@@ -107,12 +107,12 @@ size_t OPENSSL_instrument_bus2(unsigned int *out, size_t cnt, size_t max)
 
 static unsigned long getauxval(unsigned long key)
 {
-  unsigned long val = 0ul;
+    unsigned long val = 0ul;
 
-  if (elf_aux_info((int)key, &val, sizeof(val)) != 0)
-    return 0ul;
+    if (elf_aux_info((int)key, &val, sizeof(val)) != 0)
+        return 0ul;
 
-  return val;
+    return val;
 }
 # endif
 #endif
@@ -285,10 +285,10 @@ void OPENSSL_cpuid_setup(void)
             struct utsname uts;
             if (uname(&uts) == 0 && strcmp(uts.machine, "ppc64") == 0)
 # endif
-                if (sigsetjmp(ill_jmp, 1) == 0) {
-                    OPENSSL_ppc64_probe();
-                    OPENSSL_ppccap_P |= PPC_FPU64;
-                }
+            if (sigsetjmp(ill_jmp, 1) == 0) {
+                OPENSSL_ppc64_probe();
+                OPENSSL_ppccap_P |= PPC_FPU64;
+            }
         } else {
             /*
              * Wanted code detecting POWER6 CPU and setting PPC_FPU64

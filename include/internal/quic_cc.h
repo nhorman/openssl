@@ -18,18 +18,18 @@ typedef struct ossl_cc_data_st OSSL_CC_DATA;
 
 typedef struct ossl_cc_ack_info_st {
     /* The time the packet being acknowledged was originally sent. */
-    OSSL_TIME   tx_time;
+    OSSL_TIME tx_time;
 
     /* The size in bytes of the packet being acknowledged. */
-    size_t      tx_size;
+    size_t tx_size;
 } OSSL_CC_ACK_INFO;
 
 typedef struct ossl_cc_loss_info_st {
     /* The time the packet being lost was originally sent. */
-    OSSL_TIME   tx_time;
+    OSSL_TIME tx_time;
 
     /* The size in bytes of the packet which has been determined lost. */
-    size_t      tx_size;
+    size_t tx_size;
 } OSSL_CC_LOSS_INFO;
 
 typedef struct ossl_cc_ecn_info_st {
@@ -37,7 +37,7 @@ typedef struct ossl_cc_ecn_info_st {
      * The time at which the largest acked PN (in the incoming ACK frame) was
      * sent.
      */
-    OSSL_TIME   largest_acked_time;
+    OSSL_TIME largest_acked_time;
 } OSSL_CC_ECN_INFO;
 
 /* Parameter (read-write): Maximum datagram payload length in bytes. */

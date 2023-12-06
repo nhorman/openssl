@@ -21,11 +21,11 @@ int test_skip_common_options(void)
 
     while ((o = (OPTION_CHOICE_DEFAULT)opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_TEST_CASES:
-           break;
-        default:
-        case OPT_ERR:
-            return 0;
+            case OPT_TEST_CASES:
+                break;
+            default:
+            case OPT_ERR:
+                return 0;
         }
     }
     return 1;

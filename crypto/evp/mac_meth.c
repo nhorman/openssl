@@ -75,74 +75,74 @@ static void *evp_mac_from_algorithm(int name_id,
 
     for (; fns->function_id != 0; fns++) {
         switch (fns->function_id) {
-        case OSSL_FUNC_MAC_NEWCTX:
-            if (mac->newctx != NULL)
+            case OSSL_FUNC_MAC_NEWCTX:
+                if (mac->newctx != NULL)
+                    break;
+                mac->newctx = OSSL_FUNC_mac_newctx(fns);
+                fnctxcnt++;
                 break;
-            mac->newctx = OSSL_FUNC_mac_newctx(fns);
-            fnctxcnt++;
-            break;
-        case OSSL_FUNC_MAC_DUPCTX:
-            if (mac->dupctx != NULL)
+            case OSSL_FUNC_MAC_DUPCTX:
+                if (mac->dupctx != NULL)
+                    break;
+                mac->dupctx = OSSL_FUNC_mac_dupctx(fns);
                 break;
-            mac->dupctx = OSSL_FUNC_mac_dupctx(fns);
-            break;
-        case OSSL_FUNC_MAC_FREECTX:
-            if (mac->freectx != NULL)
+            case OSSL_FUNC_MAC_FREECTX:
+                if (mac->freectx != NULL)
+                    break;
+                mac->freectx = OSSL_FUNC_mac_freectx(fns);
+                fnctxcnt++;
                 break;
-            mac->freectx = OSSL_FUNC_mac_freectx(fns);
-            fnctxcnt++;
-            break;
-        case OSSL_FUNC_MAC_INIT:
-            if (mac->init != NULL)
+            case OSSL_FUNC_MAC_INIT:
+                if (mac->init != NULL)
+                    break;
+                mac->init = OSSL_FUNC_mac_init(fns);
+                fnmaccnt++;
                 break;
-            mac->init = OSSL_FUNC_mac_init(fns);
-            fnmaccnt++;
-            break;
-        case OSSL_FUNC_MAC_UPDATE:
-            if (mac->update != NULL)
+            case OSSL_FUNC_MAC_UPDATE:
+                if (mac->update != NULL)
+                    break;
+                mac->update = OSSL_FUNC_mac_update(fns);
+                fnmaccnt++;
                 break;
-            mac->update = OSSL_FUNC_mac_update(fns);
-            fnmaccnt++;
-            break;
-        case OSSL_FUNC_MAC_FINAL:
-            if (mac->final != NULL)
+            case OSSL_FUNC_MAC_FINAL:
+                if (mac->final != NULL)
+                    break;
+                mac->final = OSSL_FUNC_mac_final(fns);
+                fnmaccnt++;
                 break;
-            mac->final = OSSL_FUNC_mac_final(fns);
-            fnmaccnt++;
-            break;
-        case OSSL_FUNC_MAC_GETTABLE_PARAMS:
-            if (mac->gettable_params != NULL)
+            case OSSL_FUNC_MAC_GETTABLE_PARAMS:
+                if (mac->gettable_params != NULL)
+                    break;
+                mac->gettable_params =
+                    OSSL_FUNC_mac_gettable_params(fns);
                 break;
-            mac->gettable_params =
-                OSSL_FUNC_mac_gettable_params(fns);
-            break;
-        case OSSL_FUNC_MAC_GETTABLE_CTX_PARAMS:
-            if (mac->gettable_ctx_params != NULL)
+            case OSSL_FUNC_MAC_GETTABLE_CTX_PARAMS:
+                if (mac->gettable_ctx_params != NULL)
+                    break;
+                mac->gettable_ctx_params =
+                    OSSL_FUNC_mac_gettable_ctx_params(fns);
                 break;
-            mac->gettable_ctx_params =
-                OSSL_FUNC_mac_gettable_ctx_params(fns);
-            break;
-        case OSSL_FUNC_MAC_SETTABLE_CTX_PARAMS:
-            if (mac->settable_ctx_params != NULL)
+            case OSSL_FUNC_MAC_SETTABLE_CTX_PARAMS:
+                if (mac->settable_ctx_params != NULL)
+                    break;
+                mac->settable_ctx_params =
+                    OSSL_FUNC_mac_settable_ctx_params(fns);
                 break;
-            mac->settable_ctx_params =
-                OSSL_FUNC_mac_settable_ctx_params(fns);
-            break;
-        case OSSL_FUNC_MAC_GET_PARAMS:
-            if (mac->get_params != NULL)
+            case OSSL_FUNC_MAC_GET_PARAMS:
+                if (mac->get_params != NULL)
+                    break;
+                mac->get_params = OSSL_FUNC_mac_get_params(fns);
                 break;
-            mac->get_params = OSSL_FUNC_mac_get_params(fns);
-            break;
-        case OSSL_FUNC_MAC_GET_CTX_PARAMS:
-            if (mac->get_ctx_params != NULL)
+            case OSSL_FUNC_MAC_GET_CTX_PARAMS:
+                if (mac->get_ctx_params != NULL)
+                    break;
+                mac->get_ctx_params = OSSL_FUNC_mac_get_ctx_params(fns);
                 break;
-            mac->get_ctx_params = OSSL_FUNC_mac_get_ctx_params(fns);
-            break;
-        case OSSL_FUNC_MAC_SET_CTX_PARAMS:
-            if (mac->set_ctx_params != NULL)
+            case OSSL_FUNC_MAC_SET_CTX_PARAMS:
+                if (mac->set_ctx_params != NULL)
+                    break;
+                mac->set_ctx_params = OSSL_FUNC_mac_set_ctx_params(fns);
                 break;
-            mac->set_ctx_params = OSSL_FUNC_mac_set_ctx_params(fns);
-            break;
         }
     }
     if (fnmaccnt != 3
@@ -238,6 +238,6 @@ void EVP_MAC_do_all_provided(OSSL_LIB_CTX *libctx,
                              void *arg)
 {
     evp_generic_do_all(libctx, OSSL_OP_MAC,
-                       (void (*)(void *, void *))fn, arg,
+                       (void (*)(void *, void *)) fn, arg,
                        evp_mac_from_algorithm, evp_mac_up_ref, evp_mac_free);
 }

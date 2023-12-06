@@ -23,8 +23,8 @@ struct ossl_property_definition_st {
     OSSL_PROPERTY_OPER oper;
     unsigned int optional : 1;
     union {
-        int64_t             int_val;     /* Signed integer */
-        OSSL_PROPERTY_IDX   str_val;     /* String */
+        int64_t int_val;                 /* Signed integer */
+        OSSL_PROPERTY_IDX str_val;       /* String */
     } v;
 };
 

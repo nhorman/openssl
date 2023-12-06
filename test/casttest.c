@@ -30,7 +30,7 @@ static unsigned char k[16] = {
 };
 
 static unsigned char in[8] =
-    { 0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF };
+{ 0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF };
 
 static int k_len[3] = { 16, 10, 5 };
 
@@ -101,7 +101,7 @@ static int cast_test_iterations(void)
     }
 
     if (!TEST_mem_eq(out_a, sizeof(c_a), c_a, sizeof(c_a))
-            || !TEST_mem_eq(out_b, sizeof(c_b), c_b, sizeof(c_b)))
+        || !TEST_mem_eq(out_b, sizeof(c_b), c_b, sizeof(c_b)))
         testresult = 0;
 
     return testresult;

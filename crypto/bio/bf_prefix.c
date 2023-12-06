@@ -157,36 +157,36 @@ static long prefix_ctrl(BIO *b, int cmd, long num, void *ptr)
         return -1;
 
     switch (cmd) {
-    case BIO_CTRL_SET_PREFIX:
-        OPENSSL_free(ctx->prefix);
-        if (ptr == NULL) {
-            ctx->prefix = NULL;
-            ret = 1;
-        } else {
-            ctx->prefix = OPENSSL_strdup((const char *)ptr);
-            ret = ctx->prefix != NULL;
-        }
-        break;
-    case BIO_CTRL_SET_INDENT:
-        if (num >= 0) {
-            ctx->indent = (unsigned int)num;
-            ret = 1;
-        }
-        break;
-    case BIO_CTRL_GET_INDENT:
-        ret = (long)ctx->indent;
-        break;
-    default:
-        /* Commands that we intercept before passing them along */
-        switch (cmd) {
-        case BIO_C_FILE_SEEK:
-        case BIO_CTRL_RESET:
-            ctx->linestart = 1;
+        case BIO_CTRL_SET_PREFIX:
+            OPENSSL_free(ctx->prefix);
+            if (ptr == NULL) {
+                ctx->prefix = NULL;
+                ret = 1;
+            } else {
+                ctx->prefix = OPENSSL_strdup((const char *)ptr);
+                ret = ctx->prefix != NULL;
+            }
             break;
-        }
-        if (BIO_next(b) != NULL)
-            ret = BIO_ctrl(BIO_next(b), cmd, num, ptr);
-        break;
+        case BIO_CTRL_SET_INDENT:
+            if (num >= 0) {
+                ctx->indent = (unsigned int)num;
+                ret = 1;
+            }
+            break;
+        case BIO_CTRL_GET_INDENT:
+            ret = (long)ctx->indent;
+            break;
+        default:
+            /* Commands that we intercept before passing them along */
+            switch (cmd) {
+                case BIO_C_FILE_SEEK:
+                case BIO_CTRL_RESET:
+                    ctx->linestart = 1;
+                    break;
+            }
+            if (BIO_next(b) != NULL)
+                ret = BIO_ctrl(BIO_next(b), cmd, num, ptr);
+            break;
     }
     return ret;
 }

@@ -14,9 +14,9 @@
 
 void poly1305_init_int(void *ctx, const unsigned char key[16]);
 void poly1305_blocks(void *ctx, const unsigned char *inp, size_t len,
-                         unsigned int padbit);
+                     unsigned int padbit);
 void poly1305_emit(void *ctx, unsigned char mac[16],
-                       const unsigned int nonce[4]);
+                   const unsigned int nonce[4]);
 void poly1305_init_fpu(void *ctx, const unsigned char key[16]);
 void poly1305_blocks_fpu(void *ctx, const unsigned char *inp, size_t len,
                          unsigned int padbit);

@@ -194,9 +194,11 @@ BIGNUM *SRP_Calc_x(const BIGNUM *s, const char *user, const char *pass);
 OSSL_DEPRECATEDIN_3_0
 BIGNUM *SRP_Calc_A(const BIGNUM *a, const BIGNUM *N, const BIGNUM *g);
 OSSL_DEPRECATEDIN_3_0
-BIGNUM *SRP_Calc_client_key_ex(const BIGNUM *N, const BIGNUM *B, const BIGNUM *g,
-                            const BIGNUM *x, const BIGNUM *a, const BIGNUM *u,
-                            OSSL_LIB_CTX *libctx, const char *propq);
+BIGNUM *SRP_Calc_client_key_ex(const BIGNUM *N, const BIGNUM *B,
+                               const BIGNUM *g,
+                               const BIGNUM *x, const BIGNUM *a,
+                               const BIGNUM *u,
+                               OSSL_LIB_CTX *libctx, const char *propq);
 OSSL_DEPRECATEDIN_3_0
 BIGNUM *SRP_Calc_client_key(const BIGNUM *N, const BIGNUM *B, const BIGNUM *g,
                             const BIGNUM *x, const BIGNUM *a, const BIGNUM *u);

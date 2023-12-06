@@ -53,20 +53,23 @@
 # if defined(__GLIBC__) && defined(__GLIBC_PREREQ)
 #  if !(__GLIBC_PREREQ(2, 14))
 #   undef NO_RECVMMSG
-    /*
-     * Some old glibc versions may have recvmmsg and MSG_WAITFORONE flag, but
-     * not sendmmsg. We need both so force this to be disabled on these old
-     * versions
-     */
+/*
+ * Some old glibc versions may have recvmmsg and MSG_WAITFORONE flag, but
+ * not sendmmsg. We need both so force this to be disabled on these old
+ * versions
+ */
 #   define NO_RECVMMSG
 #  endif
 # endif
 # if !defined(M_METHOD)
-#  if defined(OPENSSL_SYS_WINDOWS) && defined(BIO_HAVE_WSAMSG) && !defined(NO_WSARECVMSG)
+#  if defined(OPENSSL_SYS_WINDOWS) && defined(BIO_HAVE_WSAMSG) && \
+    !defined(NO_WSARECVMSG)
 #   define M_METHOD  M_METHOD_WSARECVMSG
-#  elif !defined(OPENSSL_SYS_WINDOWS) && defined(MSG_WAITFORONE) && !defined(NO_RECVMMSG)
+#  elif !defined(OPENSSL_SYS_WINDOWS) && defined(MSG_WAITFORONE) && \
+    !defined(NO_RECVMMSG)
 #   define M_METHOD  M_METHOD_RECVMMSG
-#  elif !defined(OPENSSL_SYS_WINDOWS) && defined(CMSG_LEN) && !defined(NO_RECVMSG)
+#  elif !defined(OPENSSL_SYS_WINDOWS) && defined(CMSG_LEN) && \
+    !defined(NO_RECVMSG)
 #   define M_METHOD  M_METHOD_RECVMSG
 #  elif !defined(NO_RECVFROM)
 #   define M_METHOD  M_METHOD_RECVFROM
@@ -97,10 +100,10 @@
     || M_METHOD == M_METHOD_RECVMSG    \
     || M_METHOD == M_METHOD_WSARECVMSG
 #  if defined(__APPLE__)
-    /*
-     * CMSG_SPACE is not a constant expresson on OSX even though POSIX
-     * says it's supposed to be. This should be adequate.
-     */
+/*
+ * CMSG_SPACE is not a constant expresson on OSX even though POSIX
+ * says it's supposed to be. This should be adequate.
+ */
 #   define BIO_CMSG_ALLOC_LEN   64
 #  else
 #   if defined(IPV6_PKTINFO)
@@ -123,12 +126,14 @@
         BIO_MAX(BIO_CMSG_ALLOC_LEN_1,                                \
                 BIO_MAX(BIO_CMSG_ALLOC_LEN_2, BIO_CMSG_ALLOC_LEN_3))
 #  endif
-#  if (defined(IP_PKTINFO) || defined(IP_RECVDSTADDR)) && defined(IPV6_RECVPKTINFO)
+#  if (defined(IP_PKTINFO) || defined(IP_RECVDSTADDR)) && \
+    defined(IPV6_RECVPKTINFO)
 #   define SUPPORT_LOCAL_ADDR
 #  endif
 # endif
 
-# define BIO_MSG_N(array, stride, n) (*(BIO_MSG *)((char *)(array) + (n)*(stride)))
+# define BIO_MSG_N(array, stride, \
+                   n) (*(BIO_MSG *)((char *)(array) + (n)*(stride)))
 
 static int dgram_write(BIO *h, const char *buf, int num);
 static int dgram_read(BIO *h, char *buf, int size);
@@ -363,7 +368,8 @@ static void dgram_update_local_addr(BIO *b)
         BIO_ADDR_clear(&data->local_addr);
 }
 
-# if M_METHOD == M_METHOD_RECVMMSG || M_METHOD == M_METHOD_RECVMSG || M_METHOD == M_METHOD_WSARECVMSG
+# if M_METHOD == M_METHOD_RECVMMSG || M_METHOD == M_METHOD_RECVMSG || \
+    M_METHOD == M_METHOD_WSARECVMSG
 static int dgram_get_sock_family(BIO *b)
 {
     bio_dgram_data *data = (bio_dgram_data *)b->ptr;
@@ -460,14 +466,14 @@ static long dgram_get_mtu_overhead(bio_dgram_data *data)
     long ret;
 
     switch (BIO_ADDR_family(&data->peer)) {
-    case AF_INET:
-        /*
-         * Assume this is UDP - 20 bytes for IP, 8 bytes for UDP
-         */
-        ret = 28;
-        break;
+        case AF_INET:
+            /*
+             * Assume this is UDP - 20 bytes for IP, 8 bytes for UDP
+             */
+            ret = 28;
+            break;
 # if OPENSSL_USE_IPV6
-    case AF_INET6:
+        case AF_INET6:
         {
 #  ifdef IN6_IS_ADDR_V4MAPPED
             struct in6_addr tmp_addr;
@@ -486,10 +492,10 @@ static long dgram_get_mtu_overhead(bio_dgram_data *data)
         }
         break;
 # endif
-    default:
-        /* We don't know. Go with the historical default */
-        ret = 28;
-        break;
+        default:
+            /* We don't know. Go with the historical default */
+            ret = 28;
+            break;
     }
     return ret;
 }
@@ -555,187 +561,193 @@ static long dgram_ctrl(BIO *b, int cmd, long num, void *ptr)
     data = (bio_dgram_data *)b->ptr;
 
     switch (cmd) {
-    case BIO_CTRL_RESET:
-        num = 0;
-        ret = 0;
-        break;
-    case BIO_CTRL_INFO:
-        ret = 0;
-        break;
-    case BIO_C_SET_FD:
-        dgram_clear(b);
-        b->num = *((int *)ptr);
-        b->shutdown = (int)num;
-        b->init = 1;
-        dgram_update_local_addr(b);
+        case BIO_CTRL_RESET:
+            num = 0;
+            ret = 0;
+            break;
+        case BIO_CTRL_INFO:
+            ret = 0;
+            break;
+        case BIO_C_SET_FD:
+            dgram_clear(b);
+            b->num = *((int *)ptr);
+            b->shutdown = (int)num;
+            b->init = 1;
+            dgram_update_local_addr(b);
 # if defined(SUPPORT_LOCAL_ADDR)
-        if (data->local_addr_enabled) {
-            if (enable_local_addr(b, 1) < 1)
-                data->local_addr_enabled = 0;
-        }
+            if (data->local_addr_enabled) {
+                if (enable_local_addr(b, 1) < 1)
+                    data->local_addr_enabled = 0;
+            }
 # endif
-        break;
-    case BIO_C_GET_FD:
-        if (b->init) {
-            ip = (int *)ptr;
-            if (ip != NULL)
-                *ip = b->num;
-            ret = b->num;
-        } else
-            ret = -1;
-        break;
-    case BIO_CTRL_GET_CLOSE:
-        ret = b->shutdown;
-        break;
-    case BIO_CTRL_SET_CLOSE:
-        b->shutdown = (int)num;
-        break;
-    case BIO_CTRL_PENDING:
-    case BIO_CTRL_WPENDING:
-        ret = 0;
-        break;
-    case BIO_CTRL_DUP:
-    case BIO_CTRL_FLUSH:
-        ret = 1;
-        break;
-    case BIO_CTRL_DGRAM_CONNECT:
-        BIO_ADDR_make(&data->peer, BIO_ADDR_sockaddr((BIO_ADDR *)ptr));
-        break;
+            break;
+        case BIO_C_GET_FD:
+            if (b->init) {
+                ip = (int *)ptr;
+                if (ip != NULL)
+                    *ip = b->num;
+                ret = b->num;
+            } else
+                ret = -1;
+            break;
+        case BIO_CTRL_GET_CLOSE:
+            ret = b->shutdown;
+            break;
+        case BIO_CTRL_SET_CLOSE:
+            b->shutdown = (int)num;
+            break;
+        case BIO_CTRL_PENDING:
+        case BIO_CTRL_WPENDING:
+            ret = 0;
+            break;
+        case BIO_CTRL_DUP:
+        case BIO_CTRL_FLUSH:
+            ret = 1;
+            break;
+        case BIO_CTRL_DGRAM_CONNECT:
+            BIO_ADDR_make(&data->peer, BIO_ADDR_sockaddr((BIO_ADDR *)ptr));
+            break;
         /* (Linux)kernel sets DF bit on outgoing IP packets */
-    case BIO_CTRL_DGRAM_MTU_DISCOVER:
-# if defined(OPENSSL_SYS_LINUX) && defined(IP_MTU_DISCOVER) && defined(IP_PMTUDISC_DO)
-        addr_len = (socklen_t) sizeof(addr);
-        BIO_ADDR_clear(&addr);
-        if (getsockname(b->num, &addr.sa, &addr_len) < 0) {
-            ret = 0;
-            break;
-        }
-        switch (addr.sa.sa_family) {
-        case AF_INET:
-            sockopt_val = IP_PMTUDISC_DO;
-            if ((ret = setsockopt(b->num, IPPROTO_IP, IP_MTU_DISCOVER,
-                                  &sockopt_val, sizeof(sockopt_val))) < 0)
-                ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
-                               "calling setsockopt()");
-            break;
-#  if OPENSSL_USE_IPV6 && defined(IPV6_MTU_DISCOVER) && defined(IPV6_PMTUDISC_DO)
-        case AF_INET6:
-            sockopt_val = IPV6_PMTUDISC_DO;
-            if ((ret = setsockopt(b->num, IPPROTO_IPV6, IPV6_MTU_DISCOVER,
-                                  &sockopt_val, sizeof(sockopt_val))) < 0)
-                ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
-                               "calling setsockopt()");
-            break;
+        case BIO_CTRL_DGRAM_MTU_DISCOVER:
+# if defined(OPENSSL_SYS_LINUX) && defined(IP_MTU_DISCOVER) && \
+            defined(IP_PMTUDISC_DO)
+            addr_len = (socklen_t) sizeof(addr);
+            BIO_ADDR_clear(&addr);
+            if (getsockname(b->num, &addr.sa, &addr_len) < 0) {
+                ret = 0;
+                break;
+            }
+            switch (addr.sa.sa_family) {
+                case AF_INET:
+                    sockopt_val = IP_PMTUDISC_DO;
+                    if ((ret = setsockopt(b->num, IPPROTO_IP, IP_MTU_DISCOVER,
+                                          &sockopt_val,
+                                          sizeof(sockopt_val))) < 0)
+                        ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
+                                       "calling setsockopt()");
+                    break;
+#  if OPENSSL_USE_IPV6 && defined(IPV6_MTU_DISCOVER) && \
+                    defined(IPV6_PMTUDISC_DO)
+                case AF_INET6:
+                    sockopt_val = IPV6_PMTUDISC_DO;
+                    if ((ret =
+                             setsockopt(b->num, IPPROTO_IPV6, IPV6_MTU_DISCOVER,
+                                        &sockopt_val,
+                                        sizeof(sockopt_val))) < 0)
+                        ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
+                                       "calling setsockopt()");
+                    break;
 #  endif
-        default:
+                default:
+                    ret = -1;
+                    break;
+            }
+# else
             ret = -1;
-            break;
-        }
-# else
-        ret = -1;
 # endif
-        break;
-    case BIO_CTRL_DGRAM_QUERY_MTU:
+            break;
+        case BIO_CTRL_DGRAM_QUERY_MTU:
 # if defined(OPENSSL_SYS_LINUX) && defined(IP_MTU)
-        addr_len = (socklen_t) sizeof(addr);
-        BIO_ADDR_clear(&addr);
-        if (getsockname(b->num, &addr.sa, &addr_len) < 0) {
-            ret = 0;
-            break;
-        }
-        sockopt_len = sizeof(sockopt_val);
-        switch (addr.sa.sa_family) {
-        case AF_INET:
-            if ((ret =
-                 getsockopt(b->num, IPPROTO_IP, IP_MTU, (void *)&sockopt_val,
-                            &sockopt_len)) < 0 || sockopt_val < 0) {
+            addr_len = (socklen_t) sizeof(addr);
+            BIO_ADDR_clear(&addr);
+            if (getsockname(b->num, &addr.sa, &addr_len) < 0) {
                 ret = 0;
-            } else {
-                /*
-                 * we assume that the transport protocol is UDP and no IP
-                 * options are used.
-                 */
-                data->mtu = sockopt_val - 8 - 20;
-                ret = data->mtu;
+                break;
             }
-            break;
+            sockopt_len = sizeof(sockopt_val);
+            switch (addr.sa.sa_family) {
+                case AF_INET:
+                    if ((ret =
+                             getsockopt(b->num, IPPROTO_IP, IP_MTU,
+                                        (void *)&sockopt_val,
+                                        &sockopt_len)) < 0 || sockopt_val < 0) {
+                        ret = 0;
+                    } else {
+                        /*
+                         * we assume that the transport protocol is UDP and no IP
+                         * options are used.
+                         */
+                        data->mtu = sockopt_val - 8 - 20;
+                        ret = data->mtu;
+                    }
+                    break;
 #  if OPENSSL_USE_IPV6 && defined(IPV6_MTU)
-        case AF_INET6:
-            if ((ret =
-                 getsockopt(b->num, IPPROTO_IPV6, IPV6_MTU,
-                            (void *)&sockopt_val, &sockopt_len)) < 0
-                || sockopt_val < 0) {
-                ret = 0;
-            } else {
-                /*
-                 * we assume that the transport protocol is UDP and no IPV6
-                 * options are used.
-                 */
-                data->mtu = sockopt_val - 8 - 40;
-                ret = data->mtu;
-            }
-            break;
+                case AF_INET6:
+                    if ((ret =
+                             getsockopt(b->num, IPPROTO_IPV6, IPV6_MTU,
+                                        (void *)&sockopt_val, &sockopt_len)) < 0
+                        || sockopt_val < 0) {
+                        ret = 0;
+                    } else {
+                        /*
+                         * we assume that the transport protocol is UDP and no IPV6
+                         * options are used.
+                         */
+                        data->mtu = sockopt_val - 8 - 40;
+                        ret = data->mtu;
+                    }
+                    break;
 #  endif
-        default:
-            ret = 0;
-            break;
-        }
+                default:
+                    ret = 0;
+                    break;
+            }
 # else
-        ret = 0;
+            ret = 0;
 # endif
-        break;
-    case BIO_CTRL_DGRAM_GET_FALLBACK_MTU:
-        ret = -dgram_get_mtu_overhead(data);
-        switch (BIO_ADDR_family(&data->peer)) {
-        case AF_INET:
-            ret += 576;
             break;
-# if OPENSSL_USE_IPV6
-        case AF_INET6:
-            {
-#  ifdef IN6_IS_ADDR_V4MAPPED
-                struct in6_addr tmp_addr;
-                if (BIO_ADDR_rawaddress(&data->peer, &tmp_addr, NULL)
-                    && IN6_IS_ADDR_V4MAPPED(&tmp_addr))
+        case BIO_CTRL_DGRAM_GET_FALLBACK_MTU:
+            ret = -dgram_get_mtu_overhead(data);
+            switch (BIO_ADDR_family(&data->peer)) {
+                case AF_INET:
                     ret += 576;
-                else
+                    break;
+# if OPENSSL_USE_IPV6
+                case AF_INET6:
+                {
+#  ifdef IN6_IS_ADDR_V4MAPPED
+                    struct in6_addr tmp_addr;
+                    if (BIO_ADDR_rawaddress(&data->peer, &tmp_addr, NULL)
+                        && IN6_IS_ADDR_V4MAPPED(&tmp_addr))
+                        ret += 576;
+                    else
 #  endif
                     ret += 1280;
+                }
+                break;
+# endif
+                default:
+                    ret += 576;
+                    break;
             }
             break;
-# endif
-        default:
-            ret += 576;
+        case BIO_CTRL_DGRAM_GET_MTU:
+            return data->mtu;
+        case BIO_CTRL_DGRAM_SET_MTU:
+            data->mtu = num;
+            ret = num;
             break;
-        }
-        break;
-    case BIO_CTRL_DGRAM_GET_MTU:
-        return data->mtu;
-    case BIO_CTRL_DGRAM_SET_MTU:
-        data->mtu = num;
-        ret = num;
-        break;
-    case BIO_CTRL_DGRAM_SET_CONNECTED:
-        if (ptr != NULL) {
-            data->connected = 1;
+        case BIO_CTRL_DGRAM_SET_CONNECTED:
+            if (ptr != NULL) {
+                data->connected = 1;
+                BIO_ADDR_make(&data->peer, BIO_ADDR_sockaddr((BIO_ADDR *)ptr));
+            } else {
+                data->connected = 0;
+                BIO_ADDR_clear(&data->peer);
+            }
+            break;
+        case BIO_CTRL_DGRAM_GET_PEER:
+            ret = BIO_ADDR_sockaddr_size(&data->peer);
+            /* FIXME: if num < ret, we will only return part of an address.
+               That should bee an error, no? */
+            if (num == 0 || num > ret)
+                num = ret;
+            memcpy(ptr, &data->peer, (ret = num));
+            break;
+        case BIO_CTRL_DGRAM_SET_PEER:
             BIO_ADDR_make(&data->peer, BIO_ADDR_sockaddr((BIO_ADDR *)ptr));
-        } else {
-            data->connected = 0;
-            BIO_ADDR_clear(&data->peer);
-        }
-        break;
-    case BIO_CTRL_DGRAM_GET_PEER:
-        ret = BIO_ADDR_sockaddr_size(&data->peer);
-        /* FIXME: if num < ret, we will only return part of an address.
-           That should bee an error, no? */
-        if (num == 0 || num > ret)
-            num = ret;
-        memcpy(ptr, &data->peer, (ret = num));
-        break;
-    case BIO_CTRL_DGRAM_SET_PEER:
-        BIO_ADDR_make(&data->peer, BIO_ADDR_sockaddr((BIO_ADDR *)ptr));
-        break;
-    case BIO_CTRL_DGRAM_DETECT_PEER_ADDR:
+            break;
+        case BIO_CTRL_DGRAM_DETECT_PEER_ADDR:
         {
             BIO_ADDR xaddr, *p = &data->peer;
             socklen_t xaddr_len = sizeof(xaddr.sa);
@@ -757,15 +769,15 @@ static long dgram_ctrl(BIO *b, int cmd, long num, void *ptr)
             memcpy(ptr, p, (ret = num));
         }
         break;
-    case BIO_C_SET_NBIO:
-        if (!BIO_socket_nbio(b->num, num != 0))
-            ret = 0;
-        break;
-    case BIO_CTRL_DGRAM_SET_NEXT_TIMEOUT:
-        data->next_timeout = ossl_time_from_timeval(*(struct timeval *)ptr);
-        break;
+        case BIO_C_SET_NBIO:
+            if (!BIO_socket_nbio(b->num, num != 0))
+                ret = 0;
+            break;
+        case BIO_CTRL_DGRAM_SET_NEXT_TIMEOUT:
+            data->next_timeout = ossl_time_from_timeval(*(struct timeval *)ptr);
+            break;
 # if defined(SO_RCVTIMEO)
-    case BIO_CTRL_DGRAM_SET_RECV_TIMEOUT:
+        case BIO_CTRL_DGRAM_SET_RECV_TIMEOUT:
 #  ifdef OPENSSL_SYS_WINDOWS
         {
             struct timeval *tv = (struct timeval *)ptr;
@@ -777,13 +789,13 @@ static long dgram_ctrl(BIO *b, int cmd, long num, void *ptr)
                                "calling setsockopt()");
         }
 #  else
-        if ((ret = setsockopt(b->num, SOL_SOCKET, SO_RCVTIMEO, ptr,
-                              sizeof(struct timeval))) < 0)
-            ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
-                           "calling setsockopt()");
+            if ((ret = setsockopt(b->num, SOL_SOCKET, SO_RCVTIMEO, ptr,
+                                  sizeof(struct timeval))) < 0)
+                ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
+                               "calling setsockopt()");
 #  endif
-        break;
-    case BIO_CTRL_DGRAM_GET_RECV_TIMEOUT:
+            break;
+        case BIO_CTRL_DGRAM_GET_RECV_TIMEOUT:
         {
 #  ifdef OPENSSL_SYS_WINDOWS
             int sz = 0;
@@ -815,7 +827,7 @@ static long dgram_ctrl(BIO *b, int cmd, long num, void *ptr)
         break;
 # endif
 # if defined(SO_SNDTIMEO)
-    case BIO_CTRL_DGRAM_SET_SEND_TIMEOUT:
+        case BIO_CTRL_DGRAM_SET_SEND_TIMEOUT:
 #  ifdef OPENSSL_SYS_WINDOWS
         {
             struct timeval *tv = (struct timeval *)ptr;
@@ -827,13 +839,13 @@ static long dgram_ctrl(BIO *b, int cmd, long num, void *ptr)
                                "calling setsockopt()");
         }
 #  else
-        if ((ret = setsockopt(b->num, SOL_SOCKET, SO_SNDTIMEO, ptr,
-                              sizeof(struct timeval))) < 0)
-            ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
-                           "calling setsockopt()");
+            if ((ret = setsockopt(b->num, SOL_SOCKET, SO_SNDTIMEO, ptr,
+                                  sizeof(struct timeval))) < 0)
+                ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
+                               "calling setsockopt()");
 #  endif
-        break;
-    case BIO_CTRL_DGRAM_GET_SEND_TIMEOUT:
+            break;
+        case BIO_CTRL_DGRAM_GET_SEND_TIMEOUT:
         {
 #  ifdef OPENSSL_SYS_WINDOWS
             int sz = 0;
@@ -865,134 +877,139 @@ static long dgram_ctrl(BIO *b, int cmd, long num, void *ptr)
         }
         break;
 # endif
-    case BIO_CTRL_DGRAM_GET_SEND_TIMER_EXP:
+        case BIO_CTRL_DGRAM_GET_SEND_TIMER_EXP:
         /* fall-through */
-    case BIO_CTRL_DGRAM_GET_RECV_TIMER_EXP:
+        case BIO_CTRL_DGRAM_GET_RECV_TIMER_EXP:
 # ifdef OPENSSL_SYS_WINDOWS
-        d_errno = (data->_errno == WSAETIMEDOUT);
+            d_errno = (data->_errno == WSAETIMEDOUT);
 # else
-        d_errno = (data->_errno == EAGAIN);
+            d_errno = (data->_errno == EAGAIN);
 # endif
-        if (d_errno) {
-            ret = 1;
-            data->_errno = 0;
-        } else
-            ret = 0;
-        break;
-# ifdef EMSGSIZE
-    case BIO_CTRL_DGRAM_MTU_EXCEEDED:
-        if (data->_errno == EMSGSIZE) {
-            ret = 1;
-            data->_errno = 0;
-        } else
-            ret = 0;
-        break;
-# endif
-    case BIO_CTRL_DGRAM_SET_DONT_FRAG:
-        switch (data->peer.sa.sa_family) {
-        case AF_INET:
-# if defined(IP_DONTFRAG)
-            sockopt_val = num ? 1 : 0;
-            if ((ret = setsockopt(b->num, IPPROTO_IP, IP_DONTFRAG,
-                                  &sockopt_val, sizeof(sockopt_val))) < 0)
-                ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
-                               "calling setsockopt()");
-# elif defined(OPENSSL_SYS_LINUX) && defined(IP_MTU_DISCOVER) && defined (IP_PMTUDISC_PROBE)
-            sockopt_val = num ? IP_PMTUDISC_PROBE : IP_PMTUDISC_DONT;
-            if ((ret = setsockopt(b->num, IPPROTO_IP, IP_MTU_DISCOVER,
-                                  &sockopt_val, sizeof(sockopt_val))) < 0)
-                ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
-                               "calling setsockopt()");
-# elif defined(OPENSSL_SYS_WINDOWS) && defined(IP_DONTFRAGMENT)
-            sockopt_val = num ? 1 : 0;
-            if ((ret = setsockopt(b->num, IPPROTO_IP, IP_DONTFRAGMENT,
-                                  (const char *)&sockopt_val,
-                                  sizeof(sockopt_val))) < 0)
-                ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
-                               "calling setsockopt()");
-# else
-            ret = -1;
-# endif
+            if (d_errno) {
+                ret = 1;
+                data->_errno = 0;
+            } else
+                ret = 0;
             break;
+# ifdef EMSGSIZE
+        case BIO_CTRL_DGRAM_MTU_EXCEEDED:
+            if (data->_errno == EMSGSIZE) {
+                ret = 1;
+                data->_errno = 0;
+            } else
+                ret = 0;
+            break;
+# endif
+        case BIO_CTRL_DGRAM_SET_DONT_FRAG:
+            switch (data->peer.sa.sa_family) {
+                case AF_INET:
+# if defined(IP_DONTFRAG)
+                    sockopt_val = num ? 1 : 0;
+                    if ((ret = setsockopt(b->num, IPPROTO_IP, IP_DONTFRAG,
+                                          &sockopt_val,
+                                          sizeof(sockopt_val))) < 0)
+                        ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
+                                       "calling setsockopt()");
+# elif defined(OPENSSL_SYS_LINUX) && defined(IP_MTU_DISCOVER) && \
+                    defined (IP_PMTUDISC_PROBE)
+                    sockopt_val = num ? IP_PMTUDISC_PROBE : IP_PMTUDISC_DONT;
+                    if ((ret = setsockopt(b->num, IPPROTO_IP, IP_MTU_DISCOVER,
+                                          &sockopt_val,
+                                          sizeof(sockopt_val))) < 0)
+                        ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
+                                       "calling setsockopt()");
+# elif defined(OPENSSL_SYS_WINDOWS) && defined(IP_DONTFRAGMENT)
+                    sockopt_val = num ? 1 : 0;
+                    if ((ret = setsockopt(b->num, IPPROTO_IP, IP_DONTFRAGMENT,
+                                          (const char *)&sockopt_val,
+                                          sizeof(sockopt_val))) < 0)
+                        ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
+                                       "calling setsockopt()");
+# else
+                    ret = -1;
+# endif
+                    break;
 # if OPENSSL_USE_IPV6
-        case AF_INET6:
+                case AF_INET6:
 #  if defined(IPV6_DONTFRAG)
-            sockopt_val = num ? 1 : 0;
-            if ((ret = setsockopt(b->num, IPPROTO_IPV6, IPV6_DONTFRAG,
-                                  (const void *)&sockopt_val,
-                                  sizeof(sockopt_val))) < 0)
-                ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
-                               "calling setsockopt()");
+                    sockopt_val = num ? 1 : 0;
+                    if ((ret = setsockopt(b->num, IPPROTO_IPV6, IPV6_DONTFRAG,
+                                          (const void *)&sockopt_val,
+                                          sizeof(sockopt_val))) < 0)
+                        ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
+                                       "calling setsockopt()");
 
 #  elif defined(OPENSSL_SYS_LINUX) && defined(IPV6_MTUDISCOVER)
-            sockopt_val = num ? IP_PMTUDISC_PROBE : IP_PMTUDISC_DONT;
-            if ((ret = setsockopt(b->num, IPPROTO_IPV6, IPV6_MTU_DISCOVER,
-                                  &sockopt_val, sizeof(sockopt_val))) < 0)
-                ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
-                               "calling setsockopt()");
+                    sockopt_val = num ? IP_PMTUDISC_PROBE : IP_PMTUDISC_DONT;
+                    if ((ret =
+                             setsockopt(b->num, IPPROTO_IPV6, IPV6_MTU_DISCOVER,
+                                        &sockopt_val,
+                                        sizeof(sockopt_val))) < 0)
+                        ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
+                                       "calling setsockopt()");
 #  else
-            ret = -1;
+                    ret = -1;
 #  endif
-            break;
+                    break;
 # endif
-        default:
-            ret = -1;
-            break;
-        }
-        break;
-    case BIO_CTRL_DGRAM_GET_MTU_OVERHEAD:
-        ret = dgram_get_mtu_overhead(data);
-        break;
-
-    /*
-     * BIO_CTRL_DGRAM_SCTP_SET_IN_HANDSHAKE is used here for compatibility
-     * reasons. When BIO_CTRL_DGRAM_SET_PEEK_MODE was first defined its value
-     * was incorrectly clashing with BIO_CTRL_DGRAM_SCTP_SET_IN_HANDSHAKE. The
-     * value has been updated to a non-clashing value. However to preserve
-     * binary compatibility we now respond to both the old value and the new one
-     */
-    case BIO_CTRL_DGRAM_SCTP_SET_IN_HANDSHAKE:
-    case BIO_CTRL_DGRAM_SET_PEEK_MODE:
-        data->peekmode = (unsigned int)num;
-        break;
-
-    case BIO_CTRL_DGRAM_GET_LOCAL_ADDR_CAP:
-# if defined(SUPPORT_LOCAL_ADDR)
-        ret = 1;
-# else
-        ret = 0;
-# endif
-        break;
-
-    case BIO_CTRL_DGRAM_SET_LOCAL_ADDR_ENABLE:
-# if defined(SUPPORT_LOCAL_ADDR)
-        num = num > 0;
-        if (num != data->local_addr_enabled) {
-            if (enable_local_addr(b, num) < 1) {
-                ret = 0;
-                break;
+                default:
+                    ret = -1;
+                    break;
             }
+            break;
+        case BIO_CTRL_DGRAM_GET_MTU_OVERHEAD:
+            ret = dgram_get_mtu_overhead(data);
+            break;
 
-            data->local_addr_enabled = (char)num;
-        }
+        /*
+         * BIO_CTRL_DGRAM_SCTP_SET_IN_HANDSHAKE is used here for compatibility
+         * reasons. When BIO_CTRL_DGRAM_SET_PEEK_MODE was first defined its value
+         * was incorrectly clashing with BIO_CTRL_DGRAM_SCTP_SET_IN_HANDSHAKE. The
+         * value has been updated to a non-clashing value. However to preserve
+         * binary compatibility we now respond to both the old value and the new one
+         */
+        case BIO_CTRL_DGRAM_SCTP_SET_IN_HANDSHAKE:
+        case BIO_CTRL_DGRAM_SET_PEEK_MODE:
+            data->peekmode = (unsigned int)num;
+            break;
+
+        case BIO_CTRL_DGRAM_GET_LOCAL_ADDR_CAP:
+# if defined(SUPPORT_LOCAL_ADDR)
+            ret = 1;
 # else
-        ret = 0;
+            ret = 0;
 # endif
-        break;
+            break;
 
-    case BIO_CTRL_DGRAM_GET_LOCAL_ADDR_ENABLE:
-        *(int *)ptr = data->local_addr_enabled;
-        break;
+        case BIO_CTRL_DGRAM_SET_LOCAL_ADDR_ENABLE:
+# if defined(SUPPORT_LOCAL_ADDR)
+            num = num > 0;
+            if (num != data->local_addr_enabled) {
+                if (enable_local_addr(b, num) < 1) {
+                    ret = 0;
+                    break;
+                }
 
-    case BIO_CTRL_DGRAM_GET_EFFECTIVE_CAPS:
-        ret = (long)(BIO_DGRAM_CAP_HANDLES_DST_ADDR
-                     | BIO_DGRAM_CAP_HANDLES_SRC_ADDR
-                     | BIO_DGRAM_CAP_PROVIDES_DST_ADDR
-                     | BIO_DGRAM_CAP_PROVIDES_SRC_ADDR);
-        break;
+                data->local_addr_enabled = (char)num;
+            }
+# else
+            ret = 0;
+# endif
+            break;
 
-    case BIO_CTRL_GET_RPOLL_DESCRIPTOR:
-    case BIO_CTRL_GET_WPOLL_DESCRIPTOR:
+        case BIO_CTRL_DGRAM_GET_LOCAL_ADDR_ENABLE:
+            *(int *)ptr = data->local_addr_enabled;
+            break;
+
+        case BIO_CTRL_DGRAM_GET_EFFECTIVE_CAPS:
+            ret = (long)(BIO_DGRAM_CAP_HANDLES_DST_ADDR
+                         | BIO_DGRAM_CAP_HANDLES_SRC_ADDR
+                         | BIO_DGRAM_CAP_PROVIDES_DST_ADDR
+                         | BIO_DGRAM_CAP_PROVIDES_SRC_ADDR);
+            break;
+
+        case BIO_CTRL_GET_RPOLL_DESCRIPTOR:
+        case BIO_CTRL_GET_WPOLL_DESCRIPTOR:
         {
             BIO_POLL_DESCRIPTOR *pd = ptr;
 
@@ -1001,9 +1018,9 @@ static long dgram_ctrl(BIO *b, int cmd, long num, void *ptr)
         }
         break;
 
-    default:
-        ret = 0;
-        break;
+        default:
+            ret = 0;
+            break;
     }
     /* Normalize if error */
     if (ret < 0)
@@ -1080,7 +1097,8 @@ static void translate_msg(BIO *b, struct msghdr *mh, struct iovec *iov,
 }
 # endif
 
-# if M_METHOD == M_METHOD_RECVMMSG || M_METHOD == M_METHOD_RECVMSG || M_METHOD == M_METHOD_WSARECVMSG
+# if M_METHOD == M_METHOD_RECVMMSG || M_METHOD == M_METHOD_RECVMSG || \
+    M_METHOD == M_METHOD_WSARECVMSG
 /* Extracts destination address from the control buffer. */
 static int extract_local(BIO *b, MSGHDR_TYPE *mh, BIO_ADDR *local) {
 #  if defined(IP_PKTINFO) || defined(IP_RECVDSTADDR) || defined(IPV6_PKTINFO)
@@ -1204,7 +1222,8 @@ static int pack_local(BIO *b, MSGHDR_TYPE *mh, const BIO_ADDR *local) {
          * matches our understanding of our local address. IP_SENDSRCADDR is a
          * BSD thing, so we don't need an explicit test for BSD here.
          */
-        if (local->s_in.sin_addr.s_addr == data->local_addr.s_in.sin_addr.s_addr) {
+        if (local->s_in.sin_addr.s_addr ==
+            data->local_addr.s_in.sin_addr.s_addr) {
             mh->msg_control    = NULL;
             mh->msg_controllen = 0;
             return 1;
@@ -1258,7 +1277,8 @@ static int pack_local(BIO *b, MSGHDR_TYPE *mh, const BIO_ADDR *local) {
         }
 
         if (local->s_in6.sin6_scope_id != 0
-            && data->local_addr.s_in6.sin6_scope_id != local->s_in6.sin6_scope_id) {
+            && data->local_addr.s_in6.sin6_scope_id !=
+            local->s_in6.sin6_scope_id) {
             ERR_raise(ERR_LIB_BIO, BIO_R_PORT_MISMATCH);
             return 0;
         }
@@ -1658,7 +1678,8 @@ static int dgram_recvmmsg(BIO *b, BIO_MSG *msg,
             return 0;
         }
 
-        ret = WSARecvMsg((SOCKET)b->num, &wmsg, &num_bytes_received, NULL, NULL);
+        ret =
+            WSARecvMsg((SOCKET)b->num, &wmsg, &num_bytes_received, NULL, NULL);
         if (ret < 0) {
             ERR_raise(ERR_LIB_SYS, get_last_socket_error());
             *num_processed = 0;
@@ -1795,7 +1816,7 @@ BIO *BIO_new_dgram_sctp(int fd, int close_flag)
         return NULL;
     }
     ret = getsockopt(fd, IPPROTO_SCTP, SCTP_LOCAL_AUTH_CHUNKS, authchunks,
-                   &sockopt_len);
+                     &sockopt_len);
     if (ret < 0) {
         OPENSSL_free(authchunks);
         BIO_vfree(bio);
@@ -2272,238 +2293,240 @@ static long dgram_sctp_ctrl(BIO *b, int cmd, long num, void *ptr)
     data = (bio_dgram_sctp_data *) b->ptr;
 
     switch (cmd) {
-    case BIO_CTRL_DGRAM_QUERY_MTU:
-        /*
-         * Set to maximum (2^14) and ignore user input to enable transport
-         * protocol fragmentation. Returns always 2^14.
-         */
-        data->dgram.mtu = 16384;
-        ret = data->dgram.mtu;
-        break;
-    case BIO_CTRL_DGRAM_SET_MTU:
-        /*
-         * Set to maximum (2^14) and ignore input to enable transport
-         * protocol fragmentation. Returns always 2^14.
-         */
-        data->dgram.mtu = 16384;
-        ret = data->dgram.mtu;
-        break;
-    case BIO_CTRL_DGRAM_SET_CONNECTED:
-    case BIO_CTRL_DGRAM_CONNECT:
-        /* Returns always -1. */
-        ret = -1;
-        break;
-    case BIO_CTRL_DGRAM_SET_NEXT_TIMEOUT:
-        /*
-         * SCTP doesn't need the DTLS timer Returns always 1.
-         */
-        break;
-    case BIO_CTRL_DGRAM_GET_MTU_OVERHEAD:
-        /*
-         * We allow transport protocol fragmentation so this is irrelevant
-         */
-        ret = 0;
-        break;
-    case BIO_CTRL_DGRAM_SCTP_SET_IN_HANDSHAKE:
-        if (num > 0)
-            data->in_handshake = 1;
-        else
-            data->in_handshake = 0;
-
-        ret =
-            setsockopt(b->num, IPPROTO_SCTP, SCTP_NODELAY,
-                       &data->in_handshake, sizeof(int));
-        break;
-    case BIO_CTRL_DGRAM_SCTP_ADD_AUTH_KEY:
-        /*
-         * New shared key for SCTP AUTH. Returns 0 on success, -1 otherwise.
-         */
-
-        /* Get active key */
-        sockopt_len = sizeof(struct sctp_authkeyid);
-        ret =
-            getsockopt(b->num, IPPROTO_SCTP, SCTP_AUTH_ACTIVE_KEY, &authkeyid,
-                       &sockopt_len);
-        if (ret < 0)
+        case BIO_CTRL_DGRAM_QUERY_MTU:
+            /*
+             * Set to maximum (2^14) and ignore user input to enable transport
+             * protocol fragmentation. Returns always 2^14.
+             */
+            data->dgram.mtu = 16384;
+            ret = data->dgram.mtu;
             break;
-
-        /* Add new key */
-        sockopt_len = sizeof(struct sctp_authkey) + 64 * sizeof(uint8_t);
-        authkey = OPENSSL_malloc(sockopt_len);
-        if (authkey == NULL) {
+        case BIO_CTRL_DGRAM_SET_MTU:
+            /*
+             * Set to maximum (2^14) and ignore input to enable transport
+             * protocol fragmentation. Returns always 2^14.
+             */
+            data->dgram.mtu = 16384;
+            ret = data->dgram.mtu;
+            break;
+        case BIO_CTRL_DGRAM_SET_CONNECTED:
+        case BIO_CTRL_DGRAM_CONNECT:
+            /* Returns always -1. */
             ret = -1;
             break;
-        }
-        memset(authkey, 0, sockopt_len);
-        authkey->sca_keynumber = authkeyid.scact_keynumber + 1;
-#  ifndef __FreeBSD__
-        /*
-         * This field is missing in FreeBSD 8.2 and earlier, and FreeBSD 8.3
-         * and higher work without it.
-         */
-        authkey->sca_keylength = 64;
-#  endif
-        memcpy(&authkey->sca_key[0], ptr, 64 * sizeof(uint8_t));
-
-        ret =
-            setsockopt(b->num, IPPROTO_SCTP, SCTP_AUTH_KEY, authkey,
-                       sockopt_len);
-        OPENSSL_free(authkey);
-        authkey = NULL;
-        if (ret < 0)
+        case BIO_CTRL_DGRAM_SET_NEXT_TIMEOUT:
+            /*
+             * SCTP doesn't need the DTLS timer Returns always 1.
+             */
             break;
-
-        /* Reset active key */
-        ret = setsockopt(b->num, IPPROTO_SCTP, SCTP_AUTH_ACTIVE_KEY,
-                         &authkeyid, sizeof(struct sctp_authkeyid));
-        if (ret < 0)
+        case BIO_CTRL_DGRAM_GET_MTU_OVERHEAD:
+            /*
+             * We allow transport protocol fragmentation so this is irrelevant
+             */
+            ret = 0;
             break;
+        case BIO_CTRL_DGRAM_SCTP_SET_IN_HANDSHAKE:
+            if (num > 0)
+                data->in_handshake = 1;
+            else
+                data->in_handshake = 0;
 
-        break;
-    case BIO_CTRL_DGRAM_SCTP_NEXT_AUTH_KEY:
-        /* Returns 0 on success, -1 otherwise. */
-
-        /* Get active key */
-        sockopt_len = sizeof(struct sctp_authkeyid);
-        ret =
-            getsockopt(b->num, IPPROTO_SCTP, SCTP_AUTH_ACTIVE_KEY, &authkeyid,
-                       &sockopt_len);
-        if (ret < 0)
+            ret =
+                setsockopt(b->num, IPPROTO_SCTP, SCTP_NODELAY,
+                           &data->in_handshake, sizeof(int));
             break;
+        case BIO_CTRL_DGRAM_SCTP_ADD_AUTH_KEY:
+            /*
+             * New shared key for SCTP AUTH. Returns 0 on success, -1 otherwise.
+             */
 
-        /* Set active key */
-        authkeyid.scact_keynumber = authkeyid.scact_keynumber + 1;
-        ret = setsockopt(b->num, IPPROTO_SCTP, SCTP_AUTH_ACTIVE_KEY,
-                         &authkeyid, sizeof(struct sctp_authkeyid));
-        if (ret < 0)
-            break;
-
-        /*
-         * CCS has been sent, so remember that and fall through to check if
-         * we need to deactivate an old key
-         */
-        data->ccs_sent = 1;
-        /* fall-through */
-
-    case BIO_CTRL_DGRAM_SCTP_AUTH_CCS_RCVD:
-        /* Returns 0 on success, -1 otherwise. */
-
-        /*
-         * Has this command really been called or is this just a
-         * fall-through?
-         */
-        if (cmd == BIO_CTRL_DGRAM_SCTP_AUTH_CCS_RCVD)
-            data->ccs_rcvd = 1;
-
-        /*
-         * CSS has been both, received and sent, so deactivate an old key
-         */
-        if (data->ccs_rcvd == 1 && data->ccs_sent == 1) {
             /* Get active key */
             sockopt_len = sizeof(struct sctp_authkeyid);
             ret =
                 getsockopt(b->num, IPPROTO_SCTP, SCTP_AUTH_ACTIVE_KEY,
-                           &authkeyid, &sockopt_len);
+                           &authkeyid,
+                           &sockopt_len);
+            if (ret < 0)
+                break;
+
+            /* Add new key */
+            sockopt_len = sizeof(struct sctp_authkey) + 64 * sizeof(uint8_t);
+            authkey = OPENSSL_malloc(sockopt_len);
+            if (authkey == NULL) {
+                ret = -1;
+                break;
+            }
+            memset(authkey, 0, sockopt_len);
+            authkey->sca_keynumber = authkeyid.scact_keynumber + 1;
+#  ifndef __FreeBSD__
+            /*
+             * This field is missing in FreeBSD 8.2 and earlier, and FreeBSD 8.3
+             * and higher work without it.
+             */
+            authkey->sca_keylength = 64;
+#  endif
+            memcpy(&authkey->sca_key[0], ptr, 64 * sizeof(uint8_t));
+
+            ret =
+                setsockopt(b->num, IPPROTO_SCTP, SCTP_AUTH_KEY, authkey,
+                           sockopt_len);
+            OPENSSL_free(authkey);
+            authkey = NULL;
+            if (ret < 0)
+                break;
+
+            /* Reset active key */
+            ret = setsockopt(b->num, IPPROTO_SCTP, SCTP_AUTH_ACTIVE_KEY,
+                             &authkeyid, sizeof(struct sctp_authkeyid));
+            if (ret < 0)
+                break;
+
+            break;
+        case BIO_CTRL_DGRAM_SCTP_NEXT_AUTH_KEY:
+            /* Returns 0 on success, -1 otherwise. */
+
+            /* Get active key */
+            sockopt_len = sizeof(struct sctp_authkeyid);
+            ret =
+                getsockopt(b->num, IPPROTO_SCTP, SCTP_AUTH_ACTIVE_KEY,
+                           &authkeyid,
+                           &sockopt_len);
+            if (ret < 0)
+                break;
+
+            /* Set active key */
+            authkeyid.scact_keynumber = authkeyid.scact_keynumber + 1;
+            ret = setsockopt(b->num, IPPROTO_SCTP, SCTP_AUTH_ACTIVE_KEY,
+                             &authkeyid, sizeof(struct sctp_authkeyid));
             if (ret < 0)
                 break;
 
             /*
-             * Deactivate key or delete second last key if
-             * SCTP_AUTHENTICATION_EVENT is not available.
+             * CCS has been sent, so remember that and fall through to check if
+             * we need to deactivate an old key
              */
-            authkeyid.scact_keynumber = authkeyid.scact_keynumber - 1;
-#  ifdef SCTP_AUTH_DEACTIVATE_KEY
-            sockopt_len = sizeof(struct sctp_authkeyid);
-            ret = setsockopt(b->num, IPPROTO_SCTP, SCTP_AUTH_DEACTIVATE_KEY,
-                             &authkeyid, sockopt_len);
-            if (ret < 0)
-                break;
-#  endif
-#  ifndef SCTP_AUTHENTICATION_EVENT
-            if (authkeyid.scact_keynumber > 0) {
-                authkeyid.scact_keynumber = authkeyid.scact_keynumber - 1;
-                ret = setsockopt(b->num, IPPROTO_SCTP, SCTP_AUTH_DELETE_KEY,
-                                 &authkeyid, sizeof(struct sctp_authkeyid));
+            data->ccs_sent = 1;
+        /* fall-through */
+
+        case BIO_CTRL_DGRAM_SCTP_AUTH_CCS_RCVD:
+            /* Returns 0 on success, -1 otherwise. */
+
+            /*
+             * Has this command really been called or is this just a
+             * fall-through?
+             */
+            if (cmd == BIO_CTRL_DGRAM_SCTP_AUTH_CCS_RCVD)
+                data->ccs_rcvd = 1;
+
+            /*
+             * CSS has been both, received and sent, so deactivate an old key
+             */
+            if (data->ccs_rcvd == 1 && data->ccs_sent == 1) {
+                /* Get active key */
+                sockopt_len = sizeof(struct sctp_authkeyid);
+                ret =
+                    getsockopt(b->num, IPPROTO_SCTP, SCTP_AUTH_ACTIVE_KEY,
+                               &authkeyid, &sockopt_len);
                 if (ret < 0)
                     break;
-            }
+
+                /*
+                 * Deactivate key or delete second last key if
+                 * SCTP_AUTHENTICATION_EVENT is not available.
+                 */
+                authkeyid.scact_keynumber = authkeyid.scact_keynumber - 1;
+#  ifdef SCTP_AUTH_DEACTIVATE_KEY
+                sockopt_len = sizeof(struct sctp_authkeyid);
+                ret = setsockopt(b->num, IPPROTO_SCTP, SCTP_AUTH_DEACTIVATE_KEY,
+                                 &authkeyid, sockopt_len);
+                if (ret < 0)
+                    break;
+#  endif
+#  ifndef SCTP_AUTHENTICATION_EVENT
+                if (authkeyid.scact_keynumber > 0) {
+                    authkeyid.scact_keynumber = authkeyid.scact_keynumber - 1;
+                    ret = setsockopt(b->num, IPPROTO_SCTP, SCTP_AUTH_DELETE_KEY,
+                                     &authkeyid, sizeof(struct sctp_authkeyid));
+                    if (ret < 0)
+                        break;
+                }
 #  endif
 
-            data->ccs_rcvd = 0;
-            data->ccs_sent = 0;
-        }
-        break;
-    case BIO_CTRL_DGRAM_SCTP_GET_SNDINFO:
-        /* Returns the size of the copied struct. */
-        if (num > (long)sizeof(struct bio_dgram_sctp_sndinfo))
-            num = sizeof(struct bio_dgram_sctp_sndinfo);
+                data->ccs_rcvd = 0;
+                data->ccs_sent = 0;
+            }
+            break;
+        case BIO_CTRL_DGRAM_SCTP_GET_SNDINFO:
+            /* Returns the size of the copied struct. */
+            if (num > (long)sizeof(struct bio_dgram_sctp_sndinfo))
+                num = sizeof(struct bio_dgram_sctp_sndinfo);
 
-        memcpy(ptr, &(data->sndinfo), num);
-        ret = num;
-        break;
-    case BIO_CTRL_DGRAM_SCTP_SET_SNDINFO:
-        /* Returns the size of the copied struct. */
-        if (num > (long)sizeof(struct bio_dgram_sctp_sndinfo))
-            num = sizeof(struct bio_dgram_sctp_sndinfo);
+            memcpy(ptr, &(data->sndinfo), num);
+            ret = num;
+            break;
+        case BIO_CTRL_DGRAM_SCTP_SET_SNDINFO:
+            /* Returns the size of the copied struct. */
+            if (num > (long)sizeof(struct bio_dgram_sctp_sndinfo))
+                num = sizeof(struct bio_dgram_sctp_sndinfo);
 
-        memcpy(&(data->sndinfo), ptr, num);
-        break;
-    case BIO_CTRL_DGRAM_SCTP_GET_RCVINFO:
-        /* Returns the size of the copied struct. */
-        if (num > (long)sizeof(struct bio_dgram_sctp_rcvinfo))
-            num = sizeof(struct bio_dgram_sctp_rcvinfo);
+            memcpy(&(data->sndinfo), ptr, num);
+            break;
+        case BIO_CTRL_DGRAM_SCTP_GET_RCVINFO:
+            /* Returns the size of the copied struct. */
+            if (num > (long)sizeof(struct bio_dgram_sctp_rcvinfo))
+                num = sizeof(struct bio_dgram_sctp_rcvinfo);
 
-        memcpy(ptr, &data->rcvinfo, num);
+            memcpy(ptr, &data->rcvinfo, num);
 
-        ret = num;
-        break;
-    case BIO_CTRL_DGRAM_SCTP_SET_RCVINFO:
-        /* Returns the size of the copied struct. */
-        if (num > (long)sizeof(struct bio_dgram_sctp_rcvinfo))
-            num = sizeof(struct bio_dgram_sctp_rcvinfo);
+            ret = num;
+            break;
+        case BIO_CTRL_DGRAM_SCTP_SET_RCVINFO:
+            /* Returns the size of the copied struct. */
+            if (num > (long)sizeof(struct bio_dgram_sctp_rcvinfo))
+                num = sizeof(struct bio_dgram_sctp_rcvinfo);
 
-        memcpy(&(data->rcvinfo), ptr, num);
-        break;
-    case BIO_CTRL_DGRAM_SCTP_GET_PRINFO:
-        /* Returns the size of the copied struct. */
-        if (num > (long)sizeof(struct bio_dgram_sctp_prinfo))
-            num = sizeof(struct bio_dgram_sctp_prinfo);
+            memcpy(&(data->rcvinfo), ptr, num);
+            break;
+        case BIO_CTRL_DGRAM_SCTP_GET_PRINFO:
+            /* Returns the size of the copied struct. */
+            if (num > (long)sizeof(struct bio_dgram_sctp_prinfo))
+                num = sizeof(struct bio_dgram_sctp_prinfo);
 
-        memcpy(ptr, &(data->prinfo), num);
-        ret = num;
-        break;
-    case BIO_CTRL_DGRAM_SCTP_SET_PRINFO:
-        /* Returns the size of the copied struct. */
-        if (num > (long)sizeof(struct bio_dgram_sctp_prinfo))
-            num = sizeof(struct bio_dgram_sctp_prinfo);
+            memcpy(ptr, &(data->prinfo), num);
+            ret = num;
+            break;
+        case BIO_CTRL_DGRAM_SCTP_SET_PRINFO:
+            /* Returns the size of the copied struct. */
+            if (num > (long)sizeof(struct bio_dgram_sctp_prinfo))
+                num = sizeof(struct bio_dgram_sctp_prinfo);
 
-        memcpy(&(data->prinfo), ptr, num);
-        break;
-    case BIO_CTRL_DGRAM_SCTP_SAVE_SHUTDOWN:
-        /* Returns always 1. */
-        if (num > 0)
-            data->save_shutdown = 1;
-        else
-            data->save_shutdown = 0;
-        break;
-    case BIO_CTRL_DGRAM_SCTP_WAIT_FOR_DRY:
-        return dgram_sctp_wait_for_dry(b);
-    case BIO_CTRL_DGRAM_SCTP_MSG_WAITING:
-        return dgram_sctp_msg_waiting(b);
+            memcpy(&(data->prinfo), ptr, num);
+            break;
+        case BIO_CTRL_DGRAM_SCTP_SAVE_SHUTDOWN:
+            /* Returns always 1. */
+            if (num > 0)
+                data->save_shutdown = 1;
+            else
+                data->save_shutdown = 0;
+            break;
+        case BIO_CTRL_DGRAM_SCTP_WAIT_FOR_DRY:
+            return dgram_sctp_wait_for_dry(b);
+        case BIO_CTRL_DGRAM_SCTP_MSG_WAITING:
+            return dgram_sctp_msg_waiting(b);
 
-    default:
-        /*
-         * Pass to default ctrl function to process SCTP unspecific commands
-         */
-        ret = dgram_ctrl(b, cmd, num, ptr);
-        break;
+        default:
+            /*
+             * Pass to default ctrl function to process SCTP unspecific commands
+             */
+            ret = dgram_ctrl(b, cmd, num, ptr);
+            break;
     }
     return ret;
 }
 
 int BIO_dgram_sctp_notification_cb(BIO *b,
-                BIO_dgram_sctp_notification_handler_fn handle_notifications,
-                void *context)
+                                   BIO_dgram_sctp_notification_handler_fn handle_notifications,
+                                   void *context)
 {
     bio_dgram_sctp_data *data = (bio_dgram_sctp_data *) b->ptr;
 
@@ -2791,45 +2814,45 @@ int BIO_dgram_non_fatal_error(int err)
     switch (err) {
 # if defined(OPENSSL_SYS_WINDOWS)
 #  if defined(WSAEWOULDBLOCK)
-    case WSAEWOULDBLOCK:
+        case WSAEWOULDBLOCK:
 #  endif
 # endif
 
 # ifdef EWOULDBLOCK
 #  ifdef WSAEWOULDBLOCK
 #   if WSAEWOULDBLOCK != EWOULDBLOCK
-    case EWOULDBLOCK:
+        case EWOULDBLOCK:
 #   endif
 #  else
-    case EWOULDBLOCK:
+        case EWOULDBLOCK:
 #  endif
 # endif
 
 # ifdef EINTR
-    case EINTR:
+        case EINTR:
 # endif
 
 # ifdef EAGAIN
 #  if EWOULDBLOCK != EAGAIN
-    case EAGAIN:
+        case EAGAIN:
 #  endif
 # endif
 
 # ifdef EPROTO
-    case EPROTO:
+        case EPROTO:
 # endif
 
 # ifdef EINPROGRESS
-    case EINPROGRESS:
+        case EINPROGRESS:
 # endif
 
 # ifdef EALREADY
-    case EALREADY:
+        case EALREADY:
 # endif
 
-        return 1;
-    default:
-        break;
+    return 1;
+        default:
+            break;
     }
     return 0;
 }

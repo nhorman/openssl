@@ -13,11 +13,11 @@
 #include "internal/quic_error.h"
 
 #define QUIC_TLS_FATAL(rl, ad, err) \
-    do { \
-        if ((rl) != NULL) (rl)->alert = (ad); \
-        ERR_raise(ERR_LIB_SSL, (err)); \
-        if ((rl) != NULL) (rl)->qtls->inerror = 1; \
-    } while(0)
+        do { \
+            if ((rl) != NULL) (rl)->alert = (ad); \
+            ERR_raise(ERR_LIB_SSL, (err)); \
+            if ((rl) != NULL) (rl)->qtls->inerror = 1; \
+        } while(0)
 
 struct quic_tls_st {
     QUIC_TLS_ARGS args;
@@ -124,36 +124,36 @@ quic_new_record_layer(OSSL_LIB_CTX *libctx, const char *propq, int vers,
     if (fns != NULL) {
         for (; fns->function_id != 0; fns++) {
             switch (fns->function_id) {
-                break;
-            case OSSL_FUNC_RLAYER_MSG_CALLBACK:
-                rl->msg_callback = OSSL_FUNC_rlayer_msg_callback(fns);
-                break;
-            default:
-                /* Just ignore anything we don't understand */
-                break;
+            break;
+                case OSSL_FUNC_RLAYER_MSG_CALLBACK:
+                    rl->msg_callback = OSSL_FUNC_rlayer_msg_callback(fns);
+                    break;
+                default:
+                    /* Just ignore anything we don't understand */
+                    break;
             }
         }
     }
 
     switch (level) {
-    case OSSL_RECORD_PROTECTION_LEVEL_NONE:
-        return 1;
+        case OSSL_RECORD_PROTECTION_LEVEL_NONE:
+            return 1;
 
-    case OSSL_RECORD_PROTECTION_LEVEL_EARLY:
-        enc_level = QUIC_ENC_LEVEL_0RTT;
-        break;
+        case OSSL_RECORD_PROTECTION_LEVEL_EARLY:
+            enc_level = QUIC_ENC_LEVEL_0RTT;
+            break;
 
-    case OSSL_RECORD_PROTECTION_LEVEL_HANDSHAKE:
-        enc_level = QUIC_ENC_LEVEL_HANDSHAKE;
-        break;
+        case OSSL_RECORD_PROTECTION_LEVEL_HANDSHAKE:
+            enc_level = QUIC_ENC_LEVEL_HANDSHAKE;
+            break;
 
-    case OSSL_RECORD_PROTECTION_LEVEL_APPLICATION:
-        enc_level = QUIC_ENC_LEVEL_1RTT;
-        break;
+        case OSSL_RECORD_PROTECTION_LEVEL_APPLICATION:
+            enc_level = QUIC_ENC_LEVEL_1RTT;
+            break;
 
-    default:
-        QUIC_TLS_FATAL(rl, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
-        goto err;
+        default:
+            QUIC_TLS_FATAL(rl, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
+            goto err;
     }
 
     if (direction == OSSL_RECORD_DIRECTION_READ)
@@ -188,7 +188,7 @@ quic_new_record_layer(OSSL_LIB_CTX *libctx, const char *propq, int vers,
     }
 
     return 1;
- err:
+err:
     *retrl = NULL;
     quic_free(rl);
     return 0;
@@ -275,7 +275,7 @@ static int quic_write_records(OSSL_RECORD_LAYER *rl,
         dummyrec[4] = (unsigned char)(template->buflen & 0xff);
 
         rl->msg_callback(1, TLS1_3_VERSION, SSL3_RT_HEADER, dummyrec,
-                            SSL3_RT_HEADER_LENGTH, rl->cbarg);
+                         SSL3_RT_HEADER_LENGTH, rl->cbarg);
 
         if (rl->level != OSSL_RECORD_PROTECTION_LEVEL_NONE) {
             rl->msg_callback(1, TLS1_3_VERSION, SSL3_RT_INNER_CONTENT_TYPE,
@@ -284,69 +284,71 @@ static int quic_write_records(OSSL_RECORD_LAYER *rl,
     }
 
     switch (template->type) {
-    case SSL3_RT_ALERT:
-        if (template->buflen != 2) {
+        case SSL3_RT_ALERT:
+            if (template->buflen != 2) {
+                /*
+                 * We assume that libssl always sends both bytes of an alert to
+                 * us in one go, and never fragments it. If we ever get more
+                 * or less bytes than exactly 2 then this is very unexpected.
+                 */
+                QUIC_TLS_FATAL(rl, SSL_AD_INTERNAL_ERROR, SSL_R_BAD_VALUE);
+                return OSSL_RECORD_RETURN_FATAL;
+            }
             /*
-             * We assume that libssl always sends both bytes of an alert to
-             * us in one go, and never fragments it. If we ever get more
-             * or less bytes than exactly 2 then this is very unexpected.
+             * Byte 0 is the alert level (we ignore it) and byte 1 is the alert
+             * description that we are actually interested in.
              */
-            QUIC_TLS_FATAL(rl, SSL_AD_INTERNAL_ERROR, SSL_R_BAD_VALUE);
-            return OSSL_RECORD_RETURN_FATAL;
-        }
-        /*
-         * Byte 0 is the alert level (we ignore it) and byte 1 is the alert
-         * description that we are actually interested in.
-         */
-        alert = template->buf[1];
+            alert = template->buf[1];
 
-        if (!rl->qtls->args.alert_cb(rl->qtls->args.alert_cb_arg, alert)) {
-            QUIC_TLS_FATAL(rl, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
-            return OSSL_RECORD_RETURN_FATAL;
-        }
-        break;
-
-    case SSL3_RT_HANDSHAKE:
-        /*
-         * We expect this to only fail on some fatal error (e.g. malloc
-         * failure)
-         */
-        if (!rl->qtls->args.crypto_send_cb(template->buf + rl->written,
-                                           template->buflen - rl->written,
-                                           &consumed,
-                                           rl->qtls->args.crypto_send_cb_arg)) {
-            QUIC_TLS_FATAL(rl, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
-            return OSSL_RECORD_RETURN_FATAL;
-        }
-        /*
-         * We might have written less than we wanted to if we have filled the
-         * send stream buffer.
-         */
-        if (consumed + rl->written != template->buflen) {
-            if (!ossl_assert(consumed + rl->written < template->buflen)) {
+            if (!rl->qtls->args.alert_cb(rl->qtls->args.alert_cb_arg, alert)) {
                 QUIC_TLS_FATAL(rl, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
                 return OSSL_RECORD_RETURN_FATAL;
             }
+            break;
 
+        case SSL3_RT_HANDSHAKE:
             /*
-             * We've not written everything we wanted to. Take a copy of the
-             * template, remember how much we wrote so far and signal a retry.
-             * The buffer supplied in the template is guaranteed to be the same
-             * on a retry for handshake data
+             * We expect this to only fail on some fatal error (e.g. malloc
+             * failure)
              */
-            rl->written += consumed;
-            rl->template = *template;
-            BIO_set_retry_write(rl->dummybio);
+            if (!rl->qtls->args.crypto_send_cb(template->buf + rl->written,
+                                               template->buflen - rl->written,
+                                               &consumed,
+                                               rl->qtls->args.crypto_send_cb_arg))
+            {
+                QUIC_TLS_FATAL(rl, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
+                return OSSL_RECORD_RETURN_FATAL;
+            }
+            /*
+             * We might have written less than we wanted to if we have filled the
+             * send stream buffer.
+             */
+            if (consumed + rl->written != template->buflen) {
+                if (!ossl_assert(consumed + rl->written < template->buflen)) {
+                    QUIC_TLS_FATAL(rl, SSL_AD_INTERNAL_ERROR,
+                                   ERR_R_INTERNAL_ERROR);
+                    return OSSL_RECORD_RETURN_FATAL;
+                }
 
-            return OSSL_RECORD_RETURN_RETRY;
-        }
-        rl->written = 0;
-        break;
+                /*
+                 * We've not written everything we wanted to. Take a copy of the
+                 * template, remember how much we wrote so far and signal a retry.
+                 * The buffer supplied in the template is guaranteed to be the same
+                 * on a retry for handshake data
+                 */
+                rl->written += consumed;
+                rl->template = *template;
+                BIO_set_retry_write(rl->dummybio);
 
-    default:
-        /* Anything else is unexpected and an error */
-        QUIC_TLS_FATAL(rl, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
-        return OSSL_RECORD_RETURN_FATAL;
+                return OSSL_RECORD_RETURN_RETRY;
+            }
+            rl->written = 0;
+            break;
+
+        default:
+            /* Anything else is unexpected and an error */
+            QUIC_TLS_FATAL(rl, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
+            return OSSL_RECORD_RETURN_FATAL;
     }
 
     return OSSL_RECORD_RETURN_SUCCESS;
@@ -358,7 +360,8 @@ static int quic_retry_write_records(OSSL_RECORD_LAYER *rl)
 }
 
 static int quic_read_record(OSSL_RECORD_LAYER *rl, void **rechandle,
-                            int *rversion, uint8_t *type, const unsigned char **data,
+                            int *rversion, uint8_t *type,
+                            const unsigned char **data,
                             size_t *datalen, uint16_t *epoch,
                             unsigned char *seq_num)
 {
@@ -368,7 +371,8 @@ static int quic_read_record(OSSL_RECORD_LAYER *rl, void **rechandle,
     BIO_clear_retry_flags(rl->dummybio);
 
     if (!rl->qtls->args.crypto_recv_rcd_cb(data, datalen,
-                                           rl->qtls->args.crypto_recv_rcd_cb_arg)) {
+                                           rl->qtls->args.crypto_recv_rcd_cb_arg))
+    {
         QUIC_TLS_FATAL(rl, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
         return OSSL_RECORD_RETURN_FATAL;
     }
@@ -416,9 +420,9 @@ static int quic_release_record(OSSL_RECORD_LAYER *rl, void *rechandle,
                                size_t length)
 {
     if (!ossl_assert(rl->recread > 0)
-            || !ossl_assert(rl->recunreleased <= rl->recread)
-            || !ossl_assert(rl == rechandle)
-            || !ossl_assert(length <= rl->recunreleased)) {
+        || !ossl_assert(rl->recunreleased <= rl->recread)
+        || !ossl_assert(rl == rechandle)
+        || !ossl_assert(length <= rl->recunreleased)) {
         QUIC_TLS_FATAL(rl, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
         return OSSL_RECORD_RETURN_FATAL;
     }
@@ -429,7 +433,8 @@ static int quic_release_record(OSSL_RECORD_LAYER *rl, void *rechandle,
         return OSSL_RECORD_RETURN_SUCCESS;
 
     if (!rl->qtls->args.crypto_release_rcd_cb(rl->recread,
-                                              rl->qtls->args.crypto_release_rcd_cb_arg)) {
+                                              rl->qtls->args.
+                                              crypto_release_rcd_cb_arg)) {
         QUIC_TLS_FATAL(rl, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
         return OSSL_RECORD_RETURN_FATAL;
     }
@@ -470,7 +475,7 @@ static void quic_set_max_pipelines(OSSL_RECORD_LAYER *rl, size_t max_pipelines)
 }
 
 static void quic_get_state(OSSL_RECORD_LAYER *rl, const char **shortstr,
-                    const char **longstr)
+                           const char **longstr)
 {
     /*
      * According to the docs, valid read state strings are: "RH"/"read header",
@@ -549,19 +554,22 @@ static int quic_set1_bio(OSSL_RECORD_LAYER *rl, BIO *bio)
 
 static size_t quic_app_data_pending(OSSL_RECORD_LAYER *rl)
 {
-    QUIC_TLS_FATAL(rl, SSL_AD_INTERNAL_ERROR, ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
+    QUIC_TLS_FATAL(rl, SSL_AD_INTERNAL_ERROR,
+                   ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
     return (size_t)ossl_assert(0);
 }
 
 static size_t quic_get_max_record_overhead(OSSL_RECORD_LAYER *rl)
 {
-    QUIC_TLS_FATAL(rl, SSL_AD_INTERNAL_ERROR, ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
+    QUIC_TLS_FATAL(rl, SSL_AD_INTERNAL_ERROR,
+                   ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
     return (size_t)ossl_assert(0);
 }
 
 static int quic_increment_sequence_ctr(OSSL_RECORD_LAYER *rl)
 {
-    QUIC_TLS_FATAL(rl, SSL_AD_INTERNAL_ERROR, ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
+    QUIC_TLS_FATAL(rl, SSL_AD_INTERNAL_ERROR,
+                   ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
     return ossl_assert(0);
 }
 
@@ -692,11 +700,11 @@ static int raise_error(QUIC_TLS *qtls, uint64_t error_code,
 }
 
 #define RAISE_ERROR(qtls, error_code, error_msg) \
-    raise_error((qtls), (error_code), (error_msg), \
-                OPENSSL_FILE, OPENSSL_LINE, OPENSSL_FUNC)
+        raise_error((qtls), (error_code), (error_msg), \
+                    OPENSSL_FILE, OPENSSL_LINE, OPENSSL_FUNC)
 
 #define RAISE_INTERNAL_ERROR(qtls) \
-    RAISE_ERROR((qtls), QUIC_ERR_INTERNAL_ERROR, "internal error")
+        RAISE_ERROR((qtls), QUIC_ERR_INTERNAL_ERROR, "internal error")
 
 int ossl_quic_tls_tick(QUIC_TLS *qtls)
 {
@@ -756,12 +764,15 @@ int ossl_quic_tls_tick(QUIC_TLS *qtls)
         ossl_ssl_set_custom_record_layer(sc, &quic_tls_record_method, qtls);
 
         if (!ossl_tls_add_custom_ext_intern(NULL, &sc->cert->custext,
-                                            qtls->args.is_server ? ENDPOINT_SERVER
-                                                                 : ENDPOINT_CLIENT,
+                                            qtls->args.is_server ?
+                                            ENDPOINT_SERVER
+                                                                 :
+                                            ENDPOINT_CLIENT,
                                             TLSEXT_TYPE_quic_transport_parameters,
                                             SSL_EXT_TLS1_3_ONLY
                                             | SSL_EXT_CLIENT_HELLO
-                                            | SSL_EXT_TLS1_3_ENCRYPTED_EXTENSIONS,
+                                            |
+                                            SSL_EXT_TLS1_3_ENCRYPTED_EXTENSIONS,
                                             add_transport_params_cb,
                                             free_transport_params_cb, qtls,
                                             parse_transport_params_cb, qtls))
@@ -796,19 +807,19 @@ int ossl_quic_tls_tick(QUIC_TLS *qtls)
 
     if (ret <= 0) {
         err = ossl_ssl_get_error(qtls->args.s, ret,
-                                 /*check_err=*/ERR_count_to_mark() > 0);
+                                 /*check_err=*/ ERR_count_to_mark() > 0);
 
         switch (err) {
-        case SSL_ERROR_WANT_READ:
-        case SSL_ERROR_WANT_WRITE:
-        case SSL_ERROR_WANT_CLIENT_HELLO_CB:
-        case SSL_ERROR_WANT_X509_LOOKUP:
-        case SSL_ERROR_WANT_RETRY_VERIFY:
-            ERR_pop_to_mark();
-            return 1;
+            case SSL_ERROR_WANT_READ:
+            case SSL_ERROR_WANT_WRITE:
+            case SSL_ERROR_WANT_CLIENT_HELLO_CB:
+            case SSL_ERROR_WANT_X509_LOOKUP:
+            case SSL_ERROR_WANT_RETRY_VERIFY:
+                ERR_pop_to_mark();
+                return 1;
 
-        default:
-            return RAISE_INTERNAL_ERROR(qtls);
+            default:
+                return RAISE_INTERNAL_ERROR(qtls);
         }
     }
 
@@ -821,7 +832,8 @@ int ossl_quic_tls_tick(QUIC_TLS *qtls)
 
         qtls->complete = 1;
         ERR_pop_to_mark();
-        return qtls->args.handshake_complete_cb(qtls->args.handshake_complete_cb_arg);
+        return qtls->args.handshake_complete_cb(
+            qtls->args.handshake_complete_cb_arg);
     }
 
     ERR_pop_to_mark();
@@ -868,7 +880,8 @@ int ossl_quic_tls_is_cert_request(QUIC_TLS *qtls)
  */
 int ossl_quic_tls_has_bad_max_early_data(QUIC_TLS *qtls)
 {
-    uint32_t max_early_data = SSL_get0_session(qtls->args.s)->ext.max_early_data;
+    uint32_t max_early_data =
+        SSL_get0_session(qtls->args.s)->ext.max_early_data;
 
     /*
      * If max_early_data was present we always ensure a non-zero value is

@@ -141,54 +141,54 @@ static long md_ctrl(BIO *b, int cmd, long num, void *ptr)
     next = BIO_next(b);
 
     switch (cmd) {
-    case BIO_CTRL_RESET:
-        if (BIO_get_init(b))
-            ret = EVP_DigestInit_ex(ctx, EVP_MD_CTX_get0_md(ctx), NULL);
-        else
-            ret = 0;
-        if (ret > 0)
-            ret = BIO_ctrl(next, cmd, num, ptr);
-        break;
-    case BIO_C_GET_MD:
-        if (BIO_get_init(b)) {
-            ppmd = ptr;
-            *ppmd = EVP_MD_CTX_get0_md(ctx);
-        } else
-            ret = 0;
-        break;
-    case BIO_C_GET_MD_CTX:
-        pctx = ptr;
-        *pctx = ctx;
-        BIO_set_init(b, 1);
-        break;
-    case BIO_C_SET_MD_CTX:
-        if (BIO_get_init(b))
-            BIO_set_data(b, ptr);
-        else
-            ret = 0;
-        break;
-    case BIO_C_DO_STATE_MACHINE:
-        BIO_clear_retry_flags(b);
-        ret = BIO_ctrl(next, cmd, num, ptr);
-        BIO_copy_next_retry(b);
-        break;
-
-    case BIO_C_SET_MD:
-        md = ptr;
-        ret = EVP_DigestInit_ex(ctx, md, NULL);
-        if (ret > 0)
+        case BIO_CTRL_RESET:
+            if (BIO_get_init(b))
+                ret = EVP_DigestInit_ex(ctx, EVP_MD_CTX_get0_md(ctx), NULL);
+            else
+                ret = 0;
+            if (ret > 0)
+                ret = BIO_ctrl(next, cmd, num, ptr);
+            break;
+        case BIO_C_GET_MD:
+            if (BIO_get_init(b)) {
+                ppmd = ptr;
+                *ppmd = EVP_MD_CTX_get0_md(ctx);
+            } else
+                ret = 0;
+            break;
+        case BIO_C_GET_MD_CTX:
+            pctx = ptr;
+            *pctx = ctx;
             BIO_set_init(b, 1);
-        break;
-    case BIO_CTRL_DUP:
-        dbio = ptr;
-        dctx = BIO_get_data(dbio);
-        if (!EVP_MD_CTX_copy_ex(dctx, ctx))
-            return 0;
-        BIO_set_init(b, 1);
-        break;
-    default:
-        ret = BIO_ctrl(next, cmd, num, ptr);
-        break;
+            break;
+        case BIO_C_SET_MD_CTX:
+            if (BIO_get_init(b))
+                BIO_set_data(b, ptr);
+            else
+                ret = 0;
+            break;
+        case BIO_C_DO_STATE_MACHINE:
+            BIO_clear_retry_flags(b);
+            ret = BIO_ctrl(next, cmd, num, ptr);
+            BIO_copy_next_retry(b);
+            break;
+
+        case BIO_C_SET_MD:
+            md = ptr;
+            ret = EVP_DigestInit_ex(ctx, md, NULL);
+            if (ret > 0)
+                BIO_set_init(b, 1);
+            break;
+        case BIO_CTRL_DUP:
+            dbio = ptr;
+            dctx = BIO_get_data(dbio);
+            if (!EVP_MD_CTX_copy_ex(dctx, ctx))
+                return 0;
+            BIO_set_init(b, 1);
+            break;
+        default:
+            ret = BIO_ctrl(next, cmd, num, ptr);
+            break;
     }
     return ret;
 }

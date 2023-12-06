@@ -142,12 +142,12 @@ static int p_get_params(void *provctx, OSSL_PARAM params[])
             OSSL_PROVIDER *deflt;
 
             /*
-            * "default" has not been loaded into the parent libctx. We should be able
-            * to explicitly load it as a non-child provider.
-            */
+             * "default" has not been loaded into the parent libctx. We should be able
+             * to explicitly load it as a non-child provider.
+             */
             deflt = OSSL_PROVIDER_load(ctx->libctx, "default");
             if (deflt == NULL
-                    || !OSSL_PROVIDER_available(ctx->libctx, "default")) {
+                || !OSSL_PROVIDER_available(ctx->libctx, "default")) {
                 /* We set error "3" for a failure to load the default provider */
                 p_set_error(ERR_LIB_PROV, 3, ctx->thisfile, OPENSSL_LINE,
                             ctx->thisfunc, NULL);
@@ -161,16 +161,16 @@ static int p_get_params(void *provctx, OSSL_PARAM params[])
              * available.
              */
             if (ok
-                    && OSSL_PROVIDER_available(ctx->libctx, "default")
-                    && OSSL_PROVIDER_available(ctx->libctx, "base")
-                    && OSSL_PROVIDER_available(ctx->libctx, "legacy")
-                    && OSSL_PROVIDER_available(ctx->libctx, "p_test")
-                    && md4 != NULL
-                    && mdctx != NULL) {
+                && OSSL_PROVIDER_available(ctx->libctx, "default")
+                && OSSL_PROVIDER_available(ctx->libctx, "base")
+                && OSSL_PROVIDER_available(ctx->libctx, "legacy")
+                && OSSL_PROVIDER_available(ctx->libctx, "p_test")
+                && md4 != NULL
+                && mdctx != NULL) {
                 if (EVP_DigestInit_ex(mdctx, md4, NULL)
-                        && EVP_DigestUpdate(mdctx, (const unsigned char *)msg,
-                                            strlen(msg))
-                        && EVP_DigestFinal(mdctx, out, NULL))
+                    && EVP_DigestUpdate(mdctx, (const unsigned char *)msg,
+                                        strlen(msg))
+                    && EVP_DigestFinal(mdctx, out, NULL))
                     digestsuccess = 1;
             }
             EVP_MD_CTX_free(mdctx);
@@ -217,11 +217,11 @@ static const OSSL_ITEM *p_get_reason_strings(void *_)
 }
 
 static const OSSL_DISPATCH p_test_table[] = {
-    { OSSL_FUNC_PROVIDER_GETTABLE_PARAMS, (void (*)(void))p_gettable_params },
-    { OSSL_FUNC_PROVIDER_GET_PARAMS, (void (*)(void))p_get_params },
+    { OSSL_FUNC_PROVIDER_GETTABLE_PARAMS, (void (*)(void)) p_gettable_params },
+    { OSSL_FUNC_PROVIDER_GET_PARAMS, (void (*)(void)) p_get_params },
     { OSSL_FUNC_PROVIDER_GET_REASON_STRINGS,
-        (void (*)(void))p_get_reason_strings},
-    { OSSL_FUNC_PROVIDER_TEARDOWN, (void (*)(void))p_teardown },
+      (void (*)(void)) p_get_reason_strings},
+    { OSSL_FUNC_PROVIDER_TEARDOWN, (void (*)(void)) p_teardown },
     OSSL_DISPATCH_END
 };
 
@@ -235,24 +235,24 @@ int OSSL_provider_init(const OSSL_CORE_HANDLE *handle,
 
     for (; in->function_id != 0; in++) {
         switch (in->function_id) {
-        case OSSL_FUNC_CORE_GETTABLE_PARAMS:
-            c_gettable_params = OSSL_FUNC_core_gettable_params(in);
-            break;
-        case OSSL_FUNC_CORE_GET_PARAMS:
-            c_get_params = OSSL_FUNC_core_get_params(in);
-            break;
-        case OSSL_FUNC_CORE_NEW_ERROR:
-            c_new_error = OSSL_FUNC_core_new_error(in);
-            break;
-        case OSSL_FUNC_CORE_SET_ERROR_DEBUG:
-            c_set_error_debug = OSSL_FUNC_core_set_error_debug(in);
-            break;
-        case OSSL_FUNC_CORE_VSET_ERROR:
-            c_vset_error = OSSL_FUNC_core_vset_error(in);
-            break;
-        default:
-            /* Just ignore anything we don't understand */
-            break;
+            case OSSL_FUNC_CORE_GETTABLE_PARAMS:
+                c_gettable_params = OSSL_FUNC_core_gettable_params(in);
+                break;
+            case OSSL_FUNC_CORE_GET_PARAMS:
+                c_get_params = OSSL_FUNC_core_get_params(in);
+                break;
+            case OSSL_FUNC_CORE_NEW_ERROR:
+                c_new_error = OSSL_FUNC_core_new_error(in);
+                break;
+            case OSSL_FUNC_CORE_SET_ERROR_DEBUG:
+                c_set_error_debug = OSSL_FUNC_core_set_error_debug(in);
+                break;
+            case OSSL_FUNC_CORE_VSET_ERROR:
+                c_vset_error = OSSL_FUNC_core_vset_error(in);
+                break;
+            default:
+                /* Just ignore anything we don't understand */
+                break;
         }
     }
 
@@ -300,7 +300,8 @@ int OSSL_provider_init(const OSSL_CORE_HANDLE *handle,
      * Set a spurious error to check error handling works correctly. This will
      * be ignored
      */
-    p_set_error(ERR_LIB_PROV, 1, ctx->thisfile, OPENSSL_LINE, ctx->thisfunc, NULL);
+    p_set_error(ERR_LIB_PROV, 1, ctx->thisfile, OPENSSL_LINE, ctx->thisfunc,
+                NULL);
 
     *provctx = (void *)ctx;
     *out = p_test_table;

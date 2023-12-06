@@ -171,12 +171,12 @@ static const OSSL_ALGORITHM *legacy_query(void *provctx, int operation_id,
 {
     *no_cache = 0;
     switch (operation_id) {
-    case OSSL_OP_DIGEST:
-        return legacy_digests;
-    case OSSL_OP_CIPHER:
-        return legacy_ciphers;
-    case OSSL_OP_KDF:
-        return legacy_kdfs;
+        case OSSL_OP_DIGEST:
+            return legacy_digests;
+        case OSSL_OP_CIPHER:
+            return legacy_ciphers;
+        case OSSL_OP_KDF:
+            return legacy_kdfs;
     }
     return NULL;
 }
@@ -189,10 +189,11 @@ static void legacy_teardown(void *provctx)
 
 /* Functions we provide to the core */
 static const OSSL_DISPATCH legacy_dispatch_table[] = {
-    { OSSL_FUNC_PROVIDER_TEARDOWN, (void (*)(void))legacy_teardown },
-    { OSSL_FUNC_PROVIDER_GETTABLE_PARAMS, (void (*)(void))legacy_gettable_params },
-    { OSSL_FUNC_PROVIDER_GET_PARAMS, (void (*)(void))legacy_get_params },
-    { OSSL_FUNC_PROVIDER_QUERY_OPERATION, (void (*)(void))legacy_query },
+    { OSSL_FUNC_PROVIDER_TEARDOWN, (void (*)(void)) legacy_teardown },
+    { OSSL_FUNC_PROVIDER_GETTABLE_PARAMS,
+      (void (*)(void)) legacy_gettable_params },
+    { OSSL_FUNC_PROVIDER_GET_PARAMS, (void (*)(void)) legacy_get_params },
+    { OSSL_FUNC_PROVIDER_QUERY_OPERATION, (void (*)(void)) legacy_query },
     OSSL_DISPATCH_END
 };
 
@@ -215,25 +216,27 @@ int OSSL_provider_init(const OSSL_CORE_HANDLE *handle,
          */
 #define set_func(c, f) if (c == NULL) c = f; else if (c != f) return 0;
         switch (tmp->function_id) {
-        case OSSL_FUNC_CORE_NEW_ERROR:
-            set_func(c_new_error, OSSL_FUNC_core_new_error(tmp));
-            break;
-        case OSSL_FUNC_CORE_SET_ERROR_DEBUG:
-            set_func(c_set_error_debug, OSSL_FUNC_core_set_error_debug(tmp));
-            break;
-        case OSSL_FUNC_CORE_VSET_ERROR:
-            set_func(c_vset_error, OSSL_FUNC_core_vset_error(tmp));
-            break;
-        case OSSL_FUNC_CORE_SET_ERROR_MARK:
-            set_func(c_set_error_mark, OSSL_FUNC_core_set_error_mark(tmp));
-            break;
-        case OSSL_FUNC_CORE_CLEAR_LAST_ERROR_MARK:
-            set_func(c_clear_last_error_mark,
-                     OSSL_FUNC_core_clear_last_error_mark(tmp));
-            break;
-        case OSSL_FUNC_CORE_POP_ERROR_TO_MARK:
-            set_func(c_pop_error_to_mark, OSSL_FUNC_core_pop_error_to_mark(tmp));
-            break;
+            case OSSL_FUNC_CORE_NEW_ERROR:
+                set_func(c_new_error, OSSL_FUNC_core_new_error(tmp));
+                break;
+            case OSSL_FUNC_CORE_SET_ERROR_DEBUG:
+                set_func(c_set_error_debug,
+                         OSSL_FUNC_core_set_error_debug(tmp));
+                break;
+            case OSSL_FUNC_CORE_VSET_ERROR:
+                set_func(c_vset_error, OSSL_FUNC_core_vset_error(tmp));
+                break;
+            case OSSL_FUNC_CORE_SET_ERROR_MARK:
+                set_func(c_set_error_mark, OSSL_FUNC_core_set_error_mark(tmp));
+                break;
+            case OSSL_FUNC_CORE_CLEAR_LAST_ERROR_MARK:
+                set_func(c_clear_last_error_mark,
+                         OSSL_FUNC_core_clear_last_error_mark(tmp));
+                break;
+            case OSSL_FUNC_CORE_POP_ERROR_TO_MARK:
+                set_func(c_pop_error_to_mark,
+                         OSSL_FUNC_core_pop_error_to_mark(tmp));
+                break;
         }
     }
 #endif

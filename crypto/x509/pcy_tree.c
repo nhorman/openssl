@@ -83,9 +83,9 @@ static void tree_print(BIO *channel,
 }
 
 #define TREE_PRINT(str, tree, curr) \
-    OSSL_TRACE_BEGIN(X509V3_POLICY) { \
-        tree_print(trc_out, "before tree_prune()", tree, curr); \
-    } OSSL_TRACE_END(X509V3_POLICY)
+        OSSL_TRACE_BEGIN(X509V3_POLICY) { \
+            tree_print(trc_out, "before tree_prune()", tree, curr); \
+        } OSSL_TRACE_END(X509V3_POLICY)
 
 /*-
  * Return value: <= 0 on error, or positive bit mask:
@@ -243,7 +243,7 @@ static int tree_init(X509_POLICY_TREE **ptree, STACK_OF(X509) *certs,
     *ptree = tree;
     return ret;
 
- bad_tree:
+bad_tree:
     X509_policy_tree_free(tree);
     return X509_PCY_TREE_INTERNAL;
 }
@@ -269,7 +269,8 @@ static int tree_link_matching_nodes(X509_POLICY_LEVEL *curr,
         }
     }
     if (!matched && last->anyPolicy) {
-        if (ossl_policy_level_add_node(curr, data, last->anyPolicy, tree, 0) == NULL)
+        if (ossl_policy_level_add_node(curr, data, last->anyPolicy, tree,
+                                       0) == NULL)
             return 0;
     }
     return 1;
@@ -384,8 +385,8 @@ static int tree_link_any(X509_POLICY_LEVEL *curr,
     }
     /* Finally add link to anyPolicy */
     if (last->anyPolicy &&
-            ossl_policy_level_add_node(curr, cache->anyPolicy,
-                                       last->anyPolicy, tree, 0) == NULL)
+        ossl_policy_level_add_node(curr, cache->anyPolicy,
+                                   last->anyPolicy, tree, 0) == NULL)
         return 0;
     return 1;
 }
@@ -566,7 +567,7 @@ static int tree_calculate_user_set(X509_POLICY_TREE *tree,
                 return 0;
             extra->qualifier_set = anyPolicy->data->qualifier_set;
             extra->flags = POLICY_DATA_FLAG_SHARED_QUALIFIERS
-                | POLICY_DATA_FLAG_EXTRA_NODE;
+                           | POLICY_DATA_FLAG_EXTRA_NODE;
             node = ossl_policy_level_add_node(NULL, extra, anyPolicy->parent,
                                               tree, 1);
             if (node == NULL) {
@@ -715,7 +716,7 @@ int X509_policy_check(X509_POLICY_TREE **ptree, int *pexplicit_policy,
     }
     return X509_PCY_TREE_VALID;
 
- error:
+error:
     X509_policy_tree_free(tree);
     return X509_PCY_TREE_INTERNAL;
 }

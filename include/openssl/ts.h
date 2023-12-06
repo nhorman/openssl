@@ -390,19 +390,19 @@ int TS_RESP_verify_signature(PKCS7 *token, STACK_OF(X509) *certs,
 
 /* You can use the following convenience constants. */
 # define TS_VFY_ALL_IMPRINT      (TS_VFY_SIGNATURE       \
-                                 | TS_VFY_VERSION       \
-                                 | TS_VFY_POLICY        \
-                                 | TS_VFY_IMPRINT       \
-                                 | TS_VFY_NONCE         \
-                                 | TS_VFY_SIGNER        \
-                                 | TS_VFY_TSA_NAME)
+                                  | TS_VFY_VERSION       \
+                                  | TS_VFY_POLICY        \
+                                  | TS_VFY_IMPRINT       \
+                                  | TS_VFY_NONCE         \
+                                  | TS_VFY_SIGNER        \
+                                  | TS_VFY_TSA_NAME)
 # define TS_VFY_ALL_DATA         (TS_VFY_SIGNATURE       \
-                                 | TS_VFY_VERSION       \
-                                 | TS_VFY_POLICY        \
-                                 | TS_VFY_DATA          \
-                                 | TS_VFY_NONCE         \
-                                 | TS_VFY_SIGNER        \
-                                 | TS_VFY_TSA_NAME)
+                                  | TS_VFY_VERSION       \
+                                  | TS_VFY_POLICY        \
+                                  | TS_VFY_DATA          \
+                                  | TS_VFY_NONCE         \
+                                  | TS_VFY_SIGNER        \
+                                  | TS_VFY_TSA_NAME)
 
 typedef struct TS_verify_ctx TS_VERIFY_CTX;
 
@@ -425,7 +425,8 @@ X509_STORE *TS_VERIFY_CTX_set_store(TS_VERIFY_CTX *ctx, X509_STORE *s);
 # ifndef OPENSSL_NO_DEPRECATED_3_0
 #  define TS_VERIFY_CTS_set_certs(ctx, cert) TS_VERIFY_CTX_set_certs(ctx,cert)
 # endif
-STACK_OF(X509) *TS_VERIFY_CTX_set_certs(TS_VERIFY_CTX *ctx, STACK_OF(X509) *certs);
+STACK_OF(X509) *TS_VERIFY_CTX_set_certs(TS_VERIFY_CTX *ctx, STACK_OF(
+                                            X509) *certs);
 
 /*-
  * If ctx is NULL, it allocates and returns a new object, otherwise
@@ -483,7 +484,7 @@ int TS_CONF_set_signer_key(CONF *conf, const char *section,
                            const char *key, const char *pass,
                            TS_RESP_CTX *ctx);
 int TS_CONF_set_signer_digest(CONF *conf, const char *section,
-                               const char *md, TS_RESP_CTX *ctx);
+                              const char *md, TS_RESP_CTX *ctx);
 int TS_CONF_set_def_policy(CONF *conf, const char *section,
                            const char *policy, TS_RESP_CTX *ctx);
 int TS_CONF_set_policies(CONF *conf, const char *section, TS_RESP_CTX *ctx);
@@ -496,7 +497,7 @@ int TS_CONF_set_tsa_name(CONF *conf, const char *section, TS_RESP_CTX *ctx);
 int TS_CONF_set_ess_cert_id_chain(CONF *conf, const char *section,
                                   TS_RESP_CTX *ctx);
 int TS_CONF_set_ess_cert_id_digest(CONF *conf, const char *section,
-                                      TS_RESP_CTX *ctx);
+                                   TS_RESP_CTX *ctx);
 
 #  ifdef  __cplusplus
 }

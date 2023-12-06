@@ -41,7 +41,7 @@ int ossl_cmp_hdr_get_pvno(const OSSL_CMP_PKIHEADER *hdr)
 int ossl_cmp_hdr_get_protection_nid(const OSSL_CMP_PKIHEADER *hdr)
 {
     if (!ossl_assert(hdr != NULL)
-            || hdr->protectionAlg == NULL)
+        || hdr->protectionAlg == NULL)
         return NID_undef;
     return OBJ_obj2nid(hdr->protectionAlg->algorithm);
 }
@@ -76,7 +76,7 @@ ASN1_OCTET_STRING *OSSL_CMP_HDR_get0_recipNonce(const OSSL_CMP_PKIHEADER *hdr)
 int ossl_cmp_general_name_is_NULL_DN(GENERAL_NAME *name)
 {
     return name == NULL
-        || (name->type == GEN_DIRNAME && IS_NULL_DN(name->d.directoryName));
+           || (name->type == GEN_DIRNAME && IS_NULL_DN(name->d.directoryName));
 }
 
 /* assign to *tgt a copy of src (which may be NULL to indicate an empty DN) */
@@ -102,7 +102,7 @@ static int set1_general_name(GENERAL_NAME **tgt, const X509_NAME *src)
 
     return 1;
 
- err:
+err:
     GENERAL_NAME_free(name);
     return 0;
 }
@@ -131,7 +131,7 @@ int ossl_cmp_hdr_update_messageTime(OSSL_CMP_PKIHEADER *hdr)
     if (!ossl_assert(hdr != NULL))
         return 0;
     if (hdr->messageTime == NULL
-            && (hdr->messageTime = ASN1_GENERALIZEDTIME_new()) == NULL)
+        && (hdr->messageTime = ASN1_GENERALIZEDTIME_new()) == NULL)
         return 0;
     return ASN1_GENERALIZEDTIME_set(hdr->messageTime, time(NULL)) != NULL;
 }
@@ -165,7 +165,7 @@ int ossl_cmp_hdr_push0_freeText(OSSL_CMP_PKIHEADER *hdr, ASN1_UTF8STRING *text)
         return 0;
 
     if (hdr->freeText == NULL
-            && (hdr->freeText = sk_ASN1_UTF8STRING_new_null()) == NULL)
+        && (hdr->freeText = sk_ASN1_UTF8STRING_new_null()) == NULL)
         return 0;
 
     return sk_ASN1_UTF8STRING_push(hdr->freeText, text);
@@ -177,7 +177,7 @@ int ossl_cmp_hdr_push1_freeText(OSSL_CMP_PKIHEADER *hdr, ASN1_UTF8STRING *text)
         return 0;
 
     if (hdr->freeText == NULL
-            && (hdr->freeText = sk_ASN1_UTF8STRING_new_null()) == NULL)
+        && (hdr->freeText = sk_ASN1_UTF8STRING_new_null()) == NULL)
         return 0;
 
     return
@@ -232,7 +232,7 @@ int ossl_cmp_hdr_set_implicitConfirm(OSSL_CMP_PKIHEADER *hdr)
         goto err;
     return 1;
 
- err:
+err:
     ASN1_TYPE_free(asn1null);
     OSSL_CMP_ITAV_free(itav);
     return 0;
@@ -252,7 +252,7 @@ int ossl_cmp_hdr_has_implicitConfirm(const OSSL_CMP_PKIHEADER *hdr)
     for (i = 0; i < itavCount; i++) {
         itav = sk_OSSL_CMP_ITAV_value(hdr->generalInfo, i);
         if (itav != NULL
-                && OBJ_obj2nid(itav->infoType) == NID_id_it_implicitConfirm)
+            && OBJ_obj2nid(itav->infoType) == NID_id_it_implicitConfirm)
             return 1;
     }
 
@@ -305,9 +305,9 @@ int ossl_cmp_hdr_init(OSSL_CMP_CTX *ctx, OSSL_CMP_PKIHEADER *hdr)
      * sender name is not known to the client and thus set to NULL-DN
      */
     sender = ctx->cert != NULL ? X509_get_subject_name(ctx->cert) :
-        ctx->oldCert != NULL ? X509_get_subject_name(ctx->oldCert) :
-        ctx->p10CSR != NULL ? X509_REQ_get_subject_name(ctx->p10CSR) :
-        ctx->subjectName;
+             ctx->oldCert != NULL ? X509_get_subject_name(ctx->oldCert) :
+             ctx->p10CSR != NULL ? X509_REQ_get_subject_name(ctx->p10CSR) :
+             ctx->subjectName;
     if (!ossl_cmp_hdr_set1_sender(hdr, sender))
         return 0;
 
@@ -330,8 +330,8 @@ int ossl_cmp_hdr_init(OSSL_CMP_CTX *ctx, OSSL_CMP_PKIHEADER *hdr)
         return 0;
 
     if (ctx->recipNonce != NULL
-            && !ossl_cmp_asn1_octet_string_set1(&hdr->recipNonce,
-                                                ctx->recipNonce))
+        && !ossl_cmp_asn1_octet_string_set1(&hdr->recipNonce,
+                                            ctx->recipNonce))
         return 0;
 
     if (!ossl_cmp_hdr_set_transactionID(ctx, hdr))
@@ -362,7 +362,7 @@ int ossl_cmp_hdr_init(OSSL_CMP_CTX *ctx, OSSL_CMP_PKIHEADER *hdr)
      * -- (this field is intended for human consumption)
      */
     if (ctx->freeText != NULL
-            && !ossl_cmp_hdr_push1_freeText(hdr, ctx->freeText))
+        && !ossl_cmp_hdr_push1_freeText(hdr, ctx->freeText))
         return 0;
 
     return 1;

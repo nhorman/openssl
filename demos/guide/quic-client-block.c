@@ -182,7 +182,8 @@ int main(int argc, char *argv[])
      * Create the underlying transport socket/BIO and associate it with the
      * connection.
      */
-    bio = create_socket_bio(hostname, port, ipv6 ? AF_INET6 : AF_INET, &peer_addr);
+    bio = create_socket_bio(hostname, port, ipv6 ? AF_INET6 : AF_INET,
+                            &peer_addr);
     if (bio == NULL) {
         printf("Failed to crete the BIO\n");
         goto end;
@@ -230,7 +231,7 @@ int main(int argc, char *argv[])
          */
         if (SSL_get_verify_result(ssl) != X509_V_OK)
             printf("Verify error: %s\n",
-                X509_verify_cert_error_string(SSL_get_verify_result(ssl)));
+                   X509_verify_cert_error_string(SSL_get_verify_result(ssl)));
         goto end;
     }
 
@@ -254,12 +255,12 @@ int main(int argc, char *argv[])
      */
     while (SSL_read_ex(ssl, buf, sizeof(buf), &readbytes)) {
         /*
-        * OpenSSL does not guarantee that the returned data is a string or
-        * that it is NUL terminated so we use fwrite() to write the exact
-        * number of bytes that we read. The data could be non-printable or
-        * have NUL characters in the middle of it. For this simple example
-        * we're going to print it to stdout anyway.
-        */
+         * OpenSSL does not guarantee that the returned data is a string or
+         * that it is NUL terminated so we use fwrite() to write the exact
+         * number of bytes that we read. The data could be non-printable or
+         * have NUL characters in the middle of it. For this simple example
+         * we're going to print it to stdout anyway.
+         */
         fwrite(buf, 1, readbytes, stdout);
     }
     /* In case the response didn't finish with a newline we add one now */
@@ -274,36 +275,36 @@ int main(int argc, char *argv[])
      * indicate that no further data will be sent.
      */
     switch (SSL_get_error(ssl, 0)) {
-    case SSL_ERROR_ZERO_RETURN:
-        /* Normal completion of the stream */
-        break;
-
-    case SSL_ERROR_SSL:
-        /*
-         * Some stream fatal error occurred. This could be because of a stream
-         * reset - or some failure occurred on the underlying connection.
-         */
-        switch (SSL_get_stream_read_state(ssl)) {
-        case SSL_STREAM_STATE_RESET_REMOTE:
-            printf("Stream reset occurred\n");
-            /* The stream has been reset but the connection is still healthy. */
+        case SSL_ERROR_ZERO_RETURN:
+            /* Normal completion of the stream */
             break;
 
-        case SSL_STREAM_STATE_CONN_CLOSED:
-            printf("Connection closed\n");
-            /* Connection is already closed. Skip SSL_shutdown() */
-            goto end;
+        case SSL_ERROR_SSL:
+            /*
+             * Some stream fatal error occurred. This could be because of a stream
+             * reset - or some failure occurred on the underlying connection.
+             */
+            switch (SSL_get_stream_read_state(ssl)) {
+                case SSL_STREAM_STATE_RESET_REMOTE:
+                    printf("Stream reset occurred\n");
+                    /* The stream has been reset but the connection is still healthy. */
+                    break;
+
+                case SSL_STREAM_STATE_CONN_CLOSED:
+                    printf("Connection closed\n");
+                    /* Connection is already closed. Skip SSL_shutdown() */
+                    goto end;
+
+                default:
+                    printf("Unknown stream failure\n");
+                    break;
+            }
+            break;
 
         default:
-            printf("Unknown stream failure\n");
+            /* Some other unexpected error occurred */
+            printf ("Failed reading remaining data\n");
             break;
-        }
-        break;
-
-    default:
-        /* Some other unexpected error occurred */
-        printf ("Failed reading remaining data\n");
-        break;
     }
 
     /*
@@ -320,7 +321,7 @@ int main(int argc, char *argv[])
 
     /* Success! */
     res = EXIT_SUCCESS;
- end:
+end:
     /*
      * If something bad happened then we will dump the contents of the
      * OpenSSL error stack to stderr. There might be some useful diagnostic

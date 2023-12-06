@@ -776,13 +776,13 @@ int WPACKET_start_sub_packet_len__(WPACKET *pkt, size_t lenbytes);
  * lengths
  */
 #define WPACKET_start_sub_packet_u8(pkt) \
-    WPACKET_start_sub_packet_len__((pkt), 1)
+        WPACKET_start_sub_packet_len__((pkt), 1)
 #define WPACKET_start_sub_packet_u16(pkt) \
-    WPACKET_start_sub_packet_len__((pkt), 2)
+        WPACKET_start_sub_packet_len__((pkt), 2)
 #define WPACKET_start_sub_packet_u24(pkt) \
-    WPACKET_start_sub_packet_len__((pkt), 3)
+        WPACKET_start_sub_packet_len__((pkt), 3)
 #define WPACKET_start_sub_packet_u32(pkt) \
-    WPACKET_start_sub_packet_len__((pkt), 4)
+        WPACKET_start_sub_packet_len__((pkt), 4)
 
 /*
  * Same as WPACKET_start_sub_packet_len__() except no bytes are pre-allocated
@@ -815,13 +815,13 @@ int WPACKET_sub_allocate_bytes__(WPACKET *pkt, size_t len,
  * lengths
  */
 #define WPACKET_sub_allocate_bytes_u8(pkt, len, bytes) \
-    WPACKET_sub_allocate_bytes__((pkt), (len), (bytes), 1)
+        WPACKET_sub_allocate_bytes__((pkt), (len), (bytes), 1)
 #define WPACKET_sub_allocate_bytes_u16(pkt, len, bytes) \
-    WPACKET_sub_allocate_bytes__((pkt), (len), (bytes), 2)
+        WPACKET_sub_allocate_bytes__((pkt), (len), (bytes), 2)
 #define WPACKET_sub_allocate_bytes_u24(pkt, len, bytes) \
-    WPACKET_sub_allocate_bytes__((pkt), (len), (bytes), 3)
+        WPACKET_sub_allocate_bytes__((pkt), (len), (bytes), 3)
 #define WPACKET_sub_allocate_bytes_u32(pkt, len, bytes) \
-    WPACKET_sub_allocate_bytes__((pkt), (len), (bytes), 4)
+        WPACKET_sub_allocate_bytes__((pkt), (len), (bytes), 4)
 
 /*
  * The same as WPACKET_allocate_bytes() except the reserved bytes are not
@@ -847,19 +847,19 @@ int WPACKET_reserve_bytes(WPACKET *pkt, size_t len, unsigned char **allocbytes);
  * The "reserve_bytes" equivalent of WPACKET_sub_allocate_bytes__()
  */
 int WPACKET_sub_reserve_bytes__(WPACKET *pkt, size_t len,
-                                 unsigned char **allocbytes, size_t lenbytes);
+                                unsigned char **allocbytes, size_t lenbytes);
 
 /*
  * Convenience macros for  WPACKET_sub_reserve_bytes with different lengths
  */
 #define WPACKET_sub_reserve_bytes_u8(pkt, len, bytes) \
-    WPACKET_reserve_bytes__((pkt), (len), (bytes), 1)
+        WPACKET_reserve_bytes__((pkt), (len), (bytes), 1)
 #define WPACKET_sub_reserve_bytes_u16(pkt, len, bytes) \
-    WPACKET_sub_reserve_bytes__((pkt), (len), (bytes), 2)
+        WPACKET_sub_reserve_bytes__((pkt), (len), (bytes), 2)
 #define WPACKET_sub_reserve_bytes_u24(pkt, len, bytes) \
-    WPACKET_sub_reserve_bytes__((pkt), (len), (bytes), 3)
+        WPACKET_sub_reserve_bytes__((pkt), (len), (bytes), 3)
 #define WPACKET_sub_reserve_bytes_u32(pkt, len, bytes) \
-    WPACKET_sub_reserve_bytes__((pkt), (len), (bytes), 4)
+        WPACKET_sub_reserve_bytes__((pkt), (len), (bytes), 4)
 
 /*
  * Write the value stored in |val| into the WPACKET. The value will consume
@@ -875,15 +875,15 @@ int WPACKET_put_bytes__(WPACKET *pkt, uint64_t val, size_t bytes);
  * lengths
  */
 #define WPACKET_put_bytes_u8(pkt, val) \
-    WPACKET_put_bytes__((pkt), (val), 1)
+        WPACKET_put_bytes__((pkt), (val), 1)
 #define WPACKET_put_bytes_u16(pkt, val) \
-    WPACKET_put_bytes__((pkt), (val), 2)
+        WPACKET_put_bytes__((pkt), (val), 2)
 #define WPACKET_put_bytes_u24(pkt, val) \
-    WPACKET_put_bytes__((pkt), (val), 3)
+        WPACKET_put_bytes__((pkt), (val), 3)
 #define WPACKET_put_bytes_u32(pkt, val) \
-    WPACKET_put_bytes__((pkt), (val), 4)
+        WPACKET_put_bytes__((pkt), (val), 4)
 #define WPACKET_put_bytes_u64(pkt, val) \
-    WPACKET_put_bytes__((pkt), (val), 8)
+        WPACKET_put_bytes__((pkt), (val), 8)
 
 /* Set a maximum size that we will not allow the WPACKET to grow beyond */
 int WPACKET_set_max_size(WPACKET *pkt, size_t maxsize);
@@ -900,17 +900,17 @@ int WPACKET_memset(WPACKET *pkt, int ch, size_t len);
  * directly. Use the convenience macros below instead.
  */
 int WPACKET_sub_memcpy__(WPACKET *pkt, const void *src, size_t len,
-                       size_t lenbytes);
+                         size_t lenbytes);
 
 /* Convenience macros for calling WPACKET_sub_memcpy with different lengths */
 #define WPACKET_sub_memcpy_u8(pkt, src, len) \
-    WPACKET_sub_memcpy__((pkt), (src), (len), 1)
+        WPACKET_sub_memcpy__((pkt), (src), (len), 1)
 #define WPACKET_sub_memcpy_u16(pkt, src, len) \
-    WPACKET_sub_memcpy__((pkt), (src), (len), 2)
+        WPACKET_sub_memcpy__((pkt), (src), (len), 2)
 #define WPACKET_sub_memcpy_u24(pkt, src, len) \
-    WPACKET_sub_memcpy__((pkt), (src), (len), 3)
+        WPACKET_sub_memcpy__((pkt), (src), (len), 3)
 #define WPACKET_sub_memcpy_u32(pkt, src, len) \
-    WPACKET_sub_memcpy__((pkt), (src), (len), 4)
+        WPACKET_sub_memcpy__((pkt), (src), (len), 4)
 
 /*
  * Return the total number of bytes written so far to the underlying buffer

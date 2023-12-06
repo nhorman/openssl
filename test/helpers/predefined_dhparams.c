@@ -27,18 +27,19 @@ static EVP_PKEY *get_dh_from_pg_bn(OSSL_LIB_CTX *libctx, const char *type,
         goto err;
 
     if ((tmpl = OSSL_PARAM_BLD_new()) == NULL
-            || !OSSL_PARAM_BLD_push_BN(tmpl, OSSL_PKEY_PARAM_FFC_P, p)
-            || !OSSL_PARAM_BLD_push_BN(tmpl, OSSL_PKEY_PARAM_FFC_G, g)
-            || (q != NULL
-                && !OSSL_PARAM_BLD_push_BN(tmpl, OSSL_PKEY_PARAM_FFC_Q, q)))
+        || !OSSL_PARAM_BLD_push_BN(tmpl, OSSL_PKEY_PARAM_FFC_P, p)
+        || !OSSL_PARAM_BLD_push_BN(tmpl, OSSL_PKEY_PARAM_FFC_G, g)
+        || (q != NULL
+            && !OSSL_PARAM_BLD_push_BN(tmpl, OSSL_PKEY_PARAM_FFC_Q, q)))
         goto err;
 
     params = OSSL_PARAM_BLD_to_param(tmpl);
     if (params == NULL
-        || EVP_PKEY_fromdata(pctx, &dhpkey, EVP_PKEY_KEY_PARAMETERS, params) <= 0)
+        || EVP_PKEY_fromdata(pctx, &dhpkey, EVP_PKEY_KEY_PARAMETERS,
+                             params) <= 0)
         goto err;
 
- err:
+err:
     EVP_PKEY_CTX_free(pctx);
     OSSL_PARAM_free(params);
     OSSL_PARAM_BLD_free(tmpl);
@@ -62,7 +63,7 @@ static EVP_PKEY *get_dh_from_pg(OSSL_LIB_CTX *libctx, const char *type,
 
     dhpkey = get_dh_from_pg_bn(libctx, type, p, g, q);
 
- err:
+err:
     BN_free(p);
     BN_free(g);
     BN_free(q);
@@ -164,7 +165,7 @@ EVP_PKEY *get_dh2048(OSSL_LIB_CTX *libctx)
 
     dhpkey = get_dh_from_pg_bn(libctx, "DH", p, g, NULL);
 
- err:
+err:
     BN_free(p);
     BN_free(g);
     return dhpkey;
@@ -185,7 +186,7 @@ EVP_PKEY *get_dh4096(OSSL_LIB_CTX *libctx)
 
     dhpkey = get_dh_from_pg_bn(libctx, "DH", p, g, NULL);
 
- err:
+err:
     BN_free(p);
     BN_free(g);
     return dhpkey;

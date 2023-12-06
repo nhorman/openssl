@@ -98,7 +98,7 @@ static int test_hmac_md5(int idx)
     p = pt(HMAC(EVP_md5(),
                 test[idx].key, test[idx].key_len,
                 test[idx].data, test[idx].data_len, NULL, NULL),
-                MD5_DIGEST_LENGTH);
+           MD5_DIGEST_LENGTH);
 
     return TEST_ptr(p) && TEST_str_eq(p, test[idx].digest);
 }
@@ -143,7 +143,8 @@ static int test_hmac_run(void)
         || !TEST_false(HMAC_Init_ex(ctx, test[4].key, -1, EVP_sha1(), NULL)))
         goto err;
 
-    if (!TEST_true(HMAC_Init_ex(ctx, test[4].key, test[4].key_len, EVP_sha1(), NULL))
+    if (!TEST_true(HMAC_Init_ex(ctx, test[4].key, test[4].key_len, EVP_sha1(),
+                                NULL))
         || !TEST_true(HMAC_Update(ctx, test[4].data, test[4].data_len))
         || !TEST_true(HMAC_Final(ctx, buf, &len)))
         goto err;
@@ -155,7 +156,8 @@ static int test_hmac_run(void)
     if (!TEST_false(HMAC_Init_ex(ctx, NULL, 0, EVP_sha256(), NULL)))
         goto err;
 
-    if (!TEST_true(HMAC_Init_ex(ctx, test[5].key, test[5].key_len, EVP_sha256(), NULL))
+    if (!TEST_true(HMAC_Init_ex(ctx, test[5].key, test[5].key_len, EVP_sha256(),
+                                NULL))
         || !TEST_ptr_eq(HMAC_CTX_get_md(ctx), EVP_sha256())
         || !TEST_true(HMAC_Update(ctx, test[5].data, test[5].data_len))
         || !TEST_true(HMAC_Final(ctx, buf, &len)))
@@ -228,7 +230,8 @@ static int test_hmac_copy(void)
     if (!TEST_ptr(ctx) || !TEST_ptr(ctx2))
         goto err;
 
-    if (!TEST_true(HMAC_Init_ex(ctx, test[7].key, test[7].key_len, EVP_sha1(), NULL))
+    if (!TEST_true(HMAC_Init_ex(ctx, test[7].key, test[7].key_len, EVP_sha1(),
+                                NULL))
         || !TEST_true(HMAC_Update(ctx, test[7].data, test[7].data_len))
         || !TEST_true(HMAC_CTX_copy(ctx2, ctx))
         || !TEST_true(HMAC_Final(ctx2, buf, &len)))
@@ -255,11 +258,11 @@ static int test_hmac_copy_uninited(void)
     int res = 0;
 
     if (!TEST_ptr(ctx = EVP_MD_CTX_new())
-            || !TEST_ptr(pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL,
-                                                     key, sizeof(key)))
-            || !TEST_true(EVP_DigestSignInit(ctx, NULL, EVP_sha1(), NULL, pkey))
-            || !TEST_ptr(ctx_tmp = EVP_MD_CTX_new())
-            || !TEST_true(EVP_MD_CTX_copy(ctx_tmp, ctx)))
+        || !TEST_ptr(pkey = EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, NULL,
+                                                 key, sizeof(key)))
+        || !TEST_true(EVP_DigestSignInit(ctx, NULL, EVP_sha1(), NULL, pkey))
+        || !TEST_ptr(ctx_tmp = EVP_MD_CTX_new())
+        || !TEST_true(EVP_MD_CTX_copy(ctx_tmp, ctx)))
         goto err;
     EVP_MD_CTX_free(ctx);
     ctx = ctx_tmp;
@@ -268,7 +271,7 @@ static int test_hmac_copy_uninited(void)
     if (!TEST_true(EVP_DigestSignUpdate(ctx, ct, sizeof(ct))))
         goto err;
     res = 1;
- err:
+err:
     EVP_MD_CTX_free(ctx);
     EVP_MD_CTX_free(ctx_tmp);
     EVP_PKEY_free(pkey);

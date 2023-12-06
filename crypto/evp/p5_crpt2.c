@@ -21,7 +21,8 @@
 
 int ossl_pkcs5_pbkdf2_hmac_ex(const char *pass, int passlen,
                               const unsigned char *salt, int saltlen, int iter,
-                              const EVP_MD *digest, int keylen, unsigned char *out,
+                              const EVP_MD *digest, int keylen,
+                              unsigned char *out,
                               OSSL_LIB_CTX *libctx, const char *propq)
 {
     const char *empty = "";
@@ -43,7 +44,7 @@ int ossl_pkcs5_pbkdf2_hmac_ex(const char *pass, int passlen,
 
     kdf = EVP_KDF_fetch(libctx, OSSL_KDF_NAME_PBKDF2, propq);
     if (kdf == NULL)
-         return 0;
+        return 0;
     kctx = EVP_KDF_CTX_new(kdf);
     EVP_KDF_free(kdf);
     if (kctx == NULL)
@@ -129,7 +130,8 @@ int PKCS5_v2_PBE_keyivgen_ex(EVP_CIPHER_CTX *ctx, const char *pass, int passlen,
     }
 
     /* See if we recognise the key derivation function */
-    if (!EVP_PBE_find_ex(EVP_PBE_TYPE_KDF, OBJ_obj2nid(pbe2->keyfunc->algorithm),
+    if (!EVP_PBE_find_ex(EVP_PBE_TYPE_KDF,
+                         OBJ_obj2nid(pbe2->keyfunc->algorithm),
                          NULL, NULL, NULL, &kdf)) {
         ERR_raise(ERR_LIB_EVP, EVP_R_UNSUPPORTED_KEY_DERIVATION_FUNCTION);
         goto err;
@@ -138,7 +140,8 @@ int PKCS5_v2_PBE_keyivgen_ex(EVP_CIPHER_CTX *ctx, const char *pass, int passlen,
     /*
      * lets see if we recognise the encryption algorithm.
      */
-    if (OBJ_obj2txt(ciph_name, sizeof(ciph_name), pbe2->encryption->algorithm, 0) <= 0) {
+    if (OBJ_obj2txt(ciph_name, sizeof(ciph_name), pbe2->encryption->algorithm,
+                    0) <= 0) {
         ERR_raise(ERR_LIB_EVP, EVP_R_UNSUPPORTED_CIPHER);
         goto err;
     }
@@ -163,8 +166,9 @@ int PKCS5_v2_PBE_keyivgen_ex(EVP_CIPHER_CTX *ctx, const char *pass, int passlen,
         ERR_raise(ERR_LIB_EVP, EVP_R_CIPHER_PARAMETER_ERROR);
         goto err;
     }
-    rv = kdf(ctx, pass, passlen, pbe2->keyfunc->parameter, NULL, NULL, en_de, libctx, propq);
- err:
+    rv = kdf(ctx, pass, passlen, pbe2->keyfunc->parameter, NULL, NULL, en_de,
+             libctx, propq);
+err:
     EVP_CIPHER_free(cipher_fetch);
     PBE2PARAM_free(pbe2);
     return rv;
@@ -174,12 +178,14 @@ int PKCS5_v2_PBE_keyivgen(EVP_CIPHER_CTX *ctx, const char *pass, int passlen,
                           ASN1_TYPE *param, const EVP_CIPHER *c,
                           const EVP_MD *md, int en_de)
 {
-    return PKCS5_v2_PBE_keyivgen_ex(ctx, pass, passlen, param, c, md, en_de, NULL, NULL);
+    return PKCS5_v2_PBE_keyivgen_ex(ctx, pass, passlen, param, c, md, en_de,
+                                    NULL, NULL);
 }
 
 int PKCS5_v2_PBKDF2_keyivgen_ex(EVP_CIPHER_CTX *ctx, const char *pass,
                                 int passlen, ASN1_TYPE *param,
-                                const EVP_CIPHER *c, const EVP_MD *md, int en_de,
+                                const EVP_CIPHER *c, const EVP_MD *md,
+                                int en_de,
                                 OSSL_LIB_CTX *libctx, const char *propq)
 {
     unsigned char *salt, key[EVP_MAX_KEY_LENGTH];
@@ -255,7 +261,7 @@ int PKCS5_v2_PBKDF2_keyivgen_ex(EVP_CIPHER_CTX *ctx, const char *pass,
                                    keylen, key, libctx, propq))
         goto err;
     rv = EVP_CipherInit_ex(ctx, NULL, NULL, key, NULL, en_de);
- err:
+err:
     OPENSSL_cleanse(key, keylen);
     PBKDF2PARAM_free(kdf);
     EVP_MD_free(prfmd_fetch);

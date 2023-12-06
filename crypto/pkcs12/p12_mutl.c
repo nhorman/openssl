@@ -145,10 +145,11 @@ static int pkcs12_gen_mac(PKCS12 *p12, const char *pass, int passlen,
             }
         } else {
             /* Default to UTF-8 password */
-            if (!PKCS12_key_gen_utf8_ex(pass, passlen, salt, saltlen, PKCS12_MAC_ID,
-                                       iter, md_size, key, md,
-                                       p12->authsafes->ctx.libctx,
-                                       p12->authsafes->ctx.propq)) {
+            if (!PKCS12_key_gen_utf8_ex(pass, passlen, salt, saltlen,
+                                        PKCS12_MAC_ID,
+                                        iter, md_size, key, md,
+                                        p12->authsafes->ctx.libctx,
+                                        p12->authsafes->ctx.propq)) {
                 ERR_raise(ERR_LIB_PKCS12, PKCS12_R_KEY_GEN_ERROR);
                 goto err;
             }

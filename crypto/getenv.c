@@ -48,7 +48,8 @@ char *ossl_safe_getenv(const char *name)
 
         if (NULL != namew) {
             /* convert name to wide string */
-            fsize = MultiByteToWideChar(curacp, dwFlags, name, -1, namew, rsize);
+            fsize =
+                MultiByteToWideChar(curacp, dwFlags, name, -1, namew, rsize);
             /* if conversion is ok, then determine value string size in wchars */
             if (fsize > 0)
                 envlen = GetEnvironmentVariableW(namew, NULL, 0);

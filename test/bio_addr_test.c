@@ -39,26 +39,26 @@ static BIO_ADDR *make_dummy_addr(int family)
 
     /* Fill with a dummy address */
     switch(family) {
-    case AF_INET:
-        where = &(sa.sin.sin_addr);
-        wherelen = sizeof(sa.sin.sin_addr);
-        break;
+        case AF_INET:
+            where = &(sa.sin.sin_addr);
+            wherelen = sizeof(sa.sin.sin_addr);
+            break;
 #if OPENSSL_USE_IPV6
-    case AF_INET6:
-        where = &(sa.sin6.sin6_addr);
-        wherelen = sizeof(sa.sin6.sin6_addr);
-        break;
+        case AF_INET6:
+            where = &(sa.sin6.sin6_addr);
+            wherelen = sizeof(sa.sin6.sin6_addr);
+            break;
 #endif
 #ifndef OPENSSL_NO_UNIX_SOCK
-    case AF_UNIX:
-        where = &(sa.sunaddr.sun_path);
-        /* BIO_ADDR_rawmake needs an extra byte for a NUL-terminator*/
-        wherelen = sizeof(sa.sunaddr.sun_path) - 1;
-        break;
+        case AF_UNIX:
+            where = &(sa.sunaddr.sun_path);
+            /* BIO_ADDR_rawmake needs an extra byte for a NUL-terminator*/
+            wherelen = sizeof(sa.sunaddr.sun_path) - 1;
+            break;
 #endif
-    default:
-        TEST_error("Unsupported address family");
-        return 0;
+        default:
+            TEST_error("Unsupported address family");
+            return 0;
     }
     /*
      * Could be any data, but we make it printable because BIO_ADDR_rawmake
@@ -113,17 +113,17 @@ static int bio_addr_is_eq(const BIO_ADDR *a, const BIO_ADDR *b)
 
     adata = OPENSSL_malloc(alen);
     if (!TEST_ptr(adata)
-            || !BIO_ADDR_rawaddress(a, adata, &alen))
+        || !BIO_ADDR_rawaddress(a, adata, &alen))
         goto err;
 
     bdata = OPENSSL_malloc(blen);
     if (!TEST_ptr(bdata)
-            || !BIO_ADDR_rawaddress(b, bdata, &blen))
+        || !BIO_ADDR_rawaddress(b, bdata, &blen))
         goto err;
 
     ret = (memcmp(adata, bdata, alen) == 0);
 
- err:
+err:
     OPENSSL_free(adata);
     OPENSSL_free(bdata);
     return ret;
@@ -158,7 +158,7 @@ static int test_bio_addr_copy_dup(int idx)
         goto err;
 
     ret = 1;
- err:
+err:
     BIO_ADDR_free(src);
     BIO_ADDR_free(dst);
     return ret;

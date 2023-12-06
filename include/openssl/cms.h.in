@@ -59,7 +59,8 @@ DECLARE_ASN1_FUNCTIONS(CMS_ContentInfo)
 DECLARE_ASN1_FUNCTIONS(CMS_ReceiptRequest)
 DECLARE_ASN1_PRINT_FUNCTION(CMS_ContentInfo)
 
-CMS_ContentInfo *CMS_ContentInfo_new_ex(OSSL_LIB_CTX *libctx, const char *propq);
+CMS_ContentInfo *CMS_ContentInfo_new_ex(OSSL_LIB_CTX *libctx,
+                                        const char *propq);
 
 # define CMS_SIGNERINFO_ISSUER_SERIAL    0
 # define CMS_SIGNERINFO_KEYIDENTIFIER    1
@@ -78,7 +79,7 @@ CMS_ContentInfo *CMS_ContentInfo_new_ex(OSSL_LIB_CTX *libctx, const char *propq)
 # define CMS_NO_CONTENT_VERIFY           0x4
 # define CMS_NO_ATTR_VERIFY              0x8
 # define CMS_NOSIGS                      \
-                        (CMS_NO_CONTENT_VERIFY|CMS_NO_ATTR_VERIFY)
+        (CMS_NO_CONTENT_VERIFY|CMS_NO_ATTR_VERIFY)
 # define CMS_NOINTERN                    0x10
 # define CMS_NO_SIGNER_CERT_VERIFY       0x20
 # define CMS_NOVERIFY                    0x20
@@ -120,7 +121,8 @@ int i2d_CMS_bio_stream(BIO *out, CMS_ContentInfo *cms, BIO *in, int flags);
 int PEM_write_bio_CMS_stream(BIO *out, CMS_ContentInfo *cms, BIO *in,
                              int flags);
 CMS_ContentInfo *SMIME_read_CMS(BIO *bio, BIO **bcont);
-CMS_ContentInfo *SMIME_read_CMS_ex(BIO *bio, int flags, BIO **bcont, CMS_ContentInfo **ci);
+CMS_ContentInfo *SMIME_read_CMS_ex(BIO *bio, int flags, BIO **bcont,
+                                   CMS_ContentInfo **ci);
 int SMIME_write_CMS(BIO *bio, CMS_ContentInfo *cms, BIO *data, int flags);
 
 int CMS_final(CMS_ContentInfo *cms, BIO *data, BIO *dcont,
@@ -215,7 +217,8 @@ BIO *CMS_EnvelopedData_decrypt(CMS_EnvelopedData *env, BIO *detached_data,
 CMS_RecipientInfo *CMS_add1_recipient_cert(CMS_ContentInfo *cms,
                                            X509 *recip, unsigned int flags);
 CMS_RecipientInfo *CMS_add1_recipient(CMS_ContentInfo *cms, X509 *recip,
-     EVP_PKEY *originatorPrivKey, X509 * originator, unsigned int flags);
+                                      EVP_PKEY *originatorPrivKey,
+                                      X509 * originator, unsigned int flags);
 int CMS_RecipientInfo_set0_pkey(CMS_RecipientInfo *ri, EVP_PKEY *pkey);
 int CMS_RecipientInfo_ktri_cert_cmp(CMS_RecipientInfo *ri, X509 *cert);
 int CMS_RecipientInfo_ktri_get0_algs(CMS_RecipientInfo *ri,
@@ -258,7 +261,8 @@ CMS_RecipientInfo *CMS_add0_recipient_password(CMS_ContentInfo *cms,
                                                const EVP_CIPHER *kekciph);
 
 int CMS_RecipientInfo_decrypt(CMS_ContentInfo *cms, CMS_RecipientInfo *ri);
-int CMS_RecipientInfo_encrypt(const CMS_ContentInfo *cms, CMS_RecipientInfo *ri);
+int CMS_RecipientInfo_encrypt(const CMS_ContentInfo *cms,
+                              CMS_RecipientInfo *ri);
 
 int CMS_uncompress(CMS_ContentInfo *cms, BIO *dcont, BIO *out,
                    unsigned int flags);
@@ -391,7 +395,8 @@ int CMS_RecipientEncryptedKey_get0_id(CMS_RecipientEncryptedKey *rek,
 int CMS_RecipientEncryptedKey_cert_cmp(CMS_RecipientEncryptedKey *rek,
                                        X509 *cert);
 int CMS_RecipientInfo_kari_set0_pkey(CMS_RecipientInfo *ri, EVP_PKEY *pk);
-int CMS_RecipientInfo_kari_set0_pkey_and_peer(CMS_RecipientInfo *ri, EVP_PKEY *pk, X509 *peer);
+int CMS_RecipientInfo_kari_set0_pkey_and_peer(CMS_RecipientInfo *ri,
+                                              EVP_PKEY *pk, X509 *peer);
 EVP_CIPHER_CTX *CMS_RecipientInfo_kari_get0_ctx(CMS_RecipientInfo *ri);
 int CMS_RecipientInfo_kari_decrypt(CMS_ContentInfo *cms,
                                    CMS_RecipientInfo *ri,
@@ -403,7 +408,7 @@ int CMS_SharedInfo_encode(unsigned char **pder, X509_ALGOR *kekalg,
 /* Backward compatibility for spelling errors. */
 # define CMS_R_UNKNOWN_DIGEST_ALGORITM CMS_R_UNKNOWN_DIGEST_ALGORITHM
 # define CMS_R_UNSUPPORTED_RECPIENTINFO_TYPE \
-    CMS_R_UNSUPPORTED_RECIPIENTINFO_TYPE
+        CMS_R_UNSUPPORTED_RECIPIENTINFO_TYPE
 
 #  ifdef  __cplusplus
 }

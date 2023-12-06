@@ -323,7 +323,8 @@ int ossl_method_store_add(OSSL_METHOD_STORE *store, const OSSL_PROVIDER *prov,
         return 0;
     }
     ossl_method_cache_flush(store, nid);
-    if ((impl->properties = ossl_prop_defn_get(store->ctx, properties)) == NULL) {
+    if ((impl->properties =
+             ossl_prop_defn_get(store->ctx, properties)) == NULL) {
         impl->properties = ossl_parse_property(store->ctx, properties);
         if (impl->properties == NULL)
             goto err;
@@ -337,8 +338,8 @@ int ossl_method_store_add(OSSL_METHOD_STORE *store, const OSSL_PROVIDER *prov,
     alg = ossl_method_store_retrieve(store, nid);
     if (alg == NULL) {
         if ((alg = OPENSSL_zalloc(sizeof(*alg))) == NULL
-                || (alg->impls = sk_IMPLEMENTATION_new_null()) == NULL
-                || (alg->cache = lh_QUERY_new(&query_hash, &query_cmp)) == NULL)
+            || (alg->impls = sk_IMPLEMENTATION_new_null()) == NULL
+            || (alg->cache = lh_QUERY_new(&query_hash, &query_cmp)) == NULL)
             goto err;
         alg->nid = nid;
         if (!ossl_method_store_insert(store, alg))
@@ -507,7 +508,7 @@ int ossl_method_store_fetch(OSSL_METHOD_STORE *store,
 
 #if !defined(FIPS_MODULE) && !defined(OPENSSL_NO_AUTOLOAD_CONFIG)
     if (ossl_lib_ctx_is_default(store->ctx)
-            && !OPENSSL_init_crypto(OPENSSL_INIT_LOAD_CONFIG, NULL))
+        && !OPENSSL_init_crypto(OPENSSL_INIT_LOAD_CONFIG, NULL))
         return 0;
 #endif
 

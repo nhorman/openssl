@@ -92,7 +92,8 @@ int ossl_ffc_params_FIPS186_2_validate(OSSL_LIB_CTX *libctx,
  * extra parameters such as the digest and seed, which may not be available for
  * this test.
  */
-int ossl_ffc_params_simple_validate(OSSL_LIB_CTX *libctx, const FFC_PARAMS *params,
+int ossl_ffc_params_simple_validate(OSSL_LIB_CTX *libctx,
+                                    const FFC_PARAMS *params,
                                     int paramstype, int *res)
 {
     int ret;
@@ -117,8 +118,8 @@ int ossl_ffc_params_simple_validate(OSSL_LIB_CTX *libctx, const FFC_PARAMS *para
                                                  res, NULL);
     else
 #endif
-        ret = ossl_ffc_params_FIPS186_4_validate(libctx, &tmpparams, paramstype,
-                                                 res, NULL);
+    ret = ossl_ffc_params_FIPS186_4_validate(libctx, &tmpparams, paramstype,
+                                             res, NULL);
 #ifndef OPENSSL_NO_DH
     if (ret == FFC_PARAM_RET_STATUS_FAILED
         && (*res & FFC_ERROR_NOT_SUITABLE_GENERATOR) != 0) {
@@ -136,7 +137,8 @@ int ossl_ffc_params_simple_validate(OSSL_LIB_CTX *libctx, const FFC_PARAMS *para
  * Otherwise do simple check but in addition also check the primality of the
  * p and q.
  */
-int ossl_ffc_params_full_validate(OSSL_LIB_CTX *libctx, const FFC_PARAMS *params,
+int ossl_ffc_params_full_validate(OSSL_LIB_CTX *libctx,
+                                  const FFC_PARAMS *params,
                                   int paramstype, int *res)
 {
     int tmpres = 0;
@@ -153,10 +155,12 @@ int ossl_ffc_params_full_validate(OSSL_LIB_CTX *libctx, const FFC_PARAMS *params
 #else
     if (params->seed != NULL) {
         if (params->flags & FFC_PARAM_FLAG_VALIDATE_LEGACY)
-            return ossl_ffc_params_FIPS186_2_validate(libctx, params, paramstype,
+            return ossl_ffc_params_FIPS186_2_validate(libctx, params,
+                                                      paramstype,
                                                       res, NULL);
         else
-            return ossl_ffc_params_FIPS186_4_validate(libctx, params, paramstype,
+            return ossl_ffc_params_FIPS186_4_validate(libctx, params,
+                                                      paramstype,
                                                       res, NULL);
     } else {
         int ret = 0;

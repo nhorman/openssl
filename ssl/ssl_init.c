@@ -54,7 +54,8 @@ DEFINE_RUN_ONCE_STATIC(ossl_init_load_ssl_strings)
      * pulling in all the error strings during static linking
      */
 #if !defined(OPENSSL_NO_ERR) && !defined(OPENSSL_NO_AUTOERRINIT)
-    OSSL_TRACE(INIT, "ossl_init_load_ssl_strings: ossl_err_load_SSL_strings()\n");
+    OSSL_TRACE(INIT,
+               "ossl_init_load_ssl_strings: ossl_err_load_SSL_strings()\n");
     ossl_err_load_SSL_strings();
 #endif
     return 1;
@@ -106,7 +107,7 @@ int OPENSSL_init_ssl(uint64_t opts, const OPENSSL_INIT_SETTINGS *settings)
     }
 
     opts |= OPENSSL_INIT_ADD_ALL_CIPHERS
-         |  OPENSSL_INIT_ADD_ALL_DIGESTS;
+            |  OPENSSL_INIT_ADD_ALL_DIGESTS;
 #ifndef OPENSSL_NO_AUTOLOAD_CONFIG
     if ((opts & OPENSSL_INIT_NO_LOAD_CONFIG) == 0)
         opts |= OPENSSL_INIT_LOAD_CONFIG;

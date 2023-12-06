@@ -60,8 +60,8 @@ static void *rc4_hmac_md5_newctx(void *provctx)
                                     RC4_HMAC_MD5_MODE, RC4_HMAC_MD5_FLAGS,
                                     ossl_prov_cipher_hw_rc4_hmac_md5(
                                         RC4_HMAC_MD5_KEY_BITS
-                                    ), NULL);
-     return ctx;
+                                                                    ), NULL);
+    return ctx;
 }
 
 static void rc4_hmac_md5_freectx(void *vctx)
@@ -222,24 +222,24 @@ static int rc4_hmac_md5_get_params(OSSL_PARAM params[])
 }
 
 const OSSL_DISPATCH ossl_rc4_hmac_ossl_md5_functions[] = {
-    { OSSL_FUNC_CIPHER_NEWCTX, (void (*)(void))rc4_hmac_md5_newctx },
-    { OSSL_FUNC_CIPHER_FREECTX, (void (*)(void))rc4_hmac_md5_freectx },
-    { OSSL_FUNC_CIPHER_DUPCTX, (void (*)(void))rc4_hmac_md5_dupctx },
-    { OSSL_FUNC_CIPHER_ENCRYPT_INIT, (void (*)(void))rc4_hmac_md5_einit },
-    { OSSL_FUNC_CIPHER_DECRYPT_INIT, (void (*)(void))rc4_hmac_md5_dinit },
-    { OSSL_FUNC_CIPHER_UPDATE, (void (*)(void))rc4_hmac_md5_update },
-    { OSSL_FUNC_CIPHER_FINAL, (void (*)(void))rc4_hmac_md5_final },
-    { OSSL_FUNC_CIPHER_CIPHER, (void (*)(void))rc4_hmac_md5_cipher },
-    { OSSL_FUNC_CIPHER_GET_PARAMS, (void (*)(void))rc4_hmac_md5_get_params },
+    { OSSL_FUNC_CIPHER_NEWCTX, (void (*)(void)) rc4_hmac_md5_newctx },
+    { OSSL_FUNC_CIPHER_FREECTX, (void (*)(void)) rc4_hmac_md5_freectx },
+    { OSSL_FUNC_CIPHER_DUPCTX, (void (*)(void)) rc4_hmac_md5_dupctx },
+    { OSSL_FUNC_CIPHER_ENCRYPT_INIT, (void (*)(void)) rc4_hmac_md5_einit },
+    { OSSL_FUNC_CIPHER_DECRYPT_INIT, (void (*)(void)) rc4_hmac_md5_dinit },
+    { OSSL_FUNC_CIPHER_UPDATE, (void (*)(void)) rc4_hmac_md5_update },
+    { OSSL_FUNC_CIPHER_FINAL, (void (*)(void)) rc4_hmac_md5_final },
+    { OSSL_FUNC_CIPHER_CIPHER, (void (*)(void)) rc4_hmac_md5_cipher },
+    { OSSL_FUNC_CIPHER_GET_PARAMS, (void (*)(void)) rc4_hmac_md5_get_params },
     { OSSL_FUNC_CIPHER_GETTABLE_PARAMS,
-        (void (*)(void))rc4_hmac_md5_gettable_params },
+      (void (*)(void)) rc4_hmac_md5_gettable_params },
     { OSSL_FUNC_CIPHER_GET_CTX_PARAMS,
-        (void (*)(void))rc4_hmac_md5_get_ctx_params },
+      (void (*)(void)) rc4_hmac_md5_get_ctx_params },
     { OSSL_FUNC_CIPHER_GETTABLE_CTX_PARAMS,
-        (void (*)(void))rc4_hmac_md5_gettable_ctx_params },
+      (void (*)(void)) rc4_hmac_md5_gettable_ctx_params },
     { OSSL_FUNC_CIPHER_SET_CTX_PARAMS,
-        (void (*)(void))rc4_hmac_md5_set_ctx_params },
+      (void (*)(void)) rc4_hmac_md5_set_ctx_params },
     { OSSL_FUNC_CIPHER_SETTABLE_CTX_PARAMS,
-        (void (*)(void))rc4_hmac_md5_settable_ctx_params },
+      (void (*)(void)) rc4_hmac_md5_settable_ctx_params },
     OSSL_DISPATCH_END
 };

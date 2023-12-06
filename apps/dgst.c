@@ -24,7 +24,8 @@
 #undef BUFSIZE
 #define BUFSIZE 1024*8
 
-int do_fp(BIO *out, unsigned char *buf, BIO *bp, int sep, int binout, int xoflen,
+int do_fp(BIO *out, unsigned char *buf, BIO *bp, int sep, int binout,
+          int xoflen,
           EVP_PKEY *key, unsigned char *sigin, int siglen,
           const char *sig_name, const char *md_name,
           const char *file);
@@ -63,10 +64,12 @@ const OPTIONS dgst_options[] = {
     {"c", OPT_C, '-', "Print the digest with separating colons"},
     {"r", OPT_R, '-', "Print the digest in coreutils format"},
     {"out", OPT_OUT, '>', "Output to filename rather than stdout"},
-    {"keyform", OPT_KEYFORM, 'f', "Key file format (ENGINE, other values ignored)"},
+    {"keyform", OPT_KEYFORM, 'f',
+     "Key file format (ENGINE, other values ignored)"},
     {"hex", OPT_HEX, '-', "Print as hex dump"},
     {"binary", OPT_BINARY, '-', "Print in binary form"},
-    {"xoflen", OPT_XOFLEN, 'p', "Output length for XOF algorithms. To obtain the maximum security strength set this to 32 (or greater) for SHAKE128, and 64 (or greater) for SHAKE256"},
+    {"xoflen", OPT_XOFLEN, 'p',
+     "Output length for XOF algorithms. To obtain the maximum security strength set this to 32 (or greater) for SHAKE128, and 64 (or greater) for SHAKE256"},
     {"d", OPT_DEBUG, '-', "Print debug info"},
     {"debug", OPT_DEBUG, '-', "Print debug info"},
 
@@ -121,104 +124,104 @@ int dgst_main(int argc, char **argv)
     prog = opt_init(argc, argv, dgst_options);
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_EOF:
-        case OPT_ERR:
- opthelp:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto end;
-        case OPT_HELP:
-            opt_help(dgst_options);
-            ret = EXIT_SUCCESS;
-            goto end;
-        case OPT_LIST:
-            BIO_printf(bio_out, "Supported digests:\n");
-            dec.bio = bio_out;
-            dec.n = 0;
-            OBJ_NAME_do_all_sorted(OBJ_NAME_TYPE_MD_METH,
-                                   show_digests, &dec);
-            BIO_printf(bio_out, "\n");
-            ret = EXIT_SUCCESS;
-            goto end;
-        case OPT_C:
-            separator = 1;
-            break;
-        case OPT_R:
-            separator = 2;
-            break;
-        case OPT_R_CASES:
-            if (!opt_rand(o))
+            case OPT_EOF:
+            case OPT_ERR:
+opthelp:
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
                 goto end;
-            break;
-        case OPT_OUT:
-            outfile = opt_arg();
-            break;
-        case OPT_SIGN:
-            keyfile = opt_arg();
-            break;
-        case OPT_PASSIN:
-            passinarg = opt_arg();
-            break;
-        case OPT_VERIFY:
-            keyfile = opt_arg();
-            want_pub = do_verify = 1;
-            break;
-        case OPT_PRVERIFY:
-            keyfile = opt_arg();
-            do_verify = 1;
-            break;
-        case OPT_SIGNATURE:
-            sigfile = opt_arg();
-            break;
-        case OPT_KEYFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_ANY, &keyform))
-                goto opthelp;
-            break;
-        case OPT_ENGINE:
-            e = setup_engine(opt_arg(), 0);
-            break;
-        case OPT_ENGINE_IMPL:
-            engine_impl = 1;
-            break;
-        case OPT_HEX:
-            out_bin = 0;
-            break;
-        case OPT_BINARY:
-            out_bin = 1;
-            break;
-        case OPT_XOFLEN:
-            xoflen = atoi(opt_arg());
-            break;
-        case OPT_DEBUG:
-            debug = 1;
-            break;
-        case OPT_FIPS_FINGERPRINT:
-            hmac_key = "etaonrishdlcupfm";
-            break;
-        case OPT_HMAC:
-            hmac_key = opt_arg();
-            break;
-        case OPT_MAC:
-            mac_name = opt_arg();
-            break;
-        case OPT_SIGOPT:
-            if (!sigopts)
-                sigopts = sk_OPENSSL_STRING_new_null();
-            if (!sigopts || !sk_OPENSSL_STRING_push(sigopts, opt_arg()))
-                goto opthelp;
-            break;
-        case OPT_MACOPT:
-            if (!macopts)
-                macopts = sk_OPENSSL_STRING_new_null();
-            if (!macopts || !sk_OPENSSL_STRING_push(macopts, opt_arg()))
-                goto opthelp;
-            break;
-        case OPT_DIGEST:
-            digestname = opt_unknown();
-            break;
-        case OPT_PROV_CASES:
-            if (!opt_provider(o))
+            case OPT_HELP:
+                opt_help(dgst_options);
+                ret = EXIT_SUCCESS;
                 goto end;
-            break;
+            case OPT_LIST:
+                BIO_printf(bio_out, "Supported digests:\n");
+                dec.bio = bio_out;
+                dec.n = 0;
+                OBJ_NAME_do_all_sorted(OBJ_NAME_TYPE_MD_METH,
+                                       show_digests, &dec);
+                BIO_printf(bio_out, "\n");
+                ret = EXIT_SUCCESS;
+                goto end;
+            case OPT_C:
+                separator = 1;
+                break;
+            case OPT_R:
+                separator = 2;
+                break;
+            case OPT_R_CASES:
+                if (!opt_rand(o))
+                    goto end;
+                break;
+            case OPT_OUT:
+                outfile = opt_arg();
+                break;
+            case OPT_SIGN:
+                keyfile = opt_arg();
+                break;
+            case OPT_PASSIN:
+                passinarg = opt_arg();
+                break;
+            case OPT_VERIFY:
+                keyfile = opt_arg();
+                want_pub = do_verify = 1;
+                break;
+            case OPT_PRVERIFY:
+                keyfile = opt_arg();
+                do_verify = 1;
+                break;
+            case OPT_SIGNATURE:
+                sigfile = opt_arg();
+                break;
+            case OPT_KEYFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_ANY, &keyform))
+                    goto opthelp;
+                break;
+            case OPT_ENGINE:
+                e = setup_engine(opt_arg(), 0);
+                break;
+            case OPT_ENGINE_IMPL:
+                engine_impl = 1;
+                break;
+            case OPT_HEX:
+                out_bin = 0;
+                break;
+            case OPT_BINARY:
+                out_bin = 1;
+                break;
+            case OPT_XOFLEN:
+                xoflen = atoi(opt_arg());
+                break;
+            case OPT_DEBUG:
+                debug = 1;
+                break;
+            case OPT_FIPS_FINGERPRINT:
+                hmac_key = "etaonrishdlcupfm";
+                break;
+            case OPT_HMAC:
+                hmac_key = opt_arg();
+                break;
+            case OPT_MAC:
+                mac_name = opt_arg();
+                break;
+            case OPT_SIGOPT:
+                if (!sigopts)
+                    sigopts = sk_OPENSSL_STRING_new_null();
+                if (!sigopts || !sk_OPENSSL_STRING_push(sigopts, opt_arg()))
+                    goto opthelp;
+                break;
+            case OPT_MACOPT:
+                if (!macopts)
+                    macopts = sk_OPENSSL_STRING_new_null();
+                if (!macopts || !sk_OPENSSL_STRING_push(macopts, opt_arg()))
+                    goto opthelp;
+                break;
+            case OPT_DIGEST:
+                digestname = opt_unknown();
+                break;
+            case OPT_PROV_CASES:
+                if (!opt_provider(o))
+                    goto end;
+                break;
         }
     }
 
@@ -354,12 +357,12 @@ int dgst_main(int argc, char **argv)
             else
                 res = EVP_DigestVerifyInit(mctx, &pctx, md, impl, sigkey);
         else
-            if (impl == NULL)
-                res = EVP_DigestSignInit_ex(mctx, &pctx, digestname,
-                                            app_get0_libctx(),
-                                            app_get0_propq(), sigkey, NULL);
-            else
-                res = EVP_DigestSignInit(mctx, &pctx, md, impl, sigkey);
+        if (impl == NULL)
+            res = EVP_DigestSignInit_ex(mctx, &pctx, digestname,
+                                        app_get0_libctx(),
+                                        app_get0_propq(), sigkey, NULL);
+        else
+            res = EVP_DigestSignInit(mctx, &pctx, md, impl, sigkey);
         if (res == 0) {
             BIO_printf(bio_err, "Error setting context\n");
             goto end;
@@ -459,7 +462,7 @@ int dgst_main(int argc, char **argv)
             (void)BIO_reset(bmd);
         }
     }
- end:
+end:
     if (ret != EXIT_SUCCESS)
         ERR_print_errors(bio_err);
     OPENSSL_clear_free(buf, BUFSIZE);
@@ -544,7 +547,8 @@ static const char *newline_escape_filename(const char *file, int *backslash)
 }
 
 
-int do_fp(BIO *out, unsigned char *buf, BIO *bp, int sep, int binout, int xoflen,
+int do_fp(BIO *out, unsigned char *buf, BIO *bp, int sep, int binout,
+          int xoflen,
           EVP_PKEY *key, unsigned char *sigin, int siglen,
           const char *sig_name, const char *md_name,
           const char *file)
@@ -584,7 +588,8 @@ int do_fp(BIO *out, unsigned char *buf, BIO *bp, int sep, int binout, int xoflen
 
         BIO_get_md_ctx(bp, &ctx);
         if (!EVP_DigestSignFinal(ctx, NULL, &tmplen)) {
-            BIO_printf(bio_err, "Error getting maximum length of signed data\n");
+            BIO_printf(bio_err,
+                       "Error getting maximum length of signed data\n");
             goto end;
         }
         if (tmplen > BUFSIZE) {
@@ -650,7 +655,7 @@ int do_fp(BIO *out, unsigned char *buf, BIO *bp, int sep, int binout, int xoflen
     }
 
     ret = EXIT_SUCCESS;
- end:
+end:
     if (allocated_buf != NULL)
         OPENSSL_clear_free(allocated_buf, len);
 

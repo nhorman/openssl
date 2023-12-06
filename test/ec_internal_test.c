@@ -66,7 +66,7 @@ static int group_field_tests(const EC_GROUP *group, BN_CTX *ctx)
 
     ERR_clear_error();
     ret = 1;
- err:
+err:
     BN_CTX_end(ctx);
     return ret;
 }
@@ -96,7 +96,7 @@ static int field_tests(const EC_METHOD *meth, const unsigned char *params,
         goto err;
     ret = 1;
 
- err:
+err:
     BN_CTX_end(ctx);
     BN_CTX_free(ctx);
     if (group != NULL)
@@ -180,7 +180,7 @@ static int field_tests_default(int n)
         goto err;
 
     ret = 1;
- err:
+err:
     if (group != NULL)
         EC_GROUP_free(group);
     if (ctx != NULL)
@@ -230,24 +230,26 @@ static int underflow_test(void)
         goto err;
 
     if (!TEST_int_gt(BN_hex2bn(&x1, x1str), 0)
-            || !TEST_int_gt(BN_hex2bn(&y1, p521m1), 0)
-            || !TEST_int_gt(BN_hex2bn(&z1, p521m1), 0)
-            || !TEST_int_gt(BN_hex2bn(&k, "02"), 0)
-            || !TEST_true(ossl_ec_GFp_simple_set_Jprojective_coordinates_GFp(grp, P, x1,
-                                                                             y1, z1, ctx))
-            || !TEST_true(EC_POINT_mul(grp, Q, NULL, P, k, ctx))
-            || !TEST_true(EC_POINT_get_affine_coordinates(grp, Q, x1, y1, ctx))
-            || !TEST_true(EC_POINT_dbl(grp, R, P, ctx))
-            || !TEST_true(EC_POINT_get_affine_coordinates(grp, R, x2, y2, ctx)))
+        || !TEST_int_gt(BN_hex2bn(&y1, p521m1), 0)
+        || !TEST_int_gt(BN_hex2bn(&z1, p521m1), 0)
+        || !TEST_int_gt(BN_hex2bn(&k, "02"), 0)
+        || !TEST_true(ossl_ec_GFp_simple_set_Jprojective_coordinates_GFp(grp, P,
+                                                                         x1,
+                                                                         y1, z1,
+                                                                         ctx))
+        || !TEST_true(EC_POINT_mul(grp, Q, NULL, P, k, ctx))
+        || !TEST_true(EC_POINT_get_affine_coordinates(grp, Q, x1, y1, ctx))
+        || !TEST_true(EC_POINT_dbl(grp, R, P, ctx))
+        || !TEST_true(EC_POINT_get_affine_coordinates(grp, R, x2, y2, ctx)))
         goto err;
 
     if (!TEST_int_eq(BN_cmp(x1, x2), 0)
-            || !TEST_int_eq(BN_cmp(y1, y2), 0))
+        || !TEST_int_eq(BN_cmp(y1, y2), 0))
         goto err;
 
     testresult = 1;
 
- err:
+err:
     BN_CTX_end(ctx);
     EC_POINT_free(P);
     EC_POINT_free(Q);
@@ -286,7 +288,7 @@ static int set_private_key(void)
 
     testresult = 1;
 
- err:
+err:
     EC_KEY_free(key);
     EC_KEY_free(aux_key);
     return testresult;
@@ -336,10 +338,10 @@ static int decoded_flag_test(void)
         || !TEST_ptr(grp_copy = EC_GROUP_new_from_ecpkparameters(ecpkparams))
         || !TEST_int_eq(grp_copy->decoded_from_explicit_params, 0)
         || !TEST_ptr(key = EC_KEY_new())
-    /* Test EC_KEY_decoded_from_explicit_params on key without a group */
+        /* Test EC_KEY_decoded_from_explicit_params on key without a group */
         || !TEST_int_eq(EC_KEY_decoded_from_explicit_params(key), -1)
         || !TEST_int_eq(EC_KEY_set_group(key, grp_copy), 1)
-    /* Test EC_KEY_decoded_from_explicit_params negative case */
+        /* Test EC_KEY_decoded_from_explicit_params negative case */
         || !TEST_int_eq(EC_KEY_decoded_from_explicit_params(key), 0))
         goto err;
     EC_GROUP_free(grp_copy);
@@ -362,7 +364,8 @@ static int decoded_flag_test(void)
     EC_GROUP_set_asn1_flag(grp, OPENSSL_EC_EXPLICIT_CURVE);
     if (!TEST_ptr(ecpkparams = EC_GROUP_get_ecpkparameters(grp, NULL))
         || !TEST_ptr(grp_copy = EC_GROUP_new_from_ecpkparameters(ecpkparams))
-        || !TEST_int_eq(EC_GROUP_get_asn1_flag(grp_copy), OPENSSL_EC_EXPLICIT_CURVE)
+        || !TEST_int_eq(EC_GROUP_get_asn1_flag(grp_copy),
+                        OPENSSL_EC_EXPLICIT_CURVE)
         || !TEST_int_eq(grp_copy->decoded_from_explicit_params, 0))
         goto err;
     EC_GROUP_free(grp_copy);
@@ -372,16 +375,17 @@ static int decoded_flag_test(void)
     if (!TEST_int_gt(encodedlen = i2d_ECPKParameters(grp, &encodedparams), 0)
         || !TEST_ptr(encp = encodedparams)
         || !TEST_ptr(grp_copy = d2i_ECPKParameters(NULL, &encp, encodedlen))
-        || !TEST_int_eq(EC_GROUP_get_asn1_flag(grp_copy), OPENSSL_EC_EXPLICIT_CURVE)
+        || !TEST_int_eq(EC_GROUP_get_asn1_flag(grp_copy),
+                        OPENSSL_EC_EXPLICIT_CURVE)
         || !TEST_int_eq(grp_copy->decoded_from_explicit_params, 1)
         || !TEST_int_eq(EC_KEY_set_group(key, grp_copy), 1)
-    /* Test EC_KEY_decoded_from_explicit_params positive case */
+        /* Test EC_KEY_decoded_from_explicit_params positive case */
         || !TEST_int_eq(EC_KEY_decoded_from_explicit_params(key), 1))
         goto err;
 
     testresult = 1;
 
- err:
+err:
     EC_KEY_free(key);
     EC_GROUP_free(grp);
     EC_GROUP_free(grp_copy);
@@ -406,7 +410,7 @@ int ecpkparams_i2d2i_test(int n)
 
     /* encode params to file */
     if (!TEST_ptr(fp = fopen("params.der", "wb"))
-            || !TEST_true(i2d_ECPKParameters_fp(fp, g1)))
+        || !TEST_true(i2d_ECPKParameters_fp(fp, g1)))
         goto end;
 
     /* flush and close file */
@@ -418,7 +422,7 @@ int ecpkparams_i2d2i_test(int n)
 
     /* decode params from file */
     if (!TEST_ptr(fp = fopen("params.der", "rb"))
-            || !TEST_ptr(g2 = d2i_ECPKParameters_fp(fp, NULL)))
+        || !TEST_ptr(g2 = d2i_ECPKParameters_fp(fp, NULL)))
         goto end;
 
     testresult = 1; /* PASS */

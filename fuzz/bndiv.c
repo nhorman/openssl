@@ -85,10 +85,10 @@ int FuzzerTestOneInput(const uint8_t *buf, size_t len)
         success = BN_is_zero(b3) && BN_is_zero(b4);
     else if (BN_is_negative(b1))
         success = (BN_is_negative(b3) != BN_is_negative(b2) || BN_is_zero(b3))
-            && (BN_is_negative(b4) || BN_is_zero(b4));
+                  && (BN_is_negative(b4) || BN_is_zero(b4));
     else
         success = (BN_is_negative(b3) == BN_is_negative(b2)  || BN_is_zero(b3))
-            && (!BN_is_negative(b4) || BN_is_zero(b4));
+                  && (!BN_is_negative(b4) || BN_is_zero(b4));
     OPENSSL_assert(BN_mul(b5, b3, b2, ctx));
     OPENSSL_assert(BN_add(b5, b5, b4));
 
@@ -113,7 +113,7 @@ int FuzzerTestOneInput(const uint8_t *buf, size_t len)
         puts("----\n");
     }
 
- done:
+done:
     OPENSSL_assert(success);
     ERR_clear_error();
 

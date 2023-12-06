@@ -211,7 +211,7 @@ int ECPKParameters_print(BIO *bp, const EC_GROUP *x, int off)
             goto err;
     }
     ret = 1;
- err:
+err:
     if (!ret)
         ERR_raise(ERR_LIB_EC, reason);
     BN_free(p);

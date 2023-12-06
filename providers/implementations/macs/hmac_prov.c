@@ -249,11 +249,11 @@ static int hmac_get_ctx_params(void *vmacctx, OSSL_PARAM params[])
     OSSL_PARAM *p;
 
     if ((p = OSSL_PARAM_locate(params, OSSL_MAC_PARAM_SIZE)) != NULL
-            && !OSSL_PARAM_set_size_t(p, hmac_size(macctx)))
+        && !OSSL_PARAM_set_size_t(p, hmac_size(macctx)))
         return 0;
 
     if ((p = OSSL_PARAM_locate(params, OSSL_MAC_PARAM_BLOCK_SIZE)) != NULL
-            && !OSSL_PARAM_set_int(p, hmac_block_size(macctx)))
+        && !OSSL_PARAM_set_int(p, hmac_block_size(macctx)))
         return 0;
 
     return 1;
@@ -310,7 +310,8 @@ static int hmac_set_ctx_params(void *vmacctx, const OSSL_PARAM params[])
     if (!set_flag(params, OSSL_MAC_PARAM_DIGEST_NOINIT, EVP_MD_CTX_FLAG_NO_INIT,
                   &flags))
         return 0;
-    if (!set_flag(params, OSSL_MAC_PARAM_DIGEST_ONESHOT, EVP_MD_CTX_FLAG_ONESHOT,
+    if (!set_flag(params, OSSL_MAC_PARAM_DIGEST_ONESHOT,
+                  EVP_MD_CTX_FLAG_ONESHOT,
                   &flags))
         return 0;
     if (flags)
@@ -332,17 +333,17 @@ static int hmac_set_ctx_params(void *vmacctx, const OSSL_PARAM params[])
 }
 
 const OSSL_DISPATCH ossl_hmac_functions[] = {
-    { OSSL_FUNC_MAC_NEWCTX, (void (*)(void))hmac_new },
-    { OSSL_FUNC_MAC_DUPCTX, (void (*)(void))hmac_dup },
-    { OSSL_FUNC_MAC_FREECTX, (void (*)(void))hmac_free },
-    { OSSL_FUNC_MAC_INIT, (void (*)(void))hmac_init },
-    { OSSL_FUNC_MAC_UPDATE, (void (*)(void))hmac_update },
-    { OSSL_FUNC_MAC_FINAL, (void (*)(void))hmac_final },
+    { OSSL_FUNC_MAC_NEWCTX, (void (*)(void)) hmac_new },
+    { OSSL_FUNC_MAC_DUPCTX, (void (*)(void)) hmac_dup },
+    { OSSL_FUNC_MAC_FREECTX, (void (*)(void)) hmac_free },
+    { OSSL_FUNC_MAC_INIT, (void (*)(void)) hmac_init },
+    { OSSL_FUNC_MAC_UPDATE, (void (*)(void)) hmac_update },
+    { OSSL_FUNC_MAC_FINAL, (void (*)(void)) hmac_final },
     { OSSL_FUNC_MAC_GETTABLE_CTX_PARAMS,
-      (void (*)(void))hmac_gettable_ctx_params },
-    { OSSL_FUNC_MAC_GET_CTX_PARAMS, (void (*)(void))hmac_get_ctx_params },
+      (void (*)(void)) hmac_gettable_ctx_params },
+    { OSSL_FUNC_MAC_GET_CTX_PARAMS, (void (*)(void)) hmac_get_ctx_params },
     { OSSL_FUNC_MAC_SETTABLE_CTX_PARAMS,
-      (void (*)(void))hmac_settable_ctx_params },
-    { OSSL_FUNC_MAC_SET_CTX_PARAMS, (void (*)(void))hmac_set_ctx_params },
+      (void (*)(void)) hmac_settable_ctx_params },
+    { OSSL_FUNC_MAC_SET_CTX_PARAMS, (void (*)(void)) hmac_set_ctx_params },
     OSSL_DISPATCH_END
 };

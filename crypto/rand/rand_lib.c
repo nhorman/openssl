@@ -65,7 +65,7 @@ DEFINE_RUN_ONCE_STATIC(do_rand_init)
     rand_inited = 1;
     return 1;
 
- err:
+err:
 # ifndef OPENSSL_NO_DEPRECATED_3_0
     CRYPTO_THREAD_lock_free(rand_meth_lock);
     rand_meth_lock = NULL;
@@ -150,7 +150,7 @@ int RAND_poll(void)
             goto err;
 
         ret = 1;
-     err:
+err:
         ossl_rand_pool_free(pool);
         return ret;
     }
@@ -205,7 +205,7 @@ const RAND_METHOD *RAND_get_rand_method(void)
 
         /* If we have an engine that can do RAND, use it. */
         if ((e = ENGINE_get_default_RAND()) != NULL
-                && (tmp_meth = ENGINE_get_RAND(e)) != NULL) {
+            && (tmp_meth = ENGINE_get_RAND(e)) != NULL) {
             funct_ref = e;
             default_RAND_meth = tmp_meth;
         } else {
@@ -462,7 +462,7 @@ void *ossl_rand_ctx_new(OSSL_LIB_CTX *libctx)
      * We need to ensure that base libcrypto thread handling has been
      * initialised.
      */
-     OPENSSL_init_crypto(OPENSSL_INIT_BASE_ONLY, NULL);
+    OPENSSL_init_crypto(OPENSSL_INIT_BASE_ONLY, NULL);
 #endif
 
     dgbl->lock = CRYPTO_THREAD_lock_new();
@@ -477,9 +477,9 @@ void *ossl_rand_ctx_new(OSSL_LIB_CTX *libctx)
 
     return dgbl;
 
- err2:
+err2:
     CRYPTO_THREAD_cleanup_local(&dgbl->private);
- err1:
+err1:
     CRYPTO_THREAD_lock_free(dgbl->lock);
     OPENSSL_free(dgbl);
     return NULL;
@@ -613,7 +613,7 @@ static EVP_RAND_CTX *rand_new_seed(OSSL_LIB_CTX *libctx)
     }
     OPENSSL_free(props);
     return ctx;
- err:
+err:
     EVP_RAND_CTX_free(ctx);
     ossl_property_free(pl3);
     OPENSSL_free(props);
@@ -669,7 +669,7 @@ static EVP_RAND_CTX *rand_new_drbg(OSSL_LIB_CTX *libctx, EVP_RAND_CTX *parent,
                                                 cipher, 0);
     }
     if (dgbl->rng_digest != NULL
-            && OSSL_PARAM_locate_const(settables, OSSL_DRBG_PARAM_DIGEST))
+        && OSSL_PARAM_locate_const(settables, OSSL_DRBG_PARAM_DIGEST))
         *p++ = OSSL_PARAM_construct_utf8_string(OSSL_DRBG_PARAM_DIGEST,
                                                 dgbl->rng_digest, 0);
     if (dgbl->rng_propq != NULL)
@@ -735,9 +735,9 @@ EVP_RAND_CTX *RAND_get0_primary(OSSL_LIB_CTX *ctx)
                                         PRIMARY_RESEED_INTERVAL,
                                         PRIMARY_RESEED_TIME_INTERVAL, 1);
     /*
-    * The primary DRBG may be shared between multiple threads so we must
-    * enable locking.
-    */
+     * The primary DRBG may be shared between multiple threads so we must
+     * enable locking.
+     */
     if (ret != NULL && !EVP_RAND_enable_locking(ret)) {
         ERR_raise(ERR_LIB_EVP, EVP_R_UNABLE_TO_ENABLE_LOCKING);
         EVP_RAND_CTX_free(ret);
@@ -772,7 +772,7 @@ EVP_RAND_CTX *RAND_get0_public(OSSL_LIB_CTX *ctx)
          * used this thread.
          */
         if (CRYPTO_THREAD_get_local(&dgbl->private) == NULL
-                && !ossl_init_thread_start(NULL, ctx, rand_delete_thread_state))
+            && !ossl_init_thread_start(NULL, ctx, rand_delete_thread_state))
             return NULL;
         rand = rand_new_drbg(ctx, primary, SECONDARY_RESEED_INTERVAL,
                              SECONDARY_RESEED_TIME_INTERVAL, 0);
@@ -805,7 +805,7 @@ EVP_RAND_CTX *RAND_get0_private(OSSL_LIB_CTX *ctx)
          * used this thread.
          */
         if (CRYPTO_THREAD_get_local(&dgbl->public) == NULL
-                && !ossl_init_thread_start(NULL, ctx, rand_delete_thread_state))
+            && !ossl_init_thread_start(NULL, ctx, rand_delete_thread_state))
             return NULL;
         rand = rand_new_drbg(ctx, primary, SECONDARY_RESEED_INTERVAL,
                              SECONDARY_RESEED_TIME_INTERVAL, 0);
@@ -946,9 +946,9 @@ int RAND_set_DRBG_type(OSSL_LIB_CTX *ctx, const char *drbg, const char *propq,
         return 0;
     }
     return random_set_string(&dgbl->rng_name, drbg)
-        && random_set_string(&dgbl->rng_propq, propq)
-        && random_set_string(&dgbl->rng_cipher, cipher)
-        && random_set_string(&dgbl->rng_digest, digest);
+           && random_set_string(&dgbl->rng_propq, propq)
+           && random_set_string(&dgbl->rng_cipher, cipher)
+           && random_set_string(&dgbl->rng_digest, digest);
 }
 
 int RAND_set_seed_source_type(OSSL_LIB_CTX *ctx, const char *seed,
@@ -963,7 +963,7 @@ int RAND_set_seed_source_type(OSSL_LIB_CTX *ctx, const char *seed,
         return 0;
     }
     return random_set_string(&dgbl->seed_name, seed)
-        && random_set_string(&dgbl->seed_propq, propq);
+           && random_set_string(&dgbl->seed_propq, propq);
 }
 
 #endif

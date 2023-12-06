@@ -28,9 +28,9 @@
 #  include <dlfcn.h>
 #  define HAVE_DLINFO 1
 #  if defined(__SCO_VERSION__) || defined(_SCO_ELF) || \
-     (defined(__osf__) && !defined(RTLD_NEXT))     || \
-     (defined(__OpenBSD__) && !defined(RTLD_SELF)) || \
-     defined(__ANDROID__) || defined(__TANDEM)
+    (defined(__osf__) && !defined(RTLD_NEXT))     || \
+    (defined(__OpenBSD__) && !defined(RTLD_SELF)) || \
+    defined(__ANDROID__) || defined(__TANDEM)
 #   undef HAVE_DLINFO
 #  endif
 # endif
@@ -131,7 +131,7 @@ static int dlfcn_load(DSO *dso)
     /* Success */
     dso->loaded_filename = filename;
     return 1;
- err:
+err:
     /* Cleanup! */
     OPENSSL_free(filename);
     if (ptr != NULL)
@@ -275,7 +275,7 @@ static char *dlfcn_name_converter(DSO *dso, const char *filename)
 
 # ifdef __sgi
 /*-
-This is a quote from IRIX manual for dladdr(3c):
+   This is a quote from IRIX manual for dladdr(3c):
 
      <dlfcn.h> does not contain a prototype for dladdr or definition of
      Dl_info.  The #include <dlfcn.h>  in the SYNOPSIS line is traditional,
@@ -286,7 +286,7 @@ This is a quote from IRIX manual for dladdr(3c):
      part of the IRIX compatibility guarantee; however, there is no future
      intention to change this interface, so on a practical level, the code
      below is safe to use on IRIX.
-*/
+ */
 #  include <rld_interface.h>
 #  ifndef _RLD_INTERFACE_DLFCN_H_DLADDR
 #   define _RLD_INTERFACE_DLFCN_H_DLADDR

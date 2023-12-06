@@ -19,7 +19,7 @@
 #include "../ssl/ssl_cert_table.h"
 
 #define test_cert_table(nid, amask, idx) \
-    do_test_cert_table(nid, amask, idx, #idx)
+        do_test_cert_table(nid, amask, idx, #idx)
 
 static int do_test_cert_table(int nid, uint32_t amask, size_t idx,
                               const char *idxname)

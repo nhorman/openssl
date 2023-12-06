@@ -27,24 +27,27 @@
  * Hardware support for SHA3 has been removed from these legacy cases.
  */
 #define IMPLEMENT_LEGACY_EVP_MD_METH_SHA3(nm, fn, tag)                         \
-static int nm##_init(EVP_MD_CTX *ctx)                                          \
-{                                                                              \
-    return fn##_init(EVP_MD_CTX_get0_md_data(ctx), tag, ctx->digest->md_size * 8); \
-}                                                                              \
-static int nm##_update(EVP_MD_CTX *ctx, const void *data, size_t count)        \
-{                                                                              \
-    return fn##_update(EVP_MD_CTX_get0_md_data(ctx), data, count);             \
-}                                                                              \
-static int nm##_final(EVP_MD_CTX *ctx, unsigned char *md)                      \
-{                                                                              \
-    KECCAK1600_CTX *kctx = EVP_MD_CTX_get0_md_data(ctx);                       \
-    return fn##_final(kctx, md, kctx->md_size);                                \
-}
+        static int nm ## _init(EVP_MD_CTX *ctx)                                          \
+        {                                                                              \
+            return fn ## _init(EVP_MD_CTX_get0_md_data( \
+                                   ctx), tag, ctx->digest->md_size * 8); \
+        }                                                                              \
+        static int nm ## _update(EVP_MD_CTX *ctx, const void *data, \
+                                 size_t count)        \
+        {                                                                              \
+            return fn ## _update(EVP_MD_CTX_get0_md_data(ctx), data, count);             \
+        }                                                                              \
+        static int nm ## _final(EVP_MD_CTX *ctx, unsigned char *md)                      \
+        {                                                                              \
+            KECCAK1600_CTX *kctx = EVP_MD_CTX_get0_md_data(ctx);                       \
+            return fn ## _final(kctx, md, kctx->md_size);                                \
+        }
 #define IMPLEMENT_LEGACY_EVP_MD_METH_SHAKE(nm, fn, tag)                        \
-static int nm##_init(EVP_MD_CTX *ctx)                                          \
-{                                                                              \
-    return fn##_init(EVP_MD_CTX_get0_md_data(ctx), tag, ctx->digest->md_size * 8); \
-}                                                                              \
+        static int nm ## _init(EVP_MD_CTX *ctx)                                          \
+        {                                                                              \
+            return fn ## _init(EVP_MD_CTX_get0_md_data( \
+                                   ctx), tag, ctx->digest->md_size * 8); \
+        }                                                                              \
 
 #define sha512_224_Init    sha512_224_init
 #define sha512_256_Init    sha512_256_init
@@ -79,11 +82,11 @@ static int shake_ctrl(EVP_MD_CTX *evp_ctx, int cmd, int p1, void *p2)
     ctx = evp_ctx->md_data;
 
     switch (cmd) {
-    case EVP_MD_CTRL_XOF_LEN:
-        ctx->md_size = p1;
-        return 1;
-    default:
-        return 0;
+        case EVP_MD_CTRL_XOF_LEN:
+            ctx->md_size = p1;
+            return 1;
+        default:
+            return 0;
     }
 }
 
@@ -195,34 +198,36 @@ const EVP_MD *EVP_sha512(void)
 }
 
 #define EVP_MD_SHA3(bitlen)                                                    \
-const EVP_MD *EVP_sha3_##bitlen(void)                                          \
-{                                                                              \
-    static const EVP_MD sha3_##bitlen##_md = {                                 \
-        NID_sha3_##bitlen,                                                     \
-        NID_RSA_SHA3_##bitlen,                                                 \
-        bitlen / 8,                                                            \
-        EVP_MD_FLAG_DIGALGID_ABSENT,                                           \
-        EVP_ORIG_GLOBAL,                                                       \
-        LEGACY_EVP_MD_METH_TABLE(sha3_int_init, sha3_int_update,               \
-                                 sha3_int_final, NULL,                         \
-                                 (KECCAK1600_WIDTH - bitlen * 2) / 8),         \
-    };                                                                         \
-    return &sha3_##bitlen##_md;                                                \
-}
+        const EVP_MD *EVP_sha3_ ## bitlen(void)                                          \
+        {                                                                              \
+            static const EVP_MD sha3_ ## bitlen ## _md = {                                 \
+                NID_sha3_ ## bitlen,                                                     \
+                NID_RSA_SHA3_ ## bitlen,                                                 \
+                bitlen / 8,                                                            \
+                EVP_MD_FLAG_DIGALGID_ABSENT,                                           \
+                EVP_ORIG_GLOBAL,                                                       \
+                LEGACY_EVP_MD_METH_TABLE(sha3_int_init, sha3_int_update,               \
+                                         sha3_int_final, NULL,                         \
+                                         (KECCAK1600_WIDTH - bitlen * 2) / 8),         \
+            };                                                                         \
+            return &sha3_ ## bitlen ## _md;                                                \
+        }
 #define EVP_MD_SHAKE(bitlen)                                                   \
-const EVP_MD *EVP_shake##bitlen(void)                                          \
-{                                                                              \
-    static const EVP_MD shake##bitlen##_md = {                                 \
-        NID_shake##bitlen,                                                     \
-        0,                                                                     \
-        bitlen / 8,                                                            \
-        EVP_MD_FLAG_XOF,                                                       \
-        EVP_ORIG_GLOBAL,                                                       \
-        LEGACY_EVP_MD_METH_TABLE(shake_init, sha3_int_update, sha3_int_final,  \
-                        shake_ctrl, (KECCAK1600_WIDTH - bitlen * 2) / 8),      \
-    };                                                                         \
-    return &shake##bitlen##_md;                                                \
-}
+        const EVP_MD *EVP_shake ## bitlen(void)                                          \
+        {                                                                              \
+            static const EVP_MD shake ## bitlen ## _md = {                                 \
+                NID_shake ## bitlen,                                                     \
+                0,                                                                     \
+                bitlen / 8,                                                            \
+                EVP_MD_FLAG_XOF,                                                       \
+                EVP_ORIG_GLOBAL,                                                       \
+                LEGACY_EVP_MD_METH_TABLE(shake_init, sha3_int_update, \
+                                         sha3_int_final,  \
+                                         shake_ctrl, \
+                                         (KECCAK1600_WIDTH - bitlen * 2) / 8),      \
+            };                                                                         \
+            return &shake ## bitlen ## _md;                                                \
+        }
 
 EVP_MD_SHA3(224)
 EVP_MD_SHA3(256)

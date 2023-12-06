@@ -87,7 +87,7 @@ static int algorithm_do_map(OSSL_PROVIDER *provider, const OSSL_ALGORITHM *map,
         ret = -1;
     }
 
- end:
+end:
     data->unreserve_store(data->data);
 
     return ret;

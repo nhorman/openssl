@@ -28,10 +28,10 @@ static int check_num(const char *s, const int is_hex)
      */
     if (is_hex) {
         for (i = 0; ('0' <= s[i] && s[i] <= '9')
-                    || ('A' <= s[i] && s[i] <= 'F')
-                    || ('a' <= s[i] && s[i] <= 'f'); i++);
+             || ('A' <= s[i] && s[i] <= 'F')
+             || ('a' <= s[i] && s[i] <= 'f'); i++);
     } else {
-        for (i = 0;  '0' <= s[i] && s[i] <= '9'; i++);
+        for (i = 0; '0' <= s[i] && s[i] <= '9'; i++);
     }
     return s[i] == 0;
 }
@@ -67,35 +67,35 @@ int prime_main(int argc, char **argv)
     prog = opt_init(argc, argv, prime_options);
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_EOF:
-        case OPT_ERR:
+            case OPT_EOF:
+            case OPT_ERR:
 opthelp:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto end;
-        case OPT_HELP:
-            opt_help(prime_options);
-            ret = 0;
-            goto end;
-        case OPT_HEX:
-            hex = 1;
-            break;
-        case OPT_GENERATE:
-            generate = 1;
-            break;
-        case OPT_BITS:
-            bits = atoi(opt_arg());
-            break;
-        case OPT_SAFE:
-            safe = 1;
-            break;
-        case OPT_CHECKS:
-            /* ignore parameter and argument */
-            opt_arg();
-            break;
-        case OPT_PROV_CASES:
-            if (!opt_provider(o))
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
                 goto end;
-            break;
+            case OPT_HELP:
+                opt_help(prime_options);
+                ret = 0;
+                goto end;
+            case OPT_HEX:
+                hex = 1;
+                break;
+            case OPT_GENERATE:
+                generate = 1;
+                break;
+            case OPT_BITS:
+                bits = atoi(opt_arg());
+                break;
+            case OPT_SAFE:
+                safe = 1;
+                break;
+            case OPT_CHECKS:
+                /* ignore parameter and argument */
+                opt_arg();
+                break;
+            case OPT_PROV_CASES:
+                if (!opt_provider(o))
+                    goto end;
+                break;
         }
     }
 
@@ -153,7 +153,7 @@ opthelp:
     }
 
     ret = 0;
- end:
+end:
     BN_free(bn);
     return ret;
 }

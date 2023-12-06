@@ -20,7 +20,7 @@ void sha256_block_data_order(void *ctx, const void *inp, size_t len);
 void sha256_block_data_order(void *ctx, const void *inp, size_t len)
 {
     OPENSSL_ppccap_P & PPC_CRYPTO207 ? sha256_block_p8(ctx, inp, len) :
-        sha256_block_ppc(ctx, inp, len);
+    sha256_block_ppc(ctx, inp, len);
 }
 
 void sha512_block_p8(void *ctx, const void *inp, size_t len);
@@ -29,5 +29,5 @@ void sha512_block_data_order(void *ctx, const void *inp, size_t len);
 void sha512_block_data_order(void *ctx, const void *inp, size_t len)
 {
     OPENSSL_ppccap_P & PPC_CRYPTO207 ? sha512_block_p8(ctx, inp, len) :
-        sha512_block_ppc(ctx, inp, len);
+    sha512_block_ppc(ctx, inp, len);
 }

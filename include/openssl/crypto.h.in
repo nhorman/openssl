@@ -138,7 +138,8 @@ int OPENSSL_hexchar2int(unsigned char c);
 int OPENSSL_strcasecmp(const char *s1, const char *s2);
 int OPENSSL_strncasecmp(const char *s1, const char *s2, size_t n);
 
-# define OPENSSL_MALLOC_MAX_NELEMS(type)  (((1U<<(sizeof(int)*8-1))-1)/sizeof(type))
+# define OPENSSL_MALLOC_MAX_NELEMS(type)  (((1U<< \
+                                             (sizeof(int)*8-1))-1)/sizeof(type))
 
 /*
  * These functions return the values of OPENSSL_VERSION_MAJOR,
@@ -216,7 +217,7 @@ struct crypto_ex_data_st {
 # define CRYPTO_EX_INDEX__COUNT          18
 
 typedef void CRYPTO_EX_new (void *parent, void *ptr, CRYPTO_EX_DATA *ad,
-                           int idx, long argl, void *argp);
+                            int idx, long argl, void *argp);
 typedef void CRYPTO_EX_free (void *parent, void *ptr, CRYPTO_EX_DATA *ad,
                              int idx, long argl, void *argp);
 typedef int CRYPTO_EX_dup (CRYPTO_EX_DATA *to, const CRYPTO_EX_DATA *from,
@@ -323,9 +324,12 @@ void CRYPTO_get_mem_functions(CRYPTO_malloc_fn *malloc_fn,
 
 OSSL_CRYPTO_ALLOC void *CRYPTO_malloc(size_t num, const char *file, int line);
 OSSL_CRYPTO_ALLOC void *CRYPTO_zalloc(size_t num, const char *file, int line);
-OSSL_CRYPTO_ALLOC void *CRYPTO_memdup(const void *str, size_t siz, const char *file, int line);
-OSSL_CRYPTO_ALLOC char *CRYPTO_strdup(const char *str, const char *file, int line);
-OSSL_CRYPTO_ALLOC char *CRYPTO_strndup(const char *str, size_t s, const char *file, int line);
+OSSL_CRYPTO_ALLOC void *CRYPTO_memdup(const void *str, size_t siz,
+                                      const char *file, int line);
+OSSL_CRYPTO_ALLOC char *CRYPTO_strdup(const char *str, const char *file,
+                                      int line);
+OSSL_CRYPTO_ALLOC char *CRYPTO_strndup(const char *str, size_t s,
+                                       const char *file, int line);
 void CRYPTO_free(void *ptr, const char *file, int line);
 void CRYPTO_clear_free(void *ptr, size_t num, const char *file, int line);
 void *CRYPTO_realloc(void *addr, size_t num, const char *file, int line);
@@ -334,8 +338,10 @@ void *CRYPTO_clear_realloc(void *addr, size_t old_num, size_t num,
 
 int CRYPTO_secure_malloc_init(size_t sz, size_t minsize);
 int CRYPTO_secure_malloc_done(void);
-OSSL_CRYPTO_ALLOC void *CRYPTO_secure_malloc(size_t num, const char *file, int line);
-OSSL_CRYPTO_ALLOC void *CRYPTO_secure_zalloc(size_t num, const char *file, int line);
+OSSL_CRYPTO_ALLOC void *CRYPTO_secure_malloc(size_t num, const char *file,
+                                             int line);
+OSSL_CRYPTO_ALLOC void *CRYPTO_secure_zalloc(size_t num, const char *file,
+                                             int line);
 void CRYPTO_secure_free(void *ptr, const char *file, int line);
 void CRYPTO_secure_clear_free(void *ptr, size_t num,
                               const char *file, int line);
@@ -359,9 +365,9 @@ void OPENSSL_cleanse(void *ptr, size_t len);
 void CRYPTO_get_alloc_counts(int *mcount, int *rcount, int *fcount);
 #  ifndef OPENSSL_NO_DEPRECATED_3_0
 #    define OPENSSL_mem_debug_push(info) \
-         CRYPTO_mem_debug_push(info, OPENSSL_FILE, OPENSSL_LINE)
+        CRYPTO_mem_debug_push(info, OPENSSL_FILE, OPENSSL_LINE)
 #    define OPENSSL_mem_debug_pop() \
-         CRYPTO_mem_debug_pop()
+        CRYPTO_mem_debug_pop()
 #  endif
 #  ifndef OPENSSL_NO_DEPRECATED_3_0
 OSSL_DEPRECATEDIN_3_0 int CRYPTO_set_mem_debug(int flag);
@@ -392,12 +398,14 @@ OSSL_DEPRECATEDIN_3_0 int CRYPTO_mem_leaks(BIO *bio);
 # endif /* OPENSSL_NO_CRYPTO_MDEBUG */
 
 /* die if we have to */
-ossl_noreturn void OPENSSL_die(const char *assertion, const char *file, int line);
+ossl_noreturn void OPENSSL_die(const char *assertion, const char *file,
+                               int line);
 # ifndef OPENSSL_NO_DEPRECATED_1_1_0
 #  define OpenSSLDie(f,l,a) OPENSSL_die((a),(f),(l))
 # endif
 # define OPENSSL_assert(e) \
-    (void)((e) ? 0 : (OPENSSL_die("assertion failed: " #e, OPENSSL_FILE, OPENSSL_LINE), 1))
+        (void)((e) ? 0 : (OPENSSL_die("assertion failed: " #e, OPENSSL_FILE, \
+                                      OPENSSL_LINE), 1))
 
 int OPENSSL_isservice(void);
 
@@ -456,9 +464,9 @@ int CRYPTO_memcmp(const void * in_a, const void * in_b, size_t len);
 
 /* openssl and dasync not counted as builtin */
 # define OPENSSL_INIT_ENGINE_ALL_BUILTIN \
-    (OPENSSL_INIT_ENGINE_RDRAND | OPENSSL_INIT_ENGINE_DYNAMIC \
-    | OPENSSL_INIT_ENGINE_CRYPTODEV | OPENSSL_INIT_ENGINE_CAPI | \
-    OPENSSL_INIT_ENGINE_PADLOCK)
+        (OPENSSL_INIT_ENGINE_RDRAND | OPENSSL_INIT_ENGINE_DYNAMIC \
+         | OPENSSL_INIT_ENGINE_CRYPTODEV | OPENSSL_INIT_ENGINE_CAPI | \
+         OPENSSL_INIT_ENGINE_PADLOCK)
 
 /* Library initialisation functions */
 void OPENSSL_cleanup(void);

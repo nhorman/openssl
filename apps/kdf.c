@@ -39,7 +39,7 @@ const OPTIONS kdf_options[] = {
     OPT_SECTION("Output"),
     {"out", OPT_OUT, '>', "Output to filename rather than stdout"},
     {"binary", OPT_BIN, '-',
-        "Output in binary format (default is hexadecimal)"},
+     "Output in binary format (default is hexadecimal)"},
 
     OPT_PROV_OPTIONS,
 
@@ -84,51 +84,51 @@ int kdf_main(int argc, char **argv)
     prog = opt_init(argc, argv, kdf_options);
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        default:
+            default:
 opthelp:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto err;
-        case OPT_HELP:
-            opt_help(kdf_options);
-            ret = 0;
-            goto err;
-        case OPT_BIN:
-            out_bin = 1;
-            break;
-        case OPT_KEYLEN:
-            dkm_len = (size_t)atoi(opt_arg());
-            break;
-        case OPT_OUT:
-            outfile = opt_arg();
-            break;
-        case OPT_KDFOPT:
-            if (opts == NULL)
-                opts = sk_OPENSSL_STRING_new_null();
-            if (opts == NULL || !sk_OPENSSL_STRING_push(opts, opt_arg()))
-                goto opthelp;
-            break;
-        case OPT_CIPHER:
-            OPENSSL_free(cipher);
-            cipher = alloc_kdf_algorithm_name(&opts, "cipher", opt_arg());
-            if (cipher == NULL)
-                goto opthelp;
-            break;
-        case OPT_DIGEST:
-            OPENSSL_free(digest);
-            digest = alloc_kdf_algorithm_name(&opts, "digest", opt_arg());
-            if (digest == NULL)
-                goto opthelp;
-            break;
-        case OPT_MAC:
-            OPENSSL_free(mac);
-            mac = alloc_kdf_algorithm_name(&opts, "mac", opt_arg());
-            if (mac == NULL)
-                goto opthelp;
-            break;
-        case OPT_PROV_CASES:
-            if (!opt_provider(o))
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
                 goto err;
-            break;
+            case OPT_HELP:
+                opt_help(kdf_options);
+                ret = 0;
+                goto err;
+            case OPT_BIN:
+                out_bin = 1;
+                break;
+            case OPT_KEYLEN:
+                dkm_len = (size_t)atoi(opt_arg());
+                break;
+            case OPT_OUT:
+                outfile = opt_arg();
+                break;
+            case OPT_KDFOPT:
+                if (opts == NULL)
+                    opts = sk_OPENSSL_STRING_new_null();
+                if (opts == NULL || !sk_OPENSSL_STRING_push(opts, opt_arg()))
+                    goto opthelp;
+                break;
+            case OPT_CIPHER:
+                OPENSSL_free(cipher);
+                cipher = alloc_kdf_algorithm_name(&opts, "cipher", opt_arg());
+                if (cipher == NULL)
+                    goto opthelp;
+                break;
+            case OPT_DIGEST:
+                OPENSSL_free(digest);
+                digest = alloc_kdf_algorithm_name(&opts, "digest", opt_arg());
+                if (digest == NULL)
+                    goto opthelp;
+                break;
+            case OPT_MAC:
+                OPENSSL_free(mac);
+                mac = alloc_kdf_algorithm_name(&opts, "mac", opt_arg());
+                if (mac == NULL)
+                    goto opthelp;
+                break;
+            case OPT_PROV_CASES:
+                if (!opt_provider(o))
+                    goto err;
+                break;
         }
     }
 

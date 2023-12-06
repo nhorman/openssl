@@ -143,36 +143,45 @@ typedef struct ocsp_service_locator_st OCSP_SERVICELOC;
 #  define PEM_STRING_OCSP_REQUEST "OCSP REQUEST"
 #  define PEM_STRING_OCSP_RESPONSE "OCSP RESPONSE"
 
-#  define d2i_OCSP_REQUEST_bio(bp,p) ASN1_d2i_bio_of(OCSP_REQUEST,OCSP_REQUEST_new,d2i_OCSP_REQUEST,bp,p)
+#  define d2i_OCSP_REQUEST_bio(bp,p) ASN1_d2i_bio_of(OCSP_REQUEST, \
+                                                     OCSP_REQUEST_new, \
+                                                     d2i_OCSP_REQUEST,bp,p)
 
-#  define d2i_OCSP_RESPONSE_bio(bp,p) ASN1_d2i_bio_of(OCSP_RESPONSE,OCSP_RESPONSE_new,d2i_OCSP_RESPONSE,bp,p)
+#  define d2i_OCSP_RESPONSE_bio(bp,p) ASN1_d2i_bio_of(OCSP_RESPONSE, \
+                                                      OCSP_RESPONSE_new, \
+                                                      d2i_OCSP_RESPONSE,bp,p)
 
 #  define PEM_read_bio_OCSP_REQUEST(bp,x,cb) (OCSP_REQUEST *)PEM_ASN1_read_bio( \
-     (char *(*)())d2i_OCSP_REQUEST,PEM_STRING_OCSP_REQUEST, \
-     bp,(char **)(x),cb,NULL)
+            (char *(*)()) d2i_OCSP_REQUEST,PEM_STRING_OCSP_REQUEST, \
+            bp,(char **)(x),cb,NULL)
 
-#  define PEM_read_bio_OCSP_RESPONSE(bp,x,cb) (OCSP_RESPONSE *)PEM_ASN1_read_bio(\
-     (char *(*)())d2i_OCSP_RESPONSE,PEM_STRING_OCSP_RESPONSE, \
-     bp,(char **)(x),cb,NULL)
+#  define PEM_read_bio_OCSP_RESPONSE(bp,x, \
+                                     cb) (OCSP_RESPONSE *)PEM_ASN1_read_bio( \
+            (char *(*)()) d2i_OCSP_RESPONSE,PEM_STRING_OCSP_RESPONSE, \
+            bp,(char **)(x),cb,NULL)
 
 #  define PEM_write_bio_OCSP_REQUEST(bp,o) \
-    PEM_ASN1_write_bio((int (*)())i2d_OCSP_REQUEST,PEM_STRING_OCSP_REQUEST,\
-                        bp,(char *)(o), NULL,NULL,0,NULL,NULL)
+        PEM_ASN1_write_bio((int (*)()) i2d_OCSP_REQUEST,PEM_STRING_OCSP_REQUEST, \
+                           bp,(char *)(o), NULL,NULL,0,NULL,NULL)
 
 #  define PEM_write_bio_OCSP_RESPONSE(bp,o) \
-    PEM_ASN1_write_bio((int (*)())i2d_OCSP_RESPONSE,PEM_STRING_OCSP_RESPONSE,\
-                        bp,(char *)(o), NULL,NULL,0,NULL,NULL)
+        PEM_ASN1_write_bio( \
+            (int (*)()) i2d_OCSP_RESPONSE,PEM_STRING_OCSP_RESPONSE, \
+            bp,(char *)(o), NULL,NULL,0,NULL,NULL)
 
-#  define i2d_OCSP_RESPONSE_bio(bp,o) ASN1_i2d_bio_of(OCSP_RESPONSE,i2d_OCSP_RESPONSE,bp,o)
+#  define i2d_OCSP_RESPONSE_bio(bp,o) ASN1_i2d_bio_of(OCSP_RESPONSE, \
+                                                      i2d_OCSP_RESPONSE,bp,o)
 
-#  define i2d_OCSP_REQUEST_bio(bp,o) ASN1_i2d_bio_of(OCSP_REQUEST,i2d_OCSP_REQUEST,bp,o)
+#  define i2d_OCSP_REQUEST_bio(bp,o) ASN1_i2d_bio_of(OCSP_REQUEST, \
+                                                     i2d_OCSP_REQUEST,bp,o)
 
 #  define ASN1_BIT_STRING_digest(data,type,md,len) \
         ASN1_item_digest(ASN1_ITEM_rptr(ASN1_BIT_STRING),type,data,md,len)
 
-#  define OCSP_CERTSTATUS_dup(cs)\
-                (OCSP_CERTSTATUS*)ASN1_dup((i2d_of_void *)i2d_OCSP_CERTSTATUS,\
-                (d2i_of_void *)d2i_OCSP_CERTSTATUS,(char *)(cs))
+#  define OCSP_CERTSTATUS_dup(cs) \
+        (OCSP_CERTSTATUS*)ASN1_dup((i2d_of_void *)i2d_OCSP_CERTSTATUS, \
+                                   (d2i_of_void *)d2i_OCSP_CERTSTATUS, \
+                                   (char *)(cs))
 
 DECLARE_ASN1_DUP_FUNCTION(OCSP_CERTID)
 
@@ -200,7 +209,8 @@ typedef OSSL_HTTP_REQ_CTX OCSP_REQ_CTX;
         OSSL_HTTP_REQ_CTX_nbio_d2i(r, (ASN1_VALUE **)(p), \
                                    ASN1_ITEM_rptr(OCSP_RESPONSE))
 #   define OCSP_REQ_CTX_get0_mem_bio OSSL_HTTP_REQ_CTX_get0_mem_bio
-#   define OCSP_set_max_response_length OSSL_HTTP_REQ_CTX_set_max_response_length
+#   define OCSP_set_max_response_length \
+        OSSL_HTTP_REQ_CTX_set_max_response_length
 #  endif
 
 OCSP_CERTID *OCSP_cert_to_id(const EVP_MD *dgst, const X509 *subject,
@@ -238,7 +248,8 @@ int OCSP_resp_get0_signer(OCSP_BASICRESP *bs, X509 **signer,
 
 int OCSP_resp_count(OCSP_BASICRESP *bs);
 OCSP_SINGLERESP *OCSP_resp_get0(OCSP_BASICRESP *bs, int idx);
-const ASN1_GENERALIZEDTIME *OCSP_resp_get0_produced_at(const OCSP_BASICRESP* bs);
+const ASN1_GENERALIZEDTIME *OCSP_resp_get0_produced_at(
+    const OCSP_BASICRESP* bs);
 const STACK_OF(X509) *OCSP_resp_get0_certs(const OCSP_BASICRESP *bs);
 int OCSP_resp_get0_id(const OCSP_BASICRESP *bs,
                       const ASN1_OCTET_STRING **pid,
@@ -264,7 +275,7 @@ int OCSP_request_verify(OCSP_REQUEST *req, STACK_OF(X509) *certs,
                         X509_STORE *store, unsigned long flags);
 
 #  define OCSP_parse_url(url, host, port, path, ssl) \
-    OSSL_HTTP_parse_url(url, ssl, NULL, host, port, NULL, path, NULL, NULL)
+        OSSL_HTTP_parse_url(url, ssl, NULL, host, port, NULL, path, NULL, NULL)
 
 int OCSP_id_issuer_cmp(const OCSP_CERTID *a, const OCSP_CERTID *b);
 int OCSP_id_cmp(const OCSP_CERTID *a, const OCSP_CERTID *b);
@@ -321,7 +332,8 @@ int OCSP_REQUEST_add_ext(OCSP_REQUEST *x, X509_EXTENSION *ex, int loc);
 
 int OCSP_ONEREQ_get_ext_count(OCSP_ONEREQ *x);
 int OCSP_ONEREQ_get_ext_by_NID(OCSP_ONEREQ *x, int nid, int lastpos);
-int OCSP_ONEREQ_get_ext_by_OBJ(OCSP_ONEREQ *x, const ASN1_OBJECT *obj, int lastpos);
+int OCSP_ONEREQ_get_ext_by_OBJ(OCSP_ONEREQ *x, const ASN1_OBJECT *obj,
+                               int lastpos);
 int OCSP_ONEREQ_get_ext_by_critical(OCSP_ONEREQ *x, int crit, int lastpos);
 X509_EXTENSION *OCSP_ONEREQ_get_ext(OCSP_ONEREQ *x, int loc);
 X509_EXTENSION *OCSP_ONEREQ_delete_ext(OCSP_ONEREQ *x, int loc);

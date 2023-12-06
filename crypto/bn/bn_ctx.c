@@ -107,9 +107,9 @@ static void ctxdbg(BIO *channel, const char *text, BN_CTX *ctx)
 }
 
 # define CTXDBG(str, ctx)           \
-    OSSL_TRACE_BEGIN(BN_CTX) {      \
-        ctxdbg(trc_out, str, ctx);  \
-    } OSSL_TRACE_END(BN_CTX)
+        OSSL_TRACE_BEGIN(BN_CTX) {      \
+            ctxdbg(trc_out, str, ctx);  \
+        } OSSL_TRACE_END(BN_CTX)
 #else
 /* We do not want tracing in FIPS module */
 # define CTXDBG(str, ctx) do {} while(0)

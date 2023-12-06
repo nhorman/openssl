@@ -45,7 +45,7 @@ static int asn1_print_info(BIO *bp, long offset, int depth, int hl, long len,
     if (bp != NULL) {
         if (BIO_set_prefix(bp, str) <= 0) {
             if ((bio = BIO_new(BIO_f_prefix())) == NULL
-                    || (bp = BIO_push(bio, bp)) == NULL)
+                || (bp = BIO_push(bio, bp)) == NULL)
                 goto err;
             pop_f_prefix = 1;
         }
@@ -71,7 +71,7 @@ static int asn1_print_info(BIO *bp, long offset, int depth, int hl, long len,
         p = ASN1_tag2str(tag);
 
     i = (BIO_printf(bp, "%-18s", p) > 0);
- err:
+err:
     if (saved_indent >= 0)
         BIO_set_indent(bp, saved_indent);
     if (pop_f_prefix)
@@ -222,16 +222,16 @@ static int asn1_parse2(BIO *bp, const unsigned char **pp, long length,
                         }
                     }
                     if (printable)
-                        /* printable string */
+                    /* printable string */
                     {
                         if (BIO_write(bp, ":", 1) <= 0)
                             goto end;
                         if (BIO_write(bp, (const char *)opp, os->length) <= 0)
                             goto end;
                     } else if (!dump)
-                        /*
-                         * not printable => print octet string as hex dump
-                         */
+                    /*
+                     * not printable => print octet string as hex dump
+                     */
                     {
                         if (BIO_write(bp, "[HEX DUMP]:", 11) <= 0)
                             goto end;
@@ -240,7 +240,7 @@ static int asn1_parse2(BIO *bp, const unsigned char **pp, long length,
                                 goto end;
                         }
                     } else
-                        /* print the normal dump */
+                    /* print the normal dump */
                     {
                         if (!nl) {
                             if (BIO_write(bp, "\n", 1) <= 0)
@@ -348,7 +348,7 @@ static int asn1_parse2(BIO *bp, const unsigned char **pp, long length,
         length -= len;
     }
     ret = 1;
- end:
+end:
     ASN1_OBJECT_free(o);
     ASN1_OCTET_STRING_free(os);
     ASN1_INTEGER_free(ai);

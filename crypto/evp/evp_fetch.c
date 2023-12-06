@@ -53,7 +53,7 @@ static void *get_tmp_evp_method_store(void *data)
     return methdata->tmp_store;
 }
 
- static void dealloc_tmp_evp_method_store(void *store)
+static void dealloc_tmp_evp_method_store(void *store)
 {
     if (store != NULL)
         ossl_method_store_free(store);

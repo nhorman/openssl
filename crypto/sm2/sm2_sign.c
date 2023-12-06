@@ -108,31 +108,31 @@ int ossl_sm2_compute_z_digest(uint8_t *out,
         goto done;
 
     if (BN_bn2binpad(a, buf, p_bytes) < 0
-            || !EVP_DigestUpdate(hash, buf, p_bytes)
-            || BN_bn2binpad(b, buf, p_bytes) < 0
-            || !EVP_DigestUpdate(hash, buf, p_bytes)
-            || !EC_POINT_get_affine_coordinates(group,
-                                                EC_GROUP_get0_generator(group),
-                                                xG, yG, ctx)
-            || BN_bn2binpad(xG, buf, p_bytes) < 0
-            || !EVP_DigestUpdate(hash, buf, p_bytes)
-            || BN_bn2binpad(yG, buf, p_bytes) < 0
-            || !EVP_DigestUpdate(hash, buf, p_bytes)
-            || !EC_POINT_get_affine_coordinates(group,
-                                                EC_KEY_get0_public_key(key),
-                                                xA, yA, ctx)
-            || BN_bn2binpad(xA, buf, p_bytes) < 0
-            || !EVP_DigestUpdate(hash, buf, p_bytes)
-            || BN_bn2binpad(yA, buf, p_bytes) < 0
-            || !EVP_DigestUpdate(hash, buf, p_bytes)
-            || !EVP_DigestFinal(hash, out, NULL)) {
+        || !EVP_DigestUpdate(hash, buf, p_bytes)
+        || BN_bn2binpad(b, buf, p_bytes) < 0
+        || !EVP_DigestUpdate(hash, buf, p_bytes)
+        || !EC_POINT_get_affine_coordinates(group,
+                                            EC_GROUP_get0_generator(group),
+                                            xG, yG, ctx)
+        || BN_bn2binpad(xG, buf, p_bytes) < 0
+        || !EVP_DigestUpdate(hash, buf, p_bytes)
+        || BN_bn2binpad(yG, buf, p_bytes) < 0
+        || !EVP_DigestUpdate(hash, buf, p_bytes)
+        || !EC_POINT_get_affine_coordinates(group,
+                                            EC_KEY_get0_public_key(key),
+                                            xA, yA, ctx)
+        || BN_bn2binpad(xA, buf, p_bytes) < 0
+        || !EVP_DigestUpdate(hash, buf, p_bytes)
+        || BN_bn2binpad(yA, buf, p_bytes) < 0
+        || !EVP_DigestUpdate(hash, buf, p_bytes)
+        || !EVP_DigestFinal(hash, out, NULL)) {
         ERR_raise(ERR_LIB_SM2, ERR_R_INTERNAL_ERROR);
         goto done;
     }
 
     rc = 1;
 
- done:
+done:
     OPENSSL_free(buf);
     BN_CTX_free(ctx);
     EVP_MD_CTX_free(hash);
@@ -178,10 +178,10 @@ static BIGNUM *sm2_compute_msg_hash(const EVP_MD *digest,
     }
 
     if (!EVP_DigestInit(hash, fetched_digest)
-            || !EVP_DigestUpdate(hash, z, md_size)
-            || !EVP_DigestUpdate(hash, msg, msg_len)
-               /* reuse z buffer to hold H(Z || M) */
-            || !EVP_DigestFinal(hash, z, NULL)) {
+        || !EVP_DigestUpdate(hash, z, md_size)
+        || !EVP_DigestUpdate(hash, msg, msg_len)
+        /* reuse z buffer to hold H(Z || M) */
+        || !EVP_DigestFinal(hash, z, NULL)) {
         ERR_raise(ERR_LIB_SM2, ERR_R_EVP_LIB);
         goto done;
     }
@@ -190,7 +190,7 @@ static BIGNUM *sm2_compute_msg_hash(const EVP_MD *digest,
     if (e == NULL)
         ERR_raise(ERR_LIB_SM2, ERR_R_INTERNAL_ERROR);
 
- done:
+done:
     EVP_MD_free(fetched_digest);
     OPENSSL_free(z);
     EVP_MD_CTX_free(hash);
@@ -262,9 +262,9 @@ static ECDSA_SIG *sm2_sig_gen(const EC_KEY *key, const BIGNUM *e)
         }
 
         if (!EC_POINT_mul(group, kG, k, NULL, NULL, ctx)
-                || !EC_POINT_get_affine_coordinates(group, kG, x1, NULL,
-                                                    ctx)
-                || !BN_mod_add(r, e, x1, order, ctx)) {
+            || !EC_POINT_get_affine_coordinates(group, kG, x1, NULL,
+                                                ctx)
+            || !BN_mod_add(r, e, x1, order, ctx)) {
             ERR_raise(ERR_LIB_SM2, ERR_R_INTERNAL_ERROR);
             goto done;
         }
@@ -282,10 +282,10 @@ static ECDSA_SIG *sm2_sig_gen(const EC_KEY *key, const BIGNUM *e)
             continue;
 
         if (!BN_add(s, dA, BN_value_one())
-                || !ossl_ec_group_do_inverse_ord(group, s, s, ctx)
-                || !BN_mod_mul(tmp, dA, r, order, ctx)
-                || !BN_sub(tmp, k, tmp)
-                || !BN_mod_mul(s, s, tmp, order, ctx)) {
+            || !ossl_ec_group_do_inverse_ord(group, s, s, ctx)
+            || !BN_mod_mul(tmp, dA, r, order, ctx)
+            || !BN_sub(tmp, k, tmp)
+            || !BN_mod_mul(s, s, tmp, order, ctx)) {
             ERR_raise(ERR_LIB_SM2, ERR_R_BN_LIB);
             goto done;
         }
@@ -300,12 +300,12 @@ static ECDSA_SIG *sm2_sig_gen(const EC_KEY *key, const BIGNUM *e)
             goto done;
         }
 
-         /* takes ownership of r and s */
+        /* takes ownership of r and s */
         ECDSA_SIG_set0(sig, r, s);
         break;
     }
 
- done:
+done:
     if (sig == NULL) {
         BN_free(r);
         BN_free(s);
@@ -358,9 +358,9 @@ static int sm2_sig_verify(const EC_KEY *key, const ECDSA_SIG *sig,
     ECDSA_SIG_get0(sig, &r, &s);
 
     if (BN_cmp(r, BN_value_one()) < 0
-            || BN_cmp(s, BN_value_one()) < 0
-            || BN_cmp(order, r) <= 0
-            || BN_cmp(order, s) <= 0) {
+        || BN_cmp(s, BN_value_one()) < 0
+        || BN_cmp(order, r) <= 0
+        || BN_cmp(order, s) <= 0) {
         ERR_raise(ERR_LIB_SM2, SM2_R_BAD_SIGNATURE);
         goto done;
     }
@@ -376,7 +376,7 @@ static int sm2_sig_verify(const EC_KEY *key, const ECDSA_SIG *sig,
     }
 
     if (!EC_POINT_mul(group, pt, s, EC_KEY_get0_public_key(key), t, ctx)
-            || !EC_POINT_get_affine_coordinates(group, pt, x1, NULL, ctx)) {
+        || !EC_POINT_get_affine_coordinates(group, pt, x1, NULL, ctx)) {
         ERR_raise(ERR_LIB_SM2, ERR_R_EC_LIB);
         goto done;
     }
@@ -389,7 +389,7 @@ static int sm2_sig_verify(const EC_KEY *key, const ECDSA_SIG *sig,
     if (BN_cmp(r, t) == 0)
         ret = 1;
 
- done:
+done:
     BN_CTX_end(ctx);
     EC_POINT_free(pt);
     BN_CTX_free(ctx);
@@ -413,7 +413,7 @@ ECDSA_SIG *ossl_sm2_do_sign(const EC_KEY *key,
 
     sig = sm2_sig_gen(key, e);
 
- done:
+done:
     BN_free(e);
     return sig;
 }
@@ -436,7 +436,7 @@ int ossl_sm2_do_verify(const EC_KEY *key,
 
     ret = sm2_sig_verify(key, sig, e);
 
- done:
+done:
     BN_free(e);
     return ret;
 }
@@ -452,8 +452,8 @@ int ossl_sm2_internal_sign(const unsigned char *dgst, int dgstlen,
 
     e = BN_bin2bn(dgst, dgstlen, NULL);
     if (e == NULL) {
-       ERR_raise(ERR_LIB_SM2, ERR_R_BN_LIB);
-       goto done;
+        ERR_raise(ERR_LIB_SM2, ERR_R_BN_LIB);
+        goto done;
     }
 
     s = sm2_sig_gen(eckey, e);
@@ -464,14 +464,14 @@ int ossl_sm2_internal_sign(const unsigned char *dgst, int dgstlen,
 
     sigleni = i2d_ECDSA_SIG(s, sig != NULL ? &sig : NULL);
     if (sigleni < 0) {
-       ERR_raise(ERR_LIB_SM2, ERR_R_INTERNAL_ERROR);
-       goto done;
+        ERR_raise(ERR_LIB_SM2, ERR_R_INTERNAL_ERROR);
+        goto done;
     }
     *siglen = (unsigned int)sigleni;
 
     ret = 1;
 
- done:
+done:
     ECDSA_SIG_free(s);
     BN_free(e);
     return ret;
@@ -512,7 +512,7 @@ int ossl_sm2_internal_verify(const unsigned char *dgst, int dgstlen,
 
     ret = sm2_sig_verify(eckey, s, e);
 
- done:
+done:
     OPENSSL_free(der);
     BN_free(e);
     ECDSA_SIG_free(s);

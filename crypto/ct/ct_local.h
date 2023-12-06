@@ -26,7 +26,7 @@
  */
 
 #define n2s(c,s)        ((s=(((unsigned int)((c)[0]))<< 8)| \
-                            (((unsigned int)((c)[1]))    )),c+=2)
+                             (((unsigned int)((c)[1]))    )),c+=2)
 
 #define s2n(s,c)        ((c[0]=(unsigned char)(((s)>> 8)&0xff), \
                           c[1]=(unsigned char)(((s)    )&0xff)),c+=2)
@@ -63,10 +63,10 @@ struct sct_st {
     unsigned char *log_id;
     size_t log_id_len;
     /*
-    * Note, we cannot distinguish between an unset timestamp, and one
-    * that is set to 0.  However since CT didn't exist in 1970, no real
-    * SCT should ever be set as such.
-    */
+     * Note, we cannot distinguish between an unset timestamp, and one
+     * that is set to 0.  However since CT didn't exist in 1970, no real
+     * SCT should ever be set as such.
+     */
     uint64_t timestamp;
     unsigned char *ext;
     size_t ext_len;
@@ -191,24 +191,24 @@ __owur int SCT_is_complete(const SCT *sct);
 __owur int SCT_signature_is_complete(const SCT *sct);
 
 /*
-* Serialize (to TLS format) an |sct| signature and write it to |out|.
-* If |out| is null, no signature will be output but the length will be returned.
-* If |out| points to a null pointer, a string will be allocated to hold the
-* TLS-format signature. It is the responsibility of the caller to free it.
-* If |out| points to an allocated string, the signature will be written to it.
-* The length of the signature in TLS format will be returned.
-*/
+ * Serialize (to TLS format) an |sct| signature and write it to |out|.
+ * If |out| is null, no signature will be output but the length will be returned.
+ * If |out| points to a null pointer, a string will be allocated to hold the
+ * TLS-format signature. It is the responsibility of the caller to free it.
+ * If |out| points to an allocated string, the signature will be written to it.
+ * The length of the signature in TLS format will be returned.
+ */
 __owur int i2o_SCT_signature(const SCT *sct, unsigned char **out);
 
 /*
-* Parses an SCT signature in TLS format and populates the |sct| with it.
-* |in| should be a pointer to a string containing the TLS-format signature.
-* |in| will be advanced to the end of the signature if parsing succeeds.
-* |len| should be the length of the signature in |in|.
-* Returns the number of bytes parsed, or a negative integer if an error occurs.
-* If an error occurs, the SCT's signature NID may be updated whilst the
-* signature field itself remains unset.
-*/
+ * Parses an SCT signature in TLS format and populates the |sct| with it.
+ * |in| should be a pointer to a string containing the TLS-format signature.
+ * |in| will be advanced to the end of the signature if parsing succeeds.
+ * |len| should be the length of the signature in |in|.
+ * Returns the number of bytes parsed, or a negative integer if an error occurs.
+ * If an error occurs, the SCT's signature NID may be updated whilst the
+ * signature field itself remains unset.
+ */
 __owur int o2i_SCT_signature(SCT *sct, const unsigned char **in, size_t len);
 
 /*

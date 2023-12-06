@@ -39,7 +39,7 @@ const OPTIONS genpkey_options[] = {
     {"quiet", OPT_QUIET, '-', "Do not output status while generating keys"},
     {"pkeyopt", OPT_PKEYOPT, 's',
      "Set the public key algorithm option as opt:value"},
-     OPT_CONFIG_OPTION,
+    OPT_CONFIG_OPTION,
 
     OPT_SECTION("Output"),
     {"out", OPT_OUT, '>', "Output (private key) file"},
@@ -63,17 +63,18 @@ static const char *param_datatype_2name(unsigned int type, int *ishex)
     *ishex = 0;
 
     switch (type) {
-    case OSSL_PARAM_INTEGER: return "int";
-    case OSSL_PARAM_UNSIGNED_INTEGER: return "uint";
-    case OSSL_PARAM_REAL: return "float";
-    case OSSL_PARAM_OCTET_STRING: *ishex = 1; return "string";
-    case OSSL_PARAM_UTF8_STRING: return "string";
-    default:
-        return NULL;
+        case OSSL_PARAM_INTEGER: return "int";
+        case OSSL_PARAM_UNSIGNED_INTEGER: return "uint";
+        case OSSL_PARAM_REAL: return "float";
+        case OSSL_PARAM_OCTET_STRING: *ishex = 1; return "string";
+        case OSSL_PARAM_UTF8_STRING: return "string";
+        default:
+            return NULL;
     }
 }
 
-static void show_gen_pkeyopt(const char *algname, OSSL_LIB_CTX *libctx, const char *propq)
+static void show_gen_pkeyopt(const char *algname, OSSL_LIB_CTX *libctx,
+                             const char *propq)
 {
     EVP_PKEY_CTX *ctx = NULL;
     const OSSL_PARAM *params;
@@ -96,7 +97,8 @@ static void show_gen_pkeyopt(const char *algname, OSSL_LIB_CTX *libctx, const ch
         const char *name = param_datatype_2name(params[i].data_type, &ishex);
 
         if (name != NULL)
-            BIO_printf(bio_err, "    %s%s:%s\n", ishex ? "hex" : "", params[i].key, name);
+            BIO_printf(bio_err, "    %s%s:%s\n", ishex ? "hex" : "",
+                       params[i].key, name);
     }
 cleanup:
     EVP_PKEY_CTX_free(ctx);
@@ -126,68 +128,68 @@ int genpkey_main(int argc, char **argv)
         goto end;
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_EOF:
-        case OPT_ERR:
- opthelp:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto end;
-        case OPT_HELP:
-            ret = 0;
-            opt_help(genpkey_options);
-            show_gen_pkeyopt(algname, libctx, app_get0_propq());
-            goto end;
-        case OPT_OUTFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &outformat))
-                goto opthelp;
-            break;
-        case OPT_OUT:
-            outfile = opt_arg();
-            break;
-        case OPT_OUTPUBKEY:
-            outpubkeyfile = opt_arg();
-            break;
-        case OPT_PASS:
-            passarg = opt_arg();
-            break;
-        case OPT_ENGINE:
-            e = setup_engine(opt_arg(), 0);
-            break;
-        case OPT_PARAMFILE:
-            if (do_param == 1)
-                goto opthelp;
-            paramfile = opt_arg();
-            break;
-        case OPT_ALGORITHM:
-            algname = opt_arg();
-            break;
-        case OPT_PKEYOPT:
-            if (!sk_OPENSSL_STRING_push(keyopt, opt_arg()))
+            case OPT_EOF:
+            case OPT_ERR:
+opthelp:
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
                 goto end;
-            break;
-        case OPT_QUIET:
-            verbose = 0;
-            break;
-        case OPT_VERBOSE:
-            verbose = 1;
-            break;
-        case OPT_GENPARAM:
-            do_param = 1;
-            break;
-        case OPT_TEXT:
-            text = 1;
-            break;
-        case OPT_CIPHER:
-            ciphername = opt_unknown();
-            break;
-        case OPT_CONFIG:
-            conf = app_load_config_modules(opt_arg());
-            if (conf == NULL)
+            case OPT_HELP:
+                ret = 0;
+                opt_help(genpkey_options);
+                show_gen_pkeyopt(algname, libctx, app_get0_propq());
                 goto end;
-            break;
-        case OPT_PROV_CASES:
-            if (!opt_provider(o))
-                goto end;
-            break;
+            case OPT_OUTFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &outformat))
+                    goto opthelp;
+                break;
+            case OPT_OUT:
+                outfile = opt_arg();
+                break;
+            case OPT_OUTPUBKEY:
+                outpubkeyfile = opt_arg();
+                break;
+            case OPT_PASS:
+                passarg = opt_arg();
+                break;
+            case OPT_ENGINE:
+                e = setup_engine(opt_arg(), 0);
+                break;
+            case OPT_PARAMFILE:
+                if (do_param == 1)
+                    goto opthelp;
+                paramfile = opt_arg();
+                break;
+            case OPT_ALGORITHM:
+                algname = opt_arg();
+                break;
+            case OPT_PKEYOPT:
+                if (!sk_OPENSSL_STRING_push(keyopt, opt_arg()))
+                    goto end;
+                break;
+            case OPT_QUIET:
+                verbose = 0;
+                break;
+            case OPT_VERBOSE:
+                verbose = 1;
+                break;
+            case OPT_GENPARAM:
+                do_param = 1;
+                break;
+            case OPT_TEXT:
+                text = 1;
+                break;
+            case OPT_CIPHER:
+                ciphername = opt_unknown();
+                break;
+            case OPT_CONFIG:
+                conf = app_load_config_modules(opt_arg());
+                if (conf == NULL)
+                    goto end;
+                break;
+            case OPT_PROV_CASES:
+                if (!opt_provider(o))
+                    goto end;
+                break;
         }
     }
 
@@ -254,12 +256,12 @@ int genpkey_main(int argc, char **argv)
         assert(private);
         rv = PEM_write_bio_PrivateKey(out, pkey, cipher, NULL, 0, NULL, pass);
         if (rv > 0 && outpubkey != NULL)
-           rv = PEM_write_bio_PUBKEY(outpubkey, pkey);
+            rv = PEM_write_bio_PUBKEY(outpubkey, pkey);
     } else if (outformat == FORMAT_ASN1) {
         assert(private);
         rv = i2d_PrivateKey_bio(out, pkey);
         if (rv > 0 && outpubkey != NULL)
-           rv = i2d_PUBKEY_bio(outpubkey, pkey);
+            rv = i2d_PUBKEY_bio(outpubkey, pkey);
     } else {
         BIO_printf(bio_err, "Bad format specified for key\n");
         goto end;
@@ -284,7 +286,7 @@ int genpkey_main(int argc, char **argv)
         }
     }
 
- end:
+end:
     sk_OPENSSL_STRING_free(keyopt);
     if (ret != 0)
         ERR_print_errors(bio_err);
@@ -337,7 +339,7 @@ static int init_keygen_file(EVP_PKEY_CTX **pctx, const char *file, ENGINE *e,
     *pctx = ctx;
     return 1;
 
- err:
+err:
     BIO_puts(bio_err, "Error initializing context\n");
     ERR_print_errors(bio_err);
     EVP_PKEY_CTX_free(ctx);
@@ -377,7 +379,7 @@ int init_gen_str(EVP_PKEY_CTX **pctx,
     *pctx = ctx;
     return 1;
 
- err:
+err:
     BIO_printf(bio_err, "Error initializing %s context\n", algname);
     ERR_print_errors(bio_err);
     EVP_PKEY_CTX_free(ctx);

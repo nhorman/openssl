@@ -22,53 +22,53 @@
 
 static SRTP_PROTECTION_PROFILE srtp_known_profiles[] = {
     {
-     "SRTP_AES128_CM_SHA1_80",
-     SRTP_AES128_CM_SHA1_80,
-     },
+        "SRTP_AES128_CM_SHA1_80",
+        SRTP_AES128_CM_SHA1_80,
+    },
     {
-     "SRTP_AES128_CM_SHA1_32",
-     SRTP_AES128_CM_SHA1_32,
-     },
+        "SRTP_AES128_CM_SHA1_32",
+        SRTP_AES128_CM_SHA1_32,
+    },
     {
-     "SRTP_AEAD_AES_128_GCM",
-     SRTP_AEAD_AES_128_GCM,
-     },
+        "SRTP_AEAD_AES_128_GCM",
+        SRTP_AEAD_AES_128_GCM,
+    },
     {
-     "SRTP_AEAD_AES_256_GCM",
-     SRTP_AEAD_AES_256_GCM,
-     },
+        "SRTP_AEAD_AES_256_GCM",
+        SRTP_AEAD_AES_256_GCM,
+    },
     {
-     "SRTP_DOUBLE_AEAD_AES_128_GCM_AEAD_AES_128_GCM",
-     SRTP_DOUBLE_AEAD_AES_128_GCM_AEAD_AES_128_GCM,
-     },
+        "SRTP_DOUBLE_AEAD_AES_128_GCM_AEAD_AES_128_GCM",
+        SRTP_DOUBLE_AEAD_AES_128_GCM_AEAD_AES_128_GCM,
+    },
     {
-     "SRTP_DOUBLE_AEAD_AES_256_GCM_AEAD_AES_256_GCM",
-     SRTP_DOUBLE_AEAD_AES_256_GCM_AEAD_AES_256_GCM,
-     },
+        "SRTP_DOUBLE_AEAD_AES_256_GCM_AEAD_AES_256_GCM",
+        SRTP_DOUBLE_AEAD_AES_256_GCM_AEAD_AES_256_GCM,
+    },
     {
-     "SRTP_ARIA_128_CTR_HMAC_SHA1_80",
-     SRTP_ARIA_128_CTR_HMAC_SHA1_80,
-     },
+        "SRTP_ARIA_128_CTR_HMAC_SHA1_80",
+        SRTP_ARIA_128_CTR_HMAC_SHA1_80,
+    },
     {
-     "SRTP_ARIA_128_CTR_HMAC_SHA1_32",
-     SRTP_ARIA_128_CTR_HMAC_SHA1_32,
-     },
+        "SRTP_ARIA_128_CTR_HMAC_SHA1_32",
+        SRTP_ARIA_128_CTR_HMAC_SHA1_32,
+    },
     {
-     "SRTP_ARIA_256_CTR_HMAC_SHA1_80",
-     SRTP_ARIA_256_CTR_HMAC_SHA1_80,
-     },
+        "SRTP_ARIA_256_CTR_HMAC_SHA1_80",
+        SRTP_ARIA_256_CTR_HMAC_SHA1_80,
+    },
     {
-     "SRTP_ARIA_256_CTR_HMAC_SHA1_32",
-     SRTP_ARIA_256_CTR_HMAC_SHA1_32,
-     },
+        "SRTP_ARIA_256_CTR_HMAC_SHA1_32",
+        SRTP_ARIA_256_CTR_HMAC_SHA1_32,
+    },
     {
-     "SRTP_AEAD_ARIA_128_GCM",
-     SRTP_AEAD_ARIA_128_GCM,
-     },
+        "SRTP_AEAD_ARIA_128_GCM",
+        SRTP_AEAD_ARIA_128_GCM,
+    },
     {
-     "SRTP_AEAD_ARIA_256_GCM",
-     SRTP_AEAD_ARIA_256_GCM,
-     },
+        "SRTP_AEAD_ARIA_256_GCM",
+        SRTP_AEAD_ARIA_256_GCM,
+    },
     {0}
 };
 
@@ -133,7 +133,7 @@ static int ssl_ctx_make_profiles(const char *profiles_string,
     *out = profiles;
 
     return 0;
- err:
+err:
     sk_SRTP_PROTECTION_PROFILE_free(profiles);
     return 1;
 }

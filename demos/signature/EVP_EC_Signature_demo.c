@@ -63,7 +63,8 @@ static EVP_PKEY *get_key(OSSL_LIB_CTX *libctx, const char *propq, int public)
     (void)OSSL_DECODER_from_data(dctx, &data, &data_len);
     OSSL_DECODER_CTX_free(dctx);
     if (pkey == NULL)
-        fprintf(stderr, "Failed to load %s key.\n", public ? "public" : "private");
+        fprintf(stderr, "Failed to load %s key.\n",
+                public ? "public" : "private");
     return pkey;
 }
 
@@ -97,7 +98,7 @@ static int demo_sign(OSSL_LIB_CTX *libctx,  const char *sig_name,
      * sign provider.
      */
     if (!EVP_DigestSignInit_ex(sign_context, NULL, sig_name,
-                              libctx, NULL, priv_key, NULL)) {
+                               libctx, NULL, priv_key, NULL)) {
         fprintf(stderr, "EVP_DigestSignInit_ex failed.\n");
         goto cleanup;
     }
@@ -119,7 +120,8 @@ static int demo_sign(OSSL_LIB_CTX *libctx,  const char *sig_name,
         goto cleanup;
     }
     if (sig_len <= 0) {
-        fprintf(stderr, "EVP_DigestSignFinal returned invalid signature length.\n");
+        fprintf(stderr,
+                "EVP_DigestSignFinal returned invalid signature length.\n");
         goto cleanup;
     }
     sig_value = OPENSSL_malloc(sig_len);
@@ -172,7 +174,7 @@ static int demo_verify(OSSL_LIB_CTX *libctx, const char *sig_name,
     }
     /* Verify */
     if (!EVP_DigestVerifyInit_ex(verify_context, NULL, sig_name,
-                                libctx, NULL, pub_key, NULL)) {
+                                 libctx, NULL, pub_key, NULL)) {
         fprintf(stderr, "EVP_DigestVerifyInit failed.\n");
         goto cleanup;
     }

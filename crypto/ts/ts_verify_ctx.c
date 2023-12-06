@@ -138,7 +138,7 @@ TS_VERIFY_CTX *TS_REQ_to_TS_VERIFY_CTX(TS_REQ *req, TS_VERIFY_CTX *ctx)
         ret->flags &= ~TS_VFY_NONCE;
 
     return ret;
- err:
+err:
     if (ctx)
         TS_VERIFY_CTX_cleanup(ctx);
     else

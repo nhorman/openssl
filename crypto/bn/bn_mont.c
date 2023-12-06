@@ -79,7 +79,7 @@ int bn_mul_mont_fixed_top(BIGNUM *r, const BIGNUM *a, const BIGNUM *b,
         goto err;
 #endif
     ret = 1;
- err:
+err:
     BN_CTX_end(ctx);
     return ret;
 }
@@ -213,7 +213,7 @@ int bn_from_mont_fixed_top(BIGNUM *ret, const BIGNUM *a, BN_MONT_CTX *mont,
     }
     retn = 1;
     bn_check_top(ret);
- err:
+err:
     BN_CTX_end(ctx);
 #endif                          /* MONT_WORD */
     return retn;
@@ -401,7 +401,7 @@ int BN_MONT_CTX_set(BN_MONT_CTX *mont, const BIGNUM *mod, BN_CTX *ctx)
     mont->RR.flags |= BN_FLG_FIXED_TOP;
 
     ret = 1;
- err:
+err:
     BN_CTX_end(ctx);
     return ret;
 }

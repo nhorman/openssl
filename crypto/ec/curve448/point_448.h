@@ -114,8 +114,8 @@ ossl_curve448_scalar_decode_long(curve448_scalar_t out,
  * s (in): Deserialized scalar.
  */
 void
-ossl_curve448_scalar_encode(unsigned char ser[C448_SCALAR_BYTES],
-                            const curve448_scalar_t s);
+    ossl_curve448_scalar_encode(unsigned char ser[C448_SCALAR_BYTES],
+                                const curve448_scalar_t s);
 
 /*
  * Add two scalars. |a|, |b| and |out| may alias each other.
@@ -150,11 +150,11 @@ ossl_curve448_scalar_mul(curve448_scalar_t out,
                          const curve448_scalar_t a, const curve448_scalar_t b);
 
 /*
-* Halve a scalar.  |a| and |out| may alias each other.
-*
-* a (in): A scalar.
-* out (out): a/2.
-*/
+ * Halve a scalar.  |a| and |out| may alias each other.
+ *
+ * a (in): A scalar.
+ * out (out): a/2.
+ */
 void
 ossl_curve448_scalar_halve(curve448_scalar_t out, const curve448_scalar_t a);
 
@@ -248,8 +248,8 @@ ossl_x448_int(uint8_t out[X448_PUBLIC_BYTES],
  */
 void
 ossl_curve448_point_mul_by_ratio_and_encode_like_x448(
-                                        uint8_t out[X448_PUBLIC_BYTES],
-                                        const curve448_point_t p);
+    uint8_t out[X448_PUBLIC_BYTES],
+    const curve448_point_t p);
 
 /*
  * RFC 7748 Diffie-Hellman base point scalarmul.  This function uses a different

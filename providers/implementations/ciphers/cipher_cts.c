@@ -275,7 +275,8 @@ static size_t cts128_cs3_decrypt(PROV_CIPHER_CTX *ctx, const unsigned char *in,
      */
     memcpy(ct_mid.c, in + CTS_BLOCK_SIZE, residue);
     if (residue != CTS_BLOCK_SIZE)
-        memcpy(ct_mid.c + residue, pt_last.c + residue, CTS_BLOCK_SIZE - residue);
+        memcpy(ct_mid.c + residue, pt_last.c + residue,
+               CTS_BLOCK_SIZE - residue);
     /*
      * Restore the last partial ciphertext block.
      * Now that we have the cipher text of the second last block, apply
@@ -325,7 +326,8 @@ static size_t cts128_cs2_decrypt(PROV_CIPHER_CTX *ctx, const unsigned char *in,
     return cts128_cs3_decrypt(ctx, in, out, len);
 }
 
-int ossl_cipher_cbc_cts_block_update(void *vctx, unsigned char *out, size_t *outl,
+int ossl_cipher_cbc_cts_block_update(void *vctx, unsigned char *out,
+                                     size_t *outl,
                                      size_t outsize, const unsigned char *in,
                                      size_t inl)
 {
@@ -370,7 +372,8 @@ int ossl_cipher_cbc_cts_block_update(void *vctx, unsigned char *out, size_t *out
     return 1;
 }
 
-int ossl_cipher_cbc_cts_block_final(void *vctx, unsigned char *out, size_t *outl,
+int ossl_cipher_cbc_cts_block_final(void *vctx, unsigned char *out,
+                                    size_t *outl,
                                     size_t outsize)
 {
     *outl = 0;

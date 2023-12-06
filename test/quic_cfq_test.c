@@ -70,7 +70,8 @@ static int check(QUIC_CFQ *cfq)
     size_t i;
     uint32_t pn_space;
 
-    for (pn_space = QUIC_PN_SPACE_INITIAL; pn_space < QUIC_PN_SPACE_NUM; ++pn_space)
+    for (pn_space = QUIC_PN_SPACE_INITIAL; pn_space < QUIC_PN_SPACE_NUM;
+         ++pn_space)
         for (i = 0, item = ossl_quic_cfq_get_priority_head(cfq, pn_space);;
              ++i, item = ossl_quic_cfq_item_get_priority_next(item, pn_space)) {
 
@@ -135,7 +136,8 @@ static int test_cfq(void)
     if (!check(cfq))
         goto err;
 
-    for (pn_space = QUIC_PN_SPACE_INITIAL; pn_space < QUIC_PN_SPACE_NUM; ++pn_space)
+    for (pn_space = QUIC_PN_SPACE_INITIAL; pn_space < QUIC_PN_SPACE_NUM;
+         ++pn_space)
         for (item = ossl_quic_cfq_get_priority_head(cfq, pn_space);
              item != NULL; item = inext) {
             inext = ossl_quic_cfq_item_get_priority_next(item, pn_space);
@@ -143,11 +145,13 @@ static int test_cfq(void)
             ossl_quic_cfq_mark_tx(cfq, item);
         }
 
-    for (pn_space = QUIC_PN_SPACE_INITIAL; pn_space < QUIC_PN_SPACE_NUM; ++pn_space)
+    for (pn_space = QUIC_PN_SPACE_INITIAL; pn_space < QUIC_PN_SPACE_NUM;
+         ++pn_space)
         if (!TEST_ptr_null(ossl_quic_cfq_get_priority_head(cfq, pn_space)))
             goto err;
 
-    for (pn_space = QUIC_PN_SPACE_INITIAL; pn_space < QUIC_PN_SPACE_NUM; ++pn_space)
+    for (pn_space = QUIC_PN_SPACE_INITIAL; pn_space < QUIC_PN_SPACE_NUM;
+         ++pn_space)
         for (i = 0; i < OSSL_NELEM(items[0]); ++i)
             if (items[pn_space][i] != NULL)
                 ossl_quic_cfq_mark_lost(cfq, items[pn_space][i], UINT32_MAX);
@@ -155,12 +159,14 @@ static int test_cfq(void)
     if (!check(cfq))
         goto err;
 
-    for (pn_space = QUIC_PN_SPACE_INITIAL; pn_space < QUIC_PN_SPACE_NUM; ++pn_space)
+    for (pn_space = QUIC_PN_SPACE_INITIAL; pn_space < QUIC_PN_SPACE_NUM;
+         ++pn_space)
         for (i = 0; i < OSSL_NELEM(items[0]); ++i)
             if (items[pn_space][i] != NULL)
                 ossl_quic_cfq_release(cfq, items[pn_space][i]);
 
-    for (pn_space = QUIC_PN_SPACE_INITIAL; pn_space < QUIC_PN_SPACE_NUM; ++pn_space)
+    for (pn_space = QUIC_PN_SPACE_INITIAL; pn_space < QUIC_PN_SPACE_NUM;
+         ++pn_space)
         if (!TEST_ptr_null(ossl_quic_cfq_get_priority_head(cfq, pn_space)))
             goto err;
 

@@ -17,7 +17,8 @@
 # include "s390x_arch.h"
 #endif
 
-ECX_KEY *ossl_ecx_key_new(OSSL_LIB_CTX *libctx, ECX_KEY_TYPE type, int haspubkey,
+ECX_KEY *ossl_ecx_key_new(OSSL_LIB_CTX *libctx, ECX_KEY_TYPE type,
+                          int haspubkey,
                           const char *propq)
 {
     ECX_KEY *ret = OPENSSL_zalloc(sizeof(*ret));
@@ -28,18 +29,18 @@ ECX_KEY *ossl_ecx_key_new(OSSL_LIB_CTX *libctx, ECX_KEY_TYPE type, int haspubkey
     ret->libctx = libctx;
     ret->haspubkey = haspubkey;
     switch (type) {
-    case ECX_KEY_TYPE_X25519:
-        ret->keylen = X25519_KEYLEN;
-        break;
-    case ECX_KEY_TYPE_X448:
-        ret->keylen = X448_KEYLEN;
-        break;
-    case ECX_KEY_TYPE_ED25519:
-        ret->keylen = ED25519_KEYLEN;
-        break;
-    case ECX_KEY_TYPE_ED448:
-        ret->keylen = ED448_KEYLEN;
-        break;
+        case ECX_KEY_TYPE_X25519:
+            ret->keylen = X25519_KEYLEN;
+            break;
+        case ECX_KEY_TYPE_X448:
+            ret->keylen = X448_KEYLEN;
+            break;
+        case ECX_KEY_TYPE_ED25519:
+            ret->keylen = ED25519_KEYLEN;
+            break;
+        case ECX_KEY_TYPE_ED448:
+            ret->keylen = ED448_KEYLEN;
+            break;
     }
     ret->type = type;
 
@@ -105,17 +106,18 @@ unsigned char *ossl_ecx_key_allocate_privkey(ECX_KEY *key)
 }
 
 int ossl_ecx_compute_key(ECX_KEY *peer, ECX_KEY *priv, size_t keylen,
-                         unsigned char *secret, size_t *secretlen, size_t outlen)
+                         unsigned char *secret, size_t *secretlen,
+                         size_t outlen)
 {
     if (priv == NULL
-            || priv->privkey == NULL
-            || peer == NULL) {
+        || priv->privkey == NULL
+        || peer == NULL) {
         ERR_raise(ERR_LIB_PROV, PROV_R_MISSING_KEY);
         return 0;
     }
 
     if (!ossl_assert(keylen == X25519_KEYLEN
-            || keylen == X448_KEYLEN)) {
+                     || keylen == X448_KEYLEN)) {
         ERR_raise(ERR_LIB_PROV, PROV_R_INVALID_KEY_LENGTH);
         return 0;
     }
@@ -132,7 +134,7 @@ int ossl_ecx_compute_key(ECX_KEY *peer, ECX_KEY *priv, size_t keylen,
     if (keylen == X25519_KEYLEN) {
 #ifdef S390X_EC_ASM
         if (OPENSSL_s390xcap_P.pcc[1]
-                & S390X_CAPBIT(S390X_SCALAR_MULTIPLY_X25519)) {
+            & S390X_CAPBIT(S390X_SCALAR_MULTIPLY_X25519)) {
             if (s390x_x25519_mul(secret, peer->pubkey, priv->privkey) == 0) {
                 ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_DURING_DERIVATION);
                 return 0;
@@ -146,7 +148,7 @@ int ossl_ecx_compute_key(ECX_KEY *peer, ECX_KEY *priv, size_t keylen,
     } else {
 #ifdef S390X_EC_ASM
         if (OPENSSL_s390xcap_P.pcc[1]
-                & S390X_CAPBIT(S390X_SCALAR_MULTIPLY_X448)) {
+            & S390X_CAPBIT(S390X_SCALAR_MULTIPLY_X448)) {
             if (s390x_x448_mul(secret, peer->pubkey, priv->privkey) == 0) {
                 ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_DURING_DERIVATION);
                 return 0;

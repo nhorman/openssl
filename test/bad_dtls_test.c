@@ -73,7 +73,8 @@ static int do_PRF(const void *seed1, int seed1_len,
     /* No error handling. If it all screws up, the test will fail anyway */
     EVP_PKEY_derive_init(pctx);
     EVP_PKEY_CTX_set_tls1_prf_md(pctx, EVP_md5_sha1());
-    EVP_PKEY_CTX_set1_tls1_prf_secret(pctx, master_secret, sizeof(master_secret));
+    EVP_PKEY_CTX_set1_tls1_prf_secret(pctx, master_secret,
+                                      sizeof(master_secret));
     EVP_PKEY_CTX_add1_tls1_prf_seed(pctx, seed1, seed1_len);
     EVP_PKEY_CTX_add1_tls1_prf_seed(pctx, seed2, seed2_len);
     EVP_PKEY_CTX_add1_tls1_prf_seed(pctx, seed3, seed3_len);
@@ -307,7 +308,7 @@ static int send_record(BIO *rbio, unsigned char type, uint64_t seqnr,
 
     /* Append HMAC to data */
     if (!TEST_ptr(hmac = EVP_MAC_fetch(NULL, "HMAC", NULL))
-            || !TEST_ptr(ctx = EVP_MAC_CTX_new(hmac)))
+        || !TEST_ptr(ctx = EVP_MAC_CTX_new(hmac)))
         goto end;
     params[0] = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_DIGEST,
                                                  "SHA1", 0);
@@ -315,13 +316,13 @@ static int send_record(BIO *rbio, unsigned char type, uint64_t seqnr,
     lenbytes[0] = (unsigned char)(len >> 8);
     lenbytes[1] = (unsigned char)(len);
     if (!EVP_MAC_init(ctx, mac_key, 20, params)
-            || !EVP_MAC_update(ctx, epoch, 2)
-            || !EVP_MAC_update(ctx, seq, 6)
-            || !EVP_MAC_update(ctx, &type, 1)
-            || !EVP_MAC_update(ctx, ver, 2)      /* Version */
-            || !EVP_MAC_update(ctx, lenbytes, 2) /* Length */
-            || !EVP_MAC_update(ctx, enc, len)    /* Finally the data itself */
-            || !EVP_MAC_final(ctx, enc + len, NULL, SHA_DIGEST_LENGTH))
+        || !EVP_MAC_update(ctx, epoch, 2)
+        || !EVP_MAC_update(ctx, seq, 6)
+        || !EVP_MAC_update(ctx, &type, 1)
+        || !EVP_MAC_update(ctx, ver, 2)          /* Version */
+        || !EVP_MAC_update(ctx, lenbytes, 2)     /* Length */
+        || !EVP_MAC_update(ctx, enc, len)        /* Finally the data itself */
+        || !EVP_MAC_final(ctx, enc + len, NULL, SHA_DIGEST_LENGTH))
         goto end;
 
     /* Append padding bytes */
@@ -332,10 +333,10 @@ static int send_record(BIO *rbio, unsigned char type, uint64_t seqnr,
 
     /* Generate IV, and encrypt */
     if (!TEST_int_gt(RAND_bytes(iv, sizeof(iv)), 0)
-            || !TEST_ptr(enc_ctx = EVP_CIPHER_CTX_new())
-            || !TEST_true(EVP_CipherInit_ex(enc_ctx, EVP_aes_128_cbc(), NULL,
-                                            enc_key, iv, 1))
-            || !TEST_int_ge(EVP_Cipher(enc_ctx, enc, enc, len), 0))
+        || !TEST_ptr(enc_ctx = EVP_CIPHER_CTX_new())
+        || !TEST_true(EVP_CipherInit_ex(enc_ctx, EVP_aes_128_cbc(), NULL,
+                                        enc_key, iv, 1))
+        || !TEST_int_ge(EVP_Cipher(enc_ctx, enc, enc, len), 0))
         goto end;
 
     /* Finally write header (from fragmented variables), IV and encrypted record */
@@ -350,7 +351,7 @@ static int send_record(BIO *rbio, unsigned char type, uint64_t seqnr,
     BIO_write(rbio, iv, sizeof(iv));
     BIO_write(rbio, enc, len);
     ret = 1;
- end:
+end:
     EVP_MAC_free(hmac);
     EVP_MAC_CTX_free(ctx);
     EVP_CIPHER_CTX_free(enc_ctx);
@@ -441,8 +442,8 @@ static int validate_ccs(BIO *wbio)
     return 1;
 }
 
-#define NODROP(x) { x##UL, 0 }
-#define DROP(x)   { x##UL, 1 }
+#define NODROP(x) { x ## UL, 0 }
+#define DROP(x)   { x ## UL, 1 }
 
 static struct {
     uint64_t seq;
@@ -451,8 +452,10 @@ static struct {
     NODROP(1), NODROP(3), NODROP(2),
     NODROP(0x1234), NODROP(0x1230), NODROP(0x1235),
     NODROP(0xffff), NODROP(0x10001), NODROP(0xfffe), NODROP(0x10000),
-    DROP(0x10001), DROP(0xff), NODROP(0x100000), NODROP(0x800000), NODROP(0x7fffe1),
-    NODROP(0xffffff), NODROP(0x1000000), NODROP(0xfffffe), DROP(0xffffff), NODROP(0x1000010),
+    DROP(0x10001), DROP(0xff), NODROP(0x100000), NODROP(0x800000), NODROP(
+        0x7fffe1),
+    NODROP(0xffffff), NODROP(0x1000000), NODROP(0xfffffe), DROP(0xffffff),
+    NODROP(0x1000010),
     NODROP(0xfffffd), NODROP(0x1000011), DROP(0x12), NODROP(0x1000012),
     NODROP(0x1ffffff), NODROP(0x2000000), DROP(0x1ff00fe), NODROP(0x2000001),
     NODROP(0x20fffff), NODROP(0x2105500), DROP(0x20ffffe), NODROP(0x21054ff),
@@ -486,23 +489,23 @@ static int test_bad_dtls(void)
 
     handshake_md = EVP_MD_CTX_new();
     if (!TEST_ptr(handshake_md)
-            || !TEST_true(EVP_DigestInit_ex(handshake_md, EVP_md5_sha1(),
-                                            NULL)))
+        || !TEST_true(EVP_DigestInit_ex(handshake_md, EVP_md5_sha1(),
+                                        NULL)))
         goto end;
 
     ctx = SSL_CTX_new(DTLS_client_method());
     if (!TEST_ptr(ctx)
-            || !TEST_true(SSL_CTX_set_min_proto_version(ctx, DTLS1_BAD_VER))
-            || !TEST_true(SSL_CTX_set_max_proto_version(ctx, DTLS1_BAD_VER))
-            || !TEST_true(SSL_CTX_set_options(ctx,
-                                              SSL_OP_LEGACY_SERVER_CONNECT))
-            || !TEST_true(SSL_CTX_set_cipher_list(ctx, "AES128-SHA")))
+        || !TEST_true(SSL_CTX_set_min_proto_version(ctx, DTLS1_BAD_VER))
+        || !TEST_true(SSL_CTX_set_max_proto_version(ctx, DTLS1_BAD_VER))
+        || !TEST_true(SSL_CTX_set_options(ctx,
+                                          SSL_OP_LEGACY_SERVER_CONNECT))
+        || !TEST_true(SSL_CTX_set_cipher_list(ctx, "AES128-SHA")))
         goto end;
 
     SSL_CTX_set_security_level(ctx, 0);
     con = SSL_new(ctx);
     if (!TEST_ptr(con)
-            || !TEST_true(SSL_set_session(con, sess)))
+        || !TEST_true(SSL_set_session(con, sess)))
         goto end;
     SSL_SESSION_free(sess);
 
@@ -510,7 +513,7 @@ static int test_bad_dtls(void)
     wbio = BIO_new(BIO_s_mem());
 
     if (!TEST_ptr(rbio)
-            || !TEST_ptr(wbio))
+        || !TEST_ptr(wbio))
         goto end;
 
     SSL_set_bio(con, rbio, wbio);
@@ -534,27 +537,27 @@ static int test_bad_dtls(void)
     /* Send initial ClientHello */
     ret = SSL_do_handshake(con);
     if (!TEST_int_le(ret, 0)
-            || !TEST_int_eq(SSL_get_error(con, ret), SSL_ERROR_WANT_READ)
-            || !TEST_int_eq(validate_client_hello(wbio), 1)
-            || !TEST_true(send_hello_verify(rbio)))
+        || !TEST_int_eq(SSL_get_error(con, ret), SSL_ERROR_WANT_READ)
+        || !TEST_int_eq(validate_client_hello(wbio), 1)
+        || !TEST_true(send_hello_verify(rbio)))
         goto end;
 
     ret = SSL_do_handshake(con);
     if (!TEST_int_le(ret, 0)
-            || !TEST_int_eq(SSL_get_error(con, ret), SSL_ERROR_WANT_READ)
-            || !TEST_int_eq(validate_client_hello(wbio), 2)
-            || !TEST_true(send_server_hello(rbio)))
+        || !TEST_int_eq(SSL_get_error(con, ret), SSL_ERROR_WANT_READ)
+        || !TEST_int_eq(validate_client_hello(wbio), 2)
+        || !TEST_true(send_server_hello(rbio)))
         goto end;
 
     ret = SSL_do_handshake(con);
     if (!TEST_int_le(ret, 0)
-            || !TEST_int_eq(SSL_get_error(con, ret), SSL_ERROR_WANT_READ)
-            || !TEST_true(send_finished(con, rbio)))
+        || !TEST_int_eq(SSL_get_error(con, ret), SSL_ERROR_WANT_READ)
+        || !TEST_true(send_finished(con, rbio)))
         goto end;
 
     ret = SSL_do_handshake(con);
     if (!TEST_int_gt(ret, 0)
-            || !TEST_true(validate_ccs(wbio)))
+        || !TEST_true(validate_ccs(wbio)))
         goto end;
 
     /* While we're here and crafting packets by hand, we might as well do a
@@ -568,7 +571,8 @@ static int test_bad_dtls(void)
         if (!TEST_true(send_record(rbio, SSL3_RT_APPLICATION_DATA, tests[i].seq,
                                    &tests[i].seq, sizeof(uint64_t)))) {
             TEST_error("Failed to send data seq #0x%x%08x (%d)\n",
-                       (unsigned int)(tests[i].seq >> 32), (unsigned int)tests[i].seq, i);
+                       (unsigned int)(tests[i].seq >> 32),
+                       (unsigned int)tests[i].seq, i);
             goto end;
         }
 
@@ -578,7 +582,8 @@ static int test_bad_dtls(void)
         ret = SSL_read(con, recv_buf, 2 * sizeof(uint64_t));
         if (!TEST_int_eq(ret, (int)sizeof(uint64_t))) {
             TEST_error("SSL_read failed or wrong size on seq#0x%x%08x (%d)\n",
-                       (unsigned int)(tests[i].seq >> 32), (unsigned int)tests[i].seq, i);
+                       (unsigned int)(tests[i].seq >> 32),
+                       (unsigned int)tests[i].seq, i);
             goto end;
         }
         if (!TEST_true(recv_buf[0] == tests[i].seq))
@@ -591,7 +596,7 @@ static int test_bad_dtls(void)
 
     testresult = 1;
 
- end:
+end:
     BIO_free(rbio);
     BIO_free(wbio);
     SSL_free(con);

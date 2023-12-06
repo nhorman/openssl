@@ -189,7 +189,8 @@ int ossl_rsa_fips186_4_gen_prob_primes(RSA *rsa, RSA_ACVP_TEST *test,
                                        int nbits, const BIGNUM *e, BN_CTX *ctx,
                                        BN_GENCB *cb);
 
-int ossl_rsa_padding_add_PKCS1_type_2_ex(OSSL_LIB_CTX *libctx, unsigned char *to,
+int ossl_rsa_padding_add_PKCS1_type_2_ex(OSSL_LIB_CTX *libctx,
+                                         unsigned char *to,
                                          int tlen, const unsigned char *from,
                                          int flen);
 

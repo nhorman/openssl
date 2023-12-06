@@ -262,7 +262,7 @@ static int err_load_strings(const ERR_STRING_DATA *str)
         return 0;
     for (; str->error; str++)
         (void)lh_ERR_STRING_DATA_insert(int_error_hash,
-                                       (ERR_STRING_DATA *)str);
+                                        (ERR_STRING_DATA *)str);
     CRYPTO_THREAD_unlock(err_string_lock);
     return 1;
 }
@@ -695,7 +695,7 @@ ERR_STATE *ossl_err_get_state_int(void)
         }
 
         if (!ossl_init_thread_start(NULL, NULL, err_delete_thread_state)
-                || !CRYPTO_THREAD_set_local(&err_thread_local, state)) {
+            || !CRYPTO_THREAD_set_local(&err_thread_local, state)) {
             OSSL_ERR_STATE_free(state);
             CRYPTO_THREAD_set_local(&err_thread_local, NULL);
             return NULL;
@@ -835,7 +835,7 @@ void ERR_add_error_vdata(int num, va_list args)
      * Otherwise, allocate a small new buffer.
      */
     if ((es->err_data_flags[i] & flags) == flags
-            && ossl_assert(es->err_data[i] != NULL)) {
+        && ossl_assert(es->err_data[i] != NULL)) {
         str = es->err_data[i];
         size = es->err_data_size[i];
 

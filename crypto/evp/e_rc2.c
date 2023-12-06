@@ -51,7 +51,7 @@ IMPLEMENT_BLOCK_CIPHER(rc2, ks, RC2, EVP_RC2_KEY, NID_rc2,
 # define RC2_128_MAGIC   0x3a
 static const EVP_CIPHER r2_64_cbc_cipher = {
     NID_rc2_64_cbc,
-    8, 8 /* 64 bit */ , 8,
+    8, 8 /* 64 bit */, 8,
     EVP_CIPH_CBC_MODE | EVP_CIPH_VARIABLE_LENGTH | EVP_CIPH_CTRL_INIT,
     EVP_ORIG_GLOBAL,
     rc2_init_key,
@@ -66,7 +66,7 @@ static const EVP_CIPHER r2_64_cbc_cipher = {
 
 static const EVP_CIPHER r2_40_cbc_cipher = {
     NID_rc2_40_cbc,
-    8, 5 /* 40 bit */ , 8,
+    8, 5 /* 40 bit */, 8,
     EVP_CIPH_CBC_MODE | EVP_CIPH_VARIABLE_LENGTH | EVP_CIPH_CTRL_INIT,
     EVP_ORIG_GLOBAL,
     rc2_init_key,
@@ -148,7 +148,7 @@ static int rc2_get_asn1_type_and_iv(EVP_CIPHER_CTX *c, ASN1_TYPE *type)
             return -1;
         if (EVP_CIPHER_CTX_ctrl(c, EVP_CTRL_SET_RC2_KEY_BITS, key_bits,
                                 NULL) <= 0
-                || EVP_CIPHER_CTX_set_key_length(c, key_bits / 8) <= 0)
+            || EVP_CIPHER_CTX_set_key_length(c, key_bits / 8) <= 0)
             return -1;
     }
     return i;
@@ -170,28 +170,28 @@ static int rc2_set_asn1_type_and_iv(EVP_CIPHER_CTX *c, ASN1_TYPE *type)
 static int rc2_ctrl(EVP_CIPHER_CTX *c, int type, int arg, void *ptr)
 {
     switch (type) {
-    case EVP_CTRL_INIT:
-        data(c)->key_bits = EVP_CIPHER_CTX_get_key_length(c) * 8;
-        return 1;
-
-    case EVP_CTRL_GET_RC2_KEY_BITS:
-        *(int *)ptr = data(c)->key_bits;
-        return 1;
-
-    case EVP_CTRL_SET_RC2_KEY_BITS:
-        if (arg > 0) {
-            data(c)->key_bits = arg;
+        case EVP_CTRL_INIT:
+            data(c)->key_bits = EVP_CIPHER_CTX_get_key_length(c) * 8;
             return 1;
-        }
-        return 0;
+
+        case EVP_CTRL_GET_RC2_KEY_BITS:
+            *(int *)ptr = data(c)->key_bits;
+            return 1;
+
+        case EVP_CTRL_SET_RC2_KEY_BITS:
+            if (arg > 0) {
+                data(c)->key_bits = arg;
+                return 1;
+            }
+            return 0;
 # ifdef PBE_PRF_TEST
-    case EVP_CTRL_PBE_PRF_NID:
-        *(int *)ptr = NID_hmacWithMD5;
-        return 1;
+        case EVP_CTRL_PBE_PRF_NID:
+            *(int *)ptr = NID_hmacWithMD5;
+            return 1;
 # endif
 
-    default:
-        return -1;
+        default:
+            return -1;
     }
 }
 

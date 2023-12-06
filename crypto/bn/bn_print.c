@@ -49,7 +49,7 @@ int BN_print(BIO *bp, const BIGNUM *a)
         }
     }
     ret = 1;
- end:
+end:
     return ret;
 }
 

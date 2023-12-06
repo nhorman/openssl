@@ -53,8 +53,10 @@
 #define RightRotate(x, s) ( ((x) >> (s)) + ((x) << (32 - s)) )
 #define LeftRotate(x, s)  ( ((x) << (s)) + ((x) >> (32 - s)) )
 
-#define GETU32(p)   (((u32)(p)[0] << 24) ^ ((u32)(p)[1] << 16) ^ ((u32)(p)[2] <<  8) ^ ((u32)(p)[3]))
-#define PUTU32(p,v) ((p)[0] = (u8)((v) >> 24), (p)[1] = (u8)((v) >> 16), (p)[2] = (u8)((v) >>  8), (p)[3] = (u8)(v))
+#define GETU32(p)   (((u32)(p)[0] << \
+    24) ^ ((u32)(p)[1] << 16) ^ ((u32)(p)[2] <<  8) ^ ((u32)(p)[3]))
+#define PUTU32(p,v) ((p)[0] = (u8)((v) >> 24), (p)[1] = (u8)((v) >> 16), \
+                     (p)[2] = (u8)((v) >>  8), (p)[3] = (u8)(v))
 
 /* S-box data */
 #define SBOX1_1110 Camellia_SBOX[0]
@@ -250,24 +252,24 @@ static const u32 SIGMA[] = {
  * ~16 registers. For platforms with less registers [well, x86 to be
  * specific] assembler version should be/is provided anyway...
  */
-#define Camellia_Feistel(_s0,_s1,_s2,_s3,_key) do {\
-        register u32 _t0,_t1,_t2,_t3;\
+#define Camellia_Feistel(_s0,_s1,_s2,_s3,_key) do { \
+            register u32 _t0,_t1,_t2,_t3; \
 \
-        _t0  = _s0 ^ (_key)[0];\
-        _t3  = SBOX4_4404[_t0&0xff];\
-        _t1  = _s1 ^ (_key)[1];\
-        _t3 ^= SBOX3_3033[(_t0 >> 8)&0xff];\
-        _t2  = SBOX1_1110[_t1&0xff];\
-        _t3 ^= SBOX2_0222[(_t0 >> 16)&0xff];\
-        _t2 ^= SBOX4_4404[(_t1 >> 8)&0xff];\
-        _t3 ^= SBOX1_1110[(_t0 >> 24)];\
-        _t2 ^= _t3;\
-        _t3  = RightRotate(_t3,8);\
-        _t2 ^= SBOX3_3033[(_t1 >> 16)&0xff];\
-        _s3 ^= _t3;\
-        _t2 ^= SBOX2_0222[(_t1 >> 24)];\
-        _s2 ^= _t2; \
-        _s3 ^= _t2;\
+            _t0  = _s0 ^ (_key)[0]; \
+            _t3  = SBOX4_4404[_t0&0xff]; \
+            _t1  = _s1 ^ (_key)[1]; \
+            _t3 ^= SBOX3_3033[(_t0 >> 8)&0xff]; \
+            _t2  = SBOX1_1110[_t1&0xff]; \
+            _t3 ^= SBOX2_0222[(_t0 >> 16)&0xff]; \
+            _t2 ^= SBOX4_4404[(_t1 >> 8)&0xff]; \
+            _t3 ^= SBOX1_1110[(_t0 >> 24)]; \
+            _t2 ^= _t3; \
+            _t3  = RightRotate(_t3,8); \
+            _t2 ^= SBOX3_3033[(_t1 >> 16)&0xff]; \
+            _s3 ^= _t3; \
+            _t2 ^= SBOX2_0222[(_t1 >> 24)]; \
+            _s2 ^= _t2; \
+            _s3 ^= _t2; \
 } while(0)
 
 /*
@@ -275,12 +277,12 @@ static const u32 SIGMA[] = {
  * of bits are achieved by "rotating" order of s-elements and
  * adjusting n accordingly, e.g. RotLeft128(s1,s2,s3,s0,n-32).
  */
-#define RotLeft128(_s0,_s1,_s2,_s3,_n) do {\
-        u32 _t0=_s0>>(32-_n);\
-        _s0 = (_s0<<_n) | (_s1>>(32-_n));\
-        _s1 = (_s1<<_n) | (_s2>>(32-_n));\
-        _s2 = (_s2<<_n) | (_s3>>(32-_n));\
-        _s3 = (_s3<<_n) | _t0;\
+#define RotLeft128(_s0,_s1,_s2,_s3,_n) do { \
+            u32 _t0=_s0>>(32-_n); \
+            _s0 = (_s0<<_n) | (_s1>>(32-_n)); \
+            _s1 = (_s1<<_n) | (_s2>>(32-_n)); \
+            _s2 = (_s2<<_n) | (_s3>>(32-_n)); \
+            _s3 = (_s3<<_n) | _t0; \
 } while (0)
 
 int Camellia_Ekeygen(int keyBitLength, const u8 *rawKey, KEY_TABLE_TYPE k)

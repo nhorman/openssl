@@ -94,8 +94,8 @@ static int test_decode(void)
     /* Positive tests */
     pder = t_dsa_sig;
     if (ossl_decode_der_dsa_sig(r, s, &pder, sizeof(t_dsa_sig)) == 0
-            || !TEST_ptr_eq(pder, (t_dsa_sig + sizeof(t_dsa_sig)))
-            || !TEST_BN_eq_word(r, 1) || !TEST_BN_eq_word(s, 2)) {
+        || !TEST_ptr_eq(pder, (t_dsa_sig + sizeof(t_dsa_sig)))
+        || !TEST_BN_eq_word(r, 1) || !TEST_BN_eq_word(s, 2)) {
         TEST_info("asn1_dsa test_decode: t_dsa_sig failed");
         goto fail;
     }
@@ -104,9 +104,9 @@ static int test_decode(void)
     BN_clear(s);
     pder = t_dsa_sig_extra;
     if (ossl_decode_der_dsa_sig(r, s, &pder, sizeof(t_dsa_sig_extra)) == 0
-            || !TEST_ptr_eq(pder,
-                            (t_dsa_sig_extra + sizeof(t_dsa_sig_extra) - 2))
-            || !TEST_BN_eq_word(r, 1) || !TEST_BN_eq_word(s, 2)) {
+        || !TEST_ptr_eq(pder,
+                        (t_dsa_sig_extra + sizeof(t_dsa_sig_extra) - 2))
+        || !TEST_BN_eq_word(r, 1) || !TEST_BN_eq_word(s, 2)) {
         TEST_info("asn1_dsa test_decode: t_dsa_sig_extra failed");
         goto fail;
     }
@@ -115,8 +115,8 @@ static int test_decode(void)
     BN_clear(s);
     pder = t_dsa_sig_msb;
     if (ossl_decode_der_dsa_sig(r, s, &pder, sizeof(t_dsa_sig_msb)) == 0
-            || !TEST_ptr_eq(pder, (t_dsa_sig_msb + sizeof(t_dsa_sig_msb)))
-            || !TEST_BN_eq_word(r, 0x81) || !TEST_BN_eq_word(s, 0x82)) {
+        || !TEST_ptr_eq(pder, (t_dsa_sig_msb + sizeof(t_dsa_sig_msb)))
+        || !TEST_BN_eq_word(r, 0x81) || !TEST_BN_eq_word(s, 0x82)) {
         TEST_info("asn1_dsa test_decode: t_dsa_sig_msb failed");
         goto fail;
     }
@@ -125,8 +125,8 @@ static int test_decode(void)
     BN_clear(s);
     pder = t_dsa_sig_two;
     if (ossl_decode_der_dsa_sig(r, s, &pder, sizeof(t_dsa_sig_two)) == 0
-            || !TEST_ptr_eq(pder, (t_dsa_sig_two + sizeof(t_dsa_sig_two)))
-            || !TEST_BN_eq_word(r, 0x100) || !TEST_BN_eq_word(s, 0x200)) {
+        || !TEST_ptr_eq(pder, (t_dsa_sig_two + sizeof(t_dsa_sig_two)))
+        || !TEST_BN_eq_word(r, 0x100) || !TEST_BN_eq_word(s, 0x200)) {
         TEST_info("asn1_dsa test_decode: t_dsa_sig_two failed");
         goto fail;
     }

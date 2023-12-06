@@ -91,7 +91,7 @@ int FuzzerTestOneInput(const uint8_t *buf, size_t len)
         putchar('\n');
     }
 
- done:
+done:
     OPENSSL_assert(success);
     BN_free(b1);
     BN_free(b2);

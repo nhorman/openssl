@@ -124,23 +124,23 @@ static int template_public_test(int tstid)
         goto err;
 
     switch (tstid) {
-    case 0:
-        params = params_blt;
-        break;
-    case 1:
-        params = OSSL_PARAM_merge(params_blt, params_empty);
-        break;
-    case 2:
-        params = OSSL_PARAM_dup(params_blt);
-        break;
-    case 3:
-        p1 = OSSL_PARAM_merge(params_blt, params_empty);
-        params = OSSL_PARAM_dup(p1);
-        break;
-    default:
-        p1 = OSSL_PARAM_dup(params_blt);
-        params = OSSL_PARAM_merge(p1, params_empty);
-        break;
+        case 0:
+            params = params_blt;
+            break;
+        case 1:
+            params = OSSL_PARAM_merge(params_blt, params_empty);
+            break;
+        case 2:
+            params = OSSL_PARAM_dup(params_blt);
+            break;
+        case 3:
+            p1 = OSSL_PARAM_merge(params_blt, params_empty);
+            params = OSSL_PARAM_dup(p1);
+            break;
+        default:
+            p1 = OSSL_PARAM_dup(params_blt);
+            params = OSSL_PARAM_merge(p1, params_empty);
+            break;
     }
     /* Check int */
     if (!TEST_ptr(p = OSSL_PARAM_locate(params, "i"))
@@ -249,8 +249,8 @@ static int template_private_test(int tstid)
     int res = 0;
 
     if (!TEST_ptr(data1 = OPENSSL_secure_malloc(data1_size))
-            || !TEST_ptr(data2 = OPENSSL_secure_malloc(data2_size))
-            || !TEST_ptr(bld = OSSL_PARAM_BLD_new()))
+        || !TEST_ptr(data2 = OPENSSL_secure_malloc(data2_size))
+        || !TEST_ptr(bld = OSSL_PARAM_BLD_new()))
         goto err;
 
     for (j = 0; j < data1_num; j++)
@@ -279,23 +279,23 @@ static int template_private_test(int tstid)
         || !TEST_ptr(params_blt = OSSL_PARAM_BLD_to_param(bld)))
         goto err;
     switch (tstid) {
-    case 0:
-        params = params_blt;
-        break;
-    case 1:
-        params = OSSL_PARAM_merge(params_blt, params_empty);
-        break;
-    case 2:
-        params = OSSL_PARAM_dup(params_blt);
-        break;
-    case 3:
-        p1 = OSSL_PARAM_merge(params_blt, params_empty);
-        params = OSSL_PARAM_dup(p1);
-        break;
-    default:
-        p1 = OSSL_PARAM_dup(params_blt);
-        params = OSSL_PARAM_merge(p1, params_empty);
-        break;
+        case 0:
+            params = params_blt;
+            break;
+        case 1:
+            params = OSSL_PARAM_merge(params_blt, params_empty);
+            break;
+        case 2:
+            params = OSSL_PARAM_dup(params_blt);
+            break;
+        case 3:
+            p1 = OSSL_PARAM_merge(params_blt, params_empty);
+            params = OSSL_PARAM_dup(p1);
+            break;
+        default:
+            p1 = OSSL_PARAM_dup(params_blt);
+            params = OSSL_PARAM_merge(p1, params_empty);
+            break;
     }
     /* Check unsigned int */
     if (!TEST_ptr(p = OSSL_PARAM_locate(params, "i"))

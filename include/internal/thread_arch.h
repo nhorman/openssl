@@ -66,7 +66,8 @@ typedef CRYPTO_THREAD_RETVAL (*CRYPTO_THREAD_ROUTINE_CB)(void *,
 # define CRYPTO_THREAD_JOINED     (1UL << 2)
 
 # define CRYPTO_THREAD_GET_STATE(THREAD, FLAG) ((THREAD)->state & (FLAG))
-# define CRYPTO_THREAD_GET_ERROR(THREAD, FLAG) (((THREAD)->state >> 16) & (FLAG))
+# define CRYPTO_THREAD_GET_ERROR(THREAD, \
+                                 FLAG) (((THREAD)->state >> 16) & (FLAG))
 
 typedef struct crypto_thread_st {
     uint32_t state;
@@ -85,24 +86,24 @@ typedef struct crypto_thread_st {
 # if defined(OPENSSL_THREADS)
 
 #  define CRYPTO_THREAD_UNSET_STATE(THREAD, FLAG)                       \
-    do {                                                                \
-        (THREAD)->state &= ~(FLAG);                                     \
-    } while ((void)0, 0)
+        do {                                                                \
+            (THREAD)->state &= ~(FLAG);                                     \
+        } while ((void)0, 0)
 
 #  define CRYPTO_THREAD_SET_STATE(THREAD, FLAG)                         \
-    do {                                                                \
-        (THREAD)->state |= (FLAG);                                      \
-    } while ((void)0, 0)
+        do {                                                                \
+            (THREAD)->state |= (FLAG);                                      \
+        } while ((void)0, 0)
 
 #  define CRYPTO_THREAD_SET_ERROR(THREAD, FLAG)                         \
-    do {                                                                \
-        (THREAD)->state |= ((FLAG) << 16);                              \
-    } while ((void)0, 0)
+        do {                                                                \
+            (THREAD)->state |= ((FLAG) << 16);                              \
+        } while ((void)0, 0)
 
 #  define CRYPTO_THREAD_UNSET_ERROR(THREAD, FLAG)                       \
-    do {                                                                \
-        (THREAD)->state &= ~((FLAG) << 16);                             \
-    } while ((void)0, 0)
+        do {                                                                \
+            (THREAD)->state &= ~((FLAG) << 16);                             \
+        } while ((void)0, 0)
 
 # else
 
@@ -114,10 +115,10 @@ typedef struct crypto_thread_st {
 # endif /* defined(OPENSSL_THREADS) */
 
 CRYPTO_THREAD * ossl_crypto_thread_native_start(CRYPTO_THREAD_ROUTINE routine,
-                                           void *data, int joinable);
+                                                void *data, int joinable);
 int ossl_crypto_thread_native_spawn(CRYPTO_THREAD *thread);
 int ossl_crypto_thread_native_join(CRYPTO_THREAD *thread,
-                              CRYPTO_THREAD_RETVAL *retval);
+                                   CRYPTO_THREAD_RETVAL *retval);
 int ossl_crypto_thread_native_perform_join(CRYPTO_THREAD *thread,
                                            CRYPTO_THREAD_RETVAL *retval);
 int ossl_crypto_thread_native_exit(void);

@@ -21,11 +21,11 @@
 /* PKCS#5 scrypt password based encryption structures */
 
 ASN1_SEQUENCE(SCRYPT_PARAMS) = {
-        ASN1_SIMPLE(SCRYPT_PARAMS, salt, ASN1_OCTET_STRING),
-        ASN1_SIMPLE(SCRYPT_PARAMS, costParameter, ASN1_INTEGER),
-        ASN1_SIMPLE(SCRYPT_PARAMS, blockSize, ASN1_INTEGER),
-        ASN1_SIMPLE(SCRYPT_PARAMS, parallelizationParameter, ASN1_INTEGER),
-        ASN1_OPT(SCRYPT_PARAMS, keyLength, ASN1_INTEGER),
+    ASN1_SIMPLE(SCRYPT_PARAMS, salt, ASN1_OCTET_STRING),
+    ASN1_SIMPLE(SCRYPT_PARAMS, costParameter, ASN1_INTEGER),
+    ASN1_SIMPLE(SCRYPT_PARAMS, blockSize, ASN1_INTEGER),
+    ASN1_SIMPLE(SCRYPT_PARAMS, parallelizationParameter, ASN1_INTEGER),
+    ASN1_OPT(SCRYPT_PARAMS, keyLength, ASN1_INTEGER),
 } ASN1_SEQUENCE_END(SCRYPT_PARAMS)
 
 IMPLEMENT_ASN1_FUNCTIONS(SCRYPT_PARAMS)
@@ -145,7 +145,7 @@ X509_ALGOR *PKCS5_pbe2_set_scrypt(const EVP_CIPHER *cipher,
 
     return ret;
 
- err:
+err:
     PBE2PARAM_free(pbe2);
     X509_ALGOR_free(ret);
     EVP_CIPHER_CTX_free(ctx);
@@ -227,7 +227,7 @@ static X509_ALGOR *pkcs5_scrypt_set(const unsigned char *salt, size_t saltlen,
     SCRYPT_PARAMS_free(sparam);
     return keyfunc;
 
- err:
+err:
     SCRYPT_PARAMS_free(sparam);
     X509_ALGOR_free(keyfunc);
     return NULL;
@@ -235,7 +235,8 @@ static X509_ALGOR *pkcs5_scrypt_set(const unsigned char *salt, size_t saltlen,
 
 int PKCS5_v2_scrypt_keyivgen_ex(EVP_CIPHER_CTX *ctx, const char *pass,
                                 int passlen, ASN1_TYPE *param,
-                                const EVP_CIPHER *c, const EVP_MD *md, int en_de,
+                                const EVP_CIPHER *c, const EVP_MD *md,
+                                int en_de,
                                 OSSL_LIB_CTX *libctx, const char *propq)
 {
     unsigned char *salt, key[EVP_MAX_KEY_LENGTH];
@@ -294,7 +295,7 @@ int PKCS5_v2_scrypt_keyivgen_ex(EVP_CIPHER_CTX *ctx, const char *pass,
                           keylen, libctx, propq) == 0)
         goto err;
     rv = EVP_CipherInit_ex(ctx, NULL, NULL, key, NULL, en_de);
- err:
+err:
     if (keylen)
         OPENSSL_cleanse(key, keylen);
     SCRYPT_PARAMS_free(sparam);
@@ -305,7 +306,8 @@ int PKCS5_v2_scrypt_keyivgen(EVP_CIPHER_CTX *ctx, const char *pass,
                              int passlen, ASN1_TYPE *param,
                              const EVP_CIPHER *c, const EVP_MD *md, int en_de)
 {
-    return PKCS5_v2_scrypt_keyivgen_ex(ctx, pass, passlen, param, c, md, en_de, NULL, NULL);
+    return PKCS5_v2_scrypt_keyivgen_ex(ctx, pass, passlen, param, c, md, en_de,
+                                       NULL, NULL);
 }
 
 #endif /* OPENSSL_NO_SCRYPT */

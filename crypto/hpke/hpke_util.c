@@ -312,20 +312,20 @@ int ossl_hpke_labeled_extract(EVP_KDF_CTX *kctx,
     protocol_labellen = strlen(protocol_label);
     labellen = strlen(label);
     labeled_ikmlen = label_hpkev1len + protocol_labellen
-        + suiteidlen + labellen + ikmlen;
+                     + suiteidlen + labellen + ikmlen;
     labeled_ikm = OPENSSL_malloc(labeled_ikmlen);
     if (labeled_ikm == NULL)
         return 0;
 
     /* labeled_ikm = concat("HPKE-v1", suiteid, label, ikm) */
     if (!WPACKET_init_static_len(&pkt, labeled_ikm, labeled_ikmlen, 0)
-            || !WPACKET_memcpy(&pkt, LABEL_HPKEV1, label_hpkev1len)
-            || !WPACKET_memcpy(&pkt, protocol_label, protocol_labellen)
-            || !WPACKET_memcpy(&pkt, suiteid, suiteidlen)
-            || !WPACKET_memcpy(&pkt, label, labellen)
-            || !WPACKET_memcpy(&pkt, ikm, ikmlen)
-            || !WPACKET_get_total_written(&pkt, &labeled_ikmlen)
-            || !WPACKET_finish(&pkt)) {
+        || !WPACKET_memcpy(&pkt, LABEL_HPKEV1, label_hpkev1len)
+        || !WPACKET_memcpy(&pkt, protocol_label, protocol_labellen)
+        || !WPACKET_memcpy(&pkt, suiteid, suiteidlen)
+        || !WPACKET_memcpy(&pkt, label, labellen)
+        || !WPACKET_memcpy(&pkt, ikm, ikmlen)
+        || !WPACKET_get_total_written(&pkt, &labeled_ikmlen)
+        || !WPACKET_finish(&pkt)) {
         ERR_raise(ERR_LIB_PROV, PROV_R_OUTPUT_BUFFER_TOO_SMALL);
         goto end;
     }
@@ -362,21 +362,21 @@ int ossl_hpke_labeled_expand(EVP_KDF_CTX *kctx,
     protocol_labellen = strlen(protocol_label);
     labellen = strlen(label);
     labeled_infolen = 2 + okmlen + prklen + label_hpkev1len
-        + protocol_labellen + suiteidlen + labellen + infolen;
+                      + protocol_labellen + suiteidlen + labellen + infolen;
     labeled_info = OPENSSL_malloc(labeled_infolen);
     if (labeled_info == NULL)
         return 0;
 
     /* labeled_info = concat(okmlen, "HPKE-v1", suiteid, label, info) */
     if (!WPACKET_init_static_len(&pkt, labeled_info, labeled_infolen, 0)
-            || !WPACKET_put_bytes_u16(&pkt, okmlen)
-            || !WPACKET_memcpy(&pkt, LABEL_HPKEV1, label_hpkev1len)
-            || !WPACKET_memcpy(&pkt, protocol_label, protocol_labellen)
-            || !WPACKET_memcpy(&pkt, suiteid, suiteidlen)
-            || !WPACKET_memcpy(&pkt, label, labellen)
-            || !WPACKET_memcpy(&pkt, info, infolen)
-            || !WPACKET_get_total_written(&pkt, &labeled_infolen)
-            || !WPACKET_finish(&pkt)) {
+        || !WPACKET_put_bytes_u16(&pkt, okmlen)
+        || !WPACKET_memcpy(&pkt, LABEL_HPKEV1, label_hpkev1len)
+        || !WPACKET_memcpy(&pkt, protocol_label, protocol_labellen)
+        || !WPACKET_memcpy(&pkt, suiteid, suiteidlen)
+        || !WPACKET_memcpy(&pkt, label, labellen)
+        || !WPACKET_memcpy(&pkt, info, infolen)
+        || !WPACKET_get_total_written(&pkt, &labeled_infolen)
+        || !WPACKET_finish(&pkt)) {
         ERR_raise(ERR_LIB_PROV, PROV_R_OUTPUT_BUFFER_TOO_SMALL);
         goto end;
     }

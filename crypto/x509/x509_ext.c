@@ -81,7 +81,7 @@ int X509_get_ext_by_OBJ(const X509 *x, const ASN1_OBJECT *obj, int lastpos)
 int X509_get_ext_by_critical(const X509 *x, int crit, int lastpos)
 {
     return (X509v3_get_ext_by_critical
-            (x->cert_info.extensions, crit, lastpos));
+                (x->cert_info.extensions, crit, lastpos));
 }
 
 X509_EXTENSION *X509_get_ext(const X509 *x, int loc)
@@ -127,7 +127,8 @@ int X509_REVOKED_get_ext_by_OBJ(const X509_REVOKED *x, const ASN1_OBJECT *obj,
     return X509v3_get_ext_by_OBJ(x->extensions, obj, lastpos);
 }
 
-int X509_REVOKED_get_ext_by_critical(const X509_REVOKED *x, int crit, int lastpos)
+int X509_REVOKED_get_ext_by_critical(const X509_REVOKED *x, int crit,
+                                     int lastpos)
 {
     return X509v3_get_ext_by_critical(x->extensions, crit, lastpos);
 }
@@ -147,7 +148,8 @@ int X509_REVOKED_add_ext(X509_REVOKED *x, X509_EXTENSION *ex, int loc)
     return (X509v3_add_ext(&(x->extensions), ex, loc) != NULL);
 }
 
-void *X509_REVOKED_get_ext_d2i(const X509_REVOKED *x, int nid, int *crit, int *idx)
+void *X509_REVOKED_get_ext_d2i(const X509_REVOKED *x, int nid, int *crit,
+                               int *idx)
 {
     return X509V3_get_d2i(x->extensions, nid, crit, idx);
 }

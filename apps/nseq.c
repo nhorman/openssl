@@ -47,28 +47,28 @@ int nseq_main(int argc, char **argv)
     prog = opt_init(argc, argv, nseq_options);
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_EOF:
-        case OPT_ERR:
- opthelp:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto end;
-        case OPT_HELP:
-            ret = 0;
-            opt_help(nseq_options);
-            goto end;
-        case OPT_TOSEQ:
-            toseq = 1;
-            break;
-        case OPT_IN:
-            infile = opt_arg();
-            break;
-        case OPT_OUT:
-            outfile = opt_arg();
-            break;
-        case OPT_PROV_CASES:
-            if (!opt_provider(o))
+            case OPT_EOF:
+            case OPT_ERR:
+opthelp:
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
                 goto end;
-            break;
+            case OPT_HELP:
+                ret = 0;
+                opt_help(nseq_options);
+                goto end;
+            case OPT_TOSEQ:
+                toseq = 1;
+                break;
+            case OPT_IN:
+                infile = opt_arg();
+                break;
+            case OPT_OUT:
+                outfile = opt_arg();
+                break;
+            case OPT_PROV_CASES:
+                if (!opt_provider(o))
+                    goto end;
+                break;
         }
     }
 
@@ -120,7 +120,7 @@ int nseq_main(int argc, char **argv)
         PEM_write_bio_X509(out, x509);
     }
     ret = 0;
- end:
+end:
     BIO_free(in);
     BIO_free_all(out);
     NETSCAPE_CERT_SEQUENCE_free(seq);

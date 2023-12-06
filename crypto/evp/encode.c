@@ -160,7 +160,7 @@ void EVP_EncodeInit(EVP_ENCODE_CTX *ctx)
 }
 
 int EVP_EncodeUpdate(EVP_ENCODE_CTX *ctx, unsigned char *out, int *outl,
-                      const unsigned char *in, int inl)
+                     const unsigned char *in, int inl)
 {
     int i, j;
     size_t total = 0;
@@ -316,7 +316,7 @@ int EVP_DecodeUpdate(EVP_ENCODE_CTX *ctx, unsigned char *out, int *outl,
             eof++;
     }
 
-     /* Legacy behaviour: an empty input chunk signals end of input. */
+    /* Legacy behaviour: an empty input chunk signals end of input. */
     if (inl == 0) {
         rv = 0;
         goto end;

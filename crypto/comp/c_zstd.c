@@ -79,14 +79,16 @@ static ZSTD_customMem zstd_mem_funcs = {
 typedef ZSTD_CStream* (*createCStream_ft)(void);
 typedef size_t (*initCStream_ft)(ZSTD_CStream*, int);
 typedef size_t (*freeCStream_ft)(ZSTD_CStream*);
-typedef size_t (*compressStream2_ft)(ZSTD_CCtx*, ZSTD_outBuffer*, ZSTD_inBuffer*, ZSTD_EndDirective);
+typedef size_t (*compressStream2_ft)(ZSTD_CCtx*, ZSTD_outBuffer*,
+                                     ZSTD_inBuffer*, ZSTD_EndDirective);
 typedef size_t (*flushStream_ft)(ZSTD_CStream*, ZSTD_outBuffer*);
 typedef size_t (*endStream_ft)(ZSTD_CStream*, ZSTD_outBuffer*);
 typedef size_t (*compress_ft)(void*, size_t, const void*, size_t, int);
 typedef ZSTD_DStream* (*createDStream_ft)(void);
 typedef size_t (*initDStream_ft)(ZSTD_DStream*);
 typedef size_t (*freeDStream_ft)(ZSTD_DStream*);
-typedef size_t (*decompressStream_ft)(ZSTD_DStream*, ZSTD_outBuffer*, ZSTD_inBuffer*);
+typedef size_t (*decompressStream_ft)(ZSTD_DStream*, ZSTD_outBuffer*,
+                                      ZSTD_inBuffer*);
 typedef size_t (*decompress_ft)(void*, size_t, const void*, size_t);
 typedef unsigned (*isError_ft)(size_t);
 typedef const char* (*getErrorName_ft)(size_t);
@@ -163,7 +165,7 @@ static int zstd_stateful_init(COMP_CTX *ctx)
 
     ctx->data = state;
     return 1;
- err:
+err:
     ZSTD_freeCStream(state->compressor);
     ZSTD_freeDStream(state->decompressor);
     OPENSSL_free(state);
@@ -182,7 +184,8 @@ static void zstd_stateful_finish(COMP_CTX *ctx)
     }
 }
 
-static ossl_ssize_t zstd_stateful_compress_block(COMP_CTX *ctx, unsigned char *out,
+static ossl_ssize_t zstd_stateful_compress_block(COMP_CTX *ctx,
+                                                 unsigned char *out,
                                                  size_t olen, unsigned char *in,
                                                  size_t ilen)
 {
@@ -218,7 +221,8 @@ static ossl_ssize_t zstd_stateful_compress_block(COMP_CTX *ctx, unsigned char *o
      * output buffer space.
      */
     do {
-        ret = ZSTD_compressStream2(state->compressor, &outbuf, &inbuf, ZSTD_e_continue);
+        ret = ZSTD_compressStream2(state->compressor, &outbuf, &inbuf,
+                                   ZSTD_e_continue);
         if (ZSTD_isError(ret))
             return -1;
         /* do I need to check for ret == 0 ? */
@@ -232,7 +236,7 @@ static ossl_ssize_t zstd_stateful_compress_block(COMP_CTX *ctx, unsigned char *o
     if (ZSTD_isError(ret))
         return -1;
 
- end:
+end:
     if (outbuf.pos > OSSL_SSIZE_MAX)
         return -1;
     fret = (ossl_ssize_t)outbuf.pos;
@@ -241,7 +245,8 @@ static ossl_ssize_t zstd_stateful_compress_block(COMP_CTX *ctx, unsigned char *o
     return fret;
 }
 
-static ossl_ssize_t zstd_stateful_expand_block(COMP_CTX *ctx, unsigned char *out,
+static ossl_ssize_t zstd_stateful_expand_block(COMP_CTX *ctx,
+                                               unsigned char *out,
                                                size_t olen, unsigned char *in,
                                                size_t ilen)
 {
@@ -302,9 +307,10 @@ static void zstd_oneshot_finish(COMP_CTX *ctx)
 {
 }
 
-static ossl_ssize_t zstd_oneshot_compress_block(COMP_CTX *ctx, unsigned char *out,
-                                               size_t olen, unsigned char *in,
-                                               size_t ilen)
+static ossl_ssize_t zstd_oneshot_compress_block(COMP_CTX *ctx,
+                                                unsigned char *out,
+                                                size_t olen, unsigned char *in,
+                                                size_t ilen)
 {
     size_t out_size;
     ossl_ssize_t ret;
@@ -369,30 +375,48 @@ DEFINE_RUN_ONCE_STATIC(ossl_comp_zstd_init)
 
     zstd_dso = DSO_load(NULL, LIBZSTD, NULL, 0);
     if (zstd_dso != NULL) {
-        p_createCStream = (createCStream_ft)DSO_bind_func(zstd_dso, "ZSTD_createCStream");
-        p_initCStream = (initCStream_ft)DSO_bind_func(zstd_dso, "ZSTD_initCStream");
-        p_freeCStream = (freeCStream_ft)DSO_bind_func(zstd_dso, "ZSTD_freeCStream");
-        p_compressStream2 = (compressStream2_ft)DSO_bind_func(zstd_dso, "ZSTD_compressStream2");
-        p_flushStream = (flushStream_ft)DSO_bind_func(zstd_dso, "ZSTD_flushStream");
+        p_createCStream = (createCStream_ft)DSO_bind_func(zstd_dso,
+                                                          "ZSTD_createCStream");
+        p_initCStream = (initCStream_ft)DSO_bind_func(zstd_dso,
+                                                      "ZSTD_initCStream");
+        p_freeCStream = (freeCStream_ft)DSO_bind_func(zstd_dso,
+                                                      "ZSTD_freeCStream");
+        p_compressStream2 = (compressStream2_ft)DSO_bind_func(zstd_dso,
+                                                              "ZSTD_compressStream2");
+        p_flushStream = (flushStream_ft)DSO_bind_func(zstd_dso,
+                                                      "ZSTD_flushStream");
         p_endStream = (endStream_ft)DSO_bind_func(zstd_dso, "ZSTD_endStream");
         p_compress = (compress_ft)DSO_bind_func(zstd_dso, "ZSTD_compress");
-        p_createDStream = (createDStream_ft)DSO_bind_func(zstd_dso, "ZSTD_createDStream");
-        p_initDStream = (initDStream_ft)DSO_bind_func(zstd_dso, "ZSTD_initDStream");
-        p_freeDStream = (freeDStream_ft)DSO_bind_func(zstd_dso, "ZSTD_freeDStream");
-        p_decompressStream = (decompressStream_ft)DSO_bind_func(zstd_dso, "ZSTD_decompressStream");
-        p_decompress = (decompress_ft)DSO_bind_func(zstd_dso, "ZSTD_decompress");
+        p_createDStream = (createDStream_ft)DSO_bind_func(zstd_dso,
+                                                          "ZSTD_createDStream");
+        p_initDStream = (initDStream_ft)DSO_bind_func(zstd_dso,
+                                                      "ZSTD_initDStream");
+        p_freeDStream = (freeDStream_ft)DSO_bind_func(zstd_dso,
+                                                      "ZSTD_freeDStream");
+        p_decompressStream = (decompressStream_ft)DSO_bind_func(zstd_dso,
+                                                                "ZSTD_decompressStream");
+        p_decompress =
+            (decompress_ft)DSO_bind_func(zstd_dso, "ZSTD_decompress");
         p_isError = (isError_ft)DSO_bind_func(zstd_dso, "ZSTD_isError");
-        p_getErrorName = (getErrorName_ft)DSO_bind_func(zstd_dso, "ZSTD_getErrorName");
-        p_DStreamInSize = (DStreamInSize_ft)DSO_bind_func(zstd_dso, "ZSTD_DStreamInSize");
-        p_CStreamInSize = (CStreamInSize_ft)DSO_bind_func(zstd_dso, "ZSTD_CStreamInSize");
+        p_getErrorName = (getErrorName_ft)DSO_bind_func(zstd_dso,
+                                                        "ZSTD_getErrorName");
+        p_DStreamInSize = (DStreamInSize_ft)DSO_bind_func(zstd_dso,
+                                                          "ZSTD_DStreamInSize");
+        p_CStreamInSize = (CStreamInSize_ft)DSO_bind_func(zstd_dso,
+                                                          "ZSTD_CStreamInSize");
     }
 
-    if (p_createCStream == NULL || p_initCStream == NULL || p_freeCStream == NULL
-            || p_compressStream2 == NULL || p_flushStream == NULL || p_endStream == NULL
-            || p_compress == NULL || p_createDStream == NULL || p_initDStream == NULL
-            || p_freeDStream == NULL || p_decompressStream == NULL || p_decompress == NULL
-            || p_isError == NULL || p_getErrorName == NULL || p_DStreamInSize == NULL
-            || p_CStreamInSize == NULL) {
+    if (p_createCStream == NULL || p_initCStream == NULL ||
+        p_freeCStream == NULL
+        || p_compressStream2 == NULL || p_flushStream == NULL ||
+        p_endStream == NULL
+        || p_compress == NULL || p_createDStream == NULL ||
+        p_initDStream == NULL
+        || p_freeDStream == NULL || p_decompressStream == NULL ||
+        p_decompress == NULL
+        || p_isError == NULL || p_getErrorName == NULL ||
+        p_DStreamInSize == NULL
+        || p_CStreamInSize == NULL) {
         ossl_comp_zstd_cleanup();
         return 0;
     }
@@ -545,7 +569,7 @@ static int bio_zstd_new(BIO *bi)
     BIO_set_data(bi, ctx);
 
     return 1;
- err:
+err:
     ERR_raise(ERR_LIB_COMP, ERR_R_MALLOC_FAILURE);
     ZSTD_freeDStream(ctx->decompress.state);
     ZSTD_freeCStream(ctx->compress.state);
@@ -605,7 +629,8 @@ static int bio_zstd_read(BIO *b, char *out, int outl)
     for (;;) {
         /* Decompress while data available */
         do {
-            zret = ZSTD_decompressStream(ctx->decompress.state, &outBuf, &ctx->decompress.inbuf);
+            zret = ZSTD_decompressStream(ctx->decompress.state, &outBuf,
+                                         &ctx->decompress.inbuf);
             if (ZSTD_isError(zret)) {
                 ERR_raise(ERR_LIB_COMP, COMP_R_ZSTD_DECOMPRESS_ERROR);
                 ERR_add_error_data(1, ZSTD_getErrorName(zret));
@@ -664,7 +689,8 @@ static int bio_zstd_write(BIO *b, const char *in, int inl)
     for (;;) {
         /* If data in output buffer write it first */
         while (ctx->compress.write_pos < ctx->compress.outbuf.pos) {
-            ret = BIO_write(next, (unsigned char*)ctx->compress.outbuf.dst + ctx->compress.write_pos,
+            ret = BIO_write(next,
+                            (unsigned char*)ctx->compress.outbuf.dst + ctx->compress.write_pos,
                             ctx->compress.outbuf.pos - ctx->compress.write_pos);
             if (ret <= 0) {
                 BIO_copy_next_retry(b);
@@ -684,7 +710,8 @@ static int bio_zstd_write(BIO *b, const char *in, int inl)
         ctx->compress.outbuf.size = ctx->compress.bufsize;
         ctx->compress.write_pos = 0;
         /* Compress some more */
-        zret = ZSTD_compressStream2(ctx->compress.state, &ctx->compress.outbuf, &inBuf, ZSTD_e_end);
+        zret = ZSTD_compressStream2(ctx->compress.state, &ctx->compress.outbuf,
+                                    &inBuf, ZSTD_e_end);
         if (ZSTD_isError(zret)) {
             ERR_raise(ERR_LIB_COMP, COMP_R_ZSTD_COMPRESS_ERROR);
             ERR_add_error_data(1, ZSTD_getErrorName(zret));
@@ -716,7 +743,8 @@ static int bio_zstd_flush(BIO *b)
     for (;;) {
         /* If data in output buffer write it first */
         while (ctx->compress.write_pos < ctx->compress.outbuf.pos) {
-            ret = BIO_write(next, (unsigned char*)ctx->compress.outbuf.dst + ctx->compress.write_pos,
+            ret = BIO_write(next,
+                            (unsigned char*)ctx->compress.outbuf.dst + ctx->compress.write_pos,
                             ctx->compress.outbuf.pos - ctx->compress.write_pos);
             if (ret <= 0) {
                 BIO_copy_next_retry(b);
@@ -754,80 +782,80 @@ static long bio_zstd_ctrl(BIO *b, int cmd, long num, void *ptr)
     ctx = BIO_get_data(b);
     switch (cmd) {
 
-    case BIO_CTRL_RESET:
-        ctx->compress.write_pos = 0;
-        ctx->compress.bufsize = 0;
-        ret = 1;
-        break;
+        case BIO_CTRL_RESET:
+            ctx->compress.write_pos = 0;
+            ctx->compress.bufsize = 0;
+            ret = 1;
+            break;
 
-    case BIO_CTRL_FLUSH:
-        ret = bio_zstd_flush(b);
-        if (ret > 0) {
-            ret = BIO_flush(next);
+        case BIO_CTRL_FLUSH:
+            ret = bio_zstd_flush(b);
+            if (ret > 0) {
+                ret = BIO_flush(next);
+                BIO_copy_next_retry(b);
+            }
+            break;
+
+        case BIO_C_SET_BUFF_SIZE:
+            ibs = ctx->decompress.bufsize;
+            obs = ctx->compress.bufsize;
+            if (ptr != NULL) {
+                ip = ptr;
+                if (*ip == 0)
+                    ibs = (size_t)num;
+                else
+                    obs = (size_t)num;
+            } else {
+                obs = ibs = (size_t)num;
+            }
+
+            if (ibs > 0 && ibs != ctx->decompress.bufsize) {
+                if (ctx->decompress.buffer != NULL) {
+                    tmp = OPENSSL_realloc(ctx->decompress.buffer, ibs);
+                    if (tmp == NULL)
+                        return 0;
+                    if (ctx->decompress.inbuf.src == ctx->decompress.buffer)
+                        ctx->decompress.inbuf.src = tmp;
+                    ctx->decompress.buffer = tmp;
+                }
+                ctx->decompress.bufsize = ibs;
+            }
+
+            if (obs > 0 && obs != ctx->compress.bufsize) {
+                if (ctx->compress.outbuf.dst != NULL) {
+                    tmp = OPENSSL_realloc(ctx->compress.outbuf.dst, obs);
+                    if (tmp == NULL)
+                        return 0;
+                    ctx->compress.outbuf.dst = tmp;
+                }
+                ctx->compress.bufsize = obs;
+            }
+            ret = 1;
+            break;
+
+        case BIO_C_DO_STATE_MACHINE:
+            BIO_clear_retry_flags(b);
+            ret = BIO_ctrl(next, cmd, num, ptr);
             BIO_copy_next_retry(b);
-        }
-        break;
+            break;
 
-    case BIO_C_SET_BUFF_SIZE:
-        ibs = ctx->decompress.bufsize;
-        obs = ctx->compress.bufsize;
-        if (ptr != NULL) {
-            ip = ptr;
-            if (*ip == 0)
-                ibs = (size_t)num;
+        case BIO_CTRL_WPENDING:
+            if (ctx->compress.outbuf.pos < ctx->compress.outbuf.size)
+                ret = 1;
             else
-                obs = (size_t)num;
-        } else {
-            obs = ibs = (size_t)num;
-        }
+                ret = BIO_ctrl(next, cmd, num, ptr);
+            break;
 
-        if (ibs > 0 && ibs != ctx->decompress.bufsize) {
-            if (ctx->decompress.buffer != NULL) {
-                tmp = OPENSSL_realloc(ctx->decompress.buffer, ibs);
-                if (tmp == NULL)
-                    return 0;
-                if (ctx->decompress.inbuf.src == ctx->decompress.buffer)
-                    ctx->decompress.inbuf.src = tmp;
-                ctx->decompress.buffer = tmp;
-            }
-            ctx->decompress.bufsize = ibs;
-        }
+        case BIO_CTRL_PENDING:
+            if (ctx->decompress.inbuf.pos < ctx->decompress.inbuf.size)
+                ret = 1;
+            else
+                ret = BIO_ctrl(next, cmd, num, ptr);
+            break;
 
-        if (obs > 0 && obs != ctx->compress.bufsize) {
-            if (ctx->compress.outbuf.dst != NULL) {
-                tmp = OPENSSL_realloc(ctx->compress.outbuf.dst, obs);
-                if (tmp == NULL)
-                    return 0;
-                ctx->compress.outbuf.dst = tmp;
-            }
-            ctx->compress.bufsize = obs;
-        }
-        ret = 1;
-        break;
-
-    case BIO_C_DO_STATE_MACHINE:
-        BIO_clear_retry_flags(b);
-        ret = BIO_ctrl(next, cmd, num, ptr);
-        BIO_copy_next_retry(b);
-        break;
-
-   case BIO_CTRL_WPENDING:
-        if (ctx->compress.outbuf.pos < ctx->compress.outbuf.size)
-            ret = 1;
-        else
+        default:
             ret = BIO_ctrl(next, cmd, num, ptr);
-        break;
-
-    case BIO_CTRL_PENDING:
-        if (ctx->decompress.inbuf.pos < ctx->decompress.inbuf.size)
-            ret = 1;
-        else
-            ret = BIO_ctrl(next, cmd, num, ptr);
-        break;
-
-    default:
-        ret = BIO_ctrl(next, cmd, num, ptr);
-        break;
+            break;
 
     }
 

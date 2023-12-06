@@ -134,7 +134,7 @@ EC_KEY *ossl_ec_key_new_method_int(OSSL_LIB_CTX *libctx, const char *propq,
     }
     return ret;
 
- err:
+err:
     EC_KEY_free(ret);
     return NULL;
 }

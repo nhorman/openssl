@@ -26,7 +26,8 @@
 #include <openssl/err.h>
 
 /* Helper function to create a BIO connected to the server */
-static BIO *create_socket_bio(const char *hostname, const char *port, int family)
+static BIO *create_socket_bio(const char *hostname, const char *port,
+                              int family)
 {
     int sock = -1;
     BIO_ADDRINFO *res;
@@ -36,7 +37,8 @@ static BIO *create_socket_bio(const char *hostname, const char *port, int family
     /*
      * Lookup IP address info for the server.
      */
-    if (!BIO_lookup_ex(hostname, port, BIO_LOOKUP_CLIENT, family, SOCK_STREAM, 0,
+    if (!BIO_lookup_ex(hostname, port, BIO_LOOKUP_CLIENT, family, SOCK_STREAM,
+                       0,
                        &res))
         return NULL;
 
@@ -208,7 +210,7 @@ int main(int argc, char *argv[])
          */
         if (SSL_get_verify_result(ssl) != X509_V_OK)
             printf("Verify error: %s\n",
-                X509_verify_cert_error_string(SSL_get_verify_result(ssl)));
+                   X509_verify_cert_error_string(SSL_get_verify_result(ssl)));
         goto end;
     }
 
@@ -232,12 +234,12 @@ int main(int argc, char *argv[])
      */
     while (SSL_read_ex(ssl, buf, sizeof(buf), &readbytes)) {
         /*
-        * OpenSSL does not guarantee that the returned data is a string or
-        * that it is NUL terminated so we use fwrite() to write the exact
-        * number of bytes that we read. The data could be non-printable or
-        * have NUL characters in the middle of it. For this simple example
-        * we're going to print it to stdout anyway.
-        */
+         * OpenSSL does not guarantee that the returned data is a string or
+         * that it is NUL terminated so we use fwrite() to write the exact
+         * number of bytes that we read. The data could be non-printable or
+         * have NUL characters in the middle of it. For this simple example
+         * we're going to print it to stdout anyway.
+         */
         fwrite(buf, 1, readbytes, stdout);
     }
     /* In case the response didn't finish with a newline we add one now */
@@ -276,7 +278,7 @@ int main(int argc, char *argv[])
 
     /* Success! */
     res = EXIT_SUCCESS;
- end:
+end:
     /*
      * If something bad happened then we will dump the contents of the
      * OpenSSL error stack to stderr. There might be some useful diagnostic

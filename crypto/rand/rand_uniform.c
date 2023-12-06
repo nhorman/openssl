@@ -98,7 +98,8 @@ uint32_t ossl_rand_uniform_uint32(OSSL_LIB_CTX *ctx, uint32_t upper, int *err)
     return i;
 }
 
-uint32_t ossl_rand_range_uint32(OSSL_LIB_CTX *ctx, uint32_t lower, uint32_t upper,
+uint32_t ossl_rand_range_uint32(OSSL_LIB_CTX *ctx, uint32_t lower,
+                                uint32_t upper,
                                 int *err)
 {
     if (!ossl_assert(lower < upper)) {

@@ -29,16 +29,16 @@ int PKCS7_type_is_other(PKCS7 *p7)
     int nid = OBJ_obj2nid(p7->type);
 
     switch (nid) {
-    case NID_pkcs7_data:
-    case NID_pkcs7_signed:
-    case NID_pkcs7_enveloped:
-    case NID_pkcs7_signedAndEnveloped:
-    case NID_pkcs7_digest:
-    case NID_pkcs7_encrypted:
-        isOther = 0;
-        break;
-    default:
-        isOther = 1;
+        case NID_pkcs7_data:
+        case NID_pkcs7_signed:
+        case NID_pkcs7_enveloped:
+        case NID_pkcs7_signedAndEnveloped:
+        case NID_pkcs7_digest:
+        case NID_pkcs7_encrypted:
+            isOther = 0;
+            break;
+        default:
+            isOther = 1;
     }
 
     return isOther;
@@ -101,7 +101,7 @@ static int pkcs7_bio_add_digest(BIO **pbio, X509_ALGOR *alg,
 
     return 1;
 
- err:
+err:
     BIO_free(btmp);
     return 0;
 }
@@ -143,7 +143,7 @@ static int pkcs7_encode_rinfo(PKCS7_RECIP_INFO *ri,
 
     ret = 1;
 
- err:
+err:
     EVP_PKEY_CTX_free(pctx);
     OPENSSL_free(ek);
     return ret;
@@ -186,7 +186,7 @@ static int pkcs7_decrypt_rinfo(unsigned char **pek, int *peklen,
     *pek = ek;
     *peklen = eklen;
 
- err:
+err:
     EVP_PKEY_CTX_free(pctx);
     if (!ret)
         OPENSSL_free(ek);
@@ -238,38 +238,38 @@ BIO *PKCS7_dataInit(PKCS7 *p7, BIO *bio)
     p7->state = PKCS7_S_HEADER;
 
     switch (i) {
-    case NID_pkcs7_signed:
-        md_sk = p7->d.sign->md_algs;
-        os = PKCS7_get_octet_string(p7->d.sign->contents);
-        break;
-    case NID_pkcs7_signedAndEnveloped:
-        rsk = p7->d.signed_and_enveloped->recipientinfo;
-        md_sk = p7->d.signed_and_enveloped->md_algs;
-        xalg = p7->d.signed_and_enveloped->enc_data->algorithm;
-        evp_cipher = p7->d.signed_and_enveloped->enc_data->cipher;
-        if (evp_cipher == NULL) {
-            ERR_raise(ERR_LIB_PKCS7, PKCS7_R_CIPHER_NOT_INITIALIZED);
+        case NID_pkcs7_signed:
+            md_sk = p7->d.sign->md_algs;
+            os = PKCS7_get_octet_string(p7->d.sign->contents);
+            break;
+        case NID_pkcs7_signedAndEnveloped:
+            rsk = p7->d.signed_and_enveloped->recipientinfo;
+            md_sk = p7->d.signed_and_enveloped->md_algs;
+            xalg = p7->d.signed_and_enveloped->enc_data->algorithm;
+            evp_cipher = p7->d.signed_and_enveloped->enc_data->cipher;
+            if (evp_cipher == NULL) {
+                ERR_raise(ERR_LIB_PKCS7, PKCS7_R_CIPHER_NOT_INITIALIZED);
+                goto err;
+            }
+            break;
+        case NID_pkcs7_enveloped:
+            rsk = p7->d.enveloped->recipientinfo;
+            xalg = p7->d.enveloped->enc_data->algorithm;
+            evp_cipher = p7->d.enveloped->enc_data->cipher;
+            if (evp_cipher == NULL) {
+                ERR_raise(ERR_LIB_PKCS7, PKCS7_R_CIPHER_NOT_INITIALIZED);
+                goto err;
+            }
+            break;
+        case NID_pkcs7_digest:
+            xa = p7->d.digest->md;
+            os = PKCS7_get_octet_string(p7->d.digest->contents);
+            break;
+        case NID_pkcs7_data:
+            break;
+        default:
+            ERR_raise(ERR_LIB_PKCS7, PKCS7_R_UNSUPPORTED_CONTENT_TYPE);
             goto err;
-        }
-        break;
-    case NID_pkcs7_enveloped:
-        rsk = p7->d.enveloped->recipientinfo;
-        xalg = p7->d.enveloped->enc_data->algorithm;
-        evp_cipher = p7->d.enveloped->enc_data->cipher;
-        if (evp_cipher == NULL) {
-            ERR_raise(ERR_LIB_PKCS7, PKCS7_R_CIPHER_NOT_INITIALIZED);
-            goto err;
-        }
-        break;
-    case NID_pkcs7_digest:
-        xa = p7->d.digest->md;
-        os = PKCS7_get_octet_string(p7->d.digest->contents);
-        break;
-    case NID_pkcs7_data:
-        break;
-    default:
-        ERR_raise(ERR_LIB_PKCS7, PKCS7_R_UNSUPPORTED_CONTENT_TYPE);
-        goto err;
     }
 
     for (i = 0; i < sk_X509_ALGOR_num(md_sk); i++)
@@ -363,7 +363,7 @@ BIO *PKCS7_dataInit(PKCS7 *p7, BIO *bio)
         out = bio;
     return out;
 
- err:
+err:
     EVP_CIPHER_free(fetched_cipher);
     BIO_free_all(out);
     BIO_free_all(btmp);
@@ -422,67 +422,67 @@ BIO *PKCS7_dataDecode(PKCS7 *p7, EVP_PKEY *pkey, BIO *in_bio, X509 *pcert)
     p7->state = PKCS7_S_HEADER;
 
     switch (i) {
-    case NID_pkcs7_signed:
-        /*
-         * p7->d.sign->contents is a PKCS7 structure consisting of a contentType
-         * field and optional content.
-         * data_body is NULL if that structure has no (=detached) content
-         * or if the contentType is wrong (i.e., not "data").
-         */
-        data_body = PKCS7_get_octet_string(p7->d.sign->contents);
-        if (!PKCS7_is_detached(p7) && data_body == NULL) {
-            ERR_raise(ERR_LIB_PKCS7, PKCS7_R_INVALID_SIGNED_DATA_TYPE);
+        case NID_pkcs7_signed:
+            /*
+             * p7->d.sign->contents is a PKCS7 structure consisting of a contentType
+             * field and optional content.
+             * data_body is NULL if that structure has no (=detached) content
+             * or if the contentType is wrong (i.e., not "data").
+             */
+            data_body = PKCS7_get_octet_string(p7->d.sign->contents);
+            if (!PKCS7_is_detached(p7) && data_body == NULL) {
+                ERR_raise(ERR_LIB_PKCS7, PKCS7_R_INVALID_SIGNED_DATA_TYPE);
+                goto err;
+            }
+            md_sk = p7->d.sign->md_algs;
+            break;
+        case NID_pkcs7_signedAndEnveloped:
+            rsk = p7->d.signed_and_enveloped->recipientinfo;
+            md_sk = p7->d.signed_and_enveloped->md_algs;
+            /* data_body is NULL if the optional EncryptedContent is missing. */
+            data_body = p7->d.signed_and_enveloped->enc_data->enc_data;
+            enc_alg = p7->d.signed_and_enveloped->enc_data->algorithm;
+
+            OBJ_obj2txt(name, sizeof(name), enc_alg->algorithm, 0);
+
+            (void)ERR_set_mark();
+            evp_cipher = EVP_CIPHER_fetch(libctx, name, propq);
+            if (evp_cipher != NULL)
+                cipher = evp_cipher;
+            else
+                cipher = EVP_get_cipherbyname(name);
+
+            if (cipher == NULL) {
+                (void)ERR_clear_last_mark();
+                ERR_raise(ERR_LIB_PKCS7, PKCS7_R_UNSUPPORTED_CIPHER_TYPE);
+                goto err;
+            }
+            (void)ERR_pop_to_mark();
+            break;
+        case NID_pkcs7_enveloped:
+            rsk = p7->d.enveloped->recipientinfo;
+            enc_alg = p7->d.enveloped->enc_data->algorithm;
+            /* data_body is NULL if the optional EncryptedContent is missing. */
+            data_body = p7->d.enveloped->enc_data->enc_data;
+            OBJ_obj2txt(name, sizeof(name), enc_alg->algorithm, 0);
+
+            (void)ERR_set_mark();
+            evp_cipher = EVP_CIPHER_fetch(libctx, name, propq);
+            if (evp_cipher != NULL)
+                cipher = evp_cipher;
+            else
+                cipher = EVP_get_cipherbyname(name);
+
+            if (cipher == NULL) {
+                (void)ERR_clear_last_mark();
+                ERR_raise(ERR_LIB_PKCS7, PKCS7_R_UNSUPPORTED_CIPHER_TYPE);
+                goto err;
+            }
+            (void)ERR_pop_to_mark();
+            break;
+        default:
+            ERR_raise(ERR_LIB_PKCS7, PKCS7_R_UNSUPPORTED_CONTENT_TYPE);
             goto err;
-        }
-        md_sk = p7->d.sign->md_algs;
-        break;
-    case NID_pkcs7_signedAndEnveloped:
-        rsk = p7->d.signed_and_enveloped->recipientinfo;
-        md_sk = p7->d.signed_and_enveloped->md_algs;
-        /* data_body is NULL if the optional EncryptedContent is missing. */
-        data_body = p7->d.signed_and_enveloped->enc_data->enc_data;
-        enc_alg = p7->d.signed_and_enveloped->enc_data->algorithm;
-
-        OBJ_obj2txt(name, sizeof(name), enc_alg->algorithm, 0);
-
-        (void)ERR_set_mark();
-        evp_cipher = EVP_CIPHER_fetch(libctx, name, propq);
-        if (evp_cipher != NULL)
-            cipher = evp_cipher;
-        else
-            cipher = EVP_get_cipherbyname(name);
-
-        if (cipher == NULL) {
-            (void)ERR_clear_last_mark();
-            ERR_raise(ERR_LIB_PKCS7, PKCS7_R_UNSUPPORTED_CIPHER_TYPE);
-            goto err;
-        }
-        (void)ERR_pop_to_mark();
-        break;
-    case NID_pkcs7_enveloped:
-        rsk = p7->d.enveloped->recipientinfo;
-        enc_alg = p7->d.enveloped->enc_data->algorithm;
-        /* data_body is NULL if the optional EncryptedContent is missing. */
-        data_body = p7->d.enveloped->enc_data->enc_data;
-        OBJ_obj2txt(name, sizeof(name), enc_alg->algorithm, 0);
-
-        (void)ERR_set_mark();
-        evp_cipher = EVP_CIPHER_fetch(libctx, name, propq);
-        if (evp_cipher != NULL)
-            cipher = evp_cipher;
-        else
-            cipher = EVP_get_cipherbyname(name);
-
-        if (cipher == NULL) {
-            (void)ERR_clear_last_mark();
-            ERR_raise(ERR_LIB_PKCS7, PKCS7_R_UNSUPPORTED_CIPHER_TYPE);
-            goto err;
-        }
-        (void)ERR_pop_to_mark();
-        break;
-    default:
-        ERR_raise(ERR_LIB_PKCS7, PKCS7_R_UNSUPPORTED_CONTENT_TYPE);
-        goto err;
     }
 
     /* Detached content must be supplied via in_bio instead. */
@@ -570,7 +570,7 @@ BIO *PKCS7_dataDecode(PKCS7 *p7, EVP_PKEY *pkey, BIO *in_bio, X509 *pcert)
                 ri = sk_PKCS7_RECIP_INFO_value(rsk, i);
                 ri->ctx = p7_ctx;
                 if (pkcs7_decrypt_rinfo(&ek, &eklen, ri, pkey,
-                        EVP_CIPHER_get_key_length(cipher)) < 0)
+                                        EVP_CIPHER_get_key_length(cipher)) < 0)
                     goto err;
                 ERR_clear_error();
             }
@@ -653,7 +653,7 @@ BIO *PKCS7_dataDecode(PKCS7 *p7, EVP_PKEY *pkey, BIO *in_bio, X509 *pcert)
     EVP_CIPHER_free(evp_cipher);
     return out;
 
- err:
+err:
     EVP_CIPHER_free(evp_cipher);
     OPENSSL_clear_free(ek, eklen);
     OPENSSL_clear_free(tkey, tkeylen);
@@ -748,58 +748,58 @@ int PKCS7_dataFinal(PKCS7 *p7, BIO *bio)
     p7->state = PKCS7_S_HEADER;
 
     switch (i) {
-    case NID_pkcs7_data:
-        os = p7->d.data;
-        break;
-    case NID_pkcs7_signedAndEnveloped:
-        /* XXXXXXXXXXXXXXXX */
-        si_sk = p7->d.signed_and_enveloped->signer_info;
-        os = p7->d.signed_and_enveloped->enc_data->enc_data;
-        if (os == NULL) {
-            os = ASN1_OCTET_STRING_new();
+        case NID_pkcs7_data:
+            os = p7->d.data;
+            break;
+        case NID_pkcs7_signedAndEnveloped:
+            /* XXXXXXXXXXXXXXXX */
+            si_sk = p7->d.signed_and_enveloped->signer_info;
+            os = p7->d.signed_and_enveloped->enc_data->enc_data;
             if (os == NULL) {
-                ERR_raise(ERR_LIB_PKCS7, ERR_R_ASN1_LIB);
-                goto err;
+                os = ASN1_OCTET_STRING_new();
+                if (os == NULL) {
+                    ERR_raise(ERR_LIB_PKCS7, ERR_R_ASN1_LIB);
+                    goto err;
+                }
+                p7->d.signed_and_enveloped->enc_data->enc_data = os;
             }
-            p7->d.signed_and_enveloped->enc_data->enc_data = os;
-        }
-        break;
-    case NID_pkcs7_enveloped:
-        /* XXXXXXXXXXXXXXXX */
-        os = p7->d.enveloped->enc_data->enc_data;
-        if (os == NULL) {
-            os = ASN1_OCTET_STRING_new();
+            break;
+        case NID_pkcs7_enveloped:
+            /* XXXXXXXXXXXXXXXX */
+            os = p7->d.enveloped->enc_data->enc_data;
             if (os == NULL) {
-                ERR_raise(ERR_LIB_PKCS7, ERR_R_ASN1_LIB);
-                goto err;
+                os = ASN1_OCTET_STRING_new();
+                if (os == NULL) {
+                    ERR_raise(ERR_LIB_PKCS7, ERR_R_ASN1_LIB);
+                    goto err;
+                }
+                p7->d.enveloped->enc_data->enc_data = os;
             }
-            p7->d.enveloped->enc_data->enc_data = os;
-        }
-        break;
-    case NID_pkcs7_signed:
-        si_sk = p7->d.sign->signer_info;
-        os = PKCS7_get_octet_string(p7->d.sign->contents);
-        /* If detached data then the content is excluded */
-        if (PKCS7_type_is_data(p7->d.sign->contents) && p7->detached) {
-            ASN1_OCTET_STRING_free(os);
-            os = NULL;
-            p7->d.sign->contents->d.data = NULL;
-        }
-        break;
+            break;
+        case NID_pkcs7_signed:
+            si_sk = p7->d.sign->signer_info;
+            os = PKCS7_get_octet_string(p7->d.sign->contents);
+            /* If detached data then the content is excluded */
+            if (PKCS7_type_is_data(p7->d.sign->contents) && p7->detached) {
+                ASN1_OCTET_STRING_free(os);
+                os = NULL;
+                p7->d.sign->contents->d.data = NULL;
+            }
+            break;
 
-    case NID_pkcs7_digest:
-        os = PKCS7_get_octet_string(p7->d.digest->contents);
-        /* If detached data then the content is excluded */
-        if (PKCS7_type_is_data(p7->d.digest->contents) && p7->detached) {
-            ASN1_OCTET_STRING_free(os);
-            os = NULL;
-            p7->d.digest->contents->d.data = NULL;
-        }
-        break;
+        case NID_pkcs7_digest:
+            os = PKCS7_get_octet_string(p7->d.digest->contents);
+            /* If detached data then the content is excluded */
+            if (PKCS7_type_is_data(p7->d.digest->contents) && p7->detached) {
+                ASN1_OCTET_STRING_free(os);
+                os = NULL;
+                p7->d.digest->contents->d.data = NULL;
+            }
+            break;
 
-    default:
-        ERR_raise(ERR_LIB_PKCS7, PKCS7_R_UNSUPPORTED_CONTENT_TYPE);
-        goto err;
+        default:
+            ERR_raise(ERR_LIB_PKCS7, PKCS7_R_UNSUPPORTED_CONTENT_TYPE);
+            goto err;
     }
 
     if (si_sk != NULL) {
@@ -887,7 +887,7 @@ int PKCS7_dataFinal(PKCS7 *p7, BIO *bio)
         }
     }
     ret = 1;
- err:
+err:
     EVP_MD_CTX_free(ctx_tmp);
     return ret;
 }
@@ -940,7 +940,7 @@ int PKCS7_SIGNER_INFO_sign(PKCS7_SIGNER_INFO *si)
 
     return 1;
 
- err:
+err:
     OPENSSL_free(abuf);
     EVP_MD_CTX_free(mctx);
     return 0;
@@ -981,7 +981,8 @@ int PKCS7_dataVerify(X509_STORE *cert_store, X509_STORE_CTX *ctx, BIO *bio,
     /* XXXXXXXXXXXXXXXXXXXXXXX */
     ias = si->issuer_and_serial;
 
-    signer = X509_find_by_issuer_and_serial(untrusted, ias->issuer, ias->serial);
+    signer =
+        X509_find_by_issuer_and_serial(untrusted, ias->issuer, ias->serial);
 
     /* Were we able to find the signer certificate in passed to us? */
     if (signer == NULL) {
@@ -1002,7 +1003,7 @@ int PKCS7_dataVerify(X509_STORE *cert_store, X509_STORE_CTX *ctx, BIO *bio,
     }
 
     return PKCS7_signatureVerify(bio, p7, si, signer);
- err:
+err:
     return ret;
 }
 
@@ -1127,7 +1128,7 @@ int PKCS7_signatureVerify(BIO *bio, PKCS7 *p7, PKCS7_SIGNER_INFO *si,
         goto err;
     }
     ret = 1;
- err:
+err:
     EVP_MD_CTX_free(mdc_tmp);
     EVP_MD_free(fetched_md);
     return ret;
@@ -1192,7 +1193,7 @@ int PKCS7_set_signed_attributes(PKCS7_SIGNER_INFO *p7si,
     for (i = 0; i < sk_X509_ATTRIBUTE_num(sk); i++) {
         if ((sk_X509_ATTRIBUTE_set(p7si->auth_attr, i,
                                    X509_ATTRIBUTE_dup(sk_X509_ATTRIBUTE_value
-                                                      (sk, i))))
+                                                          (sk, i))))
             == NULL)
             return 0;
     }
@@ -1211,7 +1212,7 @@ int PKCS7_set_attributes(PKCS7_SIGNER_INFO *p7si,
     for (i = 0; i < sk_X509_ATTRIBUTE_num(sk); i++) {
         if ((sk_X509_ATTRIBUTE_set(p7si->unauth_attr, i,
                                    X509_ATTRIBUTE_dup(sk_X509_ATTRIBUTE_value
-                                                      (sk, i))))
+                                                          (sk, i))))
             == NULL)
             return 0;
     }
@@ -1238,7 +1239,7 @@ static int add_attribute(STACK_OF(X509_ATTRIBUTE) **sk, int nid, int atrtype,
     if (*sk == NULL) {
         if ((*sk = sk_X509_ATTRIBUTE_new_null()) == NULL)
             return 0;
- new_attrib:
+new_attrib:
         if ((attr = X509_ATTRIBUTE_create(nid, atrtype, value)) == NULL)
             return 0;
         if (!sk_X509_ATTRIBUTE_push(*sk, attr)) {
@@ -1264,6 +1265,6 @@ static int add_attribute(STACK_OF(X509_ATTRIBUTE) **sk, int nid, int atrtype,
         }
         goto new_attrib;
     }
- end:
+end:
     return 1;
 }

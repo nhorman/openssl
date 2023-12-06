@@ -339,7 +339,7 @@ BIGNUM *BN_mod_sqrt(BIGNUM *in, const BIGNUM *a, const BIGNUM *p, BN_CTX *ctx)
         e = i;
     }
 
- vrfy:
+vrfy:
     if (!err) {
         /*
          * verify the result -- the input might have been not a square (test
@@ -355,7 +355,7 @@ BIGNUM *BN_mod_sqrt(BIGNUM *in, const BIGNUM *a, const BIGNUM *p, BN_CTX *ctx)
         }
     }
 
- end:
+end:
     if (err) {
         if (ret != in)
             BN_clear_free(ret);

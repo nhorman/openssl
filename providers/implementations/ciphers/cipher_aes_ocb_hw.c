@@ -18,15 +18,16 @@
 #define OCB_SET_KEY_FN(fn_set_enc_key, fn_set_dec_key,                         \
                        fn_block_enc, fn_block_dec,                             \
                        fn_stream_enc, fn_stream_dec)                           \
-CRYPTO_ocb128_cleanup(&ctx->ocb);                                              \
-fn_set_enc_key(key, keylen * 8, &ctx->ksenc.ks);                               \
-fn_set_dec_key(key, keylen * 8, &ctx->ksdec.ks);                               \
-if (!CRYPTO_ocb128_init(&ctx->ocb, &ctx->ksenc.ks, &ctx->ksdec.ks,             \
-                        (block128_f)fn_block_enc, (block128_f)fn_block_dec,    \
-                        ctx->base.enc ? (ocb128_f)fn_stream_enc :              \
-                                        (ocb128_f)fn_stream_dec))              \
-    return 0;                                                                  \
-ctx->key_set = 1
+        CRYPTO_ocb128_cleanup(&ctx->ocb);                                              \
+        fn_set_enc_key(key, keylen * 8, &ctx->ksenc.ks);                               \
+        fn_set_dec_key(key, keylen * 8, &ctx->ksdec.ks);                               \
+        if (!CRYPTO_ocb128_init(&ctx->ocb, &ctx->ksenc.ks, &ctx->ksdec.ks,             \
+                                (block128_f)fn_block_enc, \
+                                (block128_f)fn_block_dec,    \
+                                ctx->base.enc ? (ocb128_f)fn_stream_enc :              \
+                                (ocb128_f)fn_stream_dec))              \
+        return 0;                                                                  \
+        ctx->key_set = 1
 
 
 static int cipher_hw_aes_ocb_generic_initkey(PROV_CIPHER_CTX *vctx,
@@ -74,12 +75,12 @@ static int cipher_hw_aes_ocb_aesni_initkey(PROV_CIPHER_CTX *vctx,
 }
 
 # define PROV_CIPHER_HW_declare()                                              \
-static const PROV_CIPHER_HW aesni_ocb = {                                      \
-    cipher_hw_aes_ocb_aesni_initkey,                                           \
-    NULL                                                                       \
-};
+        static const PROV_CIPHER_HW aesni_ocb = {                                      \
+            cipher_hw_aes_ocb_aesni_initkey,                                           \
+            NULL                                                                       \
+        };
 # define PROV_CIPHER_HW_select()                                               \
-    if (AESNI_CAPABLE)                                                         \
+        if (AESNI_CAPABLE)                                                         \
         return &aesni_ocb;
 
 #elif defined(SPARC_AES_CAPABLE)
@@ -96,12 +97,12 @@ static int cipher_hw_aes_ocb_t4_initkey(PROV_CIPHER_CTX *vctx,
 }
 
 # define PROV_CIPHER_HW_declare()                                              \
-static const PROV_CIPHER_HW aes_t4_ocb = {                                     \
-    cipher_hw_aes_ocb_t4_initkey,                                              \
-    NULL                                                                       \
-};
+        static const PROV_CIPHER_HW aes_t4_ocb = {                                     \
+            cipher_hw_aes_ocb_t4_initkey,                                              \
+            NULL                                                                       \
+        };
 # define PROV_CIPHER_HW_select()                                               \
-    if (SPARC_AES_CAPABLE)                                                     \
+        if (SPARC_AES_CAPABLE)                                                     \
         return &aes_t4_ocb;
 
 #elif defined(__riscv) && __riscv_xlen == 64
@@ -118,8 +119,8 @@ static int cipher_hw_aes_ocb_rv64i_zknd_zkne_initkey(PROV_CIPHER_CTX *vctx,
 }
 
 static int cipher_hw_aes_ocb_rv64i_zvkned_initkey(PROV_CIPHER_CTX *vctx,
-                                                     const unsigned char *key,
-                                                     size_t keylen)
+                                                  const unsigned char *key,
+                                                  size_t keylen)
 {
     PROV_AES_OCB_CTX *ctx = (PROV_AES_OCB_CTX *)vctx;
 
@@ -138,18 +139,18 @@ static int cipher_hw_aes_ocb_rv64i_zvkned_initkey(PROV_CIPHER_CTX *vctx,
 }
 
 # define PROV_CIPHER_HW_declare()                                              \
-static const PROV_CIPHER_HW aes_rv64i_zknd_zkne_ocb = {                        \
-    cipher_hw_aes_ocb_rv64i_zknd_zkne_initkey,                                 \
-    NULL                                                                       \
-};                                                                             \
-static const PROV_CIPHER_HW aes_rv64i_zvkned_ocb = {                           \
-    cipher_hw_aes_ocb_rv64i_zvkned_initkey,                                    \
-    NULL                                                                       \
-};
+        static const PROV_CIPHER_HW aes_rv64i_zknd_zkne_ocb = {                        \
+            cipher_hw_aes_ocb_rv64i_zknd_zkne_initkey,                                 \
+            NULL                                                                       \
+        };                                                                             \
+        static const PROV_CIPHER_HW aes_rv64i_zvkned_ocb = {                           \
+            cipher_hw_aes_ocb_rv64i_zvkned_initkey,                                    \
+            NULL                                                                       \
+        };
 # define PROV_CIPHER_HW_select()                                               \
-    if (RISCV_HAS_ZVKNED() && riscv_vlen() >= 128)                             \
+        if (RISCV_HAS_ZVKNED() && riscv_vlen() >= 128)                             \
         return &aes_rv64i_zvkned_ocb;                                          \
-    else if (RISCV_HAS_ZKND_AND_ZKNE())                                        \
+        else if (RISCV_HAS_ZKND_AND_ZKNE())                                        \
         return &aes_rv64i_zknd_zkne_ocb;
 
 #elif defined(__riscv) && __riscv_xlen == 32
@@ -171,24 +172,25 @@ static int cipher_hw_aes_ocb_rv32i_zbkb_zknd_zkne_initkey(PROV_CIPHER_CTX *vctx,
 {
     PROV_AES_OCB_CTX *ctx = (PROV_AES_OCB_CTX *)vctx;
 
-    OCB_SET_KEY_FN(rv32i_zbkb_zkne_set_encrypt_key, rv32i_zbkb_zknd_zkne_set_decrypt_key,
+    OCB_SET_KEY_FN(rv32i_zbkb_zkne_set_encrypt_key,
+                   rv32i_zbkb_zknd_zkne_set_decrypt_key,
                    rv32i_zkne_encrypt, rv32i_zknd_decrypt, NULL, NULL);
     return 1;
 }
 
 # define PROV_CIPHER_HW_declare()                                              \
-static const PROV_CIPHER_HW aes_rv32i_zknd_zkne_ocb = {                        \
-    cipher_hw_aes_ocb_rv32i_zknd_zkne_initkey,                                 \
-    NULL                                                                       \
-};                                                                             \
-static const PROV_CIPHER_HW aes_rv32i_zbkb_zknd_zkne_ocb = {                   \
-    cipher_hw_aes_ocb_rv32i_zbkb_zknd_zkne_initkey,                            \
-    NULL                                                                       \
-};
+        static const PROV_CIPHER_HW aes_rv32i_zknd_zkne_ocb = {                        \
+            cipher_hw_aes_ocb_rv32i_zknd_zkne_initkey,                                 \
+            NULL                                                                       \
+        };                                                                             \
+        static const PROV_CIPHER_HW aes_rv32i_zbkb_zknd_zkne_ocb = {                   \
+            cipher_hw_aes_ocb_rv32i_zbkb_zknd_zkne_initkey,                            \
+            NULL                                                                       \
+        };
 # define PROV_CIPHER_HW_select()                                               \
-    if (RISCV_HAS_ZBKB_AND_ZKND_AND_ZKNE())                                    \
+        if (RISCV_HAS_ZBKB_AND_ZKND_AND_ZKNE())                                    \
         return &aes_rv32i_zbkb_zknd_zkne_ocb;                                  \
-    if (RISCV_HAS_ZKND_AND_ZKNE())                                             \
+        if (RISCV_HAS_ZKND_AND_ZKNE())                                             \
         return &aes_rv32i_zknd_zkne_ocb;
 #else
 # define PROV_CIPHER_HW_declare()

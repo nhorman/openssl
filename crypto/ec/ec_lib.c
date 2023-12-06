@@ -65,7 +65,7 @@ EC_GROUP *ossl_ec_group_new_ex(OSSL_LIB_CTX *libctx, const char *propq,
         goto err;
     return ret;
 
- err:
+err:
     BN_free(ret->order);
     BN_free(ret->cofactor);
     OPENSSL_free(ret->propq);
@@ -85,36 +85,36 @@ EC_GROUP *EC_GROUP_new(const EC_METHOD *meth)
 void EC_pre_comp_free(EC_GROUP *group)
 {
     switch (group->pre_comp_type) {
-    case PCT_none:
-        break;
-    case PCT_nistz256:
+        case PCT_none:
+            break;
+        case PCT_nistz256:
 #ifdef ECP_NISTZ256_ASM
-        EC_nistz256_pre_comp_free(group->pre_comp.nistz256);
+            EC_nistz256_pre_comp_free(group->pre_comp.nistz256);
 #endif
-        break;
+            break;
 #ifndef OPENSSL_NO_EC_NISTP_64_GCC_128
-    case PCT_nistp224:
-        EC_nistp224_pre_comp_free(group->pre_comp.nistp224);
-        break;
-    case PCT_nistp256:
-        EC_nistp256_pre_comp_free(group->pre_comp.nistp256);
-        break;
-    case PCT_nistp384:
-        ossl_ec_nistp384_pre_comp_free(group->pre_comp.nistp384);
-        break;
-    case PCT_nistp521:
-        EC_nistp521_pre_comp_free(group->pre_comp.nistp521);
-        break;
+        case PCT_nistp224:
+            EC_nistp224_pre_comp_free(group->pre_comp.nistp224);
+            break;
+        case PCT_nistp256:
+            EC_nistp256_pre_comp_free(group->pre_comp.nistp256);
+            break;
+        case PCT_nistp384:
+            ossl_ec_nistp384_pre_comp_free(group->pre_comp.nistp384);
+            break;
+        case PCT_nistp521:
+            EC_nistp521_pre_comp_free(group->pre_comp.nistp521);
+            break;
 #else
-    case PCT_nistp224:
-    case PCT_nistp256:
-    case PCT_nistp384:
-    case PCT_nistp521:
-        break;
+        case PCT_nistp224:
+        case PCT_nistp256:
+        case PCT_nistp384:
+        case PCT_nistp521:
+            break;
 #endif
-    case PCT_ec:
-        EC_ec_pre_comp_free(group->pre_comp.ec);
-        break;
+        case PCT_ec:
+            EC_ec_pre_comp_free(group->pre_comp.ec);
+            break;
     }
     group->pre_comp.ec = NULL;
 }
@@ -177,37 +177,42 @@ int EC_GROUP_copy(EC_GROUP *dest, const EC_GROUP *src)
     /* Copy precomputed */
     dest->pre_comp_type = src->pre_comp_type;
     switch (src->pre_comp_type) {
-    case PCT_none:
-        dest->pre_comp.ec = NULL;
-        break;
-    case PCT_nistz256:
+        case PCT_none:
+            dest->pre_comp.ec = NULL;
+            break;
+        case PCT_nistz256:
 #ifdef ECP_NISTZ256_ASM
-        dest->pre_comp.nistz256 = EC_nistz256_pre_comp_dup(src->pre_comp.nistz256);
+            dest->pre_comp.nistz256 = EC_nistz256_pre_comp_dup(
+                src->pre_comp.nistz256);
 #endif
-        break;
+            break;
 #ifndef OPENSSL_NO_EC_NISTP_64_GCC_128
-    case PCT_nistp224:
-        dest->pre_comp.nistp224 = EC_nistp224_pre_comp_dup(src->pre_comp.nistp224);
-        break;
-    case PCT_nistp256:
-        dest->pre_comp.nistp256 = EC_nistp256_pre_comp_dup(src->pre_comp.nistp256);
-        break;
-    case PCT_nistp384:
-        dest->pre_comp.nistp384 = ossl_ec_nistp384_pre_comp_dup(src->pre_comp.nistp384);
-        break;
-    case PCT_nistp521:
-        dest->pre_comp.nistp521 = EC_nistp521_pre_comp_dup(src->pre_comp.nistp521);
-        break;
+        case PCT_nistp224:
+            dest->pre_comp.nistp224 = EC_nistp224_pre_comp_dup(
+                src->pre_comp.nistp224);
+            break;
+        case PCT_nistp256:
+            dest->pre_comp.nistp256 = EC_nistp256_pre_comp_dup(
+                src->pre_comp.nistp256);
+            break;
+        case PCT_nistp384:
+            dest->pre_comp.nistp384 = ossl_ec_nistp384_pre_comp_dup(
+                src->pre_comp.nistp384);
+            break;
+        case PCT_nistp521:
+            dest->pre_comp.nistp521 = EC_nistp521_pre_comp_dup(
+                src->pre_comp.nistp521);
+            break;
 #else
-    case PCT_nistp224:
-    case PCT_nistp256:
-    case PCT_nistp384:
-    case PCT_nistp521:
-        break;
+        case PCT_nistp224:
+        case PCT_nistp256:
+        case PCT_nistp384:
+        case PCT_nistp521:
+            break;
 #endif
-    case PCT_ec:
-        dest->pre_comp.ec = EC_ec_pre_comp_dup(src->pre_comp.ec);
-        break;
+        case PCT_ec:
+            dest->pre_comp.ec = EC_ec_pre_comp_dup(src->pre_comp.ec);
+            break;
     }
 
     if (src->mont_data != NULL) {
@@ -280,12 +285,12 @@ EC_GROUP *EC_GROUP_dup(const EC_GROUP *a)
 
     ok = 1;
 
- err:
+err:
     if (!ok) {
         EC_GROUP_free(t);
         return NULL;
     }
-        return t;
+    return t;
 }
 
 #ifndef OPENSSL_NO_DEPRECATED_3_0
@@ -357,7 +362,7 @@ static int ec_guess_cofactor(EC_GROUP *group) {
         || !BN_div(group->cofactor, NULL, group->cofactor, group->order, ctx))
         goto err;
     ret = 1;
- err:
+err:
     BN_CTX_end(ctx);
     BN_CTX_free(ctx);
     return ret;
@@ -770,9 +775,9 @@ int EC_POINT_copy(EC_POINT *dest, const EC_POINT *src)
         return 0;
     }
     if (dest->meth != src->meth
-            || (dest->curve_name != src->curve_name
-                 && dest->curve_name != 0
-                 && src->curve_name != 0)) {
+        || (dest->curve_name != src->curve_name
+            && dest->curve_name != 0
+            && src->curve_name != 0)) {
         ERR_raise(ERR_LIB_EC, EC_R_INCOMPATIBLE_OBJECTS);
         return 0;
     }
@@ -1204,7 +1209,7 @@ static int ec_precompute_mont_data(EC_GROUP *group)
 
     ret = 1;
 
- err:
+err:
 
     BN_CTX_free(ctx);
     return ret;
@@ -1269,7 +1274,7 @@ static int ec_field_inverse_mod_ord(const EC_GROUP *group, BIGNUM *r,
 
     ret = 1;
 
- err:
+err:
     BN_CTX_end(ctx);
 #ifndef FIPS_MODULE
     BN_CTX_free(new_ctx);
@@ -1410,10 +1415,11 @@ static EC_GROUP *ec_group_explicit_to_named(const EC_GROUP *group,
     int no_seed = (EC_GROUP_get0_seed(group) == NULL);
 
     if ((dup = EC_GROUP_dup(group)) == NULL
-            || EC_GROUP_set_seed(dup, NULL, 0) != 1
-            || !EC_GROUP_set_generator(dup, point, order, NULL))
+        || EC_GROUP_set_seed(dup, NULL, 0) != 1
+        || !EC_GROUP_set_generator(dup, point, order, NULL))
         goto err;
-    if ((curve_name_nid = ossl_ec_curve_nid_from_params(dup, ctx)) != NID_undef) {
+    if ((curve_name_nid =
+             ossl_ec_curve_nid_from_params(dup, ctx)) != NID_undef) {
         /*
          * The input explicit parameters successfully matched one of the
          * built-in curves: often for built-in curves we have specialized
@@ -1433,7 +1439,8 @@ static EC_GROUP *ec_group_explicit_to_named(const EC_GROUP *group,
             curve_name_nid = NID_secp224r1;
 # endif /* !def(OPENSSL_NO_EC_NISTP_64_GCC_128) */
 
-        ret_group = EC_GROUP_new_by_curve_name_ex(libctx, propq, curve_name_nid);
+        ret_group =
+            EC_GROUP_new_by_curve_name_ex(libctx, propq, curve_name_nid);
         if (ret_group == NULL)
             goto err;
 
@@ -1475,14 +1482,14 @@ static EC_GROUP *group_new_from_name(const OSSL_PARAM *p,
     const char *curve_name = NULL;
 
     switch (p->data_type) {
-    case OSSL_PARAM_UTF8_STRING:
-        /* The OSSL_PARAM functions have no support for this */
-        curve_name = p->data;
-        ok = (curve_name != NULL);
-        break;
-    case OSSL_PARAM_UTF8_PTR:
-        ok = OSSL_PARAM_get_utf8_ptr(p, &curve_name);
-        break;
+        case OSSL_PARAM_UTF8_STRING:
+            /* The OSSL_PARAM functions have no support for this */
+            curve_name = p->data;
+            ok = (curve_name != NULL);
+            break;
+        case OSSL_PARAM_UTF8_PTR:
+            ok = OSSL_PARAM_get_utf8_ptr(p, &curve_name);
+            break;
     }
 
     if (ok) {
@@ -1503,7 +1510,8 @@ int ossl_ec_group_set_params(EC_GROUP *group, const OSSL_PARAM params[])
     int encoding_flag = -1, format = -1;
     const OSSL_PARAM *p;
 
-    p = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_EC_POINT_CONVERSION_FORMAT);
+    p = OSSL_PARAM_locate_const(params,
+                                OSSL_PKEY_PARAM_EC_POINT_CONVERSION_FORMAT);
     if (p != NULL) {
         if (!ossl_ec_pt_format_param2id(p, &format)) {
             ERR_raise(ERR_LIB_EC, EC_R_INVALID_FORM);
@@ -1745,7 +1753,7 @@ EC_GROUP *EC_GROUP_new_from_params(const OSSL_PARAM params[],
     /* We've imported the group from explicit parameters, set it so. */
     group->decoded_from_explicit_params = 1;
     ok = 1;
- err:
+err:
     if (!ok) {
         EC_GROUP_free(group);
         group = NULL;
@@ -1785,7 +1793,7 @@ OSSL_PARAM *EC_GROUP_to_params(const EC_GROUP *group, OSSL_LIB_CTX *libctx,
 
     params = OSSL_PARAM_BLD_to_param(tmpl);
 
- err:
+err:
     OSSL_PARAM_BLD_free(tmpl);
     OPENSSL_free(gen_buf);
     BN_CTX_end(bnctx);

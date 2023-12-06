@@ -69,7 +69,7 @@ static void dummy_pause_job(void);
 /* SHA1 */
 static int dasync_sha1_init(EVP_MD_CTX *ctx);
 static int dasync_sha1_update(EVP_MD_CTX *ctx, const void *data,
-                             size_t count);
+                              size_t count);
 static int dasync_sha1_final(EVP_MD_CTX *ctx, unsigned char *md);
 
 /*
@@ -148,15 +148,15 @@ static int dasync_aes256_ctr_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
 static int dasync_aes256_ctr_cleanup(EVP_CIPHER_CTX *ctx);
 
 static int dasync_aes128_cbc_hmac_sha1_ctrl(EVP_CIPHER_CTX *ctx, int type,
-                                             int arg, void *ptr);
+                                            int arg, void *ptr);
 static int dasync_aes128_cbc_hmac_sha1_init_key(EVP_CIPHER_CTX *ctx,
-                                                 const unsigned char *key,
-                                                 const unsigned char *iv,
-                                                 int enc);
+                                                const unsigned char *key,
+                                                const unsigned char *iv,
+                                                int enc);
 static int dasync_aes128_cbc_hmac_sha1_cipher(EVP_CIPHER_CTX *ctx,
-                                               unsigned char *out,
-                                               const unsigned char *in,
-                                               size_t inl);
+                                              unsigned char *out,
+                                              const unsigned char *in,
+                                              size_t inl);
 static int dasync_aes128_cbc_hmac_sha1_cleanup(EVP_CIPHER_CTX *ctx);
 
 struct dasync_pipeline_ctx {
@@ -214,7 +214,7 @@ static void destroy_ciphers(void)
 }
 
 static int dasync_ciphers(ENGINE *e, const EVP_CIPHER **cipher,
-                                   const int **nids, int nid);
+                          const int **nids, int nid);
 
 static int dasync_cipher_nids[] = {
     NID_aes_128_cbc,
@@ -280,72 +280,75 @@ static int bind_dasync(ENGINE *e)
                                               16 /* block size */,
                                               16 /* key len */);
     if (_hidden_aes_128_cbc == NULL
-            || !EVP_CIPHER_meth_set_iv_length(_hidden_aes_128_cbc,16)
-            || !EVP_CIPHER_meth_set_flags(_hidden_aes_128_cbc,
-                                          EVP_CIPH_FLAG_DEFAULT_ASN1
-                                          | EVP_CIPH_CBC_MODE
-                                          | EVP_CIPH_FLAG_PIPELINE
-                                          | EVP_CIPH_CUSTOM_COPY)
-            || !EVP_CIPHER_meth_set_init(_hidden_aes_128_cbc,
-                                         dasync_aes128_init_key)
-            || !EVP_CIPHER_meth_set_do_cipher(_hidden_aes_128_cbc,
-                                              dasync_aes128_cbc_cipher)
-            || !EVP_CIPHER_meth_set_cleanup(_hidden_aes_128_cbc,
-                                            dasync_aes128_cbc_cleanup)
-            || !EVP_CIPHER_meth_set_ctrl(_hidden_aes_128_cbc,
-                                         dasync_aes128_cbc_ctrl)
-            || !EVP_CIPHER_meth_set_impl_ctx_size(_hidden_aes_128_cbc,
-                                sizeof(struct dasync_pipeline_ctx))) {
+        || !EVP_CIPHER_meth_set_iv_length(_hidden_aes_128_cbc,16)
+        || !EVP_CIPHER_meth_set_flags(_hidden_aes_128_cbc,
+                                      EVP_CIPH_FLAG_DEFAULT_ASN1
+                                      | EVP_CIPH_CBC_MODE
+                                      | EVP_CIPH_FLAG_PIPELINE
+                                      | EVP_CIPH_CUSTOM_COPY)
+        || !EVP_CIPHER_meth_set_init(_hidden_aes_128_cbc,
+                                     dasync_aes128_init_key)
+        || !EVP_CIPHER_meth_set_do_cipher(_hidden_aes_128_cbc,
+                                          dasync_aes128_cbc_cipher)
+        || !EVP_CIPHER_meth_set_cleanup(_hidden_aes_128_cbc,
+                                        dasync_aes128_cbc_cleanup)
+        || !EVP_CIPHER_meth_set_ctrl(_hidden_aes_128_cbc,
+                                     dasync_aes128_cbc_ctrl)
+        || !EVP_CIPHER_meth_set_impl_ctx_size(_hidden_aes_128_cbc,
+                                              sizeof(struct dasync_pipeline_ctx)))
+    {
         EVP_CIPHER_meth_free(_hidden_aes_128_cbc);
         _hidden_aes_128_cbc = NULL;
     }
 
     _hidden_aes_256_ctr = EVP_CIPHER_meth_new(NID_aes_256_ctr,
-                                              1  /* block size */,
+                                              1 /* block size */,
                                               32 /* key len */);
     if (_hidden_aes_256_ctr == NULL
-            || !EVP_CIPHER_meth_set_iv_length(_hidden_aes_256_ctr,16)
-            || !EVP_CIPHER_meth_set_flags(_hidden_aes_256_ctr,
-                                          EVP_CIPH_FLAG_DEFAULT_ASN1
-                                          | EVP_CIPH_CTR_MODE
-                                          | EVP_CIPH_FLAG_PIPELINE
-                                          | EVP_CIPH_CUSTOM_COPY)
-            || !EVP_CIPHER_meth_set_init(_hidden_aes_256_ctr,
-                                         dasync_aes256_init_key)
-            || !EVP_CIPHER_meth_set_do_cipher(_hidden_aes_256_ctr,
-                                              dasync_aes256_ctr_cipher)
-            || !EVP_CIPHER_meth_set_cleanup(_hidden_aes_256_ctr,
-                                            dasync_aes256_ctr_cleanup)
-            || !EVP_CIPHER_meth_set_ctrl(_hidden_aes_256_ctr,
-                                         dasync_aes256_ctr_ctrl)
-            || !EVP_CIPHER_meth_set_impl_ctx_size(_hidden_aes_256_ctr,
-                                sizeof(struct dasync_pipeline_ctx))) {
+        || !EVP_CIPHER_meth_set_iv_length(_hidden_aes_256_ctr,16)
+        || !EVP_CIPHER_meth_set_flags(_hidden_aes_256_ctr,
+                                      EVP_CIPH_FLAG_DEFAULT_ASN1
+                                      | EVP_CIPH_CTR_MODE
+                                      | EVP_CIPH_FLAG_PIPELINE
+                                      | EVP_CIPH_CUSTOM_COPY)
+        || !EVP_CIPHER_meth_set_init(_hidden_aes_256_ctr,
+                                     dasync_aes256_init_key)
+        || !EVP_CIPHER_meth_set_do_cipher(_hidden_aes_256_ctr,
+                                          dasync_aes256_ctr_cipher)
+        || !EVP_CIPHER_meth_set_cleanup(_hidden_aes_256_ctr,
+                                        dasync_aes256_ctr_cleanup)
+        || !EVP_CIPHER_meth_set_ctrl(_hidden_aes_256_ctr,
+                                     dasync_aes256_ctr_ctrl)
+        || !EVP_CIPHER_meth_set_impl_ctx_size(_hidden_aes_256_ctr,
+                                              sizeof(struct dasync_pipeline_ctx)))
+    {
         EVP_CIPHER_meth_free(_hidden_aes_256_ctr);
         _hidden_aes_256_ctr = NULL;
     }
 
     _hidden_aes_128_cbc_hmac_sha1 = EVP_CIPHER_meth_new(
-                                                NID_aes_128_cbc_hmac_sha1,
-                                                16 /* block size */,
-                                                16 /* key len */);
+        NID_aes_128_cbc_hmac_sha1,
+        16 /* block size */,
+        16 /* key len */);
     if (_hidden_aes_128_cbc_hmac_sha1 == NULL
-            || !EVP_CIPHER_meth_set_iv_length(_hidden_aes_128_cbc_hmac_sha1,16)
-            || !EVP_CIPHER_meth_set_flags(_hidden_aes_128_cbc_hmac_sha1,
-                                            EVP_CIPH_CBC_MODE
-                                          | EVP_CIPH_FLAG_DEFAULT_ASN1
-                                          | EVP_CIPH_FLAG_AEAD_CIPHER
-                                          | EVP_CIPH_FLAG_PIPELINE
-                                          | EVP_CIPH_CUSTOM_COPY)
-            || !EVP_CIPHER_meth_set_init(_hidden_aes_128_cbc_hmac_sha1,
-                                         dasync_aes128_cbc_hmac_sha1_init_key)
-            || !EVP_CIPHER_meth_set_do_cipher(_hidden_aes_128_cbc_hmac_sha1,
-                                            dasync_aes128_cbc_hmac_sha1_cipher)
-            || !EVP_CIPHER_meth_set_cleanup(_hidden_aes_128_cbc_hmac_sha1,
-                                            dasync_aes128_cbc_hmac_sha1_cleanup)
-            || !EVP_CIPHER_meth_set_ctrl(_hidden_aes_128_cbc_hmac_sha1,
-                                         dasync_aes128_cbc_hmac_sha1_ctrl)
-            || !EVP_CIPHER_meth_set_impl_ctx_size(_hidden_aes_128_cbc_hmac_sha1,
-                                sizeof(struct dasync_pipeline_ctx))) {
+        || !EVP_CIPHER_meth_set_iv_length(_hidden_aes_128_cbc_hmac_sha1,16)
+        || !EVP_CIPHER_meth_set_flags(_hidden_aes_128_cbc_hmac_sha1,
+                                      EVP_CIPH_CBC_MODE
+                                      | EVP_CIPH_FLAG_DEFAULT_ASN1
+                                      | EVP_CIPH_FLAG_AEAD_CIPHER
+                                      | EVP_CIPH_FLAG_PIPELINE
+                                      | EVP_CIPH_CUSTOM_COPY)
+        || !EVP_CIPHER_meth_set_init(_hidden_aes_128_cbc_hmac_sha1,
+                                     dasync_aes128_cbc_hmac_sha1_init_key)
+        || !EVP_CIPHER_meth_set_do_cipher(_hidden_aes_128_cbc_hmac_sha1,
+                                          dasync_aes128_cbc_hmac_sha1_cipher)
+        || !EVP_CIPHER_meth_set_cleanup(_hidden_aes_128_cbc_hmac_sha1,
+                                        dasync_aes128_cbc_hmac_sha1_cleanup)
+        || !EVP_CIPHER_meth_set_ctrl(_hidden_aes_128_cbc_hmac_sha1,
+                                     dasync_aes128_cbc_hmac_sha1_ctrl)
+        || !EVP_CIPHER_meth_set_impl_ctx_size(_hidden_aes_128_cbc_hmac_sha1,
+                                              sizeof(struct dasync_pipeline_ctx)))
+    {
         EVP_CIPHER_meth_free(_hidden_aes_128_cbc_hmac_sha1);
         _hidden_aes_128_cbc_hmac_sha1 = NULL;
     }
@@ -374,7 +377,7 @@ static int bind_helper(ENGINE *e, const char *id)
 }
 
 IMPLEMENT_DYNAMIC_CHECK_FN()
-    IMPLEMENT_DYNAMIC_BIND_FN(bind_helper)
+IMPLEMENT_DYNAMIC_BIND_FN(bind_helper)
 # endif
 
 static ENGINE *engine_dasync(void)
@@ -459,19 +462,19 @@ static int dasync_digests(ENGINE *e, const EVP_MD **digest,
     }
     /* We are being asked for a specific digest */
     switch (nid) {
-    case NID_sha1:
-        *digest = dasync_sha1();
-        break;
-    default:
-        ok = 0;
-        *digest = NULL;
-        break;
+        case NID_sha1:
+            *digest = dasync_sha1();
+            break;
+        default:
+            ok = 0;
+            *digest = NULL;
+            break;
     }
     return ok;
 }
 
 static int dasync_ciphers(ENGINE *e, const EVP_CIPHER **cipher,
-                                   const int **nids, int nid)
+                          const int **nids, int nid)
 {
     int ok = 1;
     if (cipher == NULL) {
@@ -482,19 +485,19 @@ static int dasync_ciphers(ENGINE *e, const EVP_CIPHER **cipher,
     }
     /* We are being asked for a specific cipher */
     switch (nid) {
-    case NID_aes_128_cbc:
-        *cipher = dasync_aes_128_cbc();
-        break;
-    case NID_aes_256_ctr:
-        *cipher = dasync_aes_256_ctr();
-        break;
-    case NID_aes_128_cbc_hmac_sha1:
-        *cipher = dasync_aes_128_cbc_hmac_sha1();
-        break;
-    default:
-        ok = 0;
-        *cipher = NULL;
-        break;
+        case NID_aes_128_cbc:
+            *cipher = dasync_aes_128_cbc();
+            break;
+        case NID_aes_256_ctr:
+            *cipher = dasync_aes_256_ctr();
+            break;
+        case NID_aes_128_cbc_hmac_sha1:
+            *cipher = dasync_aes_128_cbc_hmac_sha1();
+            break;
+        default:
+            ok = 0;
+            *cipher = NULL;
+            break;
     }
     return ok;
 }
@@ -534,7 +537,8 @@ static void dummy_pause_job(void) {
 
     waitctx = ASYNC_get_wait_ctx(job);
 
-    if (ASYNC_WAIT_CTX_get_callback(waitctx, &callback, &callback_arg) && callback != NULL) {
+    if (ASYNC_WAIT_CTX_get_callback(waitctx, &callback,
+                                    &callback_arg) && callback != NULL) {
         /*
          * In the Dummy async engine we are cheating. We call the callback that the job
          * is complete before the call to ASYNC_pause_job(). A real
@@ -608,7 +612,7 @@ static int dasync_sha1_init(EVP_MD_CTX *ctx)
 }
 
 static int dasync_sha1_update(EVP_MD_CTX *ctx, const void *data,
-                             size_t count)
+                              size_t count)
 {
     dummy_pause_job();
 
@@ -637,16 +641,16 @@ static int dasync_cipher_ctrl_helper(EVP_CIPHER_CTX *ctx, int type, int arg,
 
     switch (type) {
         case EVP_CTRL_COPY:
-            {
-                size_t sz = EVP_CIPHER_impl_ctx_size(ciph);
-                void *inner_cipher_data = OPENSSL_malloc(sz);
+        {
+            size_t sz = EVP_CIPHER_impl_ctx_size(ciph);
+            void *inner_cipher_data = OPENSSL_malloc(sz);
 
-                if (inner_cipher_data == NULL)
-                    return -1;
-                memcpy(inner_cipher_data, pipe_ctx->inner_cipher_data, sz);
-                pipe_ctx->inner_cipher_data = inner_cipher_data;
-            }
-            break;
+            if (inner_cipher_data == NULL)
+                return -1;
+            memcpy(inner_cipher_data, pipe_ctx->inner_cipher_data, sz);
+            pipe_ctx->inner_cipher_data = inner_cipher_data;
+        }
+        break;
 
         case EVP_CTRL_SET_PIPELINE_OUTPUT_BUFS:
             pipe_ctx->numpipes = arg;
@@ -668,7 +672,7 @@ static int dasync_cipher_ctrl_helper(EVP_CIPHER_CTX *ctx, int type, int arg,
                 return -1;
             EVP_CIPHER_CTX_set_cipher_data(ctx, pipe_ctx->inner_cipher_data);
             ret = EVP_CIPHER_meth_get_ctrl(EVP_aes_128_cbc_hmac_sha1())
-                                          (ctx, type, arg, ptr);
+                      (ctx, type, arg, ptr);
             EVP_CIPHER_CTX_set_cipher_data(ctx, pipe_ctx);
             return ret;
 
@@ -720,7 +724,7 @@ static int dasync_cipher_init_key_helper(EVP_CIPHER_CTX *ctx,
         (struct dasync_pipeline_ctx *)EVP_CIPHER_CTX_get_cipher_data(ctx);
 
     if (pipe_ctx->inner_cipher_data == NULL
-            && EVP_CIPHER_impl_ctx_size(cipher) != 0) {
+        && EVP_CIPHER_impl_ctx_size(cipher) != 0) {
         pipe_ctx->inner_cipher_data = OPENSSL_zalloc(
             EVP_CIPHER_impl_ctx_size(cipher));
         if (pipe_ctx->inner_cipher_data == NULL)
@@ -753,25 +757,25 @@ static int dasync_cipher_helper(EVP_CIPHER_CTX *ctx, unsigned char *out,
             if (pipe_ctx->aadctr != 1)
                 return -1;
             EVP_CIPHER_meth_get_ctrl(cipher)
-                                    (ctx, EVP_CTRL_AEAD_TLS1_AAD,
-                                     EVP_AEAD_TLS1_AAD_LEN,
-                                     pipe_ctx->tlsaad[0]);
+                (ctx, EVP_CTRL_AEAD_TLS1_AAD,
+                EVP_AEAD_TLS1_AAD_LEN,
+                pipe_ctx->tlsaad[0]);
         }
         ret = EVP_CIPHER_meth_get_do_cipher(cipher)
-                                           (ctx, out, in, inl);
+                  (ctx, out, in, inl);
     } else {
         if (pipe_ctx->aadctr > 0 && pipe_ctx->aadctr != pipes)
             return -1;
         for (i = 0; i < pipes; i++) {
             if (pipe_ctx->aadctr > 0) {
                 EVP_CIPHER_meth_get_ctrl(cipher)
-                                        (ctx, EVP_CTRL_AEAD_TLS1_AAD,
-                                         EVP_AEAD_TLS1_AAD_LEN,
-                                         pipe_ctx->tlsaad[i]);
+                    (ctx, EVP_CTRL_AEAD_TLS1_AAD,
+                    EVP_AEAD_TLS1_AAD_LEN,
+                    pipe_ctx->tlsaad[i]);
             }
             ret = ret && EVP_CIPHER_meth_get_do_cipher(cipher)
-                                (ctx, pipe_ctx->outbufs[i], pipe_ctx->inbufs[i],
-                                 pipe_ctx->lens[i]);
+                      (ctx, pipe_ctx->outbufs[i], pipe_ctx->inbufs[i],
+                      pipe_ctx->lens[i]);
         }
         pipe_ctx->numpipes = 0;
     }
@@ -803,13 +807,13 @@ static int dasync_aes128_cbc_ctrl(EVP_CIPHER_CTX *ctx, int type, int arg,
 }
 
 static int dasync_aes128_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
-                             const unsigned char *iv, int enc)
+                                  const unsigned char *iv, int enc)
 {
     return dasync_cipher_init_key_helper(ctx, key, iv, enc, EVP_aes_128_cbc());
 }
 
 static int dasync_aes128_cbc_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
-                               const unsigned char *in, size_t inl)
+                                    const unsigned char *in, size_t inl)
 {
     return dasync_cipher_helper(ctx, out, in, inl, EVP_aes_128_cbc());
 }
@@ -826,13 +830,13 @@ static int dasync_aes256_ctr_ctrl(EVP_CIPHER_CTX *ctx, int type, int arg,
 }
 
 static int dasync_aes256_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
-                             const unsigned char *iv, int enc)
+                                  const unsigned char *iv, int enc)
 {
     return dasync_cipher_init_key_helper(ctx, key, iv, enc, EVP_aes_256_ctr());
 }
 
 static int dasync_aes256_ctr_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
-                               const unsigned char *in, size_t inl)
+                                    const unsigned char *in, size_t inl)
 {
     return dasync_cipher_helper(ctx, out, in, inl, EVP_aes_256_ctr());
 }
@@ -848,9 +852,10 @@ static int dasync_aes256_ctr_cleanup(EVP_CIPHER_CTX *ctx)
  */
 
 static int dasync_aes128_cbc_hmac_sha1_ctrl(EVP_CIPHER_CTX *ctx, int type,
-                                             int arg, void *ptr)
+                                            int arg, void *ptr)
 {
-    return dasync_cipher_ctrl_helper(ctx, type, arg, ptr, 1, EVP_aes_128_cbc_hmac_sha1());
+    return dasync_cipher_ctrl_helper(ctx, type, arg, ptr, 1,
+                                     EVP_aes_128_cbc_hmac_sha1());
 }
 
 static int dasync_aes128_cbc_hmac_sha1_init_key(EVP_CIPHER_CTX *ctx,
@@ -867,9 +872,9 @@ static int dasync_aes128_cbc_hmac_sha1_init_key(EVP_CIPHER_CTX *ctx,
 }
 
 static int dasync_aes128_cbc_hmac_sha1_cipher(EVP_CIPHER_CTX *ctx,
-                                               unsigned char *out,
-                                               const unsigned char *in,
-                                               size_t inl)
+                                              unsigned char *out,
+                                              const unsigned char *in,
+                                              size_t inl)
 {
     return dasync_cipher_helper(ctx, out, in, inl, EVP_aes_128_cbc_hmac_sha1());
 }
@@ -977,8 +982,8 @@ static int dasync_rsa_decrypt(EVP_PKEY_CTX *ctx, unsigned char *out,
                               size_t inlen)
 {
     static int (*pdecrypt)(EVP_PKEY_CTX *ctx, unsigned char *out,
-                             size_t *outlen, const unsigned char *in,
-                             size_t inlen);
+                           size_t *outlen, const unsigned char *in,
+                           size_t inlen);
 
     if (pdecrypt == NULL)
         EVP_PKEY_meth_get_encrypt(dasync_rsa_orig, NULL, &pdecrypt);

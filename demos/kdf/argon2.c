@@ -66,10 +66,10 @@ static uint32_t iteration_cost =  3;
 static uint32_t parallel_cost  =  4;
 
 static const unsigned char expected_output[] = {
-   0x0d, 0x64, 0x0d, 0xf5, 0x8d, 0x78, 0x76, 0x6c,
-   0x08, 0xc0, 0x37, 0xa3, 0x4a, 0x8b, 0x53, 0xc9,
-   0xd0, 0x1e, 0xf0, 0x45, 0x2d, 0x75, 0xb6, 0x5e,
-   0xb5, 0x25, 0x20, 0xe9, 0x6b, 0x01, 0xe6, 0x59
+    0x0d, 0x64, 0x0d, 0xf5, 0x8d, 0x78, 0x76, 0x6c,
+    0x08, 0xc0, 0x37, 0xa3, 0x4a, 0x8b, 0x53, 0xc9,
+    0xd0, 0x1e, 0xf0, 0x45, 0x2d, 0x75, 0xb6, 0x5e,
+    0xb5, 0x25, 0x20, 0xe9, 0x6b, 0x01, 0xe6, 0x59
 };
 
 int main(int argc, char **argv)
@@ -117,21 +117,28 @@ int main(int argc, char **argv)
     }
 
     /* Set password */
-    *p++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_PASSWORD, password, sizeof(password));
+    *p++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_PASSWORD, password,
+                                             sizeof(password));
     /* Set salt */
-    *p++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_SALT, salt, sizeof(salt));
+    *p++ =
+        OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_SALT, salt,
+                                          sizeof(salt));
     /* Set optional additional data */
-    *p++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_ARGON2_AD, ad, sizeof(ad));
+    *p++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_ARGON2_AD, ad,
+                                             sizeof(ad));
     /* Set optional secret */
-    *p++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_SECRET, secret, sizeof(secret));
+    *p++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_SECRET, secret,
+                                             sizeof(secret));
     /* Set iteration count */
     *p++ = OSSL_PARAM_construct_uint32(OSSL_KDF_PARAM_ITER, &iteration_cost);
     /* Set threads performing derivation (can be decreased) */
     *p++ = OSSL_PARAM_construct_uint(OSSL_KDF_PARAM_THREADS, &threads);
     /* Set parallel cost */
-    *p++ = OSSL_PARAM_construct_uint32(OSSL_KDF_PARAM_ARGON2_LANES, &parallel_cost);
+    *p++ = OSSL_PARAM_construct_uint32(OSSL_KDF_PARAM_ARGON2_LANES,
+                                       &parallel_cost);
     /* Set memory requirement */
-    *p++ = OSSL_PARAM_construct_uint32(OSSL_KDF_PARAM_ARGON2_MEMCOST, &memory_cost);
+    *p++ = OSSL_PARAM_construct_uint32(OSSL_KDF_PARAM_ARGON2_MEMCOST,
+                                       &memory_cost);
     *p = OSSL_PARAM_construct_end();
 
     /* Derive the key */

@@ -99,8 +99,8 @@ static int get_key_values(EVP_PKEY *pkey)
     }
 
     if (!EVP_PKEY_get_octet_string_param(pkey, OSSL_PKEY_PARAM_PUB_KEY,
-                                        out_pubkey, sizeof(out_pubkey),
-                                        &out_pubkey_len)) {
+                                         out_pubkey, sizeof(out_pubkey),
+                                         &out_pubkey_len)) {
         fprintf(stderr, "Failed to get public key\n");
         goto cleanup;
     }

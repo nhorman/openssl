@@ -8,11 +8,11 @@
  */
 
 /*****************************************************************************
- *                                                                           *
- * The following macros/functions are PRIVATE to the record layer. They      *
- * should NOT be used outside of the record layer.                           *
- *                                                                           *
- *****************************************************************************/
+*                                                                           *
+* The following macros/functions are PRIVATE to the record layer. They      *
+* should NOT be used outside of the record layer.                           *
+*                                                                           *
+*****************************************************************************/
 
 #define MAX_WARN_ALERT_COUNT    5
 

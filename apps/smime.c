@@ -60,7 +60,8 @@ const OPTIONS smime_options[] = {
      "Output format SMIME (default), PEM or DER"},
     {"inkey", OPT_INKEY, 's',
      "Input private key (if not signer or recipient)"},
-    {"keyform", OPT_KEYFORM, 'f', "Input private key format (ENGINE, other values ignored)"},
+    {"keyform", OPT_KEYFORM, 'f',
+     "Input private key format (ENGINE, other values ignored)"},
 #ifndef OPENSSL_NO_ENGINE
     {"engine", OPT_ENGINE, 's', "Use engine, possibly a hardware device"},
 #endif
@@ -118,7 +119,8 @@ const OPTIONS smime_options[] = {
      "Do not load certificates from the default certificates store"},
     {"nochain", OPT_NOCHAIN, '-',
      "set PKCS7_NOCHAIN so certificates contained in the message are not used as untrusted CAs" },
-    {"crlfeol", OPT_CRLFEOL, '-', "Use CRLF as EOL termination instead of CR only"},
+    {"crlfeol", OPT_CRLFEOL, '-',
+     "Use CRLF as EOL termination instead of CR only"},
 
     OPT_R_OPTIONS,
     OPT_V_OPTIONS,
@@ -132,25 +134,25 @@ const OPTIONS smime_options[] = {
 static const char *operation_name(int operation)
 {
     switch (operation) {
-    case SMIME_ENCRYPT:
-        return "encrypt";
-    case SMIME_DECRYPT:
-        return "decrypt";
-    case SMIME_SIGN:
-        return "sign";
-    case SMIME_RESIGN:
-        return "resign";
-    case SMIME_VERIFY:
-        return "verify";
-    case SMIME_PK7OUT:
-        return "pk7out";
-    default:
-        return "(invalid operation)";
+        case SMIME_ENCRYPT:
+            return "encrypt";
+        case SMIME_DECRYPT:
+            return "decrypt";
+        case SMIME_SIGN:
+            return "sign";
+        case SMIME_RESIGN:
+            return "resign";
+        case SMIME_VERIFY:
+            return "verify";
+        case SMIME_PK7OUT:
+            return "pk7out";
+        default:
+            return "(invalid operation)";
     }
 }
 
 #define SET_OPERATION(op) \
-    ((operation != 0 && (operation != (op))) \
+        ((operation != 0 && (operation != (op))) \
      ? 0 * BIO_printf(bio_err, "%s: Cannot use -%s together with -%s\n", \
                       prog, operation_name(op), operation_name(operation)) \
      : (operation = (op)))
@@ -190,201 +192,202 @@ int smime_main(int argc, char **argv)
     prog = opt_init(argc, argv, smime_options);
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_EOF:
-        case OPT_ERR:
- opthelp:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto end;
-        case OPT_HELP:
-            opt_help(smime_options);
-            ret = 0;
-            goto end;
-        case OPT_INFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_PDS, &informat))
-                goto opthelp;
-            break;
-        case OPT_IN:
-            infile = opt_arg();
-            break;
-        case OPT_OUTFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_PDS, &outformat))
-                goto opthelp;
-            break;
-        case OPT_OUT:
-            outfile = opt_arg();
-            break;
-        case OPT_ENCRYPT:
-            if (!SET_OPERATION(SMIME_ENCRYPT))
+            case OPT_EOF:
+            case OPT_ERR:
+opthelp:
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
                 goto end;
-            break;
-        case OPT_DECRYPT:
-            if (!SET_OPERATION(SMIME_DECRYPT))
+            case OPT_HELP:
+                opt_help(smime_options);
+                ret = 0;
                 goto end;
-            break;
-        case OPT_SIGN:
-            if (!SET_OPERATION(SMIME_SIGN))
-                goto end;
-            break;
-        case OPT_RESIGN:
-            if (!SET_OPERATION(SMIME_RESIGN))
-                goto end;
-            break;
-        case OPT_VERIFY:
-            if (!SET_OPERATION(SMIME_VERIFY))
-                goto end;
-            break;
-        case OPT_PK7OUT:
-            if (!SET_OPERATION(SMIME_PK7OUT))
-                goto end;
-            break;
-        case OPT_TEXT:
-            flags |= PKCS7_TEXT;
-            break;
-        case OPT_NOINTERN:
-            flags |= PKCS7_NOINTERN;
-            break;
-        case OPT_NOVERIFY:
-            flags |= PKCS7_NOVERIFY;
-            break;
-        case OPT_NOCHAIN:
-            flags |= PKCS7_NOCHAIN;
-            break;
-        case OPT_NOCERTS:
-            flags |= PKCS7_NOCERTS;
-            break;
-        case OPT_NOATTR:
-            flags |= PKCS7_NOATTR;
-            break;
-        case OPT_NODETACH:
-            flags &= ~PKCS7_DETACHED;
-            break;
-        case OPT_NOSMIMECAP:
-            flags |= PKCS7_NOSMIMECAP;
-            break;
-        case OPT_BINARY:
-            flags |= PKCS7_BINARY;
-            break;
-        case OPT_NOSIGS:
-            flags |= PKCS7_NOSIGS;
-            break;
-        case OPT_STREAM:
-        case OPT_INDEF:
-            indef = 1;
-            break;
-        case OPT_NOINDEF:
-            indef = 0;
-            break;
-        case OPT_CRLFEOL:
-            flags |= PKCS7_CRLFEOL;
-            mime_eol = "\r\n";
-            break;
-        case OPT_R_CASES:
-            if (!opt_rand(o))
-                goto end;
-            break;
-        case OPT_PROV_CASES:
-            if (!opt_provider(o))
-                goto end;
-            break;
-        case OPT_CONFIG:
-            conf = app_load_config_modules(opt_arg());
-            if (conf == NULL)
-                goto end;
-            break;
-        case OPT_ENGINE:
-            e = setup_engine(opt_arg(), 0);
-            break;
-        case OPT_PASSIN:
-            passinarg = opt_arg();
-            break;
-        case OPT_TO:
-            to = opt_arg();
-            break;
-        case OPT_FROM:
-            from = opt_arg();
-            break;
-        case OPT_SUBJECT:
-            subject = opt_arg();
-            break;
-        case OPT_SIGNER:
-            /* If previous -signer argument add signer to list */
-            if (signerfile != NULL) {
-                if (sksigners == NULL
-                    && (sksigners = sk_OPENSSL_STRING_new_null()) == NULL)
-                    goto end;
-                sk_OPENSSL_STRING_push(sksigners, signerfile);
-                if (keyfile == NULL)
-                    keyfile = signerfile;
-                if (skkeys == NULL
-                    && (skkeys = sk_OPENSSL_STRING_new_null()) == NULL)
-                    goto end;
-                sk_OPENSSL_STRING_push(skkeys, keyfile);
-                keyfile = NULL;
-            }
-            signerfile = opt_arg();
-            break;
-        case OPT_RECIP:
-            recipfile = opt_arg();
-            break;
-        case OPT_MD:
-            digestname = opt_arg();
-            break;
-        case OPT_CIPHER:
-            ciphername = opt_unknown();
-            break;
-        case OPT_INKEY:
-            /* If previous -inkey argument add signer to list */
-            if (keyfile != NULL) {
-                if (signerfile == NULL) {
-                    BIO_printf(bio_err,
-                               "%s: Must have -signer before -inkey\n", prog);
+            case OPT_INFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_PDS, &informat))
                     goto opthelp;
+                break;
+            case OPT_IN:
+                infile = opt_arg();
+                break;
+            case OPT_OUTFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_PDS, &outformat))
+                    goto opthelp;
+                break;
+            case OPT_OUT:
+                outfile = opt_arg();
+                break;
+            case OPT_ENCRYPT:
+                if (!SET_OPERATION(SMIME_ENCRYPT))
+                    goto end;
+                break;
+            case OPT_DECRYPT:
+                if (!SET_OPERATION(SMIME_DECRYPT))
+                    goto end;
+                break;
+            case OPT_SIGN:
+                if (!SET_OPERATION(SMIME_SIGN))
+                    goto end;
+                break;
+            case OPT_RESIGN:
+                if (!SET_OPERATION(SMIME_RESIGN))
+                    goto end;
+                break;
+            case OPT_VERIFY:
+                if (!SET_OPERATION(SMIME_VERIFY))
+                    goto end;
+                break;
+            case OPT_PK7OUT:
+                if (!SET_OPERATION(SMIME_PK7OUT))
+                    goto end;
+                break;
+            case OPT_TEXT:
+                flags |= PKCS7_TEXT;
+                break;
+            case OPT_NOINTERN:
+                flags |= PKCS7_NOINTERN;
+                break;
+            case OPT_NOVERIFY:
+                flags |= PKCS7_NOVERIFY;
+                break;
+            case OPT_NOCHAIN:
+                flags |= PKCS7_NOCHAIN;
+                break;
+            case OPT_NOCERTS:
+                flags |= PKCS7_NOCERTS;
+                break;
+            case OPT_NOATTR:
+                flags |= PKCS7_NOATTR;
+                break;
+            case OPT_NODETACH:
+                flags &= ~PKCS7_DETACHED;
+                break;
+            case OPT_NOSMIMECAP:
+                flags |= PKCS7_NOSMIMECAP;
+                break;
+            case OPT_BINARY:
+                flags |= PKCS7_BINARY;
+                break;
+            case OPT_NOSIGS:
+                flags |= PKCS7_NOSIGS;
+                break;
+            case OPT_STREAM:
+            case OPT_INDEF:
+                indef = 1;
+                break;
+            case OPT_NOINDEF:
+                indef = 0;
+                break;
+            case OPT_CRLFEOL:
+                flags |= PKCS7_CRLFEOL;
+                mime_eol = "\r\n";
+                break;
+            case OPT_R_CASES:
+                if (!opt_rand(o))
+                    goto end;
+                break;
+            case OPT_PROV_CASES:
+                if (!opt_provider(o))
+                    goto end;
+                break;
+            case OPT_CONFIG:
+                conf = app_load_config_modules(opt_arg());
+                if (conf == NULL)
+                    goto end;
+                break;
+            case OPT_ENGINE:
+                e = setup_engine(opt_arg(), 0);
+                break;
+            case OPT_PASSIN:
+                passinarg = opt_arg();
+                break;
+            case OPT_TO:
+                to = opt_arg();
+                break;
+            case OPT_FROM:
+                from = opt_arg();
+                break;
+            case OPT_SUBJECT:
+                subject = opt_arg();
+                break;
+            case OPT_SIGNER:
+                /* If previous -signer argument add signer to list */
+                if (signerfile != NULL) {
+                    if (sksigners == NULL
+                        && (sksigners = sk_OPENSSL_STRING_new_null()) == NULL)
+                        goto end;
+                    sk_OPENSSL_STRING_push(sksigners, signerfile);
+                    if (keyfile == NULL)
+                        keyfile = signerfile;
+                    if (skkeys == NULL
+                        && (skkeys = sk_OPENSSL_STRING_new_null()) == NULL)
+                        goto end;
+                    sk_OPENSSL_STRING_push(skkeys, keyfile);
+                    keyfile = NULL;
                 }
-                if (sksigners == NULL
-                    && (sksigners = sk_OPENSSL_STRING_new_null()) == NULL)
-                    goto end;
-                sk_OPENSSL_STRING_push(sksigners, signerfile);
-                signerfile = NULL;
-                if (skkeys == NULL
-                    && (skkeys = sk_OPENSSL_STRING_new_null()) == NULL)
-                    goto end;
-                sk_OPENSSL_STRING_push(skkeys, keyfile);
-            }
-            keyfile = opt_arg();
-            break;
-        case OPT_KEYFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_ANY, &keyform))
-                goto opthelp;
-            break;
-        case OPT_CERTFILE:
-            certfile = opt_arg();
-            break;
-        case OPT_CAFILE:
-            CAfile = opt_arg();
-            break;
-        case OPT_CAPATH:
-            CApath = opt_arg();
-            break;
-        case OPT_CASTORE:
-            CAstore = opt_arg();
-            break;
-        case OPT_NOCAFILE:
-            noCAfile = 1;
-            break;
-        case OPT_NOCAPATH:
-            noCApath = 1;
-            break;
-        case OPT_NOCASTORE:
-            noCAstore = 1;
-            break;
-        case OPT_CONTENT:
-            contfile = opt_arg();
-            break;
-        case OPT_V_CASES:
-            if (!opt_verify(o, vpm))
-                goto opthelp;
-            vpmtouched++;
-            break;
+                signerfile = opt_arg();
+                break;
+            case OPT_RECIP:
+                recipfile = opt_arg();
+                break;
+            case OPT_MD:
+                digestname = opt_arg();
+                break;
+            case OPT_CIPHER:
+                ciphername = opt_unknown();
+                break;
+            case OPT_INKEY:
+                /* If previous -inkey argument add signer to list */
+                if (keyfile != NULL) {
+                    if (signerfile == NULL) {
+                        BIO_printf(bio_err,
+                                   "%s: Must have -signer before -inkey\n",
+                                   prog);
+                        goto opthelp;
+                    }
+                    if (sksigners == NULL
+                        && (sksigners = sk_OPENSSL_STRING_new_null()) == NULL)
+                        goto end;
+                    sk_OPENSSL_STRING_push(sksigners, signerfile);
+                    signerfile = NULL;
+                    if (skkeys == NULL
+                        && (skkeys = sk_OPENSSL_STRING_new_null()) == NULL)
+                        goto end;
+                    sk_OPENSSL_STRING_push(skkeys, keyfile);
+                }
+                keyfile = opt_arg();
+                break;
+            case OPT_KEYFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_ANY, &keyform))
+                    goto opthelp;
+                break;
+            case OPT_CERTFILE:
+                certfile = opt_arg();
+                break;
+            case OPT_CAFILE:
+                CAfile = opt_arg();
+                break;
+            case OPT_CAPATH:
+                CApath = opt_arg();
+                break;
+            case OPT_CASTORE:
+                CAstore = opt_arg();
+                break;
+            case OPT_NOCAFILE:
+                noCAfile = 1;
+                break;
+            case OPT_NOCAPATH:
+                noCApath = 1;
+                break;
+            case OPT_NOCASTORE:
+                noCAstore = 1;
+                break;
+            case OPT_CONTENT:
+                contfile = opt_arg();
+                break;
+            case OPT_V_CASES:
+                if (!opt_verify(o, vpm))
+                    goto opthelp;
+                vpmtouched++;
+                break;
         }
     }
 
@@ -400,14 +403,14 @@ int smime_main(int argc, char **argv)
             goto opthelp;
     }
     if (!opt_cipher_any(ciphername, &cipher))
-            goto opthelp;
+        goto opthelp;
     if (!(operation & SMIME_SIGNERS) && (skkeys != NULL || sksigners != NULL)) {
         BIO_puts(bio_err, "Multiple signers or keys not allowed\n");
         goto opthelp;
     }
     if (!operation) {
         BIO_puts(bio_err,
-                "No operation (-encrypt|-sign|...) specified\n");
+                 "No operation (-encrypt|-sign|...) specified\n");
         goto opthelp;
     }
 
@@ -575,7 +578,8 @@ int smime_main(int argc, char **argv)
     if (operation == SMIME_ENCRYPT) {
         if (indef)
             flags |= PKCS7_STREAM;
-        p7 = PKCS7_encrypt_ex(encerts, in, cipher, flags, libctx, app_get0_propq());
+        p7 = PKCS7_encrypt_ex(encerts, in, cipher, flags, libctx,
+                              app_get0_propq());
     } else if (operation & SMIME_SIGNERS) {
         int i;
         /*
@@ -590,7 +594,8 @@ int smime_main(int argc, char **argv)
                 flags |= PKCS7_STREAM;
             }
             flags |= PKCS7_PARTIAL;
-            p7 = PKCS7_sign_ex(NULL, NULL, other, in, flags, libctx, app_get0_propq());
+            p7 = PKCS7_sign_ex(NULL, NULL, other, in, flags, libctx,
+                               app_get0_propq());
             if (p7 == NULL)
                 goto end;
             if (flags & PKCS7_NOCERTS) {
@@ -681,7 +686,7 @@ int smime_main(int argc, char **argv)
         }
     }
     ret = 0;
- end:
+end:
     if (ret)
         ERR_print_errors(bio_err);
     OSSL_STACK_OF_X509_free(encerts);

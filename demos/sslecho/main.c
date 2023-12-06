@@ -18,7 +18,7 @@
 
 static const int server_port = 4433;
 
-typedef unsigned char   bool;
+typedef unsigned char bool;
 #define true            1
 #define false           0
 
@@ -26,7 +26,7 @@ typedef unsigned char   bool;
  * This flag won't be useful until both accept/read (TCP & SSL) methods
  * can be called with a timeout. TBD.
  */
-static volatile bool    server_running = true;
+static volatile bool server_running = true;
 
 int create_socket(bool isServer)
 {
@@ -47,7 +47,7 @@ int create_socket(bool isServer)
 
         /* Reuse the address; good for quick restarts */
         if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval))
-                < 0) {
+            < 0) {
             perror("setsockopt(SO_REUSEADDR) failed");
             exit(EXIT_FAILURE);
         }
@@ -157,7 +157,7 @@ int main(int argc, char **argv)
 
     /* Splash */
     printf("\nsslecho : Simple Echo Client/Server : %s : %s\n\n", __DATE__,
-    __TIME__);
+           __TIME__);
 
     /* Need to know if client or server */
     if (argc < 2) {
@@ -196,7 +196,7 @@ int main(int argc, char **argv)
         while (server_running) {
             /* Wait for TCP connection from client */
             client_skt = accept(server_skt, (struct sockaddr*) &addr,
-                    &addr_len);
+                                &addr_len);
             if (client_skt < 0) {
                 perror("Unable to accept");
                 exit(EXIT_FAILURE);

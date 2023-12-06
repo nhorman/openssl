@@ -29,37 +29,37 @@ enum {
 };
 
 typedef struct quic_lcid_st {
-    QUIC_CONN_ID                cid;
-    uint64_t                    seq_num;
+    QUIC_CONN_ID cid;
+    uint64_t seq_num;
 
     /* Back-pointer to the owning QUIC_LCIDM_CONN structure. */
     QUIC_LCIDM_CONN             *conn;
 
     /* LCID_TYPE_* */
-    unsigned int                type                : 2;
+    unsigned int type                : 2;
 } QUIC_LCID;
 
 DEFINE_LHASH_OF_EX(QUIC_LCID);
 DEFINE_LHASH_OF_EX(QUIC_LCIDM_CONN);
 
 struct quic_lcidm_conn_st {
-    size_t              num_active_lcid;
+    size_t num_active_lcid;
     LHASH_OF(QUIC_LCID) *lcids;
     void                *opaque;
     QUIC_LCID           *odcid_lcid_obj;
-    uint64_t            next_seq_num;
+    uint64_t next_seq_num;
 
     /* Have we enrolled an ODCID? */
-    unsigned int        done_odcid          : 1;
+    unsigned int done_odcid          : 1;
 };
 
 struct quic_lcidm_st {
     OSSL_LIB_CTX                *libctx;
     LHASH_OF(QUIC_LCID)         *lcids; /* (QUIC_CONN_ID) -> (QUIC_LCID *)  */
     LHASH_OF(QUIC_LCIDM_CONN)   *conns; /* (void *opaque) -> (QUIC_LCIDM_CONN *) */
-    size_t                      lcid_len; /* Length in bytes for all LCIDs */
+    size_t lcid_len;                      /* Length in bytes for all LCIDs */
 #ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    QUIC_CONN_ID                next_lcid;
+    QUIC_CONN_ID next_lcid;
 #endif
 };
 
@@ -143,7 +143,8 @@ void ossl_quic_lcidm_free(QUIC_LCIDM *lcidm)
     OPENSSL_free(lcidm);
 }
 
-static QUIC_LCID *lcidm_get0_lcid(const QUIC_LCIDM *lcidm, const QUIC_CONN_ID *lcid)
+static QUIC_LCID *lcidm_get0_lcid(const QUIC_LCIDM *lcidm,
+                                  const QUIC_CONN_ID *lcid)
 {
     QUIC_LCID key;
 
@@ -420,7 +421,7 @@ int ossl_quic_lcidm_retire_odcid(QUIC_LCIDM *lcidm, void *opaque)
 
 struct retire_args {
     QUIC_LCID           *earliest_seq_num_lcid_obj;
-    uint64_t            earliest_seq_num, retire_prior_to;
+    uint64_t earliest_seq_num, retire_prior_to;
 };
 
 static void retire_for_conn(QUIC_LCID *lcid_obj, void *arg)

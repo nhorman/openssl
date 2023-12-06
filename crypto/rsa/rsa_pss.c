@@ -106,14 +106,14 @@ int RSA_verify_PKCS1_PSS_mgf1(RSA *rsa, const unsigned char *mHash,
         DB[i] ^= EM[i];
     if (MSBits)
         DB[0] &= 0xFF >> (8 - MSBits);
-    for (i = 0; DB[i] == 0 && i < (maskedDBLen - 1); i++) ;
+    for (i = 0; DB[i] == 0 && i < (maskedDBLen - 1); i++);
     if (DB[i++] != 0x1) {
         ERR_raise(ERR_LIB_RSA, RSA_R_SLEN_RECOVERY_FAILED);
         goto err;
     }
     if (sLen != RSA_PSS_SALTLEN_AUTO
-            && sLen != RSA_PSS_SALTLEN_AUTO_DIGEST_MAX
-            && (maskedDBLen - i) != sLen) {
+        && sLen != RSA_PSS_SALTLEN_AUTO_DIGEST_MAX
+        && (maskedDBLen - i) != sLen) {
         ERR_raise_data(ERR_LIB_RSA, RSA_R_SLEN_CHECK_FAILED,
                        "expected: %d retrieved: %d", sLen,
                        maskedDBLen - i);
@@ -136,7 +136,7 @@ int RSA_verify_PKCS1_PSS_mgf1(RSA *rsa, const unsigned char *mHash,
         ret = 1;
     }
 
- err:
+err:
     OPENSSL_free(DB);
     EVP_MD_CTX_free(ctx);
 
@@ -187,7 +187,7 @@ int RSA_padding_add_PKCS1_PSS_mgf1(RSA *rsa, unsigned char *EM,
     if (sLen == RSA_PSS_SALTLEN_DIGEST) {
         sLen = hLen;
     } else if (sLen == RSA_PSS_SALTLEN_MAX_SIGN
-            || sLen == RSA_PSS_SALTLEN_AUTO) {
+               || sLen == RSA_PSS_SALTLEN_AUTO) {
         sLen = RSA_PSS_SALTLEN_MAX;
     } else if (sLen == RSA_PSS_SALTLEN_AUTO_DIGEST_MAX) {
         sLen = RSA_PSS_SALTLEN_MAX;
@@ -261,7 +261,7 @@ int RSA_padding_add_PKCS1_PSS_mgf1(RSA *rsa, unsigned char *EM,
 
     ret = 1;
 
- err:
+err:
     EVP_MD_CTX_free(ctx);
     OPENSSL_clear_free(salt, (size_t)sLen); /* salt != NULL implies sLen > 0 */
 
@@ -309,13 +309,14 @@ int ossl_rsa_pss_params_30_set_defaults(RSA_PSS_PARAMS_30 *rsa_pss_params)
     return 1;
 }
 
-int ossl_rsa_pss_params_30_is_unrestricted(const RSA_PSS_PARAMS_30 *rsa_pss_params)
+int ossl_rsa_pss_params_30_is_unrestricted(
+    const RSA_PSS_PARAMS_30 *rsa_pss_params)
 {
     static RSA_PSS_PARAMS_30 pss_params_cmp = { 0, };
 
     return rsa_pss_params == NULL
-        || memcmp(rsa_pss_params, &pss_params_cmp,
-                  sizeof(*rsa_pss_params)) == 0;
+           || memcmp(rsa_pss_params, &pss_params_cmp,
+                     sizeof(*rsa_pss_params)) == 0;
 }
 
 int ossl_rsa_pss_params_30_copy(RSA_PSS_PARAMS_30 *to,
@@ -375,7 +376,8 @@ int ossl_rsa_pss_params_30_maskgenalg(const RSA_PSS_PARAMS_30 *rsa_pss_params)
     return rsa_pss_params->mask_gen.algorithm_nid;
 }
 
-int ossl_rsa_pss_params_30_maskgenhashalg(const RSA_PSS_PARAMS_30 *rsa_pss_params)
+int ossl_rsa_pss_params_30_maskgenhashalg(
+    const RSA_PSS_PARAMS_30 *rsa_pss_params)
 {
     if (rsa_pss_params == NULL)
         return default_RSASSA_PSS_params.hash_algorithm_nid;

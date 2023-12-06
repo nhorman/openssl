@@ -78,9 +78,9 @@ extern "C" {
 # endif
 
 typedef struct {
-    uint16_t    kem_id; /* Key Encapsulation Method id */
-    uint16_t    kdf_id; /* Key Derivation Function id */
-    uint16_t    aead_id; /* AEAD alg id */
+    uint16_t kem_id;    /* Key Encapsulation Method id */
+    uint16_t kdf_id;    /* Key Derivation Function id */
+    uint16_t aead_id;    /* AEAD alg id */
 } OSSL_HPKE_SUITE;
 
 /**
@@ -89,18 +89,18 @@ typedef struct {
  */
 # ifndef OPENSSL_NO_ECX
 #  define OSSL_HPKE_SUITE_DEFAULT \
-    {\
-        OSSL_HPKE_KEM_ID_X25519, \
-        OSSL_HPKE_KDF_ID_HKDF_SHA256, \
-        OSSL_HPKE_AEAD_ID_AES_GCM_128 \
-    }
+        { \
+            OSSL_HPKE_KEM_ID_X25519, \
+            OSSL_HPKE_KDF_ID_HKDF_SHA256, \
+            OSSL_HPKE_AEAD_ID_AES_GCM_128 \
+        }
 # else
 #  define OSSL_HPKE_SUITE_DEFAULT \
-    {\
-        OSSL_HPKE_KEM_ID_P256, \
-        OSSL_HPKE_KDF_ID_HKDF_SHA256, \
-        OSSL_HPKE_AEAD_ID_AES_GCM_128 \
-    }
+        { \
+            OSSL_HPKE_KEM_ID_P256, \
+            OSSL_HPKE_KDF_ID_HKDF_SHA256, \
+            OSSL_HPKE_AEAD_ID_AES_GCM_128 \
+        }
 #endif
 
 typedef struct ossl_hpke_ctx_st OSSL_HPKE_CTX;

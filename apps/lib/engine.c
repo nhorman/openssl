@@ -61,7 +61,7 @@ ENGINE *setup_engine_methods(const char *id, unsigned int methods, int debug)
             (void)ENGINE_ctrl(e, ENGINE_CTRL_SET_LOGSTREAM, 0, bio_err, 0);
         if (!ENGINE_ctrl_cmd(e, "SET_USER_INTERFACE", 0,
                              (void *)get_ui_method(), 0, 1)
-                || !ENGINE_set_default(e, methods)) {
+            || !ENGINE_set_default(e, methods)) {
             BIO_printf(bio_err, "Cannot use engine \"%s\"\n", ENGINE_get_id(e));
             ERR_print_errors(bio_err);
             ENGINE_free(e);
@@ -110,7 +110,8 @@ char *make_engine_uri(ENGINE *e, const char *key_id, const char *desc)
     if (e == NULL) {
         BIO_printf(bio_err, "No engine specified for loading %s\n", desc);
     } else if (key_id == NULL) {
-        BIO_printf(bio_err, "No engine key id specified for loading %s\n", desc);
+        BIO_printf(bio_err, "No engine key id specified for loading %s\n",
+                   desc);
     } else {
         const char *engineid = ENGINE_get_id(e);
         size_t uri_sz =
@@ -119,7 +120,7 @@ char *make_engine_uri(ENGINE *e, const char *key_id, const char *desc)
             + 1 /* : */
             + strlen(key_id)
             + 1 /* \0 */
-            ;
+        ;
 
         new_uri = OPENSSL_malloc(uri_sz);
         if (new_uri != NULL) {

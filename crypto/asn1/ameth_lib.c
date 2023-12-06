@@ -243,7 +243,7 @@ EVP_PKEY_ASN1_METHOD *EVP_PKEY_asn1_new(int id, int flags,
 
     return ameth;
 
- err:
+err:
     EVP_PKEY_asn1_free(ameth);
     return NULL;
 }
@@ -403,7 +403,7 @@ void EVP_PKEY_asn1_set_param_check(EVP_PKEY_ASN1_METHOD *ameth,
 void EVP_PKEY_asn1_set_set_priv_key(EVP_PKEY_ASN1_METHOD *ameth,
                                     int (*set_priv_key) (EVP_PKEY *pk,
                                                          const unsigned char
-                                                            *priv,
+                                                         *priv,
                                                          size_t len))
 {
     ameth->set_priv_key = set_priv_key;

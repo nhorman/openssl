@@ -152,34 +152,34 @@ void OPENSSL_showfatal(const char *fmta, ...)
                     do {
                         keepgoing = 0;
                         switch (fmtw[i + 1]) {
-                        case L'0':
-                        case L'1':
-                        case L'2':
-                        case L'3':
-                        case L'4':
-                        case L'5':
-                        case L'6':
-                        case L'7':
-                        case L'8':
-                        case L'9':
-                        case L'.':
-                        case L'*':
-                        case L'-':
-                            i++;
-                            keepgoing = 1;
-                            break;
-                        case L's':
-                            fmtw[i + 1] = L'S';
-                            break;
-                        case L'S':
-                            fmtw[i + 1] = L's';
-                            break;
-                        case L'c':
-                            fmtw[i + 1] = L'C';
-                            break;
-                        case L'C':
-                            fmtw[i + 1] = L'c';
-                            break;
+                            case L'0':
+                            case L'1':
+                            case L'2':
+                            case L'3':
+                            case L'4':
+                            case L'5':
+                            case L'6':
+                            case L'7':
+                            case L'8':
+                            case L'9':
+                            case L'.':
+                            case L'*':
+                            case L'-':
+                                i++;
+                                keepgoing = 1;
+                                break;
+                            case L's':
+                                fmtw[i + 1] = L'S';
+                                break;
+                            case L'S':
+                                fmtw[i + 1] = L's';
+                                break;
+                            case L'c':
+                                fmtw[i + 1] = L'C';
+                                break;
+                            case L'C':
+                                fmtw[i + 1] = L'c';
+                                break;
                         }
                     } while (keepgoing);
             }
@@ -195,13 +195,13 @@ void OPENSSL_showfatal(const char *fmta, ...)
 #  ifdef OPENSSL_SYS_WIN_CORE
     /* ONECORE is always NONGUI and NT >= 0x0601 */
 #   if !defined(NDEBUG)
-        /*
-        * We are in a situation where we tried to report a critical
-        * error and this failed for some reason. As a last resort,
-        * in debug builds, send output to the debugger or any other
-        * tool like DebugView which can monitor the output.
-        */
-        OutputDebugString(buf);
+    /*
+     * We are in a situation where we tried to report a critical
+     * error and this failed for some reason. As a last resort,
+     * in debug builds, send output to the debugger or any other
+     * tool like DebugView which can monitor the output.
+     */
+    OutputDebugString(buf);
 #   endif
 #  else
     /* this -------------v--- guards NT-specific calls */
@@ -275,8 +275,9 @@ void OPENSSL_die(const char *message, const char *file, int line)
  * This is used by platform version identification tools.
  * Do not inline this procedure or make it static.
  */
-# define OPENSSL_VPROC_STRING_(x)    x##_CRYPTO
+# define OPENSSL_VPROC_STRING_(x)    x ## _CRYPTO
 # define OPENSSL_VPROC_STRING(x)     OPENSSL_VPROC_STRING_(x)
 # define OPENSSL_VPROC_FUNC          OPENSSL_VPROC_STRING(OPENSSL_VPROC)
-void OPENSSL_VPROC_FUNC(void) {}
+void OPENSSL_VPROC_FUNC(void) {
+}
 #endif /* __TANDEM */

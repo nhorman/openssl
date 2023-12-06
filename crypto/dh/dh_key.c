@@ -100,7 +100,7 @@ int ossl_dh_compute_key(unsigned char *key, const BIGNUM *pub_key, DH *dh)
 
     /* return the padded key, i.e. same number of bytes as the modulus */
     ret = BN_bn2binpad(z, key, BN_num_bytes(dh->params.p));
- err:
+err:
     BN_clear(z); /* (Step 2) destroy intermediate values */
     BN_CTX_end(ctx);
     BN_CTX_free(ctx);
@@ -312,7 +312,7 @@ static int generate_key(DH *dh)
         /* Is it an approved safe prime ?*/
         if (DH_get_nid(dh) != NID_undef) {
             int max_strength =
-                    ossl_ifc_ffc_compute_security_bits(BN_num_bits(dh->params.p));
+                ossl_ifc_ffc_compute_security_bits(BN_num_bits(dh->params.p));
 
             if (dh->params.q == NULL
                 || dh->length > BN_num_bits(dh->params.q))
@@ -373,7 +373,7 @@ static int generate_key(DH *dh)
     dh->priv_key = priv_key;
     dh->dirty_cnt++;
     ok = 1;
- err:
+err:
     if (ok != 1)
         ERR_raise(ERR_LIB_DH, ERR_R_BN_LIB);
 
@@ -424,8 +424,8 @@ size_t ossl_dh_key2buf(const DH *dh, unsigned char **pbuf_out, size_t size,
     DH_get0_pqg(dh, &p, NULL, NULL);
     DH_get0_key(dh, &pubkey, NULL);
     if (p == NULL || pubkey == NULL
-            || (p_size = BN_num_bytes(p)) == 0
-            || BN_num_bytes(pubkey) == 0) {
+        || (p_size = BN_num_bytes(p)) == 0
+        || BN_num_bytes(pubkey) == 0) {
         ERR_raise(ERR_LIB_DH, DH_R_INVALID_PUBKEY);
         return 0;
     }

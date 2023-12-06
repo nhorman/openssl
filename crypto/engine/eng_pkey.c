@@ -81,44 +81,44 @@ EVP_PKEY *ENGINE_load_private_key(ENGINE *e, const char *key_id,
     }
     /* We enforce check for legacy key */
     switch (EVP_PKEY_get_id(pkey)) {
-    case EVP_PKEY_RSA:
+        case EVP_PKEY_RSA:
         {
-        RSA *rsa = EVP_PKEY_get1_RSA(pkey);
-        EVP_PKEY_set1_RSA(pkey, rsa);
-        RSA_free(rsa);
+            RSA *rsa = EVP_PKEY_get1_RSA(pkey);
+            EVP_PKEY_set1_RSA(pkey, rsa);
+            RSA_free(rsa);
         }
         break;
 #  ifndef OPENSSL_NO_EC
-    case EVP_PKEY_SM2:
-    case EVP_PKEY_EC:
+        case EVP_PKEY_SM2:
+        case EVP_PKEY_EC:
         {
-        EC_KEY *ec = EVP_PKEY_get1_EC_KEY(pkey);
-        EVP_PKEY_set1_EC_KEY(pkey, ec);
-        EC_KEY_free(ec);
+            EC_KEY *ec = EVP_PKEY_get1_EC_KEY(pkey);
+            EVP_PKEY_set1_EC_KEY(pkey, ec);
+            EC_KEY_free(ec);
         }
         break;
 #  endif
 #  ifndef OPENSSL_NO_DSA
-    case EVP_PKEY_DSA:
+        case EVP_PKEY_DSA:
         {
-        DSA *dsa = EVP_PKEY_get1_DSA(pkey);
-        EVP_PKEY_set1_DSA(pkey, dsa);
-        DSA_free(dsa);
+            DSA *dsa = EVP_PKEY_get1_DSA(pkey);
+            EVP_PKEY_set1_DSA(pkey, dsa);
+            DSA_free(dsa);
         }
         break;
 #endif
 #  ifndef OPENSSL_NO_DH
-    case EVP_PKEY_DH:
+        case EVP_PKEY_DH:
         {
-        DH *dh = EVP_PKEY_get1_DH(pkey);
-        EVP_PKEY_set1_DH(pkey, dh);
-        DH_free(dh);
+            DH *dh = EVP_PKEY_get1_DH(pkey);
+            EVP_PKEY_set1_DH(pkey, dh);
+            DH_free(dh);
         }
         break;
 #endif
-    default:
-        /*Do nothing */
-        break;
+        default:
+            /*Do nothing */
+            break;
     }
 
     return pkey;

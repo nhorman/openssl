@@ -237,7 +237,8 @@ static int rxfc_cwm_bump_desired(QUIC_RXFC *rxfc)
     uint64_t window_rem = rxfc->cwm - rxfc->rwm;
     uint64_t threshold
         = safe_muldiv_uint64_t(rxfc->cur_window_size,
-                               WINDOW_THRESHOLD_NUM, WINDOW_THRESHOLD_DEN, &err);
+                               WINDOW_THRESHOLD_NUM, WINDOW_THRESHOLD_DEN,
+                               &err);
 
     if (err)
         /*
@@ -274,7 +275,7 @@ static int rxfc_should_bump_window_size(QUIC_RXFC *rxfc, OSSL_TIME rtt)
      * our 64-bit nanosecond representation, which will afford plenty of
      * precision left over after the division anyway.
      */
-    uint64_t  b = rxfc->rwm - rxfc->esrwm;
+    uint64_t b = rxfc->rwm - rxfc->esrwm;
     OSSL_TIME now, dt, t_window;
 
     if (b == 0)

@@ -61,35 +61,35 @@ int rand_main(int argc, char **argv)
     prog = opt_init(argc, argv, rand_options);
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_EOF:
-        case OPT_ERR:
- opthelp:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto end;
-        case OPT_HELP:
-            opt_help(rand_options);
-            ret = 0;
-            goto end;
-        case OPT_OUT:
-            outfile = opt_arg();
-            break;
-        case OPT_ENGINE:
-            e = setup_engine(opt_arg(), 0);
-            break;
-        case OPT_R_CASES:
-            if (!opt_rand(o))
+            case OPT_EOF:
+            case OPT_ERR:
+opthelp:
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
                 goto end;
-            break;
-        case OPT_BASE64:
-            format = FORMAT_BASE64;
-            break;
-        case OPT_HEX:
-            format = FORMAT_TEXT;
-            break;
-        case OPT_PROV_CASES:
-            if (!opt_provider(o))
+            case OPT_HELP:
+                opt_help(rand_options);
+                ret = 0;
                 goto end;
-            break;
+            case OPT_OUT:
+                outfile = opt_arg();
+                break;
+            case OPT_ENGINE:
+                e = setup_engine(opt_arg(), 0);
+                break;
+            case OPT_R_CASES:
+                if (!opt_rand(o))
+                    goto end;
+                break;
+            case OPT_BASE64:
+                format = FORMAT_BASE64;
+                break;
+            case OPT_HEX:
+                format = FORMAT_TEXT;
+                break;
+            case OPT_PROV_CASES:
+                if (!opt_provider(o))
+                    goto end;
+                break;
         }
     }
 
@@ -125,22 +125,22 @@ int rand_main(int argc, char **argv)
             while (argv[0][factoridx]) {
                 if (!isdigit((int)(argv[0][factoridx]))) {
                     switch(argv[0][factoridx]) {
-                    case 'K':
-                        shift = 10;
-                        break;
-                    case 'M':
-                        shift = 20;
-                        break;
-                    case 'G':
-                        shift = 30;
-                        break;
-                    case 'T':
-                        shift = 40;
-                        break;
-                    default:
-                        BIO_printf(bio_err, "Invalid size suffix %s\n",
-                                   &argv[0][factoridx]);
-                        goto opthelp;
+                        case 'K':
+                            shift = 10;
+                            break;
+                        case 'M':
+                            shift = 20;
+                            break;
+                        case 'G':
+                            shift = 30;
+                            break;
+                        case 'T':
+                            shift = 40;
+                            break;
+                        default:
+                            BIO_printf(bio_err, "Invalid size suffix %s\n",
+                                       &argv[0][factoridx]);
+                            goto opthelp;
                     }
                     break;
                 }
@@ -219,7 +219,7 @@ int rand_main(int argc, char **argv)
 
     ret = 0;
 
- end:
+end:
     if (ret != 0)
         ERR_print_errors(bio_err);
     OPENSSL_free(buf);

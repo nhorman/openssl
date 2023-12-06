@@ -96,10 +96,10 @@ static unsigned int query_rand_uint(EVP_RAND_CTX *drbg, const char *name)
 }
 
 #define DRBG_UINT(name)                                 \
-    static unsigned int name(EVP_RAND_CTX *drbg)        \
-    {                                                   \
-        return query_rand_uint(drbg, #name);            \
-    }
+        static unsigned int name(EVP_RAND_CTX *drbg)        \
+        {                                                   \
+            return query_rand_uint(drbg, #name);            \
+        }
 DRBG_UINT(reseed_counter)
 
 static PROV_DRBG *prov_rand(EVP_RAND_CTX *drbg)
@@ -151,7 +151,7 @@ static int using_fips_rng(void)
     return strcmp(name, "OpenSSL FIPS Provider") == 0;
 }
 
- /*
+/*
  * Disable CRNG testing if it is enabled.
  * This stub remains to indicate the calling locations where it is necessary.
  * Once the RNG infrastructure is able to disable these tests, it should be
@@ -246,16 +246,16 @@ static int test_drbg_reseed(int expect_success,
     if (expect_public_reseed >= 0) {
         /* Test whether public DRBG was reseeded as expected */
         if (!TEST_int_ge(reseed_counter(public), public_reseed)
-                || !TEST_uint_ge(reseed_counter(public),
-                                 reseed_counter(primary)))
+            || !TEST_uint_ge(reseed_counter(public),
+                             reseed_counter(primary)))
             return 0;
     }
 
     if (expect_private_reseed >= 0) {
         /* Test whether public DRBG was reseeded as expected */
         if (!TEST_int_ge(reseed_counter(private), private_reseed)
-                || !TEST_uint_ge(reseed_counter(private),
-                                 reseed_counter(primary)))
+            || !TEST_uint_ge(reseed_counter(private),
+                             reseed_counter(primary)))
             return 0;
     }
 
@@ -359,7 +359,7 @@ static int test_drbg_reseed_in_child(EVP_RAND_CTX *primary,
         if (TEST_int_eq(waitpid(pid, &status, 0), pid)
             && TEST_int_eq(status, 0)
             && TEST_true(read(fd[0], &random[0], sizeof(random))
-                          == sizeof(random))) {
+                         == sizeof(random))) {
 
             /* random output of public drbg */
             result[0].pid = pid;
@@ -386,7 +386,7 @@ static int test_drbg_reseed_in_child(EVP_RAND_CTX *primary,
 
         /* check whether all three DRBGs reseed and send output to parent */
         if (TEST_true(test_drbg_reseed(1, primary, public, private,
-                                        &random[0], &random[RANDOM_SIZE],
+                                       &random[0], &random[RANDOM_SIZE],
                                        1, 1, 1, 0))
             && TEST_true(write(fd[1], random, sizeof(random))
                          == sizeof(random))) {
@@ -476,13 +476,15 @@ static int test_rand_reseed_on_fork(EVP_RAND_CTX *primary,
 
     if (duplicate[0] >= DRBG_FORK_COUNT - 1) {
         /* just too many duplicates to be a coincidence */
-        TEST_note("ERROR: %d duplicate prefixes in public random output", duplicate[0]);
+        TEST_note("ERROR: %d duplicate prefixes in public random output",
+                  duplicate[0]);
         success = 0;
     }
 
     if (duplicate[1] >= DRBG_FORK_COUNT - 1) {
         /* just too many duplicates to be a coincidence */
-        TEST_note("ERROR: %d duplicate prefixes in private random output", duplicate[1]);
+        TEST_note("ERROR: %d duplicate prefixes in private random output",
+                  duplicate[1]);
         success = 0;
     }
 
@@ -492,7 +494,8 @@ static int test_rand_reseed_on_fork(EVP_RAND_CTX *primary,
     qsort(sample, sizeof(sample)/2, 2, compare_rand_chunk);
 
     /* ...and count duplicate chunks */
-    for (i = 2, psample = sample + 2 ; i < sizeof(sample) ; i += 2, psample += 2) {
+    for (i = 2, psample = sample + 2 ; i < sizeof(sample) ;
+         i += 2, psample += 2) {
         if (compare_rand_chunk(psample - 2, psample) == 0)
             ++duplicate[0];
     }
@@ -513,7 +516,7 @@ static int test_rand_reseed_on_fork(EVP_RAND_CTX *primary,
                       result[i].pid,
                       result[i].name,
                       result[i].private ? "private" : "public"
-                      );
+                     );
 
             OPENSSL_free(rand_hex);
         }
@@ -539,7 +542,8 @@ static int test_rand_fork_safety(int i)
         success = 0;
 
     /* request a single byte from each of the DRBGs before the next run */
-    if (!TEST_int_gt(RAND_bytes(random, 1), 0) || !TEST_int_gt(RAND_priv_bytes(random, 1), 0))
+    if (!TEST_int_gt(RAND_bytes(random, 1),
+                     0) || !TEST_int_gt(RAND_priv_bytes(random, 1), 0))
         success = 0;
 
     return success;
@@ -666,7 +670,7 @@ static int test_rand_reseed(void)
     rv = 1;
 
 error:
-   return rv;
+    return rv;
 }
 
 #if defined(OPENSSL_THREADS)
@@ -690,9 +694,9 @@ static void run_multi_thread_test(void)
     EVP_RAND_CTX *public = NULL, *private = NULL;
 
     if (!TEST_ptr(public = RAND_get0_public(NULL))
-            || !TEST_ptr(private = RAND_get0_private(NULL))
-            || !TEST_true(set_reseed_time_interval(private, 1))
-            || !TEST_true(set_reseed_time_interval(public, 1))) {
+        || !TEST_ptr(private = RAND_get0_private(NULL))
+        || !TEST_true(set_reseed_time_interval(private, 1))
+        || !TEST_true(set_reseed_time_interval(public, 1))) {
         multi_thread_rand_bytes_succeeded = 0;
         return;
     }
@@ -796,8 +800,8 @@ static EVP_RAND_CTX *new_drbg(EVP_RAND_CTX *parent)
     params[1] = OSSL_PARAM_construct_end();
 
     if (!TEST_ptr(rand = EVP_RAND_fetch(NULL, "CTR-DRBG", NULL))
-            || !TEST_ptr(drbg = EVP_RAND_CTX_new(rand, parent))
-            || !TEST_true(EVP_RAND_CTX_set_params(drbg, params))) {
+        || !TEST_ptr(drbg = EVP_RAND_CTX_new(rand, parent))
+        || !TEST_true(EVP_RAND_CTX_set_params(drbg, params))) {
         EVP_RAND_CTX_free(drbg);
         drbg = NULL;
     }

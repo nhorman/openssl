@@ -23,7 +23,7 @@ X509 *load_cert_pem(const char *file, OSSL_LIB_CTX *libctx)
     if (!TEST_ptr(file) || !TEST_ptr(bio = BIO_new(BIO_s_file())))
         return NULL;
     if (TEST_int_gt(BIO_read_filename(bio, file), 0)
-            && TEST_ptr(cert = X509_new_ex(libctx, NULL)))
+        && TEST_ptr(cert = X509_new_ex(libctx, NULL)))
         (void)TEST_ptr(cert = PEM_read_bio_X509(bio, &cert, NULL, NULL));
 
     BIO_free(bio);

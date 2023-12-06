@@ -226,11 +226,11 @@ int ossl_bn_rsa_fips186_4_gen_prob_primes(BIGNUM *p, BIGNUM *Xpout,
 
     /* (Steps 4.2/5.2) - find first auxiliary probable primes */
     if (!bn_rsa_fips186_4_find_aux_prob_prime(Xp1i, p1i, ctx, rounds, cb)
-            || !bn_rsa_fips186_4_find_aux_prob_prime(Xp2i, p2i, ctx, rounds, cb))
+        || !bn_rsa_fips186_4_find_aux_prob_prime(Xp2i, p2i, ctx, rounds, cb))
         goto err;
     /* (Table B.1) auxiliary prime Max length check */
     if ((BN_num_bits(p1i) + BN_num_bits(p2i)) >=
-            bn_rsa_fips186_5_aux_prime_max_sum_size_for_prob_primes(nlen))
+        bn_rsa_fips186_5_aux_prime_max_sum_size_for_prob_primes(nlen))
         goto err;
     /* (Steps 4.3/5.3) - generate prime */
     if (!ossl_bn_rsa_fips186_4_derive_prime(p, Xpout, Xp, p1i, p2i, nlen, e,
@@ -327,14 +327,14 @@ int ossl_bn_rsa_fips186_4_derive_prime(BIGNUM *Y, BIGNUM *X, const BIGNUM *Xin,
      *    is used further down.
      */
     if (!(BN_lshift1(r1x2, r1)
-            && (BN_mod_inverse(tmp, r1x2, r2, ctx) != NULL)
-            /* (Step 2) R = ((r2^-1 mod 2r1) * r2) - ((2r1^-1 mod r2)*2r1) */
-            && (BN_mod_inverse(R, r2, r1x2, ctx) != NULL)
-            && BN_mul(R, R, r2, ctx) /* R = (r2^-1 mod 2r1) * r2 */
-            && BN_mul(tmp, tmp, r1x2, ctx) /* tmp = (2r1^-1 mod r2)*2r1 */
-            && BN_sub(R, R, tmp)
-            /* Calculate 2r1r2 */
-            && BN_mul(r1r2x2, r1x2, r2, ctx)))
+          && (BN_mod_inverse(tmp, r1x2, r2, ctx) != NULL)
+          /* (Step 2) R = ((r2^-1 mod 2r1) * r2) - ((2r1^-1 mod r2)*2r1) */
+          && (BN_mod_inverse(R, r2, r1x2, ctx) != NULL)
+          && BN_mul(R, R, r2, ctx)   /* R = (r2^-1 mod 2r1) * r2 */
+          && BN_mul(tmp, tmp, r1x2, ctx)   /* tmp = (2r1^-1 mod r2)*2r1 */
+          && BN_sub(R, R, tmp)
+          /* Calculate 2r1r2 */
+          && BN_mul(r1r2x2, r1x2, r2, ctx)))
         goto err;
     /* Make positive by adding the modulus */
     if (BN_is_negative(R) && !BN_add(R, R, r1r2x2))
@@ -376,7 +376,7 @@ int ossl_bn_rsa_fips186_4_derive_prime(BIGNUM *Y, BIGNUM *X, const BIGNUM *Xin,
 
             /* (Step 7) If GCD(Y-1) == 1 & Y is probably prime then return Y */
             if (BN_copy(y1, Y) == NULL
-                    || !BN_sub_word(y1, 1))
+                || !BN_sub_word(y1, 1))
                 goto err;
 
             if (BN_are_coprime(y1, e, ctx)) {

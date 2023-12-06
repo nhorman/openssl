@@ -57,8 +57,10 @@ const OPTIONS dsaparam_options[] = {
     OPT_PROV_OPTIONS,
 
     OPT_PARAMETERS(),
-    {"numbits", 0, 0, "Number of bits if generating parameters or key (optional)"},
-    {"numqbits", 0, 0, "Number of bits in the subprime parameter q if generating parameters or key (optional)"},
+    {"numbits", 0, 0,
+     "Number of bits if generating parameters or key (optional)"},
+    {"numqbits", 0, 0,
+     "Number of bits in the subprime parameter q if generating parameters or key (optional)"},
     {NULL}
 };
 
@@ -77,55 +79,55 @@ int dsaparam_main(int argc, char **argv)
     prog = opt_init(argc, argv, dsaparam_options);
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_EOF:
-        case OPT_ERR:
- opthelp:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto end;
-        case OPT_HELP:
-            opt_help(dsaparam_options);
-            ret = 0;
-            goto end;
-        case OPT_INFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &informat))
-                goto opthelp;
-            break;
-        case OPT_IN:
-            infile = opt_arg();
-            break;
-        case OPT_OUTFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &outformat))
-                goto opthelp;
-            break;
-        case OPT_OUT:
-            outfile = opt_arg();
-            break;
-        case OPT_ENGINE:
-            e = setup_engine(opt_arg(), 0);
-            break;
-        case OPT_TEXT:
-            text = 1;
-            break;
-        case OPT_GENKEY:
-            genkey = 1;
-            break;
-        case OPT_R_CASES:
-            if (!opt_rand(o))
+            case OPT_EOF:
+            case OPT_ERR:
+opthelp:
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
                 goto end;
-            break;
-        case OPT_PROV_CASES:
-            if (!opt_provider(o))
+            case OPT_HELP:
+                opt_help(dsaparam_options);
+                ret = 0;
                 goto end;
-            break;
-        case OPT_NOOUT:
-            noout = 1;
-            break;
-        case OPT_VERBOSE:
-            verbose = 1;
-            break;
-        case OPT_QUIET:
-            verbose = 0;
-            break;
+            case OPT_INFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &informat))
+                    goto opthelp;
+                break;
+            case OPT_IN:
+                infile = opt_arg();
+                break;
+            case OPT_OUTFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &outformat))
+                    goto opthelp;
+                break;
+            case OPT_OUT:
+                outfile = opt_arg();
+                break;
+            case OPT_ENGINE:
+                e = setup_engine(opt_arg(), 0);
+                break;
+            case OPT_TEXT:
+                text = 1;
+                break;
+            case OPT_GENKEY:
+                genkey = 1;
+                break;
+            case OPT_R_CASES:
+                if (!opt_rand(o))
+                    goto end;
+                break;
+            case OPT_PROV_CASES:
+                if (!opt_provider(o))
+                    goto end;
+                break;
+            case OPT_NOOUT:
+                noout = 1;
+                break;
+            case OPT_VERBOSE:
+                verbose = 1;
+                break;
+            case OPT_QUIET:
+                verbose = 0;
+                break;
         }
     }
 
@@ -154,7 +156,8 @@ int dsaparam_main(int argc, char **argv)
     if (out == NULL)
         goto end;
 
-    ctx = EVP_PKEY_CTX_new_from_name(app_get0_libctx(), "DSA", app_get0_propq());
+    ctx =
+        EVP_PKEY_CTX_new_from_name(app_get0_libctx(), "DSA", app_get0_propq());
     if (ctx == NULL) {
         BIO_printf(bio_err,
                    "Error, DSA parameter generation context allocation failed\n");
@@ -170,7 +173,8 @@ int dsaparam_main(int argc, char **argv)
         EVP_PKEY_CTX_set_app_data(ctx, bio_err);
         if (verbose) {
             EVP_PKEY_CTX_set_cb(ctx, progress_cb);
-            BIO_printf(bio_err, "Generating DSA parameters, %d bit long prime\n",
+            BIO_printf(bio_err,
+                       "Generating DSA parameters, %d bit long prime\n",
                        num);
             BIO_printf(bio_err, "This could take some time\n");
         }
@@ -187,7 +191,7 @@ int dsaparam_main(int argc, char **argv)
         if (numqbits > 0) {
             if (EVP_PKEY_CTX_set_dsa_paramgen_q_bits(ctx, numqbits) <= 0) {
                 BIO_printf(bio_err,
-                        "Error, DSA key generation setting subprime bit length failed\n");
+                           "Error, DSA key generation setting subprime bit length failed\n");
                 goto end;
             }
         }
@@ -220,7 +224,7 @@ int dsaparam_main(int argc, char **argv)
     if (genkey) {
         EVP_PKEY_CTX_free(ctx);
         ctx = EVP_PKEY_CTX_new_from_pkey(app_get0_libctx(), params,
-                app_get0_propq());
+                                         app_get0_propq());
         if (ctx == NULL) {
             BIO_printf(bio_err,
                        "Error, DSA key generation context allocation failed\n");
@@ -241,7 +245,7 @@ int dsaparam_main(int argc, char **argv)
             i = PEM_write_bio_PrivateKey(out, pkey, NULL, NULL, 0, NULL, NULL);
     }
     ret = 0;
- end:
+end:
     if (ret != 0)
         ERR_print_errors(bio_err);
     BIO_free_all(out);

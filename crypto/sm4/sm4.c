@@ -83,7 +83,8 @@ static const uint32_t SM4_SBOX_T0[256] = {
     0x35F2C7C7, 0x2D092424, 0xD1C61717, 0xD66FB9B9, 0xDEC51B1B, 0x94861212,
     0x78186060, 0x30F3C3C3, 0x897CF5F5, 0x5CEFB3B3, 0xD23AE8E8, 0xACDF7373,
     0x794C3535, 0xA0208080, 0x9D78E5E5, 0x56EDBBBB, 0x235E7D7D, 0xC63EF8F8,
-    0x8BD45F5F, 0xE7C82F2F, 0xDD39E4E4, 0x68492121 };
+    0x8BD45F5F, 0xE7C82F2F, 0xDD39E4E4, 0x68492121
+};
 
 static uint32_t SM4_SBOX_T1[256] = {
     0x5B8ED55B, 0x42D09242, 0xA74DEAA7, 0xFB06FDFB, 0x33FCCF33, 0x8765E287,
@@ -128,7 +129,8 @@ static uint32_t SM4_SBOX_T1[256] = {
     0xC735F2C7, 0x242D0924, 0x17D1C617, 0xB9D66FB9, 0x1BDEC51B, 0x12948612,
     0x60781860, 0xC330F3C3, 0xF5897CF5, 0xB35CEFB3, 0xE8D23AE8, 0x73ACDF73,
     0x35794C35, 0x80A02080, 0xE59D78E5, 0xBB56EDBB, 0x7D235E7D, 0xF8C63EF8,
-    0x5F8BD45F, 0x2FE7C82F, 0xE4DD39E4, 0x21684921};
+    0x5F8BD45F, 0x2FE7C82F, 0xE4DD39E4, 0x21684921
+};
 
 static uint32_t SM4_SBOX_T2[256] = {
     0x5B5B8ED5, 0x4242D092, 0xA7A74DEA, 0xFBFB06FD, 0x3333FCCF, 0x878765E2,
@@ -173,7 +175,8 @@ static uint32_t SM4_SBOX_T2[256] = {
     0xC7C735F2, 0x24242D09, 0x1717D1C6, 0xB9B9D66F, 0x1B1BDEC5, 0x12129486,
     0x60607818, 0xC3C330F3, 0xF5F5897C, 0xB3B35CEF, 0xE8E8D23A, 0x7373ACDF,
     0x3535794C, 0x8080A020, 0xE5E59D78, 0xBBBB56ED, 0x7D7D235E, 0xF8F8C63E,
-    0x5F5F8BD4, 0x2F2FE7C8, 0xE4E4DD39, 0x21216849};
+    0x5F5F8BD4, 0x2F2FE7C8, 0xE4E4DD39, 0x21216849
+};
 
 static uint32_t SM4_SBOX_T3[256] = {
     0xD55B5B8E, 0x924242D0, 0xEAA7A74D, 0xFDFBFB06, 0xCF3333FC, 0xE2878765,
@@ -218,7 +221,8 @@ static uint32_t SM4_SBOX_T3[256] = {
     0xF2C7C735, 0x0924242D, 0xC61717D1, 0x6FB9B9D6, 0xC51B1BDE, 0x86121294,
     0x18606078, 0xF3C3C330, 0x7CF5F589, 0xEFB3B35C, 0x3AE8E8D2, 0xDF7373AC,
     0x4C353579, 0x208080A0, 0x78E5E59D, 0xEDBBBB56, 0x5E7D7D23, 0x3EF8F8C6,
-    0xD45F5F8B, 0xC82F2FE7, 0x39E4E4DD, 0x49212168};
+    0xD45F5F8B, 0xC82F2FE7, 0x39E4E4DD, 0x49212168
+};
 
 static ossl_inline uint32_t rotl(uint32_t a, uint8_t n)
 {
@@ -284,7 +288,7 @@ int ossl_sm4_set_key(const uint8_t *key, SM4_KEY *ks)
      * Family Key
      */
     static const uint32_t FK[4] =
-        { 0xa3b1bac6, 0x56aa3350, 0x677d9197, 0xb27022dc };
+    { 0xa3b1bac6, 0x56aa3350, 0x677d9197, 0xb27022dc };
 
     /*
      * Constant Key
@@ -323,12 +327,12 @@ int ossl_sm4_set_key(const uint8_t *key, SM4_KEY *ks)
 }
 
 #define SM4_RNDS(k0, k1, k2, k3, F)          \
-      do {                                   \
-         B0 ^= F(B1 ^ B2 ^ B3 ^ ks->rk[k0]); \
-         B1 ^= F(B0 ^ B2 ^ B3 ^ ks->rk[k1]); \
-         B2 ^= F(B0 ^ B1 ^ B3 ^ ks->rk[k2]); \
-         B3 ^= F(B0 ^ B1 ^ B2 ^ ks->rk[k3]); \
-      } while(0)
+        do {                                   \
+            B0 ^= F(B1 ^ B2 ^ B3 ^ ks->rk[k0]); \
+            B1 ^= F(B0 ^ B2 ^ B3 ^ ks->rk[k1]); \
+            B2 ^= F(B0 ^ B1 ^ B3 ^ ks->rk[k2]); \
+            B3 ^= F(B0 ^ B1 ^ B2 ^ ks->rk[k3]); \
+        } while(0)
 
 void ossl_sm4_encrypt(const uint8_t *in, uint8_t *out, const SM4_KEY *ks)
 {

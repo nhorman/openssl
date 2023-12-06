@@ -24,4 +24,5 @@ static ossl_inline uint64_t widemul(uint32_t a, uint32_t b)
     return ((uint64_t)a) * b;
 }
 
-#endif                          /* OSSL_CRYPTO_EC_CURVE448_ARCH_32_INTRINSICS_H */
+#endif \
+    /* OSSL_CRYPTO_EC_CURVE448_ARCH_32_INTRINSICS_H */

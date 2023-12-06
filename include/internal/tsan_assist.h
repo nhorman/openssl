@@ -56,30 +56,35 @@
 #  include <stdatomic.h>
 
 #  if defined(ATOMIC_POINTER_LOCK_FREE) \
-          && ATOMIC_POINTER_LOCK_FREE >= 2
+    && ATOMIC_POINTER_LOCK_FREE >= 2
 #   define TSAN_QUALIFIER _Atomic
 #   define tsan_load(ptr) atomic_load_explicit((ptr), memory_order_relaxed)
-#   define tsan_store(ptr, val) atomic_store_explicit((ptr), (val), memory_order_relaxed)
-#   define tsan_add(ptr, n) atomic_fetch_add_explicit((ptr), (n), memory_order_relaxed)
+#   define tsan_store(ptr, val) atomic_store_explicit((ptr), (val), \
+                                                      memory_order_relaxed)
+#   define tsan_add(ptr, n) atomic_fetch_add_explicit((ptr), (n), \
+                                                      memory_order_relaxed)
 #   define tsan_ld_acq(ptr) atomic_load_explicit((ptr), memory_order_acquire)
-#   define tsan_st_rel(ptr, val) atomic_store_explicit((ptr), (val), memory_order_release)
+#   define tsan_st_rel(ptr, val) atomic_store_explicit((ptr), (val), \
+                                                       memory_order_release)
 #  endif
 
 # elif defined(__GNUC__) && defined(__ATOMIC_RELAXED)
 
 #  if defined(__GCC_ATOMIC_POINTER_LOCK_FREE) \
-          && __GCC_ATOMIC_POINTER_LOCK_FREE >= 2
+    && __GCC_ATOMIC_POINTER_LOCK_FREE >= 2
 #   define TSAN_QUALIFIER volatile
 #   define tsan_load(ptr) __atomic_load_n((ptr), __ATOMIC_RELAXED)
 #   define tsan_store(ptr, val) __atomic_store_n((ptr), (val), __ATOMIC_RELAXED)
 #   define tsan_add(ptr, n) __atomic_fetch_add((ptr), (n), __ATOMIC_RELAXED)
 #   define tsan_ld_acq(ptr) __atomic_load_n((ptr), __ATOMIC_ACQUIRE)
-#   define tsan_st_rel(ptr, val) __atomic_store_n((ptr), (val), __ATOMIC_RELEASE)
+#   define tsan_st_rel(ptr, val) __atomic_store_n((ptr), (val), \
+                                                  __ATOMIC_RELEASE)
 #  endif
 
 # elif defined(_MSC_VER) && _MSC_VER>=1200 \
-      && (defined(_M_IX86) || defined(_M_AMD64) || defined(_M_X64) || \
-          defined(_M_ARM64) || (defined(_M_ARM) && _M_ARM >= 7 && !defined(_WIN32_WCE)))
+    && (defined(_M_IX86) || defined(_M_AMD64) || defined(_M_X64) || \
+    defined(_M_ARM64) || (defined(_M_ARM) && _M_ARM >= 7 && \
+    !defined(_WIN32_WCE)))
 /*
  * There is subtle dependency on /volatile:<iso|ms> command-line option.
  * "ms" implies same semantic as memory_order_acquire for loads and
@@ -102,8 +107,13 @@
 #    pragma intrinsic(__iso_volatile_load64, __iso_volatile_store64)
 #    define tsan_load(ptr) (sizeof(*(ptr)) == 8 ? __iso_volatile_load64(ptr) \
                                                : __iso_volatile_load32(ptr))
-#    define tsan_store(ptr, val) (sizeof(*(ptr)) == 8 ? __iso_volatile_store64((ptr), (val)) \
-                                                     : __iso_volatile_store32((ptr), (val)))
+#    define tsan_store(ptr, \
+                       val) (sizeof(*(ptr)) == \
+                             8 ? __iso_volatile_store64((ptr), (val)) \
+                                                     : __iso_volatile_store32(( \
+                                                                                  ptr), \
+                                                                              ( \
+                                                                                  val)))
 #   else
 #    define tsan_load(ptr) __iso_volatile_load32(ptr)
 #    define tsan_store(ptr, val) __iso_volatile_store32((ptr), (val))
@@ -115,8 +125,11 @@
 #  pragma intrinsic(_InterlockedExchangeAdd)
 #  ifdef _WIN64
 #   pragma intrinsic(_InterlockedExchangeAdd64)
-#   define tsan_add(ptr, n) (sizeof(*(ptr)) == 8 ? _InterlockedExchangeAdd64((ptr), (n)) \
-                                                : _InterlockedExchangeAdd((ptr), (n)))
+#   define tsan_add(ptr, \
+                    n) (sizeof(*(ptr)) == \
+                        8 ? _InterlockedExchangeAdd64((ptr), (n)) \
+                                                : _InterlockedExchangeAdd((ptr), \
+                                                                          (n)))
 #  else
 #   define tsan_add(ptr, n) _InterlockedExchangeAdd((ptr), (n))
 #  endif

@@ -34,19 +34,19 @@ PKCS12 *PKCS12_init_ex(int mode, OSSL_LIB_CTX *ctx, const char *propq)
     }
 
     switch (mode) {
-    case NID_pkcs7_data:
-        if ((pkcs12->authsafes->d.data = ASN1_OCTET_STRING_new()) == NULL) {
-            ERR_raise(ERR_LIB_PKCS12, ERR_R_ASN1_LIB);
+        case NID_pkcs7_data:
+            if ((pkcs12->authsafes->d.data = ASN1_OCTET_STRING_new()) == NULL) {
+                ERR_raise(ERR_LIB_PKCS12, ERR_R_ASN1_LIB);
+                goto err;
+            }
+            break;
+        default:
+            ERR_raise(ERR_LIB_PKCS12, PKCS12_R_UNSUPPORTED_PKCS12_MODE);
             goto err;
-        }
-        break;
-    default:
-        ERR_raise(ERR_LIB_PKCS12, PKCS12_R_UNSUPPORTED_PKCS12_MODE);
-        goto err;
     }
     return pkcs12;
 
- err:
+err:
     PKCS12_free(pkcs12);
     return NULL;
 }

@@ -43,7 +43,7 @@ CMS_ContentInfo *ossl_cms_DigestedData_create(const EVP_MD *md,
 
     return cms;
 
- err:
+err:
     CMS_ContentInfo_free(cms);
     return NULL;
 }
@@ -94,7 +94,7 @@ int ossl_cms_DigestedData_do_final(const CMS_ContentInfo *cms, BIO *chain,
         r = 1;
     }
 
- err:
+err:
     EVP_MD_CTX_free(mctx);
 
     return r;

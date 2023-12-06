@@ -48,7 +48,7 @@
 # endif
 
 # ifdef __BORLANDC__
-   /* _lseek in <io.h> is a function-like macro so we can't take its address */
+/* _lseek in <io.h> is a function-like macro so we can't take its address */
 #  undef _lseek
 #  define _lseek lseek
 # endif
@@ -113,7 +113,7 @@ OPENSSL_Applink(void)
 {
     static int once = 1;
     static void *OPENSSL_ApplinkTable[APPLINK_MAX + 1] =
-        { (void *)APPLINK_MAX };
+    { (void *)APPLINK_MAX };
 
     if (once) {
         OPENSSL_ApplinkTable[APPLINK_STDIN] = app_stdin;

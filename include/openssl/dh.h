@@ -52,7 +52,8 @@ int EVP_PKEY_CTX_set_dh_kdf_md(EVP_PKEY_CTX *ctx, const EVP_MD *md);
 int EVP_PKEY_CTX_get_dh_kdf_md(EVP_PKEY_CTX *ctx, const EVP_MD **md);
 int EVP_PKEY_CTX_set_dh_kdf_outlen(EVP_PKEY_CTX *ctx, int len);
 int EVP_PKEY_CTX_get_dh_kdf_outlen(EVP_PKEY_CTX *ctx, int *len);
-int EVP_PKEY_CTX_set0_dh_kdf_ukm(EVP_PKEY_CTX *ctx, unsigned char *ukm, int len);
+int EVP_PKEY_CTX_set0_dh_kdf_ukm(EVP_PKEY_CTX *ctx, unsigned char *ukm,
+                                 int len);
 # ifndef OPENSSL_NO_DEPRECATED_3_0
 OSSL_DEPRECATEDIN_3_0
 int EVP_PKEY_CTX_get0_dh_kdf_ukm(EVP_PKEY_CTX *ctx, unsigned char **ukm);
@@ -171,8 +172,8 @@ DECLARE_ASN1_ITEM(DHparams)
 #   define DH_CHECK_P_NOT_STRONG_PRIME     DH_CHECK_P_NOT_SAFE_PRIME
 
 #   define d2i_DHparams_fp(fp, x) \
-        (DH *)ASN1_d2i_fp((char *(*)())DH_new, \
-                          (char *(*)())d2i_DHparams, \
+        (DH *)ASN1_d2i_fp((char *(*)()) DH_new, \
+                          (char *(*)()) d2i_DHparams, \
                           (fp), \
                           (unsigned char **)(x))
 #   define i2d_DHparams_fp(fp, x) \
@@ -183,8 +184,8 @@ DECLARE_ASN1_ITEM(DHparams)
         ASN1_i2d_bio_of(DH, i2d_DHparams, bp, x)
 
 #   define d2i_DHxparams_fp(fp,x) \
-        (DH *)ASN1_d2i_fp((char *(*)())DH_new, \
-                          (char *(*)())d2i_DHxparams, \
+        (DH *)ASN1_d2i_fp((char *(*)()) DH_new, \
+                          (char *(*)()) d2i_DHxparams, \
                           (fp), \
                           (unsigned char **)(x))
 #   define i2d_DHxparams_fp(fp, x) \
@@ -222,7 +223,8 @@ OSSL_DEPRECATEDIN_3_0 int DH_generate_parameters_ex(DH *dh, int prime_len,
 
 OSSL_DEPRECATEDIN_3_0 int DH_check_params_ex(const DH *dh);
 OSSL_DEPRECATEDIN_3_0 int DH_check_ex(const DH *dh);
-OSSL_DEPRECATEDIN_3_0 int DH_check_pub_key_ex(const DH *dh, const BIGNUM *pub_key);
+OSSL_DEPRECATEDIN_3_0 int DH_check_pub_key_ex(const DH *dh,
+                                              const BIGNUM *pub_key);
 OSSL_DEPRECATEDIN_3_0 int DH_check_params(const DH *dh, int *ret);
 OSSL_DEPRECATEDIN_3_0 int DH_check(const DH *dh, int *codes);
 OSSL_DEPRECATEDIN_3_0 int DH_check_pub_key(const DH *dh, const BIGNUM *pub_key,
@@ -262,7 +264,8 @@ OSSL_DEPRECATEDIN_3_0 void DH_get0_pqg(const DH *dh, const BIGNUM **p,
 OSSL_DEPRECATEDIN_3_0 int DH_set0_pqg(DH *dh, BIGNUM *p, BIGNUM *q, BIGNUM *g);
 OSSL_DEPRECATEDIN_3_0 void DH_get0_key(const DH *dh, const BIGNUM **pub_key,
                                        const BIGNUM **priv_key);
-OSSL_DEPRECATEDIN_3_0 int DH_set0_key(DH *dh, BIGNUM *pub_key, BIGNUM *priv_key);
+OSSL_DEPRECATEDIN_3_0 int DH_set0_key(DH *dh, BIGNUM *pub_key,
+                                      BIGNUM *priv_key);
 OSSL_DEPRECATEDIN_3_0 const BIGNUM *DH_get0_p(const DH *dh);
 OSSL_DEPRECATEDIN_3_0 const BIGNUM *DH_get0_q(const DH *dh);
 OSSL_DEPRECATEDIN_3_0 const BIGNUM *DH_get0_g(const DH *dh);
@@ -284,37 +287,40 @@ OSSL_DEPRECATEDIN_3_0 int DH_meth_get_flags(const DH_METHOD *dhm);
 OSSL_DEPRECATEDIN_3_0 int DH_meth_set_flags(DH_METHOD *dhm, int flags);
 OSSL_DEPRECATEDIN_3_0 void *DH_meth_get0_app_data(const DH_METHOD *dhm);
 OSSL_DEPRECATEDIN_3_0 int DH_meth_set0_app_data(DH_METHOD *dhm, void *app_data);
-OSSL_DEPRECATEDIN_3_0 int (*DH_meth_get_generate_key(const DH_METHOD *dhm)) (DH *);
+OSSL_DEPRECATEDIN_3_0 int (*DH_meth_get_generate_key(const DH_METHOD *
+                                                     dhm)) (DH *);
 OSSL_DEPRECATEDIN_3_0 int DH_meth_set_generate_key(DH_METHOD *dhm,
                                                    int (*generate_key) (DH *));
 OSSL_DEPRECATEDIN_3_0 int (*DH_meth_get_compute_key(const DH_METHOD *dhm))
-                                                   (unsigned char *key,
-                                                    const BIGNUM *pub_key,
-                                                    DH *dh);
+(unsigned char *key,
+ const BIGNUM *pub_key,
+ DH *dh);
 OSSL_DEPRECATEDIN_3_0 int DH_meth_set_compute_key(DH_METHOD *dhm,
                                                   int (*compute_key)
                                                   (unsigned char *key,
                                                    const BIGNUM *pub_key,
                                                    DH *dh));
 OSSL_DEPRECATEDIN_3_0 int (*DH_meth_get_bn_mod_exp(const DH_METHOD *dhm))
-                                                   (const DH *, BIGNUM *,
-                                                    const BIGNUM *,
-                                                    const BIGNUM *,
-                                                    const BIGNUM *, BN_CTX *,
-                                                    BN_MONT_CTX *);
+(const DH *, BIGNUM *,
+ const BIGNUM *,
+ const BIGNUM *,
+ const BIGNUM *, BN_CTX *,
+ BN_MONT_CTX *);
 OSSL_DEPRECATEDIN_3_0 int DH_meth_set_bn_mod_exp(DH_METHOD *dhm,
                                                  int (*bn_mod_exp)
                                                  (const DH *, BIGNUM *,
-                                                  const BIGNUM *, const BIGNUM *,
+                                                  const BIGNUM *,
+                                                  const BIGNUM *,
                                                   const BIGNUM *, BN_CTX *,
                                                   BN_MONT_CTX *));
 OSSL_DEPRECATEDIN_3_0 int (*DH_meth_get_init(const DH_METHOD *dhm))(DH *);
 OSSL_DEPRECATEDIN_3_0 int DH_meth_set_init(DH_METHOD *dhm, int (*init)(DH *));
 OSSL_DEPRECATEDIN_3_0 int (*DH_meth_get_finish(const DH_METHOD *dhm)) (DH *);
-OSSL_DEPRECATEDIN_3_0 int DH_meth_set_finish(DH_METHOD *dhm, int (*finish) (DH *));
+OSSL_DEPRECATEDIN_3_0 int DH_meth_set_finish(DH_METHOD *dhm, int (*finish) (
+                                                 DH *));
 OSSL_DEPRECATEDIN_3_0 int (*DH_meth_get_generate_params(const DH_METHOD *dhm))
-                                                        (DH *, int, int,
-                                                         BN_GENCB *);
+(DH *, int, int,
+ BN_GENCB *);
 OSSL_DEPRECATEDIN_3_0 int DH_meth_set_generate_params(DH_METHOD *dhm,
                                                       int (*generate_params)
                                                       (DH *, int, int,
@@ -324,7 +330,7 @@ OSSL_DEPRECATEDIN_3_0 int DH_meth_set_generate_params(DH_METHOD *dhm,
 #  ifndef OPENSSL_NO_DEPRECATED_0_9_8
 OSSL_DEPRECATEDIN_0_9_8 DH *DH_generate_parameters(int prime_len, int generator,
                                                    void (*callback) (int, int,
-                                                                void *),
+                                                                     void *),
                                                    void *cb_arg);
 #  endif
 

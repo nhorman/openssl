@@ -135,9 +135,10 @@ static void ctr64_inc(unsigned char *counter)
 }
 
 #if defined(AESNI_CAPABLE)
-# if defined(__x86_64) || defined(__x86_64__) || defined(_M_AMD64) || defined(_M_X64)
+# if defined(__x86_64) || defined(__x86_64__) || defined(_M_AMD64) || \
+    defined(_M_X64)
 #  define AES_GCM_ASM2(gctx)      (gctx->gcm.block==(block128_f)aesni_encrypt && \
-                                 gctx->gcm.ghash==gcm_ghash_avx)
+                                   gctx->gcm.ghash==gcm_ghash_avx)
 #  undef AES_GCM_ASM2          /* minor size optimization */
 # endif
 
@@ -158,7 +159,7 @@ static int aesni_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
         ret = aesni_set_decrypt_key(key, keylen, &dat->ks.ks);
         dat->block = (block128_f) aesni_decrypt;
         dat->stream.cbc = mode == EVP_CIPH_CBC_MODE ?
-            (cbc128_f) aesni_cbc_encrypt : NULL;
+                          (cbc128_f) aesni_cbc_encrypt : NULL;
     } else {
         ret = aesni_set_encrypt_key(key, keylen, &dat->ks.ks);
         dat->block = (block128_f) aesni_encrypt;
@@ -290,7 +291,7 @@ static int aesni_xts_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
          * See comment in aes_xts_init_key() below.
          */
         if ((!allow_insecure_decrypt || enc)
-                && CRYPTO_memcmp(key, key + bytes, bytes) == 0) {
+            && CRYPTO_memcmp(key, key + bytes, bytes) == 0) {
             ERR_raise(ERR_LIB_EVP, EVP_R_XTS_DUPLICATED_KEYS);
             return 0;
         }
@@ -343,7 +344,7 @@ static int aesni_ccm_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
         CRYPTO_ccm128_init(&cctx->ccm, cctx->M, cctx->L,
                            &cctx->ks, (block128_f) aesni_encrypt);
         cctx->str = enc ? (ccm128_f) aesni_ccm64_encrypt_blocks :
-            (ccm128_f) aesni_ccm64_decrypt_blocks;
+                    (ccm128_f) aesni_ccm64_decrypt_blocks;
         cctx->key_set = 1;
     }
     if (iv) {
@@ -420,53 +421,57 @@ static int aesni_ocb_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
 # endif                        /* OPENSSL_NO_OCB */
 
 # define BLOCK_CIPHER_generic(nid,keylen,blocksize,ivlen,nmode,mode,MODE,flags) \
-static const EVP_CIPHER aesni_##keylen##_##mode = { \
-        nid##_##keylen##_##nmode,blocksize,keylen/8,ivlen, \
-        flags|EVP_CIPH_##MODE##_MODE,   \
-        EVP_ORIG_GLOBAL,                \
-        aesni_init_key,                 \
-        aesni_##mode##_cipher,          \
-        NULL,                           \
-        sizeof(EVP_AES_KEY),            \
-        NULL,NULL,NULL,NULL }; \
-static const EVP_CIPHER aes_##keylen##_##mode = { \
-        nid##_##keylen##_##nmode,blocksize,     \
-        keylen/8,ivlen,                 \
-        flags|EVP_CIPH_##MODE##_MODE,   \
-        EVP_ORIG_GLOBAL,                 \
-        aes_init_key,                   \
-        aes_##mode##_cipher,            \
-        NULL,                           \
-        sizeof(EVP_AES_KEY),            \
-        NULL,NULL,NULL,NULL }; \
-const EVP_CIPHER *EVP_aes_##keylen##_##mode(void) \
-{ return AESNI_CAPABLE?&aesni_##keylen##_##mode:&aes_##keylen##_##mode; }
+        static const EVP_CIPHER aesni_ ## keylen ## _ ## mode = { \
+            nid ## _ ## keylen ## _ ## nmode,blocksize,keylen/8,ivlen, \
+            flags|EVP_CIPH_ ## MODE ## _MODE,   \
+            EVP_ORIG_GLOBAL,                \
+            aesni_init_key,                 \
+            aesni_ ## mode ## _cipher,          \
+            NULL,                           \
+            sizeof(EVP_AES_KEY),            \
+            NULL,NULL,NULL,NULL }; \
+        static const EVP_CIPHER aes_ ## keylen ## _ ## mode = { \
+            nid ## _ ## keylen ## _ ## nmode,blocksize,     \
+            keylen/8,ivlen,                 \
+            flags|EVP_CIPH_ ## MODE ## _MODE,   \
+            EVP_ORIG_GLOBAL,                 \
+            aes_init_key,                   \
+            aes_ ## mode ## _cipher,            \
+            NULL,                           \
+            sizeof(EVP_AES_KEY),            \
+            NULL,NULL,NULL,NULL }; \
+        const EVP_CIPHER *EVP_aes_ ## keylen ## _ ## mode(void) \
+        { return AESNI_CAPABLE?&aesni_ ## keylen ## _ ## mode:&aes_ ## keylen ## \
+                 _ ## mode; }
 
 # define BLOCK_CIPHER_custom(nid,keylen,blocksize,ivlen,mode,MODE,flags) \
-static const EVP_CIPHER aesni_##keylen##_##mode = { \
-        nid##_##keylen##_##mode,blocksize, \
-        (EVP_CIPH_##MODE##_MODE==EVP_CIPH_XTS_MODE||EVP_CIPH_##MODE##_MODE==EVP_CIPH_SIV_MODE?2:1)*keylen/8, \
-        ivlen,                          \
-        flags|EVP_CIPH_##MODE##_MODE,   \
-        EVP_ORIG_GLOBAL,                \
-        aesni_##mode##_init_key,        \
-        aesni_##mode##_cipher,          \
-        aes_##mode##_cleanup,           \
-        sizeof(EVP_AES_##MODE##_CTX),   \
-        NULL,NULL,aes_##mode##_ctrl,NULL }; \
-static const EVP_CIPHER aes_##keylen##_##mode = { \
-        nid##_##keylen##_##mode,blocksize, \
-        (EVP_CIPH_##MODE##_MODE==EVP_CIPH_XTS_MODE||EVP_CIPH_##MODE##_MODE==EVP_CIPH_SIV_MODE?2:1)*keylen/8, \
-        ivlen,                          \
-        flags|EVP_CIPH_##MODE##_MODE,   \
-        EVP_ORIG_GLOBAL,                \
-        aes_##mode##_init_key,          \
-        aes_##mode##_cipher,            \
-        aes_##mode##_cleanup,           \
-        sizeof(EVP_AES_##MODE##_CTX),   \
-        NULL,NULL,aes_##mode##_ctrl,NULL }; \
-const EVP_CIPHER *EVP_aes_##keylen##_##mode(void) \
-{ return AESNI_CAPABLE?&aesni_##keylen##_##mode:&aes_##keylen##_##mode; }
+        static const EVP_CIPHER aesni_ ## keylen ## _ ## mode = { \
+            nid ## _ ## keylen ## _ ## mode,blocksize, \
+            (EVP_CIPH_ ## MODE ## _MODE==EVP_CIPH_XTS_MODE|| \
+             EVP_CIPH_ ## MODE ## _MODE==EVP_CIPH_SIV_MODE?2:1)*keylen/8, \
+            ivlen,                          \
+            flags|EVP_CIPH_ ## MODE ## _MODE,   \
+            EVP_ORIG_GLOBAL,                \
+            aesni_ ## mode ## _init_key,        \
+            aesni_ ## mode ## _cipher,          \
+            aes_ ## mode ## _cleanup,           \
+            sizeof(EVP_AES_ ## MODE ## _CTX),   \
+            NULL,NULL,aes_ ## mode ## _ctrl,NULL }; \
+        static const EVP_CIPHER aes_ ## keylen ## _ ## mode = { \
+            nid ## _ ## keylen ## _ ## mode,blocksize, \
+            (EVP_CIPH_ ## MODE ## _MODE==EVP_CIPH_XTS_MODE|| \
+             EVP_CIPH_ ## MODE ## _MODE==EVP_CIPH_SIV_MODE?2:1)*keylen/8, \
+            ivlen,                          \
+            flags|EVP_CIPH_ ## MODE ## _MODE,   \
+            EVP_ORIG_GLOBAL,                \
+            aes_ ## mode ## _init_key,          \
+            aes_ ## mode ## _cipher,            \
+            aes_ ## mode ## _cleanup,           \
+            sizeof(EVP_AES_ ## MODE ## _CTX),   \
+            NULL,NULL,aes_ ## mode ## _ctrl,NULL }; \
+        const EVP_CIPHER *EVP_aes_ ## keylen ## _ ## mode(void) \
+        { return AESNI_CAPABLE?&aesni_ ## keylen ## _ ## mode:&aes_ ## keylen ## \
+                 _ ## mode; }
 
 #elif defined(SPARC_AES_CAPABLE)
 
@@ -488,52 +493,52 @@ static int aes_t4_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
         aes_t4_set_decrypt_key(key, bits, &dat->ks.ks);
         dat->block = (block128_f) aes_t4_decrypt;
         switch (bits) {
-        case 128:
-            dat->stream.cbc = mode == EVP_CIPH_CBC_MODE ?
-                (cbc128_f) aes128_t4_cbc_decrypt : NULL;
-            break;
-        case 192:
-            dat->stream.cbc = mode == EVP_CIPH_CBC_MODE ?
-                (cbc128_f) aes192_t4_cbc_decrypt : NULL;
-            break;
-        case 256:
-            dat->stream.cbc = mode == EVP_CIPH_CBC_MODE ?
-                (cbc128_f) aes256_t4_cbc_decrypt : NULL;
-            break;
-        default:
-            ret = -1;
+            case 128:
+                dat->stream.cbc = mode == EVP_CIPH_CBC_MODE ?
+                                  (cbc128_f) aes128_t4_cbc_decrypt : NULL;
+                break;
+            case 192:
+                dat->stream.cbc = mode == EVP_CIPH_CBC_MODE ?
+                                  (cbc128_f) aes192_t4_cbc_decrypt : NULL;
+                break;
+            case 256:
+                dat->stream.cbc = mode == EVP_CIPH_CBC_MODE ?
+                                  (cbc128_f) aes256_t4_cbc_decrypt : NULL;
+                break;
+            default:
+                ret = -1;
         }
     } else {
         ret = 0;
         aes_t4_set_encrypt_key(key, bits, &dat->ks.ks);
         dat->block = (block128_f) aes_t4_encrypt;
         switch (bits) {
-        case 128:
-            if (mode == EVP_CIPH_CBC_MODE)
-                dat->stream.cbc = (cbc128_f) aes128_t4_cbc_encrypt;
-            else if (mode == EVP_CIPH_CTR_MODE)
-                dat->stream.ctr = (ctr128_f) aes128_t4_ctr32_encrypt;
-            else
-                dat->stream.cbc = NULL;
-            break;
-        case 192:
-            if (mode == EVP_CIPH_CBC_MODE)
-                dat->stream.cbc = (cbc128_f) aes192_t4_cbc_encrypt;
-            else if (mode == EVP_CIPH_CTR_MODE)
-                dat->stream.ctr = (ctr128_f) aes192_t4_ctr32_encrypt;
-            else
-                dat->stream.cbc = NULL;
-            break;
-        case 256:
-            if (mode == EVP_CIPH_CBC_MODE)
-                dat->stream.cbc = (cbc128_f) aes256_t4_cbc_encrypt;
-            else if (mode == EVP_CIPH_CTR_MODE)
-                dat->stream.ctr = (ctr128_f) aes256_t4_ctr32_encrypt;
-            else
-                dat->stream.cbc = NULL;
-            break;
-        default:
-            ret = -1;
+            case 128:
+                if (mode == EVP_CIPH_CBC_MODE)
+                    dat->stream.cbc = (cbc128_f) aes128_t4_cbc_encrypt;
+                else if (mode == EVP_CIPH_CTR_MODE)
+                    dat->stream.ctr = (ctr128_f) aes128_t4_ctr32_encrypt;
+                else
+                    dat->stream.cbc = NULL;
+                break;
+            case 192:
+                if (mode == EVP_CIPH_CBC_MODE)
+                    dat->stream.cbc = (cbc128_f) aes192_t4_cbc_encrypt;
+                else if (mode == EVP_CIPH_CTR_MODE)
+                    dat->stream.ctr = (ctr128_f) aes192_t4_ctr32_encrypt;
+                else
+                    dat->stream.cbc = NULL;
+                break;
+            case 256:
+                if (mode == EVP_CIPH_CBC_MODE)
+                    dat->stream.cbc = (cbc128_f) aes256_t4_cbc_encrypt;
+                else if (mode == EVP_CIPH_CTR_MODE)
+                    dat->stream.ctr = (ctr128_f) aes256_t4_ctr32_encrypt;
+                else
+                    dat->stream.cbc = NULL;
+                break;
+            default:
+                ret = -1;
         }
     }
 
@@ -591,17 +596,17 @@ static int aes_t4_gcm_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
         CRYPTO_gcm128_init(&gctx->gcm, &gctx->ks,
                            (block128_f) aes_t4_encrypt);
         switch (bits) {
-        case 128:
-            gctx->ctr = (ctr128_f) aes128_t4_ctr32_encrypt;
-            break;
-        case 192:
-            gctx->ctr = (ctr128_f) aes192_t4_ctr32_encrypt;
-            break;
-        case 256:
-            gctx->ctr = (ctr128_f) aes256_t4_ctr32_encrypt;
-            break;
-        default:
-            return 0;
+            case 128:
+                gctx->ctr = (ctr128_f) aes128_t4_ctr32_encrypt;
+                break;
+            case 192:
+                gctx->ctr = (ctr128_f) aes192_t4_ctr32_encrypt;
+                break;
+            case 256:
+                gctx->ctr = (ctr128_f) aes256_t4_ctr32_encrypt;
+                break;
+            default:
+                return 0;
         }
         /*
          * If we have an iv can set it directly, otherwise use saved IV.
@@ -654,7 +659,7 @@ static int aes_t4_xts_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
          * See comment in aes_xts_init_key() below.
          */
         if ((!allow_insecure_decrypt || enc)
-                && CRYPTO_memcmp(key, key + bytes, bytes) == 0) {
+            && CRYPTO_memcmp(key, key + bytes, bytes) == 0) {
             ERR_raise(ERR_LIB_EVP, EVP_R_XTS_DUPLICATED_KEYS);
             return 0;
         }
@@ -665,27 +670,27 @@ static int aes_t4_xts_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
             aes_t4_set_encrypt_key(key, bits, &xctx->ks1.ks);
             xctx->xts.block1 = (block128_f) aes_t4_encrypt;
             switch (bits) {
-            case 128:
-                xctx->stream = aes128_t4_xts_encrypt;
-                break;
-            case 256:
-                xctx->stream = aes256_t4_xts_encrypt;
-                break;
-            default:
-                return 0;
+                case 128:
+                    xctx->stream = aes128_t4_xts_encrypt;
+                    break;
+                case 256:
+                    xctx->stream = aes256_t4_xts_encrypt;
+                    break;
+                default:
+                    return 0;
             }
         } else {
             aes_t4_set_decrypt_key(key, bits, &xctx->ks1.ks);
             xctx->xts.block1 = (block128_f) aes_t4_decrypt;
             switch (bits) {
-            case 128:
-                xctx->stream = aes128_t4_xts_decrypt;
-                break;
-            case 256:
-                xctx->stream = aes256_t4_xts_decrypt;
-                break;
-            default:
-                return 0;
+                case 128:
+                    xctx->stream = aes128_t4_xts_decrypt;
+                    break;
+                case 256:
+                    xctx->stream = aes256_t4_xts_decrypt;
+                    break;
+                default:
+                    return 0;
             }
         }
 
@@ -806,53 +811,57 @@ static int aes_t4_ocb_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
 # endif /* OPENSSL_NO_SIV */
 
 # define BLOCK_CIPHER_generic(nid,keylen,blocksize,ivlen,nmode,mode,MODE,flags) \
-static const EVP_CIPHER aes_t4_##keylen##_##mode = { \
-        nid##_##keylen##_##nmode,blocksize,keylen/8,ivlen, \
-        flags|EVP_CIPH_##MODE##_MODE,   \
-        EVP_ORIG_GLOBAL,                \
-        aes_t4_init_key,                \
-        aes_t4_##mode##_cipher,         \
-        NULL,                           \
-        sizeof(EVP_AES_KEY),            \
-        NULL,NULL,NULL,NULL }; \
-static const EVP_CIPHER aes_##keylen##_##mode = { \
-        nid##_##keylen##_##nmode,blocksize,     \
-        keylen/8,ivlen, \
-        flags|EVP_CIPH_##MODE##_MODE,   \
-        EVP_ORIG_GLOBAL,                \
-        aes_init_key,                   \
-        aes_##mode##_cipher,            \
-        NULL,                           \
-        sizeof(EVP_AES_KEY),            \
-        NULL,NULL,NULL,NULL }; \
-const EVP_CIPHER *EVP_aes_##keylen##_##mode(void) \
-{ return SPARC_AES_CAPABLE?&aes_t4_##keylen##_##mode:&aes_##keylen##_##mode; }
+        static const EVP_CIPHER aes_t4_ ## keylen ## _ ## mode = { \
+            nid ## _ ## keylen ## _ ## nmode,blocksize,keylen/8,ivlen, \
+            flags|EVP_CIPH_ ## MODE ## _MODE,   \
+            EVP_ORIG_GLOBAL,                \
+            aes_t4_init_key,                \
+            aes_t4_ ## mode ## _cipher,         \
+            NULL,                           \
+            sizeof(EVP_AES_KEY),            \
+            NULL,NULL,NULL,NULL }; \
+        static const EVP_CIPHER aes_ ## keylen ## _ ## mode = { \
+            nid ## _ ## keylen ## _ ## nmode,blocksize,     \
+            keylen/8,ivlen, \
+            flags|EVP_CIPH_ ## MODE ## _MODE,   \
+            EVP_ORIG_GLOBAL,                \
+            aes_init_key,                   \
+            aes_ ## mode ## _cipher,            \
+            NULL,                           \
+            sizeof(EVP_AES_KEY),            \
+            NULL,NULL,NULL,NULL }; \
+        const EVP_CIPHER *EVP_aes_ ## keylen ## _ ## mode(void) \
+        { return SPARC_AES_CAPABLE?&aes_t4_ ## keylen ## _ ## mode:&aes_ ## \
+                 keylen ## _ ## mode; }
 
 # define BLOCK_CIPHER_custom(nid,keylen,blocksize,ivlen,mode,MODE,flags) \
-static const EVP_CIPHER aes_t4_##keylen##_##mode = { \
-        nid##_##keylen##_##mode,blocksize, \
-        (EVP_CIPH_##MODE##_MODE==EVP_CIPH_XTS_MODE||EVP_CIPH_##MODE##_MODE==EVP_CIPH_SIV_MODE?2:1)*keylen/8, \
-        ivlen,                          \
-        flags|EVP_CIPH_##MODE##_MODE,   \
-        EVP_ORIG_GLOBAL,                \
-        aes_t4_##mode##_init_key,       \
-        aes_t4_##mode##_cipher,         \
-        aes_##mode##_cleanup,           \
-        sizeof(EVP_AES_##MODE##_CTX),   \
-        NULL,NULL,aes_##mode##_ctrl,NULL }; \
-static const EVP_CIPHER aes_##keylen##_##mode = { \
-        nid##_##keylen##_##mode,blocksize, \
-        (EVP_CIPH_##MODE##_MODE==EVP_CIPH_XTS_MODE||EVP_CIPH_##MODE##_MODE==EVP_CIPH_SIV_MODE?2:1)*keylen/8, \
-        ivlen,                          \
-        flags|EVP_CIPH_##MODE##_MODE,   \
-        EVP_ORIG_GLOBAL,                \
-        aes_##mode##_init_key,          \
-        aes_##mode##_cipher,            \
-        aes_##mode##_cleanup,           \
-        sizeof(EVP_AES_##MODE##_CTX),   \
-        NULL,NULL,aes_##mode##_ctrl,NULL }; \
-const EVP_CIPHER *EVP_aes_##keylen##_##mode(void) \
-{ return SPARC_AES_CAPABLE?&aes_t4_##keylen##_##mode:&aes_##keylen##_##mode; }
+        static const EVP_CIPHER aes_t4_ ## keylen ## _ ## mode = { \
+            nid ## _ ## keylen ## _ ## mode,blocksize, \
+            (EVP_CIPH_ ## MODE ## _MODE==EVP_CIPH_XTS_MODE|| \
+             EVP_CIPH_ ## MODE ## _MODE==EVP_CIPH_SIV_MODE?2:1)*keylen/8, \
+            ivlen,                          \
+            flags|EVP_CIPH_ ## MODE ## _MODE,   \
+            EVP_ORIG_GLOBAL,                \
+            aes_t4_ ## mode ## _init_key,       \
+            aes_t4_ ## mode ## _cipher,         \
+            aes_ ## mode ## _cleanup,           \
+            sizeof(EVP_AES_ ## MODE ## _CTX),   \
+            NULL,NULL,aes_ ## mode ## _ctrl,NULL }; \
+        static const EVP_CIPHER aes_ ## keylen ## _ ## mode = { \
+            nid ## _ ## keylen ## _ ## mode,blocksize, \
+            (EVP_CIPH_ ## MODE ## _MODE==EVP_CIPH_XTS_MODE|| \
+             EVP_CIPH_ ## MODE ## _MODE==EVP_CIPH_SIV_MODE?2:1)*keylen/8, \
+            ivlen,                          \
+            flags|EVP_CIPH_ ## MODE ## _MODE,   \
+            EVP_ORIG_GLOBAL,                \
+            aes_ ## mode ## _init_key,          \
+            aes_ ## mode ## _cipher,            \
+            aes_ ## mode ## _cleanup,           \
+            sizeof(EVP_AES_ ## MODE ## _CTX),   \
+            NULL,NULL,aes_ ## mode ## _ctrl,NULL }; \
+        const EVP_CIPHER *EVP_aes_ ## keylen ## _ ## mode(void) \
+        { return SPARC_AES_CAPABLE?&aes_t4_ ## keylen ## _ ## mode:&aes_ ## \
+                 keylen ## _ ## mode; }
 
 #elif defined(S390X_aes_128_CAPABLE)
 /* IBM S390X support */
@@ -1448,159 +1457,160 @@ static int s390x_aes_gcm_ctrl(EVP_CIPHER_CTX *c, int type, int arg, void *ptr)
     int ivlen, enc, len;
 
     switch (type) {
-    case EVP_CTRL_INIT:
-        ivlen = EVP_CIPHER_get_iv_length(c->cipher);
-        gctx->key_set = 0;
-        gctx->iv_set = 0;
-        gctx->ivlen = ivlen;
-        gctx->iv = c->iv;
-        gctx->taglen = -1;
-        gctx->iv_gen = 0;
-        gctx->tls_aad_len = -1;
-        return 1;
+        case EVP_CTRL_INIT:
+            ivlen = EVP_CIPHER_get_iv_length(c->cipher);
+            gctx->key_set = 0;
+            gctx->iv_set = 0;
+            gctx->ivlen = ivlen;
+            gctx->iv = c->iv;
+            gctx->taglen = -1;
+            gctx->iv_gen = 0;
+            gctx->tls_aad_len = -1;
+            return 1;
 
-    case EVP_CTRL_GET_IVLEN:
-        *(int *)ptr = gctx->ivlen;
-        return 1;
+        case EVP_CTRL_GET_IVLEN:
+            *(int *)ptr = gctx->ivlen;
+            return 1;
 
-    case EVP_CTRL_AEAD_SET_IVLEN:
-        if (arg <= 0)
-            return 0;
+        case EVP_CTRL_AEAD_SET_IVLEN:
+            if (arg <= 0)
+                return 0;
 
-        if (arg != 12) {
-            len = S390X_gcm_ivpadlen(arg);
+            if (arg != 12) {
+                len = S390X_gcm_ivpadlen(arg);
 
-            /* Allocate memory for iv if needed. */
-            if (gctx->ivlen == 12 || len > S390X_gcm_ivpadlen(gctx->ivlen)) {
-                if (gctx->iv != c->iv)
-                    OPENSSL_free(gctx->iv);
+                /* Allocate memory for iv if needed. */
+                if (gctx->ivlen == 12 ||
+                    len > S390X_gcm_ivpadlen(gctx->ivlen)) {
+                    if (gctx->iv != c->iv)
+                        OPENSSL_free(gctx->iv);
 
-                if ((gctx->iv = OPENSSL_malloc(len)) == NULL)
-                    return 0;
+                    if ((gctx->iv = OPENSSL_malloc(len)) == NULL)
+                        return 0;
+                }
+                /* Add padding. */
+                memset(gctx->iv + arg, 0, len - arg - 8);
+                *((unsigned long long *)(gctx->iv + len - 8)) = arg << 3;
             }
-            /* Add padding. */
-            memset(gctx->iv + arg, 0, len - arg - 8);
-            *((unsigned long long *)(gctx->iv + len - 8)) = arg << 3;
-        }
-        gctx->ivlen = arg;
-        return 1;
+            gctx->ivlen = arg;
+            return 1;
 
-    case EVP_CTRL_AEAD_SET_TAG:
-        buf = EVP_CIPHER_CTX_buf_noconst(c);
-        enc = EVP_CIPHER_CTX_is_encrypting(c);
-        if (arg <= 0 || arg > 16 || enc)
-            return 0;
+        case EVP_CTRL_AEAD_SET_TAG:
+            buf = EVP_CIPHER_CTX_buf_noconst(c);
+            enc = EVP_CIPHER_CTX_is_encrypting(c);
+            if (arg <= 0 || arg > 16 || enc)
+                return 0;
 
-        memcpy(buf, ptr, arg);
-        gctx->taglen = arg;
-        return 1;
+            memcpy(buf, ptr, arg);
+            gctx->taglen = arg;
+            return 1;
 
-    case EVP_CTRL_AEAD_GET_TAG:
-        enc = EVP_CIPHER_CTX_is_encrypting(c);
-        if (arg <= 0 || arg > 16 || !enc || gctx->taglen < 0)
-            return 0;
+        case EVP_CTRL_AEAD_GET_TAG:
+            enc = EVP_CIPHER_CTX_is_encrypting(c);
+            if (arg <= 0 || arg > 16 || !enc || gctx->taglen < 0)
+                return 0;
 
-        memcpy(ptr, gctx->kma.param.t.b, arg);
-        return 1;
+            memcpy(ptr, gctx->kma.param.t.b, arg);
+            return 1;
 
-    case EVP_CTRL_GCM_SET_IV_FIXED:
-        /* Special case: -1 length restores whole iv */
-        if (arg == -1) {
-            memcpy(gctx->iv, ptr, gctx->ivlen);
+        case EVP_CTRL_GCM_SET_IV_FIXED:
+            /* Special case: -1 length restores whole iv */
+            if (arg == -1) {
+                memcpy(gctx->iv, ptr, gctx->ivlen);
+                gctx->iv_gen = 1;
+                return 1;
+            }
+            /*
+             * Fixed field must be at least 4 bytes and invocation field at least
+             * 8.
+             */
+            if ((arg < 4) || (gctx->ivlen - arg) < 8)
+                return 0;
+
+            if (arg)
+                memcpy(gctx->iv, ptr, arg);
+
+            enc = EVP_CIPHER_CTX_is_encrypting(c);
+            if (enc && RAND_bytes(gctx->iv + arg, gctx->ivlen - arg) <= 0)
+                return 0;
+
             gctx->iv_gen = 1;
             return 1;
-        }
-        /*
-         * Fixed field must be at least 4 bytes and invocation field at least
-         * 8.
-         */
-        if ((arg < 4) || (gctx->ivlen - arg) < 8)
-            return 0;
 
-        if (arg)
-            memcpy(gctx->iv, ptr, arg);
-
-        enc = EVP_CIPHER_CTX_is_encrypting(c);
-        if (enc && RAND_bytes(gctx->iv + arg, gctx->ivlen - arg) <= 0)
-            return 0;
-
-        gctx->iv_gen = 1;
-        return 1;
-
-    case EVP_CTRL_GCM_IV_GEN:
-        if (gctx->iv_gen == 0 || gctx->key_set == 0)
-            return 0;
-
-        s390x_aes_gcm_setiv(gctx, gctx->iv);
-
-        if (arg <= 0 || arg > gctx->ivlen)
-            arg = gctx->ivlen;
-
-        memcpy(ptr, gctx->iv + gctx->ivlen - arg, arg);
-        /*
-         * Invocation field will be at least 8 bytes in size and so no need
-         * to check wrap around or increment more than last 8 bytes.
-         */
-        ctr64_inc(gctx->iv + gctx->ivlen - 8);
-        gctx->iv_set = 1;
-        return 1;
-
-    case EVP_CTRL_GCM_SET_IV_INV:
-        enc = EVP_CIPHER_CTX_is_encrypting(c);
-        if (gctx->iv_gen == 0 || gctx->key_set == 0 || enc)
-            return 0;
-
-        memcpy(gctx->iv + gctx->ivlen - arg, ptr, arg);
-        s390x_aes_gcm_setiv(gctx, gctx->iv);
-        gctx->iv_set = 1;
-        return 1;
-
-    case EVP_CTRL_AEAD_TLS1_AAD:
-        /* Save the aad for later use. */
-        if (arg != EVP_AEAD_TLS1_AAD_LEN)
-            return 0;
-
-        buf = EVP_CIPHER_CTX_buf_noconst(c);
-        memcpy(buf, ptr, arg);
-        gctx->tls_aad_len = arg;
-        gctx->tls_enc_records = 0;
-
-        len = buf[arg - 2] << 8 | buf[arg - 1];
-        /* Correct length for explicit iv. */
-        if (len < EVP_GCM_TLS_EXPLICIT_IV_LEN)
-            return 0;
-        len -= EVP_GCM_TLS_EXPLICIT_IV_LEN;
-
-        /* If decrypting correct for tag too. */
-        enc = EVP_CIPHER_CTX_is_encrypting(c);
-        if (!enc) {
-            if (len < EVP_GCM_TLS_TAG_LEN)
-                return 0;
-            len -= EVP_GCM_TLS_TAG_LEN;
-        }
-        buf[arg - 2] = len >> 8;
-        buf[arg - 1] = len & 0xff;
-        /* Extra padding: tag appended to record. */
-        return EVP_GCM_TLS_TAG_LEN;
-
-    case EVP_CTRL_COPY:
-        out = ptr;
-        gctx_out = EVP_C_DATA(S390X_AES_GCM_CTX, out);
-
-        if (gctx->iv == c->iv) {
-            gctx_out->iv = out->iv;
-        } else {
-            len = S390X_gcm_ivpadlen(gctx->ivlen);
-
-            if ((gctx_out->iv = OPENSSL_malloc(len)) == NULL)
+        case EVP_CTRL_GCM_IV_GEN:
+            if (gctx->iv_gen == 0 || gctx->key_set == 0)
                 return 0;
 
-            memcpy(gctx_out->iv, gctx->iv, len);
-        }
-        return 1;
+            s390x_aes_gcm_setiv(gctx, gctx->iv);
 
-    default:
-        return -1;
+            if (arg <= 0 || arg > gctx->ivlen)
+                arg = gctx->ivlen;
+
+            memcpy(ptr, gctx->iv + gctx->ivlen - arg, arg);
+            /*
+             * Invocation field will be at least 8 bytes in size and so no need
+             * to check wrap around or increment more than last 8 bytes.
+             */
+            ctr64_inc(gctx->iv + gctx->ivlen - 8);
+            gctx->iv_set = 1;
+            return 1;
+
+        case EVP_CTRL_GCM_SET_IV_INV:
+            enc = EVP_CIPHER_CTX_is_encrypting(c);
+            if (gctx->iv_gen == 0 || gctx->key_set == 0 || enc)
+                return 0;
+
+            memcpy(gctx->iv + gctx->ivlen - arg, ptr, arg);
+            s390x_aes_gcm_setiv(gctx, gctx->iv);
+            gctx->iv_set = 1;
+            return 1;
+
+        case EVP_CTRL_AEAD_TLS1_AAD:
+            /* Save the aad for later use. */
+            if (arg != EVP_AEAD_TLS1_AAD_LEN)
+                return 0;
+
+            buf = EVP_CIPHER_CTX_buf_noconst(c);
+            memcpy(buf, ptr, arg);
+            gctx->tls_aad_len = arg;
+            gctx->tls_enc_records = 0;
+
+            len = buf[arg - 2] << 8 | buf[arg - 1];
+            /* Correct length for explicit iv. */
+            if (len < EVP_GCM_TLS_EXPLICIT_IV_LEN)
+                return 0;
+            len -= EVP_GCM_TLS_EXPLICIT_IV_LEN;
+
+            /* If decrypting correct for tag too. */
+            enc = EVP_CIPHER_CTX_is_encrypting(c);
+            if (!enc) {
+                if (len < EVP_GCM_TLS_TAG_LEN)
+                    return 0;
+                len -= EVP_GCM_TLS_TAG_LEN;
+            }
+            buf[arg - 2] = len >> 8;
+            buf[arg - 1] = len & 0xff;
+            /* Extra padding: tag appended to record. */
+            return EVP_GCM_TLS_TAG_LEN;
+
+        case EVP_CTRL_COPY:
+            out = ptr;
+            gctx_out = EVP_C_DATA(S390X_AES_GCM_CTX, out);
+
+            if (gctx->iv == c->iv) {
+                gctx_out->iv = out->iv;
+            } else {
+                len = S390X_gcm_ivpadlen(gctx->ivlen);
+
+                if ((gctx_out->iv = OPENSSL_malloc(len)) == NULL)
+                    return 0;
+
+                memcpy(gctx_out->iv, gctx->iv, len);
+            }
+            return 1;
+
+        default:
+            return -1;
     }
 }
 
@@ -1794,8 +1804,8 @@ static int s390x_aes_xts_ctrl(EVP_CIPHER_CTX *, int type, int arg, void *ptr);
  * Set nonce and length fields. Code is big-endian.
  */
 static inline void s390x_aes_ccm_setiv(S390X_AES_CCM_CTX *ctx,
-                                          const unsigned char *nonce,
-                                          size_t mlen)
+                                       const unsigned char *nonce,
+                                       size_t mlen)
 {
     ctx->aes.ccm.nonce.b[0] &= ~S390X_CCM_AAD_FLAG;
     ctx->aes.ccm.nonce.g[1] = mlen;
@@ -1974,7 +1984,7 @@ static int s390x_aes_ccm_tls_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
     const int enc = EVP_CIPHER_CTX_is_encrypting(ctx);
 
     if (out != in
-            || len < (EVP_CCM_TLS_EXPLICIT_IV_LEN + (size_t)cctx->aes.ccm.m))
+        || len < (EVP_CCM_TLS_EXPLICIT_IV_LEN + (size_t)cctx->aes.ccm.m))
         return -1;
 
     if (enc) {
@@ -2040,7 +2050,7 @@ static int s390x_aes_ccm_init_key(EVP_CIPHER_CTX *ctx,
 
         /* Store encoded m and l. */
         cctx->aes.ccm.nonce.b[0] = ((cctx->aes.ccm.l - 1) & 0x7)
-                                 | (((cctx->aes.ccm.m - 2) >> 1) & 0x7) << 3;
+                                   | (((cctx->aes.ccm.m - 2) >> 1) & 0x7) << 3;
         memset(cctx->aes.ccm.nonce.b + 1, 0,
                sizeof(cctx->aes.ccm.nonce.b));
         cctx->aes.ccm.blocks = 0;
@@ -2159,106 +2169,106 @@ static int s390x_aes_ccm_ctrl(EVP_CIPHER_CTX *c, int type, int arg, void *ptr)
     int enc, len;
 
     switch (type) {
-    case EVP_CTRL_INIT:
-        cctx->aes.ccm.key_set = 0;
-        cctx->aes.ccm.iv_set = 0;
-        cctx->aes.ccm.l = 8;
-        cctx->aes.ccm.m = 12;
-        cctx->aes.ccm.tag_set = 0;
-        cctx->aes.ccm.len_set = 0;
-        cctx->aes.ccm.tls_aad_len = -1;
-        return 1;
+        case EVP_CTRL_INIT:
+            cctx->aes.ccm.key_set = 0;
+            cctx->aes.ccm.iv_set = 0;
+            cctx->aes.ccm.l = 8;
+            cctx->aes.ccm.m = 12;
+            cctx->aes.ccm.tag_set = 0;
+            cctx->aes.ccm.len_set = 0;
+            cctx->aes.ccm.tls_aad_len = -1;
+            return 1;
 
-    case EVP_CTRL_GET_IVLEN:
-        *(int *)ptr = 15 - cctx->aes.ccm.l;
-        return 1;
+        case EVP_CTRL_GET_IVLEN:
+            *(int *)ptr = 15 - cctx->aes.ccm.l;
+            return 1;
 
-    case EVP_CTRL_AEAD_TLS1_AAD:
-        if (arg != EVP_AEAD_TLS1_AAD_LEN)
-            return 0;
-
-        /* Save the aad for later use. */
-        buf = EVP_CIPHER_CTX_buf_noconst(c);
-        memcpy(buf, ptr, arg);
-        cctx->aes.ccm.tls_aad_len = arg;
-
-        len = buf[arg - 2] << 8 | buf[arg - 1];
-        if (len < EVP_CCM_TLS_EXPLICIT_IV_LEN)
-            return 0;
-
-        /* Correct length for explicit iv. */
-        len -= EVP_CCM_TLS_EXPLICIT_IV_LEN;
-
-        enc = EVP_CIPHER_CTX_is_encrypting(c);
-        if (!enc) {
-            if (len < cctx->aes.ccm.m)
+        case EVP_CTRL_AEAD_TLS1_AAD:
+            if (arg != EVP_AEAD_TLS1_AAD_LEN)
                 return 0;
 
-            /* Correct length for tag. */
-            len -= cctx->aes.ccm.m;
-        }
-
-        buf[arg - 2] = len >> 8;
-        buf[arg - 1] = len & 0xff;
-
-        /* Extra padding: tag appended to record. */
-        return cctx->aes.ccm.m;
-
-    case EVP_CTRL_CCM_SET_IV_FIXED:
-        if (arg != EVP_CCM_TLS_FIXED_IV_LEN)
-            return 0;
-
-        /* Copy to first part of the iv. */
-        memcpy(c->iv, ptr, arg);
-        return 1;
-
-    case EVP_CTRL_AEAD_SET_IVLEN:
-        arg = 15 - arg;
-        /* fall-through */
-
-    case EVP_CTRL_CCM_SET_L:
-        if (arg < 2 || arg > 8)
-            return 0;
-
-        cctx->aes.ccm.l = arg;
-        return 1;
-
-    case EVP_CTRL_AEAD_SET_TAG:
-        if ((arg & 1) || arg < 4 || arg > 16)
-            return 0;
-
-        enc = EVP_CIPHER_CTX_is_encrypting(c);
-        if (enc && ptr)
-            return 0;
-
-        if (ptr) {
-            cctx->aes.ccm.tag_set = 1;
+            /* Save the aad for later use. */
             buf = EVP_CIPHER_CTX_buf_noconst(c);
             memcpy(buf, ptr, arg);
-        }
+            cctx->aes.ccm.tls_aad_len = arg;
 
-        cctx->aes.ccm.m = arg;
-        return 1;
+            len = buf[arg - 2] << 8 | buf[arg - 1];
+            if (len < EVP_CCM_TLS_EXPLICIT_IV_LEN)
+                return 0;
 
-    case EVP_CTRL_AEAD_GET_TAG:
-        enc = EVP_CIPHER_CTX_is_encrypting(c);
-        if (!enc || !cctx->aes.ccm.tag_set)
-            return 0;
+            /* Correct length for explicit iv. */
+            len -= EVP_CCM_TLS_EXPLICIT_IV_LEN;
 
-        if (arg < cctx->aes.ccm.m)
-            return 0;
+            enc = EVP_CIPHER_CTX_is_encrypting(c);
+            if (!enc) {
+                if (len < cctx->aes.ccm.m)
+                    return 0;
 
-        memcpy(ptr, cctx->aes.ccm.kmac_param.icv.b, cctx->aes.ccm.m);
-        cctx->aes.ccm.tag_set = 0;
-        cctx->aes.ccm.iv_set = 0;
-        cctx->aes.ccm.len_set = 0;
-        return 1;
+                /* Correct length for tag. */
+                len -= cctx->aes.ccm.m;
+            }
 
-    case EVP_CTRL_COPY:
-        return 1;
+            buf[arg - 2] = len >> 8;
+            buf[arg - 1] = len & 0xff;
 
-    default:
-        return -1;
+            /* Extra padding: tag appended to record. */
+            return cctx->aes.ccm.m;
+
+        case EVP_CTRL_CCM_SET_IV_FIXED:
+            if (arg != EVP_CCM_TLS_FIXED_IV_LEN)
+                return 0;
+
+            /* Copy to first part of the iv. */
+            memcpy(c->iv, ptr, arg);
+            return 1;
+
+        case EVP_CTRL_AEAD_SET_IVLEN:
+            arg = 15 - arg;
+        /* fall-through */
+
+        case EVP_CTRL_CCM_SET_L:
+            if (arg < 2 || arg > 8)
+                return 0;
+
+            cctx->aes.ccm.l = arg;
+            return 1;
+
+        case EVP_CTRL_AEAD_SET_TAG:
+            if ((arg & 1) || arg < 4 || arg > 16)
+                return 0;
+
+            enc = EVP_CIPHER_CTX_is_encrypting(c);
+            if (enc && ptr)
+                return 0;
+
+            if (ptr) {
+                cctx->aes.ccm.tag_set = 1;
+                buf = EVP_CIPHER_CTX_buf_noconst(c);
+                memcpy(buf, ptr, arg);
+            }
+
+            cctx->aes.ccm.m = arg;
+            return 1;
+
+        case EVP_CTRL_AEAD_GET_TAG:
+            enc = EVP_CIPHER_CTX_is_encrypting(c);
+            if (!enc || !cctx->aes.ccm.tag_set)
+                return 0;
+
+            if (arg < cctx->aes.ccm.m)
+                return 0;
+
+            memcpy(ptr, cctx->aes.ccm.kmac_param.icv.b, cctx->aes.ccm.m);
+            cctx->aes.ccm.tag_set = 0;
+            cctx->aes.ccm.iv_set = 0;
+            cctx->aes.ccm.len_set = 0;
+            return 1;
+
+        case EVP_CTRL_COPY:
+            return 1;
+
+        default:
+            return -1;
     }
 }
 
@@ -2290,118 +2300,129 @@ static int s390x_aes_ocb_ctrl(EVP_CIPHER_CTX *, int type, int arg, void *ptr);
 
 # define BLOCK_CIPHER_generic(nid,keylen,blocksize,ivlen,nmode,mode,    \
                               MODE,flags)                               \
-static const EVP_CIPHER s390x_aes_##keylen##_##mode = {                 \
-    nid##_##keylen##_##nmode,blocksize,                                 \
-    keylen / 8,                                                         \
-    ivlen,                                                              \
-    flags | EVP_CIPH_##MODE##_MODE,                                     \
-    EVP_ORIG_GLOBAL,                                                    \
-    s390x_aes_##mode##_init_key,                                        \
-    s390x_aes_##mode##_cipher,                                          \
-    NULL,                                                               \
-    sizeof(S390X_AES_##MODE##_CTX),                                     \
-    NULL,                                                               \
-    NULL,                                                               \
-    NULL,                                                               \
-    NULL                                                                \
-};                                                                      \
-static const EVP_CIPHER aes_##keylen##_##mode = {                       \
-    nid##_##keylen##_##nmode,                                           \
-    blocksize,                                                          \
-    keylen / 8,                                                         \
-    ivlen,                                                              \
-    flags | EVP_CIPH_##MODE##_MODE,                                     \
-    EVP_ORIG_GLOBAL,                                                    \
-    aes_init_key,                                                       \
-    aes_##mode##_cipher,                                                \
-    NULL,                                                               \
-    sizeof(EVP_AES_KEY),                                                \
-    NULL,                                                               \
-    NULL,                                                               \
-    NULL,                                                               \
-    NULL                                                                \
-};                                                                      \
-const EVP_CIPHER *EVP_aes_##keylen##_##mode(void)                       \
-{                                                                       \
-    return S390X_aes_##keylen##_##mode##_CAPABLE ?                      \
-           &s390x_aes_##keylen##_##mode : &aes_##keylen##_##mode;       \
-}
+        static const EVP_CIPHER s390x_aes_ ## keylen ## _ ## mode = {                 \
+            nid ## _ ## keylen ## _ ## nmode,blocksize,                                 \
+            keylen / 8,                                                         \
+            ivlen,                                                              \
+            flags | EVP_CIPH_ ## MODE ## _MODE,                                     \
+            EVP_ORIG_GLOBAL,                                                    \
+            s390x_aes_ ## mode ## _init_key,                                        \
+            s390x_aes_ ## mode ## _cipher,                                          \
+            NULL,                                                               \
+            sizeof(S390X_AES_ ## MODE ## _CTX),                                     \
+            NULL,                                                               \
+            NULL,                                                               \
+            NULL,                                                               \
+            NULL                                                                \
+        };                                                                      \
+        static const EVP_CIPHER aes_ ## keylen ## _ ## mode = {                       \
+            nid ## _ ## keylen ## _ ## nmode,                                           \
+            blocksize,                                                          \
+            keylen / 8,                                                         \
+            ivlen,                                                              \
+            flags | EVP_CIPH_ ## MODE ## _MODE,                                     \
+            EVP_ORIG_GLOBAL,                                                    \
+            aes_init_key,                                                       \
+            aes_ ## mode ## _cipher,                                                \
+            NULL,                                                               \
+            sizeof(EVP_AES_KEY),                                                \
+            NULL,                                                               \
+            NULL,                                                               \
+            NULL,                                                               \
+            NULL                                                                \
+        };                                                                      \
+        const EVP_CIPHER *EVP_aes_ ## keylen ## _ ## mode(void)                       \
+        {                                                                       \
+            return S390X_aes_ ## keylen ## _ ## mode ## _CAPABLE ?                      \
+                   &s390x_aes_ ## keylen ## _ ## mode : &aes_ ## keylen ## _ ## \
+                   mode;       \
+        }
 
-# define BLOCK_CIPHER_custom(nid,keylen,blocksize,ivlen,mode,MODE,flags)\
-static const EVP_CIPHER s390x_aes_##keylen##_##mode = {                 \
-    nid##_##keylen##_##mode,                                            \
-    blocksize,                                                          \
-    (EVP_CIPH_##MODE##_MODE==EVP_CIPH_XTS_MODE||EVP_CIPH_##MODE##_MODE==EVP_CIPH_SIV_MODE ? 2 : 1) * keylen / 8,        \
-    ivlen,                                                              \
-    flags | EVP_CIPH_##MODE##_MODE,                                     \
-    EVP_ORIG_GLOBAL,                                                    \
-    s390x_aes_##mode##_init_key,                                        \
-    s390x_aes_##mode##_cipher,                                          \
-    s390x_aes_##mode##_cleanup,                                         \
-    sizeof(S390X_AES_##MODE##_CTX),                                     \
-    NULL,                                                               \
-    NULL,                                                               \
-    s390x_aes_##mode##_ctrl,                                            \
-    NULL                                                                \
-};                                                                      \
-static const EVP_CIPHER aes_##keylen##_##mode = {                       \
-    nid##_##keylen##_##mode,blocksize,                                  \
-    (EVP_CIPH_##MODE##_MODE==EVP_CIPH_XTS_MODE||EVP_CIPH_##MODE##_MODE==EVP_CIPH_SIV_MODE ? 2 : 1) * keylen / 8,        \
-    ivlen,                                                              \
-    flags | EVP_CIPH_##MODE##_MODE,                                     \
-    EVP_ORIG_GLOBAL,                                                    \
-    aes_##mode##_init_key,                                              \
-    aes_##mode##_cipher,                                                \
-    aes_##mode##_cleanup,                                               \
-    sizeof(EVP_AES_##MODE##_CTX),                                       \
-    NULL,                                                               \
-    NULL,                                                               \
-    aes_##mode##_ctrl,                                                  \
-    NULL                                                                \
-};                                                                      \
-const EVP_CIPHER *EVP_aes_##keylen##_##mode(void)                       \
-{                                                                       \
-    return S390X_aes_##keylen##_##mode##_CAPABLE ?                      \
-           &s390x_aes_##keylen##_##mode : &aes_##keylen##_##mode;       \
-}
+# define BLOCK_CIPHER_custom(nid,keylen,blocksize,ivlen,mode,MODE,flags) \
+        static const EVP_CIPHER s390x_aes_ ## keylen ## _ ## mode = {                 \
+            nid ## _ ## keylen ## _ ## mode,                                            \
+            blocksize,                                                          \
+            (EVP_CIPH_ ## MODE ## _MODE==EVP_CIPH_XTS_MODE|| \
+             EVP_CIPH_ ## MODE ## _MODE== \
+             EVP_CIPH_SIV_MODE ? 2 : 1) * keylen / 8,        \
+            ivlen,                                                              \
+            flags | EVP_CIPH_ ## MODE ## _MODE,                                     \
+            EVP_ORIG_GLOBAL,                                                    \
+            s390x_aes_ ## mode ## _init_key,                                        \
+            s390x_aes_ ## mode ## _cipher,                                          \
+            s390x_aes_ ## mode ## _cleanup,                                         \
+            sizeof(S390X_AES_ ## MODE ## _CTX),                                     \
+            NULL,                                                               \
+            NULL,                                                               \
+            s390x_aes_ ## mode ## _ctrl,                                            \
+            NULL                                                                \
+        };                                                                      \
+        static const EVP_CIPHER aes_ ## keylen ## _ ## mode = {                       \
+            nid ## _ ## keylen ## _ ## mode,blocksize,                                  \
+            (EVP_CIPH_ ## MODE ## _MODE==EVP_CIPH_XTS_MODE|| \
+             EVP_CIPH_ ## MODE ## _MODE== \
+             EVP_CIPH_SIV_MODE ? 2 : 1) * keylen / 8,        \
+            ivlen,                                                              \
+            flags | EVP_CIPH_ ## MODE ## _MODE,                                     \
+            EVP_ORIG_GLOBAL,                                                    \
+            aes_ ## mode ## _init_key,                                              \
+            aes_ ## mode ## _cipher,                                                \
+            aes_ ## mode ## _cleanup,                                               \
+            sizeof(EVP_AES_ ## MODE ## _CTX),                                       \
+            NULL,                                                               \
+            NULL,                                                               \
+            aes_ ## mode ## _ctrl,                                                  \
+            NULL                                                                \
+        };                                                                      \
+        const EVP_CIPHER *EVP_aes_ ## keylen ## _ ## mode(void)                       \
+        {                                                                       \
+            return S390X_aes_ ## keylen ## _ ## mode ## _CAPABLE ?                      \
+                   &s390x_aes_ ## keylen ## _ ## mode : &aes_ ## keylen ## _ ## \
+                   mode;       \
+        }
 
 #else
 
 # define BLOCK_CIPHER_generic(nid,keylen,blocksize,ivlen,nmode,mode,MODE,flags) \
-static const EVP_CIPHER aes_##keylen##_##mode = { \
-        nid##_##keylen##_##nmode,blocksize,keylen/8,ivlen, \
-        flags|EVP_CIPH_##MODE##_MODE,   \
-        EVP_ORIG_GLOBAL,                \
-        aes_init_key,                   \
-        aes_##mode##_cipher,            \
-        NULL,                           \
-        sizeof(EVP_AES_KEY),            \
-        NULL,NULL,NULL,NULL }; \
-const EVP_CIPHER *EVP_aes_##keylen##_##mode(void) \
-{ return &aes_##keylen##_##mode; }
+        static const EVP_CIPHER aes_ ## keylen ## _ ## mode = { \
+            nid ## _ ## keylen ## _ ## nmode,blocksize,keylen/8,ivlen, \
+            flags|EVP_CIPH_ ## MODE ## _MODE,   \
+            EVP_ORIG_GLOBAL,                \
+            aes_init_key,                   \
+            aes_ ## mode ## _cipher,            \
+            NULL,                           \
+            sizeof(EVP_AES_KEY),            \
+            NULL,NULL,NULL,NULL }; \
+        const EVP_CIPHER *EVP_aes_ ## keylen ## _ ## mode(void) \
+        { return &aes_ ## keylen ## _ ## mode; }
 
 # define BLOCK_CIPHER_custom(nid,keylen,blocksize,ivlen,mode,MODE,flags) \
-static const EVP_CIPHER aes_##keylen##_##mode = { \
-        nid##_##keylen##_##mode,blocksize, \
-        (EVP_CIPH_##MODE##_MODE==EVP_CIPH_XTS_MODE||EVP_CIPH_##MODE##_MODE==EVP_CIPH_SIV_MODE?2:1)*keylen/8, \
-        ivlen,                          \
-        flags|EVP_CIPH_##MODE##_MODE,   \
-        EVP_ORIG_GLOBAL,                \
-        aes_##mode##_init_key,          \
-        aes_##mode##_cipher,            \
-        aes_##mode##_cleanup,           \
-        sizeof(EVP_AES_##MODE##_CTX),   \
-        NULL,NULL,aes_##mode##_ctrl,NULL }; \
-const EVP_CIPHER *EVP_aes_##keylen##_##mode(void) \
-{ return &aes_##keylen##_##mode; }
+        static const EVP_CIPHER aes_ ## keylen ## _ ## mode = { \
+            nid ## _ ## keylen ## _ ## mode,blocksize, \
+            (EVP_CIPH_ ## MODE ## _MODE==EVP_CIPH_XTS_MODE|| \
+             EVP_CIPH_ ## MODE ## _MODE==EVP_CIPH_SIV_MODE?2:1)*keylen/8, \
+            ivlen,                          \
+            flags|EVP_CIPH_ ## MODE ## _MODE,   \
+            EVP_ORIG_GLOBAL,                \
+            aes_ ## mode ## _init_key,          \
+            aes_ ## mode ## _cipher,            \
+            aes_ ## mode ## _cleanup,           \
+            sizeof(EVP_AES_ ## MODE ## _CTX),   \
+            NULL,NULL,aes_ ## mode ## _ctrl,NULL }; \
+        const EVP_CIPHER *EVP_aes_ ## keylen ## _ ## mode(void) \
+        { return &aes_ ## keylen ## _ ## mode; }
 
 #endif
 
 #define BLOCK_CIPHER_generic_pack(nid,keylen,flags)             \
-        BLOCK_CIPHER_generic(nid,keylen,16,16,cbc,cbc,CBC,flags|EVP_CIPH_FLAG_DEFAULT_ASN1)     \
-        BLOCK_CIPHER_generic(nid,keylen,16,0,ecb,ecb,ECB,flags|EVP_CIPH_FLAG_DEFAULT_ASN1)      \
-        BLOCK_CIPHER_generic(nid,keylen,1,16,ofb128,ofb,OFB,flags|EVP_CIPH_FLAG_DEFAULT_ASN1)   \
-        BLOCK_CIPHER_generic(nid,keylen,1,16,cfb128,cfb,CFB,flags|EVP_CIPH_FLAG_DEFAULT_ASN1)   \
+        BLOCK_CIPHER_generic(nid,keylen,16,16,cbc,cbc,CBC, \
+                             flags|EVP_CIPH_FLAG_DEFAULT_ASN1)     \
+        BLOCK_CIPHER_generic(nid,keylen,16,0,ecb,ecb,ECB, \
+                             flags|EVP_CIPH_FLAG_DEFAULT_ASN1)      \
+        BLOCK_CIPHER_generic(nid,keylen,1,16,ofb128,ofb,OFB, \
+                             flags|EVP_CIPH_FLAG_DEFAULT_ASN1)   \
+        BLOCK_CIPHER_generic(nid,keylen,1,16,cfb128,cfb,CFB, \
+                             flags|EVP_CIPH_FLAG_DEFAULT_ASN1)   \
         BLOCK_CIPHER_generic(nid,keylen,1,16,cfb1,cfb1,CFB,flags)       \
         BLOCK_CIPHER_generic(nid,keylen,1,16,cfb8,cfb8,CFB,flags)       \
         BLOCK_CIPHER_generic(nid,keylen,1,16,ctr,ctr,CTR,flags)
@@ -2444,14 +2465,14 @@ static int aes_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
             ret = vpaes_set_decrypt_key(key, keylen, &dat->ks.ks);
             dat->block = (block128_f) vpaes_decrypt;
             dat->stream.cbc = mode == EVP_CIPH_CBC_MODE ?
-                (cbc128_f) vpaes_cbc_encrypt : NULL;
+                              (cbc128_f) vpaes_cbc_encrypt : NULL;
         } else
 #endif
         {
             ret = AES_set_decrypt_key(key, keylen, &dat->ks.ks);
             dat->block = (block128_f) AES_decrypt;
             dat->stream.cbc = mode == EVP_CIPH_CBC_MODE ?
-                (cbc128_f) AES_cbc_encrypt : NULL;
+                              (cbc128_f) AES_cbc_encrypt : NULL;
         }
     } else
 #ifdef HWAES_CAPABLE
@@ -2469,7 +2490,7 @@ static int aes_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
             dat->stream.ctr = (ctr128_f) HWAES_ctr32_encrypt_blocks;
         else
 # endif
-            (void)0;            /* terminate potentially open 'else' */
+        (void)0;                /* terminate potentially open 'else' */
     } else
 #endif
 #ifdef BSAES_CAPABLE
@@ -2484,14 +2505,14 @@ static int aes_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
         ret = vpaes_set_encrypt_key(key, keylen, &dat->ks.ks);
         dat->block = (block128_f) vpaes_encrypt;
         dat->stream.cbc = mode == EVP_CIPH_CBC_MODE ?
-            (cbc128_f) vpaes_cbc_encrypt : NULL;
+                          (cbc128_f) vpaes_cbc_encrypt : NULL;
     } else
 #endif
     {
         ret = AES_set_encrypt_key(key, keylen, &dat->ks.ks);
         dat->block = (block128_f) AES_encrypt;
         dat->stream.cbc = mode == EVP_CIPH_CBC_MODE ?
-            (cbc128_f) AES_cbc_encrypt : NULL;
+                          (cbc128_f) AES_cbc_encrypt : NULL;
 #ifdef AES_CTR_ASM
         if (mode == EVP_CIPH_CTR_MODE)
             dat->stream.ctr = (ctr128_f) AES_ctr32_encrypt;
@@ -2639,8 +2660,8 @@ static int aes_ctr_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
 }
 
 BLOCK_CIPHER_generic_pack(NID_aes, 128, 0)
-    BLOCK_CIPHER_generic_pack(NID_aes, 192, 0)
-    BLOCK_CIPHER_generic_pack(NID_aes, 256, 0)
+BLOCK_CIPHER_generic_pack(NID_aes, 192, 0)
+BLOCK_CIPHER_generic_pack(NID_aes, 256, 0)
 
 static int aes_gcm_cleanup(EVP_CIPHER_CTX *c)
 {
@@ -2657,116 +2678,117 @@ static int aes_gcm_ctrl(EVP_CIPHER_CTX *c, int type, int arg, void *ptr)
 {
     EVP_AES_GCM_CTX *gctx = EVP_C_DATA(EVP_AES_GCM_CTX,c);
     switch (type) {
-    case EVP_CTRL_INIT:
-        gctx->key_set = 0;
-        gctx->iv_set = 0;
-        gctx->ivlen = EVP_CIPHER_get_iv_length(c->cipher);
-        gctx->iv = c->iv;
-        gctx->taglen = -1;
-        gctx->iv_gen = 0;
-        gctx->tls_aad_len = -1;
-        return 1;
+        case EVP_CTRL_INIT:
+            gctx->key_set = 0;
+            gctx->iv_set = 0;
+            gctx->ivlen = EVP_CIPHER_get_iv_length(c->cipher);
+            gctx->iv = c->iv;
+            gctx->taglen = -1;
+            gctx->iv_gen = 0;
+            gctx->tls_aad_len = -1;
+            return 1;
 
-    case EVP_CTRL_GET_IVLEN:
-        *(int *)ptr = gctx->ivlen;
-        return 1;
+        case EVP_CTRL_GET_IVLEN:
+            *(int *)ptr = gctx->ivlen;
+            return 1;
 
-    case EVP_CTRL_AEAD_SET_IVLEN:
-        if (arg <= 0)
-            return 0;
-        /* Allocate memory for IV if needed */
-        if ((arg > EVP_MAX_IV_LENGTH) && (arg > gctx->ivlen)) {
-            if (gctx->iv != c->iv)
-                OPENSSL_free(gctx->iv);
-            if ((gctx->iv = OPENSSL_malloc(arg)) == NULL)
+        case EVP_CTRL_AEAD_SET_IVLEN:
+            if (arg <= 0)
                 return 0;
-        }
-        gctx->ivlen = arg;
-        return 1;
+            /* Allocate memory for IV if needed */
+            if ((arg > EVP_MAX_IV_LENGTH) && (arg > gctx->ivlen)) {
+                if (gctx->iv != c->iv)
+                    OPENSSL_free(gctx->iv);
+                if ((gctx->iv = OPENSSL_malloc(arg)) == NULL)
+                    return 0;
+            }
+            gctx->ivlen = arg;
+            return 1;
 
-    case EVP_CTRL_AEAD_SET_TAG:
-        if (arg <= 0 || arg > 16 || c->encrypt)
-            return 0;
-        memcpy(c->buf, ptr, arg);
-        gctx->taglen = arg;
-        return 1;
+        case EVP_CTRL_AEAD_SET_TAG:
+            if (arg <= 0 || arg > 16 || c->encrypt)
+                return 0;
+            memcpy(c->buf, ptr, arg);
+            gctx->taglen = arg;
+            return 1;
 
-    case EVP_CTRL_AEAD_GET_TAG:
-        if (arg <= 0 || arg > 16 || !c->encrypt
-            || gctx->taglen < 0)
-            return 0;
-        memcpy(ptr, c->buf, arg);
-        return 1;
+        case EVP_CTRL_AEAD_GET_TAG:
+            if (arg <= 0 || arg > 16 || !c->encrypt
+                || gctx->taglen < 0)
+                return 0;
+            memcpy(ptr, c->buf, arg);
+            return 1;
 
-    case EVP_CTRL_GCM_SET_IV_FIXED:
-        /* Special case: -1 length restores whole IV */
-        if (arg == -1) {
-            memcpy(gctx->iv, ptr, gctx->ivlen);
+        case EVP_CTRL_GCM_SET_IV_FIXED:
+            /* Special case: -1 length restores whole IV */
+            if (arg == -1) {
+                memcpy(gctx->iv, ptr, gctx->ivlen);
+                gctx->iv_gen = 1;
+                return 1;
+            }
+            /*
+             * Fixed field must be at least 4 bytes and invocation field at least
+             * 8.
+             */
+            if ((arg < 4) || (gctx->ivlen - arg) < 8)
+                return 0;
+            if (arg)
+                memcpy(gctx->iv, ptr, arg);
+            if (c->encrypt &&
+                RAND_bytes(gctx->iv + arg, gctx->ivlen - arg) <= 0)
+                return 0;
             gctx->iv_gen = 1;
             return 1;
-        }
-        /*
-         * Fixed field must be at least 4 bytes and invocation field at least
-         * 8.
-         */
-        if ((arg < 4) || (gctx->ivlen - arg) < 8)
-            return 0;
-        if (arg)
-            memcpy(gctx->iv, ptr, arg);
-        if (c->encrypt && RAND_bytes(gctx->iv + arg, gctx->ivlen - arg) <= 0)
-            return 0;
-        gctx->iv_gen = 1;
-        return 1;
 
-    case EVP_CTRL_GCM_IV_GEN:
-        if (gctx->iv_gen == 0 || gctx->key_set == 0)
-            return 0;
-        CRYPTO_gcm128_setiv(&gctx->gcm, gctx->iv, gctx->ivlen);
-        if (arg <= 0 || arg > gctx->ivlen)
-            arg = gctx->ivlen;
-        memcpy(ptr, gctx->iv + gctx->ivlen - arg, arg);
-        /*
-         * Invocation field will be at least 8 bytes in size and so no need
-         * to check wrap around or increment more than last 8 bytes.
-         */
-        ctr64_inc(gctx->iv + gctx->ivlen - 8);
-        gctx->iv_set = 1;
-        return 1;
-
-    case EVP_CTRL_GCM_SET_IV_INV:
-        if (gctx->iv_gen == 0 || gctx->key_set == 0 || c->encrypt)
-            return 0;
-        memcpy(gctx->iv + gctx->ivlen - arg, ptr, arg);
-        CRYPTO_gcm128_setiv(&gctx->gcm, gctx->iv, gctx->ivlen);
-        gctx->iv_set = 1;
-        return 1;
-
-    case EVP_CTRL_AEAD_TLS1_AAD:
-        /* Save the AAD for later use */
-        if (arg != EVP_AEAD_TLS1_AAD_LEN)
-            return 0;
-        memcpy(c->buf, ptr, arg);
-        gctx->tls_aad_len = arg;
-        gctx->tls_enc_records = 0;
-        {
-            unsigned int len = c->buf[arg - 2] << 8 | c->buf[arg - 1];
-            /* Correct length for explicit IV */
-            if (len < EVP_GCM_TLS_EXPLICIT_IV_LEN)
+        case EVP_CTRL_GCM_IV_GEN:
+            if (gctx->iv_gen == 0 || gctx->key_set == 0)
                 return 0;
-            len -= EVP_GCM_TLS_EXPLICIT_IV_LEN;
-            /* If decrypting correct for tag too */
-            if (!c->encrypt) {
-                if (len < EVP_GCM_TLS_TAG_LEN)
-                    return 0;
-                len -= EVP_GCM_TLS_TAG_LEN;
-            }
-            c->buf[arg - 2] = len >> 8;
-            c->buf[arg - 1] = len & 0xff;
-        }
-        /* Extra padding: tag appended to record */
-        return EVP_GCM_TLS_TAG_LEN;
+            CRYPTO_gcm128_setiv(&gctx->gcm, gctx->iv, gctx->ivlen);
+            if (arg <= 0 || arg > gctx->ivlen)
+                arg = gctx->ivlen;
+            memcpy(ptr, gctx->iv + gctx->ivlen - arg, arg);
+            /*
+             * Invocation field will be at least 8 bytes in size and so no need
+             * to check wrap around or increment more than last 8 bytes.
+             */
+            ctr64_inc(gctx->iv + gctx->ivlen - 8);
+            gctx->iv_set = 1;
+            return 1;
 
-    case EVP_CTRL_COPY:
+        case EVP_CTRL_GCM_SET_IV_INV:
+            if (gctx->iv_gen == 0 || gctx->key_set == 0 || c->encrypt)
+                return 0;
+            memcpy(gctx->iv + gctx->ivlen - arg, ptr, arg);
+            CRYPTO_gcm128_setiv(&gctx->gcm, gctx->iv, gctx->ivlen);
+            gctx->iv_set = 1;
+            return 1;
+
+        case EVP_CTRL_AEAD_TLS1_AAD:
+            /* Save the AAD for later use */
+            if (arg != EVP_AEAD_TLS1_AAD_LEN)
+                return 0;
+            memcpy(c->buf, ptr, arg);
+            gctx->tls_aad_len = arg;
+            gctx->tls_enc_records = 0;
+            {
+                unsigned int len = c->buf[arg - 2] << 8 | c->buf[arg - 1];
+                /* Correct length for explicit IV */
+                if (len < EVP_GCM_TLS_EXPLICIT_IV_LEN)
+                    return 0;
+                len -= EVP_GCM_TLS_EXPLICIT_IV_LEN;
+                /* If decrypting correct for tag too */
+                if (!c->encrypt) {
+                    if (len < EVP_GCM_TLS_TAG_LEN)
+                        return 0;
+                    len -= EVP_GCM_TLS_TAG_LEN;
+                }
+                c->buf[arg - 2] = len >> 8;
+                c->buf[arg - 1] = len & 0xff;
+            }
+            /* Extra padding: tag appended to record */
+            return EVP_GCM_TLS_TAG_LEN;
+
+        case EVP_CTRL_COPY:
         {
             EVP_CIPHER_CTX *out = ptr;
             EVP_AES_GCM_CTX *gctx_out = EVP_C_DATA(EVP_AES_GCM_CTX,out);
@@ -2785,8 +2807,8 @@ static int aes_gcm_ctrl(EVP_CIPHER_CTX *c, int type, int arg, void *ptr)
             return 1;
         }
 
-    default:
-        return -1;
+        default:
+            return -1;
 
     }
 }
@@ -2838,7 +2860,7 @@ static int aes_gcm_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
                 break;
             } else
 #endif
-                (void)0;        /* terminate potentially open 'else' */
+            (void)0;            /* terminate potentially open 'else' */
 
             AES_set_encrypt_key(key, keylen, &gctx->ks.ks);
             CRYPTO_gcm128_init(&gctx->gcm, &gctx->ks,
@@ -2906,7 +2928,7 @@ static int aes_gcm_tls_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
      */
     if (EVP_CIPHER_CTX_ctrl(ctx,
                             EVP_CIPHER_CTX_is_encrypting(ctx) ?
-                                EVP_CTRL_GCM_IV_GEN : EVP_CTRL_GCM_SET_IV_INV,
+                            EVP_CTRL_GCM_IV_GEN : EVP_CTRL_GCM_SET_IV_INV,
                             EVP_GCM_TLS_EXPLICIT_IV_LEN, out) <= 0)
         goto err;
     /* Use saved AAD */
@@ -3007,7 +3029,7 @@ static int aes_gcm_tls_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
         rv = len;
     }
 
- err:
+err:
     gctx->iv_set = 0;
     gctx->tls_aad_len = -1;
     return rv;
@@ -3183,9 +3205,9 @@ static int aes_gcm_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
 }
 
 #define CUSTOM_FLAGS    (EVP_CIPH_FLAG_DEFAULT_ASN1 \
-                | EVP_CIPH_CUSTOM_IV | EVP_CIPH_FLAG_CUSTOM_CIPHER \
-                | EVP_CIPH_ALWAYS_CALL_INIT | EVP_CIPH_CTRL_INIT \
-                | EVP_CIPH_CUSTOM_COPY | EVP_CIPH_CUSTOM_IV_LENGTH)
+                         | EVP_CIPH_CUSTOM_IV | EVP_CIPH_FLAG_CUSTOM_CIPHER \
+                         | EVP_CIPH_ALWAYS_CALL_INIT | EVP_CIPH_CTRL_INIT \
+                         | EVP_CIPH_CUSTOM_COPY | EVP_CIPH_CUSTOM_IV_LENGTH)
 
 BLOCK_CIPHER_custom(NID_aes, 128, 1, 12, gcm, GCM,
                     EVP_CIPH_FLAG_AEAD_CIPHER | CUSTOM_FLAGS)
@@ -3257,7 +3279,7 @@ static int aes_xts_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
              *       data with them."
              */
             if ((!allow_insecure_decrypt || enc)
-                    && CRYPTO_memcmp(key, key + bytes, bytes) == 0) {
+                && CRYPTO_memcmp(key, key + bytes, bytes) == 0) {
                 ERR_raise(ERR_LIB_EVP, EVP_R_XTS_DUPLICATED_KEYS);
                 return 0;
             }
@@ -3293,7 +3315,8 @@ static int aes_xts_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
 #endif
 #ifdef BSAES_CAPABLE
             if (BSAES_CAPABLE)
-                xctx->stream = enc ? ossl_bsaes_xts_encrypt : ossl_bsaes_xts_decrypt;
+                xctx->stream =
+                    enc ? ossl_bsaes_xts_encrypt : ossl_bsaes_xts_decrypt;
             else
 #endif
 #ifdef VPAES_CAPABLE
@@ -3313,7 +3336,7 @@ static int aes_xts_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
                 break;
             } else
 #endif
-                (void)0;        /* terminate potentially open 'else' */
+            (void)0;            /* terminate potentially open 'else' */
 
             if (enc) {
                 AES_set_encrypt_key(key, bits, &xctx->ks1.ks);
@@ -3344,10 +3367,10 @@ static int aes_xts_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
     EVP_AES_XTS_CTX *xctx = EVP_C_DATA(EVP_AES_XTS_CTX,ctx);
 
     if (xctx->xts.key1 == NULL
-            || xctx->xts.key2 == NULL
-            || out == NULL
-            || in == NULL
-            || len < AES_BLOCK_SIZE)
+        || xctx->xts.key2 == NULL
+        || out == NULL
+        || in == NULL
+        || len < AES_BLOCK_SIZE)
         return 0;
 
     /*
@@ -3384,86 +3407,86 @@ static int aes_ccm_ctrl(EVP_CIPHER_CTX *c, int type, int arg, void *ptr)
 {
     EVP_AES_CCM_CTX *cctx = EVP_C_DATA(EVP_AES_CCM_CTX,c);
     switch (type) {
-    case EVP_CTRL_INIT:
-        cctx->key_set = 0;
-        cctx->iv_set = 0;
-        cctx->L = 8;
-        cctx->M = 12;
-        cctx->tag_set = 0;
-        cctx->len_set = 0;
-        cctx->tls_aad_len = -1;
-        return 1;
+        case EVP_CTRL_INIT:
+            cctx->key_set = 0;
+            cctx->iv_set = 0;
+            cctx->L = 8;
+            cctx->M = 12;
+            cctx->tag_set = 0;
+            cctx->len_set = 0;
+            cctx->tls_aad_len = -1;
+            return 1;
 
-    case EVP_CTRL_GET_IVLEN:
-        *(int *)ptr = 15 - cctx->L;
-        return 1;
+        case EVP_CTRL_GET_IVLEN:
+            *(int *)ptr = 15 - cctx->L;
+            return 1;
 
-    case EVP_CTRL_AEAD_TLS1_AAD:
-        /* Save the AAD for later use */
-        if (arg != EVP_AEAD_TLS1_AAD_LEN)
-            return 0;
-        memcpy(EVP_CIPHER_CTX_buf_noconst(c), ptr, arg);
-        cctx->tls_aad_len = arg;
-        {
-            uint16_t len =
-                EVP_CIPHER_CTX_buf_noconst(c)[arg - 2] << 8
-                | EVP_CIPHER_CTX_buf_noconst(c)[arg - 1];
-            /* Correct length for explicit IV */
-            if (len < EVP_CCM_TLS_EXPLICIT_IV_LEN)
+        case EVP_CTRL_AEAD_TLS1_AAD:
+            /* Save the AAD for later use */
+            if (arg != EVP_AEAD_TLS1_AAD_LEN)
                 return 0;
-            len -= EVP_CCM_TLS_EXPLICIT_IV_LEN;
-            /* If decrypting correct for tag too */
-            if (!EVP_CIPHER_CTX_is_encrypting(c)) {
-                if (len < cctx->M)
-                    return 0;
-                len -= cctx->M;
-            }
-            EVP_CIPHER_CTX_buf_noconst(c)[arg - 2] = len >> 8;
-            EVP_CIPHER_CTX_buf_noconst(c)[arg - 1] = len & 0xff;
-        }
-        /* Extra padding: tag appended to record */
-        return cctx->M;
-
-    case EVP_CTRL_CCM_SET_IV_FIXED:
-        /* Sanity check length */
-        if (arg != EVP_CCM_TLS_FIXED_IV_LEN)
-            return 0;
-        /* Just copy to first part of IV */
-        memcpy(c->iv, ptr, arg);
-        return 1;
-
-    case EVP_CTRL_AEAD_SET_IVLEN:
-        arg = 15 - arg;
-        /* fall through */
-    case EVP_CTRL_CCM_SET_L:
-        if (arg < 2 || arg > 8)
-            return 0;
-        cctx->L = arg;
-        return 1;
-
-    case EVP_CTRL_AEAD_SET_TAG:
-        if ((arg & 1) || arg < 4 || arg > 16)
-            return 0;
-        if (EVP_CIPHER_CTX_is_encrypting(c) && ptr)
-            return 0;
-        if (ptr) {
-            cctx->tag_set = 1;
             memcpy(EVP_CIPHER_CTX_buf_noconst(c), ptr, arg);
-        }
-        cctx->M = arg;
-        return 1;
+            cctx->tls_aad_len = arg;
+            {
+                uint16_t len =
+                    EVP_CIPHER_CTX_buf_noconst(c)[arg - 2] << 8
+                        | EVP_CIPHER_CTX_buf_noconst(c)[arg - 1];
+                /* Correct length for explicit IV */
+                if (len < EVP_CCM_TLS_EXPLICIT_IV_LEN)
+                    return 0;
+                len -= EVP_CCM_TLS_EXPLICIT_IV_LEN;
+                /* If decrypting correct for tag too */
+                if (!EVP_CIPHER_CTX_is_encrypting(c)) {
+                    if (len < cctx->M)
+                        return 0;
+                    len -= cctx->M;
+                }
+                EVP_CIPHER_CTX_buf_noconst(c)[arg - 2] = len >> 8;
+                EVP_CIPHER_CTX_buf_noconst(c)[arg - 1] = len & 0xff;
+            }
+            /* Extra padding: tag appended to record */
+            return cctx->M;
 
-    case EVP_CTRL_AEAD_GET_TAG:
-        if (!EVP_CIPHER_CTX_is_encrypting(c) || !cctx->tag_set)
-            return 0;
-        if (!CRYPTO_ccm128_tag(&cctx->ccm, ptr, (size_t)arg))
-            return 0;
-        cctx->tag_set = 0;
-        cctx->iv_set = 0;
-        cctx->len_set = 0;
-        return 1;
+        case EVP_CTRL_CCM_SET_IV_FIXED:
+            /* Sanity check length */
+            if (arg != EVP_CCM_TLS_FIXED_IV_LEN)
+                return 0;
+            /* Just copy to first part of IV */
+            memcpy(c->iv, ptr, arg);
+            return 1;
 
-    case EVP_CTRL_COPY:
+        case EVP_CTRL_AEAD_SET_IVLEN:
+            arg = 15 - arg;
+        /* fall through */
+        case EVP_CTRL_CCM_SET_L:
+            if (arg < 2 || arg > 8)
+                return 0;
+            cctx->L = arg;
+            return 1;
+
+        case EVP_CTRL_AEAD_SET_TAG:
+            if ((arg & 1) || arg < 4 || arg > 16)
+                return 0;
+            if (EVP_CIPHER_CTX_is_encrypting(c) && ptr)
+                return 0;
+            if (ptr) {
+                cctx->tag_set = 1;
+                memcpy(EVP_CIPHER_CTX_buf_noconst(c), ptr, arg);
+            }
+            cctx->M = arg;
+            return 1;
+
+        case EVP_CTRL_AEAD_GET_TAG:
+            if (!EVP_CIPHER_CTX_is_encrypting(c) || !cctx->tag_set)
+                return 0;
+            if (!CRYPTO_ccm128_tag(&cctx->ccm, ptr, (size_t)arg))
+                return 0;
+            cctx->tag_set = 0;
+            cctx->iv_set = 0;
+            cctx->len_set = 0;
+            return 1;
+
+        case EVP_CTRL_COPY:
         {
             EVP_CIPHER_CTX *out = ptr;
             EVP_AES_CCM_CTX *cctx_out = EVP_C_DATA(EVP_AES_CCM_CTX,out);
@@ -3475,8 +3498,8 @@ static int aes_ccm_ctrl(EVP_CIPHER_CTX *c, int type, int arg, void *ptr)
             return 1;
         }
 
-    default:
-        return -1;
+        default:
+            return -1;
 
     }
 }
@@ -3551,7 +3574,7 @@ static int aes_ccm_tls_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
     len -= EVP_CCM_TLS_EXPLICIT_IV_LEN + cctx->M;
     if (CRYPTO_ccm128_setiv(ccm, ctx->iv, 15 - cctx->L,
                             len))
-            return -1;
+        return -1;
     /* Use saved AAD */
     CRYPTO_ccm128_aad(ccm, EVP_CIPHER_CTX_buf_noconst(ctx),
                       cctx->tls_aad_len);
@@ -3762,8 +3785,9 @@ static int aes_wrap_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
 }
 
 #define WRAP_FLAGS      (EVP_CIPH_WRAP_MODE \
-                | EVP_CIPH_CUSTOM_IV | EVP_CIPH_FLAG_CUSTOM_CIPHER \
-                | EVP_CIPH_ALWAYS_CALL_INIT | EVP_CIPH_FLAG_DEFAULT_ASN1)
+                         | EVP_CIPH_CUSTOM_IV | EVP_CIPH_FLAG_CUSTOM_CIPHER \
+                         | EVP_CIPH_ALWAYS_CALL_INIT | \
+                         EVP_CIPH_FLAG_DEFAULT_ASN1)
 
 static const EVP_CIPHER aes_128_wrap = {
     NID_id_aes128_wrap,
@@ -3857,58 +3881,58 @@ static int aes_ocb_ctrl(EVP_CIPHER_CTX *c, int type, int arg, void *ptr)
     EVP_AES_OCB_CTX *new_octx;
 
     switch (type) {
-    case EVP_CTRL_INIT:
-        octx->key_set = 0;
-        octx->iv_set = 0;
-        octx->ivlen = EVP_CIPHER_get_iv_length(c->cipher);
-        octx->iv = c->iv;
-        octx->taglen = 16;
-        octx->data_buf_len = 0;
-        octx->aad_buf_len = 0;
-        return 1;
+        case EVP_CTRL_INIT:
+            octx->key_set = 0;
+            octx->iv_set = 0;
+            octx->ivlen = EVP_CIPHER_get_iv_length(c->cipher);
+            octx->iv = c->iv;
+            octx->taglen = 16;
+            octx->data_buf_len = 0;
+            octx->aad_buf_len = 0;
+            return 1;
 
-    case EVP_CTRL_GET_IVLEN:
-        *(int *)ptr = octx->ivlen;
-        return 1;
+        case EVP_CTRL_GET_IVLEN:
+            *(int *)ptr = octx->ivlen;
+            return 1;
 
-    case EVP_CTRL_AEAD_SET_IVLEN:
-        /* IV len must be 1 to 15 */
-        if (arg <= 0 || arg > 15)
-            return 0;
-
-        octx->ivlen = arg;
-        return 1;
-
-    case EVP_CTRL_AEAD_SET_TAG:
-        if (ptr == NULL) {
-            /* Tag len must be 0 to 16 */
-            if (arg < 0 || arg > 16)
+        case EVP_CTRL_AEAD_SET_IVLEN:
+            /* IV len must be 1 to 15 */
+            if (arg <= 0 || arg > 15)
                 return 0;
 
-            octx->taglen = arg;
+            octx->ivlen = arg;
             return 1;
-        }
-        if (arg != octx->taglen || EVP_CIPHER_CTX_is_encrypting(c))
-            return 0;
-        memcpy(octx->tag, ptr, arg);
-        return 1;
 
-    case EVP_CTRL_AEAD_GET_TAG:
-        if (arg != octx->taglen || !EVP_CIPHER_CTX_is_encrypting(c))
-            return 0;
+        case EVP_CTRL_AEAD_SET_TAG:
+            if (ptr == NULL) {
+                /* Tag len must be 0 to 16 */
+                if (arg < 0 || arg > 16)
+                    return 0;
 
-        memcpy(ptr, octx->tag, arg);
-        return 1;
+                octx->taglen = arg;
+                return 1;
+            }
+            if (arg != octx->taglen || EVP_CIPHER_CTX_is_encrypting(c))
+                return 0;
+            memcpy(octx->tag, ptr, arg);
+            return 1;
 
-    case EVP_CTRL_COPY:
-        newc = (EVP_CIPHER_CTX *)ptr;
-        new_octx = EVP_C_DATA(EVP_AES_OCB_CTX,newc);
-        return CRYPTO_ocb128_copy_ctx(&new_octx->ocb, &octx->ocb,
-                                      &new_octx->ksenc.ks,
-                                      &new_octx->ksdec.ks);
+        case EVP_CTRL_AEAD_GET_TAG:
+            if (arg != octx->taglen || !EVP_CIPHER_CTX_is_encrypting(c))
+                return 0;
 
-    default:
-        return -1;
+            memcpy(ptr, octx->tag, arg);
+            return 1;
+
+        case EVP_CTRL_COPY:
+            newc = (EVP_CIPHER_CTX *)ptr;
+            new_octx = EVP_C_DATA(EVP_AES_OCB_CTX,newc);
+            return CRYPTO_ocb128_copy_ctx(&new_octx->ocb, &octx->ocb,
+                                          &new_octx->ksenc.ks,
+                                          &new_octx->ksdec.ks);
+
+        default:
+            return -1;
 
     }
 }
@@ -3922,7 +3946,7 @@ static int aes_ocb_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
         return 1;
 
     if (key != NULL) {
-       const int keylen = EVP_CIPHER_CTX_get_key_length(ctx) * 8;
+        const int keylen = EVP_CIPHER_CTX_get_key_length(ctx) * 8;
 
         if (keylen <= 0) {
             ERR_raise(ERR_LIB_EVP, EVP_R_INVALID_KEY_LENGTH);
@@ -4083,11 +4107,11 @@ static int aes_ocb_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
                     return -1;
             } else if (EVP_CIPHER_CTX_is_encrypting(ctx)) {
                 if (!CRYPTO_ocb128_encrypt
-                    (&octx->ocb, in, out, len - trailing_len))
+                        (&octx->ocb, in, out, len - trailing_len))
                     return -1;
             } else {
                 if (!CRYPTO_ocb128_decrypt
-                    (&octx->ocb, in, out, len - trailing_len))
+                        (&octx->ocb, in, out, len - trailing_len))
                     return -1;
             }
             written_len += len - trailing_len;
@@ -4121,7 +4145,7 @@ static int aes_ocb_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
         }
         if (octx->aad_buf_len > 0) {
             if (!CRYPTO_ocb128_aad
-                (&octx->ocb, octx->aad_buf, octx->aad_buf_len))
+                    (&octx->ocb, octx->aad_buf, octx->aad_buf_len))
                 return -1;
             octx->aad_buf_len = 0;
         }

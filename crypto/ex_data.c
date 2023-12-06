@@ -43,7 +43,7 @@ static EX_CALLBACKS *get_and_lock(OSSL_EX_DATA_GLOBAL *global, int class_index,
          * If we get here, someone (who?) cleaned up the lock, so just
          * treat it as an error.
          */
-         return NULL;
+        return NULL;
     }
 
     if (read) {
@@ -94,7 +94,7 @@ void ossl_crypto_cleanup_all_ex_data_int(OSSL_LIB_CTX *ctx)
  * Any in-use instances are leaked.
  */
 static void dummy_new(void *parent, void *ptr, CRYPTO_EX_DATA *ad, int idx,
-                     long argl, void *argp)
+                      long argl, void *argp)
 {
 }
 
@@ -196,7 +196,7 @@ int ossl_crypto_get_ex_new_index_ex(OSSL_LIB_CTX *ctx, int class_index,
     toret = sk_EX_CALLBACK_num(ip->meth) - 1;
     (void)sk_EX_CALLBACK_set(ip->meth, toret, a);
 
- err:
+err:
     CRYPTO_THREAD_unlock(global->ex_data_lock);
     return toret;
 }
@@ -332,7 +332,7 @@ int CRYPTO_dup_ex_data(int class_index, CRYPTO_EX_DATA *to,
         CRYPTO_set_ex_data(to, i, ptr);
     }
     toret = 1;
- err:
+err:
     if (storage != stack)
         OPENSSL_free(storage);
     return toret;
@@ -410,7 +410,7 @@ void CRYPTO_free_ex_data(int class_index, void *obj, CRYPTO_EX_DATA *ad)
 
     if (storage != stack)
         OPENSSL_free(storage);
- err:
+err:
     sk_void_free(ad->sk);
     ad->sk = NULL;
     ad->ctx = NULL;

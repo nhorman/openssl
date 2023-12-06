@@ -110,7 +110,7 @@ SSL_SESSION *SSL_SESSION_new(void)
         return NULL;
 
     ss->verify_result = 1;      /* avoid 0 (= X509_V_OK) just in case */
-   /* 5 minute timeout by default */
+    /* 5 minute timeout by default */
     ss->timeout = ossl_seconds2time(60 * 5 + 4);
     ss->time = ossl_time_now();
     ssl_session_calculate_timeout(ss);
@@ -175,7 +175,8 @@ SSL_SESSION *ssl_session_dup(const SSL_SESSION *src, int ticket)
         return NULL;
     }
 
-    if (!CRYPTO_new_ex_data(CRYPTO_EX_INDEX_SSL_SESSION, dest, &dest->ex_data)) {
+    if (!CRYPTO_new_ex_data(CRYPTO_EX_INDEX_SSL_SESSION, dest,
+                            &dest->ex_data)) {
         ERR_raise(ERR_LIB_SSL, ERR_R_CRYPTO_LIB);
         goto err;
     }
@@ -260,7 +261,7 @@ SSL_SESSION *ssl_session_dup(const SSL_SESSION *src, int ticket)
     }
 
     return dest;
- err:
+err:
     SSL_SESSION_free(dest);
     return NULL;
 }
@@ -272,7 +273,7 @@ const unsigned char *SSL_SESSION_get_id(const SSL_SESSION *s, unsigned int *len)
     return s->session_id;
 }
 const unsigned char *SSL_SESSION_get0_id_context(const SSL_SESSION *s,
-                                                unsigned int *len)
+                                                 unsigned int *len)
 {
     if (len != NULL)
         *len = (unsigned int)s->sid_ctx_length;
@@ -309,7 +310,7 @@ static int def_generate_session_id(SSL *ssl, unsigned char *id,
         }
 #endif
     } while (SSL_has_matching_session_id(ssl, id, *id_len) &&
-           (++retry < MAX_SESS_ID_ATTEMPTS)) ;
+             (++retry < MAX_SESS_ID_ATTEMPTS));
     if (retry < MAX_SESS_ID_ATTEMPTS)
         return 1;
     /* else - woops a session_id match */
@@ -331,19 +332,19 @@ int ssl_generate_session_id(SSL_CONNECTION *s, SSL_SESSION *ss)
     SSL *ssl = SSL_CONNECTION_GET_SSL(s);
 
     switch (s->version) {
-    case SSL3_VERSION:
-    case TLS1_VERSION:
-    case TLS1_1_VERSION:
-    case TLS1_2_VERSION:
-    case TLS1_3_VERSION:
-    case DTLS1_BAD_VER:
-    case DTLS1_VERSION:
-    case DTLS1_2_VERSION:
-        ss->session_id_length = SSL3_SSL_SESSION_ID_LENGTH;
-        break;
-    default:
-        SSLfatal(s, SSL_AD_INTERNAL_ERROR, SSL_R_UNSUPPORTED_SSL_VERSION);
-        return 0;
+        case SSL3_VERSION:
+        case TLS1_VERSION:
+        case TLS1_1_VERSION:
+        case TLS1_2_VERSION:
+        case TLS1_3_VERSION:
+        case DTLS1_BAD_VER:
+        case DTLS1_VERSION:
+        case DTLS1_2_VERSION:
+            ss->session_id_length = SSL3_SSL_SESSION_ID_LENGTH;
+            break;
+        default:
+            SSLfatal(s, SSL_AD_INTERNAL_ERROR, SSL_R_UNSUPPORTED_SSL_VERSION);
+            return 0;
     }
 
     /*-
@@ -570,8 +571,8 @@ int ssl_get_prev_session(SSL_CONNECTION *s, CLIENTHELLO_MSG *hello)
         if (!tls_parse_extension(s, TLSEXT_IDX_psk_kex_modes,
                                  SSL_EXT_CLIENT_HELLO, hello->pre_proc_exts,
                                  NULL, 0)
-                || !tls_parse_extension(s, TLSEXT_IDX_psk, SSL_EXT_CLIENT_HELLO,
-                                        hello->pre_proc_exts, NULL, 0))
+            || !tls_parse_extension(s, TLSEXT_IDX_psk, SSL_EXT_CLIENT_HELLO,
+                                    hello->pre_proc_exts, NULL, 0))
             return -1;
 
         ret = s->session;
@@ -579,23 +580,23 @@ int ssl_get_prev_session(SSL_CONNECTION *s, CLIENTHELLO_MSG *hello)
         /* sets s->ext.ticket_expected */
         r = tls_get_ticket_from_client(s, hello, &ret);
         switch (r) {
-        case SSL_TICKET_FATAL_ERR_MALLOC:
-        case SSL_TICKET_FATAL_ERR_OTHER:
-            fatal = 1;
-            SSLfatal(s, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
-            goto err;
-        case SSL_TICKET_NONE:
-        case SSL_TICKET_EMPTY:
-            if (hello->session_id_len > 0) {
-                try_session_cache = 1;
-                ret = lookup_sess_in_cache(s, hello->session_id,
-                                           hello->session_id_len);
-            }
-            break;
-        case SSL_TICKET_NO_DECRYPT:
-        case SSL_TICKET_SUCCESS:
-        case SSL_TICKET_SUCCESS_RENEW:
-            break;
+            case SSL_TICKET_FATAL_ERR_MALLOC:
+            case SSL_TICKET_FATAL_ERR_OTHER:
+                fatal = 1;
+                SSLfatal(s, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
+                goto err;
+            case SSL_TICKET_NONE:
+            case SSL_TICKET_EMPTY:
+                if (hello->session_id_len > 0) {
+                    try_session_cache = 1;
+                    ret = lookup_sess_in_cache(s, hello->session_id,
+                                               hello->session_id_len);
+                }
+                break;
+            case SSL_TICKET_NO_DECRYPT:
+            case SSL_TICKET_SUCCESS:
+            case SSL_TICKET_SUCCESS_RENEW:
+                break;
         }
     }
 
@@ -666,7 +667,7 @@ int ssl_get_prev_session(SSL_CONNECTION *s, CLIENTHELLO_MSG *hello)
     s->verify_result = s->session->verify_result;
     return 1;
 
- err:
+err:
     if (ret != NULL) {
         SSL_SESSION_free(ret);
         /* In TLSv1.3 s->session was already set to ret, so we NULL it out */
@@ -750,7 +751,8 @@ int SSL_CTX_add_session(SSL_CTX *ctx, SSL_SESSION *c)
         ret = 1;
 
         if (SSL_CTX_sess_get_cache_size(ctx) > 0) {
-            while (SSL_CTX_sess_number(ctx) >= SSL_CTX_sess_get_cache_size(ctx)) {
+            while (SSL_CTX_sess_number(ctx) >=
+                   SSL_CTX_sess_get_cache_size(ctx)) {
                 if (!remove_session_lock(ctx, ctx->session_cache_tail, 0))
                     break;
                 else
@@ -881,8 +883,8 @@ int SSL_SESSION_set1_id(SSL_SESSION *s, const unsigned char *sid,
                         unsigned int sid_len)
 {
     if (sid_len > SSL_MAX_SSL_SESSION_ID_LENGTH) {
-      ERR_raise(ERR_LIB_SSL, SSL_R_SSL_SESSION_ID_TOO_LONG);
-      return 0;
+        ERR_raise(ERR_LIB_SSL, SSL_R_SSL_SESSION_ID_TOO_LONG);
+        return 0;
     }
     s->session_id_length = sid_len;
     if (sid != s->session_id)
@@ -1365,7 +1367,8 @@ void SSL_CTX_set_cookie_verify_cb(SSL_CTX *ctx,
     ctx->app_verify_cookie_cb = cb;
 }
 
-int SSL_SESSION_set1_ticket_appdata(SSL_SESSION *ss, const void *data, size_t len)
+int SSL_SESSION_set1_ticket_appdata(SSL_SESSION *ss, const void *data,
+                                    size_t len)
 {
     OPENSSL_free(ss->ticket_appdata);
     ss->ticket_appdata_len = 0;

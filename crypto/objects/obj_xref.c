@@ -200,7 +200,7 @@ int OBJ_add_sigid(int signid, int dig_id, int pkey_id)
 
     ntr = NULL;
     ret = 1;
- err:
+err:
     OPENSSL_free(ntr);
     CRYPTO_THREAD_unlock(sig_lock);
     return ret;

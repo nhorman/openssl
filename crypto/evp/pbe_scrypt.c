@@ -71,8 +71,8 @@ int EVP_PBE_scrypt_ex(const char *pass, size_t passlen,
         return 0;
 
     *z++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_PASSWORD,
-                                              (unsigned char *)pass,
-                                                      passlen);
+                                             (unsigned char *)pass,
+                                             passlen);
     *z++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_SALT,
                                              (unsigned char *)salt, saltlen);
     *z++ = OSSL_PARAM_construct_uint64(OSSL_KDF_PARAM_SCRYPT_N, &N);

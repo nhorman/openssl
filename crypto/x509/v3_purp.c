@@ -33,7 +33,7 @@ static int check_purpose_crl_sign(const X509_PURPOSE *xp, const X509 *x,
 static int check_purpose_timestamp_sign(const X509_PURPOSE *xp, const X509 *x,
                                         int non_leaf);
 static int check_purpose_code_sign(const X509_PURPOSE *xp, const X509 *x,
-                                        int non_leaf);
+                                   int non_leaf);
 static int no_check_purpose(const X509_PURPOSE *xp, const X509 *x,
                             int non_leaf);
 static int check_purpose_ocsp_helper(const X509_PURPOSE *xp, const X509 *x,
@@ -211,7 +211,7 @@ int X509_PURPOSE_add(int id, int trust, int flags,
         }
     }
     return 1;
- err:
+err:
     if (idx == -1) {
         OPENSSL_free(ptmp->name);
         OPENSSL_free(ptmp->sname);
@@ -384,11 +384,12 @@ static int check_sig_alg_match(const EVP_PKEY *issuer_key, const X509 *subject)
 
 #define V1_ROOT (EXFLAG_V1 | EXFLAG_SS)
 #define ku_reject(x, usage) \
-    (((x)->ex_flags & EXFLAG_KUSAGE) != 0 && ((x)->ex_kusage & (usage)) == 0)
+        (((x)->ex_flags &EXFLAG_KUSAGE) != 0 && ((x)->ex_kusage & (usage)) == 0)
 #define xku_reject(x, usage) \
-    (((x)->ex_flags & EXFLAG_XKUSAGE) != 0 && ((x)->ex_xkusage & (usage)) == 0)
+        (((x)->ex_flags &EXFLAG_XKUSAGE) != 0 && \
+         ((x)->ex_xkusage & (usage)) == 0)
 #define ns_reject(x, usage) \
-    (((x)->ex_flags & EXFLAG_NSCERT) != 0 && ((x)->ex_nscert & (usage)) == 0)
+        (((x)->ex_flags &EXFLAG_NSCERT) != 0 && ((x)->ex_nscert & (usage)) == 0)
 
 /*
  * Cache info on various X.509v3 extensions and further derived information,
@@ -495,37 +496,37 @@ int ossl_x509v3_cache_extensions(X509 *x)
         x->ex_flags |= EXFLAG_XKUSAGE;
         for (i = 0; i < sk_ASN1_OBJECT_num(extusage); i++) {
             switch (OBJ_obj2nid(sk_ASN1_OBJECT_value(extusage, i))) {
-            case NID_server_auth:
-                x->ex_xkusage |= XKU_SSL_SERVER;
-                break;
-            case NID_client_auth:
-                x->ex_xkusage |= XKU_SSL_CLIENT;
-                break;
-            case NID_email_protect:
-                x->ex_xkusage |= XKU_SMIME;
-                break;
-            case NID_code_sign:
-                x->ex_xkusage |= XKU_CODE_SIGN;
-                break;
-            case NID_ms_sgc:
-            case NID_ns_sgc:
-                x->ex_xkusage |= XKU_SGC;
-                break;
-            case NID_OCSP_sign:
-                x->ex_xkusage |= XKU_OCSP_SIGN;
-                break;
-            case NID_time_stamp:
-                x->ex_xkusage |= XKU_TIMESTAMP;
-                break;
-            case NID_dvcs:
-                x->ex_xkusage |= XKU_DVCS;
-                break;
-            case NID_anyExtendedKeyUsage:
-                x->ex_xkusage |= XKU_ANYEKU;
-                break;
-            default:
-                /* Ignore unknown extended key usage */
-                break;
+                case NID_server_auth:
+                    x->ex_xkusage |= XKU_SSL_SERVER;
+                    break;
+                case NID_client_auth:
+                    x->ex_xkusage |= XKU_SSL_CLIENT;
+                    break;
+                case NID_email_protect:
+                    x->ex_xkusage |= XKU_SMIME;
+                    break;
+                case NID_code_sign:
+                    x->ex_xkusage |= XKU_CODE_SIGN;
+                    break;
+                case NID_ms_sgc:
+                case NID_ns_sgc:
+                    x->ex_xkusage |= XKU_SGC;
+                    break;
+                case NID_OCSP_sign:
+                    x->ex_xkusage |= XKU_OCSP_SIGN;
+                    break;
+                case NID_time_stamp:
+                    x->ex_xkusage |= XKU_TIMESTAMP;
+                    break;
+                case NID_dvcs:
+                    x->ex_xkusage |= XKU_DVCS;
+                    break;
+                case NID_anyExtendedKeyUsage:
+                    x->ex_xkusage |= XKU_ANYEKU;
+                    break;
+                default:
+                    /* Ignore unknown extended key usage */
+                    break;
             }
         }
         sk_ASN1_OBJECT_pop_free(extusage, ASN1_OBJECT_free);
@@ -558,8 +559,8 @@ int ossl_x509v3_cache_extensions(X509 *x)
     if (X509_NAME_cmp(X509_get_subject_name(x), X509_get_issuer_name(x)) == 0) {
         x->ex_flags |= EXFLAG_SI; /* Cert is self-issued */
         if (X509_check_akid(x, x->akid) == X509_V_OK /* SKID matches AKID */
-                /* .. and the signature alg matches the PUBKEY alg: */
-                && check_sig_alg_match(X509_get0_pubkey(x), x) == X509_V_OK)
+            /* .. and the signature alg matches the PUBKEY alg: */
+            && check_sig_alg_match(X509_get0_pubkey(x), x) == X509_V_OK)
             x->ex_flags |= EXFLAG_SS; /* indicate self-signed */
         /* This is very related to ossl_x509_likely_issued(x, x) == X509_V_OK */
     }
@@ -598,20 +599,20 @@ int ossl_x509v3_cache_extensions(X509 *x)
             break;
         }
         switch (nid) {
-        case NID_basic_constraints:
-            x->ex_flags |= EXFLAG_BCONS_CRITICAL;
-            break;
-        case NID_authority_key_identifier:
-            x->ex_flags |= EXFLAG_AKID_CRITICAL;
-            break;
-        case NID_subject_key_identifier:
-            x->ex_flags |= EXFLAG_SKID_CRITICAL;
-            break;
-        case NID_subject_alt_name:
-            x->ex_flags |= EXFLAG_SAN_CRITICAL;
-            break;
-        default:
-            break;
+            case NID_basic_constraints:
+                x->ex_flags |= EXFLAG_BCONS_CRITICAL;
+                break;
+            case NID_authority_key_identifier:
+                x->ex_flags |= EXFLAG_AKID_CRITICAL;
+                break;
+            case NID_subject_key_identifier:
+                x->ex_flags |= EXFLAG_SKID_CRITICAL;
+                break;
+            case NID_subject_alt_name:
+                x->ex_flags |= EXFLAG_SAN_CRITICAL;
+                break;
+            default:
+                break;
         }
     }
 
@@ -731,7 +732,7 @@ static int check_purpose_ssl_client(const X509_PURPOSE *xp, const X509 *x,
  * key types.
  */
 #define KU_TLS \
-    KU_DIGITAL_SIGNATURE | KU_KEY_ENCIPHERMENT | KU_KEY_AGREEMENT
+        KU_DIGITAL_SIGNATURE | KU_KEY_ENCIPHERMENT | KU_KEY_AGREEMENT
 
 static int check_purpose_ssl_server(const X509_PURPOSE *xp, const X509 *x,
                                     int non_leaf)
@@ -872,7 +873,7 @@ static int check_purpose_timestamp_sign(const X509_PURPOSE *xp, const X509 *x,
     /* Extended Key Usage MUST be critical */
     i_ext = X509_get_ext_by_NID(x, NID_ext_key_usage, -1);
     if (i_ext >= 0
-            && !X509_EXTENSION_get_critical(X509_get_ext((X509 *)x, i_ext)))
+        && !X509_EXTENSION_get_critical(X509_get_ext((X509 *)x, i_ext)))
         return 0;
     return 1;
 }
@@ -970,7 +971,7 @@ int ossl_x509_likely_issued(X509 *issuer, X509 *subject)
 
     /* set issuer->skid and subject->akid */
     if (!ossl_x509v3_cache_extensions(issuer)
-            || !ossl_x509v3_cache_extensions(subject))
+        || !ossl_x509v3_cache_extensions(subject))
         return X509_V_ERR_UNSPECIFIED;
 
     ret = X509_check_akid(issuer, subject->akid);
@@ -1096,7 +1097,7 @@ long X509_get_pathlen(X509 *x)
 {
     /* Called for side effect of caching extensions */
     if (X509_check_purpose(x, -1, 0) != 1
-            || (x->ex_flags & EXFLAG_BCONS) == 0)
+        || (x->ex_flags & EXFLAG_BCONS) == 0)
         return -1;
     return x->ex_pathlen;
 }
@@ -1105,7 +1106,7 @@ long X509_get_proxy_pathlen(X509 *x)
 {
     /* Called for side effect of caching extensions */
     if (X509_check_purpose(x, -1, 0) != 1
-            || (x->ex_flags & EXFLAG_PROXY) == 0)
+        || (x->ex_flags & EXFLAG_PROXY) == 0)
         return -1;
     return x->ex_pcpathlen;
 }

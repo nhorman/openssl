@@ -22,7 +22,7 @@
 #include "internal/numbers.h"
 
 #if defined(X25519_ASM) && (defined(__x86_64) || defined(__x86_64__) || \
-                            defined(_M_AMD64) || defined(_M_X64))
+    defined(_M_AMD64) || defined(_M_X64))
 
 # define BASE_2_64_IMPLEMENTED
 
@@ -263,9 +263,9 @@ static void x25519_scalar_mulx(uint8_t out[32], const uint8_t scalar[32],
 
 #if defined(X25519_ASM) \
     || ( defined(INT128_MAX) \
-         && !defined(__sparc__) \
-         && (!defined(__SIZEOF_LONG__) || (__SIZEOF_LONG__ == 8)) \
-         && !(defined(__ANDROID__) && !defined(__clang__)) )
+    && !defined(__sparc__) \
+    && (!defined(__SIZEOF_LONG__) || (__SIZEOF_LONG__ == 8)) \
+    && !(defined(__ANDROID__) && !defined(__clang__)) )
 /*
  * Base 2^51 implementation. It's virtually no different from reference
  * base 2^25.5 implementation in respect to lax boundary conditions for
@@ -349,7 +349,7 @@ static void fe51_tobytes(uint8_t *s, const fe51 h)
     h2 += h1 >> 51; h1 &= MASK51;
     h3 += h2 >> 51; h2 &= MASK51;
     h4 += h3 >> 51; h3 &= MASK51;
-                    h4 &= MASK51;
+    h4 &= MASK51;
 
     /* smash */
     s[0] = (uint8_t)(h0 >> 0);
@@ -821,7 +821,8 @@ static void fe_frombytes(fe h, const uint8_t *s)
     int64_t carry8;
     int64_t carry9;
 
-    carry9 = h9 + (1 << 24); h0 += (carry9 >> 25) * 19; h9 -= carry9 & kTop39Bits;
+    carry9 = h9 + (1 << 24); h0 += (carry9 >> 25) * 19;
+    h9 -= carry9 & kTop39Bits;
     carry1 = h1 + (1 << 24); h2 += carry1 >> 25; h1 -= carry1 & kTop39Bits;
     carry3 = h3 + (1 << 24); h4 += carry3 >> 25; h3 -= carry3 & kTop39Bits;
     carry5 = h5 + (1 << 24); h6 += carry5 >> 25; h5 -= carry5 & kTop39Bits;
@@ -908,7 +909,7 @@ static void fe_tobytes(uint8_t *s, const fe h)
     h7 += h6 >> 26; h6 &= kBottom26Bits;
     h8 += h7 >> 25; h7 &= kBottom25Bits;
     h9 += h8 >> 26; h8 &= kBottom26Bits;
-                    h9 &= kBottom25Bits;
+    h9 &= kBottom25Bits;
     /* h10 = carry9 */
 
     /*
@@ -1178,16 +1179,26 @@ static void fe_mul(fe h, const fe f, const fe g)
     int64_t f9g7_38 = f9_2 * (int64_t) g7_19;
     int64_t f9g8_19 = f9   * (int64_t) g8_19;
     int64_t f9g9_38 = f9_2 * (int64_t) g9_19;
-    int64_t h0 = f0g0 + f1g9_38 + f2g8_19 + f3g7_38 + f4g6_19 + f5g5_38 + f6g4_19 + f7g3_38 + f8g2_19 + f9g1_38;
-    int64_t h1 = f0g1 + f1g0    + f2g9_19 + f3g8_19 + f4g7_19 + f5g6_19 + f6g5_19 + f7g4_19 + f8g3_19 + f9g2_19;
-    int64_t h2 = f0g2 + f1g1_2  + f2g0    + f3g9_38 + f4g8_19 + f5g7_38 + f6g6_19 + f7g5_38 + f8g4_19 + f9g3_38;
-    int64_t h3 = f0g3 + f1g2    + f2g1    + f3g0    + f4g9_19 + f5g8_19 + f6g7_19 + f7g6_19 + f8g5_19 + f9g4_19;
-    int64_t h4 = f0g4 + f1g3_2  + f2g2    + f3g1_2  + f4g0    + f5g9_38 + f6g8_19 + f7g7_38 + f8g6_19 + f9g5_38;
-    int64_t h5 = f0g5 + f1g4    + f2g3    + f3g2    + f4g1    + f5g0    + f6g9_19 + f7g8_19 + f8g7_19 + f9g6_19;
-    int64_t h6 = f0g6 + f1g5_2  + f2g4    + f3g3_2  + f4g2    + f5g1_2  + f6g0    + f7g9_38 + f8g8_19 + f9g7_38;
-    int64_t h7 = f0g7 + f1g6    + f2g5    + f3g4    + f4g3    + f5g2    + f6g1    + f7g0    + f8g9_19 + f9g8_19;
-    int64_t h8 = f0g8 + f1g7_2  + f2g6    + f3g5_2  + f4g4    + f5g3_2  + f6g2    + f7g1_2  + f8g0    + f9g9_38;
-    int64_t h9 = f0g9 + f1g8    + f2g7    + f3g6    + f4g5    + f5g4    + f6g3    + f7g2    + f8g1    + f9g0   ;
+    int64_t h0 = f0g0 + f1g9_38 + f2g8_19 + f3g7_38 + f4g6_19 + f5g5_38 +
+                 f6g4_19 + f7g3_38 + f8g2_19 + f9g1_38;
+    int64_t h1 = f0g1 + f1g0    + f2g9_19 + f3g8_19 + f4g7_19 + f5g6_19 +
+                 f6g5_19 + f7g4_19 + f8g3_19 + f9g2_19;
+    int64_t h2 = f0g2 + f1g1_2  + f2g0    + f3g9_38 + f4g8_19 + f5g7_38 +
+                 f6g6_19 + f7g5_38 + f8g4_19 + f9g3_38;
+    int64_t h3 = f0g3 + f1g2    + f2g1    + f3g0    + f4g9_19 + f5g8_19 +
+                 f6g7_19 + f7g6_19 + f8g5_19 + f9g4_19;
+    int64_t h4 = f0g4 + f1g3_2  + f2g2    + f3g1_2  + f4g0    + f5g9_38 +
+                 f6g8_19 + f7g7_38 + f8g6_19 + f9g5_38;
+    int64_t h5 = f0g5 + f1g4    + f2g3    + f3g2    + f4g1    + f5g0    +
+                 f6g9_19 + f7g8_19 + f8g7_19 + f9g6_19;
+    int64_t h6 = f0g6 + f1g5_2  + f2g4    + f3g3_2  + f4g2    + f5g1_2  +
+                 f6g0    + f7g9_38 + f8g8_19 + f9g7_38;
+    int64_t h7 = f0g7 + f1g6    + f2g5    + f3g4    + f4g3    + f5g2    +
+                 f6g1    + f7g0    + f8g9_19 + f9g8_19;
+    int64_t h8 = f0g8 + f1g7_2  + f2g6    + f3g5_2  + f4g4    + f5g3_2  +
+                 f6g2    + f7g1_2  + f8g0    + f9g9_38;
+    int64_t h9 = f0g9 + f1g8    + f2g7    + f3g6    + f4g5    + f5g4    +
+                 f6g3    + f7g2    + f8g1    + f9g0;
     int64_t carry0;
     int64_t carry1;
     int64_t carry2;
@@ -1239,7 +1250,8 @@ static void fe_mul(fe h, const fe f, const fe g)
     /* |h5| <= 1.01*2^24 */
     /* |h9| <= 1.71*2^59 */
 
-    carry9 = h9 + (1 << 24); h0 += (carry9 >> 25) * 19; h9 -= carry9 & kTop39Bits;
+    carry9 = h9 + (1 << 24); h0 += (carry9 >> 25) * 19;
+    h9 -= carry9 & kTop39Bits;
     /* |h9| <= 2^24; from now on fits into int32 unchanged */
     /* |h0| <= 1.1*2^39 */
 
@@ -1388,7 +1400,8 @@ static void fe_sq(fe h, const fe f)
     carry4 = h4 + (1 << 25); h5 += carry4 >> 26; h4 -= carry4 & kTop38Bits;
     carry8 = h8 + (1 << 25); h9 += carry8 >> 26; h8 -= carry8 & kTop38Bits;
 
-    carry9 = h9 + (1 << 24); h0 += (carry9 >> 25) * 19; h9 -= carry9 & kTop39Bits;
+    carry9 = h9 + (1 << 24); h0 += (carry9 >> 25) * 19;
+    h9 -= carry9 & kTop39Bits;
 
     carry0 = h0 + (1 << 25); h1 += carry0 >> 26; h0 -= carry0 & kTop38Bits;
 
@@ -1708,7 +1721,8 @@ static void fe_sq2(fe h, const fe f)
     carry4 = h4 + (1 << 25); h5 += carry4 >> 26; h4 -= carry4 & kTop38Bits;
     carry8 = h8 + (1 << 25); h9 += carry8 >> 26; h8 -= carry8 & kTop38Bits;
 
-    carry9 = h9 + (1 << 24); h0 += (carry9 >> 25) * 19; h9 -= carry9 & kTop39Bits;
+    carry9 = h9 + (1 << 24); h0 += (carry9 >> 25) * 19;
+    h9 -= carry9 & kTop39Bits;
 
     carry0 = h0 + (1 << 25); h1 += carry0 >> 26; h0 -= carry0 & kTop38Bits;
 
@@ -4345,7 +4359,8 @@ static void fe_mul121666(fe h, fe f)
     int64_t carry8;
     int64_t carry9;
 
-    carry9 = h9 + (1 << 24); h0 += (carry9 >> 25) * 19; h9 -= carry9 & kTop39Bits;
+    carry9 = h9 + (1 << 24); h0 += (carry9 >> 25) * 19;
+    h9 -= carry9 & kTop39Bits;
     carry1 = h1 + (1 << 24); h2 += carry1 >> 25; h1 -= carry1 & kTop39Bits;
     carry3 = h3 + (1 << 24); h4 += carry3 >> 25; h3 -= carry3 & kTop39Bits;
     carry5 = h5 + (1 << 24); h6 += carry5 >> 25; h5 -= carry5 & kTop39Bits;
@@ -4616,7 +4631,7 @@ static void ge_double_scalarmult_vartime(ge_p2 *r, const uint8_t *a,
  *   s[0]+256*s[1]+...+256^31*s[31] = s mod l
  *   where l = 2^252 + 27742317777372353535851937790883648493.
  *   Overwrites s in place.
-*/
+ */
 static void x25519_sc_reduce(uint8_t *s)
 {
     int64_t s0  = kBottom21Bits &  load_3(s);
@@ -4919,28 +4934,28 @@ static void x25519_sc_reduce(uint8_t *s)
 
     s[ 0] = (uint8_t) (s0  >>  0);
     s[ 1] = (uint8_t) (s0  >>  8);
-    s[ 2] = (uint8_t)((s0  >> 16) | (s1  <<  5));
+    s[ 2] = (uint8_t)((s0  >> 16) | (s1 <<  5));
     s[ 3] = (uint8_t) (s1  >>  3);
     s[ 4] = (uint8_t) (s1  >> 11);
-    s[ 5] = (uint8_t)((s1  >> 19) | (s2  <<  2));
+    s[ 5] = (uint8_t)((s1  >> 19) | (s2 <<  2));
     s[ 6] = (uint8_t) (s2  >>  6);
-    s[ 7] = (uint8_t)((s2  >> 14) | (s3  <<  7));
+    s[ 7] = (uint8_t)((s2  >> 14) | (s3 <<  7));
     s[ 8] = (uint8_t) (s3  >>  1);
     s[ 9] = (uint8_t) (s3  >>  9);
-    s[10] = (uint8_t)((s3  >> 17) | (s4  <<  4));
+    s[10] = (uint8_t)((s3  >> 17) | (s4 <<  4));
     s[11] = (uint8_t) (s4  >>  4);
     s[12] = (uint8_t) (s4  >> 12);
-    s[13] = (uint8_t)((s4  >> 20) | (s5  <<  1));
+    s[13] = (uint8_t)((s4  >> 20) | (s5 <<  1));
     s[14] = (uint8_t) (s5  >>  7);
-    s[15] = (uint8_t)((s5  >> 15) | (s6  <<  6));
+    s[15] = (uint8_t)((s5  >> 15) | (s6 <<  6));
     s[16] = (uint8_t) (s6  >>  2);
     s[17] = (uint8_t) (s6  >> 10);
-    s[18] = (uint8_t)((s6  >> 18) | (s7  <<  3));
+    s[18] = (uint8_t)((s6  >> 18) | (s7 <<  3));
     s[19] = (uint8_t) (s7  >>  5);
     s[20] = (uint8_t) (s7  >> 13);
     s[21] = (uint8_t) (s8  >>  0);
     s[22] = (uint8_t) (s8  >>  8);
-    s[23] = (uint8_t)((s8  >> 16) | (s9  <<  5));
+    s[23] = (uint8_t)((s8  >> 16) | (s9 <<  5));
     s[24] = (uint8_t) (s9  >>  3);
     s[25] = (uint8_t) (s9  >> 11);
     s[26] = (uint8_t)((s9  >> 19) | (s10 <<  2));
@@ -5052,21 +5067,42 @@ static void sc_muladd(uint8_t *s, const uint8_t *a, const uint8_t *b,
     s1  = c1   +   a0 * b1   +   a1 * b0;
     s2  = c2   +   a0 * b2   +   a1 * b1   +   a2 * b0;
     s3  = c3   +   a0 * b3   +   a1 * b2   +   a2 * b1  +   a3 * b0;
-    s4  = c4   +   a0 * b4   +   a1 * b3   +   a2 * b2  +   a3 * b1  +   a4 * b0;
-    s5  = c5   +   a0 * b5   +   a1 * b4   +   a2 * b3  +   a3 * b2  +   a4 * b1  +   a5 * b0;
-    s6  = c6   +   a0 * b6   +   a1 * b5   +   a2 * b4  +   a3 * b3  +   a4 * b2  +   a5 * b1 +   a6 * b0;
-    s7  = c7   +   a0 * b7   +   a1 * b6   +   a2 * b5  +   a3 * b4  +   a4 * b3  +   a5 * b2 +   a6 * b1   +   a7 * b0;
-    s8  = c8   +   a0 * b8   +   a1 * b7   +   a2 * b6  +   a3 * b5  +   a4 * b4  +   a5 * b3 +   a6 * b2   +   a7 * b1   +   a8 * b0;
-    s9  = c9   +   a0 * b9   +   a1 * b8   +   a2 * b7  +   a3 * b6  +   a4 * b5  +   a5 * b4 +   a6 * b3   +   a7 * b2   +   a8 * b1  +   a9 * b0;
-    s10 = c10  +   a0 * b10  +   a1 * b9   +   a2 * b8  +   a3 * b7  +   a4 * b6  +   a5 * b5 +   a6 * b4   +   a7 * b3   +   a8 * b2  +   a9 * b1  +  a10 * b0;
-    s11 = c11  +   a0 * b11  +   a1 * b10  +   a2 * b9  +   a3 * b8  +   a4 * b7  +   a5 * b6 +   a6 * b5   +   a7 * b4   +   a8 * b3  +   a9 * b2  +  a10 * b1  +  a11 * b0;
-    s12 =          a1 * b11  +   a2 * b10  +   a3 * b9  +   a4 * b8  +   a5 * b7  +   a6 * b6 +   a7 * b5   +   a8 * b4   +   a9 * b3  +  a10 * b2  +  a11 * b1;
-    s13 =          a2 * b11  +   a3 * b10  +   a4 * b9  +   a5 * b8  +   a6 * b7  +   a7 * b6 +   a8 * b5   +   a9 * b4   +  a10 * b3  +  a11 * b2;
-    s14 =          a3 * b11  +   a4 * b10  +   a5 * b9  +   a6 * b8  +   a7 * b7  +   a8 * b6 +   a9 * b5   +  a10 * b4   +  a11 * b3;
-    s15 =          a4 * b11  +   a5 * b10  +   a6 * b9  +   a7 * b8  +   a8 * b7  +   a9 * b6 +  a10 * b5   +  a11 * b4;
-    s16 =          a5 * b11  +   a6 * b10  +   a7 * b9  +   a8 * b8  +   a9 * b7  +  a10 * b6 +  a11 * b5;
-    s17 =          a6 * b11  +   a7 * b10  +   a8 * b9  +   a9 * b8  +  a10 * b7  +  a11 * b6;
-    s18 =          a7 * b11  +   a8 * b10  +   a9 * b9  +  a10 * b8  +  a11 * b7;
+    s4  = c4   +   a0 * b4   +   a1 * b3   +   a2 * b2  +   a3 * b1  +   a4 *
+          b0;
+    s5  = c5   +   a0 * b5   +   a1 * b4   +   a2 * b3  +   a3 * b2  +   a4 *
+          b1  +   a5 * b0;
+    s6  = c6   +   a0 * b6   +   a1 * b5   +   a2 * b4  +   a3 * b3  +   a4 *
+          b2  +   a5 * b1 +   a6 * b0;
+    s7  = c7   +   a0 * b7   +   a1 * b6   +   a2 * b5  +   a3 * b4  +   a4 *
+          b3  +   a5 * b2 +   a6 * b1   +   a7 * b0;
+    s8  = c8   +   a0 * b8   +   a1 * b7   +   a2 * b6  +   a3 * b5  +   a4 *
+          b4  +   a5 * b3 +   a6 * b2   +   a7 * b1   +   a8 * b0;
+    s9  = c9   +   a0 * b9   +   a1 * b8   +   a2 * b7  +   a3 * b6  +   a4 *
+          b5  +   a5 * b4 +   a6 * b3   +   a7 * b2   +   a8 * b1  +   a9 * b0;
+    s10 = c10  +   a0 * b10  +   a1 * b9   +   a2 * b8  +   a3 * b7  +   a4 *
+          b6  +   a5 * b5 +   a6 * b4   +   a7 * b3   +   a8 * b2  +   a9 *
+          b1  +
+          a10 * b0;
+    s11 = c11  +   a0 * b11  +   a1 * b10  +   a2 * b9  +   a3 * b8  +   a4 *
+          b7  +   a5 * b6 +   a6 * b5   +   a7 * b4   +   a8 * b3  +   a9 *
+          b2  +
+          a10 * b1  +  a11 * b0;
+    s12 =          a1 * b11  +   a2 * b10  +   a3 * b9  +   a4 * b8  +   a5 *
+          b7  +   a6 * b6 +   a7 * b5   +   a8 * b4   +   a9 * b3  +  a10 *
+          b2  +
+          a11 * b1;
+    s13 =          a2 * b11  +   a3 * b10  +   a4 * b9  +   a5 * b8  +   a6 *
+          b7  +   a7 * b6 +   a8 * b5   +   a9 * b4   +  a10 * b3  +  a11 * b2;
+    s14 =          a3 * b11  +   a4 * b10  +   a5 * b9  +   a6 * b8  +   a7 *
+          b7  +   a8 * b6 +   a9 * b5   +  a10 * b4   +  a11 * b3;
+    s15 =          a4 * b11  +   a5 * b10  +   a6 * b9  +   a7 * b8  +   a8 *
+          b7  +   a9 * b6 +  a10 * b5   +  a11 * b4;
+    s16 =          a5 * b11  +   a6 * b10  +   a7 * b9  +   a8 * b8  +   a9 *
+          b7  +  a10 * b6 +  a11 * b5;
+    s17 =          a6 * b11  +   a7 * b10  +   a8 * b9  +   a9 * b8  +  a10 *
+          b7  +  a11 * b6;
+    s18 =          a7 * b11  +   a8 * b10  +   a9 * b9  +  a10 * b8  +  a11 *
+          b7;
     s19 =          a8 * b11  +   a9 * b10  +  a10 * b9  +  a11 * b8;
     s20 =          a9 * b11  +  a10 * b10  +  a11 * b9;
     s21 =         a10 * b11  +  a11 * b10;
@@ -5443,9 +5479,9 @@ static int hash_init_with_dom(EVP_MD_CTX *hash_ctx,
 {
     /* ASCII: "SigEd25519 no Ed25519 collisions", in hex for EBCDIC compatibility */
     const char dom_s[] =
-            "\x53\x69\x67\x45\x64\x32\x35\x35\x31\x39\x20\x6e"
-            "\x6f\x20\x45\x64\x32\x35\x35\x31\x39\x20\x63\x6f"
-            "\x6c\x6c\x69\x73\x69\x6f\x6e\x73";
+        "\x53\x69\x67\x45\x64\x32\x35\x35\x31\x39\x20\x6e"
+        "\x6f\x20\x45\x64\x32\x35\x35\x31\x39\x20\x63\x6f"
+        "\x6c\x6c\x69\x73\x69\x6f\x6e\x73";
     uint8_t dom[2];
 
     if (!EVP_DigestInit_ex(hash_ctx, sha512, NULL))
@@ -5473,7 +5509,8 @@ static int hash_init_with_dom(EVP_MD_CTX *hash_ctx,
 int
 ossl_ed25519_sign(uint8_t *out_sig, const uint8_t *tbs, size_t tbs_len,
                   const uint8_t public_key[32], const uint8_t private_key[32],
-                  const uint8_t dom2flag, const uint8_t phflag, const uint8_t csflag,
+                  const uint8_t dom2flag, const uint8_t phflag,
+                  const uint8_t csflag,
                   const uint8_t *context, size_t context_len,
                   OSSL_LIB_CTX *libctx, const char *propq)
 {
@@ -5509,7 +5546,8 @@ ossl_ed25519_sign(uint8_t *out_sig, const uint8_t *tbs, size_t tbs_len,
     az[31] &= 63;
     az[31] |= 64;
 
-    if (!hash_init_with_dom(hash_ctx, sha512, dom2flag, phflag, context, context_len)
+    if (!hash_init_with_dom(hash_ctx, sha512, dom2flag, phflag, context,
+                            context_len)
         || !EVP_DigestUpdate(hash_ctx, az + 32, 32)
         || !EVP_DigestUpdate(hash_ctx, tbs, tbs_len)
         || !EVP_DigestFinal_ex(hash_ctx, nonce, &sz))
@@ -5519,7 +5557,8 @@ ossl_ed25519_sign(uint8_t *out_sig, const uint8_t *tbs, size_t tbs_len,
     ge_scalarmult_base(&R, nonce);
     ge_p3_tobytes(out_sig, &R);
 
-    if (!hash_init_with_dom(hash_ctx, sha512, dom2flag, phflag, context, context_len)
+    if (!hash_init_with_dom(hash_ctx, sha512, dom2flag, phflag, context,
+                            context_len)
         || !EVP_DigestUpdate(hash_ctx, out_sig, 32)
         || !EVP_DigestUpdate(hash_ctx, public_key, 32)
         || !EVP_DigestUpdate(hash_ctx, tbs, tbs_len)
@@ -5543,7 +5582,8 @@ static const char allzeroes[15];
 int
 ossl_ed25519_verify(const uint8_t *tbs, size_t tbs_len,
                     const uint8_t signature[64], const uint8_t public_key[32],
-                    const uint8_t dom2flag, const uint8_t phflag, const uint8_t csflag,
+                    const uint8_t dom2flag, const uint8_t phflag,
+                    const uint8_t csflag,
                     const uint8_t *context, size_t context_len,
                     OSSL_LIB_CTX *libctx, const char *propq)
 {
@@ -5618,7 +5658,8 @@ ossl_ed25519_verify(const uint8_t *tbs, size_t tbs_len,
     if (hash_ctx == NULL)
         goto err;
 
-    if (!hash_init_with_dom(hash_ctx, sha512, dom2flag, phflag, context, context_len)
+    if (!hash_init_with_dom(hash_ctx, sha512, dom2flag, phflag, context,
+                            context_len)
         || !EVP_DigestUpdate(hash_ctx, r, 32)
         || !EVP_DigestUpdate(hash_ctx, public_key, 32)
         || !EVP_DigestUpdate(hash_ctx, tbs, tbs_len)

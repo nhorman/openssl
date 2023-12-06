@@ -23,7 +23,7 @@ static OSSL_FUNC_rand_get_ctx_params_fn fuzz_rand_get_ctx_params;
 static OSSL_FUNC_rand_enable_locking_fn fuzz_rand_enable_locking;
 
 static void *fuzz_rand_newctx(
-         void *provctx, void *parent, const OSSL_DISPATCH *parent_dispatch)
+    void *provctx, void *parent, const OSSL_DISPATCH *parent_dispatch)
 {
     int *st = OPENSSL_malloc(sizeof(*st));
 
@@ -105,15 +105,17 @@ static const OSSL_PARAM *fuzz_rand_gettable_ctx_params(ossl_unused void *vrng,
 }
 
 static const OSSL_DISPATCH fuzz_rand_functions[] = {
-    { OSSL_FUNC_RAND_NEWCTX, (void (*)(void))fuzz_rand_newctx },
-    { OSSL_FUNC_RAND_FREECTX, (void (*)(void))fuzz_rand_freectx },
-    { OSSL_FUNC_RAND_INSTANTIATE, (void (*)(void))fuzz_rand_instantiate },
-    { OSSL_FUNC_RAND_UNINSTANTIATE, (void (*)(void))fuzz_rand_uninstantiate },
-    { OSSL_FUNC_RAND_GENERATE, (void (*)(void))fuzz_rand_generate },
-    { OSSL_FUNC_RAND_ENABLE_LOCKING, (void (*)(void))fuzz_rand_enable_locking },
+    { OSSL_FUNC_RAND_NEWCTX, (void (*)(void)) fuzz_rand_newctx },
+    { OSSL_FUNC_RAND_FREECTX, (void (*)(void)) fuzz_rand_freectx },
+    { OSSL_FUNC_RAND_INSTANTIATE, (void (*)(void)) fuzz_rand_instantiate },
+    { OSSL_FUNC_RAND_UNINSTANTIATE, (void (*)(void)) fuzz_rand_uninstantiate },
+    { OSSL_FUNC_RAND_GENERATE, (void (*)(void)) fuzz_rand_generate },
+    { OSSL_FUNC_RAND_ENABLE_LOCKING,
+      (void (*)(void)) fuzz_rand_enable_locking },
     { OSSL_FUNC_RAND_GETTABLE_CTX_PARAMS,
-      (void(*)(void))fuzz_rand_gettable_ctx_params },
-    { OSSL_FUNC_RAND_GET_CTX_PARAMS, (void(*)(void))fuzz_rand_get_ctx_params },
+      (void (*)(void)) fuzz_rand_gettable_ctx_params },
+    { OSSL_FUNC_RAND_GET_CTX_PARAMS,
+      (void (*)(void)) fuzz_rand_get_ctx_params },
     OSSL_DISPATCH_END
 };
 
@@ -128,16 +130,16 @@ static const OSSL_ALGORITHM *fuzz_rand_query(void *provctx,
 {
     *no_cache = 0;
     switch (operation_id) {
-    case OSSL_OP_RAND:
-        return fuzz_rand_rand;
+        case OSSL_OP_RAND:
+            return fuzz_rand_rand;
     }
     return NULL;
 }
 
 /* Functions we provide to the core */
 static const OSSL_DISPATCH fuzz_rand_method[] = {
-    { OSSL_FUNC_PROVIDER_TEARDOWN, (void (*)(void))OSSL_LIB_CTX_free },
-    { OSSL_FUNC_PROVIDER_QUERY_OPERATION, (void (*)(void))fuzz_rand_query },
+    { OSSL_FUNC_PROVIDER_TEARDOWN, (void (*)(void)) OSSL_LIB_CTX_free },
+    { OSSL_FUNC_PROVIDER_QUERY_OPERATION, (void (*)(void)) fuzz_rand_query },
     OSSL_DISPATCH_END
 };
 

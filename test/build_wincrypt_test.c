@@ -23,7 +23,8 @@
 # ifndef X509_NAME
 #  ifndef PEDANTIC
 #    ifdef _MSC_VER
-#      pragma message("wincrypt.h no longer defining X509_NAME before OpenSSL headers")
+#      pragma \
+    message("wincrypt.h no longer defining X509_NAME before OpenSSL headers")
 #    else
 #      warning "wincrypt.h no longer defining X509_NAME before OpenSSL headers"
 #    endif

@@ -63,8 +63,8 @@ static int rc4_hmac_md5_init_key(EVP_CIPHER_CTX *ctx,
 }
 
 # if     defined(RC4_ASM) && defined(MD5_ASM) &&     (     \
-        defined(__x86_64)       || defined(__x86_64__)  || \
-        defined(_M_AMD64)       || defined(_M_X64)      )
+    defined(__x86_64)       || defined(__x86_64__)  || \
+    defined(_M_AMD64)       || defined(_M_X64)      )
 #  define STITCHED_CALL
 # endif
 
@@ -80,7 +80,7 @@ static int rc4_hmac_md5_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
 # if defined(STITCHED_CALL)
     size_t rc4_off = 32 - 1 - (key->ks.x & (32 - 1)), /* 32 is $MOD from
                                                        * rc4_md5-x86_64.pl */
-        md5_off = MD5_CBLOCK - key->md.num, blocks;
+           md5_off = MD5_CBLOCK - key->md.num, blocks;
     unsigned int l;
 # endif
     size_t plen = key->payload_length;
@@ -189,7 +189,7 @@ static int rc4_hmac_md5_ctrl(EVP_CIPHER_CTX *ctx, int type, int arg,
     EVP_RC4_HMAC_MD5 *key = data(ctx);
 
     switch (type) {
-    case EVP_CTRL_AEAD_SET_MAC_KEY:
+        case EVP_CTRL_AEAD_SET_MAC_KEY:
         {
             unsigned int i;
             unsigned char hmac_key[64];
@@ -218,7 +218,7 @@ static int rc4_hmac_md5_ctrl(EVP_CIPHER_CTX *ctx, int type, int arg,
 
             return 1;
         }
-    case EVP_CTRL_AEAD_TLS1_AAD:
+        case EVP_CTRL_AEAD_TLS1_AAD:
         {
             unsigned char *p = ptr;
             unsigned int len;
@@ -241,8 +241,8 @@ static int rc4_hmac_md5_ctrl(EVP_CIPHER_CTX *ctx, int type, int arg,
 
             return MD5_DIGEST_LENGTH;
         }
-    default:
-        return -1;
+        default:
+            return -1;
     }
 }
 
@@ -254,7 +254,7 @@ static EVP_CIPHER r4_hmac_md5_cipher = {
 # endif
     1, EVP_RC4_KEY_SIZE, 0,
     EVP_CIPH_STREAM_CIPHER | EVP_CIPH_VARIABLE_LENGTH |
-        EVP_CIPH_FLAG_AEAD_CIPHER,
+    EVP_CIPH_FLAG_AEAD_CIPHER,
     EVP_ORIG_GLOBAL,
     rc4_hmac_md5_init_key,
     rc4_hmac_md5_cipher,

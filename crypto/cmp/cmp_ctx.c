@@ -21,16 +21,16 @@
 #include <openssl/err.h>
 
 #define DEFINE_OSSL_CMP_CTX_get0(FIELD, TYPE) \
-    DEFINE_OSSL_CMP_CTX_get0_NAME(FIELD, FIELD, TYPE)
+        DEFINE_OSSL_CMP_CTX_get0_NAME(FIELD, FIELD, TYPE)
 #define DEFINE_OSSL_CMP_CTX_get0_NAME(NAME, FIELD, TYPE) \
-TYPE *OSSL_CMP_CTX_get0_##NAME(const OSSL_CMP_CTX *ctx) \
-{ \
-    if (ctx == NULL) { \
-        ERR_raise(ERR_LIB_CMP, CMP_R_NULL_ARGUMENT); \
-        return NULL; \
-    } \
-    return ctx->FIELD; \
-}
+        TYPE *OSSL_CMP_CTX_get0_ ## NAME(const OSSL_CMP_CTX *ctx) \
+        { \
+            if (ctx == NULL) { \
+                ERR_raise(ERR_LIB_CMP, CMP_R_NULL_ARGUMENT); \
+                return NULL; \
+            } \
+            return ctx->FIELD; \
+        }
 
 /*
  * Get current certificate store containing trusted root CA certs
@@ -38,18 +38,18 @@ TYPE *OSSL_CMP_CTX_get0_##NAME(const OSSL_CMP_CTX *ctx) \
 DEFINE_OSSL_CMP_CTX_get0_NAME(trusted, trusted, X509_STORE)
 
 #define DEFINE_OSSL_set0(PREFIX, FIELD, TYPE) \
-    DEFINE_OSSL_set0_NAME(PREFIX, FIELD, FIELD, TYPE)
+        DEFINE_OSSL_set0_NAME(PREFIX, FIELD, FIELD, TYPE)
 #define DEFINE_OSSL_set0_NAME(PREFIX, NAME, FIELD, TYPE) \
-int PREFIX##_set0##_##NAME(OSSL_CMP_CTX *ctx, TYPE *val) \
-{ \
-    if (ctx == NULL) { \
-        ERR_raise(ERR_LIB_CMP, CMP_R_NULL_ARGUMENT); \
-        return 0; \
-    } \
-    TYPE##_free(ctx->FIELD); \
-    ctx->FIELD = val; \
-    return 1; \
-}
+        int PREFIX ## _set0 ## _ ## NAME(OSSL_CMP_CTX *ctx, TYPE *val) \
+        { \
+            if (ctx == NULL) { \
+                ERR_raise(ERR_LIB_CMP, CMP_R_NULL_ARGUMENT); \
+                return 0; \
+            } \
+            TYPE ## _free(ctx->FIELD); \
+            ctx->FIELD = val; \
+            return 1; \
+        }
 
 /*
  * Set certificate store containing trusted (root) CA certs and possibly CRLs
@@ -82,7 +82,7 @@ int OSSL_CMP_CTX_set1_untrusted(OSSL_CMP_CTX *ctx, STACK_OF(X509) *certs)
     OSSL_STACK_OF_X509_free(ctx->untrusted);
     ctx->untrusted = untrusted;
     return 1;
- err:
+err:
     OSSL_STACK_OF_X509_free(untrusted);
     return 0;
 }
@@ -144,17 +144,17 @@ OSSL_CMP_CTX *OSSL_CMP_CTX_new(OSSL_LIB_CTX *libctx, const char *propq)
     /* all other elements are initialized to 0 or NULL, respectively */
     return ctx;
 
- err:
+err:
     OSSL_CMP_CTX_free(ctx);
     return NULL;
 }
 
 #define OSSL_CMP_ITAVs_free(itavs) \
-    sk_OSSL_CMP_ITAV_pop_free(itavs, OSSL_CMP_ITAV_free);
+        sk_OSSL_CMP_ITAV_pop_free(itavs, OSSL_CMP_ITAV_free);
 #define X509_EXTENSIONS_free(exts) \
-    sk_X509_EXTENSION_pop_free(exts, X509_EXTENSION_free)
+        sk_X509_EXTENSION_pop_free(exts, X509_EXTENSION_free)
 #define OSSL_CMP_PKIFREETEXT_free(text) \
-    sk_ASN1_UTF8STRING_pop_free(text, ASN1_UTF8STRING_free)
+        sk_ASN1_UTF8STRING_pop_free(text, ASN1_UTF8STRING_free)
 
 /* Prepare the OSSL_CMP_CTX for next use, partly re-initializing OSSL_CMP_CTX */
 int OSSL_CMP_CTX_reinit(OSSL_CMP_CTX *ctx)
@@ -178,14 +178,14 @@ int OSSL_CMP_CTX_reinit(OSSL_CMP_CTX *ctx)
     ctx->genm_ITAVs = NULL;
 
     return ossl_cmp_ctx_set0_statusString(ctx, NULL)
-        && ossl_cmp_ctx_set0_newCert(ctx, NULL)
-        && ossl_cmp_ctx_set1_newChain(ctx, NULL)
-        && ossl_cmp_ctx_set1_caPubs(ctx, NULL)
-        && ossl_cmp_ctx_set1_extraCertsIn(ctx, NULL)
-        && ossl_cmp_ctx_set1_validatedSrvCert(ctx, NULL)
-        && OSSL_CMP_CTX_set1_transactionID(ctx, NULL)
-        && OSSL_CMP_CTX_set1_senderNonce(ctx, NULL)
-        && ossl_cmp_ctx_set1_recipNonce(ctx, NULL);
+           && ossl_cmp_ctx_set0_newCert(ctx, NULL)
+           && ossl_cmp_ctx_set1_newChain(ctx, NULL)
+           && ossl_cmp_ctx_set1_caPubs(ctx, NULL)
+           && ossl_cmp_ctx_set1_extraCertsIn(ctx, NULL)
+           && ossl_cmp_ctx_set1_validatedSrvCert(ctx, NULL)
+           && OSSL_CMP_CTX_set1_transactionID(ctx, NULL)
+           && OSSL_CMP_CTX_set1_senderNonce(ctx, NULL)
+           && ossl_cmp_ctx_set1_recipNonce(ctx, NULL);
 }
 
 /* Frees OSSL_CMP_CTX variables allocated in OSSL_CMP_CTX_new() */
@@ -251,27 +251,27 @@ void OSSL_CMP_CTX_free(OSSL_CMP_CTX *ctx)
 }
 
 #define DEFINE_OSSL_set(PREFIX, FIELD, TYPE) \
-int PREFIX##_set_##FIELD(OSSL_CMP_CTX *ctx, TYPE val) \
-{ \
-    if (ctx == NULL) { \
-        ERR_raise(ERR_LIB_CMP, CMP_R_NULL_ARGUMENT); \
-        return 0; \
-    } \
-    ctx->FIELD = val; \
-    return 1; \
-}
+        int PREFIX ## _set_ ## FIELD(OSSL_CMP_CTX *ctx, TYPE val) \
+        { \
+            if (ctx == NULL) { \
+                ERR_raise(ERR_LIB_CMP, CMP_R_NULL_ARGUMENT); \
+                return 0; \
+            } \
+            ctx->FIELD = val; \
+            return 1; \
+        }
 
 DEFINE_OSSL_set(ossl_cmp_ctx, status, int)
 
 #define DEFINE_OSSL_get(PREFIX, FIELD, TYPE, ERR_RET) \
-TYPE PREFIX##_get_##FIELD(const OSSL_CMP_CTX *ctx) \
-{ \
-    if (ctx == NULL) { \
-        ERR_raise(ERR_LIB_CMP, CMP_R_NULL_ARGUMENT); \
-        return ERR_RET; \
-    } \
-    return ctx->FIELD; \
-}
+        TYPE PREFIX ## _get_ ## FIELD(const OSSL_CMP_CTX *ctx) \
+        { \
+            if (ctx == NULL) { \
+                ERR_raise(ERR_LIB_CMP, CMP_R_NULL_ARGUMENT); \
+                return ERR_RET; \
+            } \
+            return ctx->FIELD; \
+        }
 
 /*
  * Returns the PKIStatus from the last CertRepMessage
@@ -329,7 +329,7 @@ static size_t ossl_cmp_log_trace_cb(const char *buf, size_t cnt,
                      line, level, msg))
         cnt = 0;
 
- end:
+end:
     OPENSSL_free(func);
     OPENSSL_free(file);
     return cnt;
@@ -450,29 +450,30 @@ int OSSL_CMP_CTX_set1_secretValue(OSSL_CMP_CTX *ctx,
 }
 
 #define DEFINE_OSSL_CMP_CTX_get1_certs(FIELD) \
-STACK_OF(X509) *OSSL_CMP_CTX_get1_##FIELD(const OSSL_CMP_CTX *ctx) \
-{ \
-    if (ctx == NULL) { \
-        ERR_raise(ERR_LIB_CMP, CMP_R_NULL_ARGUMENT); \
-        return NULL; \
-    } \
-    return X509_chain_up_ref(ctx->FIELD); \
-}
+        STACK_OF(X509) *OSSL_CMP_CTX_get1_ ## FIELD(const OSSL_CMP_CTX *ctx) \
+        { \
+            if (ctx == NULL) { \
+                ERR_raise(ERR_LIB_CMP, CMP_R_NULL_ARGUMENT); \
+                return NULL; \
+            } \
+            return X509_chain_up_ref(ctx->FIELD); \
+        }
 
 /* Returns the cert chain computed by OSSL_CMP_certConf_cb(), NULL on error */
 DEFINE_OSSL_CMP_CTX_get1_certs(newChain)
 
 #define DEFINE_OSSL_set1_certs(PREFIX, FIELD) \
-int PREFIX##_set1_##FIELD(OSSL_CMP_CTX *ctx, STACK_OF(X509) *certs) \
-{ \
-    if (ctx == NULL) { \
-        ERR_raise(ERR_LIB_CMP, CMP_R_NULL_ARGUMENT); \
-        return 0; \
-    } \
-    OSSL_STACK_OF_X509_free(ctx->FIELD); \
-    ctx->FIELD = NULL; \
-    return certs == NULL || (ctx->FIELD = X509_chain_up_ref(certs)) != NULL; \
-}
+        int PREFIX ## _set1_ ## FIELD(OSSL_CMP_CTX *ctx, STACK_OF(X509) *certs) \
+        { \
+            if (ctx == NULL) { \
+                ERR_raise(ERR_LIB_CMP, CMP_R_NULL_ARGUMENT); \
+                return 0; \
+            } \
+            OSSL_STACK_OF_X509_free(ctx->FIELD); \
+            ctx->FIELD = NULL; \
+            return certs == NULL || \
+                   (ctx->FIELD = X509_chain_up_ref(certs)) != NULL; \
+        }
 
 /*
  * Copies any given stack of inbound X509 certificates to newChain
@@ -507,7 +508,7 @@ int OSSL_CMP_CTX_push0_policy(OSSL_CMP_CTX *ctx, POLICYINFO *pinfo)
     }
 
     if (ctx->policies == NULL
-            && (ctx->policies = CERTIFICATEPOLICIES_new()) == NULL)
+        && (ctx->policies = CERTIFICATEPOLICIES_new()) == NULL)
         return 0;
 
     return sk_POLICYINFO_push(ctx->policies, pinfo);
@@ -560,44 +561,44 @@ DEFINE_OSSL_set1_certs(ossl_cmp_ctx, caPubs)
 #define char_dup OPENSSL_strdup
 #define char_free OPENSSL_free
 #define DEFINE_OSSL_CMP_CTX_set1(FIELD, TYPE) /* this uses _dup */ \
-int OSSL_CMP_CTX_set1_##FIELD(OSSL_CMP_CTX *ctx, const TYPE *val) \
-{ \
-    TYPE *val_dup = NULL; \
+        int OSSL_CMP_CTX_set1_ ## FIELD(OSSL_CMP_CTX *ctx, const TYPE *val) \
+        { \
+            TYPE *val_dup = NULL; \
     \
-    if (ctx == NULL) { \
-        ERR_raise(ERR_LIB_CMP, CMP_R_NULL_ARGUMENT); \
-        return 0; \
-    } \
+            if (ctx == NULL) { \
+                ERR_raise(ERR_LIB_CMP, CMP_R_NULL_ARGUMENT); \
+                return 0; \
+            } \
     \
-    if (val != NULL && (val_dup = TYPE##_dup(val)) == NULL) \
-        return 0; \
-    TYPE##_free(ctx->FIELD); \
-    ctx->FIELD = val_dup; \
-    return 1; \
-}
+            if (val != NULL && (val_dup = TYPE ## _dup(val)) == NULL) \
+            return 0; \
+            TYPE ## _free(ctx->FIELD); \
+            ctx->FIELD = val_dup; \
+            return 1; \
+        }
 
 #define X509_invalid(cert) (!ossl_x509v3_cache_extensions(cert))
 #define EVP_PKEY_invalid(key) 0
 
 #define DEFINE_OSSL_set1_up_ref(PREFIX, FIELD, TYPE) \
-int PREFIX##_set1_##FIELD(OSSL_CMP_CTX *ctx, TYPE *val) \
-{ \
-    if (ctx == NULL) { \
-        ERR_raise(ERR_LIB_CMP, CMP_R_NULL_ARGUMENT); \
-        return 0; \
-    } \
+        int PREFIX ## _set1_ ## FIELD(OSSL_CMP_CTX *ctx, TYPE *val) \
+        { \
+            if (ctx == NULL) { \
+                ERR_raise(ERR_LIB_CMP, CMP_R_NULL_ARGUMENT); \
+                return 0; \
+            } \
     \
-    /* prevent misleading error later on malformed cert or provider issue */ \
-    if (val != NULL && TYPE##_invalid(val)) { \
-        ERR_raise(ERR_LIB_CMP, CMP_R_POTENTIALLY_INVALID_CERTIFICATE); \
-        return 0; \
-    } \
-    if (val != NULL && !TYPE##_up_ref(val)) \
-        return 0; \
-    TYPE##_free(ctx->FIELD); \
-    ctx->FIELD = val; \
-    return 1; \
-}
+            /* prevent misleading error later on malformed cert or provider issue */ \
+            if (val != NULL && TYPE ## _invalid(val)) { \
+                ERR_raise(ERR_LIB_CMP, CMP_R_POTENTIALLY_INVALID_CERTIFICATE); \
+                return 0; \
+            } \
+            if (val != NULL && !TYPE ## _up_ref(val)) \
+            return 0; \
+            TYPE ## _free(ctx->FIELD); \
+            ctx->FIELD = val; \
+            return 1; \
+        }
 
 DEFINE_OSSL_set1_up_ref(ossl_cmp_ctx, validatedSrvCert, X509)
 
@@ -634,7 +635,7 @@ int OSSL_CMP_CTX_set0_reqExtensions(OSSL_CMP_CTX *ctx, X509_EXTENSIONS *exts)
     }
 
     if (sk_GENERAL_NAME_num(ctx->subjectAltNames) > 0 && exts != NULL
-            && X509v3_get_ext_by_NID(exts, NID_subject_alt_name, -1) >= 0) {
+        && X509v3_get_ext_by_NID(exts, NID_subject_alt_name, -1) >= 0) {
         ERR_raise(ERR_LIB_CMP, CMP_R_MULTIPLE_SAN_SOURCES);
         return 0;
     }
@@ -652,8 +653,8 @@ int OSSL_CMP_CTX_reqExtensions_have_SAN(OSSL_CMP_CTX *ctx)
     }
     /* if one of the following conditions 'fail' this is not an error */
     return ctx->reqExtensions != NULL
-        && X509v3_get_ext_by_NID(ctx->reqExtensions,
-                                 NID_subject_alt_name, -1) >= 0;
+           && X509v3_get_ext_by_NID(ctx->reqExtensions,
+                                    NID_subject_alt_name, -1) >= 0;
 }
 
 /*
@@ -676,7 +677,7 @@ int OSSL_CMP_CTX_push1_subjectAltName(OSSL_CMP_CTX *ctx,
     }
 
     if (ctx->subjectAltNames == NULL
-            && (ctx->subjectAltNames = sk_GENERAL_NAME_new_null()) == NULL)
+        && (ctx->subjectAltNames = sk_GENERAL_NAME_new_null()) == NULL)
         return 0;
     if ((name_dup = GENERAL_NAME_dup(name)) == NULL)
         return 0;
@@ -794,14 +795,15 @@ EVP_PKEY *ossl_cmp_ctx_get0_newPubkey(const OSSL_CMP_CTX *ctx)
 }
 
 #define DEFINE_set1_ASN1_OCTET_STRING(PREFIX, FIELD) \
-int PREFIX##_set1_##FIELD(OSSL_CMP_CTX *ctx, const ASN1_OCTET_STRING *id) \
-{ \
-    if (ctx == NULL) { \
-        ERR_raise(ERR_LIB_CMP, CMP_R_NULL_ARGUMENT); \
-        return 0; \
-    } \
-    return ossl_cmp_asn1_octet_string_set1(&ctx->FIELD, id); \
-}
+        int PREFIX ## _set1_ ## FIELD(OSSL_CMP_CTX *ctx, \
+                                      const ASN1_OCTET_STRING *id) \
+        { \
+            if (ctx == NULL) { \
+                ERR_raise(ERR_LIB_CMP, CMP_R_NULL_ARGUMENT); \
+                return 0; \
+            } \
+            return ossl_cmp_asn1_octet_string_set1(&ctx->FIELD, id); \
+        }
 
 /* Set the given transactionID to the context */
 DEFINE_set1_ASN1_OCTET_STRING(OSSL_CMP_CTX, transactionID)
@@ -873,15 +875,15 @@ int OSSL_CMP_CTX_set_option(OSSL_CMP_CTX *ctx, int opt, int val)
     }
 
     switch (opt) {
-    case OSSL_CMP_OPT_REVOCATION_REASON:
-        min_val = OCSP_REVOKED_STATUS_NOSTATUS;
-        break;
-    case OSSL_CMP_OPT_POPO_METHOD:
-        min_val = OSSL_CRMF_POPO_NONE;
-        break;
-    default:
-        min_val = 0;
-        break;
+        case OSSL_CMP_OPT_REVOCATION_REASON:
+            min_val = OCSP_REVOKED_STATUS_NOSTATUS;
+            break;
+        case OSSL_CMP_OPT_POPO_METHOD:
+            min_val = OSSL_CRMF_POPO_NONE;
+            break;
+        default:
+            min_val = 0;
+            break;
     }
     if (val < min_val) {
         ERR_raise(ERR_LIB_CMP, CMP_R_VALUE_TOO_SMALL);
@@ -889,83 +891,83 @@ int OSSL_CMP_CTX_set_option(OSSL_CMP_CTX *ctx, int opt, int val)
     }
 
     switch (opt) {
-    case OSSL_CMP_OPT_LOG_VERBOSITY:
-        if (val > OSSL_CMP_LOG_MAX) {
-            ERR_raise(ERR_LIB_CMP, CMP_R_VALUE_TOO_LARGE);
+        case OSSL_CMP_OPT_LOG_VERBOSITY:
+            if (val > OSSL_CMP_LOG_MAX) {
+                ERR_raise(ERR_LIB_CMP, CMP_R_VALUE_TOO_LARGE);
+                return 0;
+            }
+            ctx->log_verbosity = val;
+            break;
+        case OSSL_CMP_OPT_IMPLICIT_CONFIRM:
+            ctx->implicitConfirm = val;
+            break;
+        case OSSL_CMP_OPT_DISABLE_CONFIRM:
+            ctx->disableConfirm = val;
+            break;
+        case OSSL_CMP_OPT_UNPROTECTED_SEND:
+            ctx->unprotectedSend = val;
+            break;
+        case OSSL_CMP_OPT_UNPROTECTED_ERRORS:
+            ctx->unprotectedErrors = val;
+            break;
+        case OSSL_CMP_OPT_VALIDITY_DAYS:
+            ctx->days = val;
+            break;
+        case OSSL_CMP_OPT_SUBJECTALTNAME_NODEFAULT:
+            ctx->SubjectAltName_nodefault = val;
+            break;
+        case OSSL_CMP_OPT_SUBJECTALTNAME_CRITICAL:
+            ctx->setSubjectAltNameCritical = val;
+            break;
+        case OSSL_CMP_OPT_POLICIES_CRITICAL:
+            ctx->setPoliciesCritical = val;
+            break;
+        case OSSL_CMP_OPT_IGNORE_KEYUSAGE:
+            ctx->ignore_keyusage = val;
+            break;
+        case OSSL_CMP_OPT_POPO_METHOD:
+            if (val > OSSL_CRMF_POPO_KEYAGREE) {
+                ERR_raise(ERR_LIB_CMP, CMP_R_VALUE_TOO_LARGE);
+                return 0;
+            }
+            ctx->popoMethod = val;
+            break;
+        case OSSL_CMP_OPT_DIGEST_ALGNID:
+            if (!cmp_ctx_set_md(ctx, &ctx->digest, val))
+                return 0;
+            break;
+        case OSSL_CMP_OPT_OWF_ALGNID:
+            if (!cmp_ctx_set_md(ctx, &ctx->pbm_owf, val))
+                return 0;
+            break;
+        case OSSL_CMP_OPT_MAC_ALGNID:
+            ctx->pbm_mac = val;
+            break;
+        case OSSL_CMP_OPT_KEEP_ALIVE:
+            ctx->keep_alive = val;
+            break;
+        case OSSL_CMP_OPT_MSG_TIMEOUT:
+            ctx->msg_timeout = val;
+            break;
+        case OSSL_CMP_OPT_TOTAL_TIMEOUT:
+            ctx->total_timeout = val;
+            break;
+        case OSSL_CMP_OPT_USE_TLS:
+            ctx->tls_used = val;
+            break;
+        case OSSL_CMP_OPT_PERMIT_TA_IN_EXTRACERTS_FOR_IR:
+            ctx->permitTAInExtraCertsForIR = val;
+            break;
+        case OSSL_CMP_OPT_REVOCATION_REASON:
+            if (val > OCSP_REVOKED_STATUS_AACOMPROMISE) {
+                ERR_raise(ERR_LIB_CMP, CMP_R_VALUE_TOO_LARGE);
+                return 0;
+            }
+            ctx->revocationReason = val;
+            break;
+        default:
+            ERR_raise(ERR_LIB_CMP, CMP_R_INVALID_OPTION);
             return 0;
-        }
-        ctx->log_verbosity = val;
-        break;
-    case OSSL_CMP_OPT_IMPLICIT_CONFIRM:
-        ctx->implicitConfirm = val;
-        break;
-    case OSSL_CMP_OPT_DISABLE_CONFIRM:
-        ctx->disableConfirm = val;
-        break;
-    case OSSL_CMP_OPT_UNPROTECTED_SEND:
-        ctx->unprotectedSend = val;
-        break;
-    case OSSL_CMP_OPT_UNPROTECTED_ERRORS:
-        ctx->unprotectedErrors = val;
-        break;
-    case OSSL_CMP_OPT_VALIDITY_DAYS:
-        ctx->days = val;
-        break;
-    case OSSL_CMP_OPT_SUBJECTALTNAME_NODEFAULT:
-        ctx->SubjectAltName_nodefault = val;
-        break;
-    case OSSL_CMP_OPT_SUBJECTALTNAME_CRITICAL:
-        ctx->setSubjectAltNameCritical = val;
-        break;
-    case OSSL_CMP_OPT_POLICIES_CRITICAL:
-        ctx->setPoliciesCritical = val;
-        break;
-    case OSSL_CMP_OPT_IGNORE_KEYUSAGE:
-        ctx->ignore_keyusage = val;
-        break;
-    case OSSL_CMP_OPT_POPO_METHOD:
-        if (val > OSSL_CRMF_POPO_KEYAGREE) {
-            ERR_raise(ERR_LIB_CMP, CMP_R_VALUE_TOO_LARGE);
-            return 0;
-        }
-        ctx->popoMethod = val;
-        break;
-    case OSSL_CMP_OPT_DIGEST_ALGNID:
-        if (!cmp_ctx_set_md(ctx, &ctx->digest, val))
-            return 0;
-        break;
-    case OSSL_CMP_OPT_OWF_ALGNID:
-        if (!cmp_ctx_set_md(ctx, &ctx->pbm_owf, val))
-            return 0;
-        break;
-    case OSSL_CMP_OPT_MAC_ALGNID:
-        ctx->pbm_mac = val;
-        break;
-    case OSSL_CMP_OPT_KEEP_ALIVE:
-        ctx->keep_alive = val;
-        break;
-    case OSSL_CMP_OPT_MSG_TIMEOUT:
-        ctx->msg_timeout = val;
-        break;
-    case OSSL_CMP_OPT_TOTAL_TIMEOUT:
-        ctx->total_timeout = val;
-        break;
-    case OSSL_CMP_OPT_USE_TLS:
-        ctx->tls_used = val;
-        break;
-    case OSSL_CMP_OPT_PERMIT_TA_IN_EXTRACERTS_FOR_IR:
-        ctx->permitTAInExtraCertsForIR = val;
-        break;
-    case OSSL_CMP_OPT_REVOCATION_REASON:
-        if (val > OCSP_REVOKED_STATUS_AACOMPROMISE) {
-            ERR_raise(ERR_LIB_CMP, CMP_R_VALUE_TOO_LARGE);
-            return 0;
-        }
-        ctx->revocationReason = val;
-        break;
-    default:
-        ERR_raise(ERR_LIB_CMP, CMP_R_INVALID_OPTION);
-        return 0;
     }
 
     return 1;
@@ -983,48 +985,48 @@ int OSSL_CMP_CTX_get_option(const OSSL_CMP_CTX *ctx, int opt)
     }
 
     switch (opt) {
-    case OSSL_CMP_OPT_LOG_VERBOSITY:
-        return ctx->log_verbosity;
-    case OSSL_CMP_OPT_IMPLICIT_CONFIRM:
-        return ctx->implicitConfirm;
-    case OSSL_CMP_OPT_DISABLE_CONFIRM:
-        return ctx->disableConfirm;
-    case OSSL_CMP_OPT_UNPROTECTED_SEND:
-        return ctx->unprotectedSend;
-    case OSSL_CMP_OPT_UNPROTECTED_ERRORS:
-        return ctx->unprotectedErrors;
-    case OSSL_CMP_OPT_VALIDITY_DAYS:
-        return ctx->days;
-    case OSSL_CMP_OPT_SUBJECTALTNAME_NODEFAULT:
-        return ctx->SubjectAltName_nodefault;
-    case OSSL_CMP_OPT_SUBJECTALTNAME_CRITICAL:
-        return ctx->setSubjectAltNameCritical;
-    case OSSL_CMP_OPT_POLICIES_CRITICAL:
-        return ctx->setPoliciesCritical;
-    case OSSL_CMP_OPT_IGNORE_KEYUSAGE:
-        return ctx->ignore_keyusage;
-    case OSSL_CMP_OPT_POPO_METHOD:
-        return ctx->popoMethod;
-    case OSSL_CMP_OPT_DIGEST_ALGNID:
-        return EVP_MD_get_type(ctx->digest);
-    case OSSL_CMP_OPT_OWF_ALGNID:
-        return EVP_MD_get_type(ctx->pbm_owf);
-    case OSSL_CMP_OPT_MAC_ALGNID:
-        return ctx->pbm_mac;
-    case OSSL_CMP_OPT_KEEP_ALIVE:
-        return ctx->keep_alive;
-    case OSSL_CMP_OPT_MSG_TIMEOUT:
-        return ctx->msg_timeout;
-    case OSSL_CMP_OPT_TOTAL_TIMEOUT:
-        return ctx->total_timeout;
-    case OSSL_CMP_OPT_USE_TLS:
-        return ctx->tls_used;
-    case OSSL_CMP_OPT_PERMIT_TA_IN_EXTRACERTS_FOR_IR:
-        return ctx->permitTAInExtraCertsForIR;
-    case OSSL_CMP_OPT_REVOCATION_REASON:
-        return ctx->revocationReason;
-    default:
-        ERR_raise(ERR_LIB_CMP, CMP_R_INVALID_OPTION);
-        return -1;
+        case OSSL_CMP_OPT_LOG_VERBOSITY:
+            return ctx->log_verbosity;
+        case OSSL_CMP_OPT_IMPLICIT_CONFIRM:
+            return ctx->implicitConfirm;
+        case OSSL_CMP_OPT_DISABLE_CONFIRM:
+            return ctx->disableConfirm;
+        case OSSL_CMP_OPT_UNPROTECTED_SEND:
+            return ctx->unprotectedSend;
+        case OSSL_CMP_OPT_UNPROTECTED_ERRORS:
+            return ctx->unprotectedErrors;
+        case OSSL_CMP_OPT_VALIDITY_DAYS:
+            return ctx->days;
+        case OSSL_CMP_OPT_SUBJECTALTNAME_NODEFAULT:
+            return ctx->SubjectAltName_nodefault;
+        case OSSL_CMP_OPT_SUBJECTALTNAME_CRITICAL:
+            return ctx->setSubjectAltNameCritical;
+        case OSSL_CMP_OPT_POLICIES_CRITICAL:
+            return ctx->setPoliciesCritical;
+        case OSSL_CMP_OPT_IGNORE_KEYUSAGE:
+            return ctx->ignore_keyusage;
+        case OSSL_CMP_OPT_POPO_METHOD:
+            return ctx->popoMethod;
+        case OSSL_CMP_OPT_DIGEST_ALGNID:
+            return EVP_MD_get_type(ctx->digest);
+        case OSSL_CMP_OPT_OWF_ALGNID:
+            return EVP_MD_get_type(ctx->pbm_owf);
+        case OSSL_CMP_OPT_MAC_ALGNID:
+            return ctx->pbm_mac;
+        case OSSL_CMP_OPT_KEEP_ALIVE:
+            return ctx->keep_alive;
+        case OSSL_CMP_OPT_MSG_TIMEOUT:
+            return ctx->msg_timeout;
+        case OSSL_CMP_OPT_TOTAL_TIMEOUT:
+            return ctx->total_timeout;
+        case OSSL_CMP_OPT_USE_TLS:
+            return ctx->tls_used;
+        case OSSL_CMP_OPT_PERMIT_TA_IN_EXTRACERTS_FOR_IR:
+            return ctx->permitTAInExtraCertsForIR;
+        case OSSL_CMP_OPT_REVOCATION_REASON:
+            return ctx->revocationReason;
+        default:
+            ERR_raise(ERR_LIB_CMP, CMP_R_INVALID_OPTION);
+            return -1;
     }
 }

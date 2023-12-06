@@ -79,7 +79,7 @@ struct collected_encoder_st {
 
     const OSSL_PROVIDER *keymgmt_prov;
     OSSL_ENCODER_CTX *ctx;
-    unsigned int flag_find_same_provider:1;
+    unsigned int flag_find_same_provider : 1;
 
     int error_occurred;
 };
@@ -111,7 +111,8 @@ static void collect_encoder(OSSL_ENCODER *encoder, void *arg)
                 match = (data->id_names[i] == encoder->base.id);
             else
                 match = OSSL_ENCODER_is_a(encoder,
-                                          sk_OPENSSL_CSTRING_value(data->names, i));
+                                          sk_OPENSSL_CSTRING_value(data->names,
+                                                                   i));
             if (!match
                 || (encoder->does_selection != NULL
                     && !encoder->does_selection(provctx, data->ctx->selection))
@@ -130,7 +131,7 @@ static void collect_encoder(OSSL_ENCODER *encoder, void *arg)
 
 struct collected_names_st {
     STACK_OF(OPENSSL_CSTRING) *names;
-    unsigned int error_occurred:1;
+    unsigned int error_occurred : 1;
 };
 
 static void collect_name(const char *name, void *arg)
@@ -289,7 +290,8 @@ static int ossl_encoder_ctx_setup_for_pkey(OSSL_ENCODER_CTX *ctx,
                 goto err;
             }
             for (i = 0; i < end; ++i) {
-                const char *name = sk_OPENSSL_CSTRING_value(keymgmt_data.names, i);
+                const char *name = sk_OPENSSL_CSTRING_value(keymgmt_data.names,
+                                                            i);
 
                 encoder_data.id_names[i] = ossl_namemap_name2num(namemap, name);
             }
@@ -329,7 +331,7 @@ static int ossl_encoder_ctx_setup_for_pkey(OSSL_ENCODER_CTX *ctx,
     }
 
     ok = 1;
- err:
+err:
     if (data != NULL) {
         OSSL_ENCODER_CTX_set_construct_data(ctx, NULL);
         OPENSSL_free(data);

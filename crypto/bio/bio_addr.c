@@ -283,7 +283,7 @@ static int addr_strings(const BIO_ADDR *ap, int numeric,
     }
 
     if ((hostname != NULL && *hostname == NULL)
-            || (service != NULL && *service == NULL)) {
+        || (service != NULL && *service == NULL)) {
         if (hostname != NULL) {
             OPENSSL_free(*hostname);
             *hostname = NULL;
@@ -408,12 +408,12 @@ int BIO_ADDRINFO_protocol(const BIO_ADDRINFO *bai)
 #endif
 
         switch (bai->bai_socktype) {
-        case SOCK_STREAM:
-            return IPPROTO_TCP;
-        case SOCK_DGRAM:
-            return IPPROTO_UDP;
-        default:
-            break;
+            case SOCK_STREAM:
+                return IPPROTO_TCP;
+            case SOCK_DGRAM:
+                return IPPROTO_UDP;
+            default:
+                break;
         }
     }
     return 0;
@@ -577,10 +577,10 @@ int BIO_parse_hostserv(const char *hostserv, char **host, char **service,
     }
 
     return 1;
- amb_err:
+amb_err:
     ERR_raise(ERR_LIB_BIO, BIO_R_AMBIGUOUS_HOST_OR_SERVICE);
     return 0;
- spec_err:
+spec_err:
     ERR_raise(ERR_LIB_BIO, BIO_R_MALFORMED_HOST_OR_SERVICE);
     return 0;
 }
@@ -674,20 +674,20 @@ int BIO_lookup_ex(const char *host, const char *service, int lookup_type,
     int ret = 0;                 /* Assume failure */
 
     switch (family) {
-    case AF_INET:
+        case AF_INET:
 #if OPENSSL_USE_IPV6
-    case AF_INET6:
+        case AF_INET6:
 #endif
 #ifndef OPENSSL_NO_UNIX_SOCK
-    case AF_UNIX:
+        case AF_UNIX:
 #endif
 #ifdef AF_UNSPEC
-    case AF_UNSPEC:
+        case AF_UNSPEC:
 #endif
-        break;
-    default:
-        ERR_raise(ERR_LIB_BIO, BIO_R_UNSUPPORTED_PROTOCOL_FAMILY);
-        return 0;
+            break;
+        default:
+            ERR_raise(ERR_LIB_BIO, BIO_R_UNSUPPORTED_PROTOCOL_FAMILY);
+            return 0;
     }
 
 #ifndef OPENSSL_NO_UNIX_SOCK
@@ -717,7 +717,7 @@ int BIO_lookup_ex(const char *host, const char *service, int lookup_type,
 #  ifdef AF_UNSPEC
         if (host != NULL && family == AF_UNSPEC)
 #  endif
-            hints.ai_flags |= AI_ADDRCONFIG;
+        hints.ai_flags |= AI_ADDRCONFIG;
 # endif
 
         if (lookup_type == BIO_LOOKUP_SERVER)
@@ -727,37 +727,37 @@ int BIO_lookup_ex(const char *host, const char *service, int lookup_type,
          * macro magic in bio_local.h
          */
 # if defined(AI_ADDRCONFIG) && defined(AI_NUMERICHOST)
-      retry:
+retry:
 # endif
         switch ((gai_ret = getaddrinfo(host, service, &hints, res))) {
 # ifdef EAI_SYSTEM
-        case EAI_SYSTEM:
-            ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
-                           "calling getaddrinfo()");
-            ERR_raise(ERR_LIB_BIO, ERR_R_SYS_LIB);
-            break;
+            case EAI_SYSTEM:
+                ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
+                               "calling getaddrinfo()");
+                ERR_raise(ERR_LIB_BIO, ERR_R_SYS_LIB);
+                break;
 # endif
 # ifdef EAI_MEMORY
-        case EAI_MEMORY:
-            ERR_raise_data(ERR_LIB_BIO, ERR_R_SYS_LIB,
-                           gai_strerror(old_ret ? old_ret : gai_ret));
-            break;
+            case EAI_MEMORY:
+                ERR_raise_data(ERR_LIB_BIO, ERR_R_SYS_LIB,
+                               gai_strerror(old_ret ? old_ret : gai_ret));
+                break;
 # endif
-        case 0:
-            ret = 1;             /* Success */
-            break;
-        default:
+            case 0:
+                ret = 1;         /* Success */
+                break;
+            default:
 # if defined(AI_ADDRCONFIG) && defined(AI_NUMERICHOST)
-            if (hints.ai_flags & AI_ADDRCONFIG) {
-                hints.ai_flags &= ~AI_ADDRCONFIG;
-                hints.ai_flags |= AI_NUMERICHOST;
-                old_ret = gai_ret;
-                goto retry;
-            }
+                if (hints.ai_flags & AI_ADDRCONFIG) {
+                    hints.ai_flags &= ~AI_ADDRCONFIG;
+                    hints.ai_flags |= AI_NUMERICHOST;
+                    old_ret = gai_ret;
+                    goto retry;
+                }
 # endif
-            ERR_raise_data(ERR_LIB_BIO, ERR_R_SYS_LIB,
-                           gai_strerror(old_ret ? old_ret : gai_ret));
-            break;
+                ERR_raise_data(ERR_LIB_BIO, ERR_R_SYS_LIB,
+                               gai_strerror(old_ret ? old_ret : gai_ret));
+                break;
         }
     } else {
 #endif
@@ -775,15 +775,15 @@ int BIO_lookup_ex(const char *host, const char *service, int lookup_type,
 #if defined(OPENSSL_SYS_WINDOWS) || defined(OPENSSL_SYS_MSDOS)
         static uint32_t he_fallback_address;
         static const char *he_fallback_addresses[] =
-            { (char *)&he_fallback_address, NULL };
+        { (char *)&he_fallback_address, NULL };
 #else
         static in_addr_t he_fallback_address;
         static const char *he_fallback_addresses[] =
-            { (char *)&he_fallback_address, NULL };
+        { (char *)&he_fallback_address, NULL };
 #endif
         static const struct hostent he_fallback =
-            { NULL, NULL, AF_INET, sizeof(he_fallback_address),
-              (char **)&he_fallback_addresses };
+        { NULL, NULL, AF_INET, sizeof(he_fallback_address),
+          (char **)&he_fallback_addresses };
 #if defined(OPENSSL_SYS_VMS) && defined(__DECC)
 # pragma pointer_size restore
 #endif
@@ -811,18 +811,18 @@ int BIO_lookup_ex(const char *host, const char *service, int lookup_type,
         if (host == NULL) {
             he = &he_fallback;
             switch (lookup_type) {
-            case BIO_LOOKUP_CLIENT:
-                he_fallback_address = INADDR_LOOPBACK;
-                break;
-            case BIO_LOOKUP_SERVER:
-                he_fallback_address = INADDR_ANY;
-                break;
-            default:
-                /* We forgot to handle a lookup type! */
-                assert("We forgot to handle a lookup type!" == NULL);
-                ERR_raise(ERR_LIB_BIO, ERR_R_INTERNAL_ERROR);
-                ret = 0;
-                goto err;
+                case BIO_LOOKUP_CLIENT:
+                    he_fallback_address = INADDR_LOOPBACK;
+                    break;
+                case BIO_LOOKUP_SERVER:
+                    he_fallback_address = INADDR_ANY;
+                    break;
+                default:
+                    /* We forgot to handle a lookup type! */
+                    assert("We forgot to handle a lookup type!" == NULL);
+                    ERR_raise(ERR_LIB_BIO, ERR_R_INTERNAL_ERROR);
+                    ret = 0;
+                    goto err;
             }
         } else {
             he = gethostbyname(host);
@@ -879,16 +879,16 @@ int BIO_lookup_ex(const char *host, const char *service, int lookup_type,
 #endif
 
             switch (socktype) {
-            case SOCK_STREAM:
-                proto = "tcp";
-                break;
-            case SOCK_DGRAM:
-                proto = "udp";
-                break;
+                case SOCK_STREAM:
+                    proto = "tcp";
+                    break;
+                case SOCK_DGRAM:
+                    proto = "udp";
+                    break;
             }
 
             if (endp != service && *endp == '\0'
-                    && portnum > 0 && portnum < 65536) {
+                && portnum > 0 && portnum < 65536) {
                 se_fallback.s_port = htons((unsigned short)portnum);
                 se_fallback.s_proto = proto;
                 se = &se_fallback;
@@ -940,7 +940,7 @@ int BIO_lookup_ex(const char *host, const char *service, int lookup_type,
                 tmp_bai->bai_next = *res;
                 *res = tmp_bai;
                 continue;
-             addrinfo_wrap_err:
+addrinfo_wrap_err:
                 BIO_ADDRINFO_free(*res);
                 *res = NULL;
                 ERR_raise(ERR_LIB_BIO, ERR_R_BIO_LIB);
@@ -950,7 +950,7 @@ int BIO_lookup_ex(const char *host, const char *service, int lookup_type,
 
             ret = 1;
         }
-     err:
+err:
         CRYPTO_THREAD_unlock(bio_lookup_lock);
     }
 

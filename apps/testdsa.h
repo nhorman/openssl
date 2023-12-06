@@ -200,18 +200,18 @@ typedef struct testdsa_st {
 } testdsa;
 
 #define set_dsa_ptr(st, bits) \
-    do { \
-        st.priv = dsa##bits##_priv; \
-        st.pub = dsa##bits##_pub; \
-        st.p = dsa##bits##_p; \
-        st.g = dsa##bits##_g; \
-        st.q = dsa##bits##_q; \
-        st.priv_l = sizeof(dsa##bits##_priv); \
-        st.pub_l = sizeof(dsa##bits##_pub); \
-        st.p_l = sizeof(dsa##bits##_p); \
-        st.g_l = sizeof(dsa##bits##_g); \
-        st.q_l = sizeof(dsa##bits##_q); \
-    } while (0)
+        do { \
+            st.priv = dsa ## bits ## _priv; \
+            st.pub = dsa ## bits ## _pub; \
+            st.p = dsa ## bits ## _p; \
+            st.g = dsa ## bits ## _g; \
+            st.q = dsa ## bits ## _q; \
+            st.priv_l = sizeof(dsa ## bits ## _priv); \
+            st.pub_l = sizeof(dsa ## bits ## _pub); \
+            st.p_l = sizeof(dsa ## bits ## _p); \
+            st.g_l = sizeof(dsa ## bits ## _g); \
+            st.q_l = sizeof(dsa ## bits ## _q); \
+        } while (0)
 
 EVP_PKEY *get_dsa(int dsa_bits)
 {
@@ -223,17 +223,17 @@ EVP_PKEY *get_dsa(int dsa_bits)
     OSSL_PARAM *params = NULL;
 
     switch (dsa_bits) {
-    case 512:
-        set_dsa_ptr(dsa_t, 512);
-        break;
-    case 1024:
-        set_dsa_ptr(dsa_t, 1024);
-        break;
-    case 2048:
-        set_dsa_ptr(dsa_t, 2048);
-        break;
-    default:
-        return NULL;
+        case 512:
+            set_dsa_ptr(dsa_t, 512);
+            break;
+        case 1024:
+            set_dsa_ptr(dsa_t, 1024);
+            break;
+        case 2048:
+            set_dsa_ptr(dsa_t, 2048);
+            break;
+        default:
+            return NULL;
     }
 
     if ((pctx = EVP_PKEY_CTX_new_from_name(NULL, "DSA", NULL)) == NULL)

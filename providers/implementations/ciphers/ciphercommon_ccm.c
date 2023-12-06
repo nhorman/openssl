@@ -301,7 +301,8 @@ int ossl_ccm_stream_final(void *vctx, unsigned char *out, size_t *outl,
     return 1;
 }
 
-int ossl_ccm_cipher(void *vctx, unsigned char *out, size_t *outl, size_t outsize,
+int ossl_ccm_cipher(void *vctx, unsigned char *out, size_t *outl,
+                    size_t outsize,
                     const unsigned char *in, size_t inl)
 {
     PROV_CCM_CTX *ctx = (PROV_CCM_CTX *)vctx;

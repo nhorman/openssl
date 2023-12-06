@@ -235,7 +235,7 @@ int ossl_prov_set_macctx(EVP_MAC_CTX *macctx,
     if (params != NULL) {
         if (mdname == NULL) {
             if ((p = OSSL_PARAM_locate_const(params,
-                                            OSSL_ALG_PARAM_DIGEST)) != NULL) {
+                                             OSSL_ALG_PARAM_DIGEST)) != NULL) {
                 if (p->data_type != OSSL_PARAM_UTF8_STRING)
                     return 0;
                 mdname = p->data;
@@ -243,7 +243,7 @@ int ossl_prov_set_macctx(EVP_MAC_CTX *macctx,
         }
         if (ciphername == NULL) {
             if ((p = OSSL_PARAM_locate_const(params,
-                                            OSSL_ALG_PARAM_CIPHER)) != NULL) {
+                                             OSSL_ALG_PARAM_CIPHER)) != NULL) {
                 if (p->data_type != OSSL_PARAM_UTF8_STRING)
                     return 0;
                 ciphername = p->data;
@@ -251,7 +251,7 @@ int ossl_prov_set_macctx(EVP_MAC_CTX *macctx,
         }
         if (engine == NULL) {
             if ((p = OSSL_PARAM_locate_const(params, OSSL_ALG_PARAM_ENGINE))
-                    != NULL) {
+                != NULL) {
                 if (p->data_type != OSSL_PARAM_UTF8_STRING)
                     return 0;
                 engine = p->data;

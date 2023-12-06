@@ -150,7 +150,7 @@ OSSL_PARAM *OSSL_PARAM_merge(const OSSL_PARAM *p1, const OSSL_PARAM *p2)
     const OSSL_PARAM *p = NULL;
     const OSSL_PARAM **p1cur, **p2cur;
     OSSL_PARAM *params, *dst;
-    size_t  list1_sz = 0, list2_sz = 0;
+    size_t list1_sz = 0, list2_sz = 0;
     int diff;
 
     if (p1 == NULL && p2 == NULL) {
@@ -160,14 +160,16 @@ OSSL_PARAM *OSSL_PARAM_merge(const OSSL_PARAM *p1, const OSSL_PARAM *p2)
 
     /* Copy p1 to list1 */
     if (p1 != NULL) {
-        for (p = p1; p->key != NULL && list1_sz < OSSL_PARAM_MERGE_LIST_MAX; p++)
+        for (p = p1; p->key != NULL && list1_sz < OSSL_PARAM_MERGE_LIST_MAX;
+             p++)
             list1[list1_sz++] = p;
     }
     list1[list1_sz] = NULL;
 
     /* copy p2 to a list2 */
     if (p2 != NULL) {
-        for (p = p2; p->key != NULL && list2_sz < OSSL_PARAM_MERGE_LIST_MAX; p++)
+        for (p = p2; p->key != NULL && list2_sz < OSSL_PARAM_MERGE_LIST_MAX;
+             p++)
             list2[list2_sz++] = p;
     }
     list2[list2_sz] = NULL;
@@ -180,7 +182,7 @@ OSSL_PARAM *OSSL_PARAM_merge(const OSSL_PARAM *p1, const OSSL_PARAM *p2)
     qsort(list1, list1_sz, sizeof(OSSL_PARAM *), compare_params);
     qsort(list2, list2_sz, sizeof(OSSL_PARAM *), compare_params);
 
-   /* Allocate enough space to store the merged parameters */
+    /* Allocate enough space to store the merged parameters */
     params = OPENSSL_zalloc((list1_sz + list2_sz + 1) * sizeof(*p1));
     if (params == NULL)
         return NULL;

@@ -35,16 +35,16 @@ typedef size_t size_t_aX;
 
 #define PACK(s)         ((size_t)(s)<<(sizeof(size_t)*8-16))
 #define REDUCE1BIT(V)   do { \
-        if (sizeof(size_t)==8) { \
+            if (sizeof(size_t)==8) { \
                 u64 T = U64(0xe100000000000000) & (0-(V.lo&1)); \
                 V.lo  = (V.hi<<63)|(V.lo>>1); \
                 V.hi  = (V.hi>>1 )^T; \
-        } \
-        else { \
+            } \
+            else { \
                 u32 T = 0xe1000000U & (0-(u32)(V.lo&1)); \
                 V.lo  = (V.hi<<63)|(V.lo>>1); \
                 V.hi  = (V.hi>>1 )^((u64)T<<32); \
-        } \
+            } \
 } while(0)
 
 /*-
@@ -146,7 +146,7 @@ static void gcm_init_4bit(u128 Htable[16], const u64 H[2])
                 V = Htable[j];
                 Htable[j].hi = V.lo;
                 Htable[j].lo = V.hi;
-        } else
+            }else
             for (j = 0; j < 16; ++j) {
                 V = Htable[j];
                 Htable[j].hi = V.lo << 32 | V.lo >> 32;
@@ -338,9 +338,9 @@ void gcm_ghash_4bit(u64 Xi[2], const u128 Htable[16], const u8 *inp,
 
 #if     (defined(GHASH_ASM) || defined(OPENSSL_CPUID_OBJ))
 # if    !defined(I386_ONLY) && \
-        (defined(__i386)        || defined(__i386__)    || \
-         defined(__x86_64)      || defined(__x86_64__)  || \
-         defined(_M_IX86)       || defined(_M_AMD64)    || defined(_M_X64))
+    (defined(__i386)        || defined(__i386__)    || \
+    defined(__x86_64)      || defined(__x86_64__)  || \
+    defined(_M_IX86)       || defined(_M_AMD64)    || defined(_M_X64))
 #  define GHASH_ASM_X86_OR_64
 
 void gcm_init_clmul(u128 Htable[16], const u64 Xi[2]);
@@ -369,13 +369,14 @@ void gcm_gmult_4bit_x86(u64 Xi[2], const u128 Htable[16]);
 void gcm_ghash_4bit_x86(u64 Xi[2], const u128 Htable[16], const u8 *inp,
                         size_t len);
 #  endif
-# elif defined(__arm__) || defined(__arm) || defined(__aarch64__) || defined(_M_ARM64)
+# elif defined(__arm__) || defined(__arm) || defined(__aarch64__) || \
+    defined(_M_ARM64)
 #  include "arm_arch.h"
 #  if __ARM_MAX_ARCH__>=7
 #   define GHASH_ASM_ARM
-#   define PMULL_CAPABLE        (OPENSSL_armcap_P & ARMV8_PMULL)
+#   define PMULL_CAPABLE        (OPENSSL_armcap_P &ARMV8_PMULL)
 #   if defined(__arm__) || defined(__arm)
-#    define NEON_CAPABLE        (OPENSSL_armcap_P & ARMV7_NEON)
+#    define NEON_CAPABLE        (OPENSSL_armcap_P &ARMV7_NEON)
 #   endif
 void gcm_init_neon(u128 Htable[16], const u64 Xi[2]);
 void gcm_gmult_neon(u64 Xi[2], const u128 Htable[16]);
@@ -393,7 +394,8 @@ void gcm_init_vis3(u128 Htable[16], const u64 Xi[2]);
 void gcm_gmult_vis3(u64 Xi[2], const u128 Htable[16]);
 void gcm_ghash_vis3(u64 Xi[2], const u128 Htable[16], const u8 *inp,
                     size_t len);
-# elif defined(OPENSSL_CPUID_OBJ) && (defined(__powerpc__) || defined(__ppc__) || defined(_ARCH_PPC))
+# elif defined(OPENSSL_CPUID_OBJ) && (defined(__powerpc__) || \
+    defined(__ppc__) || defined(_ARCH_PPC))
 #  include "crypto/ppc_arch.h"
 #  define GHASH_ASM_PPC
 void gcm_init_p8(u128 Htable[16], const u64 Xi[2]);
@@ -1301,10 +1303,10 @@ int CRYPTO_gcm128_encrypt_ctr32(GCM128_CONTEXT *ctx,
 # endif
     }
 # if defined(GHASH)
-        if (len >= 16 && mres) {
-            GHASH(ctx, ctx->Xn, mres);
-            mres = 0;
-        }
+    if (len >= 16 && mres) {
+        GHASH(ctx, ctx->Xn, mres);
+        mres = 0;
+    }
 #  if defined(GHASH_CHUNK)
     while (len >= GHASH_CHUNK) {
         (*stream) (in, out, GHASH_CHUNK / 16, key, ctx->Yi.c);

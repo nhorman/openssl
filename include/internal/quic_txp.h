@@ -29,10 +29,10 @@
  */
 typedef struct ossl_quic_tx_packetiser_args_st {
     /* Configuration Settings */
-    QUIC_CONN_ID    cur_scid;   /* Current Source Connection ID we use. */
-    QUIC_CONN_ID    cur_dcid;   /* Current Destination Connection ID we use. */
-    BIO_ADDR        peer;       /* Current destination L4 address we use. */
-    uint32_t        ack_delay_exponent; /* ACK delay exponent used when encoding. */
+    QUIC_CONN_ID cur_scid;      /* Current Source Connection ID we use. */
+    QUIC_CONN_ID cur_dcid;      /* Current Destination Connection ID we use. */
+    BIO_ADDR peer;              /* Current destination L4 address we use. */
+    uint32_t ack_delay_exponent;        /* ACK delay exponent used when encoding. */
 
     /* Injected Dependencies */
     OSSL_QTX        *qtx;       /* QUIC Record Layer TX we are using */
@@ -46,7 +46,7 @@ typedef struct ossl_quic_tx_packetiser_args_st {
     QUIC_RXFC       *max_streams_uni_rxfc;
     const OSSL_CC_METHOD *cc_method; /* QUIC Congestion Controller */
     OSSL_CC_DATA    *cc_data;   /* QUIC Congestion Controller Instance */
-    OSSL_TIME       (*now)(void *arg);  /* Callback to get current time. */
+    OSSL_TIME (*now)(void *arg);        /* Callback to get current time. */
     void            *now_arg;
 
     /*
@@ -57,11 +57,12 @@ typedef struct ossl_quic_tx_packetiser_args_st {
      */
     QUIC_SSTREAM    *crypto[QUIC_PN_SPACE_NUM];
 
- } OSSL_QUIC_TX_PACKETISER_ARGS;
+} OSSL_QUIC_TX_PACKETISER_ARGS;
 
 typedef struct ossl_quic_tx_packetiser_st OSSL_QUIC_TX_PACKETISER;
 
-OSSL_QUIC_TX_PACKETISER *ossl_quic_tx_packetiser_new(const OSSL_QUIC_TX_PACKETISER_ARGS *args);
+OSSL_QUIC_TX_PACKETISER *ossl_quic_tx_packetiser_new(
+    const OSSL_QUIC_TX_PACKETISER_ARGS *args);
 
 typedef void (ossl_quic_initial_token_free_fn)(const unsigned char *buf,
                                                size_t buf_len, void *arg);
@@ -74,7 +75,7 @@ void ossl_quic_tx_packetiser_free(OSSL_QUIC_TX_PACKETISER *txp);
  * Refer RFC 9000 s. 10.2.1 Closing Connection State.
  */
 void ossl_quic_tx_packetiser_record_received_closing_bytes(
-        OSSL_QUIC_TX_PACKETISER *txp, size_t n);
+    OSSL_QUIC_TX_PACKETISER *txp, size_t n);
 
 /*
  * Generates a datagram by polling the various ELs to determine if they want to
@@ -155,14 +156,17 @@ int ossl_quic_tx_packetiser_discard_enc_level(OSSL_QUIC_TX_PACKETISER *txp,
  * as the authenticity of the peer is not confirmed until the handshake
  * complete event occurs.
  */
-void ossl_quic_tx_packetiser_notify_handshake_complete(OSSL_QUIC_TX_PACKETISER *txp);
+void ossl_quic_tx_packetiser_notify_handshake_complete(
+    OSSL_QUIC_TX_PACKETISER *txp);
 
 /* Asks the TXP to generate a HANDSHAKE_DONE frame in the next 1-RTT packet. */
-void ossl_quic_tx_packetiser_schedule_handshake_done(OSSL_QUIC_TX_PACKETISER *txp);
+void ossl_quic_tx_packetiser_schedule_handshake_done(
+    OSSL_QUIC_TX_PACKETISER *txp);
 
 /* Asks the TXP to ensure the next packet in the given PN space is ACK-eliciting. */
-void ossl_quic_tx_packetiser_schedule_ack_eliciting(OSSL_QUIC_TX_PACKETISER *txp,
-                                                    uint32_t pn_space);
+void ossl_quic_tx_packetiser_schedule_ack_eliciting(
+    OSSL_QUIC_TX_PACKETISER *txp,
+    uint32_t pn_space);
 
 /*
  * Asks the TXP to ensure an ACK is put in the next packet in the given PN
@@ -199,9 +203,10 @@ QUIC_PN ossl_quic_tx_packetiser_get_next_pn(OSSL_QUIC_TX_PACKETISER *txp,
  * must not modify the ACK frame data. Can be used to snoop on PNs being ACKed.
  */
 void ossl_quic_tx_packetiser_set_ack_tx_cb(OSSL_QUIC_TX_PACKETISER *txp,
-                                           void (*cb)(const OSSL_QUIC_FRAME_ACK *ack,
-                                                      uint32_t pn_space,
-                                                      void *arg),
+                                           void (*cb)(
+                                               const OSSL_QUIC_FRAME_ACK *ack,
+                                               uint32_t pn_space,
+                                               void *arg),
                                            void *cb_arg);
 
 # endif

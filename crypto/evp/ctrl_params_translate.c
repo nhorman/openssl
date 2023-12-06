@@ -291,49 +291,49 @@ static int default_check(enum state state,
                          const struct translation_ctx_st *ctx)
 {
     switch (state) {
-    default:
-        break;
-    case PRE_CTRL_TO_PARAMS:
-        if (!ossl_assert(translation != NULL)) {
-            ERR_raise(ERR_LIB_EVP, EVP_R_COMMAND_NOT_SUPPORTED);
-            return -2;
-        }
-        if (!ossl_assert(translation->param_key != 0)
-            || !ossl_assert(translation->param_data_type != 0)) {
-            ERR_raise(ERR_LIB_EVP, ERR_R_INTERNAL_ERROR);
-            return -1;
-        }
-        break;
-    case PRE_CTRL_STR_TO_PARAMS:
-        /*
-         * For ctrl_str to params translation, we allow direct use of
-         * OSSL_PARAM keys as ctrl_str keys.  Therefore, it's possible that
-         * we end up with |translation == NULL|, which is fine.  The fixup
-         * function will have to deal with it carefully.
-         */
-        if (translation != NULL) {
-            if (!ossl_assert(translation->action_type != GET)) {
+        default:
+            break;
+        case PRE_CTRL_TO_PARAMS:
+            if (!ossl_assert(translation != NULL)) {
                 ERR_raise(ERR_LIB_EVP, EVP_R_COMMAND_NOT_SUPPORTED);
                 return -2;
             }
-            if (!ossl_assert(translation->param_key != NULL)
+            if (!ossl_assert(translation->param_key != 0)
                 || !ossl_assert(translation->param_data_type != 0)) {
                 ERR_raise(ERR_LIB_EVP, ERR_R_INTERNAL_ERROR);
-                return 0;
+                return -1;
             }
-        }
-        break;
-    case PRE_PARAMS_TO_CTRL:
-    case POST_PARAMS_TO_CTRL:
-        if (!ossl_assert(translation != NULL)) {
-            ERR_raise(ERR_LIB_EVP, EVP_R_COMMAND_NOT_SUPPORTED);
-            return -2;
-        }
-        if (!ossl_assert(translation->ctrl_num != 0)
-            || !ossl_assert(translation->param_data_type != 0)) {
-            ERR_raise(ERR_LIB_EVP, ERR_R_INTERNAL_ERROR);
-            return -1;
-        }
+            break;
+        case PRE_CTRL_STR_TO_PARAMS:
+            /*
+             * For ctrl_str to params translation, we allow direct use of
+             * OSSL_PARAM keys as ctrl_str keys.  Therefore, it's possible that
+             * we end up with |translation == NULL|, which is fine.  The fixup
+             * function will have to deal with it carefully.
+             */
+            if (translation != NULL) {
+                if (!ossl_assert(translation->action_type != GET)) {
+                    ERR_raise(ERR_LIB_EVP, EVP_R_COMMAND_NOT_SUPPORTED);
+                    return -2;
+                }
+                if (!ossl_assert(translation->param_key != NULL)
+                    || !ossl_assert(translation->param_data_type != 0)) {
+                    ERR_raise(ERR_LIB_EVP, ERR_R_INTERNAL_ERROR);
+                    return 0;
+                }
+            }
+            break;
+        case PRE_PARAMS_TO_CTRL:
+        case POST_PARAMS_TO_CTRL:
+            if (!ossl_assert(translation != NULL)) {
+                ERR_raise(ERR_LIB_EVP, EVP_R_COMMAND_NOT_SUPPORTED);
+                return -2;
+            }
+            if (!ossl_assert(translation->ctrl_num != 0)
+                || !ossl_assert(translation->param_data_type != 0)) {
+                ERR_raise(ERR_LIB_EVP, ERR_R_INTERNAL_ERROR);
+                return -1;
+            }
     }
 
     /* Nothing else to check */
@@ -391,150 +391,158 @@ static int default_fixup_args(enum state state,
         return ret;
 
     switch (state) {
-    default:
-        /* For states this function should never have been called with */
-        ERR_raise_data(ERR_LIB_EVP, ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED,
-                       "[action:%d, state:%d]", ctx->action_type, state);
-        return 0;
-
-    /*
-     * PRE_CTRL_TO_PARAMS and POST_CTRL_TO_PARAMS handle ctrl to params
-     * translations.  PRE_CTRL_TO_PARAMS is responsible for preparing
-     * |*params|, and POST_CTRL_TO_PARAMS is responsible for bringing the
-     * result back to |*p2| and the return value.
-     */
-    case PRE_CTRL_TO_PARAMS:
-        /* This is ctrl to params translation, so we need an OSSL_PARAM key */
-        if (ctx->action_type == NONE) {
-            /*
-             * No action type is an error here.  That's a case for a
-             * special fixup function.
-             */
-            ERR_raise_data(ERR_LIB_EVP, ERR_R_UNSUPPORTED,
+        default:
+            /* For states this function should never have been called with */
+            ERR_raise_data(ERR_LIB_EVP, ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED,
                            "[action:%d, state:%d]", ctx->action_type, state);
             return 0;
-        }
 
-        if (translation->optype != 0) {
-            if ((EVP_PKEY_CTX_IS_SIGNATURE_OP(ctx->pctx)
-                 && ctx->pctx->op.sig.algctx == NULL)
-                || (EVP_PKEY_CTX_IS_DERIVE_OP(ctx->pctx)
-                    && ctx->pctx->op.kex.algctx == NULL)
-                || (EVP_PKEY_CTX_IS_ASYM_CIPHER_OP(ctx->pctx)
-                    && ctx->pctx->op.ciph.algctx == NULL)
-                || (EVP_PKEY_CTX_IS_KEM_OP(ctx->pctx)
-                    && ctx->pctx->op.encap.algctx == NULL)
+        /*
+         * PRE_CTRL_TO_PARAMS and POST_CTRL_TO_PARAMS handle ctrl to params
+         * translations.  PRE_CTRL_TO_PARAMS is responsible for preparing
+         * |*params|, and POST_CTRL_TO_PARAMS is responsible for bringing the
+         * result back to |*p2| and the return value.
+         */
+        case PRE_CTRL_TO_PARAMS:
+            /* This is ctrl to params translation, so we need an OSSL_PARAM key */
+            if (ctx->action_type == NONE) {
                 /*
-                 * The following may be unnecessary, but we have them
-                 * for good measure...
+                 * No action type is an error here.  That's a case for a
+                 * special fixup function.
                  */
-                || (EVP_PKEY_CTX_IS_GEN_OP(ctx->pctx)
-                    && ctx->pctx->op.keymgmt.genctx == NULL)
-                || (EVP_PKEY_CTX_IS_FROMDATA_OP(ctx->pctx)
-                    && ctx->pctx->op.keymgmt.genctx == NULL)) {
-                ERR_raise(ERR_LIB_EVP, EVP_R_COMMAND_NOT_SUPPORTED);
-                /* Uses the same return values as EVP_PKEY_CTX_ctrl */
-                return -2;
+                ERR_raise_data(ERR_LIB_EVP, ERR_R_UNSUPPORTED,
+                               "[action:%d, state:%d]", ctx->action_type,
+                               state);
+                return 0;
             }
-        }
 
-        /*
-         * OSSL_PARAM_construct_TYPE() works equally well for both SET and GET.
-         */
-        switch (translation->param_data_type) {
-        case OSSL_PARAM_INTEGER:
-            *ctx->params = OSSL_PARAM_construct_int(translation->param_key,
-                                                    &ctx->p1);
-            break;
-        case OSSL_PARAM_UNSIGNED_INTEGER:
-            /*
-             * BIGNUMs are passed via |p2|.  For all ctrl's that just want
-             * to pass a simple integer via |p1|, |p2| is expected to be
-             * NULL.
-             *
-             * Note that this allocates a buffer, which the cleanup function
-             * must deallocate.
-             */
-            if (ctx->p2 != NULL) {
-                if (ctx->action_type == SET) {
-                    ctx->buflen = BN_num_bytes(ctx->p2);
-                    if ((ctx->allocated_buf
-                         = OPENSSL_malloc(ctx->buflen)) == NULL)
-                        return 0;
-                    if (BN_bn2nativepad(ctx->p2,
-                                         ctx->allocated_buf, ctx->buflen) < 0) {
-                        OPENSSL_free(ctx->allocated_buf);
-                        ctx->allocated_buf = NULL;
-                        return 0;
-                    }
-                    *ctx->params =
-                        OSSL_PARAM_construct_BN(translation->param_key,
-                                                ctx->allocated_buf,
-                                                ctx->buflen);
-                } else {
+            if (translation->optype != 0) {
+                if ((EVP_PKEY_CTX_IS_SIGNATURE_OP(ctx->pctx)
+                     && ctx->pctx->op.sig.algctx == NULL)
+                    || (EVP_PKEY_CTX_IS_DERIVE_OP(ctx->pctx)
+                        && ctx->pctx->op.kex.algctx == NULL)
+                    || (EVP_PKEY_CTX_IS_ASYM_CIPHER_OP(ctx->pctx)
+                        && ctx->pctx->op.ciph.algctx == NULL)
+                    || (EVP_PKEY_CTX_IS_KEM_OP(ctx->pctx)
+                        && ctx->pctx->op.encap.algctx == NULL)
                     /*
-                     * No support for getting a BIGNUM by ctrl, this needs
-                     * fixup_args function support.
+                     * The following may be unnecessary, but we have them
+                     * for good measure...
                      */
-                    ERR_raise_data(ERR_LIB_EVP, ERR_R_UNSUPPORTED,
-                                   "[action:%d, state:%d] trying to get a "
-                                   "BIGNUM via ctrl call",
-                                   ctx->action_type, state);
-                    return 0;
+                    || (EVP_PKEY_CTX_IS_GEN_OP(ctx->pctx)
+                        && ctx->pctx->op.keymgmt.genctx == NULL)
+                    || (EVP_PKEY_CTX_IS_FROMDATA_OP(ctx->pctx)
+                        && ctx->pctx->op.keymgmt.genctx == NULL)) {
+                    ERR_raise(ERR_LIB_EVP, EVP_R_COMMAND_NOT_SUPPORTED);
+                    /* Uses the same return values as EVP_PKEY_CTX_ctrl */
+                    return -2;
                 }
-            } else {
-                *ctx->params =
-                    OSSL_PARAM_construct_uint(translation->param_key,
-                                              (unsigned int *)&ctx->p1);
             }
-            break;
-        case OSSL_PARAM_UTF8_STRING:
-            *ctx->params =
-                OSSL_PARAM_construct_utf8_string(translation->param_key,
-                                                 ctx->p2, (size_t)ctx->p1);
-            break;
-        case OSSL_PARAM_UTF8_PTR:
-            *ctx->params =
-                OSSL_PARAM_construct_utf8_ptr(translation->param_key,
-                                              ctx->p2, (size_t)ctx->p1);
-            break;
-        case OSSL_PARAM_OCTET_STRING:
-            *ctx->params =
-                OSSL_PARAM_construct_octet_string(translation->param_key,
-                                                  ctx->p2, (size_t)ctx->p1);
-            break;
-        case OSSL_PARAM_OCTET_PTR:
-            *ctx->params =
-                OSSL_PARAM_construct_octet_ptr(translation->param_key,
-                                               ctx->p2, (size_t)ctx->p1);
-            break;
-        }
-        break;
-    case POST_CTRL_TO_PARAMS:
-        /*
-         * Because EVP_PKEY_CTX_ctrl() returns the length of certain objects
-         * as its return value, we need to ensure that we do it here as well,
-         * for the OSSL_PARAM data types where this makes sense.
-         */
-        if (ctx->action_type == GET) {
-            switch (translation->param_data_type) {
-            case OSSL_PARAM_UTF8_STRING:
-            case OSSL_PARAM_UTF8_PTR:
-            case OSSL_PARAM_OCTET_STRING:
-            case OSSL_PARAM_OCTET_PTR:
-                ctx->p1 = (int)ctx->params[0].return_size;
-                break;
-            }
-        }
-        break;
 
-    /*
-     * PRE_CTRL_STR_TO_PARAMS and POST_CTRL_STR_TO_PARAMS handle ctrl_str to
-     * params translations.  PRE_CTRL_TO_PARAMS is responsible for preparing
-     * |*params|, and POST_CTRL_TO_PARAMS currently has nothing to do, since
-     * there's no support for getting data via ctrl_str calls.
-     */
-    case PRE_CTRL_STR_TO_PARAMS:
+            /*
+             * OSSL_PARAM_construct_TYPE() works equally well for both SET and GET.
+             */
+            switch (translation->param_data_type) {
+                case OSSL_PARAM_INTEGER:
+                    *ctx->params = OSSL_PARAM_construct_int(
+                        translation->param_key,
+                        &ctx->p1);
+                    break;
+                case OSSL_PARAM_UNSIGNED_INTEGER:
+                    /*
+                     * BIGNUMs are passed via |p2|.  For all ctrl's that just want
+                     * to pass a simple integer via |p1|, |p2| is expected to be
+                     * NULL.
+                     *
+                     * Note that this allocates a buffer, which the cleanup function
+                     * must deallocate.
+                     */
+                    if (ctx->p2 != NULL) {
+                        if (ctx->action_type == SET) {
+                            ctx->buflen = BN_num_bytes(ctx->p2);
+                            if ((ctx->allocated_buf
+                                     = OPENSSL_malloc(ctx->buflen)) == NULL)
+                                return 0;
+                            if (BN_bn2nativepad(ctx->p2,
+                                                ctx->allocated_buf,
+                                                ctx->buflen) < 0) {
+                                OPENSSL_free(ctx->allocated_buf);
+                                ctx->allocated_buf = NULL;
+                                return 0;
+                            }
+                            *ctx->params =
+                                OSSL_PARAM_construct_BN(translation->param_key,
+                                                        ctx->allocated_buf,
+                                                        ctx->buflen);
+                        } else {
+                            /*
+                             * No support for getting a BIGNUM by ctrl, this needs
+                             * fixup_args function support.
+                             */
+                            ERR_raise_data(ERR_LIB_EVP, ERR_R_UNSUPPORTED,
+                                           "[action:%d, state:%d] trying to get a "
+                                           "BIGNUM via ctrl call",
+                                           ctx->action_type,
+                                           state);
+                            return 0;
+                        }
+                    } else {
+                        *ctx->params =
+                            OSSL_PARAM_construct_uint(translation->param_key,
+                                                      (unsigned int *)&ctx->p1);
+                    }
+                    break;
+                case OSSL_PARAM_UTF8_STRING:
+                    *ctx->params =
+                        OSSL_PARAM_construct_utf8_string(translation->param_key,
+                                                         ctx->p2,
+                                                         (size_t)ctx->p1);
+                    break;
+                case OSSL_PARAM_UTF8_PTR:
+                    *ctx->params =
+                        OSSL_PARAM_construct_utf8_ptr(translation->param_key,
+                                                      ctx->p2, (size_t)ctx->p1);
+                    break;
+                case OSSL_PARAM_OCTET_STRING:
+                    *ctx->params =
+                        OSSL_PARAM_construct_octet_string(
+                            translation->param_key,
+                            ctx->p2,
+                            (size_t)ctx->p1);
+                    break;
+                case OSSL_PARAM_OCTET_PTR:
+                    *ctx->params =
+                        OSSL_PARAM_construct_octet_ptr(translation->param_key,
+                                                       ctx->p2,
+                                                       (size_t)ctx->p1);
+                    break;
+            }
+            break;
+        case POST_CTRL_TO_PARAMS:
+            /*
+             * Because EVP_PKEY_CTX_ctrl() returns the length of certain objects
+             * as its return value, we need to ensure that we do it here as well,
+             * for the OSSL_PARAM data types where this makes sense.
+             */
+            if (ctx->action_type == GET) {
+                switch (translation->param_data_type) {
+                    case OSSL_PARAM_UTF8_STRING:
+                    case OSSL_PARAM_UTF8_PTR:
+                    case OSSL_PARAM_OCTET_STRING:
+                    case OSSL_PARAM_OCTET_PTR:
+                        ctx->p1 = (int)ctx->params[0].return_size;
+                        break;
+                }
+            }
+            break;
+
+        /*
+         * PRE_CTRL_STR_TO_PARAMS and POST_CTRL_STR_TO_PARAMS handle ctrl_str to
+         * params translations.  PRE_CTRL_TO_PARAMS is responsible for preparing
+         * |*params|, and POST_CTRL_TO_PARAMS currently has nothing to do, since
+         * there's no support for getting data via ctrl_str calls.
+         */
+        case PRE_CTRL_STR_TO_PARAMS:
         {
             /* This is ctrl_str to params translation */
             const char *tmp_ctrl_str = ctx->ctrl_str;
@@ -546,8 +554,8 @@ static int default_fixup_args(enum state state,
             /* Only setting is supported here */
             if (ctx->action_type != SET) {
                 ERR_raise_data(ERR_LIB_EVP, EVP_R_COMMAND_NOT_SUPPORTED,
-                                   "[action:%d, state:%d] only setting allowed",
-                                   ctx->action_type, state);
+                               "[action:%d, state:%d] only setting allowed",
+                               ctx->action_type, state);
                 return 0;
             }
 
@@ -587,27 +595,27 @@ static int default_fixup_args(enum state state,
             ctx->buflen = ctx->params->data_size;
         }
         break;
-    case POST_CTRL_STR_TO_PARAMS:
-        /* Nothing to be done */
-        break;
+        case POST_CTRL_STR_TO_PARAMS:
+            /* Nothing to be done */
+            break;
 
-    /*
-     * PRE_PARAMS_TO_CTRL and POST_PARAMS_TO_CTRL handle params to ctrl
-     * translations.  PRE_PARAMS_TO_CTRL is responsible for preparing
-     * |p1| and |p2|, and POST_PARAMS_TO_CTRL is responsible for bringing
-     * the EVP_PKEY_CTX_ctrl() return value (passed as |p1|) and |p2| back
-     * to |*params|.
-     *
-     * PKEY is treated just like POST_PARAMS_TO_CTRL, making it easy
-     * for the related fixup_args functions to just set |p1| and |p2|
-     * appropriately and leave it to this section of code to fix up
-     * |ctx->params| accordingly.
-     */
-    case PKEY:
-    case POST_PARAMS_TO_CTRL:
-        ret = ctx->p1;
+        /*
+         * PRE_PARAMS_TO_CTRL and POST_PARAMS_TO_CTRL handle params to ctrl
+         * translations.  PRE_PARAMS_TO_CTRL is responsible for preparing
+         * |p1| and |p2|, and POST_PARAMS_TO_CTRL is responsible for bringing
+         * the EVP_PKEY_CTX_ctrl() return value (passed as |p1|) and |p2| back
+         * to |*params|.
+         *
+         * PKEY is treated just like POST_PARAMS_TO_CTRL, making it easy
+         * for the related fixup_args functions to just set |p1| and |p2|
+         * appropriately and leave it to this section of code to fix up
+         * |ctx->params| accordingly.
+         */
+        case PKEY:
+        case POST_PARAMS_TO_CTRL:
+            ret = ctx->p1;
         /* FALLTHRU */
-    case PRE_PARAMS_TO_CTRL:
+        case PRE_PARAMS_TO_CTRL:
         {
             /* This is params to ctrl translation */
             if (state == PRE_PARAMS_TO_CTRL && ctx->action_type == SET) {
@@ -615,37 +623,37 @@ static int default_fixup_args(enum state state,
 
                 /* When setting, we populate |p1| and |p2| from |*params| */
                 switch (translation->param_data_type) {
-                case OSSL_PARAM_INTEGER:
-                    return OSSL_PARAM_get_int(ctx->params, &ctx->p1);
-                case OSSL_PARAM_UNSIGNED_INTEGER:
-                    if (ctx->p2 != NULL) {
-                        /* BIGNUM passed down with p2 */
-                        if (!OSSL_PARAM_get_BN(ctx->params, ctx->p2))
-                            return 0;
-                    } else {
-                        /* Normal C unsigned int passed down */
-                        if (!OSSL_PARAM_get_uint(ctx->params,
-                                                 (unsigned int *)&ctx->p1))
-                            return 0;
-                    }
-                    return 1;
-                case OSSL_PARAM_UTF8_STRING:
-                    return OSSL_PARAM_get_utf8_string(ctx->params,
-                                                      ctx->p2, ctx->sz);
-                case OSSL_PARAM_OCTET_STRING:
-                    return OSSL_PARAM_get_octet_string(ctx->params,
-                                                       &ctx->p2, ctx->sz,
-                                                       (size_t *)&ctx->p1);
-                case OSSL_PARAM_OCTET_PTR:
-                    return OSSL_PARAM_get_octet_ptr(ctx->params,
-                                                    ctx->p2, &ctx->sz);
-                default:
-                    ERR_raise_data(ERR_LIB_EVP, ERR_R_UNSUPPORTED,
-                                   "[action:%d, state:%d] "
-                                   "unknown OSSL_PARAM data type %d",
-                                   ctx->action_type, state,
-                                   translation->param_data_type);
-                    return 0;
+                    case OSSL_PARAM_INTEGER:
+                        return OSSL_PARAM_get_int(ctx->params, &ctx->p1);
+                    case OSSL_PARAM_UNSIGNED_INTEGER:
+                        if (ctx->p2 != NULL) {
+                            /* BIGNUM passed down with p2 */
+                            if (!OSSL_PARAM_get_BN(ctx->params, ctx->p2))
+                                return 0;
+                        } else {
+                            /* Normal C unsigned int passed down */
+                            if (!OSSL_PARAM_get_uint(ctx->params,
+                                                     (unsigned int *)&ctx->p1))
+                                return 0;
+                        }
+                        return 1;
+                    case OSSL_PARAM_UTF8_STRING:
+                        return OSSL_PARAM_get_utf8_string(ctx->params,
+                                                          ctx->p2, ctx->sz);
+                    case OSSL_PARAM_OCTET_STRING:
+                        return OSSL_PARAM_get_octet_string(ctx->params,
+                                                           &ctx->p2, ctx->sz,
+                                                           (size_t *)&ctx->p1);
+                    case OSSL_PARAM_OCTET_PTR:
+                        return OSSL_PARAM_get_octet_ptr(ctx->params,
+                                                        ctx->p2, &ctx->sz);
+                    default:
+                        ERR_raise_data(ERR_LIB_EVP, ERR_R_UNSUPPORTED,
+                                       "[action:%d, state:%d] "
+                                       "unknown OSSL_PARAM data type %d",
+                                       ctx->action_type, state,
+                                       translation->param_data_type);
+                        return 0;
                 }
             } else if ((state == POST_PARAMS_TO_CTRL || state == PKEY)
                        && ctx->action_type == GET) {
@@ -665,41 +673,42 @@ static int default_fixup_args(enum state state,
                 }
                 /* When getting, we populate |*params| from |p1| and |p2| */
                 switch (param_data_type) {
-                case OSSL_PARAM_INTEGER:
-                    return OSSL_PARAM_set_int(ctx->params, ctx->p1);
-                case OSSL_PARAM_UNSIGNED_INTEGER:
-                    if (ctx->p2 != NULL) {
-                        /* BIGNUM passed back */
-                        return OSSL_PARAM_set_BN(ctx->params, ctx->p2);
-                    } else {
-                        /* Normal C unsigned int passed back */
-                        return OSSL_PARAM_set_uint(ctx->params,
-                                                   (unsigned int)ctx->p1);
-                    }
-                    return 0;
-                case OSSL_PARAM_UTF8_STRING:
-                    return OSSL_PARAM_set_utf8_string(ctx->params, ctx->p2);
-                case OSSL_PARAM_OCTET_STRING:
-                    return OSSL_PARAM_set_octet_string(ctx->params, ctx->p2,
-                                                       size);
-                case OSSL_PARAM_OCTET_PTR:
-                    return OSSL_PARAM_set_octet_ptr(ctx->params, *(void **)ctx->p2,
-                                                    size);
-                default:
-                    ERR_raise_data(ERR_LIB_EVP, ERR_R_UNSUPPORTED,
-                                   "[action:%d, state:%d] "
-                                   "unsupported OSSL_PARAM data type %d",
-                                   ctx->action_type, state,
-                                   translation->param_data_type);
-                    return 0;
+                    case OSSL_PARAM_INTEGER:
+                        return OSSL_PARAM_set_int(ctx->params, ctx->p1);
+                    case OSSL_PARAM_UNSIGNED_INTEGER:
+                        if (ctx->p2 != NULL) {
+                            /* BIGNUM passed back */
+                            return OSSL_PARAM_set_BN(ctx->params, ctx->p2);
+                        } else {
+                            /* Normal C unsigned int passed back */
+                            return OSSL_PARAM_set_uint(ctx->params,
+                                                       (unsigned int)ctx->p1);
+                        }
+                        return 0;
+                    case OSSL_PARAM_UTF8_STRING:
+                        return OSSL_PARAM_set_utf8_string(ctx->params, ctx->p2);
+                    case OSSL_PARAM_OCTET_STRING:
+                        return OSSL_PARAM_set_octet_string(ctx->params, ctx->p2,
+                                                           size);
+                    case OSSL_PARAM_OCTET_PTR:
+                        return OSSL_PARAM_set_octet_ptr(ctx->params,
+                                                        *(void **)ctx->p2,
+                                                        size);
+                    default:
+                        ERR_raise_data(ERR_LIB_EVP, ERR_R_UNSUPPORTED,
+                                       "[action:%d, state:%d] "
+                                       "unsupported OSSL_PARAM data type %d",
+                                       ctx->action_type, state,
+                                       translation->param_data_type);
+                        return 0;
                 }
             } else if (state == PRE_PARAMS_TO_CTRL && ctx->action_type == GET) {
                 if (translation->param_data_type == OSSL_PARAM_OCTET_PTR)
                     ctx->p2 = &ctx->bufp;
             }
         }
-        /* Any other combination is simply pass-through */
-        break;
+            /* Any other combination is simply pass-through */
+            break;
     }
     return ret;
 }
@@ -913,7 +922,7 @@ static int fix_kdf_type(enum state state,
     } else if (state == PRE_PARAMS_TO_CTRL && ctx->action_type == GET) {
         ctx->p1 = -2;
     }
- end:
+end:
     return ret;
 }
 
@@ -1004,7 +1013,7 @@ static int fix_dh_nid(enum state state,
 
     if (state == PRE_CTRL_TO_PARAMS) {
         if ((ctx->p2 = (char *)ossl_ffc_named_group_get_name
-             (ossl_ffc_uid_to_dh_named_group(ctx->p1))) == NULL) {
+                           (ossl_ffc_uid_to_dh_named_group(ctx->p1))) == NULL) {
             ERR_raise(ERR_LIB_EVP, EVP_R_INVALID_VALUE);
             return 0;
         }
@@ -1029,30 +1038,32 @@ static int fix_dh_nid5114(enum state state,
         return 0;
 
     switch (state) {
-    case PRE_CTRL_TO_PARAMS:
-        if ((ctx->p2 = (char *)ossl_ffc_named_group_get_name
-             (ossl_ffc_uid_to_dh_named_group(ctx->p1))) == NULL) {
-            ERR_raise(ERR_LIB_EVP, EVP_R_INVALID_VALUE);
-            return 0;
-        }
+        case PRE_CTRL_TO_PARAMS:
+            if ((ctx->p2 = (char *)ossl_ffc_named_group_get_name
+                               (ossl_ffc_uid_to_dh_named_group(ctx->p1))) ==
+                NULL) {
+                ERR_raise(ERR_LIB_EVP, EVP_R_INVALID_VALUE);
+                return 0;
+            }
 
-        ctx->p1 = 0;
-        break;
+            ctx->p1 = 0;
+            break;
 
-    case PRE_CTRL_STR_TO_PARAMS:
-        if (ctx->p2 == NULL)
-            return 0;
-        if ((ctx->p2 = (char *)ossl_ffc_named_group_get_name
-             (ossl_ffc_uid_to_dh_named_group(atoi(ctx->p2)))) == NULL) {
-            ERR_raise(ERR_LIB_EVP, EVP_R_INVALID_VALUE);
-            return 0;
-        }
+        case PRE_CTRL_STR_TO_PARAMS:
+            if (ctx->p2 == NULL)
+                return 0;
+            if ((ctx->p2 = (char *)ossl_ffc_named_group_get_name
+                               (ossl_ffc_uid_to_dh_named_group(atoi(ctx->p2))))
+                == NULL) {
+                ERR_raise(ERR_LIB_EVP, EVP_R_INVALID_VALUE);
+                return 0;
+            }
 
-        ctx->p1 = 0;
-        break;
+            ctx->p1 = 0;
+            break;
 
-    default:
-        break;
+        default:
+            break;
     }
 
     return default_fixup_args(state, translation, ctx);
@@ -1074,7 +1085,7 @@ static int fix_dh_paramgen_type(enum state state,
 
     if (state == PRE_CTRL_STR_TO_PARAMS) {
         if ((ctx->p2 = (char *)ossl_dh_gen_type_id2name(atoi(ctx->p2)))
-             == NULL) {
+            == NULL) {
             ERR_raise(ERR_LIB_EVP, EVP_R_INVALID_VALUE);
             return 0;
         }
@@ -1100,15 +1111,15 @@ static int fix_ec_param_enc(enum state state,
 
     if (state == PRE_CTRL_TO_PARAMS) {
         switch (ctx->p1) {
-        case OPENSSL_EC_EXPLICIT_CURVE:
-            ctx->p2 = OSSL_PKEY_EC_ENCODING_EXPLICIT;
-            break;
-        case OPENSSL_EC_NAMED_CURVE:
-            ctx->p2 = OSSL_PKEY_EC_ENCODING_GROUP;
-            break;
-        default:
-            ret = -2;
-            goto end;
+            case OPENSSL_EC_EXPLICIT_CURVE:
+                ctx->p2 = OSSL_PKEY_EC_ENCODING_EXPLICIT;
+                break;
+            case OPENSSL_EC_NAMED_CURVE:
+                ctx->p2 = OSSL_PKEY_EC_ENCODING_GROUP;
+                break;
+            default:
+                ret = -2;
+                goto end;
         }
         ctx->p1 = 0;
     }
@@ -1126,7 +1137,7 @@ static int fix_ec_param_enc(enum state state,
         ctx->p2 = NULL;
     }
 
- end:
+end:
     if (ret == -2)
         ERR_raise(ERR_LIB_EVP, EVP_R_COMMAND_NOT_SUPPORTED);
     return ret;
@@ -1304,12 +1315,13 @@ static int fix_rsa_padding_mode(enum state state,
          * the response from the ctrl function into a string.
          */
         switch (ctx->params->data_type) {
-        case OSSL_PARAM_INTEGER:
-            return OSSL_PARAM_get_int(ctx->params, &ctx->p1);
-        case OSSL_PARAM_UNSIGNED_INTEGER:
-            return OSSL_PARAM_get_uint(ctx->params, (unsigned int *)&ctx->p1);
-        default:
-            break;
+            case OSSL_PARAM_INTEGER:
+                return OSSL_PARAM_get_int(ctx->params, &ctx->p1);
+            case OSSL_PARAM_UNSIGNED_INTEGER:
+                return OSSL_PARAM_get_uint(ctx->params,
+                                           (unsigned int *)&ctx->p1);
+            default:
+                break;
         }
 
         for (i = 0; i < OSSL_NELEM(str_value_map); i++) {
@@ -1395,7 +1407,7 @@ static int fix_rsa_pss_saltlen(enum state state,
         ctx->p2 = ctx->name_buf;
         ctx->p1 = sizeof(ctx->name_buf);
     } else if ((ctx->action_type == SET && state == PRE_CTRL_TO_PARAMS)
-        || (ctx->action_type == GET && state == POST_PARAMS_TO_CTRL)) {
+               || (ctx->action_type == GET && state == POST_PARAMS_TO_CTRL)) {
         size_t i;
 
         for (i = 0; i < OSSL_NELEM(str_value_map); i++) {
@@ -1406,7 +1418,8 @@ static int fix_rsa_pss_saltlen(enum state state,
             BIO_snprintf(ctx->name_buf, sizeof(ctx->name_buf), "%d", ctx->p1);
         } else {
             /* This won't truncate but it will quiet static analysers */
-            strncpy(ctx->name_buf, str_value_map[i].ptr, sizeof(ctx->name_buf) - 1);
+            strncpy(ctx->name_buf, str_value_map[i].ptr,
+                    sizeof(ctx->name_buf) - 1);
             ctx->name_buf[sizeof(ctx->name_buf) - 1] = '\0';
         }
         ctx->p2 = ctx->name_buf;
@@ -1514,7 +1527,7 @@ static int get_payload_group_name(enum state state,
     ctx->p2 = NULL;
     switch (EVP_PKEY_get_base_id(pkey)) {
 #ifndef OPENSSL_NO_DH
-    case EVP_PKEY_DH:
+        case EVP_PKEY_DH:
         {
             const DH *dh = EVP_PKEY_get0_DH(pkey);
             int uid = DH_get_nid(dh);
@@ -1529,7 +1542,7 @@ static int get_payload_group_name(enum state state,
         break;
 #endif
 #ifndef OPENSSL_NO_EC
-    case EVP_PKEY_EC:
+        case EVP_PKEY_EC:
         {
             const EC_GROUP *grp =
                 EC_KEY_get0_group(EVP_PKEY_get0_EC_KEY(pkey));
@@ -1542,9 +1555,9 @@ static int get_payload_group_name(enum state state,
         }
         break;
 #endif
-    default:
-        ERR_raise(ERR_LIB_EVP, EVP_R_UNSUPPORTED_KEY_TYPE);
-        return 0;
+        default:
+            ERR_raise(ERR_LIB_EVP, EVP_R_UNSUPPORTED_KEY_TYPE);
+            return 0;
     }
 
     /*
@@ -1570,7 +1583,7 @@ static int get_payload_private_key(enum state state,
 
     switch (EVP_PKEY_get_base_id(pkey)) {
 #ifndef OPENSSL_NO_DH
-    case EVP_PKEY_DH:
+        case EVP_PKEY_DH:
         {
             const DH *dh = EVP_PKEY_get0_DH(pkey);
 
@@ -1579,7 +1592,7 @@ static int get_payload_private_key(enum state state,
         break;
 #endif
 #ifndef OPENSSL_NO_EC
-    case EVP_PKEY_EC:
+        case EVP_PKEY_EC:
         {
             const EC_KEY *ec = EVP_PKEY_get0_EC_KEY(pkey);
 
@@ -1587,9 +1600,9 @@ static int get_payload_private_key(enum state state,
         }
         break;
 #endif
-    default:
-        ERR_raise(ERR_LIB_EVP, EVP_R_UNSUPPORTED_KEY_TYPE);
-        return 0;
+        default:
+            ERR_raise(ERR_LIB_EVP, EVP_R_UNSUPPORTED_KEY_TYPE);
+            return 0;
     }
 
     return default_fixup_args(state, translation, ctx);
@@ -1606,51 +1619,52 @@ static int get_payload_public_key(enum state state,
     ctx->p2 = NULL;
     switch (EVP_PKEY_get_base_id(pkey)) {
 #ifndef OPENSSL_NO_DH
-    case EVP_PKEY_DHX:
-    case EVP_PKEY_DH:
-        switch (ctx->params->data_type) {
-        case OSSL_PARAM_OCTET_STRING:
-            ctx->sz = ossl_dh_key2buf(EVP_PKEY_get0_DH(pkey), &buf, 0, 1);
-            ctx->p2 = buf;
+        case EVP_PKEY_DHX:
+        case EVP_PKEY_DH:
+            switch (ctx->params->data_type) {
+                case OSSL_PARAM_OCTET_STRING:
+                    ctx->sz =
+                        ossl_dh_key2buf(EVP_PKEY_get0_DH(pkey), &buf, 0, 1);
+                    ctx->p2 = buf;
+                    break;
+                case OSSL_PARAM_UNSIGNED_INTEGER:
+                    ctx->p2 = (void *)DH_get0_pub_key(EVP_PKEY_get0_DH(pkey));
+                    break;
+                default:
+                    return 0;
+            }
             break;
-        case OSSL_PARAM_UNSIGNED_INTEGER:
-            ctx->p2 = (void *)DH_get0_pub_key(EVP_PKEY_get0_DH(pkey));
-            break;
-        default:
-            return 0;
-        }
-        break;
 #endif
 #ifndef OPENSSL_NO_DSA
-    case EVP_PKEY_DSA:
-        if (ctx->params->data_type == OSSL_PARAM_UNSIGNED_INTEGER) {
-            ctx->p2 = (void *)DSA_get0_pub_key(EVP_PKEY_get0_DSA(pkey));
-            break;
-        }
-        return 0;
+        case EVP_PKEY_DSA:
+            if (ctx->params->data_type == OSSL_PARAM_UNSIGNED_INTEGER) {
+                ctx->p2 = (void *)DSA_get0_pub_key(EVP_PKEY_get0_DSA(pkey));
+                break;
+            }
+            return 0;
 #endif
 #ifndef OPENSSL_NO_EC
-    case EVP_PKEY_EC:
-        if (ctx->params->data_type == OSSL_PARAM_OCTET_STRING) {
-            const EC_KEY *eckey = EVP_PKEY_get0_EC_KEY(pkey);
-            BN_CTX *bnctx = BN_CTX_new_ex(ossl_ec_key_get_libctx(eckey));
-            const EC_GROUP *ecg = EC_KEY_get0_group(eckey);
-            const EC_POINT *point = EC_KEY_get0_public_key(eckey);
+        case EVP_PKEY_EC:
+            if (ctx->params->data_type == OSSL_PARAM_OCTET_STRING) {
+                const EC_KEY *eckey = EVP_PKEY_get0_EC_KEY(pkey);
+                BN_CTX *bnctx = BN_CTX_new_ex(ossl_ec_key_get_libctx(eckey));
+                const EC_GROUP *ecg = EC_KEY_get0_group(eckey);
+                const EC_POINT *point = EC_KEY_get0_public_key(eckey);
 
-            if (bnctx == NULL)
-                return 0;
-            ctx->sz = EC_POINT_point2buf(ecg, point,
-                                         POINT_CONVERSION_COMPRESSED,
-                                         &buf, bnctx);
-            ctx->p2 = buf;
-            BN_CTX_free(bnctx);
-            break;
-        }
-        return 0;
+                if (bnctx == NULL)
+                    return 0;
+                ctx->sz = EC_POINT_point2buf(ecg, point,
+                                             POINT_CONVERSION_COMPRESSED,
+                                             &buf, bnctx);
+                ctx->p2 = buf;
+                BN_CTX_free(bnctx);
+                break;
+            }
+            return 0;
 #endif
-    default:
-        ERR_raise(ERR_LIB_EVP, EVP_R_UNSUPPORTED_KEY_TYPE);
-        return 0;
+        default:
+            ERR_raise(ERR_LIB_EVP, EVP_R_UNSUPPORTED_KEY_TYPE);
+            return 0;
     }
 
     ret = default_fixup_args(state, translation, ctx);
@@ -1738,17 +1752,17 @@ static int get_dh_dsa_payload_p(enum state state,
 
     switch (EVP_PKEY_get_base_id(pkey)) {
 #ifndef OPENSSL_NO_DH
-    case EVP_PKEY_DH:
-        bn = DH_get0_p(EVP_PKEY_get0_DH(pkey));
-        break;
+        case EVP_PKEY_DH:
+            bn = DH_get0_p(EVP_PKEY_get0_DH(pkey));
+            break;
 #endif
 #ifndef OPENSSL_NO_DSA
-    case EVP_PKEY_DSA:
-        bn = DSA_get0_p(EVP_PKEY_get0_DSA(pkey));
-        break;
+        case EVP_PKEY_DSA:
+            bn = DSA_get0_p(EVP_PKEY_get0_DSA(pkey));
+            break;
 #endif
-    default:
-        ERR_raise(ERR_LIB_EVP, EVP_R_UNSUPPORTED_KEY_TYPE);
+        default:
+            ERR_raise(ERR_LIB_EVP, EVP_R_UNSUPPORTED_KEY_TYPE);
     }
 
     return get_payload_bn(state, translation, ctx, bn);
@@ -1762,14 +1776,14 @@ static int get_dh_dsa_payload_q(enum state state,
 
     switch (EVP_PKEY_get_base_id(ctx->p2)) {
 #ifndef OPENSSL_NO_DH
-    case EVP_PKEY_DH:
-        bn = DH_get0_q(EVP_PKEY_get0_DH(ctx->p2));
-        break;
+        case EVP_PKEY_DH:
+            bn = DH_get0_q(EVP_PKEY_get0_DH(ctx->p2));
+            break;
 #endif
 #ifndef OPENSSL_NO_DSA
-    case EVP_PKEY_DSA:
-        bn = DSA_get0_q(EVP_PKEY_get0_DSA(ctx->p2));
-        break;
+        case EVP_PKEY_DSA:
+            bn = DSA_get0_q(EVP_PKEY_get0_DSA(ctx->p2));
+            break;
 #endif
     }
 
@@ -1784,14 +1798,14 @@ static int get_dh_dsa_payload_g(enum state state,
 
     switch (EVP_PKEY_get_base_id(ctx->p2)) {
 #ifndef OPENSSL_NO_DH
-    case EVP_PKEY_DH:
-        bn = DH_get0_g(EVP_PKEY_get0_DH(ctx->p2));
-        break;
+        case EVP_PKEY_DH:
+            bn = DH_get0_g(EVP_PKEY_get0_DH(ctx->p2));
+            break;
 #endif
 #ifndef OPENSSL_NO_DSA
-    case EVP_PKEY_DSA:
-        bn = DSA_get0_g(EVP_PKEY_get0_DSA(ctx->p2));
-        break;
+        case EVP_PKEY_DSA:
+            bn = DSA_get0_g(EVP_PKEY_get0_DSA(ctx->p2));
+            break;
 #endif
     }
 
@@ -1820,17 +1834,18 @@ static int get_ec_decoded_from_explicit_params(enum state state,
 
     switch (EVP_PKEY_base_id(pkey)) {
 #ifndef OPENSSL_NO_EC
-    case EVP_PKEY_EC:
-        val = EC_KEY_decoded_from_explicit_params(EVP_PKEY_get0_EC_KEY(pkey));
-        if (val < 0) {
-            ERR_raise(ERR_LIB_EVP, EVP_R_INVALID_KEY);
-            return 0;
-        }
-        break;
+        case EVP_PKEY_EC:
+            val =
+                EC_KEY_decoded_from_explicit_params(EVP_PKEY_get0_EC_KEY(pkey));
+            if (val < 0) {
+                ERR_raise(ERR_LIB_EVP, EVP_R_INVALID_KEY);
+                return 0;
+            }
+            break;
 #endif
-    default:
-        ERR_raise(ERR_LIB_EVP, EVP_R_UNSUPPORTED_KEY_TYPE);
-        return 0;
+        default:
+            ERR_raise(ERR_LIB_EVP, EVP_R_UNSUPPORTED_KEY_TYPE);
+            return 0;
     }
 
     return get_payload_int(state, translation, ctx, val);
@@ -1887,13 +1902,13 @@ static int get_rsa_payload_factor(enum state state,
     const BIGNUM *bn = NULL;
 
     switch (factornum) {
-    case 0:
-        bn = RSA_get0_p(r);
-        break;
-    case 1:
-        bn = RSA_get0_q(r);
-        break;
-    default:
+        case 0:
+            bn = RSA_get0_p(r);
+            break;
+        case 1:
+            bn = RSA_get0_q(r);
+            break;
+        default:
         {
             size_t pnum = RSA_get_multi_prime_extra_count(r);
             const BIGNUM *factors[10];
@@ -1917,13 +1932,13 @@ static int get_rsa_payload_exponent(enum state state,
     const BIGNUM *bn = NULL;
 
     switch (exponentnum) {
-    case 0:
-        bn = RSA_get0_dmp1(r);
-        break;
-    case 1:
-        bn = RSA_get0_dmq1(r);
-        break;
-    default:
+        case 0:
+            bn = RSA_get0_dmp1(r);
+            break;
+        case 1:
+            bn = RSA_get0_dmq1(r);
+            break;
+        default:
         {
             size_t pnum = RSA_get_multi_prime_extra_count(r);
             const BIGNUM *exps[10], *coeffs[10];
@@ -1947,10 +1962,10 @@ static int get_rsa_payload_coefficient(enum state state,
     const BIGNUM *bn = NULL;
 
     switch (coefficientnum) {
-    case 0:
-        bn = RSA_get0_iqmp(r);
-        break;
-    default:
+        case 0:
+            bn = RSA_get0_iqmp(r);
+            break;
+        default:
         {
             size_t pnum = RSA_get_multi_prime_extra_count(r);
             const BIGNUM *exps[10], *coeffs[10];
@@ -1966,42 +1981,42 @@ static int get_rsa_payload_coefficient(enum state state,
 }
 
 #define IMPL_GET_RSA_PAYLOAD_FACTOR(n)                                  \
-    static int                                                          \
-    get_rsa_payload_f##n(enum state state,                              \
-                         const struct translation_st *translation,      \
-                         struct translation_ctx_st *ctx)                \
-    {                                                                   \
-        if (EVP_PKEY_get_base_id(ctx->p2) != EVP_PKEY_RSA               \
-            && EVP_PKEY_get_base_id(ctx->p2) != EVP_PKEY_RSA_PSS)       \
+        static int                                                          \
+        get_rsa_payload_f ## n(enum state state,                              \
+                               const struct translation_st *translation,      \
+                               struct translation_ctx_st *ctx)                \
+        {                                                                   \
+            if (EVP_PKEY_get_base_id(ctx->p2) != EVP_PKEY_RSA               \
+                && EVP_PKEY_get_base_id(ctx->p2) != EVP_PKEY_RSA_PSS)       \
             return 0;                                                   \
-        return get_rsa_payload_factor(state, translation, ctx, n - 1);  \
-    }
+            return get_rsa_payload_factor(state, translation, ctx, n - 1);  \
+        }
 
 #define IMPL_GET_RSA_PAYLOAD_EXPONENT(n)                                \
-    static int                                                          \
-    get_rsa_payload_e##n(enum state state,                              \
-                         const struct translation_st *translation,      \
-                         struct translation_ctx_st *ctx)                \
-    {                                                                   \
-        if (EVP_PKEY_get_base_id(ctx->p2) != EVP_PKEY_RSA               \
-            && EVP_PKEY_get_base_id(ctx->p2) != EVP_PKEY_RSA_PSS)       \
+        static int                                                          \
+        get_rsa_payload_e ## n(enum state state,                              \
+                               const struct translation_st *translation,      \
+                               struct translation_ctx_st *ctx)                \
+        {                                                                   \
+            if (EVP_PKEY_get_base_id(ctx->p2) != EVP_PKEY_RSA               \
+                && EVP_PKEY_get_base_id(ctx->p2) != EVP_PKEY_RSA_PSS)       \
             return 0;                                                   \
-        return get_rsa_payload_exponent(state, translation, ctx,        \
-                                        n - 1);                         \
-    }
+            return get_rsa_payload_exponent(state, translation, ctx,        \
+                                            n - 1);                         \
+        }
 
 #define IMPL_GET_RSA_PAYLOAD_COEFFICIENT(n)                             \
-    static int                                                          \
-    get_rsa_payload_c##n(enum state state,                              \
-                         const struct translation_st *translation,      \
-                         struct translation_ctx_st *ctx)                \
-    {                                                                   \
-        if (EVP_PKEY_get_base_id(ctx->p2) != EVP_PKEY_RSA               \
-            && EVP_PKEY_get_base_id(ctx->p2) != EVP_PKEY_RSA_PSS)       \
+        static int                                                          \
+        get_rsa_payload_c ## n(enum state state,                              \
+                               const struct translation_st *translation,      \
+                               struct translation_ctx_st *ctx)                \
+        {                                                                   \
+            if (EVP_PKEY_get_base_id(ctx->p2) != EVP_PKEY_RSA               \
+                && EVP_PKEY_get_base_id(ctx->p2) != EVP_PKEY_RSA_PSS)       \
             return 0;                                                   \
-        return get_rsa_payload_coefficient(state, translation, ctx,     \
-                                           n - 1);                      \
-    }
+            return get_rsa_payload_coefficient(state, translation, ctx,     \
+                                               n - 1);                      \
+        }
 
 IMPL_GET_RSA_PAYLOAD_FACTOR(1)
 IMPL_GET_RSA_PAYLOAD_FACTOR(2)
@@ -2040,22 +2055,22 @@ static int fix_group_ecx(enum state state,
     const char *value = NULL;
 
     switch (state) {
-    case PRE_PARAMS_TO_CTRL:
-        if (!EVP_PKEY_CTX_IS_GEN_OP(ctx->pctx))
+        case PRE_PARAMS_TO_CTRL:
+            if (!EVP_PKEY_CTX_IS_GEN_OP(ctx->pctx))
+                return 0;
+            ctx->action_type = NONE;
+            return 1;
+        case POST_PARAMS_TO_CTRL:
+            if (OSSL_PARAM_get_utf8_string_ptr(ctx->params, &value) == 0 ||
+                OPENSSL_strcasecmp(ctx->pctx->keytype, value) != 0) {
+                ERR_raise(ERR_LIB_EVP, ERR_R_PASSED_INVALID_ARGUMENT);
+                ctx->p1 = 0;
+                return 0;
+            }
+            ctx->p1 = 1;
+            return 1;
+        default:
             return 0;
-        ctx->action_type = NONE;
-        return 1;
-    case POST_PARAMS_TO_CTRL:
-        if (OSSL_PARAM_get_utf8_string_ptr(ctx->params, &value) == 0 ||
-            OPENSSL_strcasecmp(ctx->pctx->keytype, value) != 0) {
-            ERR_raise(ERR_LIB_EVP, ERR_R_PASSED_INVALID_ARGUMENT);
-            ctx->p1 = 0;
-            return 0;
-        }
-        ctx->p1 = 1;
-        return 1;
-    default:
-        return 0;
     }
 }
 
@@ -2431,7 +2446,8 @@ static const struct translation_st evp_pkey_ctx_translations[] = {
      */
     { SET, EVP_PKEY_X25519, EVP_PKEY_X25519, EVP_PKEY_OP_KEYGEN, -1, NULL, NULL,
       OSSL_PKEY_PARAM_GROUP_NAME, OSSL_PARAM_UTF8_STRING, fix_group_ecx },
-    { SET, EVP_PKEY_X25519, EVP_PKEY_X25519, EVP_PKEY_OP_PARAMGEN, -1, NULL, NULL,
+    { SET, EVP_PKEY_X25519, EVP_PKEY_X25519, EVP_PKEY_OP_PARAMGEN, -1, NULL,
+      NULL,
       OSSL_PKEY_PARAM_GROUP_NAME, OSSL_PARAM_UTF8_STRING, fix_group_ecx },
     { SET, EVP_PKEY_X448, EVP_PKEY_X448, EVP_PKEY_OP_KEYGEN, -1, NULL, NULL,
       OSSL_PKEY_PARAM_GROUP_NAME, OSSL_PARAM_UTF8_STRING, fix_group_ecx },
@@ -2459,11 +2475,11 @@ static const struct translation_st evp_pkey_translations[] = {
       0 /* no data type, let get_payload_public_key() handle that */,
       get_payload_public_key },
     { GET, -1, -1, -1, 0, NULL, NULL,
-        OSSL_PKEY_PARAM_EC_PUB_X, OSSL_PARAM_UNSIGNED_INTEGER,
-        get_payload_public_key_ec },
+      OSSL_PKEY_PARAM_EC_PUB_X, OSSL_PARAM_UNSIGNED_INTEGER,
+      get_payload_public_key_ec },
     { GET, -1, -1, -1, 0, NULL, NULL,
-        OSSL_PKEY_PARAM_EC_PUB_Y, OSSL_PARAM_UNSIGNED_INTEGER,
-        get_payload_public_key_ec },
+      OSSL_PKEY_PARAM_EC_PUB_Y, OSSL_PARAM_UNSIGNED_INTEGER,
+      get_payload_public_key_ec },
 
     /* DH and DSA */
     { GET, -1, -1, -1, 0, NULL, NULL,
@@ -2741,15 +2757,15 @@ int evp_pkey_ctx_ctrl_to_param(EVP_PKEY_CTX *pctx,
 
     if (ret > 0) {
         switch (ctx.action_type) {
-        default:
-            /* fixup_args is expected to make sure this is dead code */
-            break;
-        case GET:
-            ret = evp_pkey_ctx_get_params_strict(pctx, ctx.params);
-            break;
-        case SET:
-            ret = evp_pkey_ctx_set_params_strict(pctx, ctx.params);
-            break;
+            default:
+                /* fixup_args is expected to make sure this is dead code */
+                break;
+            case GET:
+                ret = evp_pkey_ctx_get_params_strict(pctx, ctx.params);
+                break;
+            case SET:
+                ret = evp_pkey_ctx_set_params_strict(pctx, ctx.params);
+                break;
         }
     }
 
@@ -2807,18 +2823,18 @@ int evp_pkey_ctx_ctrl_str_to_param(EVP_PKEY_CTX *pctx,
 
     if (ret > 0) {
         switch (ctx.action_type) {
-        default:
-            /* fixup_args is expected to make sure this is dead code */
-            break;
-        case GET:
-            /*
-             * this is dead code, but must be present, or some compilers
-             * will complain
-             */
-            break;
-        case SET:
-            ret = evp_pkey_ctx_set_params_strict(pctx, ctx.params);
-            break;
+            default:
+                /* fixup_args is expected to make sure this is dead code */
+                break;
+            case GET:
+                /*
+                 * this is dead code, but must be present, or some compilers
+                 * will complain
+                 */
+                break;
+            case SET:
+                ret = evp_pkey_ctx_set_params_strict(pctx, ctx.params);
+                break;
         }
     }
 

@@ -34,7 +34,8 @@ void gf_sub_RAW(gf out, const gf a, const gf b)
     unsigned int i;
 
     for (i = 0; i < NLIMBS; i++)
-        out->limb[i] = a->limb[i] - b->limb[i] + ((i == NLIMBS / 2) ? co2 : co1);
+        out->limb[i] = a->limb[i] - b->limb[i] +
+                       ((i == NLIMBS / 2) ? co2 : co1);
 
     gf_weak_reduce(out);
 }

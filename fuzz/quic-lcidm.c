@@ -18,7 +18,8 @@
 int FuzzerInitialize(int *argc, char ***argv)
 {
     FuzzerSetRand();
-    OPENSSL_init_crypto(OPENSSL_INIT_LOAD_CRYPTO_STRINGS | OPENSSL_INIT_ASYNC, NULL);
+    OPENSSL_init_crypto(OPENSSL_INIT_LOAD_CRYPTO_STRINGS | OPENSSL_INIT_ASYNC,
+                        NULL);
     OPENSSL_init_ssl(OPENSSL_INIT_LOAD_SSL_STRINGS, NULL);
     ERR_clear_error();
     return 1;
@@ -92,80 +93,84 @@ int FuzzerTestOneInput(const uint8_t *buf, size_t len)
             goto err;
 
         switch (cmd) {
-        case CMD_ENROL_ODCID:
-            if (!PACKET_get_net_8(&pkt, &arg_opaque)
-                || !get_cid(&pkt, &arg_cid)) {
+            case CMD_ENROL_ODCID:
+                if (!PACKET_get_net_8(&pkt, &arg_opaque)
+                    || !get_cid(&pkt, &arg_cid)) {
+                    rc = -1;
+                    goto err;
+                }
+
+                ossl_quic_lcidm_enrol_odcid(lcidm,
+                                            (void *)(uintptr_t)arg_opaque,
+                                            &arg_cid);
+                break;
+
+            case CMD_RETIRE_ODCID:
+                if (!PACKET_get_net_8(&pkt, &arg_opaque)) {
+                    rc = -1;
+                    goto err;
+                }
+
+                ossl_quic_lcidm_retire_odcid(lcidm,
+                                             (void *)(uintptr_t)arg_opaque);
+                break;
+
+            case CMD_GENERATE_INITIAL:
+                if (!PACKET_get_net_8(&pkt, &arg_opaque)) {
+                    rc = -1;
+                    goto err;
+                }
+
+                ossl_quic_lcidm_generate_initial(lcidm,
+                                                 (void *)(uintptr_t)arg_opaque,
+                                                 &cid_out);
+                break;
+
+            case CMD_GENERATE:
+                if (!PACKET_get_net_8(&pkt, &arg_opaque)) {
+                    rc = -1;
+                    goto err;
+                }
+
+                ossl_quic_lcidm_generate(lcidm, (void *)(uintptr_t)arg_opaque,
+                                         &ncid_frame);
+                break;
+
+            case CMD_RETIRE:
+                if (!PACKET_get_net_8(&pkt, &arg_opaque)
+                    || !PACKET_get_net_8(&pkt, &arg_retire_prior_to)) {
+                    rc = -1;
+                    goto err;
+                }
+
+                ossl_quic_lcidm_retire(lcidm, (void *)(uintptr_t)arg_opaque,
+                                       arg_retire_prior_to,
+                                       NULL, &cid_out,
+                                       &seq_num_out, &did_retire);
+                break;
+
+            case CMD_CULL:
+                if (!PACKET_get_net_8(&pkt, &arg_opaque)) {
+                    rc = -1;
+                    goto err;
+                }
+
+                ossl_quic_lcidm_cull(lcidm, (void *)(uintptr_t)arg_opaque);
+                break;
+
+            case CMD_LOOKUP:
+                if (!get_cid(&pkt, &arg_cid)) {
+                    rc = -1;
+                    goto err;
+                }
+
+                ossl_quic_lcidm_lookup(lcidm, &arg_cid, &seq_num_out,
+                                       &opaque_out);
+                break;
+
+            default:
                 rc = -1;
                 goto err;
-            }
-
-            ossl_quic_lcidm_enrol_odcid(lcidm, (void *)(uintptr_t)arg_opaque,
-                                        &arg_cid);
-            break;
-
-        case CMD_RETIRE_ODCID:
-            if (!PACKET_get_net_8(&pkt, &arg_opaque)) {
-                rc = -1;
-                goto err;
-            }
-
-            ossl_quic_lcidm_retire_odcid(lcidm, (void *)(uintptr_t)arg_opaque);
-            break;
-
-        case CMD_GENERATE_INITIAL:
-            if (!PACKET_get_net_8(&pkt, &arg_opaque)) {
-                rc = -1;
-                goto err;
-            }
-
-            ossl_quic_lcidm_generate_initial(lcidm, (void *)(uintptr_t)arg_opaque,
-                                             &cid_out);
-            break;
-
-        case CMD_GENERATE:
-            if (!PACKET_get_net_8(&pkt, &arg_opaque)) {
-                rc = -1;
-                goto err;
-            }
-
-            ossl_quic_lcidm_generate(lcidm, (void *)(uintptr_t)arg_opaque,
-                                     &ncid_frame);
-            break;
-
-        case CMD_RETIRE:
-            if (!PACKET_get_net_8(&pkt, &arg_opaque)
-                || !PACKET_get_net_8(&pkt, &arg_retire_prior_to)) {
-                rc = -1;
-                goto err;
-            }
-
-            ossl_quic_lcidm_retire(lcidm, (void *)(uintptr_t)arg_opaque,
-                                   arg_retire_prior_to,
-                                   NULL, &cid_out,
-                                   &seq_num_out, &did_retire);
-            break;
-
-        case CMD_CULL:
-            if (!PACKET_get_net_8(&pkt, &arg_opaque)) {
-                rc = -1;
-                goto err;
-            }
-
-            ossl_quic_lcidm_cull(lcidm, (void *)(uintptr_t)arg_opaque);
-            break;
-
-        case CMD_LOOKUP:
-            if (!get_cid(&pkt, &arg_cid)) {
-                rc = -1;
-                goto err;
-            }
-
-            ossl_quic_lcidm_lookup(lcidm, &arg_cid, &seq_num_out, &opaque_out);
-            break;
-
-        default:
-            rc = -1;
-            goto err;
         }
     }
 

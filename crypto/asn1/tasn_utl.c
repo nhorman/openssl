@@ -82,32 +82,32 @@ int ossl_asn1_do_lock(ASN1_VALUE **pval, int op, const ASN1_ITEM *it)
     refcnt = offset2ptr(*pval, aux->ref_offset);
 
     switch (op) {
-    case 0:
-        if (!CRYPTO_NEW_REF(refcnt, 1))
-            return -1;
-        *lock = CRYPTO_THREAD_lock_new();
-        if (*lock == NULL) {
-            CRYPTO_FREE_REF(refcnt);
-            ERR_raise(ERR_LIB_ASN1, ERR_R_CRYPTO_LIB);
-            return -1;
-        }
-        ret = 1;
-        break;
-    case 1:
-        if (!CRYPTO_UP_REF(refcnt, &ret))
-            return -1;
-        break;
-    case -1:
-        if (!CRYPTO_DOWN_REF(refcnt, &ret))
-            return -1;  /* failed */
-        REF_PRINT_EX(it->sname, ret, (void *)it);
-        REF_ASSERT_ISNT(ret < 0);
-        if (ret == 0) {
-            CRYPTO_THREAD_lock_free(*lock);
-            *lock = NULL;
-            CRYPTO_FREE_REF(refcnt);
-        }
-        break;
+        case 0:
+            if (!CRYPTO_NEW_REF(refcnt, 1))
+                return -1;
+            *lock = CRYPTO_THREAD_lock_new();
+            if (*lock == NULL) {
+                CRYPTO_FREE_REF(refcnt);
+                ERR_raise(ERR_LIB_ASN1, ERR_R_CRYPTO_LIB);
+                return -1;
+            }
+            ret = 1;
+            break;
+        case 1:
+            if (!CRYPTO_UP_REF(refcnt, &ret))
+                return -1;
+            break;
+        case -1:
+            if (!CRYPTO_DOWN_REF(refcnt, &ret))
+                return -1; /* failed */
+            REF_PRINT_EX(it->sname, ret, (void *)it);
+            REF_ASSERT_ISNT(ret < 0);
+            if (ret == 0) {
+                CRYPTO_THREAD_lock_free(*lock);
+                *lock = NULL;
+                CRYPTO_FREE_REF(refcnt);
+            }
+            break;
     }
 
     return ret;
@@ -181,7 +181,8 @@ int ossl_asn1_enc_save(ASN1_VALUE **pval, const unsigned char *in, int inlen,
     return 1;
 }
 
-int ossl_asn1_enc_restore(int *len, unsigned char **out, const ASN1_VALUE **pval,
+int ossl_asn1_enc_restore(int *len, unsigned char **out,
+                          const ASN1_VALUE **pval,
                           const ASN1_ITEM *it)
 {
     const ASN1_ENCODING *enc = asn1_get_const_enc_ptr(pval, it);
@@ -280,7 +281,7 @@ const ASN1_TEMPLATE *ossl_asn1_do_adb(const ASN1_VALUE *val,
         goto err;
     return adb->default_tt;
 
- err:
+err:
     /* FIXME: should log the value or OID of unsupported type */
     if (nullerr)
         ERR_raise(ERR_LIB_ASN1, ASN1_R_UNSUPPORTED_ANY_DEFINED_BY_TYPE);

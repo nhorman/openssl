@@ -10,14 +10,17 @@
 #include <openssl/crypto.h>
 #include <openssl/opensslconf.h>
 
-#if defined(OPENSSL_SYS_WIN32) || defined(OPENSSL_SYS_VXWORKS) || defined(OPENSSL_SYS_UEFI) || defined(__wasi__)
+#if defined(OPENSSL_SYS_WIN32) || defined(OPENSSL_SYS_VXWORKS) || \
+    defined(OPENSSL_SYS_UEFI) || defined(__wasi__)
 
 int OPENSSL_issetugid(void)
 {
     return 0;
 }
 
-#elif defined(__OpenBSD__) || (defined(__FreeBSD__) && __FreeBSD__ > 2) || defined(__DragonFly__) || (defined(__GLIBC__) && defined(__FreeBSD_kernel__))
+#elif defined(__OpenBSD__) || (defined(__FreeBSD__) && __FreeBSD__ > 2) || \
+    defined(__DragonFly__) || (defined(__GLIBC__) && \
+    defined(__FreeBSD_kernel__))
 
 # include <unistd.h>
 

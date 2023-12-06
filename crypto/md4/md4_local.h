@@ -23,20 +23,20 @@ void md4_block_data_order(MD4_CTX *c, const void *p, size_t num);
 #define HASH_TRANSFORM          MD4_Transform
 #define HASH_FINAL              MD4_Final
 #define HASH_MAKE_STRING(c,s)   do {    \
-        unsigned long ll;               \
-        ll=(c)->A; (void)HOST_l2c(ll,(s));      \
-        ll=(c)->B; (void)HOST_l2c(ll,(s));      \
-        ll=(c)->C; (void)HOST_l2c(ll,(s));      \
-        ll=(c)->D; (void)HOST_l2c(ll,(s));      \
-        } while (0)
+            unsigned long ll;               \
+            ll=(c)->A; (void)HOST_l2c(ll,(s));      \
+            ll=(c)->B; (void)HOST_l2c(ll,(s));      \
+            ll=(c)->C; (void)HOST_l2c(ll,(s));      \
+            ll=(c)->D; (void)HOST_l2c(ll,(s));      \
+} while (0)
 #define HASH_BLOCK_DATA_ORDER   md4_block_data_order
 
 #include "crypto/md32_common.h"
 
 /*-
-#define F(x,y,z)        (((x) & (y))  |  ((~(x)) & (z)))
-#define G(x,y,z)        (((x) & (y))  |  ((x) & ((z))) | ((y) & ((z))))
-*/
+ #define F(x,y,z)        (((x) & (y))  |  ((~(x)) & (z)))
+ #define G(x,y,z)        (((x) & (y))  |  ((x) & ((z))) | ((y) & ((z))))
+ */
 
 /*
  * As pointed out by Wei Dai, the above can be simplified to the code
@@ -48,13 +48,13 @@ void md4_block_data_order(MD4_CTX *c, const void *p, size_t num);
 #define H(b,c,d)        ((b) ^ (c) ^ (d))
 
 #define R0(a,b,c,d,k,s,t) { \
-        a+=((k)+(t)+F((b),(c),(d))); \
-        a=ROTATE(a,s); };
+            a+=((k)+(t)+F((b),(c),(d))); \
+            a=ROTATE(a,s); };
 
 #define R1(a,b,c,d,k,s,t) { \
-        a+=((k)+(t)+G((b),(c),(d))); \
-        a=ROTATE(a,s); };
+            a+=((k)+(t)+G((b),(c),(d))); \
+            a=ROTATE(a,s); };
 
 #define R2(a,b,c,d,k,s,t) { \
-        a+=((k)+(t)+H((b),(c),(d))); \
-        a=ROTATE(a,s); };
+            a+=((k)+(t)+H((b),(c),(d))); \
+            a=ROTATE(a,s); };

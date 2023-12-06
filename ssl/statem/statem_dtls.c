@@ -22,27 +22,31 @@
 #define RSMBLY_BITMASK_SIZE(msg_len) (((msg_len) + 7) / 8)
 
 #define RSMBLY_BITMASK_MARK(bitmask, start, end) { \
-                        if ((end) - (start) <= 8) { \
-                                long ii; \
-                                for (ii = (start); ii < (end); ii++) bitmask[((ii) >> 3)] |= (1 << ((ii) & 7)); \
-                        } else { \
-                                long ii; \
-                                bitmask[((start) >> 3)] |= bitmask_start_values[((start) & 7)]; \
-                                for (ii = (((start) >> 3) + 1); ii < ((((end) - 1)) >> 3); ii++) bitmask[ii] = 0xff; \
-                                bitmask[(((end) - 1) >> 3)] |= bitmask_end_values[((end) & 7)]; \
-                        } }
+            if ((end) - (start) <= 8) { \
+                long ii; \
+                for (ii = (start); ii < (end); \
+                     ii++) bitmask[((ii) >> 3)] |= (1 << ((ii) & 7)); \
+            } else { \
+                long ii; \
+                bitmask[((start) >> 3)] |= bitmask_start_values[((start) & 7)]; \
+                for (ii = (((start) >> 3) + 1); ii < ((((end) - 1)) >> 3); \
+                     ii++) bitmask[ii] = 0xff; \
+                bitmask[(((end) - 1) >> 3)] |= bitmask_end_values[((end) & 7)]; \
+            } }
 
 #define RSMBLY_BITMASK_IS_COMPLETE(bitmask, msg_len, is_complete) { \
-                        long ii; \
-                        is_complete = 1; \
-                        if (bitmask[(((msg_len) - 1) >> 3)] != bitmask_end_values[((msg_len) & 7)]) is_complete = 0; \
-                        if (is_complete) for (ii = (((msg_len) - 1) >> 3) - 1; ii >= 0 ; ii--) \
-                                if (bitmask[ii] != 0xff) { is_complete = 0; break; } }
+            long ii; \
+            is_complete = 1; \
+            if (bitmask[(((msg_len) - 1) >> 3)] != \
+                bitmask_end_values[((msg_len) & 7)]) is_complete = 0; \
+            if (is_complete) for (ii = (((msg_len) - 1) >> 3) - 1; ii >= 0 ; \
+                                  ii--) \
+            if (bitmask[ii] != 0xff) { is_complete = 0; break; } }
 
 static const unsigned char bitmask_start_values[] =
-    { 0xff, 0xfe, 0xfc, 0xf8, 0xf0, 0xe0, 0xc0, 0x80 };
+{ 0xff, 0xfe, 0xfc, 0xf8, 0xf0, 0xe0, 0xc0, 0x80 };
 static const unsigned char bitmask_end_values[] =
-    { 0xff, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f };
+{ 0xff, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f };
 
 static void dtls1_fix_message_header(SSL_CONNECTION *s, size_t frag_off,
                                      size_t frag_len);
@@ -329,10 +333,10 @@ int dtls_get_message(SSL_CONNECTION *s, int *mt)
     msg_hdr = &s->d1->r_msg_hdr;
     memset(msg_hdr, 0, sizeof(*msg_hdr));
 
- again:
+again:
     if (!dtls_get_reassembled_message(s, &errtype, &tmplen)) {
         if (errtype == DTLS1_HM_BAD_FRAGMENT
-                || errtype == DTLS1_HM_FRAGMENT_RETRY) {
+            || errtype == DTLS1_HM_FRAGMENT_RETRY) {
             /* bad fragment received */
             goto again;
         }
@@ -409,7 +413,7 @@ int dtls_get_message_body(SSL_CONNECTION *s, size_t *len)
                         s->init_buf->data, s->init_num + DTLS1_HM_HEADER_LENGTH,
                         SSL_CONNECTION_GET_SSL(s), s->msg_callback_arg);
 
- end:
+end:
     *len = s->init_num;
     return 1;
 }
@@ -438,7 +442,7 @@ static int dtls1_preprocess_fragment(SSL_CONNECTION *s,
 
     /* sanity checking */
     if ((frag_off + frag_len) > msg_len
-            || msg_len > dtls1_max_handshake_message_len(s)) {
+        || msg_len > dtls1_max_handshake_message_len(s)) {
         SSLfatal(s, SSL_AD_ILLEGAL_PARAMETER, SSL_R_EXCESSIVE_MESSAGE_SIZE);
         return 0;
     }
@@ -448,7 +452,8 @@ static int dtls1_preprocess_fragment(SSL_CONNECTION *s,
          * msg_len is limited to 2^24, but is effectively checked against
          * dtls_max_handshake_message_len(s) above
          */
-        if (!BUF_MEM_grow_clean(s->init_buf, msg_len + DTLS1_HM_HEADER_LENGTH)) {
+        if (!BUF_MEM_grow_clean(s->init_buf,
+                                msg_len + DTLS1_HM_HEADER_LENGTH)) {
             SSLfatal(s, SSL_AD_INTERNAL_ERROR, ERR_R_BUF_LIB);
             return 0;
         }
@@ -501,9 +506,9 @@ static int dtls1_retrieve_buffered_fragment(SSL_CONNECTION *s, size_t *len)
             hm_fragment *nextfrag;
 
             if (!s->server
-                    || frag->msg_header.seq != 0
-                    || s->d1->handshake_read_seq != 1
-                    || s->statem.hand_state != DTLS_ST_SW_HELLO_VERIFY_REQUEST) {
+                || frag->msg_header.seq != 0
+                || s->d1->handshake_read_seq != 1
+                || s->statem.hand_state != DTLS_ST_SW_HELLO_VERIFY_REQUEST) {
                 /*
                  * This is a stale message that has been buffered so clear it.
                  * It is safe to pop this message from the queue even though
@@ -526,9 +531,9 @@ static int dtls1_retrieve_buffered_fragment(SSL_CONNECTION *s, size_t *len)
                     nextfrag = (hm_fragment *)next->data;
                     if (nextfrag->msg_header.seq == s->d1->handshake_read_seq) {
                         /*
-                        * We have fragments for both a ClientHello without
-                        * cookie and one with. Ditch the one without.
-                        */
+                         * We have fragments for both a ClientHello without
+                         * cookie and one with. Ditch the one without.
+                         */
                         pqueue_pop(s->d1->buffered_messages);
                         dtls1_hm_fragment_free(frag);
                         pitem_free(item);
@@ -692,7 +697,7 @@ static int dtls1_reassemble_fragment(SSL_CONNECTION *s,
 
     return DTLS1_HM_FRAGMENT_RETRY;
 
- err:
+err:
     if (item == NULL)
         dtls1_hm_fragment_free(frag);
     return -1;
@@ -791,7 +796,7 @@ static int dtls1_process_out_of_seq_message(SSL_CONNECTION *s,
 
     return DTLS1_HM_FRAGMENT_RETRY;
 
- err:
+err:
     if (item == NULL)
         dtls1_hm_fragment_free(frag);
     return 0;
@@ -811,7 +816,7 @@ static int dtls_get_reassembled_message(SSL_CONNECTION *s, int *errtype,
 
     *errtype = 0;
 
- redo:
+redo:
     /* see if we have the required fragment already */
     ret = dtls1_retrieve_buffered_fragment(s, &frag_len);
     if (ret < 0) {
@@ -878,10 +883,10 @@ static int dtls_get_reassembled_message(SSL_CONNECTION *s, int *errtype,
      */
     if (msg_hdr.seq != s->d1->handshake_read_seq) {
         if (!s->server
-                || msg_hdr.seq != 0
-                || s->d1->handshake_read_seq != 1
-                || wire[0] != SSL3_MT_CLIENT_HELLO
-                || s->statem.hand_state != DTLS_ST_SW_HELLO_VERIFY_REQUEST) {
+            || msg_hdr.seq != 0
+            || s->d1->handshake_read_seq != 1
+            || wire[0] != SSL3_MT_CLIENT_HELLO
+            || s->statem.hand_state != DTLS_ST_SW_HELLO_VERIFY_REQUEST) {
             *errtype = dtls1_process_out_of_seq_message(s, &msg_hdr);
             return 0;
         }
@@ -899,9 +904,9 @@ static int dtls_get_reassembled_message(SSL_CONNECTION *s, int *errtype,
     }
 
     if (!s->server
-            && s->d1->r_msg_hdr.frag_off == 0
-            && s->statem.hand_state != TLS_ST_OK
-            && wire[0] == SSL3_MT_HELLO_REQUEST) {
+        && s->d1->r_msg_hdr.frag_off == 0
+        && s->statem.hand_state != TLS_ST_OK
+        && wire[0] == SSL3_MT_HELLO_REQUEST) {
         /*
          * The server may always send 'Hello Request' messages -- we are
          * doing a handshake anyway now, so ignore them if their format is
@@ -976,7 +981,7 @@ static int dtls_get_reassembled_message(SSL_CONNECTION *s, int *errtype,
     *len = s->init_num = frag_len;
     return 1;
 
- f_err:
+f_err:
     s->init_num = 0;
     *len = 0;
     return 0;
@@ -1099,8 +1104,8 @@ int dtls1_retransmit_buffered_messages(SSL_CONNECTION *s)
         frag = (hm_fragment *)item->data;
         if (dtls1_retransmit_message(s, (unsigned short)
                                      dtls1_get_queue_priority
-                                     (frag->msg_header.seq,
-                                      frag->msg_header.is_ccs), &found) <= 0)
+                                         (frag->msg_header.seq,
+                                         frag->msg_header.is_ccs), &found) <= 0)
             return -1;
     }
 
@@ -1324,7 +1329,7 @@ int dtls1_set_handshake_header(SSL_CONNECTION *s, WPACKET *pkt, int htype)
          * filled in later
          */
         if (!WPACKET_allocate_bytes(pkt, DTLS1_HM_HEADER_LENGTH, &header)
-                || !WPACKET_start_sub_packet(pkt))
+            || !WPACKET_start_sub_packet(pkt))
             return 0;
     }
 
@@ -1336,8 +1341,8 @@ int dtls1_close_construct_packet(SSL_CONNECTION *s, WPACKET *pkt, int htype)
     size_t msglen;
 
     if ((htype != SSL3_MT_CHANGE_CIPHER_SPEC && !WPACKET_close(pkt))
-            || !WPACKET_get_length(pkt, &msglen)
-            || msglen > INT_MAX)
+        || !WPACKET_get_length(pkt, &msglen)
+        || msglen > INT_MAX)
         return 0;
 
     if (htype != SSL3_MT_CHANGE_CIPHER_SPEC) {

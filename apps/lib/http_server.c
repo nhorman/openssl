@@ -34,18 +34,20 @@
 
 #define HTTP_PREFIX "HTTP/"
 #define HTTP_VERSION_PATT "1." /* allow 1.x */
-#define HTTP_PREFIX_VERSION HTTP_PREFIX""HTTP_VERSION_PATT
-#define HTTP_1_0 HTTP_PREFIX_VERSION"0" /* "HTTP/1.0" */
+#define HTTP_PREFIX_VERSION HTTP_PREFIX ""HTTP_VERSION_PATT
+#define HTTP_1_0 HTTP_PREFIX_VERSION "0" /* "HTTP/1.0" */
 #define HTTP_VERSION_STR " "HTTP_PREFIX_VERSION
 
 #define log_HTTP(prog, level, text) \
-    trace_log_message(OSSL_TRACE_CATEGORY_HTTP, prog, level, "%s", text)
+        trace_log_message(OSSL_TRACE_CATEGORY_HTTP, prog, level, "%s", text)
 #define log_HTTP1(prog, level, fmt, arg) \
-    trace_log_message(OSSL_TRACE_CATEGORY_HTTP, prog, level, fmt, arg)
+        trace_log_message(OSSL_TRACE_CATEGORY_HTTP, prog, level, fmt, arg)
 #define log_HTTP2(prog, level, fmt, arg1, arg2) \
-    trace_log_message(OSSL_TRACE_CATEGORY_HTTP, prog, level, fmt, arg1, arg2)
+        trace_log_message(OSSL_TRACE_CATEGORY_HTTP, prog, level, fmt, arg1, \
+                          arg2)
 #define log_HTTP3(prog, level, fmt, a1, a2, a3)                        \
-    trace_log_message(OSSL_TRACE_CATEGORY_HTTP, prog, level, fmt, a1, a2, a3)
+        trace_log_message(OSSL_TRACE_CATEGORY_HTTP, prog, level, fmt, a1, a2, \
+                          a3)
 
 #ifdef HTTP_DAEMON
 int n_responders = 0; /* run multiple responder processes, set by ocsp.c */
@@ -154,35 +156,35 @@ void spawn_loop(const char *prog)
             break;
 
         switch (fpid = fork()) {
-        case -1: /* error */
-            /* System critically low on memory, pause and try again later */
-            OSSL_sleep(30000);
-            break;
-        case 0: /* child */
-            OPENSSL_free(kidpids);
-            signal(SIGINT, SIG_DFL);
-            signal(SIGTERM, SIG_DFL);
-            if (termsig)
-                _exit(0);
-            if (RAND_poll() <= 0) {
-                log_HTTP(prog, LOG_CRIT, "RAND_poll() failed");
-                _exit(1);
-            }
-            return;
-        default:            /* parent */
-            for (i = 0; i < n_responders; ++i) {
-                if (kidpids[i] == 0) {
-                    kidpids[i] = fpid;
-                    procs++;
-                    break;
+            case -1: /* error */
+                /* System critically low on memory, pause and try again later */
+                OSSL_sleep(30000);
+                break;
+            case 0: /* child */
+                OPENSSL_free(kidpids);
+                signal(SIGINT, SIG_DFL);
+                signal(SIGTERM, SIG_DFL);
+                if (termsig)
+                    _exit(0);
+                if (RAND_poll() <= 0) {
+                    log_HTTP(prog, LOG_CRIT, "RAND_poll() failed");
+                    _exit(1);
                 }
-            }
-            if (i >= n_responders) {
-                log_HTTP(prog, LOG_CRIT,
-                         "internal error: no free child slots");
-                killall(1, kidpids);
-            }
-            break;
+                return;
+            default:        /* parent */
+                for (i = 0; i < n_responders; ++i) {
+                    if (kidpids[i] == 0) {
+                        kidpids[i] = fpid;
+                        procs++;
+                        break;
+                    }
+                }
+                if (i >= n_responders) {
+                    log_HTTP(prog, LOG_CRIT,
+                             "internal error: no free child slots");
+                    killall(1, kidpids);
+                }
+                break;
         }
     }
 
@@ -231,7 +233,7 @@ BIO *http_server_init(const char *prog, const char *port, int verb)
 
     return acbio;
 
- err:
+err:
     ERR_print_errors(bio_err);
     BIO_free_all(acbio);
     BIO_free(bufbio);
@@ -252,7 +254,7 @@ static int urldecode(char *p)
         } else if (isxdigit(_UC(p[1])) && isxdigit(_UC(p[2]))) {
             /* Don't check, can't fail because of ixdigit() call. */
             *out++ = (OPENSSL_hexchar2int(p[1]) << 4)
-                | OPENSSL_hexchar2int(p[2]);
+                     | OPENSSL_hexchar2int(p[2]);
             p += 2;
         } else {
             return -1;
@@ -325,7 +327,7 @@ int http_server_get_asn1_req(const ASN1_ITEM *it, ASN1_VALUE **preq,
     }
 
     if (((end = strchr(reqbuf, '\r')) != NULL && end[1] == '\n')
-            || (end = strchr(reqbuf, '\n')) != NULL)
+        || (end = strchr(reqbuf, '\n')) != NULL)
         *end = '\0';
     if (log_get_verbosity() < LOG_TRACE)
         trace_log_message(-1, prog, LOG_INFO,
@@ -341,7 +343,7 @@ int http_server_get_asn1_req(const ASN1_ITEM *it, ASN1_VALUE **preq,
 
     url = meth = reqbuf;
     if ((accept_get && CHECK_AND_SKIP_PREFIX(url, "GET "))
-            || CHECK_AND_SKIP_PREFIX(url, "POST ")) {
+        || CHECK_AND_SKIP_PREFIX(url, "POST ")) {
 
         /* Expecting (GET|POST) {sp} /URL {sp} HTTP/1.x */
         url[-1] = '\0';
@@ -482,7 +484,7 @@ int http_server_get_asn1_req(const ASN1_ITEM *it, ASN1_VALUE **preq,
 
     *preq = req;
 
- out:
+out:
     BIO_free_all(getbio);
 # ifdef HTTP_DAEMON
     if (timeout > 0)
@@ -491,7 +493,7 @@ int http_server_get_asn1_req(const ASN1_ITEM *it, ASN1_VALUE **preq,
 # endif
     return ret;
 
- fatal:
+fatal:
     (void)http_server_send_status(prog, cbio, 500, "Internal Server Error");
     if (ppath != NULL) {
         OPENSSL_free(*ppath);
@@ -509,7 +511,7 @@ int http_server_send_asn1_resp(const char *prog, BIO *cbio, int keep_alive,
                                const ASN1_ITEM *it, const ASN1_VALUE *resp)
 {
     char buf[200], *p;
-    int ret = BIO_snprintf(buf, sizeof(buf), HTTP_1_0" 200 OK\r\n%s"
+    int ret = BIO_snprintf(buf, sizeof(buf), HTTP_1_0 " 200 OK\r\n%s"
                            "Content-type: %s\r\n"
                            "Content-Length: %d\r\n",
                            keep_alive ? "Connection: keep-alive\r\n" : "",
@@ -525,7 +527,7 @@ int http_server_send_asn1_resp(const char *prog, BIO *cbio, int keep_alive,
     log_HTTP1(prog, LOG_TRACE, "sending response header:\n%s", buf);
 
     ret = BIO_printf(cbio, "%s\r\n", buf) > 0
-        && ASN1_item_i2d_bio(it, cbio, resp) > 0;
+          && ASN1_item_i2d_bio(it, cbio, resp) > 0;
 
     (void)BIO_flush(cbio);
     return ret;
@@ -535,7 +537,7 @@ int http_server_send_status(const char *prog, BIO *cbio,
                             int status, const char *reason)
 {
     char buf[200];
-    int ret = BIO_snprintf(buf, sizeof(buf), HTTP_1_0" %d %s\r\n\r\n",
+    int ret = BIO_snprintf(buf, sizeof(buf), HTTP_1_0 " %d %s\r\n\r\n",
                            /* This implicitly cancels keep-alive */
                            status, reason);
 

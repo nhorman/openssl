@@ -43,7 +43,7 @@ int PKCS12_key_gen_asc(const char *pass, int passlen, unsigned char *salt,
                        unsigned char *out, const EVP_MD *md_type)
 {
     return PKCS12_key_gen_asc_ex(pass, passlen, salt, saltlen, id, iter, n,
-                                  out, md_type, NULL, NULL);    
+                                 out, md_type, NULL, NULL);
 }
 
 int PKCS12_key_gen_utf8_ex(const char *pass, int passlen, unsigned char *salt,
@@ -109,7 +109,8 @@ int PKCS12_key_gen_uni_ex(unsigned char *pass, int passlen, unsigned char *salt,
     *p = OSSL_PARAM_construct_end();
 
     OSSL_TRACE_BEGIN(PKCS12_KEYGEN) {
-        BIO_printf(trc_out, "PKCS12_key_gen_uni_ex(): ID %d, ITER %d\n", id, iter);
+        BIO_printf(trc_out, "PKCS12_key_gen_uni_ex(): ID %d, ITER %d\n", id,
+                   iter);
         BIO_printf(trc_out, "Password (length %d):\n", passlen);
         BIO_hex_string(trc_out, 0, passlen, pass, passlen);
         BIO_printf(trc_out, "\n");
@@ -134,5 +135,6 @@ int PKCS12_key_gen_uni(unsigned char *pass, int passlen, unsigned char *salt,
                        int saltlen, int id, int iter, int n,
                        unsigned char *out, const EVP_MD *md_type)
 {
-    return PKCS12_key_gen_uni_ex(pass, passlen, salt, saltlen, id, iter, n, out, md_type, NULL, NULL);
+    return PKCS12_key_gen_uni_ex(pass, passlen, salt, saltlen, id, iter, n, out,
+                                 md_type, NULL, NULL);
 }

@@ -44,7 +44,7 @@ static long bio_call_callback(BIO *b, int oper, const char *argp, size_t len,
 
     if (b->callback_ex != NULL)
 #endif
-        return b->callback_ex(b, oper, argp, len, argi, argl, inret, processed);
+    return b->callback_ex(b, oper, argp, len, argi, argl, inret, processed);
 
 #ifndef OPENSSL_NO_DEPRECATED_3_0
     /* Strip off any BIO_CB_RETURN flag */
@@ -388,7 +388,7 @@ int BIO_write(BIO *b, const void *data, int dlen)
 int BIO_write_ex(BIO *b, const void *data, size_t dlen, size_t *written)
 {
     return bio_write_intern(b, data, dlen, written) > 0
-        || (b != NULL && dlen == 0); /* order is important for *written */
+           || (b != NULL && dlen == 0); /* order is important for *written */
 }
 
 int BIO_sendmmsg(BIO *b, BIO_MSG *msg,
@@ -690,7 +690,7 @@ long BIO_callback_ctrl(BIO *b, int cmd, BIO_info_cb *fp)
     if (b == NULL)
         return -2;
     if (b->method == NULL || b->method->callback_ctrl == NULL
-            || cmd != BIO_CTRL_SET_CALLBACK) {
+        || cmd != BIO_CTRL_SET_CALLBACK) {
         ERR_raise(ERR_LIB_BIO, BIO_R_UNSUPPORTED_METHOD);
         return -2;
     }
@@ -902,7 +902,7 @@ BIO *BIO_dup_chain(BIO *in)
         }
     }
     return ret;
- err:
+err:
     BIO_free_all(ret);
 
     return NULL;
@@ -1027,7 +1027,7 @@ int BIO_do_connect_retry(BIO *bio, int timeout, int nap_milliseconds)
         nap_milliseconds = 100;
     BIO_set_nbio(bio, !blocking);
 
- retry:
+retry:
     ERR_set_mark();
     rv = BIO_do_connect(bio);
 
@@ -1038,21 +1038,21 @@ int BIO_do_connect_retry(BIO *bio, int timeout, int nap_milliseconds)
 
         if (ERR_GET_LIB(err) == ERR_LIB_BIO) {
             switch (reason) {
-            case ERR_R_SYS_LIB:
+                case ERR_R_SYS_LIB:
                 /*
                  * likely retryable system error occurred, which may be
                  * EAGAIN (resource temporarily unavailable) some 40 secs after
                  * calling getaddrinfo(): Temporary failure in name resolution
                  * or a premature ETIMEDOUT, some 30 seconds after connect()
                  */
-            case BIO_R_CONNECT_ERROR:
-            case BIO_R_NBIO_CONNECT_ERROR:
-                /* some likely retryable connection error occurred */
-                (void)BIO_reset(bio); /* often needed to avoid retry failure */
-                do_retry = 1;
-                break;
-            default:
-                break;
+                case BIO_R_CONNECT_ERROR:
+                case BIO_R_NBIO_CONNECT_ERROR:
+                    /* some likely retryable connection error occurred */
+                    (void)BIO_reset(bio); /* often needed to avoid retry failure */
+                    do_retry = 1;
+                    break;
+                default:
+                    break;
             }
         }
         if (timeout >= 0 && do_retry) {

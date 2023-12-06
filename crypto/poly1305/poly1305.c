@@ -91,8 +91,8 @@ poly1305_blocks(void *ctx, const unsigned char *inp, size_t len, u32 padbit);
  * Type-agnostic "rip-off" from constant_time.h
  */
 # define CONSTANT_TIME_CARRY(a,b) ( \
-         (a ^ ((a ^ b) | ((a - b) ^ b))) >> (sizeof(a) * 8 - 1) \
-         )
+            (a ^ ((a ^ b) | ((a - b) ^ b))) >> (sizeof(a) * 8 - 1) \
+                                  )
 
 # if defined(INT64_MAX) && defined(INT128_MAX)
 

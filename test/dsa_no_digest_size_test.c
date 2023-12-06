@@ -101,8 +101,8 @@ static DSA *load_dsa_params(void)
     if (dsa == NULL)
         return NULL;
     if (!DSA_set0_pqg(dsa, p = BN_bin2bn(dsap_2048, sizeof(dsap_2048), NULL),
-                           q = BN_bin2bn(dsaq_2048, sizeof(dsaq_2048), NULL),
-                           g = BN_bin2bn(dsag_2048, sizeof(dsag_2048), NULL))) {
+                      q = BN_bin2bn(dsaq_2048, sizeof(dsaq_2048), NULL),
+                      g = BN_bin2bn(dsag_2048, sizeof(dsag_2048), NULL))) {
         DSA_free(dsa);
         BN_free(p);
         BN_free(q);
@@ -184,7 +184,8 @@ static int sign_and_verify(int len)
     }
 
     /* ... padding/truncating the data to the appropriate digest size */
-    if (EVP_PKEY_verify(ctx, signature, sigLength, paddedData, digestlen) != 1) {
+    if (EVP_PKEY_verify(ctx, signature, sigLength, paddedData,
+                        digestlen) != 1) {
         TEST_error("EVP verify with length %d failed\n", len);
         goto end;
     }
@@ -195,7 +196,8 @@ static int sign_and_verify(int len)
         goto end;
     }
 
-    if (DSA_verify(0, paddedData, digestlen, signature, sigLength, dsakey) != 1) {
+    if (DSA_verify(0, paddedData, digestlen, signature, sigLength,
+                   dsakey) != 1) {
         TEST_error("verify with length %d failed\n", len);
         goto end;
     }

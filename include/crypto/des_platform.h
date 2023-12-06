@@ -17,7 +17,7 @@
 #  include "crypto/sparc_arch.h"
 
 #  ifndef OPENSSL_NO_DES
-#   define SPARC_DES_CAPABLE      (OPENSSL_sparcv9cap_P[1] & CFR_DES)
+#   define SPARC_DES_CAPABLE      (OPENSSL_sparcv9cap_P[1] &CFR_DES)
 #   include <openssl/des.h>
 void des_t4_key_expand(const void *key, DES_key_schedule *ks);
 void des_t4_ede3_cbc_encrypt(const void *inp, void *out, size_t len,

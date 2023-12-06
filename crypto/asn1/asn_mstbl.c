@@ -94,7 +94,7 @@ static int do_tcreate(const char *value, const char *name)
             goto err;
     }
     rv = 1;
- err:
+err:
     if (rv == 0) {
         if (cnf)
             ERR_raise_data(ERR_LIB_ASN1, ASN1_R_INVALID_STRING_TABLE_VALUE,

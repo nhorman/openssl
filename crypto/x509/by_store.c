@@ -72,14 +72,14 @@ static int cache_objects(X509_LOOKUP *lctx, const char *uri,
              * to get them.
              */
             switch (infotype) {
-            case OSSL_STORE_INFO_CERT:
-                ok = X509_STORE_add_cert(xstore,
-                                         OSSL_STORE_INFO_get0_CERT(info));
-                break;
-            case OSSL_STORE_INFO_CRL:
-                ok = X509_STORE_add_crl(xstore,
-                                        OSSL_STORE_INFO_get0_CRL(info));
-                break;
+                case OSSL_STORE_INFO_CERT:
+                    ok = X509_STORE_add_cert(xstore,
+                                             OSSL_STORE_INFO_get0_CERT(info));
+                    break;
+                case OSSL_STORE_INFO_CRL:
+                    ok = X509_STORE_add_crl(xstore,
+                                            OSSL_STORE_INFO_get0_CRL(info));
+                    break;
             }
         }
 
@@ -110,30 +110,31 @@ static int by_store_ctrl_ex(X509_LOOKUP *ctx, int cmd, const char *argp,
                             const char *propq)
 {
     switch (cmd) {
-    case X509_L_ADD_STORE:
-        /* If no URI is given, use the default cert dir as default URI */
-        if (argp == NULL)
-            argp = ossl_safe_getenv(X509_get_default_cert_dir_env());
+        case X509_L_ADD_STORE:
+            /* If no URI is given, use the default cert dir as default URI */
+            if (argp == NULL)
+                argp = ossl_safe_getenv(X509_get_default_cert_dir_env());
 
-        if (argp == NULL)
-            argp = X509_get_default_cert_dir();
+            if (argp == NULL)
+                argp = X509_get_default_cert_dir();
 
-        {
-            STACK_OF(OPENSSL_STRING) *uris = X509_LOOKUP_get_method_data(ctx);
-            char *data = OPENSSL_strdup(argp);
+            {
+                STACK_OF(OPENSSL_STRING) *
+                uris = X509_LOOKUP_get_method_data(ctx);
+                char *data = OPENSSL_strdup(argp);
 
-            if (data == NULL) {
-                return 0;
+                if (data == NULL) {
+                    return 0;
+                }
+                if (uris == NULL) {
+                    uris = sk_OPENSSL_STRING_new_null();
+                    X509_LOOKUP_set_method_data(ctx, uris);
+                }
+                return sk_OPENSSL_STRING_push(uris, data) > 0;
             }
-            if (uris == NULL) {
-                uris = sk_OPENSSL_STRING_new_null();
-                X509_LOOKUP_set_method_data(ctx, uris);
-            }
-            return sk_OPENSSL_STRING_push(uris, data) > 0;
-        }
-    case X509_L_LOAD_STORE:
-        /* This is a shortcut for quick loading of specific containers */
-        return cache_objects(ctx, argp, NULL, 0, libctx, propq);
+        case X509_L_LOAD_STORE:
+            /* This is a shortcut for quick loading of specific containers */
+            return cache_objects(ctx, argp, NULL, 0, libctx, propq);
     }
 
     return 0;
@@ -200,18 +201,18 @@ static int by_store_subject_ex(X509_LOOKUP *ctx, X509_LOOKUP_TYPE type,
          * too much.
          */
         switch (type) {
-        case X509_LU_X509:
-            ok = X509_OBJECT_set1_X509(ret, tmp->data.x509);
-            if (ok)
-                X509_free(tmp->data.x509);
-            break;
-        case X509_LU_CRL:
-            ok = X509_OBJECT_set1_X509_CRL(ret, tmp->data.crl);
-            if (ok)
-                X509_CRL_free(tmp->data.crl);
-            break;
-        case X509_LU_NONE:
-            break;
+            case X509_LU_X509:
+                ok = X509_OBJECT_set1_X509(ret, tmp->data.x509);
+                if (ok)
+                    X509_free(tmp->data.x509);
+                break;
+            case X509_LU_CRL:
+                ok = X509_OBJECT_set1_X509_CRL(ret, tmp->data.crl);
+                if (ok)
+                    X509_CRL_free(tmp->data.crl);
+                break;
+            case X509_LU_NONE:
+                break;
         }
     }
     return ok;

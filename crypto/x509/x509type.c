@@ -30,53 +30,53 @@ int X509_certificate_type(const X509 *x, const EVP_PKEY *pkey)
         return 0;
 
     switch (EVP_PKEY_get_id(pk)) {
-    case EVP_PKEY_RSA:
-        ret = EVP_PK_RSA | EVP_PKT_SIGN;
+        case EVP_PKEY_RSA:
+            ret = EVP_PK_RSA | EVP_PKT_SIGN;
 /*              if (!sign only extension) */
-        ret |= EVP_PKT_ENC;
-        break;
-    case EVP_PKEY_RSA_PSS:
-        ret = EVP_PK_RSA | EVP_PKT_SIGN;
-        break;
-    case EVP_PKEY_DSA:
-        ret = EVP_PK_DSA | EVP_PKT_SIGN;
-        break;
-    case EVP_PKEY_EC:
-        ret = EVP_PK_EC | EVP_PKT_SIGN | EVP_PKT_EXCH;
-        break;
-    case EVP_PKEY_ED448:
-    case EVP_PKEY_ED25519:
-        ret = EVP_PKT_SIGN;
-        break;
-    case EVP_PKEY_DH:
-        ret = EVP_PK_DH | EVP_PKT_EXCH;
-        break;
-    case NID_id_GostR3410_2001:
-    case NID_id_GostR3410_2012_256:
-    case NID_id_GostR3410_2012_512:
-        ret = EVP_PKT_EXCH | EVP_PKT_SIGN;
-        break;
-    default:
-        break;
+            ret |= EVP_PKT_ENC;
+            break;
+        case EVP_PKEY_RSA_PSS:
+            ret = EVP_PK_RSA | EVP_PKT_SIGN;
+            break;
+        case EVP_PKEY_DSA:
+            ret = EVP_PK_DSA | EVP_PKT_SIGN;
+            break;
+        case EVP_PKEY_EC:
+            ret = EVP_PK_EC | EVP_PKT_SIGN | EVP_PKT_EXCH;
+            break;
+        case EVP_PKEY_ED448:
+        case EVP_PKEY_ED25519:
+            ret = EVP_PKT_SIGN;
+            break;
+        case EVP_PKEY_DH:
+            ret = EVP_PK_DH | EVP_PKT_EXCH;
+            break;
+        case NID_id_GostR3410_2001:
+        case NID_id_GostR3410_2012_256:
+        case NID_id_GostR3410_2012_512:
+            ret = EVP_PKT_EXCH | EVP_PKT_SIGN;
+            break;
+        default:
+            break;
     }
 
     i = X509_get_signature_nid(x);
     if (i && OBJ_find_sigid_algs(i, NULL, &i)) {
 
         switch (i) {
-        case NID_rsaEncryption:
-        case NID_rsa:
-            ret |= EVP_PKS_RSA;
-            break;
-        case NID_dsa:
-        case NID_dsa_2:
-            ret |= EVP_PKS_DSA;
-            break;
-        case NID_X9_62_id_ecPublicKey:
-            ret |= EVP_PKS_EC;
-            break;
-        default:
-            break;
+            case NID_rsaEncryption:
+            case NID_rsa:
+                ret |= EVP_PKS_RSA;
+                break;
+            case NID_dsa:
+            case NID_dsa_2:
+                ret |= EVP_PKS_DSA;
+                break;
+            case NID_X9_62_id_ecPublicKey:
+                ret |= EVP_PKS_EC;
+                break;
+            default:
+                break;
         }
     }
 

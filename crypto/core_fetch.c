@@ -96,7 +96,7 @@ static int ossl_method_construct_postcondition(OSSL_PROVIDER *provider,
 
     /* No flag bits for temporary stores */
     return is_temporary_method_store(no_store, cbdata)
-        || ossl_provider_set_operation_bit(provider, operation_id);
+           || ossl_provider_set_operation_bit(provider, operation_id);
 }
 
 static void ossl_method_construct_this(OSSL_PROVIDER *provider,

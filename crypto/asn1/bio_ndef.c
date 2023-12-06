@@ -79,8 +79,8 @@ BIO *BIO_new_NDEF(BIO *out, ASN1_VALUE *val, const ASN1_ITEM *it)
     pop_bio = asn_bio;
 
     if (BIO_asn1_set_prefix(asn_bio, ndef_prefix, ndef_prefix_free) <= 0
-            || BIO_asn1_set_suffix(asn_bio, ndef_suffix, ndef_suffix_free) <= 0
-            || BIO_ctrl(asn_bio, BIO_C_SET_EX_ARG, 0, ndef_aux) <= 0)
+        || BIO_asn1_set_suffix(asn_bio, ndef_suffix, ndef_suffix_free) <= 0
+        || BIO_ctrl(asn_bio, BIO_C_SET_EX_ARG, 0, ndef_aux) <= 0)
         goto err;
 
     /*
@@ -118,7 +118,7 @@ BIO *BIO_new_NDEF(BIO *out, ASN1_VALUE *val, const ASN1_ITEM *it)
 
     return sarg.ndef_bio;
 
- err:
+err:
     /* BIO_pop() is NULL safe */
     (void)BIO_pop(pop_bio);
     BIO_free(asn_bio);

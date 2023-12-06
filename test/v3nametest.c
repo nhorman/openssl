@@ -108,18 +108,18 @@ static int set_cn(X509 *crt, ...)
     if (!X509_set_subject_name(crt, n))
         goto out;
     ret = 1;
- out:
+out:
     X509_NAME_free(n);
     va_end(ap);
     return ret;
 }
 
 /*-
-int             X509_add_ext(X509 *x, X509_EXTENSION *ex, int loc);
-X509_EXTENSION *X509_EXTENSION_create_by_NID(X509_EXTENSION **ex,
+   int             X509_add_ext(X509 *x, X509_EXTENSION *ex, int loc);
+   X509_EXTENSION *X509_EXTENSION_create_by_NID(X509_EXTENSION **ex,
                         int nid, int crit, ASN1_OCTET_STRING *data);
-int             X509_add_ext(X509 *x, X509_EXTENSION *ex, int loc);
-*/
+   int             X509_add_ext(X509 *x, X509_EXTENSION *ex, int loc);
+ */
 
 static int set_altname(X509 *crt, ...)
 {
@@ -149,13 +149,13 @@ static int set_altname(X509 *crt, ...)
         if (!ASN1_STRING_set(ia5, name, -1))
             goto out;
         switch (type) {
-        case GEN_EMAIL:
-        case GEN_DNS:
-            GENERAL_NAME_set0_value(gen, type, ia5);
-            ia5 = NULL;
-            break;
-        default:
-            abort();
+            case GEN_EMAIL:
+            case GEN_DNS:
+                GENERAL_NAME_set0_value(gen, type, ia5);
+                ia5 = NULL;
+                break;
+            default:
+                abort();
         }
         sk_GENERAL_NAME_push(gens, gen);
         gen = NULL;
@@ -163,7 +163,7 @@ static int set_altname(X509 *crt, ...)
     if (!X509_add1_ext_i2d(crt, NID_subject_alt_name, gens, 0, 0))
         goto out;
     ret = 1;
- out:
+out:
     ASN1_IA5STRING_free(ia5);
     GENERAL_NAME_free(gen);
     GENERAL_NAMES_free(gens);
@@ -277,7 +277,7 @@ static int check_message(const struct set_name_fn *fn, const char *op,
 }
 
 static int run_cert(X509 *crt, const char *nameincert,
-                     const struct set_name_fn *fn)
+                    const struct set_name_fn *fn)
 {
     const char *const *pname = names;
     int failed = 0;
@@ -349,8 +349,8 @@ static int call_run_cert(int i)
     TEST_info("%s", pfn->name);
     for (pname = names; *pname != NULL; pname++) {
         if (!TEST_ptr(crt = make_cert())
-             || !TEST_true(pfn->fn(crt, *pname))
-             || !run_cert(crt, *pname, pfn))
+            || !TEST_true(pfn->fn(crt, *pname))
+            || !run_cert(crt, *pname, pfn))
             failed = 1;
         X509_free(crt);
     }
@@ -363,13 +363,13 @@ static struct gennamedata {
 } gennames[] = {
     {
         /*
-        * [0] {
-        *   OBJECT_IDENTIFIER { 1.2.840.113554.4.1.72585.2.1 }
-        *   [0] {
-        *     SEQUENCE {}
-        *   }
-        * }
-        */
+         * [0] {
+         *   OBJECT_IDENTIFIER { 1.2.840.113554.4.1.72585.2.1 }
+         *   [0] {
+         *     SEQUENCE {}
+         *   }
+         * }
+         */
         {
             0xa0, 0x13, 0x06, 0x0d, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x12, 0x04,
             0x01, 0x84, 0xb7, 0x09, 0x02, 0x01, 0xa0, 0x02, 0x30, 0x00
@@ -377,13 +377,13 @@ static struct gennamedata {
         21
     }, {
         /*
-        * [0] {
-        *   OBJECT_IDENTIFIER { 1.2.840.113554.4.1.72585.2.1 }
-        *   [0] {
-        *     [APPLICATION 0] {}
-        *   }
-        * }
-        */
+         * [0] {
+         *   OBJECT_IDENTIFIER { 1.2.840.113554.4.1.72585.2.1 }
+         *   [0] {
+         *     [APPLICATION 0] {}
+         *   }
+         * }
+         */
         {
             0xa0, 0x13, 0x06, 0x0d, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x12, 0x04,
             0x01, 0x84, 0xb7, 0x09, 0x02, 0x01, 0xa0, 0x02, 0x60, 0x00
@@ -391,13 +391,13 @@ static struct gennamedata {
         21
     }, {
         /*
-        * [0] {
-        *   OBJECT_IDENTIFIER { 1.2.840.113554.4.1.72585.2.1 }
-        *   [0] {
-        *     UTF8String { "a" }
-        *   }
-        * }
-        */
+         * [0] {
+         *   OBJECT_IDENTIFIER { 1.2.840.113554.4.1.72585.2.1 }
+         *   [0] {
+         *     UTF8String { "a" }
+         *   }
+         * }
+         */
         {
             0xa0, 0x14, 0x06, 0x0d, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x12, 0x04,
             0x01, 0x84, 0xb7, 0x09, 0x02, 0x01, 0xa0, 0x03, 0x0c, 0x01, 0x61
@@ -405,13 +405,13 @@ static struct gennamedata {
         22
     }, {
         /*
-        * [0] {
-        *   OBJECT_IDENTIFIER { 1.2.840.113554.4.1.72585.2.2 }
-        *   [0] {
-        *     UTF8String { "a" }
-        *   }
-        * }
-        */
+         * [0] {
+         *   OBJECT_IDENTIFIER { 1.2.840.113554.4.1.72585.2.2 }
+         *   [0] {
+         *     UTF8String { "a" }
+         *   }
+         * }
+         */
         {
             0xa0, 0x14, 0x06, 0x0d, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x12, 0x04,
             0x01, 0x84, 0xb7, 0x09, 0x02, 0x02, 0xa0, 0x03, 0x0c, 0x01, 0x61
@@ -419,13 +419,13 @@ static struct gennamedata {
         22
     }, {
         /*
-        * [0] {
-        *   OBJECT_IDENTIFIER { 1.2.840.113554.4.1.72585.2.1 }
-        *   [0] {
-        *     UTF8String { "b" }
-        *   }
-        * }
-        */
+         * [0] {
+         *   OBJECT_IDENTIFIER { 1.2.840.113554.4.1.72585.2.1 }
+         *   [0] {
+         *     UTF8String { "b" }
+         *   }
+         * }
+         */
         {
             0xa0, 0x14, 0x06, 0x0d, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x12, 0x04,
             0x01, 0x84, 0xb7, 0x09, 0x02, 0x01, 0xa0, 0x03, 0x0c, 0x01, 0x62
@@ -433,13 +433,13 @@ static struct gennamedata {
         22
     }, {
         /*
-        * [0] {
-        *   OBJECT_IDENTIFIER { 1.2.840.113554.4.1.72585.2.1 }
-        *   [0] {
-        *     BOOLEAN { TRUE }
-        *   }
-        * }
-        */
+         * [0] {
+         *   OBJECT_IDENTIFIER { 1.2.840.113554.4.1.72585.2.1 }
+         *   [0] {
+         *     BOOLEAN { TRUE }
+         *   }
+         * }
+         */
         {
             0xa0, 0x14, 0x06, 0x0d, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x12, 0x04,
             0x01, 0x84, 0xb7, 0x09, 0x02, 0x01, 0xa0, 0x03, 0x01, 0x01, 0xff
@@ -447,13 +447,13 @@ static struct gennamedata {
         22
     }, {
         /*
-        * [0] {
-        *   OBJECT_IDENTIFIER { 1.2.840.113554.4.1.72585.2.1 }
-        *   [0] {
-        *     BOOLEAN { FALSE }
-        *   }
-        * }
-        */
+         * [0] {
+         *   OBJECT_IDENTIFIER { 1.2.840.113554.4.1.72585.2.1 }
+         *   [0] {
+         *     BOOLEAN { FALSE }
+         *   }
+         * }
+         */
         {
             0xa0, 0x14, 0x06, 0x0d, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x12, 0x04,
             0x01, 0x84, 0xb7, 0x09, 0x02, 0x01, 0xa0, 0x03, 0x01, 0x01, 0x00
@@ -485,18 +485,18 @@ static struct gennamedata {
         3
     }, {
         /*
-        * [4] {
-        *   SEQUENCE {
-        *     SET {
-        *       SEQUENCE {
-        *         # commonName
-        *         OBJECT_IDENTIFIER { 2.5.4.3 }
-        *         UTF8String { "a" }
-        *       }
-        *     }
-        *   }
-        * }
-        */
+         * [4] {
+         *   SEQUENCE {
+         *     SET {
+         *       SEQUENCE {
+         *         # commonName
+         *         OBJECT_IDENTIFIER { 2.5.4.3 }
+         *         UTF8String { "a" }
+         *       }
+         *     }
+         *   }
+         * }
+         */
         {
             0xa4, 0x0e, 0x30, 0x0c, 0x31, 0x0a, 0x30, 0x08, 0x06, 0x03, 0x55,
             0x04, 0x03, 0x0c, 0x01, 0x61
@@ -504,18 +504,18 @@ static struct gennamedata {
         16
     }, {
         /*
-        * [4] {
-        *   SEQUENCE {
-        *     SET {
-        *       SEQUENCE {
-        *         # commonName
-        *         OBJECT_IDENTIFIER { 2.5.4.3 }
-        *         UTF8String { "b" }
-        *       }
-        *     }
-        *   }
-        * }
-        */
+         * [4] {
+         *   SEQUENCE {
+         *     SET {
+         *       SEQUENCE {
+         *         # commonName
+         *         OBJECT_IDENTIFIER { 2.5.4.3 }
+         *         UTF8String { "b" }
+         *       }
+         *     }
+         *   }
+         * }
+         */
         {
             0xa4, 0x0e, 0x30, 0x0c, 0x31, 0x0a, 0x30, 0x08, 0x06, 0x03, 0x55,
             0x04, 0x03, 0x0c, 0x01, 0x62
@@ -523,54 +523,54 @@ static struct gennamedata {
         16
     }, {
         /*
-        * [5] {
-        *   [1] {
-        *     UTF8String { "a" }
-        *   }
-        * }
-        */
+         * [5] {
+         *   [1] {
+         *     UTF8String { "a" }
+         *   }
+         * }
+         */
         {
             0xa5, 0x05, 0xa1, 0x03, 0x0c, 0x01, 0x61
         },
         7
     }, {
         /*
-        * [5] {
-        *   [1] {
-        *     UTF8String { "b" }
-        *   }
-        * }
-        */
+         * [5] {
+         *   [1] {
+         *     UTF8String { "b" }
+         *   }
+         * }
+         */
         {
             0xa5, 0x05, 0xa1, 0x03, 0x0c, 0x01, 0x62
         },
         7
     }, {
         /*
-        * [5] {
-        *   [0] {
-        *     UTF8String {}
-        *   }
-        *   [1] {
-        *     UTF8String { "a" }
-        *   }
-        * }
-        */
+         * [5] {
+         *   [0] {
+         *     UTF8String {}
+         *   }
+         *   [1] {
+         *     UTF8String { "a" }
+         *   }
+         * }
+         */
         {
             0xa5, 0x09, 0xa0, 0x02, 0x0c, 0x00, 0xa1, 0x03, 0x0c, 0x01, 0x61
         },
         11
     }, {
         /*
-        * [5] {
-        *   [0] {
-        *     UTF8String { "a" }
-        *   }
-        *   [1] {
-        *     UTF8String { "a" }
-        *   }
-        * }
-        */
+         * [5] {
+         *   [0] {
+         *     UTF8String { "a" }
+         *   }
+         *   [1] {
+         *     UTF8String { "a" }
+         *   }
+         * }
+         */
         {
             0xa5, 0x0a, 0xa0, 0x03, 0x0c, 0x01, 0x61, 0xa1, 0x03, 0x0c, 0x01,
             0x61
@@ -578,15 +578,15 @@ static struct gennamedata {
         12
     }, {
         /*
-        * [5] {
-        *   [0] {
-        *     UTF8String { "b" }
-        *   }
-        *   [1] {
-        *     UTF8String { "a" }
-        *   }
-        * }
-        */
+         * [5] {
+         *   [0] {
+         *     UTF8String { "b" }
+         *   }
+         *   [1] {
+         *     UTF8String { "a" }
+         *   }
+         * }
+         */
         {
             0xa5, 0x0a, 0xa0, 0x03, 0x0c, 0x01, 0x62, 0xa1, 0x03, 0x0c, 0x01,
             0x61
@@ -695,7 +695,7 @@ static int test_GENERAL_NAME_cmp(void)
     }
     testresult = 1;
 
- end:
+end:
     for (i = 0; i < OSSL_NELEM(gennames); i++) {
         if (namesa != NULL)
             GENERAL_NAME_free(namesa[i]);

@@ -39,7 +39,7 @@ static CMP_SRV_TEST_FIXTURE *set_up(const char *const test_case_name)
         goto err;
     return fixture;
 
- err:
+err:
     tear_down(fixture);
     return NULL;
 }
@@ -70,7 +70,7 @@ static int execute_test_handle_request(CMP_SRV_TEST_FIXTURE *fixture)
     int res = 0;
 
     if (!TEST_ptr(client_ctx = OSSL_CMP_CTX_new(libctx, NULL))
-            || !TEST_true(OSSL_CMP_CTX_set_transfer_cb_arg(client_ctx, ctx)))
+        || !TEST_true(OSSL_CMP_CTX_set_transfer_cb_arg(client_ctx, ctx)))
         goto end;
 
     if (!TEST_true(OSSL_CMP_SRV_CTX_init(ctx, dummy_custom_ctx,
@@ -81,29 +81,29 @@ static int execute_test_handle_request(CMP_SRV_TEST_FIXTURE *fixture)
         goto end;
 
     if (!TEST_true(OSSL_CMP_SRV_CTX_set_send_unprotected_errors(ctx, 0))
-            || !TEST_true(OSSL_CMP_SRV_CTX_set_accept_unprotected(ctx, 0))
-            || !TEST_true(OSSL_CMP_SRV_CTX_set_accept_raverified(ctx, 1))
-            || !TEST_true(OSSL_CMP_SRV_CTX_set_grant_implicit_confirm(ctx, 1)))
+        || !TEST_true(OSSL_CMP_SRV_CTX_set_accept_unprotected(ctx, 0))
+        || !TEST_true(OSSL_CMP_SRV_CTX_set_accept_raverified(ctx, 1))
+        || !TEST_true(OSSL_CMP_SRV_CTX_set_grant_implicit_confirm(ctx, 1)))
         goto end;
 
     if (!TEST_ptr(cmp_ctx = OSSL_CMP_SRV_CTX_get0_cmp_ctx(ctx))
-            || !OSSL_CMP_CTX_set1_referenceValue(cmp_ctx,
-                                                 (unsigned char *)"server", 6)
-            || !OSSL_CMP_CTX_set1_secretValue(cmp_ctx,
-                                              (unsigned char *)"1234", 4))
+        || !OSSL_CMP_CTX_set1_referenceValue(cmp_ctx,
+                                             (unsigned char *)"server", 6)
+        || !OSSL_CMP_CTX_set1_secretValue(cmp_ctx,
+                                          (unsigned char *)"1234", 4))
         goto end;
 
     if (!TEST_ptr(rsp = OSSL_CMP_CTX_server_perform(client_ctx, fixture->req))
-            || !TEST_int_eq(OSSL_CMP_MSG_get_bodytype(rsp),
-                            OSSL_CMP_PKIBODY_ERROR)
-            || !TEST_ptr(errorContent = rsp->body->value.error)
-            || !TEST_int_eq(ASN1_INTEGER_get(errorContent->errorCode),
-                            ERR_PACK(ERR_LIB_CMP, 0, dummy_errorCode)))
+        || !TEST_int_eq(OSSL_CMP_MSG_get_bodytype(rsp),
+                        OSSL_CMP_PKIBODY_ERROR)
+        || !TEST_ptr(errorContent = rsp->body->value.error)
+        || !TEST_int_eq(ASN1_INTEGER_get(errorContent->errorCode),
+                        ERR_PACK(ERR_LIB_CMP, 0, dummy_errorCode)))
         goto end;
 
     res = 1;
 
- end:
+end:
     OSSL_CMP_MSG_free(rsp);
     OSSL_CMP_CTX_free(client_ctx);
     return res;
@@ -128,7 +128,7 @@ void cleanup_tests(void)
 }
 
 #define USAGE \
-    "CR_protected_PBM_1234.der module_name [module_conf_file]\n"
+        "CR_protected_PBM_1234.der module_name [module_conf_file]\n"
 OPT_TEST_DECLARE_USAGE(USAGE)
 
 int setup_tests(void)

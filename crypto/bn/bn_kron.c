@@ -131,7 +131,7 @@ int BN_kronecker(const BIGNUM *a, const BIGNUM *b, BN_CTX *ctx)
         B = tmp;
         tmp->neg = 0;
     }
- end:
+end:
     BN_CTX_end(ctx);
     if (err)
         return -2;

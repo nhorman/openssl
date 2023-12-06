@@ -37,11 +37,13 @@ struct tm *OPENSSL_gmtime(const time_t *timer, struct tm *result)
         memcpy(result, ts2, sizeof(struct tm));
         ts = result;
     }
-#elif defined(OPENSSL_THREADS) && !defined(OPENSSL_SYS_WIN32) && !defined(OPENSSL_SYS_MACOSX)
+#elif defined(OPENSSL_THREADS) && !defined(OPENSSL_SYS_WIN32) && \
+    !defined(OPENSSL_SYS_MACOSX)
     if (gmtime_r(timer, result) == NULL)
         return NULL;
     ts = result;
-#elif defined (OPENSSL_SYS_WINDOWS) && defined(_MSC_VER) && _MSC_VER >= 1400 && !defined(_WIN32_WCE)
+#elif defined (OPENSSL_SYS_WINDOWS) && defined(_MSC_VER) && _MSC_VER >= 1400 && \
+    !defined(_WIN32_WCE)
     if (gmtime_s(result, timer))
         return NULL;
     ts = result;
@@ -179,8 +181,8 @@ static int julian_adj(const struct tm *tm, int off_day, long offset_sec,
 static long date_to_julian(int y, int m, int d)
 {
     return (1461 * (y + 4800 + (m - 14) / 12)) / 4 +
-        (367 * (m - 2 - 12 * ((m - 14) / 12))) / 12 -
-        (3 * ((y + 4900 + (m - 14) / 12) / 100)) / 4 + d - 32075;
+           (367 * (m - 2 - 12 * ((m - 14) / 12))) / 12 -
+           (3 * ((y + 4900 + (m - 14) / 12) / 100)) / 4 + d - 32075;
 }
 
 static void julian_to_date(long jd, int *y, int *m, int *d)

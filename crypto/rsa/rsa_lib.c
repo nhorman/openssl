@@ -128,7 +128,7 @@ static RSA *rsa_new_intern(ENGINE *engine, OSSL_LIB_CTX *libctx)
 
     return ret;
 
- err:
+err:
     RSA_free(ret);
     return NULL;
 }
@@ -326,20 +326,20 @@ uint16_t ossl_ifc_ffc_compute_security_bits(int n)
      * the standards but are defined to be canonical.
      */
     switch (n) {
-    case 2048:      /* SP 800-56B rev 2 Appendix D and FIPS 140-2 IG 7.5 */
-        return 112;
-    case 3072:      /* SP 800-56B rev 2 Appendix D and FIPS 140-2 IG 7.5 */
-        return 128;
-    case 4096:      /* SP 800-56B rev 2 Appendix D */
-        return 152;
-    case 6144:      /* SP 800-56B rev 2 Appendix D */
-        return 176;
-    case 7680:      /* FIPS 140-2 IG 7.5 */
-        return 192;
-    case 8192:      /* SP 800-56B rev 2 Appendix D */
-        return 200;
-    case 15360:     /* FIPS 140-2 IG 7.5 */
-        return 256;
+        case 2048:  /* SP 800-56B rev 2 Appendix D and FIPS 140-2 IG 7.5 */
+            return 112;
+        case 3072:  /* SP 800-56B rev 2 Appendix D and FIPS 140-2 IG 7.5 */
+            return 128;
+        case 4096:  /* SP 800-56B rev 2 Appendix D */
+            return 152;
+        case 6144:  /* SP 800-56B rev 2 Appendix D */
+            return 176;
+        case 7680:  /* FIPS 140-2 IG 7.5 */
+            return 192;
+        case 8192:  /* SP 800-56B rev 2 Appendix D */
+            return 200;
+        case 15360: /* FIPS 140-2 IG 7.5 */
+            return 256;
     }
 
     /*
@@ -539,7 +539,7 @@ int RSA_set0_multi_prime_params(RSA *r, BIGNUM *primes[], BIGNUM *exps[],
     r->dirty_cnt++;
 
     return 1;
- err:
+err:
     /* r, d, t should not be freed */
     sk_RSA_PRIME_INFO_pop_free(prime_infos, ossl_rsa_multip_info_free_ex);
     return 0;
@@ -738,7 +738,7 @@ int RSA_pkey_ctx_ctrl(EVP_PKEY_CTX *ctx, int optype, int cmd, int p1, void *p2)
         && ctx->pmeth->pkey_id != EVP_PKEY_RSA
         && ctx->pmeth->pkey_id != EVP_PKEY_RSA_PSS)
         return -1;
-     return EVP_PKEY_CTX_ctrl(ctx, -1, optype, cmd, p1, p2);
+    return EVP_PKEY_CTX_ctrl(ctx, -1, optype, cmd, p1, p2);
 }
 #endif
 
@@ -770,7 +770,7 @@ int ossl_rsa_set0_all_params(RSA *r, const STACK_OF(BIGNUM) *primes,
         if (!RSA_set0_crt_params(r, sk_BIGNUM_value(exps, 0),
                                  sk_BIGNUM_value(exps, 1),
                                  sk_BIGNUM_value(coeffs, 0)))
-        return 0;
+            return 0;
     }
 
 #ifndef FIPS_MODULE
@@ -835,7 +835,7 @@ int ossl_rsa_set0_all_params(RSA *r, const STACK_OF(BIGNUM) *primes,
 
     return 1;
 #ifndef FIPS_MODULE
- err:
+err:
     /* r, d, t should not be freed */
     sk_RSA_PRIME_INFO_pop_free(prime_infos, ossl_rsa_multip_info_free_ex);
     return 0;
@@ -898,15 +898,15 @@ static int int_set_rsa_md_name(EVP_PKEY_CTX *ctx,
 
     /* If key type not RSA return error */
     switch (keytype) {
-    case -1:
-        if (!EVP_PKEY_CTX_is_a(ctx, "RSA")
-            && !EVP_PKEY_CTX_is_a(ctx, "RSA-PSS"))
-            return -1;
-        break;
-    default:
-        if (!EVP_PKEY_CTX_is_a(ctx, evp_pkey_type2name(keytype)))
-            return -1;
-        break;
+        case -1:
+            if (!EVP_PKEY_CTX_is_a(ctx, "RSA")
+                && !EVP_PKEY_CTX_is_a(ctx, "RSA-PSS"))
+                return -1;
+            break;
+        default:
+            if (!EVP_PKEY_CTX_is_a(ctx, evp_pkey_type2name(keytype)))
+                return -1;
+            break;
     }
 
     /* Cast away the const. This is read only so should be safe */
@@ -938,15 +938,15 @@ static int int_get_rsa_md_name(EVP_PKEY_CTX *ctx,
 
     /* If key type not RSA return error */
     switch (keytype) {
-    case -1:
-        if (!EVP_PKEY_CTX_is_a(ctx, "RSA")
-            && !EVP_PKEY_CTX_is_a(ctx, "RSA-PSS"))
-            return -1;
-        break;
-    default:
-        if (!EVP_PKEY_CTX_is_a(ctx, evp_pkey_type2name(keytype)))
-            return -1;
-        break;
+        case -1:
+            if (!EVP_PKEY_CTX_is_a(ctx, "RSA")
+                && !EVP_PKEY_CTX_is_a(ctx, "RSA-PSS"))
+                return -1;
+            break;
+        default:
+            if (!EVP_PKEY_CTX_is_a(ctx, evp_pkey_type2name(keytype)))
+                return -1;
+            break;
     }
 
     /* Cast away the const. This is read only so should be safe */

@@ -13,15 +13,15 @@
 typedef struct quic_cfq_item_ex_st QUIC_CFQ_ITEM_EX;
 
 struct quic_cfq_item_ex_st {
-    QUIC_CFQ_ITEM           public;
+    QUIC_CFQ_ITEM public;
     QUIC_CFQ_ITEM_EX       *prev, *next;
     unsigned char          *encoded;
     cfq_free_cb            *free_cb;
     void                   *free_cb_arg;
-    uint64_t                frame_type;
-    size_t                  encoded_len;
-    uint32_t                priority, pn_space, flags;
-    int                     state;
+    uint64_t frame_type;
+    size_t encoded_len;
+    uint32_t priority, pn_space, flags;
+    int state;
 };
 
 uint64_t ossl_quic_cfq_item_get_frame_type(const QUIC_CFQ_ITEM *item)
@@ -71,14 +71,14 @@ typedef struct quic_cfq_item_list_st {
 } QUIC_CFQ_ITEM_LIST;
 
 struct quic_cfq_st {
-    /* 
+    /*
      * Invariant: A CFQ item is always in exactly one of these lists, never more
      * or less than one.
      *
      * Invariant: The list the CFQ item is determined exactly by the state field
      * of the item.
      */
-    QUIC_CFQ_ITEM_LIST                      new_list, tx_list, free_list;
+    QUIC_CFQ_ITEM_LIST new_list, tx_list, free_list;
 };
 
 static int compare(const QUIC_CFQ_ITEM_EX *a, const QUIC_CFQ_ITEM_EX *b)
@@ -228,12 +228,12 @@ static QUIC_CFQ_ITEM_EX *cfq_get_free(QUIC_CFQ *cfq)
 }
 
 QUIC_CFQ_ITEM *ossl_quic_cfq_add_frame(QUIC_CFQ            *cfq,
-                                       uint32_t             priority,
-                                       uint32_t             pn_space,
-                                       uint64_t             frame_type,
-                                       uint32_t             flags,
+                                       uint32_t priority,
+                                       uint32_t pn_space,
+                                       uint64_t frame_type,
+                                       uint32_t flags,
                                        const unsigned char *encoded,
-                                       size_t               encoded_len,
+                                       size_t encoded_len,
                                        cfq_free_cb         *free_cb,
                                        void                *free_cb_arg)
 {
@@ -262,16 +262,16 @@ void ossl_quic_cfq_mark_tx(QUIC_CFQ *cfq, QUIC_CFQ_ITEM *item)
     QUIC_CFQ_ITEM_EX *ex = (QUIC_CFQ_ITEM_EX *)item;
 
     switch (ex->state) {
-    case QUIC_CFQ_STATE_NEW:
-        list_remove(&cfq->new_list, ex);
-        list_insert_tail(&cfq->tx_list, ex);
-        ex->state = QUIC_CFQ_STATE_TX;
-        break;
-    case QUIC_CFQ_STATE_TX:
-        break; /* nothing to do */
-    default:
-        assert(0); /* invalid state (e.g. in free state) */
-        break;
+        case QUIC_CFQ_STATE_NEW:
+            list_remove(&cfq->new_list, ex);
+            list_insert_tail(&cfq->tx_list, ex);
+            ex->state = QUIC_CFQ_STATE_TX;
+            break;
+        case QUIC_CFQ_STATE_TX:
+            break; /* nothing to do */
+        default:
+            assert(0); /* invalid state (e.g. in free state) */
+            break;
     }
 }
 
@@ -286,23 +286,23 @@ void ossl_quic_cfq_mark_lost(QUIC_CFQ *cfq, QUIC_CFQ_ITEM *item,
     }
 
     switch (ex->state) {
-    case QUIC_CFQ_STATE_NEW:
-        if (priority != UINT32_MAX && priority != ex->priority) {
-            list_remove(&cfq->new_list, ex);
-            ex->priority = priority;
+        case QUIC_CFQ_STATE_NEW:
+            if (priority != UINT32_MAX && priority != ex->priority) {
+                list_remove(&cfq->new_list, ex);
+                ex->priority = priority;
+                list_insert_sorted(&cfq->new_list, ex, compare);
+            }
+            break; /* nothing to do */
+        case QUIC_CFQ_STATE_TX:
+            if (priority != UINT32_MAX)
+                ex->priority = priority;
+            list_remove(&cfq->tx_list, ex);
             list_insert_sorted(&cfq->new_list, ex, compare);
-        }
-        break; /* nothing to do */
-    case QUIC_CFQ_STATE_TX:
-        if (priority != UINT32_MAX)
-            ex->priority = priority;
-        list_remove(&cfq->tx_list, ex);
-        list_insert_sorted(&cfq->new_list, ex, compare);
-        ex->state = QUIC_CFQ_STATE_NEW;
-        break;
-    default:
-        assert(0); /* invalid state (e.g. in free state) */
-        break;
+            ex->state = QUIC_CFQ_STATE_NEW;
+            break;
+        default:
+            assert(0); /* invalid state (e.g. in free state) */
+            break;
     }
 }
 
@@ -315,19 +315,19 @@ void ossl_quic_cfq_release(QUIC_CFQ *cfq, QUIC_CFQ_ITEM *item)
     QUIC_CFQ_ITEM_EX *ex = (QUIC_CFQ_ITEM_EX *)item;
 
     switch (ex->state) {
-    case QUIC_CFQ_STATE_NEW:
-        list_remove(&cfq->new_list, ex);
-        list_insert_tail(&cfq->free_list, ex);
-        clear_item(ex);
-        break;
-    case QUIC_CFQ_STATE_TX:
-        list_remove(&cfq->tx_list, ex);
-        list_insert_tail(&cfq->free_list, ex);
-        clear_item(ex);
-        break;
-    default:
-        assert(0); /* invalid state (e.g. in free state) */
-        break;
+        case QUIC_CFQ_STATE_NEW:
+            list_remove(&cfq->new_list, ex);
+            list_insert_tail(&cfq->free_list, ex);
+            clear_item(ex);
+            break;
+        case QUIC_CFQ_STATE_TX:
+            list_remove(&cfq->tx_list, ex);
+            list_insert_tail(&cfq->free_list, ex);
+            clear_item(ex);
+            break;
+        default:
+            assert(0); /* invalid state (e.g. in free state) */
+            break;
     }
 }
 
@@ -352,12 +352,12 @@ QUIC_CFQ_ITEM *ossl_quic_cfq_item_get_priority_next(const QUIC_CFQ_ITEM *item,
     if (ex == NULL)
         return NULL;
 
-     ex = ex->next;
+    ex = ex->next;
 
-     for (; ex != NULL && ex->pn_space != pn_space; ex = ex->next);
+    for (; ex != NULL && ex->pn_space != pn_space; ex = ex->next);
 
-     if (ex == NULL)
-         return NULL; /* ubsan */
+    if (ex == NULL)
+        return NULL;  /* ubsan */
 
-     return &ex->public;
+    return &ex->public;
 }

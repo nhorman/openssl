@@ -48,7 +48,7 @@ struct ossl_lib_ctx_st {
     void *fips_prov;
 #endif
 
-    unsigned int ischild:1;
+    unsigned int ischild : 1;
 };
 
 int ossl_lib_ctx_write_lock(OSSL_LIB_CTX *ctx)
@@ -201,7 +201,7 @@ static int context_init(OSSL_LIB_CTX *ctx)
 
     return 1;
 
- err:
+err:
     context_deinit_objs(ctx);
 
     if (exdata_done)
@@ -550,85 +550,85 @@ void *ossl_lib_ctx_get_data(OSSL_LIB_CTX *ctx, int index)
         return NULL;
 
     switch (index) {
-    case OSSL_LIB_CTX_PROPERTY_STRING_INDEX:
-        return ctx->property_string_data;
-    case OSSL_LIB_CTX_EVP_METHOD_STORE_INDEX:
-        return ctx->evp_method_store;
-    case OSSL_LIB_CTX_PROVIDER_STORE_INDEX:
-        return ctx->provider_store;
-    case OSSL_LIB_CTX_NAMEMAP_INDEX:
-        return ctx->namemap;
-    case OSSL_LIB_CTX_PROPERTY_DEFN_INDEX:
-        return ctx->property_defns;
-    case OSSL_LIB_CTX_GLOBAL_PROPERTIES:
-        return ctx->global_properties;
-    case OSSL_LIB_CTX_DRBG_INDEX:
-        return ctx->drbg;
-    case OSSL_LIB_CTX_DRBG_NONCE_INDEX:
-        return ctx->drbg_nonce;
+        case OSSL_LIB_CTX_PROPERTY_STRING_INDEX:
+            return ctx->property_string_data;
+        case OSSL_LIB_CTX_EVP_METHOD_STORE_INDEX:
+            return ctx->evp_method_store;
+        case OSSL_LIB_CTX_PROVIDER_STORE_INDEX:
+            return ctx->provider_store;
+        case OSSL_LIB_CTX_NAMEMAP_INDEX:
+            return ctx->namemap;
+        case OSSL_LIB_CTX_PROPERTY_DEFN_INDEX:
+            return ctx->property_defns;
+        case OSSL_LIB_CTX_GLOBAL_PROPERTIES:
+            return ctx->global_properties;
+        case OSSL_LIB_CTX_DRBG_INDEX:
+            return ctx->drbg;
+        case OSSL_LIB_CTX_DRBG_NONCE_INDEX:
+            return ctx->drbg_nonce;
 #ifndef FIPS_MODULE
-    case OSSL_LIB_CTX_PROVIDER_CONF_INDEX:
-        return ctx->provider_conf;
-    case OSSL_LIB_CTX_BIO_CORE_INDEX:
-        return ctx->bio_core;
-    case OSSL_LIB_CTX_CHILD_PROVIDER_INDEX:
-        return ctx->child_provider;
-    case OSSL_LIB_CTX_DECODER_STORE_INDEX:
-        return ctx->decoder_store;
-    case OSSL_LIB_CTX_DECODER_CACHE_INDEX:
-        return ctx->decoder_cache;
-    case OSSL_LIB_CTX_ENCODER_STORE_INDEX:
-        return ctx->encoder_store;
-    case OSSL_LIB_CTX_STORE_LOADER_STORE_INDEX:
-        return ctx->store_loader_store;
-    case OSSL_LIB_CTX_SELF_TEST_CB_INDEX:
-        return ctx->self_test_cb;
+        case OSSL_LIB_CTX_PROVIDER_CONF_INDEX:
+            return ctx->provider_conf;
+        case OSSL_LIB_CTX_BIO_CORE_INDEX:
+            return ctx->bio_core;
+        case OSSL_LIB_CTX_CHILD_PROVIDER_INDEX:
+            return ctx->child_provider;
+        case OSSL_LIB_CTX_DECODER_STORE_INDEX:
+            return ctx->decoder_store;
+        case OSSL_LIB_CTX_DECODER_CACHE_INDEX:
+            return ctx->decoder_cache;
+        case OSSL_LIB_CTX_ENCODER_STORE_INDEX:
+            return ctx->encoder_store;
+        case OSSL_LIB_CTX_STORE_LOADER_STORE_INDEX:
+            return ctx->store_loader_store;
+        case OSSL_LIB_CTX_SELF_TEST_CB_INDEX:
+            return ctx->self_test_cb;
 #endif
 #ifndef OPENSSL_NO_THREAD_POOL
-    case OSSL_LIB_CTX_THREAD_INDEX:
-        return ctx->threads;
+        case OSSL_LIB_CTX_THREAD_INDEX:
+            return ctx->threads;
 #endif
 
-    case OSSL_LIB_CTX_RAND_CRNGT_INDEX: {
+        case OSSL_LIB_CTX_RAND_CRNGT_INDEX: {
 
-        /*
-         * rand_crngt must be lazily initialized because it calls into
-         * libctx, so must not be called from context_init, else a deadlock
-         * will occur.
-         *
-         * We use a separate lock because code called by the instantiation
-         * of rand_crngt is liable to try and take the libctx lock.
-         */
-        if (CRYPTO_THREAD_read_lock(ctx->rand_crngt_lock) != 1)
-            return NULL;
-
-        if (ctx->rand_crngt == NULL) {
-            CRYPTO_THREAD_unlock(ctx->rand_crngt_lock);
-
-            if (CRYPTO_THREAD_write_lock(ctx->rand_crngt_lock) != 1)
+            /*
+             * rand_crngt must be lazily initialized because it calls into
+             * libctx, so must not be called from context_init, else a deadlock
+             * will occur.
+             *
+             * We use a separate lock because code called by the instantiation
+             * of rand_crngt is liable to try and take the libctx lock.
+             */
+            if (CRYPTO_THREAD_read_lock(ctx->rand_crngt_lock) != 1)
                 return NULL;
 
-            if (ctx->rand_crngt == NULL)
-                ctx->rand_crngt = ossl_rand_crng_ctx_new(ctx);
+            if (ctx->rand_crngt == NULL) {
+                CRYPTO_THREAD_unlock(ctx->rand_crngt_lock);
+
+                if (CRYPTO_THREAD_write_lock(ctx->rand_crngt_lock) != 1)
+                    return NULL;
+
+                if (ctx->rand_crngt == NULL)
+                    ctx->rand_crngt = ossl_rand_crng_ctx_new(ctx);
+            }
+
+            p = ctx->rand_crngt;
+
+            CRYPTO_THREAD_unlock(ctx->rand_crngt_lock);
+
+            return p;
         }
 
-        p = ctx->rand_crngt;
-
-        CRYPTO_THREAD_unlock(ctx->rand_crngt_lock);
-
-        return p;
-    }
-
 #ifdef FIPS_MODULE
-    case OSSL_LIB_CTX_THREAD_EVENT_HANDLER_INDEX:
-        return ctx->thread_event_handler;
+        case OSSL_LIB_CTX_THREAD_EVENT_HANDLER_INDEX:
+            return ctx->thread_event_handler;
 
-    case OSSL_LIB_CTX_FIPS_PROV_INDEX:
-        return ctx->fips_prov;
+        case OSSL_LIB_CTX_FIPS_PROV_INDEX:
+            return ctx->fips_prov;
 #endif
 
-    default:
-        return NULL;
+        default:
+            return NULL;
     }
 }
 

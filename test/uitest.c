@@ -37,31 +37,31 @@ static int test_old(void)
     int ok = 0;
 
     if (!TEST_ptr(ui_method =
-                  UI_UTIL_wrap_read_pem_callback(test_pem_password_cb, 0))
-            || !TEST_ptr(ui = UI_new_method(ui_method)))
+                      UI_UTIL_wrap_read_pem_callback(test_pem_password_cb, 0))
+        || !TEST_ptr(ui = UI_new_method(ui_method)))
         goto err;
 
     /* The wrapper passes the UI userdata as the callback userdata param */
     UI_add_user_data(ui, defpass);
 
     if (UI_add_input_string(ui, "prompt", UI_INPUT_FLAG_DEFAULT_PWD,
-                             pass, 0, sizeof(pass) - 1) <= 0)
+                            pass, 0, sizeof(pass) - 1) <= 0)
         goto err;
 
     switch (UI_process(ui)) {
-    case -2:
-        TEST_info("test_old: UI process interrupted or cancelled");
+        case -2:
+            TEST_info("test_old: UI process interrupted or cancelled");
         /* fall through */
-    case -1:
-        goto err;
-    default:
-        break;
+        case -1:
+            goto err;
+        default:
+            break;
     }
 
     if (TEST_str_eq(pass, defpass))
         ok = 1;
 
- err:
+err:
     UI_free(ui);
     UI_destroy_method(ui_method);
 
@@ -80,7 +80,7 @@ static int test_new_ui(void)
 
     (void)setup_ui_method();
     if (TEST_int_gt(password_callback(pass, sizeof(pass), 0, &cb_data), 0)
-            && TEST_str_eq(pass, cb_data.password))
+        && TEST_str_eq(pass, cb_data.password))
         ok = 1;
     destroy_ui_method();
     return ok;

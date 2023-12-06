@@ -78,34 +78,34 @@ int verify_callback(int ok, X509_STORE_CTX *ctx)
         }
     }
     switch (err) {
-    case X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT:
-        if (err_cert != NULL) {
-            BIO_puts(bio_err, "issuer= ");
-            X509_NAME_print_ex(bio_err, X509_get_issuer_name(err_cert),
-                               0, get_nameopt());
-            BIO_puts(bio_err, "\n");
-        }
-        break;
-    case X509_V_ERR_CERT_NOT_YET_VALID:
-    case X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD:
-        if (err_cert != NULL) {
-            BIO_printf(bio_err, "notBefore=");
-            ASN1_TIME_print(bio_err, X509_get0_notBefore(err_cert));
-            BIO_printf(bio_err, "\n");
-        }
-        break;
-    case X509_V_ERR_CERT_HAS_EXPIRED:
-    case X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD:
-        if (err_cert != NULL) {
-            BIO_printf(bio_err, "notAfter=");
-            ASN1_TIME_print(bio_err, X509_get0_notAfter(err_cert));
-            BIO_printf(bio_err, "\n");
-        }
-        break;
-    case X509_V_ERR_NO_EXPLICIT_POLICY:
-        if (!verify_args.quiet)
-            policies_print(ctx);
-        break;
+        case X509_V_ERR_UNABLE_TO_GET_ISSUER_CERT:
+            if (err_cert != NULL) {
+                BIO_puts(bio_err, "issuer= ");
+                X509_NAME_print_ex(bio_err, X509_get_issuer_name(err_cert),
+                                   0, get_nameopt());
+                BIO_puts(bio_err, "\n");
+            }
+            break;
+        case X509_V_ERR_CERT_NOT_YET_VALID:
+        case X509_V_ERR_ERROR_IN_CERT_NOT_BEFORE_FIELD:
+            if (err_cert != NULL) {
+                BIO_printf(bio_err, "notBefore=");
+                ASN1_TIME_print(bio_err, X509_get0_notBefore(err_cert));
+                BIO_printf(bio_err, "\n");
+            }
+            break;
+        case X509_V_ERR_CERT_HAS_EXPIRED:
+        case X509_V_ERR_ERROR_IN_CERT_NOT_AFTER_FIELD:
+            if (err_cert != NULL) {
+                BIO_printf(bio_err, "notAfter=");
+                ASN1_TIME_print(bio_err, X509_get0_notAfter(err_cert));
+                BIO_printf(bio_err, "\n");
+            }
+            break;
+        case X509_V_ERR_NO_EXPLICIT_POLICY:
+            if (!verify_args.quiet)
+                policies_print(ctx);
+            break;
     }
     if (err == X509_V_OK && ok == 2 && !verify_args.quiet)
         policies_print(ctx);
@@ -230,36 +230,36 @@ static void ssl_print_client_cert_types(BIO *bio, SSL *s)
 static const char *get_sigtype(int nid)
 {
     switch (nid) {
-    case EVP_PKEY_RSA:
-        return "RSA";
+        case EVP_PKEY_RSA:
+            return "RSA";
 
-    case EVP_PKEY_RSA_PSS:
-        return "RSA-PSS";
+        case EVP_PKEY_RSA_PSS:
+            return "RSA-PSS";
 
-    case EVP_PKEY_DSA:
-        return "DSA";
+        case EVP_PKEY_DSA:
+            return "DSA";
 
-    case EVP_PKEY_EC:
-        return "ECDSA";
+        case EVP_PKEY_EC:
+            return "ECDSA";
 
-    case NID_ED25519:
-        return "Ed25519";
+        case NID_ED25519:
+            return "Ed25519";
 
-    case NID_ED448:
-        return "Ed448";
+        case NID_ED448:
+            return "Ed448";
 
-    case NID_id_GostR3410_2001:
-        return "gost2001";
+        case NID_id_GostR3410_2001:
+            return "gost2001";
 
-    case NID_id_GostR3410_2012_256:
-        return "gost2012_256";
+        case NID_id_GostR3410_2012_256:
+            return "gost2012_256";
 
-    case NID_id_GostR3410_2012_512:
-        return "gost2012_512";
+        case NID_id_GostR3410_2012_512:
+            return "gost2012_512";
 
-    default:
-        /* Try to output provider-registered sig alg name */
-        return OBJ_nid2sn(nid);
+        default:
+            /* Try to output provider-registered sig alg name */
+            return OBJ_nid2sn(nid);
     }
 }
 
@@ -335,21 +335,21 @@ int ssl_print_point_formats(BIO *out, SSL *s)
         if (i)
             BIO_puts(out, ":");
         switch (*pformats) {
-        case TLSEXT_ECPOINTFORMAT_uncompressed:
-            BIO_puts(out, "uncompressed");
-            break;
+            case TLSEXT_ECPOINTFORMAT_uncompressed:
+                BIO_puts(out, "uncompressed");
+                break;
 
-        case TLSEXT_ECPOINTFORMAT_ansiX962_compressed_prime:
-            BIO_puts(out, "ansiX962_compressed_prime");
-            break;
+            case TLSEXT_ECPOINTFORMAT_ansiX962_compressed_prime:
+                BIO_puts(out, "ansiX962_compressed_prime");
+                break;
 
-        case TLSEXT_ECPOINTFORMAT_ansiX962_compressed_char2:
-            BIO_puts(out, "ansiX962_compressed_char2");
-            break;
+            case TLSEXT_ECPOINTFORMAT_ansiX962_compressed_char2:
+                BIO_puts(out, "ansiX962_compressed_char2");
+                break;
 
-        default:
-            BIO_printf(out, "unknown(%d)", (int)*pformats);
-            break;
+            default:
+                BIO_printf(out, "unknown(%d)", (int)*pformats);
+                break;
 
         }
     }
@@ -402,15 +402,15 @@ int ssl_print_tmp_key(BIO *out, SSL *s)
         return 1;
     BIO_puts(out, "Server Temp Key: ");
     switch (EVP_PKEY_get_id(key)) {
-    case EVP_PKEY_RSA:
-        BIO_printf(out, "RSA, %d bits\n", EVP_PKEY_get_bits(key));
-        break;
+        case EVP_PKEY_RSA:
+            BIO_printf(out, "RSA, %d bits\n", EVP_PKEY_get_bits(key));
+            break;
 
-    case EVP_PKEY_DH:
-        BIO_printf(out, "DH, %d bits\n", EVP_PKEY_get_bits(key));
-        break;
+        case EVP_PKEY_DH:
+            BIO_printf(out, "DH, %d bits\n", EVP_PKEY_get_bits(key));
+            break;
 #ifndef OPENSSL_NO_EC
-    case EVP_PKEY_EC:
+        case EVP_PKEY_EC:
         {
             char name[80];
             size_t name_len;
@@ -418,13 +418,14 @@ int ssl_print_tmp_key(BIO *out, SSL *s)
             if (!EVP_PKEY_get_utf8_string_param(key, OSSL_PKEY_PARAM_GROUP_NAME,
                                                 name, sizeof(name), &name_len))
                 strcpy(name, "?");
-            BIO_printf(out, "ECDH, %s, %d bits\n", name, EVP_PKEY_get_bits(key));
+            BIO_printf(out, "ECDH, %s, %d bits\n", name,
+                       EVP_PKEY_get_bits(key));
         }
-    break;
+        break;
 #endif
-    default:
-        BIO_printf(out, "%s, %d bits\n", OBJ_nid2sn(EVP_PKEY_get_id(key)),
-                   EVP_PKEY_get_bits(key));
+        default:
+            BIO_printf(out, "%s, %d bits\n", OBJ_nid2sn(EVP_PKEY_get_id(key)),
+                       EVP_PKEY_get_bits(key));
     }
     EVP_PKEY_free(key);
     return 1;
@@ -442,71 +443,76 @@ long bio_dump_callback(BIO *bio, int cmd, const char *argp, size_t len,
         return ret;
 
     switch (cmd) {
-    case (BIO_CB_READ | BIO_CB_RETURN):
-        if (ret > 0 && processed != NULL) {
-            BIO_printf(out, "read from %p [%p] (%zu bytes => %zu (0x%zX))\n",
-                       (void *)bio, (void *)argp, len, *processed, *processed);
-            BIO_dump(out, argp, (int)*processed);
-        } else {
-            BIO_printf(out, "read from %p [%p] (%zu bytes => %d)\n",
-                       (void *)bio, (void *)argp, len, ret);
-        }
-        break;
-
-    case (BIO_CB_WRITE | BIO_CB_RETURN):
-        if (ret > 0 && processed != NULL) {
-            BIO_printf(out, "write to %p [%p] (%zu bytes => %zu (0x%zX))\n",
-                       (void *)bio, (void *)argp, len, *processed, *processed);
-            BIO_dump(out, argp, (int)*processed);
-        } else {
-            BIO_printf(out, "write to %p [%p] (%zu bytes => %d)\n",
-                       (void *)bio, (void *)argp, len, ret);
-        }
-        break;
-
-    case (BIO_CB_RECVMMSG | BIO_CB_RETURN):
-        mmsgargs = (BIO_MMSG_CB_ARGS *)argp;
-        if (ret > 0) {
-            for (i = 0; i < *(mmsgargs->msgs_processed); i++) {
-                BIO_MSG *msg = (BIO_MSG *)((char *)mmsgargs->msg
-                                           + (i * mmsgargs->stride));
-
-                BIO_printf(out, "read from %p [%p] (%zu bytes => %zu (0x%zX))\n",
-                           (void *)bio, (void *)msg->data, msg->data_len,
-                           msg->data_len, msg->data_len);
-                BIO_dump(out, msg->data, msg->data_len);
+        case (BIO_CB_READ | BIO_CB_RETURN):
+            if (ret > 0 && processed != NULL) {
+                BIO_printf(out,
+                           "read from %p [%p] (%zu bytes => %zu (0x%zX))\n",
+                           (void *)bio, (void *)argp, len, *processed,
+                           *processed);
+                BIO_dump(out, argp, (int)*processed);
+            } else {
+                BIO_printf(out, "read from %p [%p] (%zu bytes => %d)\n",
+                           (void *)bio, (void *)argp, len, ret);
             }
-        } else if (mmsgargs->num_msg > 0) {
-            BIO_MSG *msg = mmsgargs->msg;
+            break;
 
-            BIO_printf(out, "read from %p [%p] (%zu bytes => %d)\n",
-                       (void *)bio, (void *)msg->data, msg->data_len, ret);
-        }
-        break;
-
-    case (BIO_CB_SENDMMSG | BIO_CB_RETURN):
-        mmsgargs = (BIO_MMSG_CB_ARGS *)argp;
-        if (ret > 0) {
-            for (i = 0; i < *(mmsgargs->msgs_processed); i++) {
-                BIO_MSG *msg = (BIO_MSG *)((char *)mmsgargs->msg
-                                           + (i * mmsgargs->stride));
-
+        case (BIO_CB_WRITE | BIO_CB_RETURN):
+            if (ret > 0 && processed != NULL) {
                 BIO_printf(out, "write to %p [%p] (%zu bytes => %zu (0x%zX))\n",
-                           (void *)bio, (void *)msg->data, msg->data_len,
-                           msg->data_len, msg->data_len);
-                BIO_dump(out, msg->data, msg->data_len);
+                           (void *)bio, (void *)argp, len, *processed,
+                           *processed);
+                BIO_dump(out, argp, (int)*processed);
+            } else {
+                BIO_printf(out, "write to %p [%p] (%zu bytes => %d)\n",
+                           (void *)bio, (void *)argp, len, ret);
             }
-        } else if (mmsgargs->num_msg > 0) {
-            BIO_MSG *msg = mmsgargs->msg;
+            break;
 
-            BIO_printf(out, "write to %p [%p] (%zu bytes => %d)\n",
-                       (void *)bio, (void *)msg->data, msg->data_len, ret);
-        }
-        break;
+        case (BIO_CB_RECVMMSG | BIO_CB_RETURN):
+            mmsgargs = (BIO_MMSG_CB_ARGS *)argp;
+            if (ret > 0) {
+                for (i = 0; i < *(mmsgargs->msgs_processed); i++) {
+                    BIO_MSG *msg = (BIO_MSG *)((char *)mmsgargs->msg
+                                               + (i * mmsgargs->stride));
 
-    default:
-        /* do nothing */
-        break;
+                    BIO_printf(out,
+                               "read from %p [%p] (%zu bytes => %zu (0x%zX))\n",
+                               (void *)bio, (void *)msg->data, msg->data_len,
+                               msg->data_len, msg->data_len);
+                    BIO_dump(out, msg->data, msg->data_len);
+                }
+            } else if (mmsgargs->num_msg > 0) {
+                BIO_MSG *msg = mmsgargs->msg;
+
+                BIO_printf(out, "read from %p [%p] (%zu bytes => %d)\n",
+                           (void *)bio, (void *)msg->data, msg->data_len, ret);
+            }
+            break;
+
+        case (BIO_CB_SENDMMSG | BIO_CB_RETURN):
+            mmsgargs = (BIO_MMSG_CB_ARGS *)argp;
+            if (ret > 0) {
+                for (i = 0; i < *(mmsgargs->msgs_processed); i++) {
+                    BIO_MSG *msg = (BIO_MSG *)((char *)mmsgargs->msg
+                                               + (i * mmsgargs->stride));
+
+                    BIO_printf(out,
+                               "write to %p [%p] (%zu bytes => %zu (0x%zX))\n",
+                               (void *)bio, (void *)msg->data, msg->data_len,
+                               msg->data_len, msg->data_len);
+                    BIO_dump(out, msg->data, msg->data_len);
+                }
+            } else if (mmsgargs->num_msg > 0) {
+                BIO_MSG *msg = mmsgargs->msg;
+
+                BIO_printf(out, "write to %p [%p] (%zu bytes => %d)\n",
+                           (void *)bio, (void *)msg->data, msg->data_len, ret);
+            }
+            break;
+
+        default:
+            /* do nothing */
+            break;
     }
     return ret;
 }
@@ -624,7 +630,8 @@ void msg_cb(int write_p, int version, int content_type, const void *buf,
     BIO *bio = arg;
     const char *str_write_p = write_p ? ">>>" : "<<<";
     char tmpbuf[128];
-    const char *str_version, *str_content_type = "", *str_details1 = "", *str_details2 = "";
+    const char *str_version, *str_content_type = "", *str_details1 = "",
+               *str_details2 = "";
     const unsigned char* bp = buf;
 
     if (version == SSL3_VERSION ||
@@ -635,51 +642,54 @@ void msg_cb(int write_p, int version, int content_type, const void *buf,
         version == DTLS1_VERSION || version == DTLS1_BAD_VER) {
         str_version = lookup(version, ssl_versions, "???");
         switch (content_type) {
-        case SSL3_RT_CHANGE_CIPHER_SPEC:
-            /* type 20 */
-            str_content_type = ", ChangeCipherSpec";
-            break;
-        case SSL3_RT_ALERT:
-            /* type 21 */
-            str_content_type = ", Alert";
-            str_details1 = ", ???";
-            if (len == 2) {
-                switch (bp[0]) {
-                case 1:
-                    str_details1 = ", warning";
-                    break;
-                case 2:
-                    str_details1 = ", fatal";
-                    break;
+            case SSL3_RT_CHANGE_CIPHER_SPEC:
+                /* type 20 */
+                str_content_type = ", ChangeCipherSpec";
+                break;
+            case SSL3_RT_ALERT:
+                /* type 21 */
+                str_content_type = ", Alert";
+                str_details1 = ", ???";
+                if (len == 2) {
+                    switch (bp[0]) {
+                        case 1:
+                            str_details1 = ", warning";
+                            break;
+                        case 2:
+                            str_details1 = ", fatal";
+                            break;
+                    }
+                    str_details2 = lookup((int)bp[1], alert_types, " ???");
                 }
-                str_details2 = lookup((int)bp[1], alert_types, " ???");
-            }
-            break;
-        case SSL3_RT_HANDSHAKE:
-            /* type 22 */
-            str_content_type = ", Handshake";
-            str_details1 = "???";
-            if (len > 0)
-                str_details1 = lookup((int)bp[0], handshakes, "???");
-            break;
-        case SSL3_RT_APPLICATION_DATA:
-            /* type 23 */
-            str_content_type = ", ApplicationData";
-            break;
-        case SSL3_RT_HEADER:
-            /* type 256 */
-            str_content_type = ", RecordHeader";
-            break;
-        case SSL3_RT_INNER_CONTENT_TYPE:
-            /* type 257 */
-            str_content_type = ", InnerContent";
-            break;
-        default:
-            BIO_snprintf(tmpbuf, sizeof(tmpbuf)-1, ", Unknown (content_type=%d)", content_type);
-            str_content_type = tmpbuf;
+                break;
+            case SSL3_RT_HANDSHAKE:
+                /* type 22 */
+                str_content_type = ", Handshake";
+                str_details1 = "???";
+                if (len > 0)
+                    str_details1 = lookup((int)bp[0], handshakes, "???");
+                break;
+            case SSL3_RT_APPLICATION_DATA:
+                /* type 23 */
+                str_content_type = ", ApplicationData";
+                break;
+            case SSL3_RT_HEADER:
+                /* type 256 */
+                str_content_type = ", RecordHeader";
+                break;
+            case SSL3_RT_INNER_CONTENT_TYPE:
+                /* type 257 */
+                str_content_type = ", InnerContent";
+                break;
+            default:
+                BIO_snprintf(tmpbuf, sizeof(tmpbuf)-1,
+                             ", Unknown (content_type=%d)", content_type);
+                str_content_type = tmpbuf;
         }
     } else {
-        BIO_snprintf(tmpbuf, sizeof(tmpbuf)-1, "Not TLS data or unknown version (version=%d, content_type=%d)", version, content_type);
+        BIO_snprintf(tmpbuf, sizeof(tmpbuf)-1,
+                     "Not TLS data or unknown version (version=%d, content_type=%d)", version,
+                     content_type);
         str_version = tmpbuf;
     }
 
@@ -756,11 +766,14 @@ static STRINT_PAIR signature_tls13_scheme_list[] = {
 /*  {"rsa_pkcs1_sha224",       0x0301    TLSEXT_SIGALG_rsa_pkcs1_sha224}, not in rfc8446 */
 /*  {"ecdsa_sha224",           0x0303    TLSEXT_SIGALG_ecdsa_sha224}      not in rfc8446 */
     {"rsa_pkcs1_sha256",       0x0401 /* TLSEXT_SIGALG_rsa_pkcs1_sha256 */},
-    {"ecdsa_secp256r1_sha256", 0x0403 /* TLSEXT_SIGALG_ecdsa_secp256r1_sha256 */},
+    {"ecdsa_secp256r1_sha256",
+     0x0403 /* TLSEXT_SIGALG_ecdsa_secp256r1_sha256 */},
     {"rsa_pkcs1_sha384",       0x0501 /* TLSEXT_SIGALG_rsa_pkcs1_sha384 */},
-    {"ecdsa_secp384r1_sha384", 0x0503 /* TLSEXT_SIGALG_ecdsa_secp384r1_sha384 */},
+    {"ecdsa_secp384r1_sha384",
+     0x0503 /* TLSEXT_SIGALG_ecdsa_secp384r1_sha384 */},
     {"rsa_pkcs1_sha512",       0x0601 /* TLSEXT_SIGALG_rsa_pkcs1_sha512 */},
-    {"ecdsa_secp521r1_sha512", 0x0603 /* TLSEXT_SIGALG_ecdsa_secp521r1_sha512 */},
+    {"ecdsa_secp521r1_sha512",
+     0x0603 /* TLSEXT_SIGALG_ecdsa_secp521r1_sha512 */},
     {"rsa_pss_rsae_sha256",    0x0804 /* TLSEXT_SIGALG_rsa_pss_rsae_sha256 */},
     {"rsa_pss_rsae_sha384",    0x0805 /* TLSEXT_SIGALG_rsa_pss_rsae_sha384 */},
     {"rsa_pss_rsae_sha512",    0x0806 /* TLSEXT_SIGALG_rsa_pss_rsae_sha512 */},
@@ -769,26 +782,29 @@ static STRINT_PAIR signature_tls13_scheme_list[] = {
     {"rsa_pss_pss_sha256",     0x0809 /* TLSEXT_SIGALG_rsa_pss_pss_sha256 */},
     {"rsa_pss_pss_sha384",     0x080a /* TLSEXT_SIGALG_rsa_pss_pss_sha384 */},
     {"rsa_pss_pss_sha512",     0x080b /* TLSEXT_SIGALG_rsa_pss_pss_sha512 */},
-    {"gostr34102001",          0xeded /* TLSEXT_SIGALG_gostr34102001_gostr3411 */},
-    {"gostr34102012_256",      0xeeee /* TLSEXT_SIGALG_gostr34102012_256_gostr34112012_256 */},
-    {"gostr34102012_512",      0xefef /* TLSEXT_SIGALG_gostr34102012_512_gostr34112012_512 */},
+    {"gostr34102001",
+     0xeded /* TLSEXT_SIGALG_gostr34102001_gostr3411 */},
+    {"gostr34102012_256",
+     0xeeee /* TLSEXT_SIGALG_gostr34102012_256_gostr34112012_256 */},
+    {"gostr34102012_512",
+     0xefef /* TLSEXT_SIGALG_gostr34102012_512_gostr34112012_512 */},
     {NULL}
 };
 
 /* from rfc5246 7.4.1.4.1. */
 static STRINT_PAIR signature_tls12_alg_list[] = {
     {"anonymous", TLSEXT_signature_anonymous /* 0 */},
-    {"RSA",       TLSEXT_signature_rsa       /* 1 */},
-    {"DSA",       TLSEXT_signature_dsa       /* 2 */},
-    {"ECDSA",     TLSEXT_signature_ecdsa     /* 3 */},
+    {"RSA",       TLSEXT_signature_rsa /* 1 */},
+    {"DSA",       TLSEXT_signature_dsa /* 2 */},
+    {"ECDSA",     TLSEXT_signature_ecdsa /* 3 */},
     {NULL}
 };
 
 /* from rfc5246 7.4.1.4.1. */
 static STRINT_PAIR signature_tls12_hash_list[] = {
-    {"none",   TLSEXT_hash_none   /* 0 */},
-    {"MD5",    TLSEXT_hash_md5    /* 1 */},
-    {"SHA1",   TLSEXT_hash_sha1   /* 2 */},
+    {"none",   TLSEXT_hash_none /* 0 */},
+    {"MD5",    TLSEXT_hash_md5 /* 1 */},
+    {"SHA1",   TLSEXT_hash_sha1 /* 2 */},
     {"SHA224", TLSEXT_hash_sha224 /* 3 */},
     {"SHA256", TLSEXT_hash_sha256 /* 4 */},
     {"SHA384", TLSEXT_hash_sha384 /* 5 */},
@@ -997,7 +1013,7 @@ static int set_cert_cb(SSL *ssl, void *arg)
         print_chain_flags(ssl, rv);
         if (rv & CERT_PKEY_VALID) {
             if (!SSL_use_certificate(ssl, exc->cert)
-                    || !SSL_use_PrivateKey(ssl, exc->key)) {
+                || !SSL_use_PrivateKey(ssl, exc->key)) {
                 return 0;
             }
             /*
@@ -1091,7 +1107,8 @@ int load_excert(SSL_EXCERT **pexc)
         if (exc->key == NULL)
             return 0;
         if (exc->chainfile != NULL) {
-            if (!load_certs(exc->chainfile, 0, &exc->chain, NULL, "server chain"))
+            if (!load_certs(exc->chainfile, 0, &exc->chain, NULL,
+                            "server chain"))
                 return 0;
         }
     }
@@ -1117,47 +1134,48 @@ int args_excert(int opt, SSL_EXCERT **pexc)
     }
 
     switch ((enum range)opt) {
-    case OPT_X__FIRST:
-    case OPT_X__LAST:
-        return 0;
-    case OPT_X_CERT:
-        if (exc->certfile != NULL && !ssl_excert_prepend(&exc)) {
-            BIO_printf(bio_err, "%s: Error adding xcert\n", opt_getprog());
-            goto err;
-        }
-        *pexc = exc;
-        exc->certfile = opt_arg();
-        break;
-    case OPT_X_KEY:
-        if (exc->keyfile != NULL) {
-            BIO_printf(bio_err, "%s: Key already specified\n", opt_getprog());
-            goto err;
-        }
-        exc->keyfile = opt_arg();
-        break;
-    case OPT_X_CHAIN:
-        if (exc->chainfile != NULL) {
-            BIO_printf(bio_err, "%s: Chain already specified\n",
-                       opt_getprog());
-            goto err;
-        }
-        exc->chainfile = opt_arg();
-        break;
-    case OPT_X_CHAIN_BUILD:
-        exc->build_chain = 1;
-        break;
-    case OPT_X_CERTFORM:
-        if (!opt_format(opt_arg(), OPT_FMT_ANY, &exc->certform))
+        case OPT_X__FIRST:
+        case OPT_X__LAST:
             return 0;
-        break;
-    case OPT_X_KEYFORM:
-        if (!opt_format(opt_arg(), OPT_FMT_ANY, &exc->keyform))
-            return 0;
-        break;
+        case OPT_X_CERT:
+            if (exc->certfile != NULL && !ssl_excert_prepend(&exc)) {
+                BIO_printf(bio_err, "%s: Error adding xcert\n", opt_getprog());
+                goto err;
+            }
+            *pexc = exc;
+            exc->certfile = opt_arg();
+            break;
+        case OPT_X_KEY:
+            if (exc->keyfile != NULL) {
+                BIO_printf(bio_err, "%s: Key already specified\n",
+                           opt_getprog());
+                goto err;
+            }
+            exc->keyfile = opt_arg();
+            break;
+        case OPT_X_CHAIN:
+            if (exc->chainfile != NULL) {
+                BIO_printf(bio_err, "%s: Chain already specified\n",
+                           opt_getprog());
+                goto err;
+            }
+            exc->chainfile = opt_arg();
+            break;
+        case OPT_X_CHAIN_BUILD:
+            exc->build_chain = 1;
+            break;
+        case OPT_X_CERTFORM:
+            if (!opt_format(opt_arg(), OPT_FMT_ANY, &exc->certform))
+                return 0;
+            break;
+        case OPT_X_KEYFORM:
+            if (!opt_format(opt_arg(), OPT_FMT_ANY, &exc->keyform))
+                return 0;
+            break;
     }
     return 1;
 
- err:
+err:
     ERR_print_errors(bio_err);
     ssl_excert_free(exc);
     *pexc = NULL;
@@ -1400,7 +1418,7 @@ int ssl_load_stores(SSL_CTX *ctx,
         SSL_CTX_set1_chain_cert_store(ctx, ch);
     }
     rv = 1;
- err:
+err:
     X509_STORE_free(vfy);
     X509_STORE_free(ch);
     return rv;
@@ -1457,38 +1475,39 @@ static int security_callback_debug(const SSL *s, const SSL_CTX *ctx,
     nm = lookup(op, callback_types, NULL);
     show_nm = nm != NULL;
     switch (op) {
-    case SSL_SECOP_TICKET:
-    case SSL_SECOP_COMPRESSION:
-        show_bits = 0;
-        show_nm = 0;
-        break;
-    case SSL_SECOP_VERSION:
-        BIO_printf(sdb->out, "Version=%s", lookup(nid, ssl_versions, "???"));
-        show_bits = 0;
-        show_nm = 0;
-        break;
-    case SSL_SECOP_CA_MD:
-    case SSL_SECOP_PEER_CA_MD:
-        cert_md = 1;
-        break;
-    case SSL_SECOP_SIGALG_SUPPORTED:
-    case SSL_SECOP_SIGALG_SHARED:
-    case SSL_SECOP_SIGALG_CHECK:
-    case SSL_SECOP_SIGALG_MASK:
-        show_nm = 0;
-        break;
+        case SSL_SECOP_TICKET:
+        case SSL_SECOP_COMPRESSION:
+            show_bits = 0;
+            show_nm = 0;
+            break;
+        case SSL_SECOP_VERSION:
+            BIO_printf(sdb->out, "Version=%s",
+                       lookup(nid, ssl_versions, "???"));
+            show_bits = 0;
+            show_nm = 0;
+            break;
+        case SSL_SECOP_CA_MD:
+        case SSL_SECOP_PEER_CA_MD:
+            cert_md = 1;
+            break;
+        case SSL_SECOP_SIGALG_SUPPORTED:
+        case SSL_SECOP_SIGALG_SHARED:
+        case SSL_SECOP_SIGALG_CHECK:
+        case SSL_SECOP_SIGALG_MASK:
+            show_nm = 0;
+            break;
     }
     if (show_nm)
         BIO_printf(sdb->out, "%s=", nm);
 
     switch (op & SSL_SECOP_OTHER_TYPE) {
 
-    case SSL_SECOP_OTHER_CIPHER:
-        BIO_puts(sdb->out, SSL_CIPHER_get_name(other));
-        break;
+        case SSL_SECOP_OTHER_CIPHER:
+            BIO_puts(sdb->out, SSL_CIPHER_get_name(other));
+            break;
 
 #ifndef OPENSSL_NO_EC
-    case SSL_SECOP_OTHER_CURVE:
+        case SSL_SECOP_OTHER_CURVE:
         {
             const char *cname;
             cname = EC_curve_nid2nist(nid);
@@ -1498,7 +1517,7 @@ static int security_callback_debug(const SSL *s, const SSL_CTX *ctx,
         }
         break;
 #endif
-    case SSL_SECOP_OTHER_CERT:
+        case SSL_SECOP_OTHER_CERT:
         {
             if (cert_md) {
                 int sig_nid = X509_get_signature_nid(other);
@@ -1515,22 +1534,23 @@ static int security_callback_debug(const SSL *s, const SSL_CTX *ctx,
                     EVP_PKEY_asn1_get0_info(NULL, NULL, NULL, NULL,
                                             &algname, EVP_PKEY_get0_asn1(pkey));
                     BIO_printf(sdb->out, "%s, bits=%d",
-                            algname, EVP_PKEY_get_bits(pkey));
+                               algname, EVP_PKEY_get_bits(pkey));
                 }
             }
             break;
         }
-    case SSL_SECOP_OTHER_SIGALG:
+        case SSL_SECOP_OTHER_SIGALG:
         {
             const unsigned char *salg = other;
             const char *sname = NULL;
             int raw_sig_code = (salg[0] << 8) + salg[1]; /* always big endian (msb, lsb) */
-                /* raw_sig_code: signature_scheme from tls1.3, or signature_and_hash from tls1.2 */
+            /* raw_sig_code: signature_scheme from tls1.3, or signature_and_hash from tls1.2 */
 
             if (nm != NULL)
                 BIO_printf(sdb->out, "%s", nm);
             else
-                BIO_printf(sdb->out, "s_cb.c:security_callback_debug op=0x%x", op);
+                BIO_printf(sdb->out, "s_cb.c:security_callback_debug op=0x%x",
+                           op);
 
             sname = lookup(raw_sig_code, signature_tls13_scheme_list, NULL);
             if (sname != NULL) {
@@ -1538,13 +1558,17 @@ static int security_callback_debug(const SSL *s, const SSL_CTX *ctx,
             } else {
                 int alg_code = salg[1];
                 int hash_code = salg[0];
-                const char *alg_str = lookup(alg_code, signature_tls12_alg_list, NULL);
-                const char *hash_str = lookup(hash_code, signature_tls12_hash_list, NULL);
+                const char *alg_str = lookup(alg_code, signature_tls12_alg_list,
+                                             NULL);
+                const char *hash_str = lookup(hash_code,
+                                              signature_tls12_hash_list, NULL);
 
                 if (alg_str != NULL && hash_str != NULL)
-                    BIO_printf(sdb->out, " digest=%s, algorithm=%s", hash_str, alg_str);
+                    BIO_printf(sdb->out, " digest=%s, algorithm=%s", hash_str,
+                               alg_str);
                 else
-                    BIO_printf(sdb->out, " scheme=unknown(0x%04x)", raw_sig_code);
+                    BIO_printf(sdb->out, " scheme=unknown(0x%04x)",
+                               raw_sig_code);
             }
         }
 

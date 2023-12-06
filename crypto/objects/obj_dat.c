@@ -127,24 +127,24 @@ static unsigned long added_obj_hash(const ADDED_OBJ *ca)
 
     a = ca->obj;
     switch (ca->type) {
-    case ADDED_DATA:
-        ret = a->length << 20L;
-        p = (unsigned char *)a->data;
-        for (i = 0; i < a->length; i++)
-            ret ^= p[i] << ((i * 3) % 24);
-        break;
-    case ADDED_SNAME:
-        ret = OPENSSL_LH_strhash(a->sn);
-        break;
-    case ADDED_LNAME:
-        ret = OPENSSL_LH_strhash(a->ln);
-        break;
-    case ADDED_NID:
-        ret = a->nid;
-        break;
-    default:
-        /* abort(); */
-        return 0;
+        case ADDED_DATA:
+            ret = a->length << 20L;
+            p = (unsigned char *)a->data;
+            for (i = 0; i < a->length; i++)
+                ret ^= p[i] << ((i * 3) % 24);
+            break;
+        case ADDED_SNAME:
+            ret = OPENSSL_LH_strhash(a->sn);
+            break;
+        case ADDED_LNAME:
+            ret = OPENSSL_LH_strhash(a->ln);
+            break;
+        case ADDED_NID:
+            ret = a->nid;
+            break;
+        default:
+            /* abort(); */
+            return 0;
     }
     ret &= 0x3fffffffL;
     ret |= ((unsigned long)ca->type) << 30L;
@@ -162,30 +162,30 @@ static int added_obj_cmp(const ADDED_OBJ *ca, const ADDED_OBJ *cb)
     a = ca->obj;
     b = cb->obj;
     switch (ca->type) {
-    case ADDED_DATA:
-        i = (a->length - b->length);
-        if (i)
-            return i;
-        return memcmp(a->data, b->data, (size_t)a->length);
-    case ADDED_SNAME:
-        if (a->sn == NULL)
-            return -1;
-        else if (b->sn == NULL)
-            return 1;
-        else
-            return strcmp(a->sn, b->sn);
-    case ADDED_LNAME:
-        if (a->ln == NULL)
-            return -1;
-        else if (b->ln == NULL)
-            return 1;
-        else
-            return strcmp(a->ln, b->ln);
-    case ADDED_NID:
-        return a->nid - b->nid;
-    default:
-        /* abort(); */
-        return 0;
+        case ADDED_DATA:
+            i = (a->length - b->length);
+            if (i)
+                return i;
+            return memcmp(a->data, b->data, (size_t)a->length);
+        case ADDED_SNAME:
+            if (a->sn == NULL)
+                return -1;
+            else if (b->sn == NULL)
+                return 1;
+            else
+                return strcmp(a->sn, b->sn);
+        case ADDED_LNAME:
+            if (a->ln == NULL)
+                return -1;
+            else if (b->ln == NULL)
+                return 1;
+            else
+                return strcmp(a->ln, b->ln);
+        case ADDED_NID:
+            return a->nid - b->nid;
+        default:
+            /* abort(); */
+            return 0;
     }
 }
 
@@ -193,7 +193,8 @@ static void cleanup1_doall(ADDED_OBJ *a)
 {
     a->obj->nid = 0;
     a->obj->flags |= ASN1_OBJECT_FLAG_DYNAMIC |
-        ASN1_OBJECT_FLAG_DYNAMIC_STRINGS | ASN1_OBJECT_FLAG_DYNAMIC_DATA;
+                     ASN1_OBJECT_FLAG_DYNAMIC_STRINGS |
+                     ASN1_OBJECT_FLAG_DYNAMIC_DATA;
 }
 
 static void cleanup2_doall(ADDED_OBJ *a)
@@ -269,13 +270,13 @@ static int ossl_obj_add_object(const ASN1_OBJECT *obj, int lock)
     if ((o = OBJ_dup(obj)) == NULL)
         return NID_undef;
     if ((ao[ADDED_NID] = OPENSSL_malloc(sizeof(*ao[0]))) == NULL
-            || (o->length != 0
-                && obj->data != NULL
-                && (ao[ADDED_DATA] = OPENSSL_malloc(sizeof(*ao[0]))) == NULL)
-            || (o->sn != NULL
-                && (ao[ADDED_SNAME] = OPENSSL_malloc(sizeof(*ao[0]))) == NULL)
-            || (o->ln != NULL
-                && (ao[ADDED_LNAME] = OPENSSL_malloc(sizeof(*ao[0]))) == NULL))
+        || (o->length != 0
+            && obj->data != NULL
+            && (ao[ADDED_DATA] = OPENSSL_malloc(sizeof(*ao[0]))) == NULL)
+        || (o->sn != NULL
+            && (ao[ADDED_SNAME] = OPENSSL_malloc(sizeof(*ao[0]))) == NULL)
+        || (o->ln != NULL
+            && (ao[ADDED_LNAME] = OPENSSL_malloc(sizeof(*ao[0]))) == NULL))
         goto err2;
 
     if (!ossl_obj_write_lock(lock)) {
@@ -306,9 +307,9 @@ static int ossl_obj_add_object(const ASN1_OBJECT *obj, int lock)
     ossl_obj_unlock(lock);
     return o->nid;
 
- err:
+err:
     ossl_obj_unlock(lock);
- err2:
+err2:
     for (i = ADDED_DATA; i <= ADDED_NID; i++)
         OPENSSL_free(ao[i]);
     ASN1_OBJECT_free(o);
@@ -604,7 +605,7 @@ int OBJ_obj2txt(char *buf, int buf_len, const ASN1_OBJECT *a, int no_name)
     BN_free(bl);
     return n;
 
- err:
+err:
     BN_free(bl);
     return -1;
 }
@@ -777,7 +778,7 @@ int OBJ_create(const char *oid, const char *sn, const char *ln)
 
     /* Check to see if short or long name already present */
     if ((sn != NULL && OBJ_sn2nid(sn) != NID_undef)
-            || (ln != NULL && OBJ_ln2nid(ln) != NID_undef)) {
+        || (ln != NULL && OBJ_ln2nid(ln) != NID_undef)) {
         ERR_raise(ERR_LIB_OBJ, OBJ_R_OID_EXISTS);
         return 0;
     }
@@ -818,7 +819,7 @@ int OBJ_create(const char *oid, const char *sn, const char *ln)
     tmpoid->sn = NULL;
     tmpoid->ln = NULL;
 
- err:
+err:
     ossl_obj_unlock(1);
     ASN1_OBJECT_free(tmpoid);
     return ok;

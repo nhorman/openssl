@@ -92,7 +92,8 @@ static int get_ulong_via_BN(const OSSL_PARAM *p, unsigned long *goal)
     int ret = 1;                 /* Ever so hopeful */
 
     if (!TEST_true(OSSL_PARAM_get_BN(p, &n))
-        || !TEST_int_ge(BN_bn2nativepad(n, (unsigned char *)goal, sizeof(*goal)), 0))
+        || !TEST_int_ge(BN_bn2nativepad(n, (unsigned char *)goal,
+                                        sizeof(*goal)), 0))
         ret = 0;
     BN_free(n);
     return ret;
@@ -114,25 +115,41 @@ static int export_cb(const OSSL_PARAM *params, void *arg)
         || !TEST_true(get_ulong_via_BN(p, &keydata[D])))
         return 0;
 
-    if (!TEST_ptr(p = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_RSA_FACTOR1))
+    if (!TEST_ptr(p =
+                      OSSL_PARAM_locate_const(params,
+                                              OSSL_PKEY_PARAM_RSA_FACTOR1))
         || !TEST_true(get_ulong_via_BN(p, &keydata[P]))
-        || !TEST_ptr(p = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_RSA_FACTOR2))
+        || !TEST_ptr(p =
+                         OSSL_PARAM_locate_const(params,
+                                                 OSSL_PKEY_PARAM_RSA_FACTOR2))
         || !TEST_true(get_ulong_via_BN(p, &keydata[Q]))
-        || !TEST_ptr(p = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_RSA_FACTOR3))
+        || !TEST_ptr(p =
+                         OSSL_PARAM_locate_const(params,
+                                                 OSSL_PKEY_PARAM_RSA_FACTOR3))
         || !TEST_true(get_ulong_via_BN(p, &keydata[F3])))
         return 0;
 
-    if (!TEST_ptr(p = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_RSA_EXPONENT1))
+    if (!TEST_ptr(p =
+                      OSSL_PARAM_locate_const(params,
+                                              OSSL_PKEY_PARAM_RSA_EXPONENT1))
         || !TEST_true(get_ulong_via_BN(p, &keydata[DP]))
-        || !TEST_ptr(p = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_RSA_EXPONENT2))
+        || !TEST_ptr(p =
+                         OSSL_PARAM_locate_const(params,
+                                                 OSSL_PKEY_PARAM_RSA_EXPONENT2))
         || !TEST_true(get_ulong_via_BN(p, &keydata[DQ]))
-        || !TEST_ptr(p = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_RSA_EXPONENT3))
+        || !TEST_ptr(p =
+                         OSSL_PARAM_locate_const(params,
+                                                 OSSL_PKEY_PARAM_RSA_EXPONENT3))
         || !TEST_true(get_ulong_via_BN(p, &keydata[E3])))
         return 0;
 
-    if (!TEST_ptr(p = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_RSA_COEFFICIENT1))
+    if (!TEST_ptr(p =
+                      OSSL_PARAM_locate_const(params,
+                                              OSSL_PKEY_PARAM_RSA_COEFFICIENT1))
         || !TEST_true(get_ulong_via_BN(p, &keydata[QINV]))
-        || !TEST_ptr(p = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_RSA_COEFFICIENT2))
+        || !TEST_ptr(p =
+                         OSSL_PARAM_locate_const(params,
+                                                 OSSL_PKEY_PARAM_RSA_COEFFICIENT2))
         || !TEST_true(get_ulong_via_BN(p, &keydata[C2])))
         return 0;
 
@@ -265,7 +282,7 @@ static int test_pass_rsa(FIXTURE *fixture)
             goto err;
     }
 
- err:
+err:
     RSA_free(rsa);
     BN_free(bn1);
     BN_free(bn2);
@@ -302,7 +319,7 @@ static int test_evp_pkey_export_to_provider(int n)
     int ret = 0;
 
     if (!TEST_ptr(libctx = OSSL_LIB_CTX_new())
-         || !TEST_ptr(prov = OSSL_PROVIDER_load(libctx, "default")))
+        || !TEST_ptr(prov = OSSL_PROVIDER_load(libctx, "default")))
         goto end;
 
     if ((bio = BIO_new_file(cert_filename, "r")) == NULL) {
@@ -312,8 +329,9 @@ static int test_evp_pkey_export_to_provider(int n)
     }
 
     if ((cert = PEM_read_bio_X509(bio, NULL, NULL, NULL)) == NULL) {
-        TEST_error("'%s' doesn't appear to be a X.509 certificate in PEM format\n",
-                   cert_filename);
+        TEST_error(
+            "'%s' doesn't appear to be a X.509 certificate in PEM format\n",
+            cert_filename);
         TEST_openssl_errors();
         goto end;
     }
@@ -338,7 +356,7 @@ static int test_evp_pkey_export_to_provider(int n)
     }
 
     ret = 1;
- end:
+end:
     BIO_free(bio);
     X509_free(cert);
     EVP_KEYMGMT_free(keymgmt);

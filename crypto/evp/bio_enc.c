@@ -305,89 +305,89 @@ static long enc_ctrl(BIO *b, int cmd, long num, void *ptr)
         return 0;
 
     switch (cmd) {
-    case BIO_CTRL_RESET:
-        ctx->ok = 1;
-        ctx->finished = 0;
-        if (!EVP_CipherInit_ex(ctx->cipher, NULL, NULL, NULL, NULL,
-                               EVP_CIPHER_CTX_is_encrypting(ctx->cipher)))
-            return 0;
-        ret = BIO_ctrl(next, cmd, num, ptr);
-        break;
-    case BIO_CTRL_EOF:         /* More to read */
-        if (ctx->cont <= 0)
-            ret = 1;
-        else
+        case BIO_CTRL_RESET:
+            ctx->ok = 1;
+            ctx->finished = 0;
+            if (!EVP_CipherInit_ex(ctx->cipher, NULL, NULL, NULL, NULL,
+                                   EVP_CIPHER_CTX_is_encrypting(ctx->cipher)))
+                return 0;
             ret = BIO_ctrl(next, cmd, num, ptr);
-        break;
-    case BIO_CTRL_WPENDING:
-        ret = ctx->buf_len - ctx->buf_off;
-        if (ret <= 0)
-            ret = BIO_ctrl(next, cmd, num, ptr);
-        break;
-    case BIO_CTRL_PENDING:     /* More to read in buffer */
-        ret = ctx->buf_len - ctx->buf_off;
-        if (ret <= 0)
-            ret = BIO_ctrl(next, cmd, num, ptr);
-        break;
-    case BIO_CTRL_FLUSH:
-        /* do a final write */
- again:
-        while (ctx->buf_len != ctx->buf_off) {
-            pend = ctx->buf_len - ctx->buf_off;
-            i = enc_write(b, NULL, 0);
-            /*
-             * i should never be > 0 here because we didn't ask to write any
-             * new data. We stop if we get an error or we failed to make any
-             * progress writing pending data.
-             */
-            if (i < 0 || (ctx->buf_len - ctx->buf_off) == pend)
-                return i;
-        }
-
-        if (!ctx->finished) {
-            ctx->finished = 1;
-            ctx->buf_off = 0;
-            ret = EVP_CipherFinal_ex(ctx->cipher,
-                                     (unsigned char *)ctx->buf,
-                                     &(ctx->buf_len));
-            ctx->ok = (int)ret;
+            break;
+        case BIO_CTRL_EOF:     /* More to read */
+            if (ctx->cont <= 0)
+                ret = 1;
+            else
+                ret = BIO_ctrl(next, cmd, num, ptr);
+            break;
+        case BIO_CTRL_WPENDING:
+            ret = ctx->buf_len - ctx->buf_off;
             if (ret <= 0)
-                break;
+                ret = BIO_ctrl(next, cmd, num, ptr);
+            break;
+        case BIO_CTRL_PENDING: /* More to read in buffer */
+            ret = ctx->buf_len - ctx->buf_off;
+            if (ret <= 0)
+                ret = BIO_ctrl(next, cmd, num, ptr);
+            break;
+        case BIO_CTRL_FLUSH:
+            /* do a final write */
+again:
+            while (ctx->buf_len != ctx->buf_off) {
+                pend = ctx->buf_len - ctx->buf_off;
+                i = enc_write(b, NULL, 0);
+                /*
+                 * i should never be > 0 here because we didn't ask to write any
+                 * new data. We stop if we get an error or we failed to make any
+                 * progress writing pending data.
+                 */
+                if (i < 0 || (ctx->buf_len - ctx->buf_off) == pend)
+                    return i;
+            }
 
-            /* push out the bytes */
-            goto again;
-        }
+            if (!ctx->finished) {
+                ctx->finished = 1;
+                ctx->buf_off = 0;
+                ret = EVP_CipherFinal_ex(ctx->cipher,
+                                         (unsigned char *)ctx->buf,
+                                         &(ctx->buf_len));
+                ctx->ok = (int)ret;
+                if (ret <= 0)
+                    break;
 
-        /* Finally flush the underlying BIO */
-        ret = BIO_ctrl(next, cmd, num, ptr);
-        BIO_copy_next_retry(b);
-        break;
-    case BIO_C_GET_CIPHER_STATUS:
-        ret = (long)ctx->ok;
-        break;
-    case BIO_C_DO_STATE_MACHINE:
-        BIO_clear_retry_flags(b);
-        ret = BIO_ctrl(next, cmd, num, ptr);
-        BIO_copy_next_retry(b);
-        break;
-    case BIO_C_GET_CIPHER_CTX:
-        c_ctx = (EVP_CIPHER_CTX **)ptr;
-        *c_ctx = ctx->cipher;
-        BIO_set_init(b, 1);
-        break;
-    case BIO_CTRL_DUP:
-        dbio = (BIO *)ptr;
-        dctx = BIO_get_data(dbio);
-        dctx->cipher = EVP_CIPHER_CTX_new();
-        if (dctx->cipher == NULL)
-            return 0;
-        ret = EVP_CIPHER_CTX_copy(dctx->cipher, ctx->cipher);
-        if (ret)
-            BIO_set_init(dbio, 1);
-        break;
-    default:
-        ret = BIO_ctrl(next, cmd, num, ptr);
-        break;
+                /* push out the bytes */
+                goto again;
+            }
+
+            /* Finally flush the underlying BIO */
+            ret = BIO_ctrl(next, cmd, num, ptr);
+            BIO_copy_next_retry(b);
+            break;
+        case BIO_C_GET_CIPHER_STATUS:
+            ret = (long)ctx->ok;
+            break;
+        case BIO_C_DO_STATE_MACHINE:
+            BIO_clear_retry_flags(b);
+            ret = BIO_ctrl(next, cmd, num, ptr);
+            BIO_copy_next_retry(b);
+            break;
+        case BIO_C_GET_CIPHER_CTX:
+            c_ctx = (EVP_CIPHER_CTX **)ptr;
+            *c_ctx = ctx->cipher;
+            BIO_set_init(b, 1);
+            break;
+        case BIO_CTRL_DUP:
+            dbio = (BIO *)ptr;
+            dctx = BIO_get_data(dbio);
+            dctx->cipher = EVP_CIPHER_CTX_new();
+            if (dctx->cipher == NULL)
+                return 0;
+            ret = EVP_CIPHER_CTX_copy(dctx->cipher, ctx->cipher);
+            if (ret)
+                BIO_set_init(dbio, 1);
+            break;
+        default:
+            ret = BIO_ctrl(next, cmd, num, ptr);
+            break;
     }
     return ret;
 }
@@ -408,7 +408,8 @@ int BIO_set_cipher(BIO *b, const EVP_CIPHER *c, const unsigned char *k,
     BIO_ENC_CTX *ctx;
     BIO_callback_fn_ex callback_ex;
 #ifndef OPENSSL_NO_DEPRECATED_3_0
-    long (*callback) (struct bio_st *, int, const char *, int, long, long) = NULL;
+    long (*callback) (struct bio_st *, int, const char *, int, long,
+                      long) = NULL;
 #endif
 
     ctx = BIO_get_data(b);

@@ -60,7 +60,7 @@ static char *change_path(const char *file)
     ret = chdir(s);
     if (ret == 0)
         new_config_name = strdup(last + DIRSEP_PRESERVE + 1);
- err:
+err:
     OPENSSL_free(s);
     return new_config_name;
 }
@@ -102,7 +102,8 @@ static int test_load_config(void)
 
     /* verify whether CA_default/default_days is set */
     val = 0;
-    if (!TEST_int_eq(NCONF_get_number(conf, "CA_default", "default_days", &val), 1)
+    if (!TEST_int_eq(NCONF_get_number(conf, "CA_default", "default_days", &val),
+                     1)
         || !TEST_int_eq(val, 365)) {
         TEST_note("default_days incorrect");
         return 0;
@@ -117,7 +118,8 @@ static int test_load_config(void)
     }
 
     /* verify whether countryName_default is set correctly */
-    str = NCONF_get_string(conf, "req_distinguished_name", "countryName_default");
+    str =
+        NCONF_get_string(conf, "req_distinguished_name", "countryName_default");
     if (!TEST_ptr(str) || !TEST_str_eq(str, "AU")) {
         TEST_note("countryName_default incorrect");
         return 0;
@@ -126,19 +128,22 @@ static int test_load_config(void)
     if (test_providers != 0) {
         /* test for `active` directive in configuration file */
         val = 0;
-        if (!TEST_int_eq(NCONF_get_number(conf, "null_sect", "activate", &val), 1)
+        if (!TEST_int_eq(NCONF_get_number(conf, "null_sect", "activate", &val),
+                         1)
             || !TEST_int_eq(val, 1)) {
             TEST_note("null provider not activated");
             return 0;
         }
         val = 0;
-        if (!TEST_int_eq(NCONF_get_number(conf, "default_sect", "activate", &val), 1)
+        if (!TEST_int_eq(NCONF_get_number(conf, "default_sect", "activate",
+                                          &val), 1)
             || !TEST_int_eq(val, 1)) {
             TEST_note("default provider not activated");
             return 0;
         }
         val = 0;
-        if (!TEST_int_eq(NCONF_get_number(conf, "legacy_sect", "activate", &val), 1)
+        if (!TEST_int_eq(NCONF_get_number(conf, "legacy_sect", "activate",
+                                          &val), 1)
             || !TEST_int_eq(val, 1)) {
             TEST_note("legacy provider not activated");
             return 0;
@@ -150,16 +155,16 @@ static int test_load_config(void)
 static int test_check_null_numbers(void)
 {
 #if defined(_BSD_SOURCE) \
-        || (defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 200112L) \
-        || (defined(_XOPEN_SOURCE) && _XOPEN_SOURCE >= 600)
+    || (defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 200112L) \
+    || (defined(_XOPEN_SOURCE) && _XOPEN_SOURCE >= 600)
     long val = 0;
 
     /* Verify that a NULL config with a present environment variable returns
      * success and the value.
      */
     if (!TEST_int_eq(setenv("FNORD", "123", 1), 0)
-            || !TEST_true(NCONF_get_number(NULL, "missing", "FNORD", &val))
-            || !TEST_long_eq(val, 123)) {
+        || !TEST_true(NCONF_get_number(NULL, "missing", "FNORD", &val))
+        || !TEST_long_eq(val, 123)) {
         TEST_note("environment variable with NULL conf failed");
         return 0;
     }
@@ -169,7 +174,7 @@ static int test_check_null_numbers(void)
      * a failure code.
      */
     if (!TEST_int_eq(unsetenv("FNORD"), 0)
-            || !TEST_false(NCONF_get_number(NULL, "missing", "FNORD", &val))) {
+        || !TEST_false(NCONF_get_number(NULL, "missing", "FNORD", &val))) {
         TEST_note("missing environment variable with NULL conf failed");
         return 0;
     }
@@ -180,8 +185,8 @@ static int test_check_null_numbers(void)
 static int test_check_overflow(void)
 {
 #if defined(_BSD_SOURCE) \
-        || (defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 200112L) \
-        || (defined(_XOPEN_SOURCE) && _XOPEN_SOURCE >= 600)
+    || (defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 200112L) \
+    || (defined(_XOPEN_SOURCE) && _XOPEN_SOURCE >= 600)
     long val = 0;
     char max[(sizeof(long) * 8) / 3 + 3];
     char *p;
@@ -189,7 +194,7 @@ static int test_check_overflow(void)
     p = max + sprintf(max, "0%ld", LONG_MAX) - 1;
     setenv("FNORD", max, 1);
     if (!TEST_true(NCONF_get_number(NULL, "missing", "FNORD", &val))
-            || !TEST_long_eq(val, LONG_MAX))
+        || !TEST_long_eq(val, LONG_MAX))
         return 0;
 
     while (++*p > '9')
@@ -208,7 +213,8 @@ static int test_available_providers(void)
     if (!TEST_ptr(libctx))
         return 0;
 
-    if (!TEST_ptr(rel_conf_file) || !OSSL_LIB_CTX_load_config(libctx, rel_conf_file)) {
+    if (!TEST_ptr(rel_conf_file) ||
+        !OSSL_LIB_CTX_load_config(libctx, rel_conf_file)) {
         TEST_note("Failed to load config");
         return 0;
     }
@@ -254,15 +260,15 @@ int setup_tests(void)
 
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_FAIL:
-            expect_failure = 1;
-            break;
-        case OPT_TEST_PROV:
-            test_providers = 1;
-        case OPT_TEST_CASES:
-            break;
-        default:
-            return 0;
+            case OPT_FAIL:
+                expect_failure = 1;
+                break;
+            case OPT_TEST_PROV:
+                test_providers = 1;
+            case OPT_TEST_CASES:
+                break;
+            default:
+                return 0;
         }
     }
 

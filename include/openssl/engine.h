@@ -146,17 +146,17 @@ extern "C" {
 #  define ENGINE_CTRL_SET_LOGSTREAM               1
 #  define ENGINE_CTRL_SET_PASSWORD_CALLBACK       2
 #  define ENGINE_CTRL_HUP                         3/* Close and reinitialise
-                                                   * any handles/connections
-                                                   * etc. */
+                                                    * any handles/connections
+                                                    * etc. */
 #  define ENGINE_CTRL_SET_USER_INTERFACE          4/* Alternative to callback */
 #  define ENGINE_CTRL_SET_CALLBACK_DATA           5/* User-specific data, used
-                                                   * when calling the password
-                                                   * callback and the user
-                                                   * interface */
+                                                    * when calling the password
+                                                    * callback and the user
+                                                    * interface */
 #  define ENGINE_CTRL_LOAD_CONFIGURATION          6/* Load a configuration,
-                                                   * given a string that
-                                                   * represents a file name
-                                                   * or so */
+                                                    * given a string that
+                                                    * represents a file name
+                                                    * or so */
 #  define ENGINE_CTRL_LOAD_SECTION                7/* Load data from a given
                                                    * section in the already
                                                    * loaded configuration */
@@ -233,16 +233,16 @@ extern "C" {
 
 /* Flags specific to the nCipher "chil" engine */
 #  define ENGINE_CTRL_CHIL_SET_FORKCHECK          100
-         /*
-          * Depending on the value of the (long)i argument, this sets or
-          * unsets the SimpleForkCheck flag in the CHIL API to enable or
-          * disable checking and workarounds for applications that fork().
-          */
+/*
+ * Depending on the value of the (long)i argument, this sets or
+ * unsets the SimpleForkCheck flag in the CHIL API to enable or
+ * disable checking and workarounds for applications that fork().
+ */
 #  define ENGINE_CTRL_CHIL_NO_LOCKING             101
-         /*
-          * This prevents the initialisation function from providing mutex
-          * callbacks to the nCipher library.
-          */
+/*
+ * This prevents the initialisation function from providing mutex
+ * callbacks to the nCipher library.
+ */
 
 /*
  * If an ENGINE supports its own specific control commands and wishes the
@@ -273,9 +273,9 @@ typedef EVP_PKEY *(*ENGINE_LOAD_KEY_PTR)(ENGINE *, const char *,
                                          UI_METHOD *ui_method,
                                          void *callback_data);
 typedef int (*ENGINE_SSL_CLIENT_CERT_PTR) (ENGINE *, SSL *ssl,
-                                           STACK_OF(X509_NAME) *ca_dn,
+                                           STACK_OF (X509_NAME) *ca_dn,
                                            X509 **pcert, EVP_PKEY **pkey,
-                                           STACK_OF(X509) **pother,
+                                           STACK_OF (X509) **pother,
                                            UI_METHOD *ui_method,
                                            void *callback_data);
 /*-
@@ -496,9 +496,11 @@ OSSL_DEPRECATEDIN_3_0 int ENGINE_set_id(ENGINE *e, const char *id);
 OSSL_DEPRECATEDIN_3_0 int ENGINE_set_name(ENGINE *e, const char *name);
 OSSL_DEPRECATEDIN_3_0 int ENGINE_set_RSA(ENGINE *e, const RSA_METHOD *rsa_meth);
 OSSL_DEPRECATEDIN_3_0 int ENGINE_set_DSA(ENGINE *e, const DSA_METHOD *dsa_meth);
-OSSL_DEPRECATEDIN_3_0 int ENGINE_set_EC(ENGINE *e, const EC_KEY_METHOD *ecdsa_meth);
+OSSL_DEPRECATEDIN_3_0 int ENGINE_set_EC(ENGINE *e,
+                                        const EC_KEY_METHOD *ecdsa_meth);
 OSSL_DEPRECATEDIN_3_0 int ENGINE_set_DH(ENGINE *e, const DH_METHOD *dh_meth);
-OSSL_DEPRECATEDIN_3_0 int ENGINE_set_RAND(ENGINE *e, const RAND_METHOD *rand_meth);
+OSSL_DEPRECATEDIN_3_0 int ENGINE_set_RAND(ENGINE *e,
+                                          const RAND_METHOD *rand_meth);
 OSSL_DEPRECATEDIN_3_0
 int ENGINE_set_destroy_function(ENGINE *e,ENGINE_GEN_INT_FUNC_PTR destroy_f);
 OSSL_DEPRECATEDIN_3_0
@@ -528,7 +530,7 @@ OSSL_DEPRECATEDIN_3_0 int ENGINE_set_cmd_defns(ENGINE *e,
 #  endif
 /* These functions allow control over any per-structure ENGINE data. */
 #  define ENGINE_get_ex_new_index(l, p, newf, dupf, freef) \
-    CRYPTO_get_ex_new_index(CRYPTO_EX_INDEX_ENGINE, l, p, newf, dupf, freef)
+        CRYPTO_get_ex_new_index(CRYPTO_EX_INDEX_ENGINE, l, p, newf, dupf, freef)
 # ifndef OPENSSL_NO_DEPRECATED_3_0
 OSSL_DEPRECATEDIN_3_0 int ENGINE_set_ex_data(ENGINE *e, int idx, void *arg);
 OSSL_DEPRECATEDIN_3_0 void *ENGINE_get_ex_data(const ENGINE *e, int idx);
@@ -769,8 +771,8 @@ typedef unsigned long (*dynamic_v_check_fn) (unsigned long ossl_version);
 #  define IMPLEMENT_DYNAMIC_CHECK_FN() \
         OPENSSL_EXPORT unsigned long v_check(unsigned long v); \
         OPENSSL_EXPORT unsigned long v_check(unsigned long v) { \
-                if (v >= OSSL_DYNAMIC_OLDEST) return OSSL_DYNAMIC_VERSION; \
-                return 0; }
+            if (v >= OSSL_DYNAMIC_OLDEST) return OSSL_DYNAMIC_VERSION; \
+            return 0; }
 
 /*
  * This function is passed the ENGINE structure to initialise with its own
@@ -802,7 +804,7 @@ typedef int (*dynamic_bind_engine) (ENGINE *e, const char *id,
                                      fns->mem_fns.realloc_fn, \
                                      fns->mem_fns.free_fn); \
             OPENSSL_init_crypto(OPENSSL_INIT_NO_ATEXIT, NULL); \
-        skip_cbs: \
+skip_cbs: \
             if (!fn(e, id)) return 0; \
             return 1; }
 

@@ -103,7 +103,7 @@ static int ui_open(UI *ui)
 static int ui_read(UI *ui, UI_STRING *uis)
 {
     switch (UI_get_string_type(uis)) {
-    case UIT_PROMPT:
+        case UIT_PROMPT:
         {
             char result[PEM_BUFSIZE + 1];
             const struct pem_password_cb_data *data =
@@ -121,12 +121,12 @@ static int ui_read(UI *ui, UI_STRING *uis)
                 return 1;
             return 0;
         }
-    case UIT_VERIFY:
-    case UIT_NONE:
-    case UIT_BOOLEAN:
-    case UIT_INFO:
-    case UIT_ERROR:
-        break;
+        case UIT_VERIFY:
+        case UIT_NONE:
+        case UIT_BOOLEAN:
+        case UIT_INFO:
+        case UIT_ERROR:
+            break;
     }
     return 1;
 }
@@ -145,7 +145,8 @@ UI_METHOD *UI_UTIL_wrap_read_pem_callback(pem_password_cb *cb, int rwflag)
     UI_METHOD *ui_method = NULL;
 
     if ((data = OPENSSL_zalloc(sizeof(*data))) == NULL
-        || (ui_method = UI_create_method("PEM password callback wrapper")) == NULL
+        || (ui_method = UI_create_method("PEM password callback wrapper")) ==
+        NULL
         || UI_method_set_opener(ui_method, ui_open) < 0
         || UI_method_set_reader(ui_method, ui_read) < 0
         || UI_method_set_writer(ui_method, ui_write) < 0

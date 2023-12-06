@@ -389,9 +389,9 @@ void ossl_rlayer_fatal(OSSL_RECORD_LAYER *rl, int al, int reason,
 
 #define RLAYERfatal(rl, al, r) RLAYERfatal_data((rl), (al), (r), NULL)
 #define RLAYERfatal_data                                           \
-    (ERR_new(),                                                    \
-     ERR_set_debug(OPENSSL_FILE, OPENSSL_LINE, OPENSSL_FUNC),      \
-     ossl_rlayer_fatal)
+        (ERR_new(),                                                    \
+         ERR_set_debug(OPENSSL_FILE, OPENSSL_LINE, OPENSSL_FUNC),      \
+         ossl_rlayer_fatal)
 
 #define RLAYER_USE_EXPLICIT_IV(rl) ((rl)->version == TLS1_1_VERSION \
                                     || (rl)->version == TLS1_2_VERSION \
@@ -426,7 +426,8 @@ int dtls_post_encryption_processing(OSSL_RECORD_LAYER *rl,
                                     TLS_RL_RECORD *thiswr);
 
 int tls_default_set_protocol_version(OSSL_RECORD_LAYER *rl, int version);
-int tls_default_validate_record_header(OSSL_RECORD_LAYER *rl, TLS_RL_RECORD *re);
+int tls_default_validate_record_header(OSSL_RECORD_LAYER *rl,
+                                       TLS_RL_RECORD *re);
 int tls_do_compress(OSSL_RECORD_LAYER *rl, TLS_RL_RECORD *wr);
 int tls_do_uncompress(OSSL_RECORD_LAYER *rl, TLS_RL_RECORD *rec);
 int tls_default_post_process_record(OSSL_RECORD_LAYER *rl, TLS_RL_RECORD *rec);

@@ -47,7 +47,8 @@ const OPTIONS dsa_options[] = {
     {"help", OPT_HELP, '-', "Display this summary"},
     {"", OPT_CIPHER, '-', "Any supported cipher"},
 #ifndef OPENSSL_NO_RC4
-    {"pvk-strong", OPT_PVK_STRONG, '-', "Enable 'Strong' PVK encoding level (default)"},
+    {"pvk-strong", OPT_PVK_STRONG, '-',
+     "Enable 'Strong' PVK encoding level (default)"},
     {"pvk-weak", OPT_PVK_WEAK, '-', "Enable 'Weak' PVK encoding level"},
     {"pvk-none", OPT_PVK_NONE, '-', "Don't enforce PVK encoding"},
 #endif
@@ -96,68 +97,68 @@ int dsa_main(int argc, char **argv)
     prog = opt_init(argc, argv, dsa_options);
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_EOF:
-        case OPT_ERR:
- opthelp:
-            ret = 0;
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto end;
-        case OPT_HELP:
-            opt_help(dsa_options);
-            ret = 0;
-            goto end;
-        case OPT_INFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_ANY, &informat))
-                goto opthelp;
-            break;
-        case OPT_IN:
-            infile = opt_arg();
-            break;
-        case OPT_OUTFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_ANY, &outformat))
-                goto opthelp;
-            break;
-        case OPT_OUT:
-            outfile = opt_arg();
-            break;
-        case OPT_ENGINE:
-            e = setup_engine(opt_arg(), 0);
-            break;
-        case OPT_PASSIN:
-            passinarg = opt_arg();
-            break;
-        case OPT_PASSOUT:
-            passoutarg = opt_arg();
-            break;
-        case OPT_PVK_STRONG:    /* pvk_encr:= 2 */
-        case OPT_PVK_WEAK:      /* pvk_encr:= 1 */
-        case OPT_PVK_NONE:      /* pvk_encr:= 0 */
-#ifndef OPENSSL_NO_RC4
-            pvk_encr = (o - OPT_PVK_NONE);
-#endif
-            break;
-        case OPT_NOOUT:
-            noout = 1;
-            break;
-        case OPT_TEXT:
-            text = 1;
-            break;
-        case OPT_MODULUS:
-            modulus = 1;
-            break;
-        case OPT_PUBIN:
-            pubin = 1;
-            break;
-        case OPT_PUBOUT:
-            pubout = 1;
-            break;
-        case OPT_CIPHER:
-            ciphername = opt_unknown();
-            break;
-        case OPT_PROV_CASES:
-            if (!opt_provider(o))
+            case OPT_EOF:
+            case OPT_ERR:
+opthelp:
+                ret = 0;
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
                 goto end;
-            break;
+            case OPT_HELP:
+                opt_help(dsa_options);
+                ret = 0;
+                goto end;
+            case OPT_INFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_ANY, &informat))
+                    goto opthelp;
+                break;
+            case OPT_IN:
+                infile = opt_arg();
+                break;
+            case OPT_OUTFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_ANY, &outformat))
+                    goto opthelp;
+                break;
+            case OPT_OUT:
+                outfile = opt_arg();
+                break;
+            case OPT_ENGINE:
+                e = setup_engine(opt_arg(), 0);
+                break;
+            case OPT_PASSIN:
+                passinarg = opt_arg();
+                break;
+            case OPT_PASSOUT:
+                passoutarg = opt_arg();
+                break;
+            case OPT_PVK_STRONG: /* pvk_encr:= 2 */
+            case OPT_PVK_WEAK:  /* pvk_encr:= 1 */
+            case OPT_PVK_NONE:  /* pvk_encr:= 0 */
+#ifndef OPENSSL_NO_RC4
+                pvk_encr = (o - OPT_PVK_NONE);
+#endif
+                break;
+            case OPT_NOOUT:
+                noout = 1;
+                break;
+            case OPT_TEXT:
+                text = 1;
+                break;
+            case OPT_MODULUS:
+                modulus = 1;
+                break;
+            case OPT_PUBIN:
+                pubin = 1;
+                break;
+            case OPT_PUBOUT:
+                pubout = 1;
+                break;
+            case OPT_CIPHER:
+                ciphername = opt_unknown();
+                break;
+            case OPT_PROV_CASES:
+                if (!opt_provider(o))
+                    goto end;
+                break;
         }
     }
 
@@ -293,7 +294,7 @@ int dsa_main(int argc, char **argv)
         goto end;
     }
     ret = 0;
- end:
+end:
     if (ret != 0)
         ERR_print_errors(bio_err);
     OSSL_ENCODER_CTX_free(ectx);

@@ -69,7 +69,7 @@ static int do_bio_comp_test(const BIO_METHOD *meth, size_t size)
         goto err;
 
     ret = 1;
- err:
+err:
     BIO_free(bexp);
     BIO_free(bcomp);
     BIO_free(bmem);
@@ -88,32 +88,32 @@ static int do_bio_comp(const BIO_METHOD *meth, int n)
         goto err;
 
     switch (type) {
-    case 0:
-        TEST_info("zeros of size %d\n", size);
-        memset(original, 0, BUFFER_SIZE);
-        break;
-    case 1:
-        TEST_info("ones of size %d\n", size);
-        memset(original, 1, BUFFER_SIZE);
-        break;
-    case 2:
-        TEST_info("sequential of size %d\n", size);
-        for (i = 0; i < BUFFER_SIZE; i++)
-            original[i] = i & 0xFF;
-        break;
-    case 3:
-        TEST_info("random of size %d\n", size);
-        if (!TEST_int_gt(RAND_bytes(original, BUFFER_SIZE), 0))
+        case 0:
+            TEST_info("zeros of size %d\n", size);
+            memset(original, 0, BUFFER_SIZE);
+            break;
+        case 1:
+            TEST_info("ones of size %d\n", size);
+            memset(original, 1, BUFFER_SIZE);
+            break;
+        case 2:
+            TEST_info("sequential of size %d\n", size);
+            for (i = 0; i < BUFFER_SIZE; i++)
+                original[i] = i & 0xFF;
+            break;
+        case 3:
+            TEST_info("random of size %d\n", size);
+            if (!TEST_int_gt(RAND_bytes(original, BUFFER_SIZE), 0))
+                goto err;
+            break;
+        default:
             goto err;
-        break;
-    default:
-        goto err;
     }
 
     if (!TEST_true(do_bio_comp_test(meth, size)))
         goto err;
     success = 1;
- err:
+err:
     OPENSSL_free(original);
     OPENSSL_free(result);
     return success;

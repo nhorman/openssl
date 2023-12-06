@@ -25,15 +25,15 @@
 # ifndef timersub
 /* struct timeval * subtraction; a must be greater than or equal to b */
 #  define timersub(a, b, res)                                         \
-     do {                                                             \
-         (res)->tv_sec = (a)->tv_sec - (b)->tv_sec;                   \
-         if ((a)->tv_usec < (b)->tv_usec) {                           \
-             (res)->tv_usec = (a)->tv_usec + 1000000 - (b)->tv_usec;  \
-             --(res)->tv_sec;                                         \
-         } else {                                                     \
-             (res)->tv_usec = (a)->tv_usec - (b)->tv_usec;            \
-         }                                                            \
-     } while(0)
+        do {                                                             \
+            (res)->tv_sec = (a)->tv_sec - (b)->tv_sec;                   \
+            if ((a)->tv_usec < (b)->tv_usec) {                           \
+                (res)->tv_usec = (a)->tv_usec + 1000000 - (b)->tv_usec;  \
+                --(res)->tv_sec;                                         \
+            } else {                                                     \
+                (res)->tv_usec = (a)->tv_usec - (b)->tv_usec;            \
+            }                                                            \
+        } while(0)
 # endif
 
 static char *prog;
@@ -108,29 +108,29 @@ int main(int ac, char **av)
     prog = av[0];
     while ((i = getopt(ac, av, "c:dw:")) != EOF) {
         switch (i) {
-        default:
-            usage();
-            break;
-        case 'c':
-            if ((count = atoi(optarg)) < 0)
-                usage();
-            break;
-        case 'd':
-            debug = 1;
-            break;
-        case 'w':
-            if (optarg[1] != '\0')
-                usage();
-            switch (*optarg) {
             default:
                 usage();
                 break;
             case 'c':
-            case 'p':
-                what = *optarg;
+                if ((count = atoi(optarg)) < 0)
+                    usage();
                 break;
-            }
-            break;
+            case 'd':
+                debug = 1;
+                break;
+            case 'w':
+                if (optarg[1] != '\0')
+                    usage();
+                switch (*optarg) {
+                    default:
+                        usage();
+                        break;
+                    case 'c':
+                    case 'p':
+                        what = *optarg;
+                        break;
+                }
+                break;
         }
     }
     ac -= optind;
@@ -161,12 +161,12 @@ int main(int ac, char **av)
     /* Try to prep system cache, etc. */
     for (i = 10; i > 0; i--) {
         switch (what) {
-        case 'c':
-            readx509(contents, (int)sb.st_size);
-            break;
-        case 'p':
-            readpkey(contents, (int)sb.st_size);
-            break;
+            case 'c':
+                readx509(contents, (int)sb.st_size);
+                break;
+            case 'p':
+                readpkey(contents, (int)sb.st_size);
+                break;
         }
     }
 
@@ -180,12 +180,12 @@ int main(int ac, char **av)
     }
     for (i = count; i > 0; i--) {
         switch (what) {
-        case 'c':
-            readx509(contents, (int)sb.st_size);
-            break;
-        case 'p':
-            readpkey(contents, (int)sb.st_size);
-            break;
+            case 'c':
+                readx509(contents, (int)sb.st_size);
+                break;
+            case 'p':
+                readpkey(contents, (int)sb.st_size);
+                break;
         }
     }
     if (getrusage(RUSAGE_SELF, &end) < 0) {

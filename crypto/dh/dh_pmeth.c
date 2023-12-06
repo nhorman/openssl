@@ -105,7 +105,7 @@ static int pkey_dh_copy(EVP_PKEY_CTX *dst, const EVP_PKEY_CTX *src)
     if (sctx->kdf_ukm != NULL) {
         dctx->kdf_ukm = OPENSSL_memdup(sctx->kdf_ukm, sctx->kdf_ukmlen);
         if (dctx->kdf_ukm == NULL)
-          return 0;
+            return 0;
         dctx->kdf_ukmlen = sctx->kdf_ukmlen;
     }
     dctx->kdf_outlen = sctx->kdf_outlen;
@@ -116,105 +116,105 @@ static int pkey_dh_ctrl(EVP_PKEY_CTX *ctx, int type, int p1, void *p2)
 {
     DH_PKEY_CTX *dctx = ctx->data;
     switch (type) {
-    case EVP_PKEY_CTRL_DH_PARAMGEN_PRIME_LEN:
-        if (p1 < 256)
-            return -2;
-        dctx->prime_len = p1;
-        return 1;
+        case EVP_PKEY_CTRL_DH_PARAMGEN_PRIME_LEN:
+            if (p1 < 256)
+                return -2;
+            dctx->prime_len = p1;
+            return 1;
 
-    case EVP_PKEY_CTRL_DH_PARAMGEN_SUBPRIME_LEN:
-        if (dctx->paramgen_type == DH_PARAMGEN_TYPE_GENERATOR)
-            return -2;
-        dctx->subprime_len = p1;
-        return 1;
+        case EVP_PKEY_CTRL_DH_PARAMGEN_SUBPRIME_LEN:
+            if (dctx->paramgen_type == DH_PARAMGEN_TYPE_GENERATOR)
+                return -2;
+            dctx->subprime_len = p1;
+            return 1;
 
-    case EVP_PKEY_CTRL_DH_PAD:
-        dctx->pad = p1;
-        return 1;
+        case EVP_PKEY_CTRL_DH_PAD:
+            dctx->pad = p1;
+            return 1;
 
-    case EVP_PKEY_CTRL_DH_PARAMGEN_GENERATOR:
-        if (dctx->paramgen_type != DH_PARAMGEN_TYPE_GENERATOR)
-            return -2;
-        dctx->generator = p1;
-        return 1;
+        case EVP_PKEY_CTRL_DH_PARAMGEN_GENERATOR:
+            if (dctx->paramgen_type != DH_PARAMGEN_TYPE_GENERATOR)
+                return -2;
+            dctx->generator = p1;
+            return 1;
 
-    case EVP_PKEY_CTRL_DH_PARAMGEN_TYPE:
+        case EVP_PKEY_CTRL_DH_PARAMGEN_TYPE:
 #ifdef OPENSSL_NO_DSA
-        if (p1 != DH_PARAMGEN_TYPE_GENERATOR)
-            return -2;
+            if (p1 != DH_PARAMGEN_TYPE_GENERATOR)
+                return -2;
 #else
-        if (p1 < 0 || p1 > 2)
-            return -2;
+            if (p1 < 0 || p1 > 2)
+                return -2;
 #endif
-        dctx->paramgen_type = p1;
-        return 1;
+            dctx->paramgen_type = p1;
+            return 1;
 
-    case EVP_PKEY_CTRL_DH_RFC5114:
-        if (p1 < 1 || p1 > 3 || dctx->param_nid != NID_undef)
+        case EVP_PKEY_CTRL_DH_RFC5114:
+            if (p1 < 1 || p1 > 3 || dctx->param_nid != NID_undef)
+                return -2;
+            dctx->param_nid = p1;
+            return 1;
+
+        case EVP_PKEY_CTRL_DH_NID:
+            if (p1 <= 0 || dctx->param_nid != NID_undef)
+                return -2;
+            dctx->param_nid = p1;
+            return 1;
+
+        case EVP_PKEY_CTRL_PEER_KEY:
+            /* Default behaviour is OK */
+            return 1;
+
+        case EVP_PKEY_CTRL_DH_KDF_TYPE:
+            if (p1 == -2)
+                return dctx->kdf_type;
+            if (p1 != EVP_PKEY_DH_KDF_NONE && p1 != EVP_PKEY_DH_KDF_X9_42)
+                return -2;
+            dctx->kdf_type = p1;
+            return 1;
+
+        case EVP_PKEY_CTRL_DH_KDF_MD:
+            dctx->kdf_md = p2;
+            return 1;
+
+        case EVP_PKEY_CTRL_GET_DH_KDF_MD:
+            *(const EVP_MD **)p2 = dctx->kdf_md;
+            return 1;
+
+        case EVP_PKEY_CTRL_DH_KDF_OUTLEN:
+            if (p1 <= 0)
+                return -2;
+            dctx->kdf_outlen = (size_t)p1;
+            return 1;
+
+        case EVP_PKEY_CTRL_GET_DH_KDF_OUTLEN:
+            *(int *)p2 = dctx->kdf_outlen;
+            return 1;
+
+        case EVP_PKEY_CTRL_DH_KDF_UKM:
+            OPENSSL_free(dctx->kdf_ukm);
+            dctx->kdf_ukm = p2;
+            if (p2)
+                dctx->kdf_ukmlen = p1;
+            else
+                dctx->kdf_ukmlen = 0;
+            return 1;
+
+        case EVP_PKEY_CTRL_GET_DH_KDF_UKM:
+            *(unsigned char **)p2 = dctx->kdf_ukm;
+            return dctx->kdf_ukmlen;
+
+        case EVP_PKEY_CTRL_DH_KDF_OID:
+            ASN1_OBJECT_free(dctx->kdf_oid);
+            dctx->kdf_oid = p2;
+            return 1;
+
+        case EVP_PKEY_CTRL_GET_DH_KDF_OID:
+            *(ASN1_OBJECT **)p2 = dctx->kdf_oid;
+            return 1;
+
+        default:
             return -2;
-        dctx->param_nid = p1;
-        return 1;
-
-    case EVP_PKEY_CTRL_DH_NID:
-        if (p1 <= 0 || dctx->param_nid != NID_undef)
-            return -2;
-        dctx->param_nid = p1;
-        return 1;
-
-    case EVP_PKEY_CTRL_PEER_KEY:
-        /* Default behaviour is OK */
-        return 1;
-
-    case EVP_PKEY_CTRL_DH_KDF_TYPE:
-        if (p1 == -2)
-            return dctx->kdf_type;
-        if (p1 != EVP_PKEY_DH_KDF_NONE && p1 != EVP_PKEY_DH_KDF_X9_42)
-            return -2;
-        dctx->kdf_type = p1;
-        return 1;
-
-    case EVP_PKEY_CTRL_DH_KDF_MD:
-        dctx->kdf_md = p2;
-        return 1;
-
-    case EVP_PKEY_CTRL_GET_DH_KDF_MD:
-        *(const EVP_MD **)p2 = dctx->kdf_md;
-        return 1;
-
-    case EVP_PKEY_CTRL_DH_KDF_OUTLEN:
-        if (p1 <= 0)
-            return -2;
-        dctx->kdf_outlen = (size_t)p1;
-        return 1;
-
-    case EVP_PKEY_CTRL_GET_DH_KDF_OUTLEN:
-        *(int *)p2 = dctx->kdf_outlen;
-        return 1;
-
-    case EVP_PKEY_CTRL_DH_KDF_UKM:
-        OPENSSL_free(dctx->kdf_ukm);
-        dctx->kdf_ukm = p2;
-        if (p2)
-            dctx->kdf_ukmlen = p1;
-        else
-            dctx->kdf_ukmlen = 0;
-        return 1;
-
-    case EVP_PKEY_CTRL_GET_DH_KDF_UKM:
-        *(unsigned char **)p2 = dctx->kdf_ukm;
-        return dctx->kdf_ukmlen;
-
-    case EVP_PKEY_CTRL_DH_KDF_OID:
-        ASN1_OBJECT_free(dctx->kdf_oid);
-        dctx->kdf_oid = p2;
-        return 1;
-
-    case EVP_PKEY_CTRL_GET_DH_KDF_OID:
-        *(ASN1_OBJECT **)p2 = dctx->kdf_oid;
-        return 1;
-
-    default:
-        return -2;
 
     }
 }
@@ -452,7 +452,7 @@ static int pkey_dh_derive(EVP_PKEY_CTX *ctx, unsigned char *key,
             goto err;
         *keylen = dctx->kdf_outlen;
         ret = 1;
- err:
+err:
         OPENSSL_clear_free(Z, Zlen);
         return ret;
     }

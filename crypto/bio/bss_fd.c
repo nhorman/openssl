@@ -147,51 +147,51 @@ static long fd_ctrl(BIO *b, int cmd, long num, void *ptr)
     int *ip;
 
     switch (cmd) {
-    case BIO_CTRL_RESET:
-        num = 0;
+        case BIO_CTRL_RESET:
+            num = 0;
         /* fall through */
-    case BIO_C_FILE_SEEK:
-        ret = (long)UP_lseek(b->num, num, 0);
-        break;
-    case BIO_C_FILE_TELL:
-    case BIO_CTRL_INFO:
-        ret = (long)UP_lseek(b->num, 0, 1);
-        break;
-    case BIO_C_SET_FD:
-        fd_free(b);
-        b->num = *((int *)ptr);
-        b->shutdown = (int)num;
-        b->init = 1;
-        break;
-    case BIO_C_GET_FD:
-        if (b->init) {
-            ip = (int *)ptr;
-            if (ip != NULL)
-                *ip = b->num;
-            ret = b->num;
-        } else
-            ret = -1;
-        break;
-    case BIO_CTRL_GET_CLOSE:
-        ret = b->shutdown;
-        break;
-    case BIO_CTRL_SET_CLOSE:
-        b->shutdown = (int)num;
-        break;
-    case BIO_CTRL_PENDING:
-    case BIO_CTRL_WPENDING:
-        ret = 0;
-        break;
-    case BIO_CTRL_DUP:
-    case BIO_CTRL_FLUSH:
-        ret = 1;
-        break;
-    case BIO_CTRL_EOF:
-        ret = (b->flags & BIO_FLAGS_IN_EOF) != 0;
-        break;
-    default:
-        ret = 0;
-        break;
+        case BIO_C_FILE_SEEK:
+            ret = (long)UP_lseek(b->num, num, 0);
+            break;
+        case BIO_C_FILE_TELL:
+        case BIO_CTRL_INFO:
+            ret = (long)UP_lseek(b->num, 0, 1);
+            break;
+        case BIO_C_SET_FD:
+            fd_free(b);
+            b->num = *((int *)ptr);
+            b->shutdown = (int)num;
+            b->init = 1;
+            break;
+        case BIO_C_GET_FD:
+            if (b->init) {
+                ip = (int *)ptr;
+                if (ip != NULL)
+                    *ip = b->num;
+                ret = b->num;
+            } else
+                ret = -1;
+            break;
+        case BIO_CTRL_GET_CLOSE:
+            ret = b->shutdown;
+            break;
+        case BIO_CTRL_SET_CLOSE:
+            b->shutdown = (int)num;
+            break;
+        case BIO_CTRL_PENDING:
+        case BIO_CTRL_WPENDING:
+            ret = 0;
+            break;
+        case BIO_CTRL_DUP:
+        case BIO_CTRL_FLUSH:
+            ret = 1;
+            break;
+        case BIO_CTRL_EOF:
+            ret = (b->flags & BIO_FLAGS_IN_EOF) != 0;
+            break;
+        default:
+            ret = 0;
+            break;
     }
     return ret;
 }
@@ -213,7 +213,7 @@ static int fd_gets(BIO *bp, char *buf, int size)
 
     while (ptr < end && fd_read(bp, ptr, 1) > 0) {
         if (*ptr++ == '\n')
-           break;
+            break;
     }
 
     ptr[0] = '\0';
@@ -242,41 +242,41 @@ int BIO_fd_non_fatal_error(int err)
 # ifdef EWOULDBLOCK
 #  ifdef WSAEWOULDBLOCK
 #   if WSAEWOULDBLOCK != EWOULDBLOCK
-    case EWOULDBLOCK:
+        case EWOULDBLOCK:
 #   endif
 #  else
-    case EWOULDBLOCK:
+        case EWOULDBLOCK:
 #  endif
 # endif
 
 # if defined(ENOTCONN)
-    case ENOTCONN:
+        case ENOTCONN:
 # endif
 
 # ifdef EINTR
-    case EINTR:
+        case EINTR:
 # endif
 
 # ifdef EAGAIN
 #  if EWOULDBLOCK != EAGAIN
-    case EAGAIN:
+        case EAGAIN:
 #  endif
 # endif
 
 # ifdef EPROTO
-    case EPROTO:
+        case EPROTO:
 # endif
 
 # ifdef EINPROGRESS
-    case EINPROGRESS:
+        case EINPROGRESS:
 # endif
 
 # ifdef EALREADY
-    case EALREADY:
+        case EALREADY:
 # endif
-        return 1;
-    default:
-        break;
+    return 1;
+        default:
+            break;
     }
     return 0;
 }

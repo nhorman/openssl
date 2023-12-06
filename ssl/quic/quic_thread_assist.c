@@ -35,14 +35,15 @@ static unsigned int assist_thread_main(void *arg)
 
         deadline = ossl_quic_reactor_get_tick_deadline(rtor);
         if (qta->now_cb != NULL
-                && !ossl_time_is_zero(deadline)
-                && !ossl_time_is_infinite(deadline)) {
+            && !ossl_time_is_zero(deadline)
+            && !ossl_time_is_infinite(deadline)) {
             /*
              * ossl_crypto_condvar_wait_timeout needs to use real time for the
              * deadline
              */
             deadline = ossl_time_add(ossl_time_subtract(deadline,
-                                                        qta->now_cb(qta->now_cb_arg)),
+                                                        qta->now_cb(qta->
+                                                                    now_cb_arg)),
                                      ossl_time_now());
         }
         ossl_crypto_condvar_wait_timeout(qta->cv, m, deadline);
@@ -89,7 +90,7 @@ int ossl_quic_thread_assist_init_start(QUIC_THREAD_ASSIST *qta,
         return 0;
 
     qta->t = ossl_crypto_thread_native_start(assist_thread_main,
-                                             qta, /*joinable=*/1);
+                                             qta, /*joinable=*/ 1);
     if (qta->t == NULL) {
         ossl_crypto_condvar_free(qta->cv);
         return 0;

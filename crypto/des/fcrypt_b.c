@@ -20,13 +20,13 @@
 #undef DES_FCRYPT
 
 #undef PERM_OP
-#define PERM_OP(a,b,t,n,m) ((t)=((((a)>>(n))^(b))&(m)),\
-        (b)^=(t),\
-        (a)^=((t)<<(n)))
+#define PERM_OP(a,b,t,n,m) ((t)=((((a)>>(n))^(b))&(m)), \
+                            (b)^=(t), \
+                            (a)^=((t)<<(n)))
 
 #undef HPERM_OP
-#define HPERM_OP(a,t,n,m) ((t)=((((a)<<(16-(n)))^(a))&(m)),\
-        (a)=(a)^(t)^(t>>(16-(n))))\
+#define HPERM_OP(a,t,n,m) ((t)=((((a)<<(16-(n)))^(a))&(m)), \
+                           (a)=(a)^(t)^(t>>(16-(n)))) \
 
 void fcrypt_body(DES_LONG *out, DES_key_schedule *ks, DES_LONG Eswap0,
                  DES_LONG Eswap1)

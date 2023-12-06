@@ -47,13 +47,13 @@ static const BIO_METHOD *bio_f_async_filter(void)
     if (methods_async == NULL) {
         methods_async = BIO_meth_new(BIO_TYPE_ASYNC_FILTER, "Async filter");
         if (   methods_async == NULL
-            || !BIO_meth_set_write(methods_async, async_write)
-            || !BIO_meth_set_read(methods_async, async_read)
-            || !BIO_meth_set_puts(methods_async, async_puts)
-            || !BIO_meth_set_gets(methods_async, async_gets)
-            || !BIO_meth_set_ctrl(methods_async, async_ctrl)
-            || !BIO_meth_set_create(methods_async, async_new)
-            || !BIO_meth_set_destroy(methods_async, async_free))
+               || !BIO_meth_set_write(methods_async, async_write)
+               || !BIO_meth_set_read(methods_async, async_read)
+               || !BIO_meth_set_puts(methods_async, async_puts)
+               || !BIO_meth_set_gets(methods_async, async_gets)
+               || !BIO_meth_set_ctrl(methods_async, async_ctrl)
+               || !BIO_meth_set_create(methods_async, async_new)
+               || !BIO_meth_set_destroy(methods_async, async_free))
             return NULL;
     }
     return methods_async;
@@ -151,9 +151,9 @@ static int async_write(BIO *bio, const char *in, int inl)
                 unsigned int msgtype = 0, negversion = 0;
 
                 if (!PACKET_get_1(&pkt, &contenttype)
-                        || !PACKET_get_1(&pkt, &versionhi)
-                        || !PACKET_get_1(&pkt, &versionlo)
-                        || !PACKET_get_length_prefixed_2(&pkt, &payload))
+                    || !PACKET_get_1(&pkt, &versionhi)
+                    || !PACKET_get_1(&pkt, &versionlo)
+                    || !PACKET_get_length_prefixed_2(&pkt, &payload))
                     return -1;
 
                 /* Pretend we wrote out the record header */
@@ -161,25 +161,25 @@ static int async_write(BIO *bio, const char *in, int inl)
 
                 wholebody = payload;
                 if (contenttype == SSL3_RT_HANDSHAKE
-                        && !PACKET_get_1(&wholebody, &msgtype))
+                    && !PACKET_get_1(&wholebody, &msgtype))
                     return -1;
 
                 if (msgtype == SSL3_MT_SERVER_HELLO) {
                     if (!PACKET_forward(&wholebody,
-                                            SSL3_HM_HEADER_LENGTH - 1)
-                            || !PACKET_get_net_2(&wholebody, &negversion)
-                               /* Skip random (32 bytes) */
-                            || !PACKET_forward(&wholebody, 32)
-                               /* Skip session id */
-                            || !PACKET_get_length_prefixed_1(&wholebody,
-                                                             &sessionid)
-                               /*
-                                * Skip ciphersuite (2 bytes) and compression
-                                * method (1 byte)
-                                */
-                            || !PACKET_forward(&wholebody, 2 + 1)
-                            || !PACKET_get_length_prefixed_2(&wholebody,
-                                                             &extensions))
+                                        SSL3_HM_HEADER_LENGTH - 1)
+                        || !PACKET_get_net_2(&wholebody, &negversion)
+                        /* Skip random (32 bytes) */
+                        || !PACKET_forward(&wholebody, 32)
+                        /* Skip session id */
+                        || !PACKET_get_length_prefixed_1(&wholebody,
+                                                         &sessionid)
+                        /*
+                         * Skip ciphersuite (2 bytes) and compression
+                         * method (1 byte)
+                         */
+                        || !PACKET_forward(&wholebody, 2 + 1)
+                        || !PACKET_get_length_prefixed_2(&wholebody,
+                                                         &extensions))
                         return -1;
 
                     /*
@@ -191,13 +191,13 @@ static int async_write(BIO *bio, const char *in, int inl)
                         PACKET extbody;
 
                         if (!PACKET_get_net_2(&extensions, &type)
-                                || !PACKET_get_length_prefixed_2(&extensions,
-                                &extbody))
+                            || !PACKET_get_length_prefixed_2(&extensions,
+                                                             &extbody))
                             return -1;
 
                         if (type == TLSEXT_TYPE_supported_versions
-                                && (!PACKET_get_net_2(&extbody, &negversion)
-                                    || PACKET_remaining(&extbody) != 0))
+                            && (!PACKET_get_net_2(&extbody, &negversion)
+                                || PACKET_remaining(&extbody) != 0))
                             return -1;
                     }
                 }
@@ -229,8 +229,8 @@ static int async_write(BIO *bio, const char *in, int inl)
                  * TLS1.2), otherwise we get a bad record MAC
                  */
                 if (contenttype == SSL3_RT_CHANGE_CIPHER_SPEC
-                        || (negversion == TLS1_3_VERSION
-                            && msgtype == SSL3_MT_SERVER_HELLO)) {
+                    || (negversion == TLS1_3_VERSION
+                        && msgtype == SSL3_MT_SERVER_HELLO)) {
                     fragment = 0;
                     break;
                 }
@@ -263,12 +263,12 @@ static long async_ctrl(BIO *bio, int cmd, long num, void *ptr)
         return 0;
 
     switch (cmd) {
-    case BIO_CTRL_DUP:
-        ret = 0L;
-        break;
-    default:
-        ret = BIO_ctrl(next, cmd, num, ptr);
-        break;
+        case BIO_CTRL_DUP:
+            ret = 0L;
+            break;
+        default:
+            ret = BIO_ctrl(next, cmd, num, ptr);
+            break;
     }
     return ret;
 }
@@ -315,7 +315,7 @@ static int test_asyncio(int test)
     s_to_c_fbio = BIO_new(bio_f_async_filter());
     c_to_s_fbio = BIO_new(bio_f_async_filter());
     if (!TEST_ptr(s_to_c_fbio)
-            || !TEST_ptr(c_to_s_fbio)) {
+        || !TEST_ptr(c_to_s_fbio)) {
         BIO_free(s_to_c_fbio);
         BIO_free(c_to_s_fbio);
         goto end;
@@ -324,8 +324,8 @@ static int test_asyncio(int test)
     /* BIOs get freed on error */
     if (!TEST_true(create_ssl_objects(serverctx, clientctx, &serverssl,
                                       &clientssl, s_to_c_fbio, c_to_s_fbio))
-            || !TEST_true(create_ssl_connection(serverssl, clientssl,
-                          SSL_ERROR_NONE)))
+        || !TEST_true(create_ssl_connection(serverssl, clientssl,
+                                            SSL_ERROR_NONE)))
         goto end;
 
     /*
@@ -340,9 +340,9 @@ static int test_asyncio(int test)
          * (the first one might be a retryable fail).
          */
         for (ret = -1, i = 0, len = 0; len != sizeof(testdata) && i < 2;
-            i++) {
+             i++) {
             ret = SSL_write(clientssl, testdata + len,
-                sizeof(testdata) - len);
+                            sizeof(testdata) - len);
             if (ret > 0) {
                 len += ret;
             } else {
@@ -362,7 +362,7 @@ static int test_asyncio(int test)
          * bytes from the record header/padding etc.
          */
         for (ret = -1, i = 0, len = 0; len != sizeof(testdata) &&
-                i < MAX_ATTEMPTS; i++) {
+             i < MAX_ATTEMPTS; i++) {
             ret = SSL_read(serverssl, buf + len, sizeof(buf) - len);
             if (ret > 0) {
                 len += ret;
@@ -385,7 +385,7 @@ static int test_asyncio(int test)
 
     testresult = 1;
 
- end:
+end:
     SSL_free(clientssl);
     SSL_free(serverssl);
     SSL_CTX_free(clientctx);
@@ -404,7 +404,7 @@ int setup_tests(void)
     }
 
     if (!TEST_ptr(cert = test_get_argument(0))
-            || !TEST_ptr(privkey = test_get_argument(1)))
+        || !TEST_ptr(privkey = test_get_argument(1)))
         return 0;
 
     ADD_ALL_TESTS(test_asyncio, 2);

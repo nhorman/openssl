@@ -88,7 +88,8 @@ int pkcs8_main(int argc, char **argv)
     char *passin = NULL, *passout = NULL, *p8pass = NULL;
     OPTION_CHOICE o;
     int nocrypt = 0, ret = 1, iter = PKCS12_DEFAULT_ITER;
-    int informat = FORMAT_UNDEF, outformat = FORMAT_PEM, topk8 = 0, pbe_nid = -1;
+    int informat = FORMAT_UNDEF, outformat = FORMAT_PEM, topk8 = 0,
+        pbe_nid = -1;
     int private = 0, traditional = 0;
 #ifndef OPENSSL_NO_SCRYPT
     long scrypt_N = 0, scrypt_r = 0, scrypt_p = 0;
@@ -98,107 +99,109 @@ int pkcs8_main(int argc, char **argv)
     prog = opt_init(argc, argv, pkcs8_options);
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_EOF:
-        case OPT_ERR:
- opthelp:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto end;
-        case OPT_HELP:
-            opt_help(pkcs8_options);
-            ret = 0;
-            goto end;
-        case OPT_INFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &informat))
-                goto opthelp;
-            break;
-        case OPT_IN:
-            infile = opt_arg();
-            break;
-        case OPT_OUTFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &outformat))
-                goto opthelp;
-            break;
-        case OPT_OUT:
-            outfile = opt_arg();
-            break;
-        case OPT_TOPK8:
-            topk8 = 1;
-            break;
-        case OPT_NOITER:
-            iter = 1;
-            break;
-        case OPT_NOCRYPT:
-            nocrypt = 1;
-            break;
-        case OPT_R_CASES:
-            if (!opt_rand(o))
+            case OPT_EOF:
+            case OPT_ERR:
+opthelp:
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
                 goto end;
-            break;
-        case OPT_PROV_CASES:
-            if (!opt_provider(o))
+            case OPT_HELP:
+                opt_help(pkcs8_options);
+                ret = 0;
                 goto end;
-            break;
-        case OPT_TRADITIONAL:
-            traditional = 1;
-            break;
-        case OPT_V2:
-            ciphername = opt_arg();
-            break;
-        case OPT_V1:
-            pbe_nid = OBJ_txt2nid(opt_arg());
-            if (pbe_nid == NID_undef) {
-                BIO_printf(bio_err,
-                           "%s: Unknown PBE algorithm %s\n", prog, opt_arg());
-                goto opthelp;
-            }
-            break;
-        case OPT_V2PRF:
-            pbe_nid = OBJ_txt2nid(opt_arg());
-            if (!EVP_PBE_find(EVP_PBE_TYPE_PRF, pbe_nid, NULL, NULL, 0)) {
-                BIO_printf(bio_err,
-                           "%s: Unknown PRF algorithm %s\n", prog, opt_arg());
-                goto opthelp;
-            }
-            if (cipher == NULL)
-                cipher = (EVP_CIPHER *)EVP_aes_256_cbc();
-            break;
-        case OPT_ITER:
-            iter =  opt_int_arg();
-            break;
-        case OPT_PASSIN:
-            passinarg = opt_arg();
-            break;
-        case OPT_PASSOUT:
-            passoutarg = opt_arg();
-            break;
-        case OPT_ENGINE:
-            e = setup_engine(opt_arg(), 0);
-            break;
+            case OPT_INFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &informat))
+                    goto opthelp;
+                break;
+            case OPT_IN:
+                infile = opt_arg();
+                break;
+            case OPT_OUTFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &outformat))
+                    goto opthelp;
+                break;
+            case OPT_OUT:
+                outfile = opt_arg();
+                break;
+            case OPT_TOPK8:
+                topk8 = 1;
+                break;
+            case OPT_NOITER:
+                iter = 1;
+                break;
+            case OPT_NOCRYPT:
+                nocrypt = 1;
+                break;
+            case OPT_R_CASES:
+                if (!opt_rand(o))
+                    goto end;
+                break;
+            case OPT_PROV_CASES:
+                if (!opt_provider(o))
+                    goto end;
+                break;
+            case OPT_TRADITIONAL:
+                traditional = 1;
+                break;
+            case OPT_V2:
+                ciphername = opt_arg();
+                break;
+            case OPT_V1:
+                pbe_nid = OBJ_txt2nid(opt_arg());
+                if (pbe_nid == NID_undef) {
+                    BIO_printf(bio_err,
+                               "%s: Unknown PBE algorithm %s\n", prog,
+                               opt_arg());
+                    goto opthelp;
+                }
+                break;
+            case OPT_V2PRF:
+                pbe_nid = OBJ_txt2nid(opt_arg());
+                if (!EVP_PBE_find(EVP_PBE_TYPE_PRF, pbe_nid, NULL, NULL, 0)) {
+                    BIO_printf(bio_err,
+                               "%s: Unknown PRF algorithm %s\n", prog,
+                               opt_arg());
+                    goto opthelp;
+                }
+                if (cipher == NULL)
+                    cipher = (EVP_CIPHER *)EVP_aes_256_cbc();
+                break;
+            case OPT_ITER:
+                iter =  opt_int_arg();
+                break;
+            case OPT_PASSIN:
+                passinarg = opt_arg();
+                break;
+            case OPT_PASSOUT:
+                passoutarg = opt_arg();
+                break;
+            case OPT_ENGINE:
+                e = setup_engine(opt_arg(), 0);
+                break;
 #ifndef OPENSSL_NO_SCRYPT
-        case OPT_SCRYPT:
-            scrypt_N = 16384;
-            scrypt_r = 8;
-            scrypt_p = 1;
-            if (cipher == NULL)
-                cipher = (EVP_CIPHER *)EVP_aes_256_cbc();
-            break;
-        case OPT_SCRYPT_N:
-            if (!opt_long(opt_arg(), &scrypt_N) || scrypt_N <= 0)
-                goto opthelp;
-            break;
-        case OPT_SCRYPT_R:
-            if (!opt_long(opt_arg(), &scrypt_r) || scrypt_r <= 0)
-                goto opthelp;
-            break;
-        case OPT_SCRYPT_P:
-            if (!opt_long(opt_arg(), &scrypt_p) || scrypt_p <= 0)
-                goto opthelp;
-            break;
+            case OPT_SCRYPT:
+                scrypt_N = 16384;
+                scrypt_r = 8;
+                scrypt_p = 1;
+                if (cipher == NULL)
+                    cipher = (EVP_CIPHER *)EVP_aes_256_cbc();
+                break;
+            case OPT_SCRYPT_N:
+                if (!opt_long(opt_arg(), &scrypt_N) || scrypt_N <= 0)
+                    goto opthelp;
+                break;
+            case OPT_SCRYPT_R:
+                if (!opt_long(opt_arg(), &scrypt_r) || scrypt_r <= 0)
+                    goto opthelp;
+                break;
+            case OPT_SCRYPT_P:
+                if (!opt_long(opt_arg(), &scrypt_p) || scrypt_p <= 0)
+                    goto opthelp;
+                break;
 #endif
-        case OPT_SALTLEN:
-            if (!opt_int(opt_arg(), &saltlen))
-                goto opthelp;
-            break;
+            case OPT_SALTLEN:
+                if (!opt_int(opt_arg(), &saltlen))
+                    goto opthelp;
+                break;
         }
     }
 
@@ -259,8 +262,8 @@ int pkcs8_main(int argc, char **argv)
                                                 scrypt_N, scrypt_r, scrypt_p);
                 else
 #endif
-                    pbe = PKCS5_pbe2_set_iv(cipher, iter, NULL, saltlen, NULL,
-                                            pbe_nid);
+                pbe = PKCS5_pbe2_set_iv(cipher, iter, NULL, saltlen, NULL,
+                                        pbe_nid);
             } else {
                 pbe = PKCS5_pbe_set(pbe_nid, iter, NULL, saltlen);
             }
@@ -276,7 +279,7 @@ int pkcs8_main(int argc, char **argv)
 #ifndef OPENSSL_NO_UI_CONSOLE
                 p8pass = pass;
                 if (EVP_read_pw_string
-                    (pass, sizeof(pass), "Enter Encryption Password:", 1)) {
+                        (pass, sizeof(pass), "Enter Encryption Password:", 1)) {
                     X509_ALGOR_free(pbe);
                     goto end;
                 }
@@ -375,7 +378,7 @@ int pkcs8_main(int argc, char **argv)
     }
     ret = 0;
 
- end:
+end:
     X509_SIG_free(p8);
     PKCS8_PRIV_KEY_INFO_free(p8inf);
     EVP_PKEY_free(pkey);

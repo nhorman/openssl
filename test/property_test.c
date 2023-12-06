@@ -200,9 +200,9 @@ static const struct {
     { 0, "n=145d, a=2" },       /* Bad decimal digit */
     { 1, "@='hello'" },         /* Invalid name */
     { 1, "n0123456789012345678901234567890123456789"
-         "0123456789012345678901234567890123456789"
-         "0123456789012345678901234567890123456789"
-         "0123456789012345678901234567890123456789=yes" }, /* Name too long */
+      "0123456789012345678901234567890123456789"
+      "0123456789012345678901234567890123456789"
+      "0123456789012345678901234567890123456789=yes" },    /* Name too long */
     { 0, ".n=3" },              /* Invalid name */
     { 1, "fnord.fnord.=3" }     /* Invalid name */
 };
@@ -225,7 +225,7 @@ static int test_property_parse_error(int n)
         goto err;
     }
     r = 1;
- err:
+err:
     ossl_property_free(p);
     ossl_method_store_free(store);
     return r;
@@ -240,7 +240,7 @@ static const struct {
     { "colour=blue", "", "colour=blue" },
     { "colour=red", "colour=blue", "colour=blue" },
     { "clouds=pink, urn=red", "urn=blue, colour=green",
-        "urn=blue, colour=green, clouds=pink" },
+      "urn=blue, colour=green, clouds=pink" },
     { "pot=gold", "urn=blue", "pot=gold, urn=blue" },
     { "night", "day", "day=yes, night=yes" },
     { "day", "night", "day=yes, night=yes" },
@@ -403,7 +403,8 @@ static int test_register_deregister(void)
         }
     }
 
-    if (TEST_false(ossl_method_store_remove(store, impls[0].nid, impls[0].impl)))
+    if (TEST_false(ossl_method_store_remove(store, impls[0].nid,
+                                            impls[0].impl)))
         ret = 1;
 err:
     ossl_method_store_free(store);
@@ -572,12 +573,12 @@ static int test_query_cache_stochastic(void)
         BIO_snprintf(buf, sizeof(buf), "n=%d\n", i);
         if (!TEST_true(ossl_method_store_add(store, &prov, i, buf, "abc",
                                              &up_ref, &down_ref))
-                || !TEST_true(ossl_method_store_cache_set(store, &prov, i,
-                                                          buf, v + i,
-                                                          &up_ref, &down_ref))
-                || !TEST_true(ossl_method_store_cache_set(store, &prov, i,
-                                                          "n=1234", "miss",
-                                                          &up_ref, &down_ref))) {
+            || !TEST_true(ossl_method_store_cache_set(store, &prov, i,
+                                                      buf, v + i,
+                                                      &up_ref, &down_ref))
+            || !TEST_true(ossl_method_store_cache_set(store, &prov, i,
+                                                      "n=1234", "miss",
+                                                      &up_ref, &down_ref))) {
             TEST_note("iteration %d", i);
             goto err;
         }
@@ -640,7 +641,7 @@ static struct {
     { "fips=yes,provider!=fips", "fips=yes,provider!=fips" },
     { "fips=yes,?provider=fips", "fips=yes,?provider=fips" },
     { "fips=yes,-provider", "fips=yes,-provider" },
-      /* foo is an unknown internal name */
+    /* foo is an unknown internal name */
     { "foo=yes,fips=yes", "fips=yes"},
     { "", "" },
     { "fips=3", "fips=3" },
@@ -659,22 +660,22 @@ static int test_property_list_to_string(int i)
     char *buf = NULL;
 
     if (to_string_tests[i].in != NULL
-            && !TEST_ptr(pl = ossl_parse_query(NULL, to_string_tests[i].in, 1)))
+        && !TEST_ptr(pl = ossl_parse_query(NULL, to_string_tests[i].in, 1)))
         goto err;
     bufsize = ossl_property_list_to_string(NULL, pl, NULL, 0);
     if (!TEST_size_t_gt(bufsize, 0))
         goto err;
     buf = OPENSSL_malloc(bufsize);
     if (!TEST_ptr(buf)
-            || !TEST_size_t_eq(ossl_property_list_to_string(NULL, pl, buf,
-                                                            bufsize),
-                               bufsize)
-            || !TEST_str_eq(to_string_tests[i].out, buf)
-            || !TEST_size_t_eq(bufsize, strlen(to_string_tests[i].out) + 1))
+        || !TEST_size_t_eq(ossl_property_list_to_string(NULL, pl, buf,
+                                                        bufsize),
+                           bufsize)
+        || !TEST_str_eq(to_string_tests[i].out, buf)
+        || !TEST_size_t_eq(bufsize, strlen(to_string_tests[i].out) + 1))
         goto err;
 
     ret = 1;
- err:
+err:
     OPENSSL_free(buf);
     ossl_property_free(pl);
     return ret;

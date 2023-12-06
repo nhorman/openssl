@@ -240,7 +240,7 @@ struct err_state_st {
 # define ERR_RFLAG_FATAL                (0x1 << ERR_RFLAGS_OFFSET)
 # define ERR_RFLAG_COMMON               (0x2 << ERR_RFLAGS_OFFSET)
 
-# define ERR_SYSTEM_ERROR(errcode)      (((errcode) & ERR_SYSTEM_FLAG) != 0)
+# define ERR_SYSTEM_ERROR(errcode)      (((errcode)&ERR_SYSTEM_FLAG) != 0)
 
 static ossl_unused ossl_inline int ERR_GET_LIB(unsigned long errcode)
 {
@@ -280,8 +280,8 @@ static ossl_unused ossl_inline int ERR_COMMON_ERROR(unsigned long errcode)
  * ERR_PACK ignores |func|, that parameter is just legacy from pre-3.0 OpenSSL.
  */
 # define ERR_PACK(lib,func,reason)                                      \
-    ( (((unsigned long)(lib)    & ERR_LIB_MASK   ) << ERR_LIB_OFFSET) | \
-      (((unsigned long)(reason) & ERR_REASON_MASK)) )
+        ( (((unsigned long)(lib)&ERR_LIB_MASK   ) << ERR_LIB_OFFSET) | \
+          (((unsigned long)(reason)&ERR_REASON_MASK)) )
 
 # ifndef OPENSSL_NO_DEPRECATED_3_0
 #  define SYS_F_FOPEN             0
@@ -316,42 +316,45 @@ static ossl_unused ossl_inline int ERR_COMMON_ERROR(unsigned long errcode)
  */
 
 /* "we came from here" global reason codes, range 1..255 */
-# define ERR_R_SYS_LIB          (ERR_LIB_SYS/* 2 */ | ERR_RFLAG_COMMON)
-# define ERR_R_BN_LIB           (ERR_LIB_BN/* 3 */ | ERR_RFLAG_COMMON)
-# define ERR_R_RSA_LIB          (ERR_LIB_RSA/* 4 */ | ERR_RFLAG_COMMON)
-# define ERR_R_DH_LIB           (ERR_LIB_DH/* 5 */ | ERR_RFLAG_COMMON)
-# define ERR_R_EVP_LIB          (ERR_LIB_EVP/* 6 */ | ERR_RFLAG_COMMON)
-# define ERR_R_BUF_LIB          (ERR_LIB_BUF/* 7 */ | ERR_RFLAG_COMMON)
-# define ERR_R_OBJ_LIB          (ERR_LIB_OBJ/* 8 */ | ERR_RFLAG_COMMON)
-# define ERR_R_PEM_LIB          (ERR_LIB_PEM/* 9 */ | ERR_RFLAG_COMMON)
-# define ERR_R_DSA_LIB          (ERR_LIB_DSA/* 10 */ | ERR_RFLAG_COMMON)
-# define ERR_R_X509_LIB         (ERR_LIB_X509/* 11 */ | ERR_RFLAG_COMMON)
-# define ERR_R_ASN1_LIB         (ERR_LIB_ASN1/* 13 */ | ERR_RFLAG_COMMON)
-# define ERR_R_CONF_LIB         (ERR_LIB_CONF/* 14 */ | ERR_RFLAG_COMMON)
-# define ERR_R_CRYPTO_LIB       (ERR_LIB_CRYPTO/* 15 */ | ERR_RFLAG_COMMON)
-# define ERR_R_EC_LIB           (ERR_LIB_EC/* 16 */ | ERR_RFLAG_COMMON)
-# define ERR_R_SSL_LIB          (ERR_LIB_SSL/* 20 */ | ERR_RFLAG_COMMON)
-# define ERR_R_BIO_LIB          (ERR_LIB_BIO/* 32 */ | ERR_RFLAG_COMMON)
-# define ERR_R_PKCS7_LIB        (ERR_LIB_PKCS7/* 33 */ | ERR_RFLAG_COMMON)
-# define ERR_R_X509V3_LIB       (ERR_LIB_X509V3/* 34 */ | ERR_RFLAG_COMMON)
-# define ERR_R_PKCS12_LIB       (ERR_LIB_PKCS12/* 35 */ | ERR_RFLAG_COMMON)
-# define ERR_R_RAND_LIB         (ERR_LIB_RAND/* 36 */ | ERR_RFLAG_COMMON)
-# define ERR_R_DSO_LIB          (ERR_LIB_DSO/* 37 */ | ERR_RFLAG_COMMON)
-# define ERR_R_ENGINE_LIB       (ERR_LIB_ENGINE/* 38 */ | ERR_RFLAG_COMMON)
-# define ERR_R_UI_LIB           (ERR_LIB_UI/* 40 */ | ERR_RFLAG_COMMON)
-# define ERR_R_ECDSA_LIB        (ERR_LIB_ECDSA/* 42 */ | ERR_RFLAG_COMMON)
-# define ERR_R_OSSL_STORE_LIB   (ERR_LIB_OSSL_STORE/* 44 */ | ERR_RFLAG_COMMON)
-# define ERR_R_CMS_LIB          (ERR_LIB_CMS/* 46 */ | ERR_RFLAG_COMMON)
-# define ERR_R_TS_LIB           (ERR_LIB_TS/* 47 */ | ERR_RFLAG_COMMON)
-# define ERR_R_CT_LIB           (ERR_LIB_CT/* 50 */ | ERR_RFLAG_COMMON)
-# define ERR_R_PROV_LIB         (ERR_LIB_PROV/* 57 */ | ERR_RFLAG_COMMON)
-# define ERR_R_ESS_LIB          (ERR_LIB_ESS/* 54 */ | ERR_RFLAG_COMMON)
-# define ERR_R_CMP_LIB          (ERR_LIB_CMP/* 58 */ | ERR_RFLAG_COMMON)
-# define ERR_R_OSSL_ENCODER_LIB (ERR_LIB_OSSL_ENCODER/* 59 */ | ERR_RFLAG_COMMON)
-# define ERR_R_OSSL_DECODER_LIB (ERR_LIB_OSSL_DECODER/* 60 */ | ERR_RFLAG_COMMON)
+# define ERR_R_SYS_LIB          (ERR_LIB_SYS /* 2 */ | ERR_RFLAG_COMMON)
+# define ERR_R_BN_LIB           (ERR_LIB_BN /* 3 */ | ERR_RFLAG_COMMON)
+# define ERR_R_RSA_LIB          (ERR_LIB_RSA /* 4 */ | ERR_RFLAG_COMMON)
+# define ERR_R_DH_LIB           (ERR_LIB_DH /* 5 */ | ERR_RFLAG_COMMON)
+# define ERR_R_EVP_LIB          (ERR_LIB_EVP /* 6 */ | ERR_RFLAG_COMMON)
+# define ERR_R_BUF_LIB          (ERR_LIB_BUF /* 7 */ | ERR_RFLAG_COMMON)
+# define ERR_R_OBJ_LIB          (ERR_LIB_OBJ /* 8 */ | ERR_RFLAG_COMMON)
+# define ERR_R_PEM_LIB          (ERR_LIB_PEM /* 9 */ | ERR_RFLAG_COMMON)
+# define ERR_R_DSA_LIB          (ERR_LIB_DSA /* 10 */ | ERR_RFLAG_COMMON)
+# define ERR_R_X509_LIB         (ERR_LIB_X509 /* 11 */ | ERR_RFLAG_COMMON)
+# define ERR_R_ASN1_LIB         (ERR_LIB_ASN1 /* 13 */ | ERR_RFLAG_COMMON)
+# define ERR_R_CONF_LIB         (ERR_LIB_CONF /* 14 */ | ERR_RFLAG_COMMON)
+# define ERR_R_CRYPTO_LIB       (ERR_LIB_CRYPTO /* 15 */ | ERR_RFLAG_COMMON)
+# define ERR_R_EC_LIB           (ERR_LIB_EC /* 16 */ | ERR_RFLAG_COMMON)
+# define ERR_R_SSL_LIB          (ERR_LIB_SSL /* 20 */ | ERR_RFLAG_COMMON)
+# define ERR_R_BIO_LIB          (ERR_LIB_BIO /* 32 */ | ERR_RFLAG_COMMON)
+# define ERR_R_PKCS7_LIB        (ERR_LIB_PKCS7 /* 33 */ | ERR_RFLAG_COMMON)
+# define ERR_R_X509V3_LIB       (ERR_LIB_X509V3 /* 34 */ | ERR_RFLAG_COMMON)
+# define ERR_R_PKCS12_LIB       (ERR_LIB_PKCS12 /* 35 */ | ERR_RFLAG_COMMON)
+# define ERR_R_RAND_LIB         (ERR_LIB_RAND /* 36 */ | ERR_RFLAG_COMMON)
+# define ERR_R_DSO_LIB          (ERR_LIB_DSO /* 37 */ | ERR_RFLAG_COMMON)
+# define ERR_R_ENGINE_LIB       (ERR_LIB_ENGINE /* 38 */ | ERR_RFLAG_COMMON)
+# define ERR_R_UI_LIB           (ERR_LIB_UI /* 40 */ | ERR_RFLAG_COMMON)
+# define ERR_R_ECDSA_LIB        (ERR_LIB_ECDSA /* 42 */ | ERR_RFLAG_COMMON)
+# define ERR_R_OSSL_STORE_LIB   (ERR_LIB_OSSL_STORE /* 44 */ | ERR_RFLAG_COMMON)
+# define ERR_R_CMS_LIB          (ERR_LIB_CMS /* 46 */ | ERR_RFLAG_COMMON)
+# define ERR_R_TS_LIB           (ERR_LIB_TS /* 47 */ | ERR_RFLAG_COMMON)
+# define ERR_R_CT_LIB           (ERR_LIB_CT /* 50 */ | ERR_RFLAG_COMMON)
+# define ERR_R_PROV_LIB         (ERR_LIB_PROV /* 57 */ | ERR_RFLAG_COMMON)
+# define ERR_R_ESS_LIB          (ERR_LIB_ESS /* 54 */ | ERR_RFLAG_COMMON)
+# define ERR_R_CMP_LIB          (ERR_LIB_CMP /* 58 */ | ERR_RFLAG_COMMON)
+# define ERR_R_OSSL_ENCODER_LIB (ERR_LIB_OSSL_ENCODER /* 59 */ | \
+                                 ERR_RFLAG_COMMON)
+# define ERR_R_OSSL_DECODER_LIB (ERR_LIB_OSSL_DECODER /* 60 */ | \
+                                 ERR_RFLAG_COMMON)
 
 /* Other common error codes, range 256..2^ERR_RFLAGS_OFFSET-1 */
-# define ERR_R_FATAL                             (ERR_RFLAG_FATAL|ERR_RFLAG_COMMON)
+# define ERR_R_FATAL                             (ERR_RFLAG_FATAL| \
+                                                  ERR_RFLAG_COMMON)
 # define ERR_R_MALLOC_FAILURE                    (256|ERR_R_FATAL)
 # define ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED       (257|ERR_R_FATAL)
 # define ERR_R_PASSED_NULL_PARAMETER             (258|ERR_R_FATAL)
@@ -393,16 +396,16 @@ void ERR_vset_error(int lib, int reason, const char *fmt, va_list args);
 /* Main error raising functions */
 # define ERR_raise(lib, reason) ERR_raise_data((lib),(reason),NULL)
 # define ERR_raise_data                                         \
-    (ERR_new(),                                                 \
-     ERR_set_debug(OPENSSL_FILE,OPENSSL_LINE,OPENSSL_FUNC),     \
-     ERR_set_error)
+        (ERR_new(),                                                 \
+         ERR_set_debug(OPENSSL_FILE,OPENSSL_LINE,OPENSSL_FUNC),     \
+         ERR_set_error)
 
 # ifndef OPENSSL_NO_DEPRECATED_3_0
 /* Backward compatibility */
 #  define ERR_put_error(lib, func, reason, file, line)          \
-    (ERR_new(),                                                 \
-     ERR_set_debug((file), (line), OPENSSL_FUNC),               \
-     ERR_set_error((lib), (reason), NULL))
+        (ERR_new(),                                                 \
+         ERR_set_debug((file), (line), OPENSSL_FUNC),               \
+         ERR_set_error((lib), (reason), NULL))
 # endif
 
 void ERR_set_error_data(char *data, int flags);
@@ -471,7 +474,7 @@ int ERR_unload_strings(int lib, ERR_STRING_DATA *str);
 
 #ifndef OPENSSL_NO_DEPRECATED_1_1_0
 # define ERR_load_crypto_strings() \
-    OPENSSL_init_crypto(OPENSSL_INIT_LOAD_CRYPTO_STRINGS, NULL)
+        OPENSSL_init_crypto(OPENSSL_INIT_LOAD_CRYPTO_STRINGS, NULL)
 # define ERR_free_strings() while(0) continue
 #endif
 #ifndef OPENSSL_NO_DEPRECATED_1_1_0

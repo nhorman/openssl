@@ -32,7 +32,8 @@ void ossl_quic_reactor_init(QUIC_REACTOR *rtor,
     rtor->tick_cb_arg       = tick_cb_arg;
 }
 
-void ossl_quic_reactor_set_poll_r(QUIC_REACTOR *rtor, const BIO_POLL_DESCRIPTOR *r)
+void ossl_quic_reactor_set_poll_r(QUIC_REACTOR *rtor,
+                                  const BIO_POLL_DESCRIPTOR *r)
 {
     if (r == NULL)
         rtor->poll_r.type = BIO_POLL_DESCRIPTOR_TYPE_NONE;
@@ -43,7 +44,8 @@ void ossl_quic_reactor_set_poll_r(QUIC_REACTOR *rtor, const BIO_POLL_DESCRIPTOR 
         = ossl_quic_reactor_can_support_poll_descriptor(rtor, &rtor->poll_r);
 }
 
-void ossl_quic_reactor_set_poll_w(QUIC_REACTOR *rtor, const BIO_POLL_DESCRIPTOR *w)
+void ossl_quic_reactor_set_poll_w(QUIC_REACTOR *rtor,
+                                  const BIO_POLL_DESCRIPTOR *w)
 {
     if (w == NULL)
         rtor->poll_w.type = BIO_POLL_DESCRIPTOR_TYPE_NONE;
@@ -54,12 +56,14 @@ void ossl_quic_reactor_set_poll_w(QUIC_REACTOR *rtor, const BIO_POLL_DESCRIPTOR 
         = ossl_quic_reactor_can_support_poll_descriptor(rtor, &rtor->poll_w);
 }
 
-const BIO_POLL_DESCRIPTOR *ossl_quic_reactor_get_poll_r(const QUIC_REACTOR *rtor)
+const BIO_POLL_DESCRIPTOR *ossl_quic_reactor_get_poll_r(
+    const QUIC_REACTOR *rtor)
 {
     return &rtor->poll_r;
 }
 
-const BIO_POLL_DESCRIPTOR *ossl_quic_reactor_get_poll_w(const QUIC_REACTOR *rtor)
+const BIO_POLL_DESCRIPTOR *ossl_quic_reactor_get_poll_w(
+    const QUIC_REACTOR *rtor)
 {
     return &rtor->poll_w;
 }
@@ -247,7 +251,7 @@ static int poll_two_fds(int rfd, int rfd_want_read,
     if (rfd == wfd) {
         pfds[npfd].fd = rfd;
         pfds[npfd].events = (rfd_want_read  ? POLLIN  : 0)
-                          | (wfd_want_write ? POLLOUT : 0);
+                            | (wfd_want_write ? POLLOUT : 0);
         if (rfd >= 0 && pfds[npfd].events != 0)
             ++npfd;
     } else {
@@ -300,7 +304,7 @@ static int poll_descriptor_to_fd(const BIO_POLL_DESCRIPTOR *d, int *fd)
     }
 
     if (d->type != BIO_POLL_DESCRIPTOR_TYPE_SOCK_FD
-            || d->value.fd == INVALID_SOCKET)
+        || d->value.fd == INVALID_SOCKET)
         return 0;
 
     *fd = d->value.fd;

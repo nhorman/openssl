@@ -45,7 +45,8 @@ int PEM_write_bio_PKCS8PrivateKey_nid(BIO *bp, const EVP_PKEY *x, int nid,
     return do_pk8pkey(bp, x, 0, nid, NULL, kstr, klen, cb, u, NULL);
 }
 
-int PEM_write_bio_PKCS8PrivateKey(BIO *bp, const EVP_PKEY *x, const EVP_CIPHER *enc,
+int PEM_write_bio_PKCS8PrivateKey(BIO *bp, const EVP_PKEY *x,
+                                  const EVP_CIPHER *enc,
                                   const char *kstr, int klen,
                                   pem_password_cb *cb, void *u)
 {
@@ -159,7 +160,7 @@ static int do_pk8pkey(BIO *bp, const EVP_PKEY *x, int isder, int nid,
             else
                 ret = PEM_write_bio_PKCS8_PRIV_KEY_INFO(bp, p8inf);
         }
-     legacy_end:
+legacy_end:
         PKCS8_PRIV_KEY_INFO_free(p8inf);
     }
     OSSL_ENCODER_CTX_free(ctx);
@@ -226,7 +227,8 @@ int PEM_write_PKCS8PrivateKey_nid(FILE *fp, const EVP_PKEY *x, int nid,
     return do_pk8pkey_fp(fp, x, 0, nid, NULL, kstr, klen, cb, u, NULL);
 }
 
-int PEM_write_PKCS8PrivateKey(FILE *fp, const EVP_PKEY *x, const EVP_CIPHER *enc,
+int PEM_write_PKCS8PrivateKey(FILE *fp, const EVP_PKEY *x,
+                              const EVP_CIPHER *enc,
                               const char *kstr, int klen,
                               pem_password_cb *cb, void *u)
 {

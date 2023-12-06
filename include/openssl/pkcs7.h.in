@@ -41,11 +41,11 @@ extern "C" {
 
 
 /*-
-Encryption_ID           DES-CBC
-Digest_ID               MD5
-Digest_Encryption_ID    rsaEncryption
-Key_Encryption_ID       rsaEncryption
-*/
+   Encryption_ID           DES-CBC
+   Digest_ID               MD5
+   Digest_Encryption_ID    rsaEncryption
+   Key_Encryption_ID       rsaEncryption
+ */
 
 typedef struct PKCS7_CTX_st {
     OSSL_LIB_CTX *libctx;
@@ -190,19 +190,22 @@ typedef struct pkcs7_st {
 # define PKCS7_get_attributes(si)        ((si)->unauth_attr)
 
 # define PKCS7_type_is_signed(a) (OBJ_obj2nid((a)->type) == NID_pkcs7_signed)
-# define PKCS7_type_is_encrypted(a) (OBJ_obj2nid((a)->type) == NID_pkcs7_encrypted)
-# define PKCS7_type_is_enveloped(a) (OBJ_obj2nid((a)->type) == NID_pkcs7_enveloped)
+# define PKCS7_type_is_encrypted(a) (OBJ_obj2nid((a)->type) == \
+                                     NID_pkcs7_encrypted)
+# define PKCS7_type_is_enveloped(a) (OBJ_obj2nid((a)->type) == \
+                                     NID_pkcs7_enveloped)
 # define PKCS7_type_is_signedAndEnveloped(a) \
-                (OBJ_obj2nid((a)->type) == NID_pkcs7_signedAndEnveloped)
+        (OBJ_obj2nid((a)->type) == NID_pkcs7_signedAndEnveloped)
 # define PKCS7_type_is_data(a)   (OBJ_obj2nid((a)->type) == NID_pkcs7_data)
 # define PKCS7_type_is_digest(a)   (OBJ_obj2nid((a)->type) == NID_pkcs7_digest)
 
 # define PKCS7_set_detached(p,v) \
-                PKCS7_ctrl(p,PKCS7_OP_SET_DETACHED_SIGNATURE,v,NULL)
+        PKCS7_ctrl(p,PKCS7_OP_SET_DETACHED_SIGNATURE,v,NULL)
 # define PKCS7_get_detached(p) \
-                PKCS7_ctrl(p,PKCS7_OP_GET_DETACHED_SIGNATURE,0,NULL)
+        PKCS7_ctrl(p,PKCS7_OP_GET_DETACHED_SIGNATURE,0,NULL)
 
-# define PKCS7_is_detached(p7) (PKCS7_type_is_signed(p7) && PKCS7_get_detached(p7))
+# define PKCS7_is_detached(p7) (PKCS7_type_is_signed(p7) && \
+                                PKCS7_get_detached(p7))
 
 /* S/MIME related flags */
 

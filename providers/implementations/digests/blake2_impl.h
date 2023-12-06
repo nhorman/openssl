@@ -27,9 +27,9 @@ static ossl_inline uint32_t load32(const uint8_t *src)
         return w;
     } else {
         uint32_t w = ((uint32_t)src[0])
-                   | ((uint32_t)src[1] <<  8)
-                   | ((uint32_t)src[2] << 16)
-                   | ((uint32_t)src[3] << 24);
+                     | ((uint32_t)src[1] <<  8)
+                     | ((uint32_t)src[2] << 16)
+                     | ((uint32_t)src[3] << 24);
         return w;
     }
 }
@@ -44,13 +44,13 @@ static ossl_inline uint64_t load64(const uint8_t *src)
         return w;
     } else {
         uint64_t w = ((uint64_t)src[0])
-                   | ((uint64_t)src[1] <<  8)
-                   | ((uint64_t)src[2] << 16)
-                   | ((uint64_t)src[3] << 24)
-                   | ((uint64_t)src[4] << 32)
-                   | ((uint64_t)src[5] << 40)
-                   | ((uint64_t)src[6] << 48)
-                   | ((uint64_t)src[7] << 56);
+                     | ((uint64_t)src[1] <<  8)
+                     | ((uint64_t)src[2] << 16)
+                     | ((uint64_t)src[3] << 24)
+                     | ((uint64_t)src[4] << 32)
+                     | ((uint64_t)src[5] << 40)
+                     | ((uint64_t)src[6] << 48)
+                     | ((uint64_t)src[7] << 56);
         return w;
     }
 }
@@ -88,11 +88,11 @@ static ossl_inline void store64(uint8_t *dst, uint64_t w)
 static ossl_inline uint64_t load48(const uint8_t *src)
 {
     uint64_t w = ((uint64_t)src[0])
-               | ((uint64_t)src[1] <<  8)
-               | ((uint64_t)src[2] << 16)
-               | ((uint64_t)src[3] << 24)
-               | ((uint64_t)src[4] << 32)
-               | ((uint64_t)src[5] << 40);
+                 | ((uint64_t)src[1] <<  8)
+                 | ((uint64_t)src[2] << 16)
+                 | ((uint64_t)src[3] << 24)
+                 | ((uint64_t)src[4] << 32)
+                 | ((uint64_t)src[5] << 40);
     return w;
 }
 

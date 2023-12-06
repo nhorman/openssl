@@ -61,11 +61,11 @@ static int verify_chain(SSL *ssl, STACK_OF(X509) *chain)
     int store_ctx_idx = SSL_get_ex_data_X509_STORE_CTX_idx();
 
     if (!TEST_ptr(store_ctx = X509_STORE_CTX_new())
-            || !TEST_ptr(ssl_ctx = SSL_get_SSL_CTX(ssl))
-            || !TEST_ptr(store = SSL_CTX_get_cert_store(ssl_ctx))
-            || !TEST_true(X509_STORE_CTX_init(store_ctx, store, NULL, chain))
-            || !TEST_true(X509_STORE_CTX_set_ex_data(store_ctx, store_ctx_idx,
-                                                     ssl)))
+        || !TEST_ptr(ssl_ctx = SSL_get_SSL_CTX(ssl))
+        || !TEST_ptr(store = SSL_CTX_get_cert_store(ssl_ctx))
+        || !TEST_true(X509_STORE_CTX_init(store_ctx, store, NULL, chain))
+        || !TEST_true(X509_STORE_CTX_set_ex_data(store_ctx, store_ctx_idx,
+                                                 ssl)))
         goto end;
 
     X509_STORE_CTX_set_default(store_ctx, SSL_is_server(ssl)
@@ -107,15 +107,15 @@ static STACK_OF(X509) *load_chain(BIO *fp, int nelem)
          && PEM_read_bio(fp, &name, &header, &data, &len) == 1;
          ++count) {
         if (strcmp(name, PEM_STRING_X509) == 0
-                || strcmp(name, PEM_STRING_X509_TRUSTED) == 0
-                || strcmp(name, PEM_STRING_X509_OLD) == 0) {
+            || strcmp(name, PEM_STRING_X509_TRUSTED) == 0
+            || strcmp(name, PEM_STRING_X509_OLD) == 0) {
             d2i_X509_t d = strcmp(name, PEM_STRING_X509_TRUSTED) != 0
                 ? d2i_X509_AUX : d2i_X509;
             X509 *cert;
             const unsigned char *p = data;
 
             if (!TEST_ptr(cert = d(0, &p, len))
-                    || !TEST_long_eq(p - data, len)) {
+                || !TEST_long_eq(p - data, len)) {
                 TEST_info("Certificate parsing error");
                 goto err;
             }
@@ -388,12 +388,12 @@ static int run_tlsatest(void)
     int ret = 0;
 
     if (!TEST_ptr(f = BIO_new_file(tlsafile, "r"))
-            || !TEST_ptr(ctx = SSL_CTX_new(TLS_client_method()))
-            || !TEST_int_gt(SSL_CTX_dane_enable(ctx), 0)
-            || !TEST_true(SSL_CTX_load_verify_file(ctx, CAfile))
-            || !TEST_int_gt(SSL_CTX_dane_mtype_set(ctx, EVP_sha512(), 2, 1), 0)
-            || !TEST_int_gt(SSL_CTX_dane_mtype_set(ctx, EVP_sha256(), 1, 2), 0)
-            || !TEST_int_gt(test_tlsafile(ctx, basedomain, f, tlsafile), 0))
+        || !TEST_ptr(ctx = SSL_CTX_new(TLS_client_method()))
+        || !TEST_int_gt(SSL_CTX_dane_enable(ctx), 0)
+        || !TEST_true(SSL_CTX_load_verify_file(ctx, CAfile))
+        || !TEST_int_gt(SSL_CTX_dane_mtype_set(ctx, EVP_sha512(), 2, 1), 0)
+        || !TEST_int_gt(SSL_CTX_dane_mtype_set(ctx, EVP_sha256(), 1, 2), 0)
+        || !TEST_int_gt(test_tlsafile(ctx, basedomain, f, tlsafile), 0))
         goto end;
     ret = 1;
 
@@ -414,8 +414,8 @@ int setup_tests(void)
     }
 
     if (!TEST_ptr(basedomain = test_get_argument(0))
-            || !TEST_ptr(CAfile = test_get_argument(1))
-            || !TEST_ptr(tlsafile = test_get_argument(2)))
+        || !TEST_ptr(CAfile = test_get_argument(1))
+        || !TEST_ptr(tlsafile = test_get_argument(2)))
         return 0;
 
     ADD_TEST(run_tlsatest);

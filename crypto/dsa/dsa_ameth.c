@@ -77,7 +77,7 @@ static int dsa_pub_decode(EVP_PKEY *pkey, const X509_PUBKEY *pubkey)
     EVP_PKEY_assign_DSA(pkey, dsa);
     return 1;
 
- err:
+err:
     ASN1_INTEGER_free(public_key);
     DSA_free(dsa);
     return 0;
@@ -135,7 +135,7 @@ static int dsa_pub_encode(X509_PUBKEY *pk, const EVP_PKEY *pkey)
     if (X509_PUBKEY_set0_param(pk, aobj, ptype, str, penc, penclen))
         return 1;
 
- err:
+err:
     OPENSSL_free(penc);
     ASN1_STRING_free(str);
 
@@ -210,7 +210,7 @@ static int dsa_priv_encode(PKCS8_PRIV_KEY_INFO *p8, const EVP_PKEY *pkey)
     }
     return 1;
 
- err:
+err:
     ASN1_STRING_free(params);
     return 0;
 }
@@ -235,9 +235,9 @@ static int dsa_missing_parameters(const EVP_PKEY *pkey)
     DSA *dsa;
     dsa = pkey->pkey.dsa;
     return dsa == NULL
-        || dsa->params.p == NULL
-        || dsa->params.q == NULL
-        || dsa->params.g == NULL;
+           || dsa->params.p == NULL
+           || dsa->params.q == NULL
+           || dsa->params.g == NULL;
 }
 
 static int dsa_copy_parameters(EVP_PKEY *to, const EVP_PKEY *from)
@@ -313,7 +313,7 @@ static int do_dsa_print(BIO *bp, const DSA *x, int off, int ptype)
     if (!ossl_ffc_params_print(bp, &x->params, off))
         goto err;
     ret = 1;
- err:
+err:
     return ret;
 }
 
@@ -400,7 +400,7 @@ static int dsa_sig_print(BIO *bp, const X509_ALGOR *sigalg,
         if (!ASN1_bn_print(bp, "s:   ", s, NULL, indent))
             goto err;
         rv = 1;
- err:
+err:
         DSA_SIG_free(dsa_sig);
         return rv;
     }
@@ -412,12 +412,12 @@ static int dsa_sig_print(BIO *bp, const X509_ALGOR *sigalg,
 static int dsa_pkey_ctrl(EVP_PKEY *pkey, int op, long arg1, void *arg2)
 {
     switch (op) {
-    case ASN1_PKEY_CTRL_DEFAULT_MD_NID:
-        *(int *)arg2 = NID_sha256;
-        return 1;
+        case ASN1_PKEY_CTRL_DEFAULT_MD_NID:
+            *(int *)arg2 = NID_sha256;
+            return 1;
 
-    default:
-        return -2;
+        default:
+            return -2;
     }
 }
 
@@ -471,7 +471,7 @@ static int dsa_pkey_export_to(const EVP_PKEY *from, void *to_keydata,
     rv = importer(to_keydata, selection, params);
 
     OSSL_PARAM_free(params);
- err:
+err:
     OSSL_PARAM_BLD_free(tmpl);
     return rv;
 }
@@ -519,66 +519,70 @@ static int dsa_pkey_copy(EVP_PKEY *to, EVP_PKEY *from)
 const EVP_PKEY_ASN1_METHOD ossl_dsa_asn1_meths[5] = {
 
     {
-     EVP_PKEY_DSA2,
-     EVP_PKEY_DSA,
-     ASN1_PKEY_ALIAS},
+        EVP_PKEY_DSA2,
+        EVP_PKEY_DSA,
+        ASN1_PKEY_ALIAS
+    },
 
     {
-     EVP_PKEY_DSA1,
-     EVP_PKEY_DSA,
-     ASN1_PKEY_ALIAS},
+        EVP_PKEY_DSA1,
+        EVP_PKEY_DSA,
+        ASN1_PKEY_ALIAS
+    },
 
     {
-     EVP_PKEY_DSA4,
-     EVP_PKEY_DSA,
-     ASN1_PKEY_ALIAS},
+        EVP_PKEY_DSA4,
+        EVP_PKEY_DSA,
+        ASN1_PKEY_ALIAS
+    },
 
     {
-     EVP_PKEY_DSA3,
-     EVP_PKEY_DSA,
-     ASN1_PKEY_ALIAS},
+        EVP_PKEY_DSA3,
+        EVP_PKEY_DSA,
+        ASN1_PKEY_ALIAS
+    },
 
     {
-     EVP_PKEY_DSA,
-     EVP_PKEY_DSA,
-     0,
+        EVP_PKEY_DSA,
+        EVP_PKEY_DSA,
+        0,
 
-     "DSA",
-     "OpenSSL DSA method",
+        "DSA",
+        "OpenSSL DSA method",
 
-     dsa_pub_decode,
-     dsa_pub_encode,
-     dsa_pub_cmp,
-     dsa_pub_print,
+        dsa_pub_decode,
+        dsa_pub_encode,
+        dsa_pub_cmp,
+        dsa_pub_print,
 
-     dsa_priv_decode,
-     dsa_priv_encode,
-     dsa_priv_print,
+        dsa_priv_decode,
+        dsa_priv_encode,
+        dsa_priv_print,
 
-     int_dsa_size,
-     dsa_bits,
-     dsa_security_bits,
+        int_dsa_size,
+        dsa_bits,
+        dsa_security_bits,
 
-     dsa_param_decode,
-     dsa_param_encode,
-     dsa_missing_parameters,
-     dsa_copy_parameters,
-     dsa_cmp_parameters,
-     dsa_param_print,
-     dsa_sig_print,
+        dsa_param_decode,
+        dsa_param_encode,
+        dsa_missing_parameters,
+        dsa_copy_parameters,
+        dsa_cmp_parameters,
+        dsa_param_print,
+        dsa_sig_print,
 
-     int_dsa_free,
-     dsa_pkey_ctrl,
-     old_dsa_priv_decode,
-     old_dsa_priv_encode,
+        int_dsa_free,
+        dsa_pkey_ctrl,
+        old_dsa_priv_decode,
+        old_dsa_priv_encode,
 
-     NULL, NULL, NULL,
-     NULL, NULL, NULL,
-     NULL, NULL, NULL, NULL,
+        NULL, NULL, NULL,
+        NULL, NULL, NULL,
+        NULL, NULL, NULL, NULL,
 
-     dsa_pkey_dirty_cnt,
-     dsa_pkey_export_to,
-     dsa_pkey_import_from,
-     dsa_pkey_copy
+        dsa_pkey_dirty_cnt,
+        dsa_pkey_export_to,
+        dsa_pkey_import_from,
+        dsa_pkey_copy
     }
 };

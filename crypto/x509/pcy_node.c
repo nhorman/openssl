@@ -112,7 +112,7 @@ X509_POLICY_NODE *ossl_policy_level_add_node(X509_POLICY_LEVEL *level,
 
     return node;
 
- extra_data_error:
+extra_data_error:
     if (level != NULL) {
         if (level->anyPolicy == node)
             level->anyPolicy = NULL;
@@ -120,7 +120,7 @@ X509_POLICY_NODE *ossl_policy_level_add_node(X509_POLICY_LEVEL *level,
             (void) sk_X509_POLICY_NODE_pop(level->nodes);
     }
 
- node_error:
+node_error:
     ossl_policy_node_free(node);
     return NULL;
 }

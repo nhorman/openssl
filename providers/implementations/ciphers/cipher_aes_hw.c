@@ -84,7 +84,7 @@ static int cipher_hw_aes_initkey(PROV_CIPHER_CTX *dat,
             dat->stream.ctr = (ctr128_f)HWAES_ctr32_encrypt_blocks;
         else
 # endif
-            (void)0;            /* terminate potentially open 'else' */
+        (void)0;                /* terminate potentially open 'else' */
     } else
 #endif
 #ifdef BSAES_CAPABLE
@@ -124,17 +124,17 @@ static int cipher_hw_aes_initkey(PROV_CIPHER_CTX *dat,
 IMPLEMENT_CIPHER_HW_COPYCTX(cipher_hw_aes_copyctx, PROV_AES_CTX)
 
 #define PROV_CIPHER_HW_aes_mode(mode)                                          \
-static const PROV_CIPHER_HW aes_##mode = {                                     \
-    cipher_hw_aes_initkey,                                                     \
-    ossl_cipher_hw_generic_##mode,                                             \
-    cipher_hw_aes_copyctx                                                      \
-};                                                                             \
-PROV_CIPHER_HW_declare(mode)                                                   \
-const PROV_CIPHER_HW *ossl_prov_cipher_hw_aes_##mode(size_t keybits)           \
-{                                                                              \
-    PROV_CIPHER_HW_select(mode)                                                \
-    return &aes_##mode;                                                        \
-}
+        static const PROV_CIPHER_HW aes_ ## mode = {                                     \
+            cipher_hw_aes_initkey,                                                     \
+            ossl_cipher_hw_generic_ ## mode,                                             \
+            cipher_hw_aes_copyctx                                                      \
+        };                                                                             \
+        PROV_CIPHER_HW_declare(mode)                                                   \
+        const PROV_CIPHER_HW *ossl_prov_cipher_hw_aes_ ## mode(size_t keybits)           \
+        {                                                                              \
+            PROV_CIPHER_HW_select(mode)                                                \
+            return &aes_ ## mode;                                                        \
+        }
 
 #if defined(AESNI_CAPABLE)
 # include "cipher_aes_hw_aesni.inc"

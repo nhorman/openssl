@@ -43,14 +43,15 @@ int main(int argc, char **argv)
     params[3] = OSSL_PARAM_construct_int(OSSL_PKEY_PARAM_FFC_GINDEX, &gindex);
     params[4] = OSSL_PARAM_construct_utf8_string(OSSL_PKEY_PARAM_FFC_DIGEST,
                                                  "SHA384", 0);
-    params[5] = OSSL_PARAM_construct_utf8_string(OSSL_PKEY_PARAM_FFC_DIGEST_PROPS,
-                                                 "provider=default", 0);
+    params[5] = OSSL_PARAM_construct_utf8_string(
+        OSSL_PKEY_PARAM_FFC_DIGEST_PROPS,
+        "provider=default", 0);
     params[6] = OSSL_PARAM_construct_end();
 
     /* Generate a dsa param key using optional params */
     if (EVP_PKEY_paramgen_init(ctx) <= 0
-            || EVP_PKEY_CTX_set_params(ctx, params) <= 0
-            || EVP_PKEY_paramgen(ctx, &dsaparamkey) <= 0) {
+        || EVP_PKEY_CTX_set_params(ctx, params) <= 0
+        || EVP_PKEY_paramgen(ctx, &dsaparamkey) <= 0) {
         fprintf(stderr, "DSA paramgen failed\n");
         goto cleanup;
     }

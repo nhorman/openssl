@@ -25,16 +25,17 @@ static int cipher_hw_seed_initkey(PROV_CIPHER_CTX *ctx,
 }
 
 # define PROV_CIPHER_HW_seed_mode(mode, UCMODE)                                \
-IMPLEMENT_CIPHER_HW_##UCMODE(mode, seed, PROV_SEED_CTX, SEED_KEY_SCHEDULE,     \
-                             SEED_##mode)                                      \
-static const PROV_CIPHER_HW seed_##mode = {                                    \
-    cipher_hw_seed_initkey,                                                    \
-    cipher_hw_seed_##mode##_cipher                                             \
-};                                                                             \
-const PROV_CIPHER_HW *ossl_prov_cipher_hw_seed_##mode(size_t keybits)          \
-{                                                                              \
-    return &seed_##mode;                                                       \
-}
+        IMPLEMENT_CIPHER_HW_ ## UCMODE(mode, seed, PROV_SEED_CTX, \
+                                       SEED_KEY_SCHEDULE,     \
+                                       SEED_ ## mode)                                      \
+        static const PROV_CIPHER_HW seed_ ## mode = {                                    \
+            cipher_hw_seed_initkey,                                                    \
+            cipher_hw_seed_ ## mode ## _cipher                                             \
+        };                                                                             \
+        const PROV_CIPHER_HW *ossl_prov_cipher_hw_seed_ ## mode(size_t keybits)          \
+        {                                                                              \
+            return &seed_ ## mode;                                                       \
+        }
 
 PROV_CIPHER_HW_seed_mode(cbc, CBC)
 PROV_CIPHER_HW_seed_mode(ecb, ECB)

@@ -264,7 +264,7 @@ static size_t tls1_multi_block_encrypt(void *vctx,
     memset(blocks, 0, sizeof(blocks));
     for (i = 0; i < x4; i++) {
         unsigned int len = (i == (x4 - 1) ? last : frag),
-            off = hash_d[i].blocks * 64;
+                     off = hash_d[i].blocks * 64;
         const unsigned char *ptr = hash_d[i].ptr + off;
 
         off = (len - processed) - (64 - 13) - off; /* remainder actually */
@@ -714,7 +714,8 @@ static void aesni_cbc_hmac_sha256_set_mac_key(void *vctx,
 
 /* EVP_CTRL_AEAD_TLS1_AAD */
 static int aesni_cbc_hmac_sha256_set_tls1_aad(void *vctx,
-                                              unsigned char *aad_rec, int aad_len)
+                                              unsigned char *aad_rec,
+                                              int aad_len)
 {
     PROV_AES_HMAC_SHA_CTX *ctx = (PROV_AES_HMAC_SHA_CTX *)vctx;
     PROV_AES_HMAC_SHA256_CTX *sctx = (PROV_AES_HMAC_SHA256_CTX *)vctx;
@@ -729,7 +730,7 @@ static int aesni_cbc_hmac_sha256_set_tls1_aad(void *vctx,
     if (ctx->base.enc) {
         ctx->payload_length = len;
         if ((ctx->aux.tls_ver =
-             p[aad_len - 4] << 8 | p[aad_len - 3]) >= TLS1_1_VERSION) {
+                 p[aad_len - 4] << 8 | p[aad_len - 3]) >= TLS1_1_VERSION) {
             if (len < AES_BLOCK_SIZE)
                 return 0;
             len -= AES_BLOCK_SIZE;
@@ -740,7 +741,7 @@ static int aesni_cbc_hmac_sha256_set_tls1_aad(void *vctx,
         sha256_update(&sctx->md, p, aad_len);
         ctx->tls_aad_pad = (int)(((len + SHA256_DIGEST_LENGTH +
                                    AES_BLOCK_SIZE) & -AES_BLOCK_SIZE)
-                                   - len);
+                                 - len);
         return 1;
     } else {
         memcpy(ctx->aux.tls_aad, p, aad_len);
@@ -826,8 +827,8 @@ static int aesni_cbc_hmac_sha256_tls1_multiblock_encrypt(
 
 static const PROV_CIPHER_HW_AES_HMAC_SHA cipher_hw_aes_hmac_sha256 = {
     {
-      aesni_cbc_hmac_sha256_init_key,
-      aesni_cbc_hmac_sha256_cipher
+        aesni_cbc_hmac_sha256_init_key,
+        aesni_cbc_hmac_sha256_cipher
     },
     aesni_cbc_hmac_sha256_set_mac_key,
     aesni_cbc_hmac_sha256_set_tls1_aad,

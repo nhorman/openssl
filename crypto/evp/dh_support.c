@@ -12,7 +12,7 @@
 #include "internal/nelem.h"
 #include "crypto/dh.h"
 
-typedef struct dh_name2id_st{
+typedef struct dh_name2id_st {
     const char *name;
     int id;
     int type;

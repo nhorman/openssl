@@ -18,19 +18,22 @@ extern unsigned int OPENSSL_arm_midr;
 static inline int vpsm4_capable(void)
 {
     return (OPENSSL_armcap_P & ARMV8_CPUID) &&
-            (MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_ARM, ARM_CPU_PART_V1) ||
-             MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_ARM, ARM_CPU_PART_N1));
+           (MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_ARM,
+                              ARM_CPU_PART_V1) ||
+            MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_ARM,
+                              ARM_CPU_PART_N1));
 }
 static inline int vpsm4_ex_capable(void)
 {
     return (OPENSSL_armcap_P & ARMV8_CPUID) &&
-            (MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, HISI_CPU_IMP, HISI_CPU_PART_KP920));
+           (MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, HISI_CPU_IMP,
+                              HISI_CPU_PART_KP920));
 }
 #   if defined(VPSM4_ASM)
 #    define VPSM4_CAPABLE vpsm4_capable()
 #    define VPSM4_EX_CAPABLE vpsm4_ex_capable()
 #   endif
-#   define HWSM4_CAPABLE (OPENSSL_armcap_P & ARMV8_SM4)
+#   define HWSM4_CAPABLE (OPENSSL_armcap_P &ARMV8_SM4)
 #   define HWSM4_set_encrypt_key sm4_v8_set_encrypt_key
 #   define HWSM4_set_decrypt_key sm4_v8_set_decrypt_key
 #   define HWSM4_encrypt sm4_v8_encrypt

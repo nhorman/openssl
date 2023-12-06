@@ -59,7 +59,7 @@ FILE *openssl_fopen(const char *filename, const char *mode)
         (GetLastError() == ERROR_INVALID_FLAGS &&
          (sz = MultiByteToWideChar(CP_UTF8, (flags = 0),
                                    filename, len_0, NULL, 0)) > 0)
-        ) {
+       ) {
         WCHAR wmode[8];
         WCHAR *wfilename = _alloca(sz * sizeof(WCHAR));
 
@@ -69,7 +69,7 @@ FILE *openssl_fopen(const char *filename, const char *mode)
                                 wmode, OSSL_NELEM(wmode)) &&
             (file = _wfopen(wfilename, wmode)) == NULL &&
             (errno == ENOENT || errno == EBADF)
-            ) {
+           ) {
             /*
              * UTF-8 decode succeeded, but no file, filename
              * could still have been locale-ized...
@@ -91,7 +91,7 @@ FILE *openssl_fopen(const char *filename, const char *mode)
                 return NULL;
 
             for (iterator = newname, lastchar = '\0';
-                *filename; filename++, iterator++) {
+                 *filename; filename++, iterator++) {
                 if (lastchar == '/' && filename[0] == '.'
                     && filename[1] != '.' && filename[1] != '/') {
                     /* Leading dots are not permitted in plain DOS. */

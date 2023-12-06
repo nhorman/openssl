@@ -214,7 +214,7 @@ int CONF_modules_load_file_ex(OSSL_LIB_CTX *libctx, const char *filename,
     ret = CONF_modules_load(conf, appname, flags);
     diagnostics = conf_diagnostics(conf);
 
- err:
+err:
     if (filename == NULL)
         OPENSSL_free(file);
     NCONF_free(conf);
@@ -316,7 +316,7 @@ static CONF_MODULE *module_load_dso(const CONF *cnf,
 
     return md;
 
- err:
+err:
     DSO_free(dso);
     ERR_raise_data(ERR_LIB_CONF, errcode, "module=%s, path=%s", name, path);
     return NULL;
@@ -354,7 +354,7 @@ static CONF_MODULE *module_add(DSO *dso, const char *name,
     CRYPTO_THREAD_unlock(module_list_lock);
     return tmod;
 
- err:
+err:
     CRYPTO_THREAD_unlock(module_list_lock);
     if (tmod != NULL) {
         OPENSSL_free(tmod->name);
@@ -455,13 +455,13 @@ static int module_init(CONF_MODULE *pmod, const char *name, const char *value,
     CRYPTO_THREAD_unlock(module_list_lock);
     return ret;
 
- err:
+err:
 
     /* We've started the module so we'd better finish it */
     if (pmod->finish && init_called)
         pmod->finish(imod);
 
- memerr:
+memerr:
     if (imod) {
         OPENSSL_free(imod->name);
         OPENSSL_free(imod->value);

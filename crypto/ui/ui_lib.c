@@ -52,17 +52,17 @@ static void free_string(UI_STRING *uis)
     if (uis->flags & OUT_STRING_FREEABLE) {
         OPENSSL_free((char *)uis->out_string);
         switch (uis->type) {
-        case UIT_BOOLEAN:
-            OPENSSL_free((char *)uis->_.boolean_data.action_desc);
-            OPENSSL_free((char *)uis->_.boolean_data.ok_chars);
-            OPENSSL_free((char *)uis->_.boolean_data.cancel_chars);
-            break;
-        case UIT_NONE:
-        case UIT_PROMPT:
-        case UIT_VERIFY:
-        case UIT_ERROR:
-        case UIT_INFO:
-            break;
+            case UIT_BOOLEAN:
+                OPENSSL_free((char *)uis->_.boolean_data.action_desc);
+                OPENSSL_free((char *)uis->_.boolean_data.ok_chars);
+                OPENSSL_free((char *)uis->_.boolean_data.cancel_chars);
+                break;
+            case UIT_NONE:
+            case UIT_PROMPT:
+            case UIT_VERIFY:
+            case UIT_ERROR:
+            case UIT_INFO:
+                break;
         }
     }
     OPENSSL_free(uis);
@@ -288,7 +288,7 @@ int UI_dup_input_boolean(UI *ui, const char *prompt, const char *action_desc,
     return general_allocate_boolean(ui, prompt_copy, action_desc_copy,
                                     ok_chars_copy, cancel_chars_copy, 1,
                                     UIT_BOOLEAN, flags, result_buf);
- err:
+err:
     OPENSSL_free(prompt_copy);
     OPENSSL_free(action_desc_copy);
     OPENSSL_free(ok_chars_copy);
@@ -478,17 +478,17 @@ int UI_process(UI *ui)
 
     if (ui->meth->ui_flush != NULL)
         switch (ui->meth->ui_flush(ui)) {
-        case -1:               /* Interrupt/Cancel/something... */
-            ui->flags &= ~UI_FLAG_REDOABLE;
-            ok = -2;
-            goto err;
-        case 0:                /* Errors */
-            state = "flushing";
-            ok = -1;
-            goto err;
-        default:               /* Success */
-            ok = 0;
-            break;
+            case -1:           /* Interrupt/Cancel/something... */
+                ui->flags &= ~UI_FLAG_REDOABLE;
+                ok = -2;
+                goto err;
+            case 0:            /* Errors */
+                state = "flushing";
+                ok = -1;
+                goto err;
+            default:           /* Success */
+                ok = 0;
+                break;
         }
 
     for (i = 0; i < sk_UI_STRING_num(ui->strings); i++) {
@@ -496,17 +496,17 @@ int UI_process(UI *ui)
             switch (ui->meth->ui_read_string(ui,
                                              sk_UI_STRING_value(ui->strings,
                                                                 i))) {
-            case -1:           /* Interrupt/Cancel/something... */
-                ui->flags &= ~UI_FLAG_REDOABLE;
-                ok = -2;
-                goto err;
-            case 0:            /* Errors */
-                state = "reading strings";
-                ok = -1;
-                goto err;
-            default:           /* Success */
-                ok = 0;
-                break;
+                case -1:       /* Interrupt/Cancel/something... */
+                    ui->flags &= ~UI_FLAG_REDOABLE;
+                    ok = -2;
+                    goto err;
+                case 0:        /* Errors */
+                    state = "reading strings";
+                    ok = -1;
+                    goto err;
+                default:       /* Success */
+                    ok = 0;
+                    break;
             }
         } else {
             ui->flags &= ~UI_FLAG_REDOABLE;
@@ -516,7 +516,7 @@ int UI_process(UI *ui)
     }
 
     state = NULL;
- err:
+err:
     if (ui->meth->ui_close_session != NULL
         && ui->meth->ui_close_session(ui) <= 0) {
         if (state == NULL)
@@ -536,19 +536,19 @@ int UI_ctrl(UI *ui, int cmd, long i, void *p, void (*f) (void))
         return -1;
     }
     switch (cmd) {
-    case UI_CTRL_PRINT_ERRORS:
+        case UI_CTRL_PRINT_ERRORS:
         {
-            int save_flag = ! !(ui->flags & UI_FLAG_PRINT_ERRORS);
+            int save_flag = !!(ui->flags & UI_FLAG_PRINT_ERRORS);
             if (i)
                 ui->flags |= UI_FLAG_PRINT_ERRORS;
             else
                 ui->flags &= ~UI_FLAG_PRINT_ERRORS;
             return save_flag;
         }
-    case UI_CTRL_IS_REDOABLE:
-        return ! !(ui->flags & UI_FLAG_REDOABLE);
-    default:
-        break;
+        case UI_CTRL_IS_REDOABLE:
+            return !!(ui->flags & UI_FLAG_REDOABLE);
+        default:
+            break;
     }
     ERR_raise(ERR_LIB_UI, UI_R_UNKNOWN_CONTROL_COMMAND);
     return -1;
@@ -771,14 +771,14 @@ const char *UI_get0_output_string(UI_STRING *uis)
 const char *UI_get0_action_string(UI_STRING *uis)
 {
     switch (uis->type) {
-    case UIT_BOOLEAN:
-        return uis->_.boolean_data.action_desc;
-    case UIT_PROMPT:
-    case UIT_NONE:
-    case UIT_VERIFY:
-    case UIT_INFO:
-    case UIT_ERROR:
-        break;
+        case UIT_BOOLEAN:
+            return uis->_.boolean_data.action_desc;
+        case UIT_PROMPT:
+        case UIT_NONE:
+        case UIT_VERIFY:
+        case UIT_INFO:
+        case UIT_ERROR:
+            break;
     }
     return NULL;
 }
@@ -786,14 +786,14 @@ const char *UI_get0_action_string(UI_STRING *uis)
 const char *UI_get0_result_string(UI_STRING *uis)
 {
     switch (uis->type) {
-    case UIT_PROMPT:
-    case UIT_VERIFY:
-        return uis->result_buf;
-    case UIT_NONE:
-    case UIT_BOOLEAN:
-    case UIT_INFO:
-    case UIT_ERROR:
-        break;
+        case UIT_PROMPT:
+        case UIT_VERIFY:
+            return uis->result_buf;
+        case UIT_NONE:
+        case UIT_BOOLEAN:
+        case UIT_INFO:
+        case UIT_ERROR:
+            break;
     }
     return NULL;
 }
@@ -801,14 +801,14 @@ const char *UI_get0_result_string(UI_STRING *uis)
 int UI_get_result_string_length(UI_STRING *uis)
 {
     switch (uis->type) {
-    case UIT_PROMPT:
-    case UIT_VERIFY:
-        return uis->result_len;
-    case UIT_NONE:
-    case UIT_BOOLEAN:
-    case UIT_INFO:
-    case UIT_ERROR:
-        break;
+        case UIT_PROMPT:
+        case UIT_VERIFY:
+            return uis->result_len;
+        case UIT_NONE:
+        case UIT_BOOLEAN:
+        case UIT_INFO:
+        case UIT_ERROR:
+            break;
     }
     return -1;
 }
@@ -816,14 +816,14 @@ int UI_get_result_string_length(UI_STRING *uis)
 const char *UI_get0_test_string(UI_STRING *uis)
 {
     switch (uis->type) {
-    case UIT_VERIFY:
-        return uis->_.string_data.test_buf;
-    case UIT_NONE:
-    case UIT_BOOLEAN:
-    case UIT_INFO:
-    case UIT_ERROR:
-    case UIT_PROMPT:
-        break;
+        case UIT_VERIFY:
+            return uis->_.string_data.test_buf;
+        case UIT_NONE:
+        case UIT_BOOLEAN:
+        case UIT_INFO:
+        case UIT_ERROR:
+        case UIT_PROMPT:
+            break;
     }
     return NULL;
 }
@@ -831,14 +831,14 @@ const char *UI_get0_test_string(UI_STRING *uis)
 int UI_get_result_minsize(UI_STRING *uis)
 {
     switch (uis->type) {
-    case UIT_PROMPT:
-    case UIT_VERIFY:
-        return uis->_.string_data.result_minsize;
-    case UIT_NONE:
-    case UIT_INFO:
-    case UIT_ERROR:
-    case UIT_BOOLEAN:
-        break;
+        case UIT_PROMPT:
+        case UIT_VERIFY:
+            return uis->_.string_data.result_minsize;
+        case UIT_NONE:
+        case UIT_INFO:
+        case UIT_ERROR:
+        case UIT_BOOLEAN:
+            break;
     }
     return -1;
 }
@@ -846,14 +846,14 @@ int UI_get_result_minsize(UI_STRING *uis)
 int UI_get_result_maxsize(UI_STRING *uis)
 {
     switch (uis->type) {
-    case UIT_PROMPT:
-    case UIT_VERIFY:
-        return uis->_.string_data.result_maxsize;
-    case UIT_NONE:
-    case UIT_INFO:
-    case UIT_ERROR:
-    case UIT_BOOLEAN:
-        break;
+        case UIT_PROMPT:
+        case UIT_VERIFY:
+            return uis->_.string_data.result_maxsize;
+        case UIT_NONE:
+        case UIT_INFO:
+        case UIT_ERROR:
+        case UIT_BOOLEAN:
+            break;
     }
     return -1;
 }
@@ -868,36 +868,36 @@ int UI_set_result_ex(UI *ui, UI_STRING *uis, const char *result, int len)
     ui->flags &= ~UI_FLAG_REDOABLE;
 
     switch (uis->type) {
-    case UIT_PROMPT:
-    case UIT_VERIFY:
-        if (len < uis->_.string_data.result_minsize) {
-            ui->flags |= UI_FLAG_REDOABLE;
-            ERR_raise_data(ERR_LIB_UI, UI_R_RESULT_TOO_SMALL,
-                           "You must type in %d to %d characters",
-                           uis->_.string_data.result_minsize,
-                           uis->_.string_data.result_maxsize);
-            return -1;
-        }
-        if (len > uis->_.string_data.result_maxsize) {
-            ui->flags |= UI_FLAG_REDOABLE;
-            ERR_raise_data(ERR_LIB_UI, UI_R_RESULT_TOO_LARGE,
-                           "You must type in %d to %d characters",
-                           uis->_.string_data.result_minsize,
-                           uis->_.string_data.result_maxsize);
-            return -1;
-        }
+        case UIT_PROMPT:
+        case UIT_VERIFY:
+            if (len < uis->_.string_data.result_minsize) {
+                ui->flags |= UI_FLAG_REDOABLE;
+                ERR_raise_data(ERR_LIB_UI, UI_R_RESULT_TOO_SMALL,
+                               "You must type in %d to %d characters",
+                               uis->_.string_data.result_minsize,
+                               uis->_.string_data.result_maxsize);
+                return -1;
+            }
+            if (len > uis->_.string_data.result_maxsize) {
+                ui->flags |= UI_FLAG_REDOABLE;
+                ERR_raise_data(ERR_LIB_UI, UI_R_RESULT_TOO_LARGE,
+                               "You must type in %d to %d characters",
+                               uis->_.string_data.result_minsize,
+                               uis->_.string_data.result_maxsize);
+                return -1;
+            }
 
-        if (uis->result_buf == NULL) {
-            ERR_raise(ERR_LIB_UI, UI_R_NO_RESULT_BUFFER);
-            return -1;
-        }
+            if (uis->result_buf == NULL) {
+                ERR_raise(ERR_LIB_UI, UI_R_NO_RESULT_BUFFER);
+                return -1;
+            }
 
-        memcpy(uis->result_buf, result, len);
-        if (len <= uis->_.string_data.result_maxsize)
-            uis->result_buf[len] = '\0';
-        uis->result_len = len;
-        break;
-    case UIT_BOOLEAN:
+            memcpy(uis->result_buf, result, len);
+            if (len <= uis->_.string_data.result_maxsize)
+                uis->result_buf[len] = '\0';
+            uis->result_len = len;
+            break;
+        case UIT_BOOLEAN:
         {
             const char *p;
 
@@ -918,10 +918,10 @@ int UI_set_result_ex(UI *ui, UI_STRING *uis, const char *result, int len)
                 }
             }
         }
-    case UIT_NONE:
-    case UIT_INFO:
-    case UIT_ERROR:
-        break;
+        case UIT_NONE:
+        case UIT_INFO:
+        case UIT_ERROR:
+            break;
     }
     return 0;
 }

@@ -24,10 +24,10 @@
 
 # if __INITIAL_POINTER_SIZE == 64
 #  define NAMX_DNA_FNA_SET(fab) fab.fab$l_dna = (__char_ptr32) -1; \
-   fab.fab$l_fna = (__char_ptr32) -1;
+        fab.fab$l_fna = (__char_ptr32) -1;
 # else                          /* __INITIAL_POINTER_SIZE == 64 */
 #  define NAMX_DNA_FNA_SET(fab) fab.fab$l_dna = (char *) -1; \
-   fab.fab$l_fna = (char *) -1;
+        fab.fab$l_fna = (char *) -1;
 # endif                         /* __INITIAL_POINTER_SIZE == 64 [else] */
 
 # define NAMX_MAXRSS NAML$C_MAXRSS

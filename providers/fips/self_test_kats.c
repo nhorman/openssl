@@ -37,17 +37,17 @@ static int self_test_digest(const ST_KAT_DIGEST *t, OSSL_SELF_TEST *st,
     OSSL_SELF_TEST_onbegin(st, OSSL_SELF_TEST_TYPE_KAT_DIGEST, t->desc);
 
     if (ctx == NULL
-            || md == NULL
-            || !EVP_DigestInit_ex(ctx, md, NULL)
-            || !EVP_DigestUpdate(ctx, t->pt, t->pt_len)
-            || !EVP_DigestFinal(ctx, out, &out_len))
+        || md == NULL
+        || !EVP_DigestInit_ex(ctx, md, NULL)
+        || !EVP_DigestUpdate(ctx, t->pt, t->pt_len)
+        || !EVP_DigestFinal(ctx, out, &out_len))
         goto err;
 
     /* Optional corruption */
     OSSL_SELF_TEST_oncorrupt_byte(st, out);
 
     if (out_len != t->expected_len
-            || memcmp(out, t->expected, out_len) != 0)
+        || memcmp(out, t->expected, out_len) != 0)
         goto err;
     ok = 1;
 err:
@@ -80,7 +80,8 @@ static int cipher_init(EVP_CIPHER_CTX *ctx, const EVP_CIPHER *cipher,
         in_tag = (unsigned char *)t->tag;
 
     return EVP_CipherInit_ex(ctx, cipher, NULL, NULL, NULL, enc)
-           && (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_IVLEN, t->iv_len, NULL) > 0)
+           && (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_IVLEN, t->iv_len,
+                                   NULL) > 0)
            && (in_tag == NULL
                || EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_TAG, t->tag_len,
                                       in_tag) > 0)
@@ -111,9 +112,9 @@ static int self_test_cipher(const ST_KAT_CIPHER *t, OSSL_SELF_TEST *st,
     /* Encrypt plain text message */
     if ((t->mode & CIPHER_MODE_ENCRYPT) != 0) {
         if (!cipher_init(ctx, cipher, t, encrypt)
-                || !EVP_CipherUpdate(ctx, ct_buf, &len, t->base.pt,
-                                     t->base.pt_len)
-                || !EVP_CipherFinal_ex(ctx, ct_buf + len, &ct_len))
+            || !EVP_CipherUpdate(ctx, ct_buf, &len, t->base.pt,
+                                 t->base.pt_len)
+            || !EVP_CipherFinal_ex(ctx, ct_buf + len, &ct_len))
             goto err;
 
         OSSL_SELF_TEST_oncorrupt_byte(st, ct_buf);
@@ -126,7 +127,7 @@ static int self_test_cipher(const ST_KAT_CIPHER *t, OSSL_SELF_TEST *st,
             unsigned char tag[16] = { 0 };
 
             if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_GET_TAG, t->tag_len,
-                                     tag) <= 0
+                                    tag) <= 0
                 || memcmp(tag, t->tag, t->tag_len) != 0)
                 goto err;
         }
@@ -142,7 +143,7 @@ static int self_test_cipher(const ST_KAT_CIPHER *t, OSSL_SELF_TEST *st,
         OSSL_SELF_TEST_oncorrupt_byte(st, pt_buf);
         pt_len += len;
         if (pt_len != (int)t->base.pt_len
-                || memcmp(pt_buf, t->base.pt, pt_len) != 0)
+            || memcmp(pt_buf, t->base.pt, pt_len) != 0)
             goto err;
     }
 
@@ -165,34 +166,34 @@ static int add_params(OSSL_PARAM_BLD *bld, const ST_KAT_PARAM *params,
     for (p = params; p->data != NULL; ++p)
     {
         switch (p->type) {
-        case OSSL_PARAM_UNSIGNED_INTEGER: {
-            BIGNUM *bn = BN_CTX_get(ctx);
+            case OSSL_PARAM_UNSIGNED_INTEGER: {
+                BIGNUM *bn = BN_CTX_get(ctx);
 
-            if (bn == NULL
-                || (BN_bin2bn(p->data, p->data_len, bn) == NULL)
-                || !OSSL_PARAM_BLD_push_BN(bld, p->name, bn))
-                goto err;
-            break;
-        }
-        case OSSL_PARAM_UTF8_STRING: {
-            if (!OSSL_PARAM_BLD_push_utf8_string(bld, p->name, p->data,
-                                                 p->data_len))
-                goto err;
-            break;
-        }
-        case OSSL_PARAM_OCTET_STRING: {
-            if (!OSSL_PARAM_BLD_push_octet_string(bld, p->name, p->data,
-                                                  p->data_len))
-                goto err;
-            break;
-        }
-        case OSSL_PARAM_INTEGER: {
-            if (!OSSL_PARAM_BLD_push_int(bld, p->name, *(int *)p->data))
-                goto err;
-            break;
-        }
-        default:
-            break;
+                if (bn == NULL
+                    || (BN_bin2bn(p->data, p->data_len, bn) == NULL)
+                    || !OSSL_PARAM_BLD_push_BN(bld, p->name, bn))
+                    goto err;
+                break;
+            }
+            case OSSL_PARAM_UTF8_STRING: {
+                if (!OSSL_PARAM_BLD_push_utf8_string(bld, p->name, p->data,
+                                                     p->data_len))
+                    goto err;
+                break;
+            }
+            case OSSL_PARAM_OCTET_STRING: {
+                if (!OSSL_PARAM_BLD_push_octet_string(bld, p->name, p->data,
+                                                      p->data_len))
+                    goto err;
+                break;
+            }
+            case OSSL_PARAM_INTEGER: {
+                if (!OSSL_PARAM_BLD_push_int(bld, p->name, *(int *)p->data))
+                    goto err;
+                break;
+            }
+            default:
+                break;
         }
     }
     ret = 1;
@@ -330,8 +331,8 @@ static int self_test_drbg(const ST_KAT_DRBG *t, OSSL_SELF_TEST *st,
 
     drbg_params[0] =
         OSSL_PARAM_construct_octet_string(OSSL_RAND_PARAM_TEST_ENTROPY,
-                                         (void *)t->entropyinpr2,
-                                         t->entropyinpr2len);
+                                          (void *)t->entropyinpr2,
+                                          t->entropyinpr2len);
     if (!EVP_RAND_CTX_set_params(test, drbg_params))
         goto err;
 
@@ -411,7 +412,8 @@ static int self_test_ka(const ST_KAT_KAS *t,
         || EVP_PKEY_fromdata(kactx, &pkey, EVP_PKEY_KEYPAIR, params) <= 0)
         goto err;
     if (EVP_PKEY_fromdata_init(kactx) <= 0
-        || EVP_PKEY_fromdata(kactx, &peerkey, EVP_PKEY_KEYPAIR, params_peer) <= 0)
+        || EVP_PKEY_fromdata(kactx, &peerkey, EVP_PKEY_KEYPAIR,
+                             params_peer) <= 0)
         goto err;
 
     /* Create a EVP_PKEY_CTX to perform key derivation */
@@ -534,7 +536,8 @@ err:
  * FIPS 140-2 IG D.9 states that separate KAT tests are needed for encrypt
  * and decrypt..
  */
-static int self_test_asym_cipher(const ST_KAT_ASYM_CIPHER *t, OSSL_SELF_TEST *st,
+static int self_test_asym_cipher(const ST_KAT_ASYM_CIPHER *t,
+                                 OSSL_SELF_TEST *st,
                                  OSSL_LIB_CTX *libctx)
 {
     int ret = 0;
@@ -781,7 +784,8 @@ static int set_kat_drbg(OSSL_LIB_CTX *ctx,
     EVP_RAND_CTX_free(parent_rand);
     parent_rand = NULL;
 
-    if (!EVP_RAND_instantiate(kat_rand, strength, 0, persstr, persstr_len, NULL))
+    if (!EVP_RAND_instantiate(kat_rand, strength, 0, persstr, persstr_len,
+                              NULL))
         goto err;
 
     /* When we set the new private generator this one is freed, so upref it */
@@ -796,7 +800,7 @@ static int set_kat_drbg(OSSL_LIB_CTX *ctx,
         RAND_set0_private(ctx, main_rand);
     }
 
- err:
+err:
     EVP_RAND_CTX_free(parent_rand);
     EVP_RAND_CTX_free(kat_rand);
     kat_rand = NULL;
@@ -810,7 +814,7 @@ static int reset_main_drbg(OSSL_LIB_CTX *ctx) {
         ret = 0;
     if (kat_rand != NULL) {
         if (!EVP_RAND_uninstantiate(kat_rand)
-                || !EVP_RAND_verify_zeroization(kat_rand))
+            || !EVP_RAND_verify_zeroization(kat_rand))
             ret = 0;
         EVP_RAND_CTX_free(kat_rand);
         kat_rand = NULL;
@@ -843,7 +847,7 @@ static int setup_main_random(OSSL_LIB_CTX *libctx)
     if (!EVP_RAND_instantiate(main_rand, strength, 0, NULL, 0, drbg_params))
         goto err;
     return 1;
- err:
+err:
     EVP_RAND_CTX_free(main_rand);
     return 0;
 }
@@ -859,7 +863,7 @@ int SELF_TEST_kats(OSSL_SELF_TEST *st, OSSL_LIB_CTX *libctx)
     int ret = 1;
 
     if (!setup_main_random(libctx)
-            || !RAND_set0_private(libctx, main_rand)) {
+        || !RAND_set0_private(libctx, main_rand)) {
         EVP_RAND_CTX_free(main_rand);
         return 0;
     }

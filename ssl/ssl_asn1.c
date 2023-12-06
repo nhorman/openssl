@@ -75,7 +75,8 @@ ASN1_SEQUENCE(SSL_SESSION_ASN1) = {
     ASN1_EXP_OPT_EMBED(SSL_SESSION_ASN1, tlsext_tick_age_add, ZUINT32, 14),
     ASN1_EXP_OPT_EMBED(SSL_SESSION_ASN1, max_early_data, ZUINT32, 15),
     ASN1_EXP_OPT(SSL_SESSION_ASN1, alpn_selected, ASN1_OCTET_STRING, 16),
-    ASN1_EXP_OPT_EMBED(SSL_SESSION_ASN1, tlsext_max_fragment_len_mode, ZUINT32, 17),
+    ASN1_EXP_OPT_EMBED(SSL_SESSION_ASN1, tlsext_max_fragment_len_mode, ZUINT32,
+                       17),
     ASN1_EXP_OPT(SSL_SESSION_ASN1, ticket_appdata, ASN1_OCTET_STRING, 18),
     ASN1_EXP_OPT_EMBED(SSL_SESSION_ASN1, kex_group, UINT32, 19),
     ASN1_EXP_OPT(SSL_SESSION_ASN1, peer_rpk, ASN1_OCTET_STRING, 20)
@@ -304,7 +305,7 @@ SSL_SESSION *d2i_SSL_SESSION_ex(SSL_SESSION **a, const unsigned char **pp,
     }
 
     id = 0x03000000L | ((unsigned long)as->cipher->data[0] << 8L)
-                     | (unsigned long)as->cipher->data[1];
+         | (unsigned long)as->cipher->data[1];
 
     ret->cipher_id = id;
     ret->cipher = ssl3_get_cipher_by_id(id);
@@ -344,7 +345,8 @@ SSL_SESSION *d2i_SSL_SESSION_ex(SSL_SESSION **a, const unsigned char **pp,
         /*
          * |data| is incremented; we don't want to lose original ptr
          */
-        ret->peer_rpk = d2i_PUBKEY_ex(NULL, &data, as->peer_rpk->length, libctx, propq);
+        ret->peer_rpk = d2i_PUBKEY_ex(NULL, &data, as->peer_rpk->length, libctx,
+                                      propq);
         if (ret->peer_rpk == NULL)
             goto err;
     }
@@ -425,7 +427,7 @@ SSL_SESSION *d2i_SSL_SESSION_ex(SSL_SESSION **a, const unsigned char **pp,
     *pp = p;
     return ret;
 
- err:
+err:
     M_ASN1_free_of(as, SSL_SESSION_ASN1);
     if ((a == NULL) || (*a != ret))
         SSL_SESSION_free(ret);

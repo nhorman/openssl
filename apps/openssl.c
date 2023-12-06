@@ -98,7 +98,7 @@ static void apps_shutdown(void)
 #ifndef OPENSSL_NO_TRACE
 typedef struct tracedata_st {
     BIO *bio;
-    unsigned int ingroup:1;
+    unsigned int ingroup : 1;
 } tracedata;
 
 static size_t internal_trace_cb(const char *buf, size_t cnt,
@@ -110,39 +110,41 @@ static size_t internal_trace_cb(const char *buf, size_t cnt,
     CRYPTO_THREAD_ID tid;
 
     switch (cmd) {
-    case OSSL_TRACE_CTRL_BEGIN:
-        if (trace_data->ingroup) {
-            BIO_printf(bio_err, "ERROR: tracing already started\n");
-            return 0;
-        }
-        trace_data->ingroup = 1;
+        case OSSL_TRACE_CTRL_BEGIN:
+            if (trace_data->ingroup) {
+                BIO_printf(bio_err, "ERROR: tracing already started\n");
+                return 0;
+            }
+            trace_data->ingroup = 1;
 
-        tid = CRYPTO_THREAD_get_current_id();
-        hex = OPENSSL_buf2hexstr((const unsigned char *)&tid, sizeof(tid));
-        BIO_snprintf(buffer, sizeof(buffer), "TRACE[%s]:%s: ",
-                     hex == NULL ? "<null>" : hex,
-                     OSSL_trace_get_category_name(category));
-        OPENSSL_free(hex);
-        BIO_set_prefix(trace_data->bio, buffer);
-        break;
-    case OSSL_TRACE_CTRL_WRITE:
-        if (!trace_data->ingroup) {
-            BIO_printf(bio_err, "ERROR: writing when tracing not started\n");
-            return 0;
-        }
+            tid = CRYPTO_THREAD_get_current_id();
+            hex = OPENSSL_buf2hexstr((const unsigned char *)&tid, sizeof(tid));
+            BIO_snprintf(buffer, sizeof(buffer), "TRACE[%s]:%s: ",
+                         hex == NULL ? "<null>" : hex,
+                         OSSL_trace_get_category_name(category));
+            OPENSSL_free(hex);
+            BIO_set_prefix(trace_data->bio, buffer);
+            break;
+        case OSSL_TRACE_CTRL_WRITE:
+            if (!trace_data->ingroup) {
+                BIO_printf(bio_err,
+                           "ERROR: writing when tracing not started\n");
+                return 0;
+            }
 
-        ret = BIO_write(trace_data->bio, buf, cnt);
-        break;
-    case OSSL_TRACE_CTRL_END:
-        if (!trace_data->ingroup) {
-            BIO_printf(bio_err, "ERROR: finishing when tracing not started\n");
-            return 0;
-        }
-        trace_data->ingroup = 0;
+            ret = BIO_write(trace_data->bio, buf, cnt);
+            break;
+        case OSSL_TRACE_CTRL_END:
+            if (!trace_data->ingroup) {
+                BIO_printf(bio_err,
+                           "ERROR: finishing when tracing not started\n");
+                return 0;
+            }
+            trace_data->ingroup = 0;
 
-        BIO_set_prefix(trace_data->bio, NULL);
+            BIO_set_prefix(trace_data->bio, NULL);
 
-        break;
+            break;
     }
 
     return ret < 0 ? 0 : ret;
@@ -263,7 +265,7 @@ int main(int argc, char *argv[])
 #endif
 
     if ((fname = "apps_startup", !apps_startup())
-            || (fname = "prog_init", (prog = prog_init()) == NULL)) {
+        || (fname = "prog_init", (prog = prog_init()) == NULL)) {
         BIO_printf(bio_err,
                    "FATAL: Startup failure (dev note: %s()) for %s\n",
                    fname, argv[0]);
@@ -283,15 +285,23 @@ int main(int argc, char *argv[])
     if (fp == NULL) {
         /* We assume we've been called as 'openssl ...' */
         global_help = argc > 1
-            && (strcmp(argv[1], "-help") == 0 || strcmp(argv[1], "--help") == 0
-                || strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--h") == 0);
+                      && (strcmp(argv[1],
+                                 "-help") == 0 || strcmp(argv[1], "--help") == 0
+                          || strcmp(argv[1], "-h") == 0 || strcmp(argv[1],
+                                                                  "--h") == 0);
         global_version = argc > 1
-            && (strcmp(argv[1], "-version") == 0 || strcmp(argv[1], "--version") == 0
-                || strcmp(argv[1], "-v") == 0 || strcmp(argv[1], "--v") == 0);
+                         && (strcmp(argv[1],
+                                    "-version") == 0 ||
+                             strcmp(argv[1], "--version") == 0
+                             || strcmp(argv[1],
+                                       "-v") == 0 ||
+                             strcmp(argv[1], "--v") == 0);
 
         argc--;
         argv++;
-        opt_appname(argc == 1 || global_help ? "help" : global_version ? "version" : argv[0]);
+        opt_appname(
+            argc == 1 ||
+            global_help ? "help" : global_version ? "version" : argv[0]);
     } else {
         argv[0] = pname;
     }
@@ -306,7 +316,7 @@ int main(int argc, char *argv[])
                 ? do_cmd(prog, 1, version_argv)
                 : do_cmd(prog, argc, argv);
 
- end:
+end:
     OPENSSL_free(default_config_file);
     lh_FUNCTION_free(prog);
     OPENSSL_free(arg.argv);
@@ -348,13 +358,13 @@ int help_main(int argc, char **argv)
     prog = opt_init(argc, argv, help_options);
     while ((o = opt_next()) != OPT_hEOF) {
         switch (o) {
-        case OPT_hERR:
-        case OPT_hEOF:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            return 1;
-        case OPT_hHELP:
-            opt_help(help_options);
-            return 0;
+            case OPT_hERR:
+            case OPT_hEOF:
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
+                return 1;
+            case OPT_hHELP:
+                opt_help(help_options);
+                return 0;
         }
     }
 

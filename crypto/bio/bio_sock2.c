@@ -116,7 +116,8 @@ int BIO_connect(int sock, const BIO_ADDR *addr, int options)
         size_t enabledlen = sizeof(enabled);
 
         /* Later FreeBSD */
-        if (sysctlbyname(OSSL_TFO_SYSCTL_CLIENT, &enabled, &enabledlen, NULL, 0) < 0) {
+        if (sysctlbyname(OSSL_TFO_SYSCTL_CLIENT, &enabled, &enabledlen, NULL,
+                         0) < 0) {
             ERR_raise(ERR_LIB_BIO, BIO_R_TFO_NO_KERNEL_SUPPORT);
             return 0;
         }
@@ -236,7 +237,8 @@ int BIO_bind(int sock, const BIO_ADDR *addr, int options)
     }
 # endif
 
-    if (bind(sock, BIO_ADDR_sockaddr(addr), BIO_ADDR_sockaddr_size(addr)) != 0) {
+    if (bind(sock, BIO_ADDR_sockaddr(addr),
+             BIO_ADDR_sockaddr_size(addr)) != 0) {
         ERR_raise_data(ERR_LIB_SYS, get_last_socket_error() /* may be 0 */,
                        "calling bind()");
         ERR_raise(ERR_LIB_BIO, BIO_R_UNABLE_TO_BIND_SOCKET);
@@ -327,7 +329,7 @@ int BIO_listen(int sock, const BIO_ADDR *addr, int options)
         }
     }
 
-  /* On OpenBSD it is always IPv6 only with IPv6 sockets thus read-only */
+    /* On OpenBSD it is always IPv6 only with IPv6 sockets thus read-only */
 # if defined(IPV6_V6ONLY) && !defined(__OpenBSD__)
     if (BIO_ADDR_family(addr) == AF_INET6) {
         /*
@@ -368,7 +370,8 @@ int BIO_listen(int sock, const BIO_ADDR *addr, int options)
         size_t enabledlen = sizeof(enabled);
 
         /* Later FreeBSD */
-        if (sysctlbyname(OSSL_TFO_SYSCTL_SERVER, &enabled, &enabledlen, NULL, 0) < 0) {
+        if (sysctlbyname(OSSL_TFO_SYSCTL_SERVER, &enabled, &enabledlen, NULL,
+                         0) < 0) {
             ERR_raise(ERR_LIB_BIO, BIO_R_TFO_NO_KERNEL_SUPPORT);
             return 0;
         }

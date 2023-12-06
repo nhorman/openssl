@@ -17,8 +17,8 @@ static int cipher_hw_sm4_initkey(PROV_CIPHER_CTX *ctx,
 
     ctx->ks = ks;
     if (ctx->enc
-            || (ctx->mode != EVP_CIPH_ECB_MODE
-                && ctx->mode != EVP_CIPH_CBC_MODE)) {
+        || (ctx->mode != EVP_CIPH_ECB_MODE
+            && ctx->mode != EVP_CIPH_CBC_MODE)) {
 #ifdef HWSM4_CAPABLE
         if (HWSM4_CAPABLE) {
             HWSM4_set_encrypt_key(key, ks);
@@ -122,17 +122,17 @@ static int cipher_hw_sm4_initkey(PROV_CIPHER_CTX *ctx,
 IMPLEMENT_CIPHER_HW_COPYCTX(cipher_hw_sm4_copyctx, PROV_SM4_CTX)
 
 # define PROV_CIPHER_HW_sm4_mode(mode)                                         \
-static const PROV_CIPHER_HW sm4_##mode = {                                     \
-    cipher_hw_sm4_initkey,                                                     \
-    ossl_cipher_hw_generic_##mode,                                             \
-    cipher_hw_sm4_copyctx                                                      \
-};                                                                             \
-PROV_CIPHER_HW_declare(mode)                                                   \
-const PROV_CIPHER_HW *ossl_prov_cipher_hw_sm4_##mode(size_t keybits)           \
-{                                                                              \
-    PROV_CIPHER_HW_select(mode)                                                \
-    return &sm4_##mode;                                                        \
-}
+        static const PROV_CIPHER_HW sm4_ ## mode = {                                     \
+            cipher_hw_sm4_initkey,                                                     \
+            ossl_cipher_hw_generic_ ## mode,                                             \
+            cipher_hw_sm4_copyctx                                                      \
+        };                                                                             \
+        PROV_CIPHER_HW_declare(mode)                                                   \
+        const PROV_CIPHER_HW *ossl_prov_cipher_hw_sm4_ ## mode(size_t keybits)           \
+        {                                                                              \
+            PROV_CIPHER_HW_select(mode)                                                \
+            return &sm4_ ## mode;                                                        \
+        }
 
 #if defined(__riscv) && __riscv_xlen == 64
 # include "cipher_sm4_hw_rv64i.inc"

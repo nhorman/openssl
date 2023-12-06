@@ -20,13 +20,13 @@
 #define HASH_CTX                SHA_CTX
 #define HASH_CBLOCK             SHA_CBLOCK
 #define HASH_MAKE_STRING(c,s)   do {    \
-        unsigned long ll;               \
-        ll=(c)->h0; (void)HOST_l2c(ll,(s));     \
-        ll=(c)->h1; (void)HOST_l2c(ll,(s));     \
-        ll=(c)->h2; (void)HOST_l2c(ll,(s));     \
-        ll=(c)->h3; (void)HOST_l2c(ll,(s));     \
-        ll=(c)->h4; (void)HOST_l2c(ll,(s));     \
-        } while (0)
+            unsigned long ll;               \
+            ll=(c)->h0; (void)HOST_l2c(ll,(s));     \
+            ll=(c)->h1; (void)HOST_l2c(ll,(s));     \
+            ll=(c)->h2; (void)HOST_l2c(ll,(s));     \
+            ll=(c)->h3; (void)HOST_l2c(ll,(s));     \
+            ll=(c)->h4; (void)HOST_l2c(ll,(s));     \
+} while (0)
 
 #define HASH_UPDATE                     SHA1_Update
 #define HASH_TRANSFORM                  SHA1_Transform
@@ -115,21 +115,21 @@ int HASH_INIT(SHA_CTX *c)
 #  undef X
 # endif
 # ifndef MD32_XARRAY
-  /*
-   * Originally X was an array. As it's automatic it's natural
-   * to expect RISC compiler to accommodate at least part of it in
-   * the register bank, isn't it? Unfortunately not all compilers
-   * "find" this expectation reasonable:-( On order to make such
-   * compilers generate better code I replace X[] with a bunch of
-   * X0, X1, etc. See the function body below...
-   */
-#  define X(i)   XX##i
+/*
+ * Originally X was an array. As it's automatic it's natural
+ * to expect RISC compiler to accommodate at least part of it in
+ * the register bank, isn't it? Unfortunately not all compilers
+ * "find" this expectation reasonable:-( On order to make such
+ * compilers generate better code I replace X[] with a bunch of
+ * X0, X1, etc. See the function body below...
+ */
+#  define X(i)   XX ## i
 # else
-  /*
-   * However! Some compilers (most notably HP C) get overwhelmed by
-   * that many local variables so that we have to have the way to
-   * fall down to the original behavior.
-   */
+/*
+ * However! Some compilers (most notably HP C) get overwhelmed by
+ * that many local variables so that we have to have the way to
+ * fall down to the original behavior.
+ */
 #  define X(i)   XX[i]
 # endif
 
@@ -140,7 +140,7 @@ static void HASH_BLOCK_DATA_ORDER(SHA_CTX *c, const void *p, size_t num)
     register unsigned MD32_REG_T A, B, C, D, E, T, l;
 #  ifndef MD32_XARRAY
     unsigned MD32_REG_T XX0, XX1, XX2, XX3, XX4, XX5, XX6, XX7,
-        XX8, XX9, XX10, XX11, XX12, XX13, XX14, XX15;
+                        XX8, XX9, XX10, XX11, XX12, XX13, XX14, XX15;
 #  else
     SHA_LONG XX[16];
 #  endif
@@ -334,33 +334,33 @@ static void HASH_BLOCK_DATA_ORDER(SHA_CTX *c, const void *p, size_t num)
 #else                           /* OPENSSL_SMALL_FOOTPRINT */
 
 # define BODY_00_15(xi)           do {   \
-        T=E+K_00_19+F_00_19(B,C,D);     \
-        E=D, D=C, C=ROTATE(B,30), B=A;  \
-        A=ROTATE(A,5)+T+xi;         } while(0)
+            T=E+K_00_19+F_00_19(B,C,D);     \
+            E=D, D=C, C=ROTATE(B,30), B=A;  \
+            A=ROTATE(A,5)+T+xi;         } while(0)
 
 # define BODY_16_19(xa,xb,xc,xd)  do {   \
-        Xupdate(T,xa,xa,xb,xc,xd);      \
-        T+=E+K_00_19+F_00_19(B,C,D);    \
-        E=D, D=C, C=ROTATE(B,30), B=A;  \
-        A=ROTATE(A,5)+T;            } while(0)
+            Xupdate(T,xa,xa,xb,xc,xd);      \
+            T+=E+K_00_19+F_00_19(B,C,D);    \
+            E=D, D=C, C=ROTATE(B,30), B=A;  \
+            A=ROTATE(A,5)+T;            } while(0)
 
 # define BODY_20_39(xa,xb,xc,xd)  do {   \
-        Xupdate(T,xa,xa,xb,xc,xd);      \
-        T+=E+K_20_39+F_20_39(B,C,D);    \
-        E=D, D=C, C=ROTATE(B,30), B=A;  \
-        A=ROTATE(A,5)+T;            } while(0)
+            Xupdate(T,xa,xa,xb,xc,xd);      \
+            T+=E+K_20_39+F_20_39(B,C,D);    \
+            E=D, D=C, C=ROTATE(B,30), B=A;  \
+            A=ROTATE(A,5)+T;            } while(0)
 
 # define BODY_40_59(xa,xb,xc,xd)  do {   \
-        Xupdate(T,xa,xa,xb,xc,xd);      \
-        T+=E+K_40_59+F_40_59(B,C,D);    \
-        E=D, D=C, C=ROTATE(B,30), B=A;  \
-        A=ROTATE(A,5)+T;            } while(0)
+            Xupdate(T,xa,xa,xb,xc,xd);      \
+            T+=E+K_40_59+F_40_59(B,C,D);    \
+            E=D, D=C, C=ROTATE(B,30), B=A;  \
+            A=ROTATE(A,5)+T;            } while(0)
 
 # define BODY_60_79(xa,xb,xc,xd)  do {   \
-        Xupdate(T,xa,xa,xb,xc,xd);      \
-        T=E+K_60_79+F_60_79(B,C,D);     \
-        E=D, D=C, C=ROTATE(B,30), B=A;  \
-        A=ROTATE(A,5)+T+xa;         } while(0)
+            Xupdate(T,xa,xa,xb,xc,xd);      \
+            T=E+K_60_79+F_60_79(B,C,D);     \
+            E=D, D=C, C=ROTATE(B,30), B=A;  \
+            A=ROTATE(A,5)+T+xa;         } while(0)
 
 # if !defined(SHA1_ASM)
 static void HASH_BLOCK_DATA_ORDER(SHA_CTX *c, const void *p, size_t num)

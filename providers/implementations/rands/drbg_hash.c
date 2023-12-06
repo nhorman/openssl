@@ -35,7 +35,8 @@ static OSSL_FUNC_rand_gettable_ctx_params_fn drbg_hash_gettable_ctx_params;
 static OSSL_FUNC_rand_get_ctx_params_fn drbg_hash_get_ctx_params;
 static OSSL_FUNC_rand_verify_zeroization_fn drbg_hash_verify_zeroization;
 
-static int drbg_hash_set_ctx_params_locked(void *vctx, const OSSL_PARAM params[]);
+static int drbg_hash_set_ctx_params_locked(void *vctx,
+                                           const OSSL_PARAM params[]);
 
 /* 888 bits from SP800-90Ar1 10.1 table 2 */
 #define HASH_PRNG_MAX_SEEDLEN    (888/8)
@@ -103,10 +104,10 @@ static int hash_df(PROV_DRBG *drbg, unsigned char *out,
          *            (where tmp = counter || num_bits_returned || [inbyte])
          */
         if (!(EVP_DigestInit_ex(ctx, ossl_prov_digest_md(&hash->digest), NULL)
-                && EVP_DigestUpdate(ctx, tmp, tmp_sz)
-                && EVP_DigestUpdate(ctx, in, inlen)
-                && (in2 == NULL || EVP_DigestUpdate(ctx, in2, in2len))
-                && (in3 == NULL || EVP_DigestUpdate(ctx, in3, in3len))))
+              && EVP_DigestUpdate(ctx, tmp, tmp_sz)
+              && EVP_DigestUpdate(ctx, in, inlen)
+              && (in2 == NULL || EVP_DigestUpdate(ctx, in2, in2len))
+              && (in3 == NULL || EVP_DigestUpdate(ctx, in3, in3len))))
             return 0;
 
         if (outlen < hash->blocklen) {
@@ -217,7 +218,7 @@ static int hash_gen(PROV_DRBG *drbg, unsigned char *out, size_t outlen)
     for (;;) {
         if (!EVP_DigestInit_ex(hash->ctx, ossl_prov_digest_md(&hash->digest),
                                NULL)
-                || !EVP_DigestUpdate(hash->ctx, hash->vtmp, drbg->seedlen))
+            || !EVP_DigestUpdate(hash->ctx, hash->vtmp, drbg->seedlen))
             return 0;
 
         if (outlen < hash->blocklen) {
@@ -278,11 +279,11 @@ static int drbg_hash_instantiate_wrapper(void *vdrbg, unsigned int strength,
         return 0;
 
     if (!ossl_prov_is_running()
-            || !drbg_hash_set_ctx_params_locked(drbg, params))
+        || !drbg_hash_set_ctx_params_locked(drbg, params))
         goto err;
     ret = ossl_prov_drbg_instantiate(drbg, strength, prediction_resistance,
                                      pstr, pstr_len);
- err:
+err:
     if (drbg->lock != NULL)
         CRYPTO_THREAD_unlock(drbg->lock);
     return ret;
@@ -346,7 +347,7 @@ static int drbg_hash_generate(PROV_DRBG *drbg,
 
     return hash->ctx != NULL
            && (adin == NULL
-           /* (Step 2) if adin != NULL then V = V + Hash(0x02||V||adin) */
+               /* (Step 2) if adin != NULL then V = V + Hash(0x02||V||adin) */
                || adin_len == 0
                || add_hash_to_v(drbg, 0x02, adin, adin_len))
            /* (Step 3) Hashgen(outlen, V) */
@@ -362,7 +363,7 @@ static int drbg_hash_generate(PROV_DRBG *drbg,
 
 static int drbg_hash_generate_wrapper
     (void *vdrbg, unsigned char *out, size_t outlen, unsigned int strength,
-     int prediction_resistance, const unsigned char *adin, size_t adin_len)
+    int prediction_resistance, const unsigned char *adin, size_t adin_len)
 {
     PROV_DRBG *drbg = (PROV_DRBG *)vdrbg;
 
@@ -410,7 +411,7 @@ static int drbg_hash_verify_zeroization(void *vdrbg)
     PROV_DRBG_VERIFY_ZEROIZATION(hash->vtmp);
 
     ret = 1;
- err:
+err:
     if (drbg->lock != NULL)
         CRYPTO_THREAD_unlock(drbg->lock);
     return ret;
@@ -482,7 +483,7 @@ static int drbg_hash_get_ctx_params(void *vdrbg, OSSL_PARAM params[])
     }
 
     ret = ossl_drbg_get_ctx_params(drbg, params);
- err:
+err:
     if (drbg->lock != NULL)
         CRYPTO_THREAD_unlock(drbg->lock);
 
@@ -500,7 +501,8 @@ static const OSSL_PARAM *drbg_hash_gettable_ctx_params(ossl_unused void *vctx,
     return known_gettable_ctx_params;
 }
 
-static int drbg_hash_set_ctx_params_locked(void *vctx, const OSSL_PARAM params[])
+static int drbg_hash_set_ctx_params_locked(void *vctx,
+                                           const OSSL_PARAM params[])
 {
     PROV_DRBG *ctx = (PROV_DRBG *)vctx;
     PROV_DRBG_HASH *hash = (PROV_DRBG_HASH *)ctx->data;
@@ -562,26 +564,29 @@ static const OSSL_PARAM *drbg_hash_settable_ctx_params(ossl_unused void *vctx,
 }
 
 const OSSL_DISPATCH ossl_drbg_hash_functions[] = {
-    { OSSL_FUNC_RAND_NEWCTX, (void(*)(void))drbg_hash_new_wrapper },
-    { OSSL_FUNC_RAND_FREECTX, (void(*)(void))drbg_hash_free },
+    { OSSL_FUNC_RAND_NEWCTX, (void (*)(void)) drbg_hash_new_wrapper },
+    { OSSL_FUNC_RAND_FREECTX, (void (*)(void)) drbg_hash_free },
     { OSSL_FUNC_RAND_INSTANTIATE,
-      (void(*)(void))drbg_hash_instantiate_wrapper },
+      (void (*)(void)) drbg_hash_instantiate_wrapper },
     { OSSL_FUNC_RAND_UNINSTANTIATE,
-      (void(*)(void))drbg_hash_uninstantiate_wrapper },
-    { OSSL_FUNC_RAND_GENERATE, (void(*)(void))drbg_hash_generate_wrapper },
-    { OSSL_FUNC_RAND_RESEED, (void(*)(void))drbg_hash_reseed_wrapper },
-    { OSSL_FUNC_RAND_ENABLE_LOCKING, (void(*)(void))ossl_drbg_enable_locking },
-    { OSSL_FUNC_RAND_LOCK, (void(*)(void))ossl_drbg_lock },
-    { OSSL_FUNC_RAND_UNLOCK, (void(*)(void))ossl_drbg_unlock },
+      (void (*)(void)) drbg_hash_uninstantiate_wrapper },
+    { OSSL_FUNC_RAND_GENERATE, (void (*)(void)) drbg_hash_generate_wrapper },
+    { OSSL_FUNC_RAND_RESEED, (void (*)(void)) drbg_hash_reseed_wrapper },
+    { OSSL_FUNC_RAND_ENABLE_LOCKING,
+      (void (*)(void)) ossl_drbg_enable_locking },
+    { OSSL_FUNC_RAND_LOCK, (void (*)(void)) ossl_drbg_lock },
+    { OSSL_FUNC_RAND_UNLOCK, (void (*)(void)) ossl_drbg_unlock },
     { OSSL_FUNC_RAND_SETTABLE_CTX_PARAMS,
-      (void(*)(void))drbg_hash_settable_ctx_params },
-    { OSSL_FUNC_RAND_SET_CTX_PARAMS, (void(*)(void))drbg_hash_set_ctx_params },
+      (void (*)(void)) drbg_hash_settable_ctx_params },
+    { OSSL_FUNC_RAND_SET_CTX_PARAMS,
+      (void (*)(void)) drbg_hash_set_ctx_params },
     { OSSL_FUNC_RAND_GETTABLE_CTX_PARAMS,
-      (void(*)(void))drbg_hash_gettable_ctx_params },
-    { OSSL_FUNC_RAND_GET_CTX_PARAMS, (void(*)(void))drbg_hash_get_ctx_params },
+      (void (*)(void)) drbg_hash_gettable_ctx_params },
+    { OSSL_FUNC_RAND_GET_CTX_PARAMS,
+      (void (*)(void)) drbg_hash_get_ctx_params },
     { OSSL_FUNC_RAND_VERIFY_ZEROIZATION,
-      (void(*)(void))drbg_hash_verify_zeroization },
-    { OSSL_FUNC_RAND_GET_SEED, (void(*)(void))ossl_drbg_get_seed },
-    { OSSL_FUNC_RAND_CLEAR_SEED, (void(*)(void))ossl_drbg_clear_seed },
+      (void (*)(void)) drbg_hash_verify_zeroization },
+    { OSSL_FUNC_RAND_GET_SEED, (void (*)(void)) ossl_drbg_get_seed },
+    { OSSL_FUNC_RAND_CLEAR_SEED, (void (*)(void)) ossl_drbg_clear_seed },
     OSSL_DISPATCH_END
 };

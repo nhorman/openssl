@@ -14,26 +14,26 @@
 static const char *packet_type(int type)
 {
     switch (type) {
-    case QUIC_PKT_TYPE_INITIAL:
-        return "Initial";
+        case QUIC_PKT_TYPE_INITIAL:
+            return "Initial";
 
-    case QUIC_PKT_TYPE_0RTT:
-        return "0RTT";
+        case QUIC_PKT_TYPE_0RTT:
+            return "0RTT";
 
-    case QUIC_PKT_TYPE_HANDSHAKE:
-        return "Handshake";
+        case QUIC_PKT_TYPE_HANDSHAKE:
+            return "Handshake";
 
-    case QUIC_PKT_TYPE_RETRY:
-        return "Retry";
+        case QUIC_PKT_TYPE_RETRY:
+            return "Retry";
 
-    case QUIC_PKT_TYPE_1RTT:
-        return "1RTT";
+        case QUIC_PKT_TYPE_1RTT:
+            return "1RTT";
 
-    case QUIC_PKT_TYPE_VERSION_NEG:
-        return "VersionNeg";
+        case QUIC_PKT_TYPE_VERSION_NEG:
+            return "VersionNeg";
 
-    default:
-        return "Unknown";
+        default:
+            return "Unknown";
     }
 }
 
@@ -155,7 +155,8 @@ static int frame_crypto(BIO *bio, PACKET *pkt)
     if (!ossl_quic_wire_decode_frame_crypto(pkt, 1, &frame_data))
         return 0;
 
-    BIO_printf(bio, "    Offset: %llu\n", (unsigned long long)frame_data.offset);
+    BIO_printf(bio, "    Offset: %llu\n",
+               (unsigned long long)frame_data.offset);
     BIO_printf(bio, "    Len: %llu\n", (unsigned long long)frame_data.len);
 
     return 1;
@@ -183,40 +184,40 @@ static int frame_stream(BIO *bio, PACKET *pkt, uint64_t frame_type)
 
     BIO_puts(bio, "Stream");
     switch(frame_type) {
-    case OSSL_QUIC_FRAME_TYPE_STREAM:
-        BIO_puts(bio, "\n");
-        break;
+        case OSSL_QUIC_FRAME_TYPE_STREAM:
+            BIO_puts(bio, "\n");
+            break;
 
-    case OSSL_QUIC_FRAME_TYPE_STREAM_FIN:
-        BIO_puts(bio, " (Fin)\n");
-        break;
+        case OSSL_QUIC_FRAME_TYPE_STREAM_FIN:
+            BIO_puts(bio, " (Fin)\n");
+            break;
 
-    case OSSL_QUIC_FRAME_TYPE_STREAM_LEN:
-        BIO_puts(bio, " (Len)\n");
-        break;
+        case OSSL_QUIC_FRAME_TYPE_STREAM_LEN:
+            BIO_puts(bio, " (Len)\n");
+            break;
 
-    case OSSL_QUIC_FRAME_TYPE_STREAM_LEN_FIN:
-        BIO_puts(bio, " (Len, Fin)\n");
-        break;
+        case OSSL_QUIC_FRAME_TYPE_STREAM_LEN_FIN:
+            BIO_puts(bio, " (Len, Fin)\n");
+            break;
 
-    case OSSL_QUIC_FRAME_TYPE_STREAM_OFF:
-        BIO_puts(bio, " (Off)\n");
-        break;
+        case OSSL_QUIC_FRAME_TYPE_STREAM_OFF:
+            BIO_puts(bio, " (Off)\n");
+            break;
 
-    case OSSL_QUIC_FRAME_TYPE_STREAM_OFF_FIN:
-        BIO_puts(bio, " (Off, Fin)\n");
-        break;
+        case OSSL_QUIC_FRAME_TYPE_STREAM_OFF_FIN:
+            BIO_puts(bio, " (Off, Fin)\n");
+            break;
 
-    case OSSL_QUIC_FRAME_TYPE_STREAM_OFF_LEN:
-        BIO_puts(bio, " (Off, Len)\n");
-        break;
+        case OSSL_QUIC_FRAME_TYPE_STREAM_OFF_LEN:
+            BIO_puts(bio, " (Off, Len)\n");
+            break;
 
-    case OSSL_QUIC_FRAME_TYPE_STREAM_OFF_LEN_FIN:
-        BIO_puts(bio, " (Off, Len, Fin)\n");
-        break;
+        case OSSL_QUIC_FRAME_TYPE_STREAM_OFF_LEN_FIN:
+            BIO_puts(bio, " (Off, Len, Fin)\n");
+            break;
 
-    default:
-        return 0;
+        default:
+            return 0;
     }
 
     if (!ossl_quic_wire_decode_frame_stream(pkt, 1, &frame_data))
@@ -397,154 +398,154 @@ static int trace_frame_data(BIO *bio, PACKET *pkt)
         return 0;
 
     switch (frame_type) {
-    case OSSL_QUIC_FRAME_TYPE_PING:
-        BIO_puts(bio, "Ping\n");
-        if (!ossl_quic_wire_decode_frame_ping(pkt))
+        case OSSL_QUIC_FRAME_TYPE_PING:
+            BIO_puts(bio, "Ping\n");
+            if (!ossl_quic_wire_decode_frame_ping(pkt))
+                return 0;
+            break;
+
+        case OSSL_QUIC_FRAME_TYPE_PADDING:
+            BIO_puts(bio, "Padding\n");
+            ossl_quic_wire_decode_padding(pkt);
+            break;
+
+        case OSSL_QUIC_FRAME_TYPE_ACK_WITHOUT_ECN:
+        case OSSL_QUIC_FRAME_TYPE_ACK_WITH_ECN:
+            BIO_puts(bio, "Ack ");
+            if (frame_type == OSSL_QUIC_FRAME_TYPE_ACK_WITH_ECN)
+                BIO_puts(bio, " (with ECN)\n");
+            else
+                BIO_puts(bio, " (without ECN)\n");
+            if (!frame_ack(bio, pkt))
+                return 0;
+            break;
+
+        case OSSL_QUIC_FRAME_TYPE_RESET_STREAM:
+            BIO_puts(bio, "Reset stream\n");
+            if (!frame_reset_stream(bio, pkt))
+                return 0;
+            break;
+
+        case OSSL_QUIC_FRAME_TYPE_STOP_SENDING:
+            BIO_puts(bio, "Stop sending\n");
+            if (!frame_stop_sending(bio, pkt))
+                return 0;
+            break;
+
+        case OSSL_QUIC_FRAME_TYPE_CRYPTO:
+            BIO_puts(bio, "Crypto\n");
+            if (!frame_crypto(bio, pkt))
+                return 0;
+            break;
+
+        case OSSL_QUIC_FRAME_TYPE_NEW_TOKEN:
+            BIO_puts(bio, "New token\n");
+            if (!frame_new_token(bio, pkt))
+                return 0;
+            break;
+
+        case OSSL_QUIC_FRAME_TYPE_STREAM:
+        case OSSL_QUIC_FRAME_TYPE_STREAM_FIN:
+        case OSSL_QUIC_FRAME_TYPE_STREAM_LEN:
+        case OSSL_QUIC_FRAME_TYPE_STREAM_LEN_FIN:
+        case OSSL_QUIC_FRAME_TYPE_STREAM_OFF:
+        case OSSL_QUIC_FRAME_TYPE_STREAM_OFF_FIN:
+        case OSSL_QUIC_FRAME_TYPE_STREAM_OFF_LEN:
+        case OSSL_QUIC_FRAME_TYPE_STREAM_OFF_LEN_FIN:
+            /* frame_stream() prints the frame type string */
+            if (!frame_stream(bio, pkt, frame_type))
+                return 0;
+            break;
+
+        case OSSL_QUIC_FRAME_TYPE_MAX_DATA:
+            BIO_puts(bio, "Max data\n");
+            if (!frame_max_data(bio, pkt))
+                return 0;
+            break;
+
+        case OSSL_QUIC_FRAME_TYPE_MAX_STREAM_DATA:
+            BIO_puts(bio, "Max stream data\n");
+            if (!frame_max_stream_data(bio, pkt))
+                return 0;
+            break;
+
+        case OSSL_QUIC_FRAME_TYPE_MAX_STREAMS_BIDI:
+        case OSSL_QUIC_FRAME_TYPE_MAX_STREAMS_UNI:
+            BIO_puts(bio, "Max streams ");
+            if (frame_type == OSSL_QUIC_FRAME_TYPE_MAX_STREAMS_BIDI)
+                BIO_puts(bio, " (Bidi)\n");
+            else
+                BIO_puts(bio, " (Uni)\n");
+            if (!frame_max_streams(bio, pkt))
+                return 0;
+            break;
+
+        case OSSL_QUIC_FRAME_TYPE_DATA_BLOCKED:
+            BIO_puts(bio, "Data blocked\n");
+            if (!frame_data_blocked(bio, pkt))
+                return 0;
+            break;
+
+        case OSSL_QUIC_FRAME_TYPE_STREAM_DATA_BLOCKED:
+            BIO_puts(bio, "Stream data blocked\n");
+            if (!frame_stream_data_blocked(bio, pkt))
+                return 0;
+            break;
+
+        case OSSL_QUIC_FRAME_TYPE_STREAMS_BLOCKED_BIDI:
+        case OSSL_QUIC_FRAME_TYPE_STREAMS_BLOCKED_UNI:
+            BIO_puts(bio, "Streams blocked");
+            if (frame_type == OSSL_QUIC_FRAME_TYPE_STREAMS_BLOCKED_BIDI)
+                BIO_puts(bio, " (Bidi)\n");
+            else
+                BIO_puts(bio, " (Uni)\n");
+            if (!frame_streams_blocked(bio, pkt))
+                return 0;
+            break;
+
+        case OSSL_QUIC_FRAME_TYPE_NEW_CONN_ID:
+            BIO_puts(bio, "New conn id\n");
+            if (!frame_new_conn_id(bio, pkt))
+                return 0;
+            break;
+
+        case OSSL_QUIC_FRAME_TYPE_RETIRE_CONN_ID:
+            BIO_puts(bio, "Retire conn id\n");
+            if (!frame_retire_conn_id(bio, pkt))
+                return 0;
+            break;
+
+        case OSSL_QUIC_FRAME_TYPE_PATH_CHALLENGE:
+            BIO_puts(bio, "Path challenge\n");
+            if (!frame_path_challenge(bio, pkt))
+                return 0;
+            break;
+
+        case OSSL_QUIC_FRAME_TYPE_PATH_RESPONSE:
+            BIO_puts(bio, "Path response\n");
+            if (!frame_path_response(bio, pkt))
+                return 0;
+            break;
+
+        case OSSL_QUIC_FRAME_TYPE_CONN_CLOSE_APP:
+        case OSSL_QUIC_FRAME_TYPE_CONN_CLOSE_TRANSPORT:
+            BIO_puts(bio, "Connection close");
+            if (frame_type == OSSL_QUIC_FRAME_TYPE_CONN_CLOSE_APP)
+                BIO_puts(bio, " (app)\n");
+            else
+                BIO_puts(bio, " (transport)\n");
+            if (!frame_conn_closed(bio, pkt))
+                return 0;
+            break;
+
+        case OSSL_QUIC_FRAME_TYPE_HANDSHAKE_DONE:
+            BIO_puts(bio, "Handshake done\n");
+            if (!ossl_quic_wire_decode_frame_handshake_done(pkt))
+                return 0;
+            break;
+
+        default:
             return 0;
-        break;
-
-    case OSSL_QUIC_FRAME_TYPE_PADDING:
-        BIO_puts(bio, "Padding\n");
-        ossl_quic_wire_decode_padding(pkt);
-        break;
-
-    case OSSL_QUIC_FRAME_TYPE_ACK_WITHOUT_ECN:
-    case OSSL_QUIC_FRAME_TYPE_ACK_WITH_ECN:
-        BIO_puts(bio, "Ack ");
-        if (frame_type == OSSL_QUIC_FRAME_TYPE_ACK_WITH_ECN)
-            BIO_puts(bio, " (with ECN)\n");
-        else
-            BIO_puts(bio, " (without ECN)\n");
-        if (!frame_ack(bio, pkt))
-            return 0;
-        break;
-
-    case OSSL_QUIC_FRAME_TYPE_RESET_STREAM:
-        BIO_puts(bio, "Reset stream\n");
-        if (!frame_reset_stream(bio, pkt))
-            return 0;
-        break;
-
-    case OSSL_QUIC_FRAME_TYPE_STOP_SENDING:
-        BIO_puts(bio, "Stop sending\n");
-        if (!frame_stop_sending(bio, pkt))
-            return 0;
-        break;
-
-    case OSSL_QUIC_FRAME_TYPE_CRYPTO:
-        BIO_puts(bio, "Crypto\n");
-        if (!frame_crypto(bio, pkt))
-            return 0;
-        break;
-
-    case OSSL_QUIC_FRAME_TYPE_NEW_TOKEN:
-        BIO_puts(bio, "New token\n");
-        if (!frame_new_token(bio, pkt))
-            return 0;
-        break;
-
-    case OSSL_QUIC_FRAME_TYPE_STREAM:
-    case OSSL_QUIC_FRAME_TYPE_STREAM_FIN:
-    case OSSL_QUIC_FRAME_TYPE_STREAM_LEN:
-    case OSSL_QUIC_FRAME_TYPE_STREAM_LEN_FIN:
-    case OSSL_QUIC_FRAME_TYPE_STREAM_OFF:
-    case OSSL_QUIC_FRAME_TYPE_STREAM_OFF_FIN:
-    case OSSL_QUIC_FRAME_TYPE_STREAM_OFF_LEN:
-    case OSSL_QUIC_FRAME_TYPE_STREAM_OFF_LEN_FIN:
-        /* frame_stream() prints the frame type string */
-        if (!frame_stream(bio, pkt, frame_type))
-            return 0;
-        break;
-
-    case OSSL_QUIC_FRAME_TYPE_MAX_DATA:
-        BIO_puts(bio, "Max data\n");
-        if (!frame_max_data(bio, pkt))
-            return 0;
-        break;
-
-    case OSSL_QUIC_FRAME_TYPE_MAX_STREAM_DATA:
-        BIO_puts(bio, "Max stream data\n");
-        if (!frame_max_stream_data(bio, pkt))
-            return 0;
-        break;
-
-    case OSSL_QUIC_FRAME_TYPE_MAX_STREAMS_BIDI:
-    case OSSL_QUIC_FRAME_TYPE_MAX_STREAMS_UNI:
-        BIO_puts(bio, "Max streams ");
-        if (frame_type == OSSL_QUIC_FRAME_TYPE_MAX_STREAMS_BIDI)
-            BIO_puts(bio, " (Bidi)\n");
-        else
-            BIO_puts(bio, " (Uni)\n");
-        if (!frame_max_streams(bio, pkt))
-            return 0;
-        break;
-
-    case OSSL_QUIC_FRAME_TYPE_DATA_BLOCKED:
-        BIO_puts(bio, "Data blocked\n");
-        if (!frame_data_blocked(bio, pkt))
-            return 0;
-        break;
-
-    case OSSL_QUIC_FRAME_TYPE_STREAM_DATA_BLOCKED:
-        BIO_puts(bio, "Stream data blocked\n");
-        if (!frame_stream_data_blocked(bio, pkt))
-            return 0;
-        break;
-
-    case OSSL_QUIC_FRAME_TYPE_STREAMS_BLOCKED_BIDI:
-    case OSSL_QUIC_FRAME_TYPE_STREAMS_BLOCKED_UNI:
-        BIO_puts(bio, "Streams blocked");
-        if (frame_type == OSSL_QUIC_FRAME_TYPE_STREAMS_BLOCKED_BIDI)
-            BIO_puts(bio, " (Bidi)\n");
-        else
-            BIO_puts(bio, " (Uni)\n");
-        if (!frame_streams_blocked(bio, pkt))
-            return 0;
-        break;
-
-    case OSSL_QUIC_FRAME_TYPE_NEW_CONN_ID:
-        BIO_puts(bio, "New conn id\n");
-        if (!frame_new_conn_id(bio, pkt))
-            return 0;
-        break;
-
-    case OSSL_QUIC_FRAME_TYPE_RETIRE_CONN_ID:
-        BIO_puts(bio, "Retire conn id\n");
-        if (!frame_retire_conn_id(bio, pkt))
-            return 0;
-        break;
-
-    case OSSL_QUIC_FRAME_TYPE_PATH_CHALLENGE:
-        BIO_puts(bio, "Path challenge\n");
-        if (!frame_path_challenge(bio, pkt))
-            return 0;
-        break;
-
-    case OSSL_QUIC_FRAME_TYPE_PATH_RESPONSE:
-        BIO_puts(bio, "Path response\n");
-        if (!frame_path_response(bio, pkt))
-            return 0;
-        break;
-
-    case OSSL_QUIC_FRAME_TYPE_CONN_CLOSE_APP:
-    case OSSL_QUIC_FRAME_TYPE_CONN_CLOSE_TRANSPORT:
-        BIO_puts(bio, "Connection close");
-        if (frame_type == OSSL_QUIC_FRAME_TYPE_CONN_CLOSE_APP)
-            BIO_puts(bio, " (app)\n");
-        else
-            BIO_puts(bio, " (transport)\n");
-        if (!frame_conn_closed(bio, pkt))
-            return 0;
-        break;
-
-    case OSSL_QUIC_FRAME_TYPE_HANDSHAKE_DONE:
-        BIO_puts(bio, "Handshake done\n");
-        if (!ossl_quic_wire_decode_frame_handshake_done(pkt))
-            return 0;
-        break;
-
-    default:
-        return 0;
     }
 
     if (PACKET_remaining(pkt) != 0)
@@ -560,17 +561,17 @@ int ossl_quic_trace(int write_p, int version, int content_type,
     PACKET pkt;
 
     switch (content_type) {
-    case SSL3_RT_QUIC_DATAGRAM:
-        BIO_puts(bio, write_p ? "Sent" : "Received");
-        /*
-         * Unfortunately there is no way of receiving auxiliary information
-         * about the datagram through the msg_callback API such as the peer
-         * address
-         */
-        BIO_printf(bio, " Datagram\n  Length: %zu\n", msglen);
-        break;
+        case SSL3_RT_QUIC_DATAGRAM:
+            BIO_puts(bio, write_p ? "Sent" : "Received");
+            /*
+             * Unfortunately there is no way of receiving auxiliary information
+             * about the datagram through the msg_callback API such as the peer
+             * address
+             */
+            BIO_printf(bio, " Datagram\n  Length: %zu\n", msglen);
+            break;
 
-    case SSL3_RT_QUIC_PACKET:
+        case SSL3_RT_QUIC_PACKET:
         {
             QUIC_PKT_HDR hdr;
             size_t i;
@@ -606,7 +607,7 @@ int ossl_quic_trace(int write_p, int version, int content_type,
                 BIO_puts(bio, "\n");
             }
             if (hdr.type != QUIC_PKT_TYPE_VERSION_NEG
-                    && hdr.type != QUIC_PKT_TYPE_RETRY) {
+                && hdr.type != QUIC_PKT_TYPE_RETRY) {
                 BIO_puts(bio, "  Packet Number: 0x");
                 /* Will always be at least 1 byte */
                 for (i = 0; i < hdr.pn_len; i++)
@@ -616,9 +617,9 @@ int ossl_quic_trace(int write_p, int version, int content_type,
             break;
         }
 
-    case SSL3_RT_QUIC_FRAME_PADDING:
-    case SSL3_RT_QUIC_FRAME_FULL:
-    case SSL3_RT_QUIC_FRAME_HEADER:
+        case SSL3_RT_QUIC_FRAME_PADDING:
+        case SSL3_RT_QUIC_FRAME_FULL:
+        case SSL3_RT_QUIC_FRAME_HEADER:
         {
             BIO_puts(bio, write_p ? "Sent" : "Received");
             BIO_puts(bio, " Frame: ");
@@ -632,9 +633,9 @@ int ossl_quic_trace(int write_p, int version, int content_type,
         }
         break;
 
-    default:
-        /* Unrecognised content_type. We defer to SSL_trace */
-        return 0;
+        default:
+            /* Unrecognised content_type. We defer to SSL_trace */
+            return 0;
     }
 
     return 1;

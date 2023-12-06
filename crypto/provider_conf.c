@@ -145,12 +145,12 @@ static int provider_conf_activate(OSSL_LIB_CTX *libctx, const char *name,
     }
     if (!prov_already_activated(name, pcgbl->activated_providers)) {
         /*
-        * There is an attempt to activate a provider, so we should disable
-        * loading of fallbacks. Otherwise a misconfiguration could mean the
-        * intended provider does not get loaded. Subsequent fetches could
-        * then fallback to the default provider - which may be the wrong
-        * thing.
-        */
+         * There is an attempt to activate a provider, so we should disable
+         * loading of fallbacks. Otherwise a misconfiguration could mean the
+         * intended provider does not get loaded. Subsequent fetches could
+         * then fallback to the default provider - which may be the wrong
+         * thing.
+         */
         if (!ossl_provider_disable_fallback_loading(libctx)) {
             CRYPTO_THREAD_unlock(pcgbl->lock);
             ERR_raise(ERR_LIB_CRYPTO, ERR_R_INTERNAL_ERROR);
@@ -301,7 +301,7 @@ static int provider_conf_init(CONF_IMODULE *md, const CONF *cnf)
     for (i = 0; i < sk_CONF_VALUE_num(elist); i++) {
         cval = sk_CONF_VALUE_value(elist, i);
         if (!provider_conf_load(NCONF_get0_libctx((CONF *)cnf),
-                    cval->name, cval->value, cnf))
+                                cval->name, cval->value, cnf))
             return 0;
     }
 

@@ -48,7 +48,7 @@ void *ASN1_d2i_bio(void *(*xnew) (void), d2i_of_void *d2i, BIO *in, void **x)
 
     p = (unsigned char *)b->data;
     ret = d2i(x, &p, len);
- err:
+err:
     BUF_MEM_free(b);
     return ret;
 }
@@ -71,7 +71,7 @@ void *ASN1_item_d2i_bio_ex(const ASN1_ITEM *it, BIO *in, void *x,
 
     p = (const unsigned char *)b->data;
     ret = ASN1_item_d2i_ex(x, &p, len, it, libctx, propq);
- err:
+err:
     BUF_MEM_free(b);
     return ret;
 }
@@ -216,10 +216,10 @@ int asn1_d2i_read_bio(BIO *in, BUF_MEM **pb)
                             ERR_raise(ERR_LIB_ASN1, ASN1_R_NOT_ENOUGH_DATA);
                             goto err;
                         }
-                    /*
-                     * This can't overflow because |len+want| didn't
-                     * overflow.
-                     */
+                        /*
+                         * This can't overflow because |len+want| didn't
+                         * overflow.
+                         */
                         len += i;
                         chunk -= i;
                     }
@@ -246,7 +246,7 @@ int asn1_d2i_read_bio(BIO *in, BUF_MEM **pb)
 
     *pb = b;
     return off;
- err:
+err:
     ERR_clear_last_mark();
     BUF_MEM_free(b);
     return -1;

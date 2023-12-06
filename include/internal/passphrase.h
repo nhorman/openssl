@@ -72,7 +72,7 @@ struct ossl_passphrase_data_st {
      */
 
     /* Set to indicate that caching should be done */
-    unsigned int flag_cache_passphrase:1;
+    unsigned int flag_cache_passphrase : 1;
 
     /*-
      * Misc section: caches and other

@@ -35,7 +35,7 @@ int ASN1_buf_print(BIO *bp, const unsigned char *buf, size_t buflen, int indent)
          */
         if (BIO_printf(bp, "%02x%s", buf[i],
                        (i == buflen - 1) ? "" : ":") <= 0)
-                return 0;
+            return 0;
     }
     if (BIO_write(bp, "\n", 1) <= 0)
         return 0;
@@ -87,7 +87,7 @@ int ASN1_bn_print(BIO *bp, const char *number, const BIGNUM *num,
     if (ASN1_buf_print(bp, tmp, n, indent + 4) == 0)
         goto err;
     rv = 1;
-    err:
+err:
     OPENSSL_clear_free(buf, buflen);
     return rv;
 }

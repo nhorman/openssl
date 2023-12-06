@@ -20,17 +20,17 @@
 /* PKCS#5 v2.0 password based encryption structures */
 
 ASN1_SEQUENCE(PBE2PARAM) = {
-        ASN1_SIMPLE(PBE2PARAM, keyfunc, X509_ALGOR),
-        ASN1_SIMPLE(PBE2PARAM, encryption, X509_ALGOR)
+    ASN1_SIMPLE(PBE2PARAM, keyfunc, X509_ALGOR),
+    ASN1_SIMPLE(PBE2PARAM, encryption, X509_ALGOR)
 } ASN1_SEQUENCE_END(PBE2PARAM)
 
 IMPLEMENT_ASN1_FUNCTIONS(PBE2PARAM)
 
 ASN1_SEQUENCE(PBKDF2PARAM) = {
-        ASN1_SIMPLE(PBKDF2PARAM, salt, ASN1_ANY),
-        ASN1_SIMPLE(PBKDF2PARAM, iter, ASN1_INTEGER),
-        ASN1_OPT(PBKDF2PARAM, keylength, ASN1_INTEGER),
-        ASN1_OPT(PBKDF2PARAM, prf, X509_ALGOR)
+    ASN1_SIMPLE(PBKDF2PARAM, salt, ASN1_ANY),
+    ASN1_SIMPLE(PBKDF2PARAM, iter, ASN1_INTEGER),
+    ASN1_OPT(PBKDF2PARAM, keylength, ASN1_INTEGER),
+    ASN1_OPT(PBKDF2PARAM, prf, X509_ALGOR)
 } ASN1_SEQUENCE_END(PBKDF2PARAM)
 
 IMPLEMENT_ASN1_FUNCTIONS(PBKDF2PARAM)
@@ -147,7 +147,7 @@ X509_ALGOR *PKCS5_pbe2_set_iv_ex(const EVP_CIPHER *cipher, int iter,
 
     return ret;
 
- err:
+err:
     EVP_CIPHER_CTX_free(ctx);
     PBE2PARAM_free(pbe2);
     /* Note 'scheme' is freed as part of pbe2 */
@@ -262,7 +262,7 @@ X509_ALGOR *PKCS5_pbkdf2_set_ex(int iter, unsigned char *salt, int saltlen,
     PBKDF2PARAM_free(kdf);
     return keyfunc;
 
- err:
+err:
     PBKDF2PARAM_free(kdf);
     X509_ALGOR_free(keyfunc);
     return NULL;

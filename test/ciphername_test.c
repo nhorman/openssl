@@ -388,19 +388,22 @@ static int test_cipher_name(void)
     /* tests for invalid input */
     p = SSL_CIPHER_standard_name(NULL);
     if (!TEST_str_eq(p, "(NONE)")) {
-        TEST_info("test_cipher_name(std) failed: NULL input doesn't return \"(NONE)\"\n");
+        TEST_info(
+            "test_cipher_name(std) failed: NULL input doesn't return \"(NONE)\"\n");
         goto err;
     }
 
     p = OPENSSL_cipher_name(NULL);
     if (!TEST_str_eq(p, "(NONE)")) {
-        TEST_info("test_cipher_name(ossl) failed: NULL input doesn't return \"(NONE)\"\n");
+        TEST_info(
+            "test_cipher_name(ossl) failed: NULL input doesn't return \"(NONE)\"\n");
         goto err;
     }
 
     p = OPENSSL_cipher_name("This is not a valid cipher");
     if (!TEST_str_eq(p, "(NONE)")) {
-        TEST_info("test_cipher_name(ossl) failed: invalid input doesn't return \"(NONE)\"\n");
+        TEST_info(
+            "test_cipher_name(ossl) failed: invalid input doesn't return \"(NONE)\"\n");
         goto err;
     }
 
@@ -437,22 +440,25 @@ static int test_cipher_name(void)
         p = SSL_CIPHER_standard_name(c);
         q = get_std_name_by_id(id);
         if (!TEST_ptr(p)) {
-            TEST_info("test_cipher_name failed: expected %s, got NULL, cipher %x\n",
-                      q, id);
+            TEST_info(
+                "test_cipher_name failed: expected %s, got NULL, cipher %x\n",
+                q, id);
             goto err;
         }
         /* check if p is a valid standard name */
         if (!TEST_str_eq(p, q)) {
-            TEST_info("test_cipher_name(std) failed: expected %s, got %s, cipher %x\n",
-                       q, p, id);
+            TEST_info(
+                "test_cipher_name(std) failed: expected %s, got %s, cipher %x\n",
+                q, p, id);
             goto err;
         }
         /* test OPENSSL_cipher_name */
         q = SSL_CIPHER_get_name(c);
         r = OPENSSL_cipher_name(p);
         if (!TEST_str_eq(r, q)) {
-            TEST_info("test_cipher_name(ossl) failed: expected %s, got %s, cipher %x\n",
-                       q, r, id);
+            TEST_info(
+                "test_cipher_name(ossl) failed: expected %s, got %s, cipher %x\n",
+                q, r, id);
             goto err;
         }
     }

@@ -58,15 +58,17 @@ __owur static ossl_inline int ossl_assert_int(int expr, const char *exprstr,
 #define HAS_PREFIX(str, pre) (strncmp(str, pre "", sizeof(pre) - 1) == 0)
 /* As before, and if check succeeds, advance |str| past the prefix |pre| */
 #define CHECK_AND_SKIP_PREFIX(str, pre) \
-    (HAS_PREFIX(str, pre) ? ((str) += sizeof(pre) - 1, 1) : 0)
+        (HAS_PREFIX(str, pre) ? ((str) += sizeof(pre) - 1, 1) : 0)
 /* Check if the string literal |p| is a case-insensitive prefix of |s| */
 #define HAS_CASE_PREFIX(s, p) (OPENSSL_strncasecmp(s, p "", sizeof(p) - 1) == 0)
 /* As before, and if check succeeds, advance |str| past the prefix |pre| */
 #define CHECK_AND_SKIP_CASE_PREFIX(str, pre) \
-    (HAS_CASE_PREFIX(str, pre) ? ((str) += sizeof(pre) - 1, 1) : 0)
+        (HAS_CASE_PREFIX(str, pre) ? ((str) += sizeof(pre) - 1, 1) : 0)
 /* Check if the string literal |suffix| is a case-insensitive suffix of |str| */
 #define HAS_CASE_SUFFIX(str, suffix) (strlen(str) < sizeof(suffix) - 1 ? 0 : \
-    OPENSSL_strcasecmp(str + strlen(str) - sizeof(suffix) + 1, suffix "") == 0)
+                                      OPENSSL_strcasecmp(str + strlen(str) - \
+                                                         sizeof(suffix) + 1, \
+                                                         suffix "") == 0)
 
 /*
  * Use this inside a union with the field that needs to be aligned to a
@@ -74,9 +76,9 @@ __owur static ossl_inline int ossl_assert_int(int expr, const char *exprstr,
  * of the listed types will be used by the compiler.
  */
 # define OSSL_UNION_ALIGN       \
-    double align;               \
-    ossl_uintmax_t align_int;   \
-    void *align_ptr
+        double align;               \
+        ossl_uintmax_t align_int;   \
+        void *align_ptr
 
 # define OPENSSL_CONF             "openssl.cnf"
 
@@ -102,83 +104,83 @@ __owur static ossl_inline int ossl_assert_int(int expr, const char *exprstr,
 # define DECIMAL_SIZE(type)      ((sizeof(type)*8+2)/3+1)
 # define HEX_SIZE(type)          (sizeof(type)*2)
 
-# define c2l(c,l)        (l = ((unsigned long)(*((c)++)))     , \
-                         l|=(((unsigned long)(*((c)++)))<< 8), \
-                         l|=(((unsigned long)(*((c)++)))<<16), \
-                         l|=(((unsigned long)(*((c)++)))<<24))
+# define c2l(c,l)        (l = ((unsigned long)(*((c)++))), \
+                          l|=(((unsigned long)(*((c)++)))<< 8), \
+                          l|=(((unsigned long)(*((c)++)))<<16), \
+                          l|=(((unsigned long)(*((c)++)))<<24))
 
 /* NOTE - c is not incremented as per c2l */
 # define c2ln(c,l1,l2,n) { \
-                        c+=n; \
-                        l1=l2=0; \
-                        switch (n) { \
-                        case 8: l2 =((unsigned long)(*(--(c))))<<24; \
-                        case 7: l2|=((unsigned long)(*(--(c))))<<16; \
-                        case 6: l2|=((unsigned long)(*(--(c))))<< 8; \
-                        case 5: l2|=((unsigned long)(*(--(c))));     \
-                        case 4: l1 =((unsigned long)(*(--(c))))<<24; \
-                        case 3: l1|=((unsigned long)(*(--(c))))<<16; \
-                        case 2: l1|=((unsigned long)(*(--(c))))<< 8; \
-                        case 1: l1|=((unsigned long)(*(--(c))));     \
-                                } \
-                        }
+            c+=n; \
+            l1=l2=0; \
+            switch (n) { \
+                case 8: l2 =((unsigned long)(*(--(c))))<<24; \
+                case 7: l2|=((unsigned long)(*(--(c))))<<16; \
+                case 6: l2|=((unsigned long)(*(--(c))))<< 8; \
+                case 5: l2|=((unsigned long)(*(--(c))));     \
+                case 4: l1 =((unsigned long)(*(--(c))))<<24; \
+                case 3: l1|=((unsigned long)(*(--(c))))<<16; \
+                case 2: l1|=((unsigned long)(*(--(c))))<< 8; \
+                case 1: l1|=((unsigned long)(*(--(c))));     \
+            } \
+}
 
 # define l2c(l,c)        (*((c)++)=(unsigned char)(((l)    )&0xff), \
-                         *((c)++)=(unsigned char)(((l)>> 8)&0xff), \
-                         *((c)++)=(unsigned char)(((l)>>16)&0xff), \
-                         *((c)++)=(unsigned char)(((l)>>24)&0xff))
+                          *((c)++)=(unsigned char)(((l)>> 8)&0xff), \
+                          *((c)++)=(unsigned char)(((l)>>16)&0xff), \
+                          *((c)++)=(unsigned char)(((l)>>24)&0xff))
 
 # define n2l(c,l)        (l =((unsigned long)(*((c)++)))<<24, \
-                         l|=((unsigned long)(*((c)++)))<<16, \
-                         l|=((unsigned long)(*((c)++)))<< 8, \
-                         l|=((unsigned long)(*((c)++))))
+                          l|=((unsigned long)(*((c)++)))<<16, \
+                          l|=((unsigned long)(*((c)++)))<< 8, \
+                          l|=((unsigned long)(*((c)++))))
 
 # define n2l8(c,l)       (l =((uint64_t)(*((c)++)))<<56, \
-                         l|=((uint64_t)(*((c)++)))<<48, \
-                         l|=((uint64_t)(*((c)++)))<<40, \
-                         l|=((uint64_t)(*((c)++)))<<32, \
-                         l|=((uint64_t)(*((c)++)))<<24, \
-                         l|=((uint64_t)(*((c)++)))<<16, \
-                         l|=((uint64_t)(*((c)++)))<< 8, \
-                         l|=((uint64_t)(*((c)++))))
+                          l|=((uint64_t)(*((c)++)))<<48, \
+                          l|=((uint64_t)(*((c)++)))<<40, \
+                          l|=((uint64_t)(*((c)++)))<<32, \
+                          l|=((uint64_t)(*((c)++)))<<24, \
+                          l|=((uint64_t)(*((c)++)))<<16, \
+                          l|=((uint64_t)(*((c)++)))<< 8, \
+                          l|=((uint64_t)(*((c)++))))
 
 # define l2n(l,c)        (*((c)++)=(unsigned char)(((l)>>24)&0xff), \
-                         *((c)++)=(unsigned char)(((l)>>16)&0xff), \
-                         *((c)++)=(unsigned char)(((l)>> 8)&0xff), \
-                         *((c)++)=(unsigned char)(((l)    )&0xff))
+                          *((c)++)=(unsigned char)(((l)>>16)&0xff), \
+                          *((c)++)=(unsigned char)(((l)>> 8)&0xff), \
+                          *((c)++)=(unsigned char)(((l)    )&0xff))
 
 # define l2n8(l,c)       (*((c)++)=(unsigned char)(((l)>>56)&0xff), \
-                         *((c)++)=(unsigned char)(((l)>>48)&0xff), \
-                         *((c)++)=(unsigned char)(((l)>>40)&0xff), \
-                         *((c)++)=(unsigned char)(((l)>>32)&0xff), \
-                         *((c)++)=(unsigned char)(((l)>>24)&0xff), \
-                         *((c)++)=(unsigned char)(((l)>>16)&0xff), \
-                         *((c)++)=(unsigned char)(((l)>> 8)&0xff), \
-                         *((c)++)=(unsigned char)(((l)    )&0xff))
+                          *((c)++)=(unsigned char)(((l)>>48)&0xff), \
+                          *((c)++)=(unsigned char)(((l)>>40)&0xff), \
+                          *((c)++)=(unsigned char)(((l)>>32)&0xff), \
+                          *((c)++)=(unsigned char)(((l)>>24)&0xff), \
+                          *((c)++)=(unsigned char)(((l)>>16)&0xff), \
+                          *((c)++)=(unsigned char)(((l)>> 8)&0xff), \
+                          *((c)++)=(unsigned char)(((l)    )&0xff))
 
 /* NOTE - c is not incremented as per l2c */
 # define l2cn(l1,l2,c,n) { \
-                        c+=n; \
-                        switch (n) { \
-                        case 8: *(--(c))=(unsigned char)(((l2)>>24)&0xff); \
-                        case 7: *(--(c))=(unsigned char)(((l2)>>16)&0xff); \
-                        case 6: *(--(c))=(unsigned char)(((l2)>> 8)&0xff); \
-                        case 5: *(--(c))=(unsigned char)(((l2)    )&0xff); \
-                        case 4: *(--(c))=(unsigned char)(((l1)>>24)&0xff); \
-                        case 3: *(--(c))=(unsigned char)(((l1)>>16)&0xff); \
-                        case 2: *(--(c))=(unsigned char)(((l1)>> 8)&0xff); \
-                        case 1: *(--(c))=(unsigned char)(((l1)    )&0xff); \
-                                } \
-                        }
+            c+=n; \
+            switch (n) { \
+                case 8: *(--(c))=(unsigned char)(((l2)>>24)&0xff); \
+                case 7: *(--(c))=(unsigned char)(((l2)>>16)&0xff); \
+                case 6: *(--(c))=(unsigned char)(((l2)>> 8)&0xff); \
+                case 5: *(--(c))=(unsigned char)(((l2)    )&0xff); \
+                case 4: *(--(c))=(unsigned char)(((l1)>>24)&0xff); \
+                case 3: *(--(c))=(unsigned char)(((l1)>>16)&0xff); \
+                case 2: *(--(c))=(unsigned char)(((l1)>> 8)&0xff); \
+                case 1: *(--(c))=(unsigned char)(((l1)    )&0xff); \
+            } \
+}
 
 # define n2s(c,s)        ((s=(((unsigned int)((c)[0]))<< 8)| \
-                             (((unsigned int)((c)[1]))    )),(c)+=2)
+                              (((unsigned int)((c)[1]))    )),(c)+=2)
 # define s2n(s,c)        (((c)[0]=(unsigned char)(((s)>> 8)&0xff), \
                            (c)[1]=(unsigned char)(((s)    )&0xff)),(c)+=2)
 
 # define n2l3(c,l)       ((l =(((unsigned long)((c)[0]))<<16)| \
-                              (((unsigned long)((c)[1]))<< 8)| \
-                              (((unsigned long)((c)[2]))    )),(c)+=3)
+                               (((unsigned long)((c)[1]))<< 8)| \
+                               (((unsigned long)((c)[2]))    )),(c)+=3)
 
 # define l2n3(l,c)       (((c)[0]=(unsigned char)(((l)>>16)&0xff), \
                            (c)[1]=(unsigned char)(((l)>> 8)&0xff), \

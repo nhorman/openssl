@@ -43,16 +43,16 @@ struct quic_sstream_st {
      *
      * Invariant: No logical byte is ever in both new_set and acked_set.
      */
-    UINT_SET        new_set, acked_set;
+    UINT_SET new_set, acked_set;
 
     /*
      * The current size of the stream is ring_buf.head_offset. If
      * have_final_size is true, this is also the final size of the stream.
      */
-    unsigned int    have_final_size     : 1;
-    unsigned int    sent_final_size     : 1;
-    unsigned int    acked_final_size    : 1;
-    unsigned int    cleanse             : 1;
+    unsigned int have_final_size     : 1;
+    unsigned int sent_final_size     : 1;
+    unsigned int acked_final_size    : 1;
+    unsigned int cleanse             : 1;
 };
 
 static void qss_cull(QUIC_SSTREAM *qss);
@@ -157,7 +157,7 @@ int ossl_quic_sstream_get_stream_frame(QUIC_SSTREAM *qss,
     hdr->offset = range->range.start;
     hdr->len    = total_len;
     hdr->is_fin = qss->have_final_size
-        && hdr->offset + hdr->len == qss->ring_buf.head_offset;
+                  && hdr->offset + hdr->len == qss->ring_buf.head_offset;
 
     *num_iov    = num_iov_;
     return 1;

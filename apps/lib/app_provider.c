@@ -71,15 +71,15 @@ int opt_provider(int opt)
 
     provider_option_given = 1;
     switch ((enum prov_range)opt) {
-    case OPT_PROV__FIRST:
-    case OPT_PROV__LAST:
-        return 1;
-    case OPT_PROV_PROVIDER:
-        return app_provider_load(app_get0_libctx(), opt_arg());
-    case OPT_PROV_PROVIDER_PATH:
-        return opt_provider_path(opt_arg());
-    case OPT_PROV_PROPQUERY:
-        return app_set_propq(opt_arg());
+        case OPT_PROV__FIRST:
+        case OPT_PROV__LAST:
+            return 1;
+        case OPT_PROV_PROVIDER:
+            return app_provider_load(app_get0_libctx(), opt_arg());
+        case OPT_PROV_PROVIDER_PATH:
+            return opt_provider_path(opt_arg());
+        case OPT_PROV_PROPQUERY:
+            return app_set_propq(opt_arg());
     }
     /* Should never get here but if we do, undo what we did earlier */
     provider_option_given = given;

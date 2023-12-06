@@ -588,8 +588,8 @@ static const uint8_t *dohash(EVP_MD_CTX *hashctx, const uint8_t *msg,
     static uint8_t hashout[64];
 
     if (!EVP_DigestInit_ex(hashctx, EVP_shake256(), NULL)
-            || !EVP_DigestUpdate(hashctx, msg, msglen)
-            || !EVP_DigestFinalXOF(hashctx, hashout, sizeof(hashout)))
+        || !EVP_DigestUpdate(hashctx, msg, msglen)
+        || !EVP_DigestFinalXOF(hashctx, hashout, sizeof(hashout)))
         return NULL;
 
     return hashout;
@@ -601,45 +601,45 @@ static int test_ed448(void)
     EVP_MD_CTX *hashctx = EVP_MD_CTX_new();
 
     if (!TEST_ptr(hashctx)
-            || !TEST_true(ossl_ed448_sign(NULL, outsig, NULL, 0, pubkey1,
-                                          privkey1, NULL, 0, 0, NULL))
-            || !TEST_int_eq(memcmp(sig1, outsig, sizeof(sig1)), 0)
-            || !TEST_true(ossl_ed448_sign(NULL, outsig, msg2, sizeof(msg2),
-                                          pubkey2, privkey2, NULL, 0, 0, NULL))
-            || !TEST_int_eq(memcmp(sig2, outsig, sizeof(sig2)), 0)
-            || !TEST_true(ossl_ed448_sign(NULL, outsig, msg3, sizeof(msg3),
-                                          pubkey3, privkey3, context3,
-                                          sizeof(context3), 0, NULL))
-            || !TEST_int_eq(memcmp(sig3, outsig, sizeof(sig3)), 0)
-            || !TEST_true(ossl_ed448_sign(NULL, outsig, msg4, sizeof(msg4),
-                                          pubkey4, privkey4, NULL, 0, 0, NULL))
-            || !TEST_int_eq(memcmp(sig4, outsig, sizeof(sig4)), 0)
-            || !TEST_true(ossl_ed448_sign(NULL, outsig, msg5, sizeof(msg5),
-                                          pubkey5, privkey5, NULL, 0, 0, NULL))
-            || !TEST_int_eq(memcmp(sig5, outsig, sizeof(sig5)), 0)
-            || !TEST_true(ossl_ed448_sign(NULL, outsig, msg6, sizeof(msg6),
-                                          pubkey6, privkey6, NULL, 0, 0, NULL))
-            || !TEST_int_eq(memcmp(sig6, outsig, sizeof(sig6)), 0)
-            || !TEST_true(ossl_ed448_sign(NULL, outsig, msg7, sizeof(msg7),
-                                          pubkey7, privkey7, NULL, 0, 0, NULL))
-            || !TEST_int_eq(memcmp(sig7, outsig, sizeof(sig7)), 0)
-            || !TEST_true(ossl_ed448_sign(NULL, outsig, msg8, sizeof(msg8),
-                                          pubkey8, privkey8, NULL, 0, 0, NULL))
-            || !TEST_int_eq(memcmp(sig8, outsig, sizeof(sig8)), 0)
-            || !TEST_true(ossl_ed448_sign(NULL, outsig, msg9, sizeof(msg9),
-                                          pubkey9, privkey9, NULL, 0, 0, NULL))
-            || !TEST_int_eq(memcmp(sig9, outsig, sizeof(sig9)), 0)
-            || !TEST_true(ossl_ed448_sign(NULL, outsig,
-                                          dohash(hashctx, phmsg1,
-                                                 sizeof(phmsg1)), 64, phpubkey1,
-                                                 phprivkey1, NULL, 0, 1, NULL))
-            || !TEST_int_eq(memcmp(phsig1, outsig, sizeof(phsig1)), 0)
-            || !TEST_true(ossl_ed448_sign(NULL, outsig,
-                                          dohash(hashctx, phmsg2,
-                                                 sizeof(phmsg2)), 64, phpubkey2,
-                                                 phprivkey2, phcontext2,
-                                                 sizeof(phcontext2), 1, NULL))
-            || !TEST_int_eq(memcmp(phsig2, outsig, sizeof(phsig2)), 0)) {
+        || !TEST_true(ossl_ed448_sign(NULL, outsig, NULL, 0, pubkey1,
+                                      privkey1, NULL, 0, 0, NULL))
+        || !TEST_int_eq(memcmp(sig1, outsig, sizeof(sig1)), 0)
+        || !TEST_true(ossl_ed448_sign(NULL, outsig, msg2, sizeof(msg2),
+                                      pubkey2, privkey2, NULL, 0, 0, NULL))
+        || !TEST_int_eq(memcmp(sig2, outsig, sizeof(sig2)), 0)
+        || !TEST_true(ossl_ed448_sign(NULL, outsig, msg3, sizeof(msg3),
+                                      pubkey3, privkey3, context3,
+                                      sizeof(context3), 0, NULL))
+        || !TEST_int_eq(memcmp(sig3, outsig, sizeof(sig3)), 0)
+        || !TEST_true(ossl_ed448_sign(NULL, outsig, msg4, sizeof(msg4),
+                                      pubkey4, privkey4, NULL, 0, 0, NULL))
+        || !TEST_int_eq(memcmp(sig4, outsig, sizeof(sig4)), 0)
+        || !TEST_true(ossl_ed448_sign(NULL, outsig, msg5, sizeof(msg5),
+                                      pubkey5, privkey5, NULL, 0, 0, NULL))
+        || !TEST_int_eq(memcmp(sig5, outsig, sizeof(sig5)), 0)
+        || !TEST_true(ossl_ed448_sign(NULL, outsig, msg6, sizeof(msg6),
+                                      pubkey6, privkey6, NULL, 0, 0, NULL))
+        || !TEST_int_eq(memcmp(sig6, outsig, sizeof(sig6)), 0)
+        || !TEST_true(ossl_ed448_sign(NULL, outsig, msg7, sizeof(msg7),
+                                      pubkey7, privkey7, NULL, 0, 0, NULL))
+        || !TEST_int_eq(memcmp(sig7, outsig, sizeof(sig7)), 0)
+        || !TEST_true(ossl_ed448_sign(NULL, outsig, msg8, sizeof(msg8),
+                                      pubkey8, privkey8, NULL, 0, 0, NULL))
+        || !TEST_int_eq(memcmp(sig8, outsig, sizeof(sig8)), 0)
+        || !TEST_true(ossl_ed448_sign(NULL, outsig, msg9, sizeof(msg9),
+                                      pubkey9, privkey9, NULL, 0, 0, NULL))
+        || !TEST_int_eq(memcmp(sig9, outsig, sizeof(sig9)), 0)
+        || !TEST_true(ossl_ed448_sign(NULL, outsig,
+                                      dohash(hashctx, phmsg1,
+                                             sizeof(phmsg1)), 64, phpubkey1,
+                                      phprivkey1, NULL, 0, 1, NULL))
+        || !TEST_int_eq(memcmp(phsig1, outsig, sizeof(phsig1)), 0)
+        || !TEST_true(ossl_ed448_sign(NULL, outsig,
+                                      dohash(hashctx, phmsg2,
+                                             sizeof(phmsg2)), 64, phpubkey2,
+                                      phprivkey2, phcontext2,
+                                      sizeof(phcontext2), 1, NULL))
+        || !TEST_int_eq(memcmp(phsig2, outsig, sizeof(phsig2)), 0)) {
         EVP_MD_CTX_free(hashctx);
         return 0;
     }
@@ -657,9 +657,9 @@ static int test_x448(void)
     /* Curve448 tests */
 
     if (!TEST_true(ossl_x448(out, in_scalar1, in_u1))
-          || !TEST_int_eq(memcmp(out, out_u1, sizeof(out)), 0)
-          || !TEST_true(ossl_x448(out, in_scalar2, in_u2))
-          || !TEST_int_eq(memcmp(out, out_u2, sizeof(out)), 0))
+        || !TEST_int_eq(memcmp(out, out_u1, sizeof(out)), 0)
+        || !TEST_true(ossl_x448(out, in_scalar2, in_u2))
+        || !TEST_int_eq(memcmp(out, out_u2, sizeof(out)), 0))
         return 0;
 
     memcpy(u, in_u3, sizeof(u));
@@ -701,7 +701,7 @@ const OPTIONS *test_get_options(void)
         OPT_TEST_OPTIONS_WITH_EXTRA_USAGE("conf_file\n"),
         { "f", OPT_SLOW, '-', "Enables a slow test" },
         { "v", OPT_PROGRESS, '-',
-              "Enables verbose mode (prints progress dots)" },
+          "Enables verbose mode (prints progress dots)" },
         { NULL }
     };
     return test_options;
@@ -713,21 +713,21 @@ int setup_tests(void)
 
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_TEST_CASES:
-            break;
-        default:
-            return 0;
-        /*
-         * The test vectors contain one test which takes a very long time to run
-         * so we don't do that be default. Using the -f option will cause it to
-         * be run.
-         */
-        case OPT_SLOW:
-            max = 1000000;
-            break;
-        case OPT_PROGRESS:
-            verbose = 1; /* Print progress dots */
-            break;
+            case OPT_TEST_CASES:
+                break;
+            default:
+                return 0;
+            /*
+             * The test vectors contain one test which takes a very long time to run
+             * so we don't do that be default. Using the -f option will cause it to
+             * be run.
+             */
+            case OPT_SLOW:
+                max = 1000000;
+                break;
+            case OPT_PROGRESS:
+                verbose = 1; /* Print progress dots */
+                break;
         }
     }
 

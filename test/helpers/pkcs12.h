@@ -34,9 +34,9 @@ typedef struct pkcs12_attr {
 
 /* Holds encryption parameters */
 typedef struct pkcs12_enc {
-    int         nid;
+    int nid;
     const char *pass;
-    int         iter;
+    int iter;
 } PKCS12_ENC;
 
 /* Set of variables required for constructing the PKCS#12 structure */
@@ -88,11 +88,13 @@ void add_extra_attr(PKCS12_BUILDER *pb);
 void start_check_pkcs12(PKCS12_BUILDER *pb);
 void start_check_pkcs12_with_mac(PKCS12_BUILDER *pb, const PKCS12_ENC *mac);
 void start_check_pkcs12_file(PKCS12_BUILDER *pb);
-void start_check_pkcs12_file_with_mac(PKCS12_BUILDER *pb, const PKCS12_ENC *mac);
+void start_check_pkcs12_file_with_mac(PKCS12_BUILDER *pb,
+                                      const PKCS12_ENC *mac);
 void end_check_pkcs12(PKCS12_BUILDER *pb);
 
 void start_check_contentinfo(PKCS12_BUILDER *pb);
-void start_check_contentinfo_encrypted(PKCS12_BUILDER *pb, const PKCS12_ENC *enc);
+void start_check_contentinfo_encrypted(PKCS12_BUILDER *pb,
+                                       const PKCS12_ENC *enc);
 void end_check_contentinfo(PKCS12_BUILDER *pb);
 
 void check_certbag(PKCS12_BUILDER *pb, const unsigned char *bytes, int len,

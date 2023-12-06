@@ -299,14 +299,14 @@ static int dtls_listen_test(int i)
     int ret, success = 0;
 
     if (!TEST_ptr(ctx = SSL_CTX_new(DTLS_server_method()))
-            || !TEST_ptr(peer = BIO_ADDR_new()))
+        || !TEST_ptr(peer = BIO_ADDR_new()))
         goto err;
     SSL_CTX_set_cookie_generate_cb(ctx, cookie_gen);
     SSL_CTX_set_cookie_verify_cb(ctx, cookie_verify);
 
     /* Create an SSL object and set the BIO */
     if (!TEST_ptr(ssl = SSL_new(ctx))
-            || !TEST_ptr(outbio = BIO_new(BIO_s_mem())))
+        || !TEST_ptr(outbio = BIO_new(BIO_s_mem())))
         goto err;
     SSL_set0_wbio(ssl, outbio);
 
@@ -323,11 +323,11 @@ static int dtls_listen_test(int i)
 
     if (tp->outtype == VERIFY) {
         if (!TEST_int_eq(ret, 0)
-                || !TEST_mem_eq(data, datalen, verify, sizeof(verify)))
+            || !TEST_mem_eq(data, datalen, verify, sizeof(verify)))
             goto err;
     } else if (datalen == 0) {
         if (!TEST_true((ret == 0 && tp->outtype == DROP)
-                || (ret == 1 && tp->outtype == GOOD)))
+                       || (ret == 1 && tp->outtype == GOOD)))
             goto err;
     } else {
         TEST_info("Test %d: unexpected data output", i);
@@ -338,7 +338,7 @@ static int dtls_listen_test(int i)
     SSL_set0_rbio(ssl, NULL);
     success = 1;
 
- err:
+err:
     /* Also frees up outbio */
     SSL_free(ssl);
     SSL_CTX_free(ctx);

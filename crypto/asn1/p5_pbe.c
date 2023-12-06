@@ -17,8 +17,8 @@
 /* PKCS#5 password based encryption structure */
 
 ASN1_SEQUENCE(PBEPARAM) = {
-        ASN1_SIMPLE(PBEPARAM, salt, ASN1_OCTET_STRING),
-        ASN1_SIMPLE(PBEPARAM, iter, ASN1_INTEGER)
+    ASN1_SIMPLE(PBEPARAM, salt, ASN1_OCTET_STRING),
+    ASN1_SIMPLE(PBEPARAM, iter, ASN1_INTEGER)
 } ASN1_SEQUENCE_END(PBEPARAM)
 
 IMPLEMENT_ASN1_FUNCTIONS(PBEPARAM)
@@ -72,7 +72,7 @@ int PKCS5_pbe_set0_algor_ex(X509_ALGOR *algor, int alg, int iter,
     if (X509_ALGOR_set0(algor, OBJ_nid2obj(alg), V_ASN1_SEQUENCE, pbe_str))
         return 1;
 
- err:
+err:
     OPENSSL_free(sstr);
     PBEPARAM_free(pbe);
     ASN1_STRING_free(pbe_str);

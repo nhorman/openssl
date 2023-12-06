@@ -41,9 +41,9 @@ static int test_sparse_array(void)
     int res = 0;
 
     if (!TEST_ptr(sa = ossl_sa_char_new())
-            || !TEST_ptr_null(ossl_sa_char_get(sa, 3))
-            || !TEST_ptr_null(ossl_sa_char_get(sa, 0))
-            || !TEST_ptr_null(ossl_sa_char_get(sa, UINT_MAX)))
+        || !TEST_ptr_null(ossl_sa_char_get(sa, 3))
+        || !TEST_ptr_null(ossl_sa_char_get(sa, 0))
+        || !TEST_ptr_null(ossl_sa_char_get(sa, UINT_MAX)))
         goto err;
 
     for (i = 0; i < OSSL_NELEM(cases); i++) {
@@ -81,12 +81,12 @@ static int test_sparse_array_num(void)
     int res = 0;
 
     if (!TEST_size_t_eq(ossl_sa_char_num(NULL), 0)
-            || !TEST_ptr(sa = ossl_sa_char_new())
-            || !TEST_size_t_eq(ossl_sa_char_num(sa), 0))
+        || !TEST_ptr(sa = ossl_sa_char_new())
+        || !TEST_size_t_eq(ossl_sa_char_num(sa), 0))
         goto err;
     for (i = 0; i < OSSL_NELEM(cases); i++)
         if (!TEST_true(ossl_sa_char_set(sa, cases[i].n, cases[i].v))
-                || !TEST_size_t_eq(ossl_sa_char_num(sa), cases[i].num))
+            || !TEST_size_t_eq(ossl_sa_char_num(sa), cases[i].num))
             goto err;
     res = 1;
 err:
@@ -162,7 +162,7 @@ static int test_sparse_array_doall(void)
         if (!TEST_true(ossl_sa_char_set(sa, cases[i].n, cases[i].v))) {
             TEST_note("failed at iteration %zu", i + 1);
             goto err;
-    }
+        }
 
     ossl_sa_char_doall_arg(sa, &leaf_check_all, &doall_data);
     if (doall_data.res == 0) {

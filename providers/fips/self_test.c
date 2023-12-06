@@ -93,14 +93,14 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved);
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
     switch (fdwReason) {
-    case DLL_PROCESS_ATTACH:
-        init();
-        break;
-    case DLL_PROCESS_DETACH:
-        cleanup();
-        break;
-    default:
-        break;
+        case DLL_PROCESS_ATTACH:
+            init();
+            break;
+        case DLL_PROCESS_DETACH:
+            cleanup();
+            break;
+        default:
+            break;
     }
     return TRUE;
 }
@@ -199,28 +199,28 @@ static int integrity_self_test(OSSL_SELF_TEST *ev, OSSL_LIB_CTX *libctx)
     unsigned char out[EVP_MAX_MD_SIZE];
     size_t out_len = 0;
 
-    OSSL_PARAM   params[2];
+    OSSL_PARAM params[2];
     EVP_MAC     *mac = EVP_MAC_fetch(libctx, MAC_NAME, NULL);
     EVP_MAC_CTX *ctx = EVP_MAC_CTX_new(mac);
 
     OSSL_SELF_TEST_onbegin(ev, OSSL_SELF_TEST_TYPE_KAT_INTEGRITY,
-                               OSSL_SELF_TEST_DESC_INTEGRITY_HMAC);
+                           OSSL_SELF_TEST_DESC_INTEGRITY_HMAC);
 
     params[0] = OSSL_PARAM_construct_utf8_string("digest", DIGEST_NAME, 0);
     params[1] = OSSL_PARAM_construct_end();
 
     if (ctx == NULL
-            || mac == NULL
-            || !EVP_MAC_init(ctx, hmac_kat_key, sizeof(hmac_kat_key), params)
-            || !EVP_MAC_update(ctx, hmac_kat_pt, sizeof(hmac_kat_pt))
-            || !EVP_MAC_final(ctx, out, &out_len, MAX_MD_SIZE))
+        || mac == NULL
+        || !EVP_MAC_init(ctx, hmac_kat_key, sizeof(hmac_kat_key), params)
+        || !EVP_MAC_update(ctx, hmac_kat_pt, sizeof(hmac_kat_pt))
+        || !EVP_MAC_final(ctx, out, &out_len, MAX_MD_SIZE))
         goto err;
 
     /* Optional corruption */
     OSSL_SELF_TEST_oncorrupt_byte(ev, out);
 
     if (out_len != sizeof(hmac_kat_digest)
-            || memcmp(out, hmac_kat_digest, out_len) != 0)
+        || memcmp(out, hmac_kat_digest, out_len) != 0)
         goto err;
     ok = 1;
 err:
@@ -235,7 +235,8 @@ err:
  * the result matches the expected value.
  * Return 1 if verified, or 0 if it fails.
  */
-static int verify_integrity(OSSL_CORE_BIO *bio, OSSL_FUNC_BIO_read_ex_fn read_ex_cb,
+static int verify_integrity(OSSL_CORE_BIO *bio,
+                            OSSL_FUNC_BIO_read_ex_fn read_ex_cb,
                             unsigned char *expected, size_t expected_len,
                             OSSL_LIB_CTX *libctx, OSSL_SELF_TEST *ev,
                             const char *event_type)
@@ -278,7 +279,7 @@ static int verify_integrity(OSSL_CORE_BIO *bio, OSSL_FUNC_BIO_read_ex_fn read_ex
 
     OSSL_SELF_TEST_oncorrupt_byte(ev, out);
     if (expected_len != out_len
-            || memcmp(expected, out, out_len) != 0)
+        || memcmp(expected, out, out_len) != 0)
         goto err;
     ret = 1;
 err:
@@ -336,7 +337,7 @@ int SELF_TEST_post(SELF_TEST_POST_PARAMS *st, int on_demand_test)
     }
 
     if (st == NULL
-            || st->module_checksum_data == NULL) {
+        || st->module_checksum_data == NULL) {
         ERR_raise(ERR_LIB_PROV, PROV_R_MISSING_CONFIG_DATA);
         goto end;
     }
@@ -355,9 +356,9 @@ int SELF_TEST_post(SELF_TEST_POST_PARAMS *st, int on_demand_test)
 
     /* Always check the integrity of the fips module */
     if (bio_module == NULL
-            || !verify_integrity(bio_module, st->bio_read_ex_cb,
-                                 module_checksum, checksum_len, st->libctx,
-                                 ev, OSSL_SELF_TEST_TYPE_MODULE_INTEGRITY)) {
+        || !verify_integrity(bio_module, st->bio_read_ex_cb,
+                             module_checksum, checksum_len, st->libctx,
+                             ev, OSSL_SELF_TEST_TYPE_MODULE_INTEGRITY)) {
         ERR_raise(ERR_LIB_PROV, PROV_R_MODULE_INTEGRITY_FAILURE);
         goto end;
     }
@@ -383,10 +384,10 @@ int SELF_TEST_post(SELF_TEST_POST_PARAMS *st, int on_demand_test)
             (*st->bio_new_buffer_cb)(st->indicator_data,
                                      strlen(st->indicator_data));
         if (bio_indicator == NULL
-                || !verify_integrity(bio_indicator, st->bio_read_ex_cb,
-                                     indicator_checksum, checksum_len,
-                                     st->libctx, ev,
-                                     OSSL_SELF_TEST_TYPE_INSTALL_INTEGRITY)) {
+            || !verify_integrity(bio_indicator, st->bio_read_ex_cb,
+                                 indicator_checksum, checksum_len,
+                                 st->libctx, ev,
+                                 OSSL_SELF_TEST_TYPE_INSTALL_INTEGRITY)) {
             ERR_raise(ERR_LIB_PROV, PROV_R_INDICATOR_INTEGRITY_FAILURE);
             goto end;
         } else {
@@ -410,8 +411,8 @@ int SELF_TEST_post(SELF_TEST_POST_PARAMS *st, int on_demand_test)
     rng = ossl_rand_get0_private_noncreating(st->libctx);
     if (rng != NULL)
         if ((testrand = EVP_RAND_fetch(st->libctx, "TEST-RAND", NULL)) == NULL
-                || strcmp(EVP_RAND_get0_name(EVP_RAND_CTX_get0_rand(rng)),
-                          EVP_RAND_get0_name(testrand)) == 0) {
+            || strcmp(EVP_RAND_get0_name(EVP_RAND_CTX_get0_rand(rng)),
+                      EVP_RAND_get0_name(testrand)) == 0) {
             ERR_raise(ERR_LIB_PROV, PROV_R_SELF_TEST_KAT_FAILURE);
             goto end;
         }
@@ -443,7 +444,8 @@ void SELF_TEST_disable_conditional_error_state(void)
 
 void ossl_set_error_state(const char *type)
 {
-    int cond_test = (type != NULL && strcmp(type, OSSL_SELF_TEST_TYPE_PCT) == 0);
+    int cond_test =
+        (type != NULL && strcmp(type, OSSL_SELF_TEST_TYPE_PCT) == 0);
 
     if (!cond_test || (FIPS_conditional_error_check == 1)) {
         set_fips_state(FIPS_STATE_ERROR);

@@ -286,7 +286,7 @@ static size_t test_rng_get_seed(void *vtest, unsigned char **pout,
     PROV_TEST_RNG *t = (PROV_TEST_RNG *)vtest;
 
     *pout = t->entropy;
-    return  t->entropy_len > max_len ? max_len : t->entropy_len;
+    return t->entropy_len > max_len ? max_len : t->entropy_len;
 }
 
 static int test_rng_enable_locking(void *vtest)
@@ -321,26 +321,26 @@ static void test_rng_unlock(void *vtest)
 }
 
 const OSSL_DISPATCH ossl_test_rng_functions[] = {
-    { OSSL_FUNC_RAND_NEWCTX, (void(*)(void))test_rng_new },
-    { OSSL_FUNC_RAND_FREECTX, (void(*)(void))test_rng_free },
+    { OSSL_FUNC_RAND_NEWCTX, (void (*)(void)) test_rng_new },
+    { OSSL_FUNC_RAND_FREECTX, (void (*)(void)) test_rng_free },
     { OSSL_FUNC_RAND_INSTANTIATE,
-      (void(*)(void))test_rng_instantiate },
+      (void (*)(void)) test_rng_instantiate },
     { OSSL_FUNC_RAND_UNINSTANTIATE,
-      (void(*)(void))test_rng_uninstantiate },
-    { OSSL_FUNC_RAND_GENERATE, (void(*)(void))test_rng_generate },
-    { OSSL_FUNC_RAND_RESEED, (void(*)(void))test_rng_reseed },
-    { OSSL_FUNC_RAND_NONCE, (void(*)(void))test_rng_nonce },
-    { OSSL_FUNC_RAND_ENABLE_LOCKING, (void(*)(void))test_rng_enable_locking },
-    { OSSL_FUNC_RAND_LOCK, (void(*)(void))test_rng_lock },
-    { OSSL_FUNC_RAND_UNLOCK, (void(*)(void))test_rng_unlock },
+      (void (*)(void)) test_rng_uninstantiate },
+    { OSSL_FUNC_RAND_GENERATE, (void (*)(void)) test_rng_generate },
+    { OSSL_FUNC_RAND_RESEED, (void (*)(void)) test_rng_reseed },
+    { OSSL_FUNC_RAND_NONCE, (void (*)(void)) test_rng_nonce },
+    { OSSL_FUNC_RAND_ENABLE_LOCKING, (void (*)(void)) test_rng_enable_locking },
+    { OSSL_FUNC_RAND_LOCK, (void (*)(void)) test_rng_lock },
+    { OSSL_FUNC_RAND_UNLOCK, (void (*)(void)) test_rng_unlock },
     { OSSL_FUNC_RAND_SETTABLE_CTX_PARAMS,
-      (void(*)(void))test_rng_settable_ctx_params },
-    { OSSL_FUNC_RAND_SET_CTX_PARAMS, (void(*)(void))test_rng_set_ctx_params },
+      (void (*)(void)) test_rng_settable_ctx_params },
+    { OSSL_FUNC_RAND_SET_CTX_PARAMS, (void (*)(void)) test_rng_set_ctx_params },
     { OSSL_FUNC_RAND_GETTABLE_CTX_PARAMS,
-      (void(*)(void))test_rng_gettable_ctx_params },
-    { OSSL_FUNC_RAND_GET_CTX_PARAMS, (void(*)(void))test_rng_get_ctx_params },
+      (void (*)(void)) test_rng_gettable_ctx_params },
+    { OSSL_FUNC_RAND_GET_CTX_PARAMS, (void (*)(void)) test_rng_get_ctx_params },
     { OSSL_FUNC_RAND_VERIFY_ZEROIZATION,
-      (void(*)(void))test_rng_verify_zeroization },
-    { OSSL_FUNC_RAND_GET_SEED, (void(*)(void))test_rng_get_seed },
+      (void (*)(void)) test_rng_verify_zeroization },
+    { OSSL_FUNC_RAND_GET_SEED, (void (*)(void)) test_rng_get_seed },
     OSSL_DISPATCH_END
 };

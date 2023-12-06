@@ -41,7 +41,7 @@ static CMP_HDR_TEST_FIXTURE *set_up(const char *const test_case_name)
         goto err;
     return fixture;
 
- err:
+err:
     tear_down(fixture);
     return NULL;
 }
@@ -66,8 +66,9 @@ static int test_HDR_set_get_pvno(void)
 }
 
 #define X509_NAME_ADD(n, rd, s) \
-    X509_NAME_add_entry_by_txt((n), (rd), MBSTRING_ASC, (unsigned char *)(s), \
-                               -1, -1, 0)
+        X509_NAME_add_entry_by_txt((n), (rd), MBSTRING_ASC, \
+                                   (unsigned char *)(s), \
+                                   -1, -1, 0)
 
 static int execute_HDR_get0_senderNonce_test(CMP_HDR_TEST_FIXTURE *fixture)
 {
@@ -214,7 +215,7 @@ static int execute_HDR_set1_senderKID_test(CMP_HDR_TEST_FIXTURE *fixture)
                                            senderKID), 0))
         goto err;
     res = 1;
- err:
+err:
     ASN1_OCTET_STRING_free(senderKID);
     return res;
 }
@@ -245,7 +246,7 @@ static int execute_HDR_push0_freeText_test(CMP_HDR_TEST_FIXTURE *fixture)
 
     return 1;
 
- err:
+err:
     ASN1_UTF8STRING_free(text);
     return 0;
 }
@@ -278,7 +279,7 @@ static int execute_HDR_push1_freeText_test(CMP_HDR_TEST_FIXTURE *fixture)
         goto err;
 
     res = 1;
- err:
+err:
     ASN1_UTF8STRING_free(text);
     return res;
 }
@@ -334,7 +335,7 @@ execute_HDR_generalInfo_push1_items_test(CMP_HDR_TEST_FIXTURE *fixture)
         return 0;
 
     if (!TEST_ptr(val)
-            || !TEST_true(ASN1_INTEGER_set(asn1int, 88))) {
+        || !TEST_true(ASN1_INTEGER_set(asn1int, 88))) {
         ASN1_INTEGER_free(asn1int);
         return 0;
     }
@@ -364,7 +365,7 @@ execute_HDR_generalInfo_push1_items_test(CMP_HDR_TEST_FIXTURE *fixture)
 
     res = 1;
 
- err:
+err:
     sk_OSSL_CMP_ITAV_pop_free(itavs, OSSL_CMP_ITAV_free);
     return res;
 }
@@ -382,8 +383,8 @@ execute_HDR_set_and_check_implicitConfirm_test(CMP_HDR_TEST_FIXTURE
                                                * fixture)
 {
     return TEST_false(ossl_cmp_hdr_has_implicitConfirm(fixture->hdr))
-        && TEST_true(ossl_cmp_hdr_set_implicitConfirm(fixture->hdr))
-        && TEST_true(ossl_cmp_hdr_has_implicitConfirm(fixture->hdr));
+           && TEST_true(ossl_cmp_hdr_set_implicitConfirm(fixture->hdr))
+           && TEST_true(ossl_cmp_hdr_has_implicitConfirm(fixture->hdr));
 }
 
 static int test_HDR_set_and_check_implicit_confirm(void)
@@ -419,9 +420,9 @@ static int execute_HDR_init_test(CMP_HDR_TEST_FIXTURE *fixture)
     header_nonce = OSSL_CMP_HDR_get0_recipNonce(fixture->hdr);
     ctx_nonce = fixture->cmp_ctx->recipNonce;
     if (ctx_nonce != NULL
-            && (!TEST_ptr(header_nonce)
-                    || !TEST_int_eq(0, ASN1_OCTET_STRING_cmp(header_nonce,
-                                                             ctx_nonce))))
+        && (!TEST_ptr(header_nonce)
+            || !TEST_int_eq(0, ASN1_OCTET_STRING_cmp(header_nonce,
+                                                     ctx_nonce))))
         return 0;
 
     return 1;
@@ -435,8 +436,8 @@ static int test_HDR_init_with_ref(void)
 
     fixture->expected = 1;
     if (!TEST_int_eq(1, RAND_bytes(ref, sizeof(ref)))
-            || !TEST_true(OSSL_CMP_CTX_set1_referenceValue(fixture->cmp_ctx,
-                                                           ref, sizeof(ref)))) {
+        || !TEST_true(OSSL_CMP_CTX_set1_referenceValue(fixture->cmp_ctx,
+                                                       ref, sizeof(ref)))) {
         tear_down(fixture);
         fixture = NULL;
     }
@@ -451,9 +452,9 @@ static int test_HDR_init_with_subject(void)
     SETUP_TEST_FIXTURE(CMP_HDR_TEST_FIXTURE, set_up);
     fixture->expected = 1;
     if (!TEST_ptr(subject = X509_NAME_new())
-            || !TEST_true(X509_NAME_ADD(subject, "CN", "Common Name"))
-            || !TEST_true(OSSL_CMP_CTX_set1_subjectName(fixture->cmp_ctx,
-                                                        subject))) {
+        || !TEST_true(X509_NAME_ADD(subject, "CN", "Common Name"))
+        || !TEST_true(OSSL_CMP_CTX_set1_subjectName(fixture->cmp_ctx,
+                                                    subject))) {
         tear_down(fixture);
         fixture = NULL;
     }

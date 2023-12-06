@@ -68,7 +68,7 @@ static int ossl_X509_check_all(OSSL_CMP_CTX *ctx, const char *source,
     for (i = 0; i < sk_X509_num(certs /* may be NULL */); i++)
         ret = ossl_X509_check(ctx, source,
                               sk_X509_value(certs, i), type_CA, vpm)
-            && ret; /* Having 'ret' after the '&&', all certs are checked. */
+              && ret; /* Having 'ret' after the '&&', all certs are checked. */
     return ret;
 }
 
@@ -102,7 +102,8 @@ static OSSL_CMP_ITAV *get_genm_itav(OSSL_CMP_CTX *ctx,
 
     if ((n = sk_OSSL_CMP_ITAV_num(itavs)) <= 0) {
         ERR_raise_data(ERR_LIB_CMP, CMP_R_INVALID_GENP,
-                       "response on genm requesting infoType %s does not include suitable value", desc);
+                       "response on genm requesting infoType %s does not include suitable value",
+                       desc);
         sk_OSSL_CMP_ITAV_free(itavs);
         return NULL;
     }
@@ -132,7 +133,7 @@ static OSSL_CMP_ITAV *get_genm_itav(OSSL_CMP_CTX *ctx,
     ERR_raise_data(ERR_LIB_CMP, CMP_R_INVALID_GENP,
                    "could not find any ITAV for %s", desc);
 
- err:
+err:
     sk_OSSL_CMP_ITAV_free(itavs);
     OSSL_CMP_ITAV_free(req);
     return NULL;
@@ -173,7 +174,7 @@ int OSSL_CMP_get1_caCerts(OSSL_CMP_CTX *ctx, STACK_OF(X509) **out)
         ret = 0;
     }
 
- end:
+end:
     OSSL_CMP_ITAV_free(itav);
     return ret;
 }
@@ -181,9 +182,9 @@ int OSSL_CMP_get1_caCerts(OSSL_CMP_CTX *ctx, STACK_OF(X509) **out)
 static int selfsigned_verify_cb(int ok, X509_STORE_CTX *store_ctx)
 {
     if (ok == 0
-            && X509_STORE_CTX_get_error_depth(store_ctx) == 0
-            && X509_STORE_CTX_get_error(store_ctx)
-            == X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT) {
+        && X509_STORE_CTX_get_error_depth(store_ctx) == 0
+        && X509_STORE_CTX_get_error(store_ctx)
+        == X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT) {
         /* in this case, custom chain building */
         int i;
         STACK_OF(X509) *trust;
@@ -235,12 +236,12 @@ static int verify_ss_cert(OSSL_LIB_CTX *libctx, const char *propq,
     }
 
     if ((csc = X509_STORE_CTX_new_ex(libctx, propq)) == NULL
-            || !X509_STORE_CTX_init(csc, ts, target, untrusted))
+        || !X509_STORE_CTX_init(csc, ts, target, untrusted))
         goto err;
     X509_STORE_CTX_set_verify_cb(csc, selfsigned_verify_cb);
     ok = X509_verify_cert(csc) > 0;
 
- err:
+err:
     X509_STORE_CTX_free(csc);
     return ok;
 }
@@ -265,7 +266,7 @@ verify_ss_cert_trans(OSSL_CMP_CTX *ctx, X509 *trusted /* may be NULL */,
     }
 
     if (trans != NULL
-            && !ossl_x509_add_cert_new(&untrusted, trans, X509_ADD_FLAG_UP_REF))
+        && !ossl_x509_add_cert_new(&untrusted, trans, X509_ADD_FLAG_UP_REF))
         goto err;
 
     res = verify_ss_cert(OSSL_CMP_CTX_get0_libctx(ctx),
@@ -277,7 +278,7 @@ verify_ss_cert_trans(OSSL_CMP_CTX *ctx, X509 *trusted /* may be NULL */,
                        desc, trusted == NULL ? "using trust store"
                        : "with given certificate as trust anchor");
 
- err:
+err:
     sk_X509_pop_free(untrusted, X509_free);
     if (trusted != NULL)
         X509_STORE_free(ts);
@@ -300,7 +301,8 @@ int OSSL_CMP_get1_rootCaKeyUpdate(OSSL_CMP_CTX *ctx,
 
     if ((req = OSSL_CMP_ITAV_new_rootCaCert(oldWithOld)) == NULL)
         return 0;
-    itav = get_genm_itav(ctx, req, NID_id_it_rootCaKeyUpdate, "rootCaKeyUpdate");
+    itav =
+        get_genm_itav(ctx, req, NID_id_it_rootCaKeyUpdate, "rootCaKeyUpdate");
     if (itav == NULL)
         return 0;
 
@@ -336,10 +338,10 @@ int OSSL_CMP_get1_rootCaKeyUpdate(OSSL_CMP_CTX *ctx,
     }
     if (newWithOld != NULL)
         X509_free(*newWithOld);
- free:
+free:
     X509_free(*newWithNew);
 
- end:
+end:
     OSSL_CMP_ITAV_free(itav);
     X509_free(oldWithOld_copy);
     return res;

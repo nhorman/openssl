@@ -40,7 +40,8 @@ static int int_engine_init(ENGINE *e)
     return 1;
 }
 
-static int int_engine_configure(const char *name, const char *value, const CONF *cnf)
+static int int_engine_configure(const char *name, const char *value,
+                                const CONF *cnf)
 {
     int i;
     int ret = 0;
@@ -131,7 +132,7 @@ static int int_engine_configure(const char *name, const char *value, const CONF 
         goto err;
     }
     ret = 1;
- err:
+err:
     if (ret != 1) {
         if (ecmd == NULL)
             ERR_raise(ERR_LIB_ENGINE, ENGINE_R_ENGINE_CONFIGURATION_ERROR);

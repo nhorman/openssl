@@ -444,75 +444,75 @@ static long b64_ctrl(BIO *b, int cmd, long num, void *ptr)
         return 0;
 
     switch (cmd) {
-    case BIO_CTRL_RESET:
-        ctx->cont = 1;
-        ctx->start = 1;
-        ctx->encode = B64_NONE;
-        ret = BIO_ctrl(next, cmd, num, ptr);
-        break;
-    case BIO_CTRL_EOF:         /* More to read */
-        if (ctx->cont <= 0)
-            ret = 1;
-        else
+        case BIO_CTRL_RESET:
+            ctx->cont = 1;
+            ctx->start = 1;
+            ctx->encode = B64_NONE;
             ret = BIO_ctrl(next, cmd, num, ptr);
-        break;
-    case BIO_CTRL_WPENDING:    /* More to write in buffer */
-        OPENSSL_assert(ctx->buf_len >= ctx->buf_off);
-        ret = ctx->buf_len - ctx->buf_off;
-        if (ret == 0 && ctx->encode != B64_NONE
-            && EVP_ENCODE_CTX_num(ctx->base64) != 0)
-            ret = 1;
-        else if (ret <= 0)
-            ret = BIO_ctrl(next, cmd, num, ptr);
-        break;
-    case BIO_CTRL_PENDING:     /* More to read in buffer */
-        OPENSSL_assert(ctx->buf_len >= ctx->buf_off);
-        ret = ctx->buf_len - ctx->buf_off;
-        if (ret <= 0)
-            ret = BIO_ctrl(next, cmd, num, ptr);
-        break;
-    case BIO_CTRL_FLUSH:
-        /* do a final write */
- again:
-        while (ctx->buf_len != ctx->buf_off) {
-            i = b64_write(b, NULL, 0);
-            if (i < 0)
-                return i;
-        }
-        if (BIO_get_flags(b) & BIO_FLAGS_BASE64_NO_NL) {
-            if (ctx->tmp_len != 0) {
-                ctx->buf_len = EVP_EncodeBlock(ctx->buf,
-                                               ctx->tmp, ctx->tmp_len);
+            break;
+        case BIO_CTRL_EOF:     /* More to read */
+            if (ctx->cont <= 0)
+                ret = 1;
+            else
+                ret = BIO_ctrl(next, cmd, num, ptr);
+            break;
+        case BIO_CTRL_WPENDING: /* More to write in buffer */
+            OPENSSL_assert(ctx->buf_len >= ctx->buf_off);
+            ret = ctx->buf_len - ctx->buf_off;
+            if (ret == 0 && ctx->encode != B64_NONE
+                && EVP_ENCODE_CTX_num(ctx->base64) != 0)
+                ret = 1;
+            else if (ret <= 0)
+                ret = BIO_ctrl(next, cmd, num, ptr);
+            break;
+        case BIO_CTRL_PENDING: /* More to read in buffer */
+            OPENSSL_assert(ctx->buf_len >= ctx->buf_off);
+            ret = ctx->buf_len - ctx->buf_off;
+            if (ret <= 0)
+                ret = BIO_ctrl(next, cmd, num, ptr);
+            break;
+        case BIO_CTRL_FLUSH:
+            /* do a final write */
+again:
+            while (ctx->buf_len != ctx->buf_off) {
+                i = b64_write(b, NULL, 0);
+                if (i < 0)
+                    return i;
+            }
+            if (BIO_get_flags(b) & BIO_FLAGS_BASE64_NO_NL) {
+                if (ctx->tmp_len != 0) {
+                    ctx->buf_len = EVP_EncodeBlock(ctx->buf,
+                                                   ctx->tmp, ctx->tmp_len);
+                    ctx->buf_off = 0;
+                    ctx->tmp_len = 0;
+                    goto again;
+                }
+            } else if (ctx->encode != B64_NONE
+                       && EVP_ENCODE_CTX_num(ctx->base64) != 0) {
                 ctx->buf_off = 0;
-                ctx->tmp_len = 0;
+                EVP_EncodeFinal(ctx->base64, ctx->buf, &(ctx->buf_len));
+                /* push out the bytes */
                 goto again;
             }
-        } else if (ctx->encode != B64_NONE
-                   && EVP_ENCODE_CTX_num(ctx->base64) != 0) {
-            ctx->buf_off = 0;
-            EVP_EncodeFinal(ctx->base64, ctx->buf, &(ctx->buf_len));
-            /* push out the bytes */
-            goto again;
-        }
-        /* Finally flush the underlying BIO */
-        ret = BIO_ctrl(next, cmd, num, ptr);
-        BIO_copy_next_retry(b);
-        break;
+            /* Finally flush the underlying BIO */
+            ret = BIO_ctrl(next, cmd, num, ptr);
+            BIO_copy_next_retry(b);
+            break;
 
-    case BIO_C_DO_STATE_MACHINE:
-        BIO_clear_retry_flags(b);
-        ret = BIO_ctrl(next, cmd, num, ptr);
-        BIO_copy_next_retry(b);
-        break;
+        case BIO_C_DO_STATE_MACHINE:
+            BIO_clear_retry_flags(b);
+            ret = BIO_ctrl(next, cmd, num, ptr);
+            BIO_copy_next_retry(b);
+            break;
 
-    case BIO_CTRL_DUP:
-        break;
-    case BIO_CTRL_INFO:
-    case BIO_CTRL_GET:
-    case BIO_CTRL_SET:
-    default:
-        ret = BIO_ctrl(next, cmd, num, ptr);
-        break;
+        case BIO_CTRL_DUP:
+            break;
+        case BIO_CTRL_INFO:
+        case BIO_CTRL_GET:
+        case BIO_CTRL_SET:
+        default:
+            ret = BIO_ctrl(next, cmd, num, ptr);
+            break;
     }
     return ret;
 }

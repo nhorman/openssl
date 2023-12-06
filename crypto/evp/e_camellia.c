@@ -65,41 +65,41 @@ static int cmll_t4_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
         ret = 0;
         dat->block = (block128_f) cmll_t4_decrypt;
         switch (bits) {
-        case 128:
-            dat->stream.cbc = mode == EVP_CIPH_CBC_MODE ?
-                (cbc128_f) cmll128_t4_cbc_decrypt : NULL;
-            break;
-        case 192:
-        case 256:
-            dat->stream.cbc = mode == EVP_CIPH_CBC_MODE ?
-                (cbc128_f) cmll256_t4_cbc_decrypt : NULL;
-            break;
-        default:
-            ret = -1;
+            case 128:
+                dat->stream.cbc = mode == EVP_CIPH_CBC_MODE ?
+                                  (cbc128_f) cmll128_t4_cbc_decrypt : NULL;
+                break;
+            case 192:
+            case 256:
+                dat->stream.cbc = mode == EVP_CIPH_CBC_MODE ?
+                                  (cbc128_f) cmll256_t4_cbc_decrypt : NULL;
+                break;
+            default:
+                ret = -1;
         }
     } else {
         ret = 0;
         dat->block = (block128_f) cmll_t4_encrypt;
         switch (bits) {
-        case 128:
-            if (mode == EVP_CIPH_CBC_MODE)
-                dat->stream.cbc = (cbc128_f) cmll128_t4_cbc_encrypt;
-            else if (mode == EVP_CIPH_CTR_MODE)
-                dat->stream.ctr = (ctr128_f) cmll128_t4_ctr32_encrypt;
-            else
-                dat->stream.cbc = NULL;
-            break;
-        case 192:
-        case 256:
-            if (mode == EVP_CIPH_CBC_MODE)
-                dat->stream.cbc = (cbc128_f) cmll256_t4_cbc_encrypt;
-            else if (mode == EVP_CIPH_CTR_MODE)
-                dat->stream.ctr = (ctr128_f) cmll256_t4_ctr32_encrypt;
-            else
-                dat->stream.cbc = NULL;
-            break;
-        default:
-            ret = -1;
+            case 128:
+                if (mode == EVP_CIPH_CBC_MODE)
+                    dat->stream.cbc = (cbc128_f) cmll128_t4_cbc_encrypt;
+                else if (mode == EVP_CIPH_CTR_MODE)
+                    dat->stream.ctr = (ctr128_f) cmll128_t4_ctr32_encrypt;
+                else
+                    dat->stream.cbc = NULL;
+                break;
+            case 192:
+            case 256:
+                if (mode == EVP_CIPH_CBC_MODE)
+                    dat->stream.cbc = (cbc128_f) cmll256_t4_cbc_encrypt;
+                else if (mode == EVP_CIPH_CTR_MODE)
+                    dat->stream.ctr = (ctr128_f) cmll256_t4_ctr32_encrypt;
+                else
+                    dat->stream.cbc = NULL;
+                break;
+            default:
+                ret = -1;
         }
     }
 
@@ -140,50 +140,55 @@ static int cmll_t4_ctr_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
                               const unsigned char *in, size_t len);
 
 # define BLOCK_CIPHER_generic(nid,keylen,blocksize,ivlen,nmode,mode,MODE,flags) \
-static const EVP_CIPHER cmll_t4_##keylen##_##mode = { \
-        nid##_##keylen##_##nmode,blocksize,keylen/8,ivlen, \
-        flags|EVP_CIPH_##MODE##_MODE,   \
-        EVP_ORIG_GLOBAL,                \
-        cmll_t4_init_key,               \
-        cmll_t4_##mode##_cipher,        \
-        NULL,                           \
-        sizeof(EVP_CAMELLIA_KEY),       \
-        NULL,NULL,NULL,NULL }; \
-static const EVP_CIPHER camellia_##keylen##_##mode = { \
-        nid##_##keylen##_##nmode,blocksize,     \
-        keylen/8,ivlen, \
-        flags|EVP_CIPH_##MODE##_MODE,   \
-        EVP_ORIG_GLOBAL,                \
-        camellia_init_key,              \
-        camellia_##mode##_cipher,       \
-        NULL,                           \
-        sizeof(EVP_CAMELLIA_KEY),       \
-        NULL,NULL,NULL,NULL }; \
-const EVP_CIPHER *EVP_camellia_##keylen##_##mode(void) \
-{ return SPARC_CMLL_CAPABLE?&cmll_t4_##keylen##_##mode:&camellia_##keylen##_##mode; }
+        static const EVP_CIPHER cmll_t4_ ## keylen ## _ ## mode = { \
+            nid ## _ ## keylen ## _ ## nmode,blocksize,keylen/8,ivlen, \
+            flags|EVP_CIPH_ ## MODE ## _MODE,   \
+            EVP_ORIG_GLOBAL,                \
+            cmll_t4_init_key,               \
+            cmll_t4_ ## mode ## _cipher,        \
+            NULL,                           \
+            sizeof(EVP_CAMELLIA_KEY),       \
+            NULL,NULL,NULL,NULL }; \
+        static const EVP_CIPHER camellia_ ## keylen ## _ ## mode = { \
+            nid ## _ ## keylen ## _ ## nmode,blocksize,     \
+            keylen/8,ivlen, \
+            flags|EVP_CIPH_ ## MODE ## _MODE,   \
+            EVP_ORIG_GLOBAL,                \
+            camellia_init_key,              \
+            camellia_ ## mode ## _cipher,       \
+            NULL,                           \
+            sizeof(EVP_CAMELLIA_KEY),       \
+            NULL,NULL,NULL,NULL }; \
+        const EVP_CIPHER *EVP_camellia_ ## keylen ## _ ## mode(void) \
+        { return SPARC_CMLL_CAPABLE?&cmll_t4_ ## keylen ## _ ## mode:&camellia_ \
+                 ## keylen ## _ ## mode; }
 
 #else
 
 # define BLOCK_CIPHER_generic(nid,keylen,blocksize,ivlen,nmode,mode,MODE,flags) \
-static const EVP_CIPHER camellia_##keylen##_##mode = { \
-        nid##_##keylen##_##nmode,blocksize,keylen/8,ivlen, \
-        flags|EVP_CIPH_##MODE##_MODE,   \
-        EVP_ORIG_GLOBAL,                \
-        camellia_init_key,              \
-        camellia_##mode##_cipher,       \
-        NULL,                           \
-        sizeof(EVP_CAMELLIA_KEY),       \
-        NULL,NULL,NULL,NULL }; \
-const EVP_CIPHER *EVP_camellia_##keylen##_##mode(void) \
-{ return &camellia_##keylen##_##mode; }
+        static const EVP_CIPHER camellia_ ## keylen ## _ ## mode = { \
+            nid ## _ ## keylen ## _ ## nmode,blocksize,keylen/8,ivlen, \
+            flags|EVP_CIPH_ ## MODE ## _MODE,   \
+            EVP_ORIG_GLOBAL,                \
+            camellia_init_key,              \
+            camellia_ ## mode ## _cipher,       \
+            NULL,                           \
+            sizeof(EVP_CAMELLIA_KEY),       \
+            NULL,NULL,NULL,NULL }; \
+        const EVP_CIPHER *EVP_camellia_ ## keylen ## _ ## mode(void) \
+        { return &camellia_ ## keylen ## _ ## mode; }
 
 #endif
 
 #define BLOCK_CIPHER_generic_pack(nid,keylen,flags)             \
-        BLOCK_CIPHER_generic(nid,keylen,16,16,cbc,cbc,CBC,flags|EVP_CIPH_FLAG_DEFAULT_ASN1)     \
-        BLOCK_CIPHER_generic(nid,keylen,16,0,ecb,ecb,ECB,flags|EVP_CIPH_FLAG_DEFAULT_ASN1)      \
-        BLOCK_CIPHER_generic(nid,keylen,1,16,ofb128,ofb,OFB,flags|EVP_CIPH_FLAG_DEFAULT_ASN1)   \
-        BLOCK_CIPHER_generic(nid,keylen,1,16,cfb128,cfb,CFB,flags|EVP_CIPH_FLAG_DEFAULT_ASN1)   \
+        BLOCK_CIPHER_generic(nid,keylen,16,16,cbc,cbc,CBC, \
+                             flags|EVP_CIPH_FLAG_DEFAULT_ASN1)     \
+        BLOCK_CIPHER_generic(nid,keylen,16,0,ecb,ecb,ECB, \
+                             flags|EVP_CIPH_FLAG_DEFAULT_ASN1)      \
+        BLOCK_CIPHER_generic(nid,keylen,1,16,ofb128,ofb,OFB, \
+                             flags|EVP_CIPH_FLAG_DEFAULT_ASN1)   \
+        BLOCK_CIPHER_generic(nid,keylen,1,16,cfb128,cfb,CFB, \
+                             flags|EVP_CIPH_FLAG_DEFAULT_ASN1)   \
         BLOCK_CIPHER_generic(nid,keylen,1,16,cfb1,cfb1,CFB,flags)       \
         BLOCK_CIPHER_generic(nid,keylen,1,16,cfb8,cfb8,CFB,flags)       \
         BLOCK_CIPHER_generic(nid, keylen, 1, 16, ctr, ctr, CTR, flags)
@@ -207,11 +212,11 @@ static int camellia_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
         && !enc) {
         dat->block = (block128_f) Camellia_decrypt;
         dat->stream.cbc = mode == EVP_CIPH_CBC_MODE ?
-            (cbc128_f) Camellia_cbc_encrypt : NULL;
+                          (cbc128_f) Camellia_cbc_encrypt : NULL;
     } else {
         dat->block = (block128_f) Camellia_encrypt;
         dat->stream.cbc = mode == EVP_CIPH_CBC_MODE ?
-            (cbc128_f) Camellia_cbc_encrypt : NULL;
+                          (cbc128_f) Camellia_cbc_encrypt : NULL;
     }
 
     return 1;
@@ -345,5 +350,5 @@ static int camellia_ctr_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
 }
 
 BLOCK_CIPHER_generic_pack(NID_camellia, 128, 0)
-    BLOCK_CIPHER_generic_pack(NID_camellia, 192, 0)
-    BLOCK_CIPHER_generic_pack(NID_camellia, 256, 0)
+BLOCK_CIPHER_generic_pack(NID_camellia, 192, 0)
+BLOCK_CIPHER_generic_pack(NID_camellia, 256, 0)

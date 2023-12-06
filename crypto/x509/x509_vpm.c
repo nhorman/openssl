@@ -140,12 +140,13 @@ void X509_VERIFY_PARAM_free(X509_VERIFY_PARAM *param)
 /* Macro to test if a field should be copied from src to dest */
 
 #define test_x509_verify_param_copy(field, def) \
-    (to_overwrite || (src->field != def && (to_default || dest->field == def)))
+        (to_overwrite || \
+         (src->field != def && (to_default || dest->field == def)))
 
 /* Macro to test and copy a field if necessary */
 
 #define x509_verify_param_copy(field, def) \
-    if (test_x509_verify_param_copy(field, def)) \
+        if (test_x509_verify_param_copy(field, def)) \
         dest->field = src->field;
 
 int X509_VERIFY_PARAM_inherit(X509_VERIFY_PARAM *dest,
@@ -505,76 +506,76 @@ const char *X509_VERIFY_PARAM_get0_name(const X509_VERIFY_PARAM *param)
 
 static const X509_VERIFY_PARAM default_table[] = {
     {
-     "code_sign",               /* Code sign parameters */
-     0,                         /* check time to use */
-     0,                         /* inheritance flags */
-     0,                         /* flags */
-     X509_PURPOSE_CODE_SIGN,    /* purpose */
-     X509_TRUST_OBJECT_SIGN,    /* trust */
-     -1,                        /* depth */
-     -1,                        /* auth_level */
-     NULL,                      /* policies */
-     vpm_empty_id
+        "code_sign",            /* Code sign parameters */
+        0,                      /* check time to use */
+        0,                      /* inheritance flags */
+        0,                      /* flags */
+        X509_PURPOSE_CODE_SIGN, /* purpose */
+        X509_TRUST_OBJECT_SIGN, /* trust */
+        -1,                     /* depth */
+        -1,                     /* auth_level */
+        NULL,                   /* policies */
+        vpm_empty_id
     },
     {
-     "default",                 /* X509 default parameters */
-     0,                         /* check time to use */
-     0,                         /* inheritance flags */
-     X509_V_FLAG_TRUSTED_FIRST, /* flags */
-     0,                         /* purpose */
-     0,                         /* trust */
-     100,                       /* depth */
-     -1,                        /* auth_level */
-     NULL,                      /* policies */
-     vpm_empty_id
+        "default",              /* X509 default parameters */
+        0,                      /* check time to use */
+        0,                      /* inheritance flags */
+        X509_V_FLAG_TRUSTED_FIRST, /* flags */
+        0,                      /* purpose */
+        0,                      /* trust */
+        100,                    /* depth */
+        -1,                     /* auth_level */
+        NULL,                   /* policies */
+        vpm_empty_id
     },
     {
-     "pkcs7",                   /* S/MIME sign parameters */
-     0,                         /* check time to use */
-     0,                         /* inheritance flags */
-     0,                         /* flags */
-     X509_PURPOSE_SMIME_SIGN,   /* purpose */
-     X509_TRUST_EMAIL,          /* trust */
-     -1,                        /* depth */
-     -1,                        /* auth_level */
-     NULL,                      /* policies */
-     vpm_empty_id
+        "pkcs7",                /* S/MIME sign parameters */
+        0,                      /* check time to use */
+        0,                      /* inheritance flags */
+        0,                      /* flags */
+        X509_PURPOSE_SMIME_SIGN, /* purpose */
+        X509_TRUST_EMAIL,       /* trust */
+        -1,                     /* depth */
+        -1,                     /* auth_level */
+        NULL,                   /* policies */
+        vpm_empty_id
     },
     {
-     "smime_sign",              /* S/MIME sign parameters */
-     0,                         /* check time to use */
-     0,                         /* inheritance flags */
-     0,                         /* flags */
-     X509_PURPOSE_SMIME_SIGN,   /* purpose */
-     X509_TRUST_EMAIL,          /* trust */
-     -1,                        /* depth */
-     -1,                        /* auth_level */
-     NULL,                      /* policies */
-     vpm_empty_id
+        "smime_sign",           /* S/MIME sign parameters */
+        0,                      /* check time to use */
+        0,                      /* inheritance flags */
+        0,                      /* flags */
+        X509_PURPOSE_SMIME_SIGN, /* purpose */
+        X509_TRUST_EMAIL,       /* trust */
+        -1,                     /* depth */
+        -1,                     /* auth_level */
+        NULL,                   /* policies */
+        vpm_empty_id
     },
     {
-     "ssl_client",              /* SSL/TLS client parameters */
-     0,                         /* check time to use */
-     0,                         /* inheritance flags */
-     0,                         /* flags */
-     X509_PURPOSE_SSL_CLIENT,   /* purpose */
-     X509_TRUST_SSL_CLIENT,     /* trust */
-     -1,                        /* depth */
-     -1,                        /* auth_level */
-     NULL,                      /* policies */
-     vpm_empty_id
+        "ssl_client",           /* SSL/TLS client parameters */
+        0,                      /* check time to use */
+        0,                      /* inheritance flags */
+        0,                      /* flags */
+        X509_PURPOSE_SSL_CLIENT, /* purpose */
+        X509_TRUST_SSL_CLIENT,  /* trust */
+        -1,                     /* depth */
+        -1,                     /* auth_level */
+        NULL,                   /* policies */
+        vpm_empty_id
     },
     {
-     "ssl_server",              /* SSL/TLS server parameters */
-     0,                         /* check time to use */
-     0,                         /* inheritance flags */
-     0,                         /* flags */
-     X509_PURPOSE_SSL_SERVER,   /* purpose */
-     X509_TRUST_SSL_SERVER,     /* trust */
-     -1,                        /* depth */
-     -1,                        /* auth_level */
-     NULL,                      /* policies */
-     vpm_empty_id
+        "ssl_server",           /* SSL/TLS server parameters */
+        0,                      /* check time to use */
+        0,                      /* inheritance flags */
+        0,                      /* flags */
+        X509_PURPOSE_SSL_SERVER, /* purpose */
+        X509_TRUST_SSL_SERVER,  /* trust */
+        -1,                     /* depth */
+        -1,                     /* auth_level */
+        NULL,                   /* policies */
+        vpm_empty_id
     }
 };
 

@@ -88,7 +88,7 @@ static int dl_load(DSO *dso)
      */
     dso->loaded_filename = filename;
     return 1;
- err:
+err:
     /* Cleanup! */
     OPENSSL_free(filename);
     if (ptr != NULL)
@@ -176,13 +176,13 @@ static char *dl_merger(DSO *dso, const char *filespec1, const char *filespec2)
         if (merged == NULL)
             return NULL;
     } else
-        /*
-         * This part isn't as trivial as it looks.  It assumes that the
-         * second file specification really is a directory, and makes no
-         * checks whatsoever.  Therefore, the result becomes the
-         * concatenation of filespec2 followed by a slash followed by
-         * filespec1.
-         */
+    /*
+     * This part isn't as trivial as it looks.  It assumes that the
+     * second file specification really is a directory, and makes no
+     * checks whatsoever.  Therefore, the result becomes the
+     * concatenation of filespec2 followed by a slash followed by
+     * filespec1.
+     */
     {
         int spec2len, len;
 

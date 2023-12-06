@@ -58,7 +58,7 @@ ESS_SIGNING_CERT *OSSL_ESS_signing_cert_new_init(const X509 *signcert,
     }
 
     return sc;
- err:
+err:
     ESS_SIGNING_CERT_free(sc);
     ESS_CERT_ID_free(cid);
     return NULL;
@@ -109,13 +109,13 @@ static ESS_CERT_ID *ESS_CERT_ID_new_init(const X509 *cert,
     name = NULL;            /* Ownership is lost. */
     ASN1_INTEGER_free(cid->issuer_serial->serial);
     if ((cid->issuer_serial->serial
-         = ASN1_INTEGER_dup(X509_get0_serialNumber(cert))) == NULL) {
+             = ASN1_INTEGER_dup(X509_get0_serialNumber(cert))) == NULL) {
         ERR_raise(ERR_LIB_ESS, ERR_R_ASN1_LIB);
         goto err;
     }
 
     return cid;
- err:
+err:
     GENERAL_NAME_free(name);
     ESS_CERT_ID_free(cid);
     return NULL;
@@ -161,7 +161,7 @@ ESS_SIGNING_CERT_V2 *OSSL_ESS_signing_cert_v2_new_init(const EVP_MD *hash_alg,
     }
 
     return sc;
- err:
+err:
     ESS_SIGNING_CERT_V2_free(sc);
     ESS_CERT_ID_V2_free(cid);
     return NULL;
@@ -240,7 +240,7 @@ static ESS_CERT_ID_V2 *ESS_CERT_ID_V2_new_init(const EVP_MD *hash_alg,
     }
 
     return cid;
- err:
+err:
     X509_ALGOR_free(alg);
     GENERAL_NAME_free(name);
     ESS_CERT_ID_V2_free(cid);
@@ -309,7 +309,7 @@ static int find(const ESS_CERT_ID *cid, const ESS_CERT_ID_V2 *cid_v2,
 
         cid_hash_len = cid != NULL ? cid->hash->length : cid_v2->hash->length;
         if (!X509_digest(cert, md, cert_digest, &len)
-                || cid_hash_len != len) {
+            || cid_hash_len != len) {
             ERR_raise(ERR_LIB_ESS, ESS_R_ESS_CERT_DIGEST_ERROR);
             goto end;
         }

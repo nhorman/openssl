@@ -24,7 +24,7 @@ static int dummy_decoder_decode(void *ctx, OSSL_CORE_BIO *cin, int selection,
 }
 
 static const OSSL_DISPATCH dummy_decoder_functions[] = {
-    { OSSL_FUNC_DECODER_DECODE, (void (*)(void))dummy_decoder_decode },
+    { OSSL_FUNC_DECODER_DECODE, (void (*)(void)) dummy_decoder_decode },
     OSSL_DISPATCH_END
 };
 
@@ -42,7 +42,7 @@ static int dummy_encoder_encode(void *ctx, OSSL_CORE_BIO *out,
 }
 
 static const OSSL_DISPATCH dummy_encoder_functions[] = {
-    { OSSL_FUNC_DECODER_DECODE, (void (*)(void))dummy_encoder_encode },
+    { OSSL_FUNC_DECODER_DECODE, (void (*)(void)) dummy_encoder_encode },
     OSSL_DISPATCH_END
 };
 
@@ -74,10 +74,10 @@ static int dummy_store_close(void *loaderctx)
 }
 
 static const OSSL_DISPATCH dummy_store_functions[] = {
-    { OSSL_FUNC_STORE_OPEN, (void (*)(void))dummy_store_open },
-    { OSSL_FUNC_STORE_LOAD, (void (*)(void))dummy_store_load },
-    { OSSL_FUNC_STORE_EOF, (void (*)(void))dumm_store_eof },
-    { OSSL_FUNC_STORE_CLOSE, (void (*)(void))dummy_store_close },
+    { OSSL_FUNC_STORE_OPEN, (void (*)(void)) dummy_store_open },
+    { OSSL_FUNC_STORE_LOAD, (void (*)(void)) dummy_store_load },
+    { OSSL_FUNC_STORE_EOF, (void (*)(void)) dumm_store_eof },
+    { OSSL_FUNC_STORE_CLOSE, (void (*)(void)) dummy_store_close },
     OSSL_DISPATCH_END
 };
 
@@ -121,7 +121,8 @@ static int dummy_rand_generate(void *vctx, unsigned char *out, size_t outlen,
     return 1;
 }
 
-static const OSSL_PARAM *dummy_rand_gettable_ctx_params(void *vctx, void *provctx)
+static const OSSL_PARAM *dummy_rand_gettable_ctx_params(void *vctx,
+                                                        void *provctx)
 {
     static const OSSL_PARAM known_gettable_ctx_params[] = {
         OSSL_PARAM_size_t(OSSL_RAND_PARAM_MAX_REQUEST, NULL),
@@ -156,17 +157,19 @@ static void dummy_rand_unlock(void *vtest)
 }
 
 static const OSSL_DISPATCH dummy_rand_functions[] = {
-    { OSSL_FUNC_RAND_NEWCTX, (void (*)(void))dummy_rand_newctx },
-    { OSSL_FUNC_RAND_FREECTX, (void (*)(void))dummy_rand_freectx },
-    { OSSL_FUNC_RAND_INSTANTIATE, (void (*)(void))dummy_rand_instantiate },
-    { OSSL_FUNC_RAND_UNINSTANTIATE, (void (*)(void))dummy_rand_uninstantiate },
-    { OSSL_FUNC_RAND_GENERATE, (void (*)(void))dummy_rand_generate },
+    { OSSL_FUNC_RAND_NEWCTX, (void (*)(void)) dummy_rand_newctx },
+    { OSSL_FUNC_RAND_FREECTX, (void (*)(void)) dummy_rand_freectx },
+    { OSSL_FUNC_RAND_INSTANTIATE, (void (*)(void)) dummy_rand_instantiate },
+    { OSSL_FUNC_RAND_UNINSTANTIATE, (void (*)(void)) dummy_rand_uninstantiate },
+    { OSSL_FUNC_RAND_GENERATE, (void (*)(void)) dummy_rand_generate },
     { OSSL_FUNC_RAND_GETTABLE_CTX_PARAMS,
-      (void(*)(void))dummy_rand_gettable_ctx_params },
-    { OSSL_FUNC_RAND_GET_CTX_PARAMS, (void(*)(void))dummy_rand_get_ctx_params },
-    { OSSL_FUNC_RAND_ENABLE_LOCKING, (void(*)(void))dummy_rand_enable_locking },
-    { OSSL_FUNC_RAND_LOCK, (void(*)(void))dummy_rand_lock },
-    { OSSL_FUNC_RAND_UNLOCK, (void(*)(void))dummy_rand_unlock },
+      (void (*)(void)) dummy_rand_gettable_ctx_params },
+    { OSSL_FUNC_RAND_GET_CTX_PARAMS,
+      (void (*)(void)) dummy_rand_get_ctx_params },
+    { OSSL_FUNC_RAND_ENABLE_LOCKING,
+      (void (*)(void)) dummy_rand_enable_locking },
+    { OSSL_FUNC_RAND_LOCK, (void (*)(void)) dummy_rand_lock },
+    { OSSL_FUNC_RAND_UNLOCK, (void (*)(void)) dummy_rand_unlock },
     OSSL_DISPATCH_END
 };
 
@@ -180,21 +183,21 @@ static const OSSL_ALGORITHM *dummy_query(void *provctx, int operation_id,
 {
     *no_cache = 0;
     switch (operation_id) {
-    case OSSL_OP_DECODER:
-        return dummy_decoders;
-    case OSSL_OP_ENCODER:
-        return dummy_encoders;
-    case OSSL_OP_STORE:
-        return dummy_store;
-    case OSSL_OP_RAND:
-        return dummy_rand;
+        case OSSL_OP_DECODER:
+            return dummy_decoders;
+        case OSSL_OP_ENCODER:
+            return dummy_encoders;
+        case OSSL_OP_STORE:
+            return dummy_store;
+        case OSSL_OP_RAND:
+            return dummy_rand;
     }
     return NULL;
 }
 
 static const OSSL_DISPATCH dummy_dispatch_table[] = {
-    { OSSL_FUNC_PROVIDER_QUERY_OPERATION, (void (*)(void))dummy_query },
-    { OSSL_FUNC_PROVIDER_TEARDOWN, (void (*)(void))OSSL_LIB_CTX_free },
+    { OSSL_FUNC_PROVIDER_QUERY_OPERATION, (void (*)(void)) dummy_query },
+    { OSSL_FUNC_PROVIDER_TEARDOWN, (void (*)(void)) OSSL_LIB_CTX_free },
     OSSL_DISPATCH_END
 };
 
@@ -244,42 +247,42 @@ static int fetch_test(int tst)
 
     if (!TEST_true(OSSL_PROVIDER_add_builtin(libctx, "dummy-prov",
                                              dummy_provider_init))
-            || !TEST_ptr(nullprov = OSSL_PROVIDER_load(libctx, "default"))
-            || !TEST_ptr(dummyprov = OSSL_PROVIDER_load(libctx, "dummy-prov")))
+        || !TEST_ptr(nullprov = OSSL_PROVIDER_load(libctx, "default"))
+        || !TEST_ptr(dummyprov = OSSL_PROVIDER_load(libctx, "dummy-prov")))
         goto err;
 
     switch (tst % 4) {
-    case 0:
-        decoder = OSSL_DECODER_fetch(libctx, "DUMMY",
-                                     query ? "provider=dummy" : NULL);
-        if (!TEST_ptr(decoder))
-            goto err;
-        break;
-    case 1:
-        encoder = OSSL_ENCODER_fetch(libctx, "DUMMY",
-                                     query ? "provider=dummy" : NULL);
-        if (!TEST_ptr(encoder))
-            goto err;
-        break;
-    case 2:
-        loader = OSSL_STORE_LOADER_fetch(libctx, "DUMMY",
+        case 0:
+            decoder = OSSL_DECODER_fetch(libctx, "DUMMY",
                                          query ? "provider=dummy" : NULL);
-        if (!TEST_ptr(loader))
-            goto err;
-        break;
-    case 3:
-        if (!TEST_true(RAND_set_DRBG_type(libctx, "DUMMY",
-                                          query ? "provider=dummy" : NULL,
-                                          NULL, NULL))
+            if (!TEST_ptr(decoder))
+                goto err;
+            break;
+        case 1:
+            encoder = OSSL_ENCODER_fetch(libctx, "DUMMY",
+                                         query ? "provider=dummy" : NULL);
+            if (!TEST_ptr(encoder))
+                goto err;
+            break;
+        case 2:
+            loader = OSSL_STORE_LOADER_fetch(libctx, "DUMMY",
+                                             query ? "provider=dummy" : NULL);
+            if (!TEST_ptr(loader))
+                goto err;
+            break;
+        case 3:
+            if (!TEST_true(RAND_set_DRBG_type(libctx, "DUMMY",
+                                              query ? "provider=dummy" : NULL,
+                                              NULL, NULL))
                 || !TEST_int_ge(RAND_bytes_ex(libctx, buf, sizeof(buf), 0), 1))
+                goto err;
+            break;
+        default:
             goto err;
-        break;
-    default:
-        goto err;
     }
 
     testresult = 1;
- err:
+err:
     OSSL_DECODER_free(decoder);
     OSSL_ENCODER_free(encoder);
     OSSL_STORE_LOADER_free(loader);

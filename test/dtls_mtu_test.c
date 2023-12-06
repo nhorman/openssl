@@ -67,10 +67,10 @@ static int mtu_test(SSL_CTX *ctx, const char *cs, int no_etm)
         SSL_set_options(srvr_ssl, SSL_OP_NO_ENCRYPT_THEN_MAC);
 
     if (!TEST_true(SSL_set_cipher_list(srvr_ssl, cs))
-            || !TEST_true(SSL_set_cipher_list(clnt_ssl, cs))
-            || !TEST_ptr(sc_bio = SSL_get_rbio(srvr_ssl))
-            || !TEST_true(create_ssl_connection(clnt_ssl, srvr_ssl,
-                                                SSL_ERROR_NONE)))
+        || !TEST_true(SSL_set_cipher_list(clnt_ssl, cs))
+        || !TEST_ptr(sc_bio = SSL_get_rbio(srvr_ssl))
+        || !TEST_true(create_ssl_connection(clnt_ssl, srvr_ssl,
+                                            SSL_ERROR_NONE)))
         goto end;
 
     if (debug)
@@ -138,7 +138,7 @@ static int mtu_test(SSL_CTX *ctx, const char *cs, int no_etm)
     rv = 1;
     if (SSL_READ_ETM(clnt_sc))
         rv = 2;
- end:
+end:
     SSL_free(clnt_ssl);
     SSL_free(srvr_ssl);
     return rv;
@@ -186,7 +186,7 @@ static int run_mtu_tests(void)
         TEST_info("%s without EtM OK", cipher_name);
     }
 
- end:
+end:
     SSL_CTX_free(ctx);
     return ret;
 }
@@ -225,7 +225,7 @@ static int test_server_mtu_larger_than_max_fragment_length(void)
 
     rv = 1;
 
- end:
+end:
     SSL_free(clnt_ssl);
     SSL_free(srvr_ssl);
     SSL_CTX_free(ctx);

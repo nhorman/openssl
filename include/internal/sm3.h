@@ -26,10 +26,10 @@
 # define SM3_LBLOCK      (SM3_CBLOCK/4)
 
 typedef struct SM3state_st {
-   SM3_WORD A, B, C, D, E, F, G, H;
-   SM3_WORD Nl, Nh;
-   SM3_WORD data[SM3_LBLOCK];
-   unsigned int num;
+    SM3_WORD A, B, C, D, E, F, G, H;
+    SM3_WORD Nl, Nh;
+    SM3_WORD data[SM3_LBLOCK];
+    unsigned int num;
 } SM3_CTX;
 
 int ossl_sm3_init(SM3_CTX *c);

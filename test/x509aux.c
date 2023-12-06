@@ -143,7 +143,7 @@ static int test_certs(int num)
         /*
          * If any of these were null, PEM_read() would have failed.
          */
-    next:
+next:
         X509_free(cert);
         X509_free(reuse);
         OPENSSL_free(buf);

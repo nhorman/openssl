@@ -43,7 +43,7 @@
 # define FFC_PARAM_FLAG_VALIDATE_PQ    0x01
 # define FFC_PARAM_FLAG_VALIDATE_G     0x02
 # define FFC_PARAM_FLAG_VALIDATE_PQG                                           \
-    (FFC_PARAM_FLAG_VALIDATE_PQ | FFC_PARAM_FLAG_VALIDATE_G)
+        (FFC_PARAM_FLAG_VALIDATE_PQ | FFC_PARAM_FLAG_VALIDATE_G)
 #define FFC_PARAM_FLAG_VALIDATE_LEGACY 0x04
 
 /*
@@ -137,7 +137,8 @@ void ossl_ffc_params_set_h(FFC_PARAMS *params, int index);
 void ossl_ffc_params_set_flags(FFC_PARAMS *params, unsigned int flags);
 void ossl_ffc_params_enable_flags(FFC_PARAMS *params, unsigned int flags,
                                   int enable);
-void ossl_ffc_set_digest(FFC_PARAMS *params, const char *alg, const char *props);
+void ossl_ffc_set_digest(FFC_PARAMS *params, const char *alg,
+                         const char *props);
 
 int ossl_ffc_params_set_validate_params(FFC_PARAMS *params,
                                         const unsigned char *seed,
@@ -196,7 +197,7 @@ int ossl_ffc_validate_public_key(const FFC_PARAMS *params,
 int ossl_ffc_validate_public_key_partial(const FFC_PARAMS *params,
                                          const BIGNUM *pub_key, int *ret);
 int ossl_ffc_validate_private_key(const BIGNUM *upper, const BIGNUM *priv_key,
-                                 int *ret);
+                                  int *ret);
 
 int ossl_ffc_params_todata(const FFC_PARAMS *ffc, OSSL_PARAM_BLD *tmpl,
                            OSSL_PARAM params[]);

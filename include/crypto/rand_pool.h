@@ -98,7 +98,8 @@ size_t ossl_rand_pool_length(RAND_POOL *pool);
 size_t ossl_rand_pool_entropy_available(RAND_POOL *pool);
 size_t ossl_rand_pool_entropy_needed(RAND_POOL *pool);
 /* |entropy_factor| expresses how many bits of data contain 1 bit of entropy */
-size_t ossl_rand_pool_bytes_needed(RAND_POOL *pool, unsigned int entropy_factor);
+size_t ossl_rand_pool_bytes_needed(RAND_POOL *pool,
+                                   unsigned int entropy_factor);
 size_t ossl_rand_pool_bytes_remaining(RAND_POOL *pool);
 
 int ossl_rand_pool_add(RAND_POOL *pool,

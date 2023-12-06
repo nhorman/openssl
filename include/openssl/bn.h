@@ -177,13 +177,13 @@ void *BN_GENCB_get_arg(BN_GENCB *cb);
  */
 
 #  define BN_prime_checks_for_size(b) ((b) >= 3747 ?  3 : \
-                                      (b) >=  1345 ?  4 : \
-                                      (b) >=  476 ?  5 : \
-                                      (b) >=  400 ?  6 : \
-                                      (b) >=  347 ?  7 : \
-                                      (b) >=  308 ?  8 : \
-                                      (b) >=  55  ? 27 : \
-                                      /* b >= 6 */ 34)
+                                       (b) >=  1345 ?  4 : \
+                                       (b) >=  476 ?  5 : \
+                                       (b) >=  400 ?  6 : \
+                                       (b) >=  347 ?  7 : \
+                                       (b) >=  308 ?  8 : \
+                                       (b) >=  55  ? 27 : \
+                                       /* b >= 6 */ 34)
 # endif
 
 # define BN_num_bytes(a) ((BN_num_bits(a)+7)/8)
@@ -322,9 +322,11 @@ int BN_mod_exp2_mont(BIGNUM *r, const BIGNUM *a1, const BIGNUM *p1,
                      BN_CTX *ctx, BN_MONT_CTX *m_ctx);
 int BN_mod_exp_simple(BIGNUM *r, const BIGNUM *a, const BIGNUM *p,
                       const BIGNUM *m, BN_CTX *ctx);
-int BN_mod_exp_mont_consttime_x2(BIGNUM *rr1, const BIGNUM *a1, const BIGNUM *p1,
+int BN_mod_exp_mont_consttime_x2(BIGNUM *rr1, const BIGNUM *a1,
+                                 const BIGNUM *p1,
                                  const BIGNUM *m1, BN_MONT_CTX *in_mont1,
-                                 BIGNUM *rr2, const BIGNUM *a2, const BIGNUM *p2,
+                                 BIGNUM *rr2, const BIGNUM *a2,
+                                 const BIGNUM *p2,
                                  const BIGNUM *m2, BN_MONT_CTX *in_mont2,
                                  BN_CTX *ctx);
 
@@ -348,8 +350,8 @@ int BN_dec2bn(BIGNUM **a, const char *str);
 int BN_asc2bn(BIGNUM **a, const char *str);
 int BN_gcd(BIGNUM *r, const BIGNUM *a, const BIGNUM *b, BN_CTX *ctx);
 int BN_kronecker(const BIGNUM *a, const BIGNUM *b, BN_CTX *ctx); /* returns
-                                                                  * -2 for
-                                                                  * error */
+                                                                 * -2 for
+                                                                 * error */
 int BN_are_coprime(BIGNUM *a, const BIGNUM *b, BN_CTX *ctx);
 BIGNUM *BN_mod_inverse(BIGNUM *ret,
                        const BIGNUM *a, const BIGNUM *n, BN_CTX *ctx);

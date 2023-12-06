@@ -120,7 +120,7 @@ static ASYNC_JOB *async_get_pool_job(void) {
 
         job = async_job_new();
         if (job != NULL) {
-            if (! async_fibre_makecontext(&job->fibrectx)) {
+            if (!async_fibre_makecontext(&job->fibrectx)) {
                 async_job_free(job);
                 return NULL;
             }
@@ -223,7 +223,7 @@ int ASYNC_start_job(ASYNC_JOB **job, ASYNC_WAIT_CTX *wctx, int *ret,
                 }
                 /* Resume previous job */
                 if (!async_fibre_swapcontext(&ctx->dispatcher,
-                        &ctx->currjob->fibrectx, 1)) {
+                                             &ctx->currjob->fibrectx, 1)) {
                     ctx->currjob->libctx = OSSL_LIB_CTX_set0_default(libctx);
                     ERR_raise(ERR_LIB_ASYNC, ASYNC_R_FAILED_TO_SWAP_CONTEXT);
                     goto err;
@@ -265,7 +265,7 @@ int ASYNC_start_job(ASYNC_JOB **job, ASYNC_WAIT_CTX *wctx, int *ret,
         ctx->currjob->waitctx = wctx;
         libctx = ossl_lib_ctx_get_concrete(NULL);
         if (!async_fibre_swapcontext(&ctx->dispatcher,
-                &ctx->currjob->fibrectx, 1)) {
+                                     &ctx->currjob->fibrectx, 1)) {
             ERR_raise(ERR_LIB_ASYNC, ASYNC_R_FAILED_TO_SWAP_CONTEXT);
             goto err;
         }
@@ -289,8 +289,8 @@ int ASYNC_pause_job(void)
     async_ctx *ctx = async_get_ctx();
 
     if (ctx == NULL
-            || ctx->currjob == NULL
-            || ctx->blocked) {
+        || ctx->currjob == NULL
+        || ctx->blocked) {
         /*
          * Could be we've deliberately not been started within a job so this is
          * counted as success.

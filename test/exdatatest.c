@@ -27,7 +27,7 @@ static int gbl_result;
  */
 
 static void exnew(void *parent, void *ptr, CRYPTO_EX_DATA *ad,
-          int idx, long argl, void *argp)
+                  int idx, long argl, void *argp)
 {
     if (!TEST_int_eq(idx, saved_idx)
         || !TEST_long_eq(argl, saved_argl)
@@ -37,7 +37,7 @@ static void exnew(void *parent, void *ptr, CRYPTO_EX_DATA *ad,
 }
 
 static int exdup(CRYPTO_EX_DATA *to, const CRYPTO_EX_DATA *from,
-          void **from_d, int idx, long argl, void *argp)
+                 void **from_d, int idx, long argl, void *argp)
 {
     if (!TEST_int_eq(idx, saved_idx)
         || !TEST_long_eq(argl, saved_argl)
@@ -48,7 +48,7 @@ static int exdup(CRYPTO_EX_DATA *to, const CRYPTO_EX_DATA *from,
 }
 
 static void exfree(void *parent, void *ptr, CRYPTO_EX_DATA *ad,
-            int idx, long argl, void *argp)
+                   int idx, long argl, void *argp)
 {
     if (!TEST_int_eq(idx, saved_idx)
         || !TEST_long_eq(argl, saved_argl)
@@ -69,7 +69,7 @@ typedef struct myobj_ex_data_st {
 } MYOBJ_EX_DATA;
 
 static void exnew2(void *parent, void *ptr, CRYPTO_EX_DATA *ad,
-          int idx, long argl, void *argp)
+                   int idx, long argl, void *argp)
 {
     MYOBJ_EX_DATA *ex_data = OPENSSL_zalloc(sizeof(*ex_data));
 
@@ -87,7 +87,7 @@ static void exnew2(void *parent, void *ptr, CRYPTO_EX_DATA *ad,
 }
 
 static int exdup2(CRYPTO_EX_DATA *to, const CRYPTO_EX_DATA *from,
-          void **from_d, int idx, long argl, void *argp)
+                  void **from_d, int idx, long argl, void *argp)
 {
     MYOBJ_EX_DATA **update_ex_data = (MYOBJ_EX_DATA**)from_d;
     MYOBJ_EX_DATA *ex_data = NULL;
@@ -112,7 +112,7 @@ static int exdup2(CRYPTO_EX_DATA *to, const CRYPTO_EX_DATA *from,
 }
 
 static void exfree2(void *parent, void *ptr, CRYPTO_EX_DATA *ad,
-            int idx, long argl, void *argp)
+                    int idx, long argl, void *argp)
 {
     MYOBJ_EX_DATA *ex_data = CRYPTO_get_ex_data(ad, idx);
 
@@ -213,7 +213,7 @@ static MYOBJ *MYOBJ_dup(MYOBJ *in)
 
     if (obj != NULL)
         obj->st |= CRYPTO_dup_ex_data(CRYPTO_EX_INDEX_APP, &obj->ex_data,
-                                     &in->ex_data);
+                                      &in->ex_data);
     return obj;
 }
 
@@ -302,7 +302,7 @@ static int test_exdata(void)
 
     if (gbl_result)
         res = 1;
- err:
+err:
     MYOBJ_free(t1);
     MYOBJ_free(t2);
     MYOBJ_free(t3);

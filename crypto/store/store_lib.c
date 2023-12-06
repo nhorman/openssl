@@ -36,25 +36,25 @@ static int loader_set_params(OSSL_STORE_LOADER *loader,
                              OSSL_STORE_LOADER_CTX *loader_ctx,
                              const OSSL_PARAM params[], const char *propq)
 {
-   if (params != NULL) {
-       if (!loader->p_set_ctx_params(loader_ctx, params))
-           return 0;
-   }
+    if (params != NULL) {
+        if (!loader->p_set_ctx_params(loader_ctx, params))
+            return 0;
+    }
 
-   if (propq != NULL) {
-       OSSL_PARAM propp[2];
+    if (propq != NULL) {
+        OSSL_PARAM propp[2];
 
-       if (OSSL_PARAM_locate_const(params,
-                                   OSSL_STORE_PARAM_PROPERTIES) != NULL)
-           /* use the propq from params */
-           return 1;
+        if (OSSL_PARAM_locate_const(params,
+                                    OSSL_STORE_PARAM_PROPERTIES) != NULL)
+            /* use the propq from params */
+            return 1;
 
-       propp[0] = OSSL_PARAM_construct_utf8_string(OSSL_STORE_PARAM_PROPERTIES,
-                                                   (char *)propq, 0);
-       propp[1] = OSSL_PARAM_construct_end();
+        propp[0] = OSSL_PARAM_construct_utf8_string(OSSL_STORE_PARAM_PROPERTIES,
+                                                    (char *)propq, 0);
+        propp[1] = OSSL_PARAM_construct_end();
 
-       if (!loader->p_set_ctx_params(loader_ctx, propp))
-           return 0;
+        if (!loader->p_set_ctx_params(loader_ctx, propp))
+            return 0;
     }
     return 1;
 }
@@ -137,7 +137,7 @@ OSSL_STORE_open_ex(const char *uri, OSSL_LIB_CTX *libctx, const char *propq,
 #endif
         if (loader == NULL
             && (fetched_loader =
-                OSSL_STORE_LOADER_fetch(libctx, scheme, propq)) != NULL) {
+                    OSSL_STORE_LOADER_fetch(libctx, scheme, propq)) != NULL) {
             const OSSL_PROVIDER *provider =
                 OSSL_STORE_LOADER_get0_provider(fetched_loader);
             void *provctx = OSSL_PROVIDER_get0_provider_ctx(provider);
@@ -207,7 +207,7 @@ OSSL_STORE_open_ex(const char *uri, OSSL_LIB_CTX *libctx, const char *propq,
 
     return ctx;
 
- err:
+err:
     ERR_clear_last_mark();
     if (loader_ctx != NULL) {
         /*
@@ -264,15 +264,15 @@ int OSSL_STORE_vctrl(OSSL_STORE_CTX *ctx, int cmd, va_list args)
             OSSL_PARAM params[2] = { OSSL_PARAM_END, OSSL_PARAM_END };
 
             switch (cmd) {
-            case OSSL_STORE_C_USE_SECMEM:
+                case OSSL_STORE_C_USE_SECMEM:
                 {
                     int on = *(va_arg(args, int *));
 
                     params[0] = OSSL_PARAM_construct_int("use_secmem", &on);
                 }
                 break;
-            default:
-                break;
+                default:
+                    break;
             }
 
             return ctx->fetched_loader->p_set_ctx_params(ctx->loader_ctx,
@@ -295,7 +295,7 @@ int OSSL_STORE_expect(OSSL_STORE_CTX *ctx, int expected_type)
     int ret = 1;
 
     if (ctx == NULL
-            || expected_type < 0 || expected_type > OSSL_STORE_INFO_CRL) {
+        || expected_type < 0 || expected_type > OSSL_STORE_INFO_CRL) {
         ERR_raise(ERR_LIB_OSSL_STORE, ERR_R_PASSED_INVALID_ARGUMENT);
         return 0;
     }
@@ -357,41 +357,46 @@ int OSSL_STORE_find(OSSL_STORE_CTX *ctx, const OSSL_STORE_SEARCH *search)
         ret = 0;                 /* Assume the worst */
 
         switch (search->search_type) {
-        case OSSL_STORE_SEARCH_BY_NAME:
-            if ((name_der_sz = i2d_X509_NAME(search->name,
-                                             (unsigned char **)&name_der)) > 0
-                && OSSL_PARAM_BLD_push_octet_string(bld,
-                                                    OSSL_STORE_PARAM_SUBJECT,
-                                                    name_der, name_der_sz))
-                ret = 1;
-            break;
-        case OSSL_STORE_SEARCH_BY_ISSUER_SERIAL:
-            if ((name_der_sz = i2d_X509_NAME(search->name,
-                                             (unsigned char **)&name_der)) > 0
-                && (number = ASN1_INTEGER_to_BN(search->serial, NULL)) != NULL
-                && OSSL_PARAM_BLD_push_octet_string(bld,
-                                                    OSSL_STORE_PARAM_ISSUER,
-                                                    name_der, name_der_sz)
-                && OSSL_PARAM_BLD_push_BN(bld, OSSL_STORE_PARAM_SERIAL,
-                                          number))
-                ret = 1;
-            break;
-        case OSSL_STORE_SEARCH_BY_KEY_FINGERPRINT:
-            if (OSSL_PARAM_BLD_push_utf8_string(bld, OSSL_STORE_PARAM_DIGEST,
-                                                EVP_MD_get0_name(search->digest),
-                                                0)
-                && OSSL_PARAM_BLD_push_octet_string(bld,
-                                                    OSSL_STORE_PARAM_FINGERPRINT,
-                                                    search->string,
+            case OSSL_STORE_SEARCH_BY_NAME:
+                if ((name_der_sz = i2d_X509_NAME(search->name,
+                                                 (unsigned char **)&name_der)) >
+                    0
+                    && OSSL_PARAM_BLD_push_octet_string(bld,
+                                                        OSSL_STORE_PARAM_SUBJECT,
+                                                        name_der, name_der_sz))
+                    ret = 1;
+                break;
+            case OSSL_STORE_SEARCH_BY_ISSUER_SERIAL:
+                if ((name_der_sz = i2d_X509_NAME(search->name,
+                                                 (unsigned char **)&name_der)) >
+                    0
+                    && (number =
+                            ASN1_INTEGER_to_BN(search->serial, NULL)) != NULL
+                    && OSSL_PARAM_BLD_push_octet_string(bld,
+                                                        OSSL_STORE_PARAM_ISSUER,
+                                                        name_der, name_der_sz)
+                    && OSSL_PARAM_BLD_push_BN(bld, OSSL_STORE_PARAM_SERIAL,
+                                              number))
+                    ret = 1;
+                break;
+            case OSSL_STORE_SEARCH_BY_KEY_FINGERPRINT:
+                if (OSSL_PARAM_BLD_push_utf8_string(bld,
+                                                    OSSL_STORE_PARAM_DIGEST,
+                                                    EVP_MD_get0_name(search->
+                                                                     digest),
+                                                    0)
+                    && OSSL_PARAM_BLD_push_octet_string(bld,
+                                                        OSSL_STORE_PARAM_FINGERPRINT,
+                                                        search->string,
+                                                        search->stringlength))
+                    ret = 1;
+                break;
+            case OSSL_STORE_SEARCH_BY_ALIAS:
+                if (OSSL_PARAM_BLD_push_utf8_string(bld, OSSL_STORE_PARAM_ALIAS,
+                                                    (char *)search->string,
                                                     search->stringlength))
-                ret = 1;
-            break;
-        case OSSL_STORE_SEARCH_BY_ALIAS:
-            if (OSSL_PARAM_BLD_push_utf8_string(bld, OSSL_STORE_PARAM_ALIAS,
-                                                (char *)search->string,
-                                                search->stringlength))
-                ret = 1;
-            break;
+                    ret = 1;
+                break;
         }
         if (ret) {
             params = OSSL_PARAM_BLD_to_param(bld);
@@ -421,7 +426,7 @@ OSSL_STORE_INFO *OSSL_STORE_load(OSSL_STORE_CTX *ctx)
     OSSL_STORE_INFO *v = NULL;
 
     ctx->loading = 1;
- again:
+again:
     if (OSSL_STORE_eof(ctx))
         return NULL;
 
@@ -824,25 +829,25 @@ void OSSL_STORE_INFO_free(OSSL_STORE_INFO *info)
 {
     if (info != NULL) {
         switch (info->type) {
-        case OSSL_STORE_INFO_NAME:
-            OPENSSL_free(info->_.name.name);
-            OPENSSL_free(info->_.name.desc);
-            break;
-        case OSSL_STORE_INFO_PARAMS:
-            EVP_PKEY_free(info->_.params);
-            break;
-        case OSSL_STORE_INFO_PUBKEY:
-            EVP_PKEY_free(info->_.pubkey);
-            break;
-        case OSSL_STORE_INFO_PKEY:
-            EVP_PKEY_free(info->_.pkey);
-            break;
-        case OSSL_STORE_INFO_CERT:
-            X509_free(info->_.x509);
-            break;
-        case OSSL_STORE_INFO_CRL:
-            X509_CRL_free(info->_.crl);
-            break;
+            case OSSL_STORE_INFO_NAME:
+                OPENSSL_free(info->_.name.name);
+                OPENSSL_free(info->_.name.desc);
+                break;
+            case OSSL_STORE_INFO_PARAMS:
+                EVP_PKEY_free(info->_.params);
+                break;
+            case OSSL_STORE_INFO_PUBKEY:
+                EVP_PKEY_free(info->_.pubkey);
+                break;
+            case OSSL_STORE_INFO_PKEY:
+                EVP_PKEY_free(info->_.pkey);
+                break;
+            case OSSL_STORE_INFO_CERT:
+                X509_free(info->_.x509);
+                break;
+            case OSSL_STORE_INFO_CRL:
+                X509_CRL_free(info->_.crl);
+                break;
         }
         OPENSSL_free(info);
     }
@@ -854,7 +859,8 @@ int OSSL_STORE_supports_search(OSSL_STORE_CTX *ctx, int search_type)
 
     if (ctx->fetched_loader != NULL) {
         void *provctx =
-            ossl_provider_ctx(OSSL_STORE_LOADER_get0_provider(ctx->fetched_loader));
+            ossl_provider_ctx(OSSL_STORE_LOADER_get0_provider(ctx->
+                                                              fetched_loader));
         const OSSL_PARAM *params;
         const OSSL_PARAM *p_subject = NULL;
         const OSSL_PARAM *p_issuer = NULL;
@@ -874,18 +880,18 @@ int OSSL_STORE_supports_search(OSSL_STORE_CTX *ctx, int search_type)
         p_alias = OSSL_PARAM_locate_const(params, OSSL_STORE_PARAM_ALIAS);
 
         switch (search_type) {
-        case OSSL_STORE_SEARCH_BY_NAME:
-            ret = (p_subject != NULL);
-            break;
-        case OSSL_STORE_SEARCH_BY_ISSUER_SERIAL:
-            ret = (p_issuer != NULL && p_serial != NULL);
-            break;
-        case OSSL_STORE_SEARCH_BY_KEY_FINGERPRINT:
-            ret = (p_fingerprint != NULL);
-            break;
-        case OSSL_STORE_SEARCH_BY_ALIAS:
-            ret = (p_alias != NULL);
-            break;
+            case OSSL_STORE_SEARCH_BY_NAME:
+                ret = (p_subject != NULL);
+                break;
+            case OSSL_STORE_SEARCH_BY_ISSUER_SERIAL:
+                ret = (p_issuer != NULL && p_serial != NULL);
+                break;
+            case OSSL_STORE_SEARCH_BY_KEY_FINGERPRINT:
+                ret = (p_fingerprint != NULL);
+                break;
+            case OSSL_STORE_SEARCH_BY_ALIAS:
+                ret = (p_alias != NULL);
+                break;
         }
     }
 #ifndef OPENSSL_NO_DEPRECATED_3_0
@@ -1030,7 +1036,7 @@ OSSL_STORE_CTX *OSSL_STORE_attach(BIO *bp, const char *scheme,
 #endif
     if (loader == NULL
         && (fetched_loader =
-            OSSL_STORE_LOADER_fetch(libctx, scheme, propq)) != NULL) {
+                OSSL_STORE_LOADER_fetch(libctx, scheme, propq)) != NULL) {
         const OSSL_PROVIDER *provider =
             OSSL_STORE_LOADER_get0_provider(fetched_loader);
         void *provctx = OSSL_PROVIDER_get0_provider_ctx(provider);

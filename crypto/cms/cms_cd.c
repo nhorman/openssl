@@ -58,7 +58,7 @@ CMS_ContentInfo *ossl_cms_CompressedData_create(int comp_nid,
 
     return cms;
 
- err:
+err:
     CMS_ContentInfo_free(cms);
     return NULL;
 }

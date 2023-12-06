@@ -140,8 +140,8 @@ int ossl_rsa_check_prime_factor(BIGNUM *p, BIGNUM *e, int nbits, BN_CTX *ctx)
 
     /* (Steps 5 a-b) prime test */
     if (BN_check_prime(p, ctx, NULL) != 1
-            /* (Step 5c) (√2)(2^(nbits/2 - 1) <= p <= 2^(nbits/2 - 1) */
-            || ossl_rsa_check_prime_factor_range(p, nbits, ctx) != 1)
+        /* (Step 5c) (√2)(2^(nbits/2 - 1) <= p <= 2^(nbits/2 - 1) */
+        || ossl_rsa_check_prime_factor_range(p, nbits, ctx) != 1)
         return 0;
 
     BN_CTX_start(ctx);
@@ -200,14 +200,14 @@ int ossl_rsa_check_private_exponent(const RSA *rsa, int nbits, BN_CTX *ctx)
         ret = 0;
     }
     ret = (ret
-          /* LCM(p - 1, q - 1) */
-          && (ossl_rsa_get_lcm(ctx, rsa->p, rsa->q, lcm, gcd, p1, q1,
-                               p1q1) == 1)
-          /* (Step 6a) d < LCM(p - 1, q - 1) */
-          && (BN_cmp(rsa->d, lcm) < 0)
-          /* (Step 6b) 1 = (e . d) mod LCM(p - 1, q - 1) */
-          && BN_mod_mul(r, rsa->e, rsa->d, lcm, ctx)
-          && BN_is_one(r));
+           /* LCM(p - 1, q - 1) */
+           && (ossl_rsa_get_lcm(ctx, rsa->p, rsa->q, lcm, gcd, p1, q1,
+                                p1q1) == 1)
+           /* (Step 6a) d < LCM(p - 1, q - 1) */
+           && (BN_cmp(rsa->d, lcm) < 0)
+           /* (Step 6b) 1 = (e . d) mod LCM(p - 1, q - 1) */
+           && BN_mod_mul(r, rsa->e, rsa->d, lcm, ctx)
+           && BN_is_one(r));
 
     BN_clear(r);
     BN_clear(p1);
@@ -240,7 +240,7 @@ int ossl_rsa_check_public_exponent(const BIGNUM *e)
  * i.e- numbits(p-q-1) > (nbits/2 -100)
  */
 int ossl_rsa_check_pminusq_diff(BIGNUM *diff, const BIGNUM *p, const BIGNUM *q,
-                           int nbits)
+                                int nbits)
 {
     int bitlen = (nbits >> 1) - 100;
 
@@ -373,10 +373,10 @@ int ossl_rsa_sp800_56b_check_keypair(const RSA *rsa, const BIGNUM *efixed,
     BIGNUM *r = NULL;
 
     if (rsa->p == NULL
-            || rsa->q == NULL
-            || rsa->e == NULL
-            || rsa->d == NULL
-            || rsa->n == NULL) {
+        || rsa->q == NULL
+        || rsa->e == NULL
+        || rsa->d == NULL
+        || rsa->n == NULL) {
         ERR_raise(ERR_LIB_RSA, RSA_R_INVALID_REQUEST);
         return 0;
     }

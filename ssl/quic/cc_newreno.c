@@ -6,25 +6,25 @@ OSSL_SAFE_MATH_UNSIGNED(u64, uint64_t)
 
 typedef struct ossl_cc_newreno_st {
     /* Dependencies. */
-    OSSL_TIME   (*now_cb)(void *arg);
+    OSSL_TIME (*now_cb)(void *arg);
     void        *now_cb_arg;
 
     /* 'Constants' (which we allow to be configurable). */
-    uint64_t    k_init_wnd, k_min_wnd;
-    uint32_t    k_loss_reduction_factor_num, k_loss_reduction_factor_den;
-    uint32_t    persistent_cong_thresh;
+    uint64_t k_init_wnd, k_min_wnd;
+    uint32_t k_loss_reduction_factor_num, k_loss_reduction_factor_den;
+    uint32_t persistent_cong_thresh;
 
     /* State. */
-    size_t      max_dgram_size;
-    uint64_t    bytes_in_flight, cong_wnd, slow_start_thresh, bytes_acked;
-    OSSL_TIME   cong_recovery_start_time;
+    size_t max_dgram_size;
+    uint64_t bytes_in_flight, cong_wnd, slow_start_thresh, bytes_acked;
+    OSSL_TIME cong_recovery_start_time;
 
     /* Unflushed state during multiple on-loss calls. */
-    int         processing_loss; /* 1 if not flushed */
-    OSSL_TIME   tx_time_of_last_loss;
+    int processing_loss;         /* 1 if not flushed */
+    OSSL_TIME tx_time_of_last_loss;
 
     /* Diagnostic state. */
-    int         in_congestion_recovery;
+    int in_congestion_recovery;
 
     /* Diagnostic output locations. */
     size_t      *p_diag_max_dgram_payload_len;

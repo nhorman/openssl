@@ -83,10 +83,10 @@ struct evp_pkey_asn1_method_st {
     int (*copy) (EVP_PKEY *to, EVP_PKEY *from);
 
     int (*priv_decode_ex) (EVP_PKEY *pk,
-                                    const PKCS8_PRIV_KEY_INFO *p8inf,
-                                    OSSL_LIB_CTX *libctx,
-                                    const char *propq);
-} /* EVP_PKEY_ASN1_METHOD */ ;
+                           const PKCS8_PRIV_KEY_INFO *p8inf,
+                           OSSL_LIB_CTX *libctx,
+                           const char *propq);
+} /* EVP_PKEY_ASN1_METHOD */;
 
 DEFINE_STACK_OF_CONST(EVP_PKEY_ASN1_METHOD)
 
@@ -127,7 +127,7 @@ struct asn1_pctx_st {
     unsigned long cert_flags;
     unsigned long oid_flags;
     unsigned long str_flags;
-} /* ASN1_PCTX */ ;
+} /* ASN1_PCTX */;
 
 /* ASN1 type functions */
 

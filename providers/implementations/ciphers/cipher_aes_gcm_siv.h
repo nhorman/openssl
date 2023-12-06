@@ -53,10 +53,12 @@ typedef struct prov_aes_gcm_siv_ctx_st {
     unsigned int speed : 1;
 } PROV_AES_GCM_SIV_CTX;
 
-const PROV_CIPHER_HW_AES_GCM_SIV *ossl_prov_cipher_hw_aes_gcm_siv(size_t keybits);
+const PROV_CIPHER_HW_AES_GCM_SIV *ossl_prov_cipher_hw_aes_gcm_siv(
+    size_t keybits);
 
 void ossl_polyval_ghash_init(u128 Htable[16], const uint64_t H[2]);
-void ossl_polyval_ghash_hash(const u128 Htable[16], uint8_t *tag,  const uint8_t *inp, size_t len);
+void ossl_polyval_ghash_hash(const u128 Htable[16], uint8_t *tag,
+                             const uint8_t *inp, size_t len);
 
 /* Define GSWAP8/GSWAP4 - used for BOTH little and big endian architectures */
 static ossl_inline uint32_t GSWAP4(uint32_t n)

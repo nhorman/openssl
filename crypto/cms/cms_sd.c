@@ -154,7 +154,8 @@ static int cms_copy_messageDigest(CMS_ContentInfo *cms, CMS_SignerInfo *si)
             continue;
         messageDigest = CMS_signed_get0_data_by_OBJ(sitmp,
                                                     OBJ_nid2obj
-                                                    (NID_pkcs9_messageDigest),
+                                                    (
+                                                        NID_pkcs9_messageDigest),
                                                     -3, V_ASN1_OCTET_STRING);
         if (!messageDigest) {
             ERR_raise(ERR_LIB_CMS, CMS_R_ERROR_READING_MESSAGEDIGEST_ATTRIBUTE);
@@ -176,19 +177,19 @@ int ossl_cms_set1_SignerIdentifier(CMS_SignerIdentifier *sid, X509 *cert,
                                    int type, const CMS_CTX *ctx)
 {
     switch (type) {
-    case CMS_SIGNERINFO_ISSUER_SERIAL:
-        if (!ossl_cms_set1_ias(&sid->d.issuerAndSerialNumber, cert))
-            return 0;
-        break;
+        case CMS_SIGNERINFO_ISSUER_SERIAL:
+            if (!ossl_cms_set1_ias(&sid->d.issuerAndSerialNumber, cert))
+                return 0;
+            break;
 
-    case CMS_SIGNERINFO_KEYIDENTIFIER:
-        if (!ossl_cms_set1_keyid(&sid->d.subjectKeyIdentifier, cert))
-            return 0;
-        break;
+        case CMS_SIGNERINFO_KEYIDENTIFIER:
+            if (!ossl_cms_set1_keyid(&sid->d.subjectKeyIdentifier, cert))
+                return 0;
+            break;
 
-    default:
-        ERR_raise(ERR_LIB_CMS, CMS_R_UNKNOWN_ID);
-        return 0;
+        default:
+            ERR_raise(ERR_LIB_CMS, CMS_R_UNKNOWN_ID);
+            return 0;
     }
 
     sid->type = type;
@@ -518,14 +519,15 @@ CMS_SignerInfo *CMS_add1_signer(CMS_ContentInfo *cms,
 
     if (sd->signerInfos == NULL)
         sd->signerInfos = sk_CMS_SignerInfo_new_null();
-    if (sd->signerInfos == NULL || !sk_CMS_SignerInfo_push(sd->signerInfos, si)) {
+    if (sd->signerInfos == NULL ||
+        !sk_CMS_SignerInfo_push(sd->signerInfos, si)) {
         ERR_raise(ERR_LIB_CMS, ERR_R_CRYPTO_LIB);
         goto err;
     }
 
     return si;
 
- err:
+err:
     M_ASN1_free_of(si, CMS_SignerInfo);
     return NULL;
 
@@ -571,7 +573,7 @@ static int cms_add1_signingTime(CMS_SignerInfo *si, ASN1_TIME *t)
     }
 
     r = 1;
- err:
+err:
     if (t == NULL)
         ASN1_TIME_free(tt);
 
@@ -632,7 +634,8 @@ int CMS_SignerInfo_get0_signer_id(CMS_SignerInfo *si,
                                   ASN1_OCTET_STRING **keyid,
                                   X509_NAME **issuer, ASN1_INTEGER **sno)
 {
-    return ossl_cms_SignerIdentifier_get0_signer_id(si->sid, keyid, issuer, sno);
+    return ossl_cms_SignerIdentifier_get0_signer_id(si->sid, keyid, issuer,
+                                                    sno);
 }
 
 int CMS_SignerInfo_cert_cmp(CMS_SignerInfo *si, X509 *cert)
@@ -794,7 +797,7 @@ static int cms_SignerInfo_content_sign(CMS_ContentInfo *cms,
 
     r = 1;
 
- err:
+err:
     EVP_MD_CTX_free(mctx);
     EVP_PKEY_CTX_free(pctx);
     return r;
@@ -875,7 +878,7 @@ int CMS_SignerInfo_sign(CMS_SignerInfo *si)
 
     return 1;
 
- err:
+err:
     OPENSSL_free(abuf);
     EVP_MD_CTX_reset(mctx);
     return 0;
@@ -943,7 +946,7 @@ int CMS_SignerInfo_verify(CMS_SignerInfo *si)
                               si->signature->data, si->signature->length);
     if (r <= 0)
         ERR_raise(ERR_LIB_CMS, CMS_R_VERIFICATION_FAILURE);
- err:
+err:
     EVP_MD_free(fetched_md);
     EVP_MD_CTX_reset(mctx);
     return r;
@@ -976,7 +979,7 @@ BIO *ossl_cms_SignedData_init_bio(CMS_ContentInfo *cms)
             chain = mdbio;
     }
     return chain;
- err:
+err:
     BIO_free_all(chain);
     return NULL;
 }
@@ -1050,7 +1053,7 @@ int CMS_SignerInfo_verify_content(CMS_SignerInfo *si, BIO *chain)
         }
     }
 
- err:
+err:
     EVP_PKEY_CTX_free(pkctx);
     EVP_MD_CTX_free(mctx);
     return r;
@@ -1087,7 +1090,7 @@ BIO *CMS_SignedData_verify(CMS_SignedData *sd, BIO *detached_data,
             goto end;
     res = CMS_verify(ci, scerts, store, detached_data, bio, flags);
 
- end:
+end:
     if (ci != NULL)
         ci->d.signedData = NULL; /* do not indirectly free |sd| */
     CMS_ContentInfo_free(ci);

@@ -71,7 +71,7 @@ int ossl_asn1_item_digest_ex(const ASN1_ITEM *it, const EVP_MD *md, void *asn,
             ENGINE_finish(tmpeng);
         else
 #endif
-            fetched_md = EVP_MD_fetch(libctx, EVP_MD_get0_name(md), propq);
+        fetched_md = EVP_MD_fetch(libctx, EVP_MD_get0_name(md), propq);
     }
     if (fetched_md == NULL)
         goto err;

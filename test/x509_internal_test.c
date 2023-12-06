@@ -61,9 +61,12 @@ static IP_TESTDATA a2i_ipaddress_tests[] = {
     {"1.2.3", NULL, 0},
     {"1.2.3 .4", NULL, 0},
 
-    {"::1", "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01", 16},
-    {"1:1:1:1:1:1:1:1", "\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01", 16},
-    {"2001:db8::ff00:42:8329", "\x20\x01\x0d\xb8\x00\x00\x00\x00\x00\x00\xff\x00\x00\x42\x83\x29", 16},
+    {"::1", "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01",
+     16},
+    {"1:1:1:1:1:1:1:1",
+     "\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01\x00\x01", 16},
+    {"2001:db8::ff00:42:8329",
+     "\x20\x01\x0d\xb8\x00\x00\x00\x00\x00\x00\xff\x00\x00\x42\x83\x29", 16},
     {"1:1:1:1:1:1:1:1.test", NULL, 0},
     {":::1", NULL, 0},
     {"2001::123g", NULL, 0},
@@ -88,7 +91,8 @@ static int test_a2i_ipaddress(int idx)
     if (len == 0) {
         if (!TEST_ptr_null(ip)) {
             good = 0;
-            TEST_note("'%s' should not be parsed as IP address", a2i_ipaddress_tests[idx].ipasc);
+            TEST_note("'%s' should not be parsed as IP address",
+                      a2i_ipaddress_tests[idx].ipasc);
         }
     } else {
         if (!TEST_ptr(ip)

@@ -51,18 +51,18 @@ const char *SCT_validation_status_string(const SCT *sct)
 {
 
     switch (SCT_get_validation_status(sct)) {
-    case SCT_VALIDATION_STATUS_NOT_SET:
-        return "not set";
-    case SCT_VALIDATION_STATUS_UNKNOWN_VERSION:
-        return "unknown version";
-    case SCT_VALIDATION_STATUS_UNKNOWN_LOG:
-        return "unknown log";
-    case SCT_VALIDATION_STATUS_UNVERIFIED:
-        return "unverified";
-    case SCT_VALIDATION_STATUS_INVALID:
-        return "invalid";
-    case SCT_VALIDATION_STATUS_VALID:
-        return "valid";
+        case SCT_VALIDATION_STATUS_NOT_SET:
+            return "not set";
+        case SCT_VALIDATION_STATUS_UNKNOWN_VERSION:
+            return "unknown version";
+        case SCT_VALIDATION_STATUS_UNKNOWN_LOG:
+            return "unknown log";
+        case SCT_VALIDATION_STATUS_UNVERIFIED:
+            return "unverified";
+        case SCT_VALIDATION_STATUS_INVALID:
+            return "invalid";
+        case SCT_VALIDATION_STATUS_VALID:
+            return "valid";
     }
     return "unknown status";
 }

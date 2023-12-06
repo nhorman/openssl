@@ -248,47 +248,47 @@ static unsigned char *rsa_generate_signature_aid(PROV_RSA_CTX *ctx,
     }
 
     switch (ctx->pad_mode) {
-    case RSA_PKCS1_PADDING:
-        ret = ossl_DER_w_algorithmIdentifier_MDWithRSAEncryption(&pkt, -1,
-                                                                 ctx->mdnid);
+        case RSA_PKCS1_PADDING:
+            ret = ossl_DER_w_algorithmIdentifier_MDWithRSAEncryption(&pkt, -1,
+                                                                     ctx->mdnid);
 
-        if (ret > 0) {
+            if (ret > 0) {
+                break;
+            } else if (ret == 0) {
+                ERR_raise(ERR_LIB_PROV, ERR_R_INTERNAL_ERROR);
+                goto cleanup;
+            }
+            ERR_raise_data(ERR_LIB_PROV, ERR_R_UNSUPPORTED,
+                           "Algorithm ID generation - md NID: %d",
+                           ctx->mdnid);
+            goto cleanup;
+        case RSA_PKCS1_PSS_PADDING:
+            saltlen = rsa_pss_compute_saltlen(ctx);
+            if (saltlen < 0)
+                goto cleanup;
+            if (!ossl_rsa_pss_params_30_set_defaults(&pss_params)
+                || !ossl_rsa_pss_params_30_set_hashalg(&pss_params, ctx->mdnid)
+                || !ossl_rsa_pss_params_30_set_maskgenhashalg(&pss_params,
+                                                              ctx->mgf1_mdnid)
+                || !ossl_rsa_pss_params_30_set_saltlen(&pss_params, saltlen)
+                || !ossl_DER_w_algorithmIdentifier_RSA_PSS(&pkt, -1,
+                                                           RSA_FLAG_TYPE_RSASSAPSS,
+                                                           &pss_params)) {
+                ERR_raise(ERR_LIB_PROV, ERR_R_INTERNAL_ERROR);
+                goto cleanup;
+            }
             break;
-        } else if (ret == 0) {
-            ERR_raise(ERR_LIB_PROV, ERR_R_INTERNAL_ERROR);
+        default:
+            ERR_raise_data(ERR_LIB_PROV, ERR_R_UNSUPPORTED,
+                           "Algorithm ID generation - pad mode: %d",
+                           ctx->pad_mode);
             goto cleanup;
-        }
-        ERR_raise_data(ERR_LIB_PROV, ERR_R_UNSUPPORTED,
-                       "Algorithm ID generation - md NID: %d",
-                       ctx->mdnid);
-        goto cleanup;
-    case RSA_PKCS1_PSS_PADDING:
-        saltlen = rsa_pss_compute_saltlen(ctx);
-        if (saltlen < 0)
-            goto cleanup;
-        if (!ossl_rsa_pss_params_30_set_defaults(&pss_params)
-            || !ossl_rsa_pss_params_30_set_hashalg(&pss_params, ctx->mdnid)
-            || !ossl_rsa_pss_params_30_set_maskgenhashalg(&pss_params,
-                                                          ctx->mgf1_mdnid)
-            || !ossl_rsa_pss_params_30_set_saltlen(&pss_params, saltlen)
-            || !ossl_DER_w_algorithmIdentifier_RSA_PSS(&pkt, -1,
-                                                       RSA_FLAG_TYPE_RSASSAPSS,
-                                                       &pss_params)) {
-            ERR_raise(ERR_LIB_PROV, ERR_R_INTERNAL_ERROR);
-            goto cleanup;
-        }
-        break;
-    default:
-        ERR_raise_data(ERR_LIB_PROV, ERR_R_UNSUPPORTED,
-                       "Algorithm ID generation - pad mode: %d",
-                       ctx->pad_mode);
-        goto cleanup;
     }
     if (WPACKET_finish(&pkt)) {
         WPACKET_get_total_written(&pkt, aid_len);
         aid = WPACKET_get_curr(&pkt);
     }
- cleanup:
+cleanup:
     WPACKET_cleanup(&pkt);
     return aid;
 }
@@ -426,65 +426,66 @@ static int rsa_signverify_init(void *vprsactx, void *vrsa,
     prsactx->min_saltlen = -1;
 
     switch (RSA_test_flags(prsactx->rsa, RSA_FLAG_TYPE_MASK)) {
-    case RSA_FLAG_TYPE_RSA:
-        prsactx->pad_mode = RSA_PKCS1_PADDING;
-        break;
-    case RSA_FLAG_TYPE_RSASSAPSS:
-        prsactx->pad_mode = RSA_PKCS1_PSS_PADDING;
+        case RSA_FLAG_TYPE_RSA:
+            prsactx->pad_mode = RSA_PKCS1_PADDING;
+            break;
+        case RSA_FLAG_TYPE_RSASSAPSS:
+            prsactx->pad_mode = RSA_PKCS1_PSS_PADDING;
 
-        {
-            const RSA_PSS_PARAMS_30 *pss =
-                ossl_rsa_get0_pss_params_30(prsactx->rsa);
+            {
+                const RSA_PSS_PARAMS_30 *pss =
+                    ossl_rsa_get0_pss_params_30(prsactx->rsa);
 
-            if (!ossl_rsa_pss_params_30_is_unrestricted(pss)) {
-                int md_nid = ossl_rsa_pss_params_30_hashalg(pss);
-                int mgf1md_nid = ossl_rsa_pss_params_30_maskgenhashalg(pss);
-                int min_saltlen = ossl_rsa_pss_params_30_saltlen(pss);
-                const char *mdname, *mgf1mdname;
-                size_t len;
+                if (!ossl_rsa_pss_params_30_is_unrestricted(pss)) {
+                    int md_nid = ossl_rsa_pss_params_30_hashalg(pss);
+                    int mgf1md_nid = ossl_rsa_pss_params_30_maskgenhashalg(pss);
+                    int min_saltlen = ossl_rsa_pss_params_30_saltlen(pss);
+                    const char *mdname, *mgf1mdname;
+                    size_t len;
 
-                mdname = ossl_rsa_oaeppss_nid2name(md_nid);
-                mgf1mdname = ossl_rsa_oaeppss_nid2name(mgf1md_nid);
+                    mdname = ossl_rsa_oaeppss_nid2name(md_nid);
+                    mgf1mdname = ossl_rsa_oaeppss_nid2name(mgf1md_nid);
 
-                if (mdname == NULL) {
-                    ERR_raise_data(ERR_LIB_PROV, PROV_R_INVALID_DIGEST,
-                                   "PSS restrictions lack hash algorithm");
-                    return 0;
+                    if (mdname == NULL) {
+                        ERR_raise_data(ERR_LIB_PROV, PROV_R_INVALID_DIGEST,
+                                       "PSS restrictions lack hash algorithm");
+                        return 0;
+                    }
+                    if (mgf1mdname == NULL) {
+                        ERR_raise_data(ERR_LIB_PROV, PROV_R_INVALID_DIGEST,
+                                       "PSS restrictions lack MGF1 hash algorithm");
+                        return 0;
+                    }
+
+                    len = OPENSSL_strlcpy(prsactx->mdname, mdname,
+                                          sizeof(prsactx->mdname));
+                    if (len >= sizeof(prsactx->mdname)) {
+                        ERR_raise_data(ERR_LIB_PROV, PROV_R_INVALID_DIGEST,
+                                       "hash algorithm name too long");
+                        return 0;
+                    }
+                    len = OPENSSL_strlcpy(prsactx->mgf1_mdname, mgf1mdname,
+                                          sizeof(prsactx->mgf1_mdname));
+                    if (len >= sizeof(prsactx->mgf1_mdname)) {
+                        ERR_raise_data(ERR_LIB_PROV, PROV_R_INVALID_DIGEST,
+                                       "MGF1 hash algorithm name too long");
+                        return 0;
+                    }
+                    prsactx->saltlen = min_saltlen;
+
+                    /* call rsa_setup_mgf1_md before rsa_setup_md to avoid duplication */
+                    if (!rsa_setup_mgf1_md(prsactx, mgf1mdname, prsactx->propq)
+                        || !rsa_setup_md(prsactx, mdname, prsactx->propq)
+                        || !rsa_check_parameters(prsactx, min_saltlen))
+                        return 0;
                 }
-                if (mgf1mdname == NULL) {
-                    ERR_raise_data(ERR_LIB_PROV, PROV_R_INVALID_DIGEST,
-                                   "PSS restrictions lack MGF1 hash algorithm");
-                    return 0;
-                }
-
-                len = OPENSSL_strlcpy(prsactx->mdname, mdname,
-                                      sizeof(prsactx->mdname));
-                if (len >= sizeof(prsactx->mdname)) {
-                    ERR_raise_data(ERR_LIB_PROV, PROV_R_INVALID_DIGEST,
-                                   "hash algorithm name too long");
-                    return 0;
-                }
-                len = OPENSSL_strlcpy(prsactx->mgf1_mdname, mgf1mdname,
-                                      sizeof(prsactx->mgf1_mdname));
-                if (len >= sizeof(prsactx->mgf1_mdname)) {
-                    ERR_raise_data(ERR_LIB_PROV, PROV_R_INVALID_DIGEST,
-                                   "MGF1 hash algorithm name too long");
-                    return 0;
-                }
-                prsactx->saltlen = min_saltlen;
-
-                /* call rsa_setup_mgf1_md before rsa_setup_md to avoid duplication */
-                if (!rsa_setup_mgf1_md(prsactx, mgf1mdname, prsactx->propq)
-                    || !rsa_setup_md(prsactx, mdname, prsactx->propq)
-                    || !rsa_check_parameters(prsactx, min_saltlen))
-                    return 0;
             }
-        }
 
-        break;
-    default:
-        ERR_raise(ERR_LIB_RSA, PROV_R_OPERATION_NOT_SUPPORTED_FOR_THIS_KEYTYPE);
-        return 0;
+            break;
+        default:
+            ERR_raise(ERR_LIB_RSA,
+                      PROV_R_OPERATION_NOT_SUPPORTED_FOR_THIS_KEYTYPE);
+            return 0;
     }
 
     if (!rsa_set_ctx_params(prsactx, params))
@@ -571,25 +572,25 @@ static int rsa_sign(void *vprsactx, unsigned char *sig, size_t *siglen,
         }
 #endif
         switch (prsactx->pad_mode) {
-        case RSA_X931_PADDING:
-            if ((size_t)RSA_size(prsactx->rsa) < tbslen + 1) {
-                ERR_raise_data(ERR_LIB_PROV, PROV_R_KEY_SIZE_TOO_SMALL,
-                               "RSA key size = %d, expected minimum = %d",
-                               RSA_size(prsactx->rsa), tbslen + 1);
-                return 0;
-            }
-            if (!setup_tbuf(prsactx)) {
-                ERR_raise(ERR_LIB_PROV, ERR_R_PROV_LIB);
-                return 0;
-            }
-            memcpy(prsactx->tbuf, tbs, tbslen);
-            prsactx->tbuf[tbslen] = RSA_X931_hash_id(prsactx->mdnid);
-            ret = RSA_private_encrypt(tbslen + 1, prsactx->tbuf,
-                                      sig, prsactx->rsa, RSA_X931_PADDING);
-            clean_tbuf(prsactx);
-            break;
+            case RSA_X931_PADDING:
+                if ((size_t)RSA_size(prsactx->rsa) < tbslen + 1) {
+                    ERR_raise_data(ERR_LIB_PROV, PROV_R_KEY_SIZE_TOO_SMALL,
+                                   "RSA key size = %d, expected minimum = %d",
+                                   RSA_size(prsactx->rsa), tbslen + 1);
+                    return 0;
+                }
+                if (!setup_tbuf(prsactx)) {
+                    ERR_raise(ERR_LIB_PROV, ERR_R_PROV_LIB);
+                    return 0;
+                }
+                memcpy(prsactx->tbuf, tbs, tbslen);
+                prsactx->tbuf[tbslen] = RSA_X931_hash_id(prsactx->mdnid);
+                ret = RSA_private_encrypt(tbslen + 1, prsactx->tbuf,
+                                          sig, prsactx->rsa, RSA_X931_PADDING);
+                clean_tbuf(prsactx);
+                break;
 
-        case RSA_PKCS1_PADDING:
+            case RSA_PKCS1_PADDING:
             {
                 unsigned int sltmp;
 
@@ -603,53 +604,55 @@ static int rsa_sign(void *vprsactx, unsigned char *sig, size_t *siglen,
             }
             break;
 
-        case RSA_PKCS1_PSS_PADDING:
-            /* Check PSS restrictions */
-            if (rsa_pss_restricted(prsactx)) {
-                switch (prsactx->saltlen) {
-                case RSA_PSS_SALTLEN_DIGEST:
-                    if (prsactx->min_saltlen > EVP_MD_get_size(prsactx->md)) {
-                        ERR_raise_data(ERR_LIB_PROV,
-                                       PROV_R_PSS_SALTLEN_TOO_SMALL,
-                                       "minimum salt length set to %d, "
-                                       "but the digest only gives %d",
-                                       prsactx->min_saltlen,
-                                       EVP_MD_get_size(prsactx->md));
-                        return 0;
+            case RSA_PKCS1_PSS_PADDING:
+                /* Check PSS restrictions */
+                if (rsa_pss_restricted(prsactx)) {
+                    switch (prsactx->saltlen) {
+                        case RSA_PSS_SALTLEN_DIGEST:
+                            if (prsactx->min_saltlen >
+                                EVP_MD_get_size(prsactx->md)) {
+                                ERR_raise_data(ERR_LIB_PROV,
+                                               PROV_R_PSS_SALTLEN_TOO_SMALL,
+                                               "minimum salt length set to %d, "
+                                               "but the digest only gives %d",
+                                               prsactx->min_saltlen,
+                                               EVP_MD_get_size(prsactx->md));
+                                return 0;
+                            }
+                        /* FALLTHRU */
+                        default:
+                            if (prsactx->saltlen >= 0
+                                && prsactx->saltlen < prsactx->min_saltlen) {
+                                ERR_raise_data(ERR_LIB_PROV,
+                                               PROV_R_PSS_SALTLEN_TOO_SMALL,
+                                               "minimum salt length set to %d, but the"
+                                               "actual salt length is only set to %d",
+                                               prsactx->min_saltlen,
+                                               prsactx->saltlen);
+                                return 0;
+                            }
+                            break;
                     }
-                    /* FALLTHRU */
-                default:
-                    if (prsactx->saltlen >= 0
-                        && prsactx->saltlen < prsactx->min_saltlen) {
-                        ERR_raise_data(ERR_LIB_PROV,
-                                       PROV_R_PSS_SALTLEN_TOO_SMALL,
-                                       "minimum salt length set to %d, but the"
-                                       "actual salt length is only set to %d",
-                                       prsactx->min_saltlen,
-                                       prsactx->saltlen);
-                        return 0;
-                    }
-                    break;
                 }
-            }
-            if (!setup_tbuf(prsactx))
-                return 0;
-            if (!RSA_padding_add_PKCS1_PSS_mgf1(prsactx->rsa,
-                                                prsactx->tbuf, tbs,
-                                                prsactx->md, prsactx->mgf1_md,
-                                                prsactx->saltlen)) {
-                ERR_raise(ERR_LIB_PROV, ERR_R_RSA_LIB);
-                return 0;
-            }
-            ret = RSA_private_encrypt(RSA_size(prsactx->rsa), prsactx->tbuf,
-                                      sig, prsactx->rsa, RSA_NO_PADDING);
-            clean_tbuf(prsactx);
-            break;
+                if (!setup_tbuf(prsactx))
+                    return 0;
+                if (!RSA_padding_add_PKCS1_PSS_mgf1(prsactx->rsa,
+                                                    prsactx->tbuf, tbs,
+                                                    prsactx->md,
+                                                    prsactx->mgf1_md,
+                                                    prsactx->saltlen)) {
+                    ERR_raise(ERR_LIB_PROV, ERR_R_RSA_LIB);
+                    return 0;
+                }
+                ret = RSA_private_encrypt(RSA_size(prsactx->rsa), prsactx->tbuf,
+                                          sig, prsactx->rsa, RSA_NO_PADDING);
+                clean_tbuf(prsactx);
+                break;
 
-        default:
-            ERR_raise_data(ERR_LIB_PROV, PROV_R_INVALID_PADDING_MODE,
-                           "Only X.931, PKCS#1 v1.5 or PSS padding allowed");
-            return 0;
+            default:
+                ERR_raise_data(ERR_LIB_PROV, PROV_R_INVALID_PADDING_MODE,
+                               "Only X.931, PKCS#1 v1.5 or PSS padding allowed");
+                return 0;
         }
     } else {
         ret = RSA_private_encrypt(tbslen, tbs, sig, prsactx->rsa,
@@ -657,7 +660,7 @@ static int rsa_sign(void *vprsactx, unsigned char *sig, size_t *siglen,
     }
 
 #ifndef FIPS_MODULE
- end:
+end:
 #endif
     if (ret <= 0) {
         ERR_raise(ERR_LIB_PROV, ERR_R_RSA_LIB);
@@ -697,40 +700,42 @@ static int rsa_verify_recover(void *vprsactx,
 
     if (prsactx->md != NULL) {
         switch (prsactx->pad_mode) {
-        case RSA_X931_PADDING:
-            if (!setup_tbuf(prsactx))
-                return 0;
-            ret = RSA_public_decrypt(siglen, sig, prsactx->tbuf, prsactx->rsa,
-                                     RSA_X931_PADDING);
-            if (ret < 1) {
-                ERR_raise(ERR_LIB_PROV, ERR_R_RSA_LIB);
-                return 0;
-            }
-            ret--;
-            if (prsactx->tbuf[ret] != RSA_X931_hash_id(prsactx->mdnid)) {
-                ERR_raise(ERR_LIB_PROV, PROV_R_ALGORITHM_MISMATCH);
-                return 0;
-            }
-            if (ret != EVP_MD_get_size(prsactx->md)) {
-                ERR_raise_data(ERR_LIB_PROV, PROV_R_INVALID_DIGEST_LENGTH,
-                               "Should be %d, but got %d",
-                               EVP_MD_get_size(prsactx->md), ret);
-                return 0;
-            }
-
-            *routlen = ret;
-            if (rout != prsactx->tbuf) {
-                if (routsize < (size_t)ret) {
-                    ERR_raise_data(ERR_LIB_PROV, PROV_R_OUTPUT_BUFFER_TOO_SMALL,
-                                   "buffer size is %d, should be %d",
-                                   routsize, ret);
+            case RSA_X931_PADDING:
+                if (!setup_tbuf(prsactx))
+                    return 0;
+                ret = RSA_public_decrypt(siglen, sig, prsactx->tbuf,
+                                         prsactx->rsa,
+                                         RSA_X931_PADDING);
+                if (ret < 1) {
+                    ERR_raise(ERR_LIB_PROV, ERR_R_RSA_LIB);
                     return 0;
                 }
-                memcpy(rout, prsactx->tbuf, ret);
-            }
-            break;
+                ret--;
+                if (prsactx->tbuf[ret] != RSA_X931_hash_id(prsactx->mdnid)) {
+                    ERR_raise(ERR_LIB_PROV, PROV_R_ALGORITHM_MISMATCH);
+                    return 0;
+                }
+                if (ret != EVP_MD_get_size(prsactx->md)) {
+                    ERR_raise_data(ERR_LIB_PROV, PROV_R_INVALID_DIGEST_LENGTH,
+                                   "Should be %d, but got %d",
+                                   EVP_MD_get_size(prsactx->md), ret);
+                    return 0;
+                }
 
-        case RSA_PKCS1_PADDING:
+                *routlen = ret;
+                if (rout != prsactx->tbuf) {
+                    if (routsize < (size_t)ret) {
+                        ERR_raise_data(ERR_LIB_PROV,
+                                       PROV_R_OUTPUT_BUFFER_TOO_SMALL,
+                                       "buffer size is %d, should be %d",
+                                       routsize, ret);
+                        return 0;
+                    }
+                    memcpy(rout, prsactx->tbuf, ret);
+                }
+                break;
+
+            case RSA_PKCS1_PADDING:
             {
                 size_t sltmp;
 
@@ -744,10 +749,10 @@ static int rsa_verify_recover(void *vprsactx,
             }
             break;
 
-        default:
-            ERR_raise_data(ERR_LIB_PROV, PROV_R_INVALID_PADDING_MODE,
-                           "Only X.931 or PKCS#1 v1.5 padding allowed");
-            return 0;
+            default:
+                ERR_raise_data(ERR_LIB_PROV, PROV_R_INVALID_PADDING_MODE,
+                               "Only X.931 or PKCS#1 v1.5 padding allowed");
+                return 0;
         }
     } else {
         ret = RSA_public_decrypt(siglen, sig, rout, prsactx->rsa,
@@ -779,21 +784,21 @@ static int rsa_verify(void *vprsactx, const unsigned char *sig, size_t siglen,
         return 0;
     if (prsactx->md != NULL) {
         switch (prsactx->pad_mode) {
-        case RSA_PKCS1_PADDING:
-            if (!RSA_verify(prsactx->mdnid, tbs, tbslen, sig, siglen,
-                            prsactx->rsa)) {
-                ERR_raise(ERR_LIB_PROV, ERR_R_RSA_LIB);
-                return 0;
-            }
-            return 1;
-        case RSA_X931_PADDING:
-            if (!setup_tbuf(prsactx))
-                return 0;
-            if (rsa_verify_recover(prsactx, prsactx->tbuf, &rslen, 0,
-                                   sig, siglen) <= 0)
-                return 0;
-            break;
-        case RSA_PKCS1_PSS_PADDING:
+            case RSA_PKCS1_PADDING:
+                if (!RSA_verify(prsactx->mdnid, tbs, tbslen, sig, siglen,
+                                prsactx->rsa)) {
+                    ERR_raise(ERR_LIB_PROV, ERR_R_RSA_LIB);
+                    return 0;
+                }
+                return 1;
+            case RSA_X931_PADDING:
+                if (!setup_tbuf(prsactx))
+                    return 0;
+                if (rsa_verify_recover(prsactx, prsactx->tbuf, &rslen, 0,
+                                       sig, siglen) <= 0)
+                    return 0;
+                break;
+            case RSA_PKCS1_PSS_PADDING:
             {
                 int ret;
                 size_t mdsize;
@@ -828,10 +833,10 @@ static int rsa_verify(void *vprsactx, const unsigned char *sig, size_t siglen,
                 }
                 return 1;
             }
-        default:
-            ERR_raise_data(ERR_LIB_PROV, PROV_R_INVALID_PADDING_MODE,
-                           "Only X.931, PKCS#1 v1.5 or PSS padding allowed");
-            return 0;
+            default:
+                ERR_raise_data(ERR_LIB_PROV, PROV_R_INVALID_PADDING_MODE,
+                               "Only X.931, PKCS#1 v1.5 or PSS padding allowed");
+                return 0;
         }
     } else {
         int ret;
@@ -867,7 +872,8 @@ static int rsa_digest_signverify_init(void *vprsactx, const char *mdname,
 
     if (mdname != NULL
         /* was rsa_setup_md already called in rsa_signverify_init()? */
-        && (mdname[0] == '\0' || OPENSSL_strcasecmp(prsactx->mdname, mdname) != 0)
+        && (mdname[0] == '\0' ||
+            OPENSSL_strcasecmp(prsactx->mdname, mdname) != 0)
         && !rsa_setup_md(prsactx, mdname, prsactx->propq))
         return 0;
 
@@ -884,7 +890,7 @@ static int rsa_digest_signverify_init(void *vprsactx, const char *mdname,
 
     return 1;
 
- error:
+error:
     EVP_MD_CTX_free(prsactx->mdctx);
     prsactx->mdctx = NULL;
     return 0;
@@ -1026,7 +1032,7 @@ static void *rsa_dupctx(void *vprsactx)
     if (srcctx->mdctx != NULL) {
         dstctx->mdctx = EVP_MD_CTX_new();
         if (dstctx->mdctx == NULL
-                || !EVP_MD_CTX_copy_ex(dstctx->mdctx, srcctx->mdctx))
+            || !EVP_MD_CTX_copy_ex(dstctx->mdctx, srcctx->mdctx))
             goto err;
     }
 
@@ -1037,7 +1043,7 @@ static void *rsa_dupctx(void *vprsactx)
     }
 
     return dstctx;
- err:
+err:
     rsa_freectx(dstctx);
     return NULL;
 }
@@ -1055,7 +1061,7 @@ static int rsa_get_ctx_params(void *vprsactx, OSSL_PARAM *params)
         /* The Algorithm Identifier of the combined signature algorithm */
         unsigned char aid_buf[128];
         unsigned char *aid;
-        size_t  aid_len;
+        size_t aid_len;
 
         aid = rsa_generate_signature_aid(prsactx, aid_buf,
                                          sizeof(aid_buf), &aid_len);
@@ -1066,11 +1072,11 @@ static int rsa_get_ctx_params(void *vprsactx, OSSL_PARAM *params)
     p = OSSL_PARAM_locate(params, OSSL_SIGNATURE_PARAM_PAD_MODE);
     if (p != NULL)
         switch (p->data_type) {
-        case OSSL_PARAM_INTEGER:
-            if (!OSSL_PARAM_set_int(p, prsactx->pad_mode))
-                return 0;
-            break;
-        case OSSL_PARAM_UTF8_STRING:
+            case OSSL_PARAM_INTEGER:
+                if (!OSSL_PARAM_set_int(p, prsactx->pad_mode))
+                    return 0;
+                break;
+            case OSSL_PARAM_UTF8_STRING:
             {
                 int i;
                 const char *word = NULL;
@@ -1090,8 +1096,8 @@ static int rsa_get_ctx_params(void *vprsactx, OSSL_PARAM *params)
                 }
             }
             break;
-        default:
-            return 0;
+            default:
+                return 0;
         }
 
     p = OSSL_PARAM_locate(params, OSSL_SIGNATURE_PARAM_DIGEST);
@@ -1111,19 +1117,19 @@ static int rsa_get_ctx_params(void *vprsactx, OSSL_PARAM *params)
             const char *value = NULL;
 
             switch (prsactx->saltlen) {
-            case RSA_PSS_SALTLEN_DIGEST:
-                value = OSSL_PKEY_RSA_PSS_SALT_LEN_DIGEST;
-                break;
-            case RSA_PSS_SALTLEN_MAX:
-                value = OSSL_PKEY_RSA_PSS_SALT_LEN_MAX;
-                break;
-            case RSA_PSS_SALTLEN_AUTO:
-                value = OSSL_PKEY_RSA_PSS_SALT_LEN_AUTO;
-                break;
-            case RSA_PSS_SALTLEN_AUTO_DIGEST_MAX:
-                value = OSSL_PKEY_RSA_PSS_SALT_LEN_AUTO_DIGEST_MAX;
-                break;
-            default:
+                case RSA_PSS_SALTLEN_DIGEST:
+                    value = OSSL_PKEY_RSA_PSS_SALT_LEN_DIGEST;
+                    break;
+                case RSA_PSS_SALTLEN_MAX:
+                    value = OSSL_PKEY_RSA_PSS_SALT_LEN_MAX;
+                    break;
+                case RSA_PSS_SALTLEN_AUTO:
+                    value = OSSL_PKEY_RSA_PSS_SALT_LEN_AUTO;
+                    break;
+                case RSA_PSS_SALTLEN_AUTO_DIGEST_MAX:
+                    value = OSSL_PKEY_RSA_PSS_SALT_LEN_AUTO_DIGEST_MAX;
+                    break;
+                default:
                 {
                     int len = BIO_snprintf(p->data, p->data_size, "%d",
                                            prsactx->saltlen);
@@ -1200,11 +1206,11 @@ static int rsa_set_ctx_params(void *vprsactx, const OSSL_PARAM params[])
         const char *err_extra_text = NULL;
 
         switch (p->data_type) {
-        case OSSL_PARAM_INTEGER: /* Support for legacy pad mode number */
-            if (!OSSL_PARAM_get_int(p, &pad_mode))
-                return 0;
-            break;
-        case OSSL_PARAM_UTF8_STRING:
+            case OSSL_PARAM_INTEGER: /* Support for legacy pad mode number */
+                if (!OSSL_PARAM_get_int(p, &pad_mode))
+                    return 0;
+                break;
+            case OSSL_PARAM_UTF8_STRING:
             {
                 int i;
 
@@ -1219,49 +1225,50 @@ static int rsa_set_ctx_params(void *vprsactx, const OSSL_PARAM params[])
                 }
             }
             break;
-        default:
-            return 0;
+            default:
+                return 0;
         }
 
         switch (pad_mode) {
-        case RSA_PKCS1_OAEP_PADDING:
-            /*
-             * OAEP padding is for asymmetric cipher only so is not compatible
-             * with signature use.
-             */
-            err_extra_text = "OAEP padding not allowed for signing / verifying";
-            goto bad_pad;
-        case RSA_PKCS1_PSS_PADDING:
-            if ((prsactx->operation
-                 & (EVP_PKEY_OP_SIGN | EVP_PKEY_OP_VERIFY)) == 0) {
+            case RSA_PKCS1_OAEP_PADDING:
+                /*
+                 * OAEP padding is for asymmetric cipher only so is not compatible
+                 * with signature use.
+                 */
                 err_extra_text =
-                    "PSS padding only allowed for sign and verify operations";
+                    "OAEP padding not allowed for signing / verifying";
                 goto bad_pad;
-            }
-            break;
-        case RSA_PKCS1_PADDING:
-            err_extra_text = "PKCS#1 padding not allowed with RSA-PSS";
-            goto cont;
-        case RSA_NO_PADDING:
-            err_extra_text = "No padding not allowed with RSA-PSS";
-            goto cont;
-        case RSA_X931_PADDING:
-            err_extra_text = "X.931 padding not allowed with RSA-PSS";
-        cont:
-            if (RSA_test_flags(prsactx->rsa,
-                               RSA_FLAG_TYPE_MASK) == RSA_FLAG_TYPE_RSA)
+            case RSA_PKCS1_PSS_PADDING:
+                if ((prsactx->operation
+                     & (EVP_PKEY_OP_SIGN | EVP_PKEY_OP_VERIFY)) == 0) {
+                    err_extra_text =
+                        "PSS padding only allowed for sign and verify operations";
+                    goto bad_pad;
+                }
                 break;
+            case RSA_PKCS1_PADDING:
+                err_extra_text = "PKCS#1 padding not allowed with RSA-PSS";
+                goto cont;
+            case RSA_NO_PADDING:
+                err_extra_text = "No padding not allowed with RSA-PSS";
+                goto cont;
+            case RSA_X931_PADDING:
+                err_extra_text = "X.931 padding not allowed with RSA-PSS";
+cont:
+                if (RSA_test_flags(prsactx->rsa,
+                                   RSA_FLAG_TYPE_MASK) == RSA_FLAG_TYPE_RSA)
+                    break;
             /* FALLTHRU */
-        default:
-        bad_pad:
-            if (err_extra_text == NULL)
-                ERR_raise(ERR_LIB_PROV,
-                          PROV_R_ILLEGAL_OR_UNSUPPORTED_PADDING_MODE);
-            else
-                ERR_raise_data(ERR_LIB_PROV,
-                               PROV_R_ILLEGAL_OR_UNSUPPORTED_PADDING_MODE,
-                               err_extra_text);
-            return 0;
+            default:
+bad_pad:
+                if (err_extra_text == NULL)
+                    ERR_raise(ERR_LIB_PROV,
+                              PROV_R_ILLEGAL_OR_UNSUPPORTED_PADDING_MODE);
+                else
+                    ERR_raise_data(ERR_LIB_PROV,
+                                   PROV_R_ILLEGAL_OR_UNSUPPORTED_PADDING_MODE,
+                                   err_extra_text);
+                return 0;
         }
     }
 
@@ -1275,24 +1282,26 @@ static int rsa_set_ctx_params(void *vprsactx, const OSSL_PARAM params[])
         }
 
         switch (p->data_type) {
-        case OSSL_PARAM_INTEGER: /* Support for legacy pad mode number */
-            if (!OSSL_PARAM_get_int(p, &saltlen))
+            case OSSL_PARAM_INTEGER: /* Support for legacy pad mode number */
+                if (!OSSL_PARAM_get_int(p, &saltlen))
+                    return 0;
+                break;
+            case OSSL_PARAM_UTF8_STRING:
+                if (strcmp(p->data, OSSL_PKEY_RSA_PSS_SALT_LEN_DIGEST) == 0)
+                    saltlen = RSA_PSS_SALTLEN_DIGEST;
+                else if (strcmp(p->data, OSSL_PKEY_RSA_PSS_SALT_LEN_MAX) == 0)
+                    saltlen = RSA_PSS_SALTLEN_MAX;
+                else if (strcmp(p->data, OSSL_PKEY_RSA_PSS_SALT_LEN_AUTO) == 0)
+                    saltlen = RSA_PSS_SALTLEN_AUTO;
+                else if (strcmp(p->data,
+                                OSSL_PKEY_RSA_PSS_SALT_LEN_AUTO_DIGEST_MAX) ==
+                         0)
+                    saltlen = RSA_PSS_SALTLEN_AUTO_DIGEST_MAX;
+                else
+                    saltlen = atoi(p->data);
+                break;
+            default:
                 return 0;
-            break;
-        case OSSL_PARAM_UTF8_STRING:
-            if (strcmp(p->data, OSSL_PKEY_RSA_PSS_SALT_LEN_DIGEST) == 0)
-                saltlen = RSA_PSS_SALTLEN_DIGEST;
-            else if (strcmp(p->data, OSSL_PKEY_RSA_PSS_SALT_LEN_MAX) == 0)
-                saltlen = RSA_PSS_SALTLEN_MAX;
-            else if (strcmp(p->data, OSSL_PKEY_RSA_PSS_SALT_LEN_AUTO) == 0)
-                saltlen = RSA_PSS_SALTLEN_AUTO;
-            else if (strcmp(p->data, OSSL_PKEY_RSA_PSS_SALT_LEN_AUTO_DIGEST_MAX) == 0)
-                saltlen = RSA_PSS_SALTLEN_AUTO_DIGEST_MAX;
-            else
-                saltlen = atoi(p->data);
-            break;
-        default:
-            return 0;
         }
 
         /*
@@ -1307,34 +1316,34 @@ static int rsa_set_ctx_params(void *vprsactx, const OSSL_PARAM params[])
 
         if (rsa_pss_restricted(prsactx)) {
             switch (saltlen) {
-            case RSA_PSS_SALTLEN_AUTO:
-            case RSA_PSS_SALTLEN_AUTO_DIGEST_MAX:
-                if (prsactx->operation == EVP_PKEY_OP_VERIFY) {
-                    ERR_raise_data(ERR_LIB_PROV, PROV_R_INVALID_SALT_LENGTH,
-                                   "Cannot use autodetected salt length");
-                    return 0;
-                }
-                break;
-            case RSA_PSS_SALTLEN_DIGEST:
-                if (prsactx->min_saltlen > EVP_MD_get_size(prsactx->md)) {
-                    ERR_raise_data(ERR_LIB_PROV,
-                                   PROV_R_PSS_SALTLEN_TOO_SMALL,
-                                   "Should be more than %d, but would be "
-                                   "set to match digest size (%d)",
-                                   prsactx->min_saltlen,
-                                   EVP_MD_get_size(prsactx->md));
-                    return 0;
-                }
-                break;
-            default:
-                if (saltlen >= 0 && saltlen < prsactx->min_saltlen) {
-                    ERR_raise_data(ERR_LIB_PROV,
-                                   PROV_R_PSS_SALTLEN_TOO_SMALL,
-                                   "Should be more than %d, "
-                                   "but would be set to %d",
-                                   prsactx->min_saltlen, saltlen);
-                    return 0;
-                }
+                case RSA_PSS_SALTLEN_AUTO:
+                case RSA_PSS_SALTLEN_AUTO_DIGEST_MAX:
+                    if (prsactx->operation == EVP_PKEY_OP_VERIFY) {
+                        ERR_raise_data(ERR_LIB_PROV, PROV_R_INVALID_SALT_LENGTH,
+                                       "Cannot use autodetected salt length");
+                        return 0;
+                    }
+                    break;
+                case RSA_PSS_SALTLEN_DIGEST:
+                    if (prsactx->min_saltlen > EVP_MD_get_size(prsactx->md)) {
+                        ERR_raise_data(ERR_LIB_PROV,
+                                       PROV_R_PSS_SALTLEN_TOO_SMALL,
+                                       "Should be more than %d, but would be "
+                                       "set to match digest size (%d)",
+                                       prsactx->min_saltlen,
+                                       EVP_MD_get_size(prsactx->md));
+                        return 0;
+                    }
+                    break;
+                default:
+                    if (saltlen >= 0 && saltlen < prsactx->min_saltlen) {
+                        ERR_raise_data(ERR_LIB_PROV,
+                                       PROV_R_PSS_SALTLEN_TOO_SMALL,
+                                       "Should be more than %d, "
+                                       "but would be set to %d",
+                                       prsactx->min_saltlen, saltlen);
+                        return 0;
+                    }
             }
         }
     }
@@ -1358,7 +1367,7 @@ static int rsa_set_ctx_params(void *vprsactx, const OSSL_PARAM params[])
 
         if (pad_mode != RSA_PKCS1_PSS_PADDING) {
             ERR_raise(ERR_LIB_PROV, PROV_R_INVALID_MGF1_MD);
-            return  0;
+            return 0;
         }
     }
 
@@ -1452,42 +1461,42 @@ static const OSSL_PARAM *rsa_settable_ctx_md_params(void *vprsactx)
 }
 
 const OSSL_DISPATCH ossl_rsa_signature_functions[] = {
-    { OSSL_FUNC_SIGNATURE_NEWCTX, (void (*)(void))rsa_newctx },
-    { OSSL_FUNC_SIGNATURE_SIGN_INIT, (void (*)(void))rsa_sign_init },
-    { OSSL_FUNC_SIGNATURE_SIGN, (void (*)(void))rsa_sign },
-    { OSSL_FUNC_SIGNATURE_VERIFY_INIT, (void (*)(void))rsa_verify_init },
-    { OSSL_FUNC_SIGNATURE_VERIFY, (void (*)(void))rsa_verify },
+    { OSSL_FUNC_SIGNATURE_NEWCTX, (void (*)(void)) rsa_newctx },
+    { OSSL_FUNC_SIGNATURE_SIGN_INIT, (void (*)(void)) rsa_sign_init },
+    { OSSL_FUNC_SIGNATURE_SIGN, (void (*)(void)) rsa_sign },
+    { OSSL_FUNC_SIGNATURE_VERIFY_INIT, (void (*)(void)) rsa_verify_init },
+    { OSSL_FUNC_SIGNATURE_VERIFY, (void (*)(void)) rsa_verify },
     { OSSL_FUNC_SIGNATURE_VERIFY_RECOVER_INIT,
-      (void (*)(void))rsa_verify_recover_init },
+      (void (*)(void)) rsa_verify_recover_init },
     { OSSL_FUNC_SIGNATURE_VERIFY_RECOVER,
-      (void (*)(void))rsa_verify_recover },
+      (void (*)(void)) rsa_verify_recover },
     { OSSL_FUNC_SIGNATURE_DIGEST_SIGN_INIT,
-      (void (*)(void))rsa_digest_sign_init },
+      (void (*)(void)) rsa_digest_sign_init },
     { OSSL_FUNC_SIGNATURE_DIGEST_SIGN_UPDATE,
-      (void (*)(void))rsa_digest_signverify_update },
+      (void (*)(void)) rsa_digest_signverify_update },
     { OSSL_FUNC_SIGNATURE_DIGEST_SIGN_FINAL,
-      (void (*)(void))rsa_digest_sign_final },
+      (void (*)(void)) rsa_digest_sign_final },
     { OSSL_FUNC_SIGNATURE_DIGEST_VERIFY_INIT,
-      (void (*)(void))rsa_digest_verify_init },
+      (void (*)(void)) rsa_digest_verify_init },
     { OSSL_FUNC_SIGNATURE_DIGEST_VERIFY_UPDATE,
-      (void (*)(void))rsa_digest_signverify_update },
+      (void (*)(void)) rsa_digest_signverify_update },
     { OSSL_FUNC_SIGNATURE_DIGEST_VERIFY_FINAL,
-      (void (*)(void))rsa_digest_verify_final },
-    { OSSL_FUNC_SIGNATURE_FREECTX, (void (*)(void))rsa_freectx },
-    { OSSL_FUNC_SIGNATURE_DUPCTX, (void (*)(void))rsa_dupctx },
-    { OSSL_FUNC_SIGNATURE_GET_CTX_PARAMS, (void (*)(void))rsa_get_ctx_params },
+      (void (*)(void)) rsa_digest_verify_final },
+    { OSSL_FUNC_SIGNATURE_FREECTX, (void (*)(void)) rsa_freectx },
+    { OSSL_FUNC_SIGNATURE_DUPCTX, (void (*)(void)) rsa_dupctx },
+    { OSSL_FUNC_SIGNATURE_GET_CTX_PARAMS, (void (*)(void)) rsa_get_ctx_params },
     { OSSL_FUNC_SIGNATURE_GETTABLE_CTX_PARAMS,
-      (void (*)(void))rsa_gettable_ctx_params },
-    { OSSL_FUNC_SIGNATURE_SET_CTX_PARAMS, (void (*)(void))rsa_set_ctx_params },
+      (void (*)(void)) rsa_gettable_ctx_params },
+    { OSSL_FUNC_SIGNATURE_SET_CTX_PARAMS, (void (*)(void)) rsa_set_ctx_params },
     { OSSL_FUNC_SIGNATURE_SETTABLE_CTX_PARAMS,
-      (void (*)(void))rsa_settable_ctx_params },
+      (void (*)(void)) rsa_settable_ctx_params },
     { OSSL_FUNC_SIGNATURE_GET_CTX_MD_PARAMS,
-      (void (*)(void))rsa_get_ctx_md_params },
+      (void (*)(void)) rsa_get_ctx_md_params },
     { OSSL_FUNC_SIGNATURE_GETTABLE_CTX_MD_PARAMS,
-      (void (*)(void))rsa_gettable_ctx_md_params },
+      (void (*)(void)) rsa_gettable_ctx_md_params },
     { OSSL_FUNC_SIGNATURE_SET_CTX_MD_PARAMS,
-      (void (*)(void))rsa_set_ctx_md_params },
+      (void (*)(void)) rsa_set_ctx_md_params },
     { OSSL_FUNC_SIGNATURE_SETTABLE_CTX_MD_PARAMS,
-      (void (*)(void))rsa_settable_ctx_md_params },
+      (void (*)(void)) rsa_settable_ctx_md_params },
     OSSL_DISPATCH_END
 };

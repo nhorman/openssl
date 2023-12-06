@@ -35,7 +35,7 @@ static int test_is_fips_enabled(void)
      * loading the FIPS provider.
      */
     if (!TEST_int_eq(is_fips || bad_fips, is_fips_enabled)
-            || !TEST_int_eq(is_fips && !bad_fips, is_fips_loaded))
+        || !TEST_int_eq(is_fips && !bad_fips, is_fips_loaded))
         return 0;
 
     /*
@@ -80,26 +80,26 @@ int setup_tests(void)
 
     argc = test_get_argument_count();
     switch (argc) {
-    case 0:
-        is_fips = 0;
-        bad_fips = 0;
-        break;
-    case 1:
-        arg1 = test_get_argument(0);
-        if (strcmp(arg1, "fips") == 0) {
-            is_fips = 1;
+        case 0:
+            is_fips = 0;
             bad_fips = 0;
             break;
-        } else if (strcmp(arg1, "badfips") == 0) {
-            /* Configured for FIPS, but the module fails to load */
-            is_fips = 0;
-            bad_fips = 1;
-            break;
-        }
+        case 1:
+            arg1 = test_get_argument(0);
+            if (strcmp(arg1, "fips") == 0) {
+                is_fips = 1;
+                bad_fips = 0;
+                break;
+            } else if (strcmp(arg1, "badfips") == 0) {
+                /* Configured for FIPS, but the module fails to load */
+                is_fips = 0;
+                bad_fips = 1;
+                break;
+            }
         /* fall through */
-    default:
-        TEST_error("Invalid argument\n");
-        return 0;
+        default:
+            TEST_error("Invalid argument\n");
+            return 0;
     }
 
     /* Must be the first test before any other libcrypto calls are made */

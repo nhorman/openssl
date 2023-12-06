@@ -21,7 +21,7 @@ static int cipher_enabled(const SSL_CIPHER *ciph)
         return 1;
 
     if (ciph->algorithm_enc != SSL_eNULL
-            && EVP_get_cipherbynid(SSL_CIPHER_get_cipher_nid(ciph)) == NULL)
+        && EVP_get_cipherbynid(SSL_CIPHER_get_cipher_nid(ciph)) == NULL)
         return 0;
 
     if (EVP_get_digestbynid(SSL_CIPHER_get_digest_nid(ciph)) == NULL)

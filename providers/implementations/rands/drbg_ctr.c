@@ -33,7 +33,8 @@ static OSSL_FUNC_rand_gettable_ctx_params_fn drbg_ctr_gettable_ctx_params;
 static OSSL_FUNC_rand_get_ctx_params_fn drbg_ctr_get_ctx_params;
 static OSSL_FUNC_rand_verify_zeroization_fn drbg_ctr_verify_zeroization;
 
-static int drbg_ctr_set_ctx_params_locked(void *vctx, const OSSL_PARAM params[]);
+static int drbg_ctr_set_ctx_params_locked(void *vctx,
+                                          const OSSL_PARAM params[]);
 
 /*
  * The state of a DRBG AES-CTR.
@@ -280,7 +281,7 @@ __owur static int ctr_update(PROV_DRBG *drbg,
         len = 48;
     }
     if (!EVP_CipherUpdate(ctr->ctx_ecb, out, &outlen, V_tmp, len)
-            || outlen != len)
+        || outlen != len)
         return 0;
     memcpy(ctr->K, out, ctr->keylen);
     memcpy(ctr->V, out + ctr->keylen, 16);
@@ -338,11 +339,11 @@ static int drbg_ctr_instantiate_wrapper(void *vdrbg, unsigned int strength,
         return 0;
 
     if (!ossl_prov_is_running()
-            || !drbg_ctr_set_ctx_params_locked(drbg, params))
+        || !drbg_ctr_set_ctx_params_locked(drbg, params))
         goto err;
     ret = ossl_prov_drbg_instantiate(drbg, strength, prediction_resistance,
                                      pstr, pstr_len);
- err:
+err:
     if (drbg->lock != NULL)
         CRYPTO_THREAD_unlock(drbg->lock);
     return ret;
@@ -461,8 +462,8 @@ static int drbg_ctr_generate(PROV_DRBG *drbg,
 
 static int drbg_ctr_generate_wrapper
     (void *vdrbg, unsigned char *out, size_t outlen,
-     unsigned int strength, int prediction_resistance,
-     const unsigned char *adin, size_t adin_len)
+    unsigned int strength, int prediction_resistance,
+    const unsigned char *adin, size_t adin_len)
 {
     PROV_DRBG *drbg = (PROV_DRBG *)vdrbg;
 
@@ -515,7 +516,7 @@ static int drbg_ctr_verify_zeroization(void *vdrbg)
         goto err;
 
     ret = 1;
- err:
+err:
     if (drbg->lock != NULL)
         CRYPTO_THREAD_unlock(drbg->lock);
     return ret;
@@ -612,7 +613,7 @@ err:
     EVP_CIPHER_CTX_free(ctr->ctx_ecb);
     EVP_CIPHER_CTX_free(ctr->ctx_ctr);
     ctr->ctx_ecb = ctr->ctx_ctr = NULL;
-    return 0;    
+    return 0;
 }
 
 static int drbg_ctr_new(PROV_DRBG *drbg)
@@ -629,7 +630,7 @@ static int drbg_ctr_new(PROV_DRBG *drbg)
 }
 
 static void *drbg_ctr_new_wrapper(void *provctx, void *parent,
-                                   const OSSL_DISPATCH *parent_dispatch)
+                                  const OSSL_DISPATCH *parent_dispatch)
 {
     return ossl_rand_drbg_new(provctx, parent, parent_dispatch, &drbg_ctr_new,
                               &drbg_ctr_instantiate, &drbg_ctr_uninstantiate,
@@ -677,12 +678,13 @@ static int drbg_ctr_get_ctx_params(void *vdrbg, OSSL_PARAM params[])
     if (p != NULL) {
         if (ctr->cipher_ctr == NULL
             || !OSSL_PARAM_set_utf8_string(p,
-                                           EVP_CIPHER_get0_name(ctr->cipher_ctr)))
+                                           EVP_CIPHER_get0_name(
+                                               ctr->cipher_ctr)))
             goto err;
     }
 
     ret = ossl_drbg_get_ctx_params(drbg, params);
- err:
+err:
     if (drbg->lock != NULL)
         CRYPTO_THREAD_unlock(drbg->lock);
 
@@ -712,7 +714,7 @@ static int drbg_ctr_set_ctx_params_locked(void *vctx, const OSSL_PARAM params[])
     int i, cipher_init = 0;
 
     if ((p = OSSL_PARAM_locate_const(params, OSSL_DRBG_PARAM_USE_DF)) != NULL
-            && OSSL_PARAM_get_int(p, &i)) {
+        && OSSL_PARAM_get_int(p, &i)) {
         /* FIPS errors out in the drbg_ctr_init() call later */
         ctr->use_df = i != 0;
         cipher_init = 1;
@@ -731,7 +733,7 @@ static int drbg_ctr_set_ctx_params_locked(void *vctx, const OSSL_PARAM params[])
         size_t ecb_str_len = sizeof("ECB") - 1;
 
         if (p->data_type != OSSL_PARAM_UTF8_STRING
-                || p->data_size < ctr_str_len)
+            || p->data_size < ctr_str_len)
             return 0;
         if (OPENSSL_strcasecmp("CTR", base + p->data_size - ctr_str_len) != 0) {
             ERR_raise(ERR_LIB_PROV, PROV_R_REQUIRE_CTR_MODE_CIPHER);
@@ -788,26 +790,27 @@ static const OSSL_PARAM *drbg_ctr_settable_ctx_params(ossl_unused void *vctx,
 }
 
 const OSSL_DISPATCH ossl_drbg_ctr_functions[] = {
-    { OSSL_FUNC_RAND_NEWCTX, (void(*)(void))drbg_ctr_new_wrapper },
-    { OSSL_FUNC_RAND_FREECTX, (void(*)(void))drbg_ctr_free },
+    { OSSL_FUNC_RAND_NEWCTX, (void (*)(void)) drbg_ctr_new_wrapper },
+    { OSSL_FUNC_RAND_FREECTX, (void (*)(void)) drbg_ctr_free },
     { OSSL_FUNC_RAND_INSTANTIATE,
-      (void(*)(void))drbg_ctr_instantiate_wrapper },
+      (void (*)(void)) drbg_ctr_instantiate_wrapper },
     { OSSL_FUNC_RAND_UNINSTANTIATE,
-      (void(*)(void))drbg_ctr_uninstantiate_wrapper },
-    { OSSL_FUNC_RAND_GENERATE, (void(*)(void))drbg_ctr_generate_wrapper },
-    { OSSL_FUNC_RAND_RESEED, (void(*)(void))drbg_ctr_reseed_wrapper },
-    { OSSL_FUNC_RAND_ENABLE_LOCKING, (void(*)(void))ossl_drbg_enable_locking },
-    { OSSL_FUNC_RAND_LOCK, (void(*)(void))ossl_drbg_lock },
-    { OSSL_FUNC_RAND_UNLOCK, (void(*)(void))ossl_drbg_unlock },
+      (void (*)(void)) drbg_ctr_uninstantiate_wrapper },
+    { OSSL_FUNC_RAND_GENERATE, (void (*)(void)) drbg_ctr_generate_wrapper },
+    { OSSL_FUNC_RAND_RESEED, (void (*)(void)) drbg_ctr_reseed_wrapper },
+    { OSSL_FUNC_RAND_ENABLE_LOCKING,
+      (void (*)(void)) ossl_drbg_enable_locking },
+    { OSSL_FUNC_RAND_LOCK, (void (*)(void)) ossl_drbg_lock },
+    { OSSL_FUNC_RAND_UNLOCK, (void (*)(void)) ossl_drbg_unlock },
     { OSSL_FUNC_RAND_SETTABLE_CTX_PARAMS,
-      (void(*)(void))drbg_ctr_settable_ctx_params },
-    { OSSL_FUNC_RAND_SET_CTX_PARAMS, (void(*)(void))drbg_ctr_set_ctx_params },
+      (void (*)(void)) drbg_ctr_settable_ctx_params },
+    { OSSL_FUNC_RAND_SET_CTX_PARAMS, (void (*)(void)) drbg_ctr_set_ctx_params },
     { OSSL_FUNC_RAND_GETTABLE_CTX_PARAMS,
-      (void(*)(void))drbg_ctr_gettable_ctx_params },
-    { OSSL_FUNC_RAND_GET_CTX_PARAMS, (void(*)(void))drbg_ctr_get_ctx_params },
+      (void (*)(void)) drbg_ctr_gettable_ctx_params },
+    { OSSL_FUNC_RAND_GET_CTX_PARAMS, (void (*)(void)) drbg_ctr_get_ctx_params },
     { OSSL_FUNC_RAND_VERIFY_ZEROIZATION,
-      (void(*)(void))drbg_ctr_verify_zeroization },
-    { OSSL_FUNC_RAND_GET_SEED, (void(*)(void))ossl_drbg_get_seed },
-    { OSSL_FUNC_RAND_CLEAR_SEED, (void(*)(void))ossl_drbg_clear_seed },
+      (void (*)(void)) drbg_ctr_verify_zeroization },
+    { OSSL_FUNC_RAND_GET_SEED, (void (*)(void)) ossl_drbg_get_seed },
+    { OSSL_FUNC_RAND_CLEAR_SEED, (void (*)(void)) ossl_drbg_clear_seed },
     OSSL_DISPATCH_END
 };

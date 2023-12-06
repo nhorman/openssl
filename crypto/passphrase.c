@@ -174,25 +174,25 @@ static int do_ui_passphrase(char *pass, size_t pass_size, size_t *pass_len,
     }
 
     switch (UI_process(ui)) {
-    case -2:
-        ERR_raise(ERR_LIB_CRYPTO, ERR_R_INTERRUPTED_OR_CANCELLED);
-        break;
-    case -1:
-        ERR_raise(ERR_LIB_CRYPTO, ERR_R_UI_LIB);
-        break;
-    default:
-        res = UI_get_result_length(ui, prompt_idx);
-        if (res < 0) {
+        case -2:
+            ERR_raise(ERR_LIB_CRYPTO, ERR_R_INTERRUPTED_OR_CANCELLED);
+            break;
+        case -1:
             ERR_raise(ERR_LIB_CRYPTO, ERR_R_UI_LIB);
             break;
-        }
-        *pass_len = (size_t)res;
-        memcpy(pass, ipass, *pass_len);
-        ret = 1;
-        break;
+        default:
+            res = UI_get_result_length(ui, prompt_idx);
+            if (res < 0) {
+                ERR_raise(ERR_LIB_CRYPTO, ERR_R_UI_LIB);
+                break;
+            }
+            *pass_len = (size_t)res;
+            memcpy(pass, ipass, *pass_len);
+            ret = 1;
+            break;
     }
 
- end:
+end:
     OPENSSL_clear_free(vpass, pass_size + 1);
     OPENSSL_clear_free(ipass, pass_size + 1);
     OPENSSL_free(prompt);
@@ -282,7 +282,7 @@ int ossl_pw_get_passphrase(char *pass, size_t pass_size, size_t *pass_len,
 
     UI_destroy_method(allocated_ui_method);
 
- do_cache:
+do_cache:
     if (ret && data->flag_cache_passphrase) {
         if (data->cached_passphrase == NULL
             || *pass_len > data->cached_passphrase_len) {

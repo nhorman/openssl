@@ -49,15 +49,16 @@ typedef struct SHAstate_st {
 OSSL_DEPRECATEDIN_3_0 int SHA1_Init(SHA_CTX *c);
 OSSL_DEPRECATEDIN_3_0 int SHA1_Update(SHA_CTX *c, const void *data, size_t len);
 OSSL_DEPRECATEDIN_3_0 int SHA1_Final(unsigned char *md, SHA_CTX *c);
-OSSL_DEPRECATEDIN_3_0 void SHA1_Transform(SHA_CTX *c, const unsigned char *data);
+OSSL_DEPRECATEDIN_3_0 void SHA1_Transform(SHA_CTX *c,
+                                          const unsigned char *data);
 # endif
 
 unsigned char *SHA1(const unsigned char *d, size_t n, unsigned char *md);
 
 # ifndef OPENSSL_NO_DEPRECATED_3_0
 #  define SHA256_CBLOCK   (SHA_LBLOCK*4)/* SHA-256 treats input data as a
-                                        * contiguous array of 32 bit wide
-                                        * big-endian values. */
+                                         * contiguous array of 32 bit wide
+                                         * big-endian values. */
 
 typedef struct SHA256state_st {
     SHA_LONG h[8];

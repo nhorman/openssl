@@ -24,8 +24,10 @@ static X509_EXTENSION *do_ext_nconf(CONF *conf, X509V3_CTX *ctx, int ext_nid,
 static X509_EXTENSION *v3_generic_extension(const char *ext, const char *value,
                                             int crit, int type,
                                             X509V3_CTX *ctx);
-static char *conf_lhash_get_string(void *db, const char *section, const char *value);
-static STACK_OF(CONF_VALUE) *conf_lhash_get_section(void *db, const char *section);
+static char *conf_lhash_get_string(void *db, const char *section,
+                                   const char *value);
+static STACK_OF(CONF_VALUE) *conf_lhash_get_section(void *db,
+                                                    const char *section);
 static X509_EXTENSION *do_ext_i2d(const X509V3_EXT_METHOD *method,
                                   int ext_nid, int crit, void *ext_struc);
 static unsigned char *generic_asn1(const char *value, X509V3_CTX *ctx,
@@ -182,7 +184,7 @@ static X509_EXTENSION *do_ext_i2d(const X509V3_EXT_METHOD *method,
 
     return ext;
 
- err:
+err:
     OPENSSL_free(ext_der);
     ASN1_OCTET_STRING_free(ext_oct);
     return NULL;
@@ -273,7 +275,7 @@ static X509_EXTENSION *v3_generic_extension(const char *ext, const char *value,
 
     extension = X509_EXTENSION_create_by_OBJ(NULL, obj, crit, oct);
 
- err:
+err:
     ASN1_OBJECT_free(obj);
     ASN1_OCTET_STRING_free(oct);
     OPENSSL_free(ext_der);
@@ -511,7 +513,8 @@ X509_EXTENSION *X509V3_EXT_conf(LHASH_OF(CONF_VALUE) *conf, X509V3_CTX *ctx,
 }
 
 X509_EXTENSION *X509V3_EXT_conf_nid(LHASH_OF(CONF_VALUE) *conf,
-                                    X509V3_CTX *ctx, int ext_nid, const char *value)
+                                    X509V3_CTX *ctx, int ext_nid,
+                                    const char *value)
 {
     CONF *ctmp;
     X509_EXTENSION *ret;
@@ -525,12 +528,14 @@ X509_EXTENSION *X509V3_EXT_conf_nid(LHASH_OF(CONF_VALUE) *conf,
     return ret;
 }
 
-static char *conf_lhash_get_string(void *db, const char *section, const char *value)
+static char *conf_lhash_get_string(void *db, const char *section,
+                                   const char *value)
 {
     return CONF_get_string(db, section, value);
 }
 
-static STACK_OF(CONF_VALUE) *conf_lhash_get_section(void *db, const char *section)
+static STACK_OF(CONF_VALUE) *conf_lhash_get_section(void *db,
+                                                    const char *section)
 {
     return CONF_get_section(db, section);
 }

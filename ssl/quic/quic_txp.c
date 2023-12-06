@@ -56,52 +56,52 @@ struct ossl_quic_tx_packetiser_st {
      * callback when it is no longer needed.
      */
     const unsigned char             *initial_token;
-    size_t                          initial_token_len;
+    size_t initial_token_len;
     ossl_quic_initial_token_free_fn *initial_token_free_cb;
     void                            *initial_token_free_cb_arg;
 
     /* Subcomponents of the TXP that we own. */
-    QUIC_FIFD       fifd;       /* QUIC Frame-in-Flight Dispatcher */
+    QUIC_FIFD fifd;             /* QUIC Frame-in-Flight Dispatcher */
 
     /* Internal state. */
-    uint64_t        next_pn[QUIC_PN_SPACE_NUM]; /* Next PN to use in given PN space. */
-    OSSL_TIME       last_tx_time;               /* Last time a packet was generated, or 0. */
+    uint64_t next_pn[QUIC_PN_SPACE_NUM];        /* Next PN to use in given PN space. */
+    OSSL_TIME last_tx_time;                     /* Last time a packet was generated, or 0. */
 
     /* Internal state - frame (re)generation flags. */
-    unsigned int    want_handshake_done     : 1;
-    unsigned int    want_max_data           : 1;
-    unsigned int    want_max_streams_bidi   : 1;
-    unsigned int    want_max_streams_uni    : 1;
+    unsigned int want_handshake_done     : 1;
+    unsigned int want_max_data           : 1;
+    unsigned int want_max_streams_bidi   : 1;
+    unsigned int want_max_streams_uni    : 1;
 
     /* Internal state - frame (re)generation flags - per PN space. */
-    unsigned int    want_ack                : QUIC_PN_SPACE_NUM;
-    unsigned int    force_ack_eliciting     : QUIC_PN_SPACE_NUM;
+    unsigned int want_ack                : QUIC_PN_SPACE_NUM;
+    unsigned int force_ack_eliciting     : QUIC_PN_SPACE_NUM;
 
     /*
      * Internal state - connection close terminal state.
      * Once this is set, it is not unset unlike other want_ flags - we keep
      * sending it in every packet.
      */
-    unsigned int    want_conn_close         : 1;
+    unsigned int want_conn_close         : 1;
 
     /* Has the handshake been completed? */
-    unsigned int    handshake_complete      : 1;
+    unsigned int handshake_complete      : 1;
 
-    OSSL_QUIC_FRAME_CONN_CLOSE  conn_close_frame;
+    OSSL_QUIC_FRAME_CONN_CLOSE conn_close_frame;
 
     /*
      * Counts of the number of bytes received and sent while in the closing
      * state.
      */
-    uint64_t                        closing_bytes_recv;
-    uint64_t                        closing_bytes_xmit;
+    uint64_t closing_bytes_recv;
+    uint64_t closing_bytes_xmit;
 
     /* Internal state - packet assembly. */
     struct txp_el {
         unsigned char   *scratch;       /* scratch buffer for packet assembly */
-        size_t          scratch_len;    /* number of bytes allocated for scratch */
+        size_t scratch_len;             /* number of bytes allocated for scratch */
         OSSL_QTX_IOVEC  *iovec;         /* scratch iovec array for use with QTX */
-        size_t          alloc_iovec;    /* size of iovec array */
+        size_t alloc_iovec;             /* size of iovec array */
     } el[QUIC_ENC_LEVEL_NUM];
 
     /* Message callback related arguments */
@@ -110,9 +110,9 @@ struct ossl_quic_tx_packetiser_st {
     SSL *msg_callback_ssl;
 
     /* Callbacks. */
-    void            (*ack_tx_cb)(const OSSL_QUIC_FRAME_ACK *ack,
-                                 uint32_t pn_space,
-                                 void *arg);
+    void (*ack_tx_cb)(const OSSL_QUIC_FRAME_ACK *ack,
+                      uint32_t pn_space,
+                      void *arg);
     void            *ack_tx_cb_arg;
 };
 
@@ -175,8 +175,8 @@ struct tx_helper {
          * that a serialization transaction is currently in progress.
          */
         unsigned char   *data;
-        WPACKET         wpkt;
-        unsigned int    active : 1;
+        WPACKET wpkt;
+        unsigned int active : 1;
     } txn;
 };
 
@@ -272,7 +272,7 @@ static int tx_helper_append_iovec(struct tx_helper *h,
 static size_t tx_helper_get_space_left(struct tx_helper *h)
 {
     return h->max_ppl
-        - (h->reserve_allowed ? 0 : h->reserve) - h->bytes_appended;
+           - (h->reserve_allowed ? 0 : h->reserve) - h->bytes_appended;
 }
 
 /*
@@ -358,7 +358,7 @@ static int tx_helper_commit(struct tx_helper *h)
         PACKET pkt;
 
         if (!PACKET_buf_init(&pkt, h->txn.data, l)
-                || !ossl_quic_wire_peek_frame_header(&pkt, &ftype, NULL)) {
+            || !ossl_quic_wire_peek_frame_header(&pkt, &ftype, NULL)) {
             tx_helper_end(h, 0);
             return 0;
         }
@@ -366,7 +366,7 @@ static int tx_helper_commit(struct tx_helper *h)
         if (ftype == OSSL_QUIC_FRAME_TYPE_PADDING)
             ctype = SSL3_RT_QUIC_FRAME_PADDING;
         else if (OSSL_QUIC_FRAME_TYPE_IS_STREAM(ftype)
-                || ftype == OSSL_QUIC_FRAME_TYPE_CRYPTO)
+                 || ftype == OSSL_QUIC_FRAME_TYPE_CRYPTO)
             ctype = SSL3_RT_QUIC_FRAME_HEADER;
 
         h->txp->msg_callback(1, OSSL_QUIC1_VERSION, ctype, h->txn.data, l,
@@ -400,19 +400,19 @@ struct archetype_data {
 };
 
 struct txp_pkt_geom {
-    size_t                  cmpl, cmppl, hwm, pkt_overhead;
-    uint32_t                archetype;
-    struct archetype_data   adata;
+    size_t cmpl, cmppl, hwm, pkt_overhead;
+    uint32_t archetype;
+    struct archetype_data adata;
 };
 
 struct txp_pkt {
-    struct tx_helper    h;
-    int                 h_valid;
+    struct tx_helper h;
+    int h_valid;
     QUIC_TXPIM_PKT      *tpkt;
     QUIC_STREAM         *stream_head;
-    QUIC_PKT_HDR        phdr;
+    QUIC_PKT_HDR phdr;
     struct txp_pkt_geom geom;
-    int                 force_pad;
+    int force_pad;
 };
 
 static QUIC_SSTREAM *get_sstream_by_id(uint64_t stream_id, uint32_t pn_space,
@@ -445,13 +445,15 @@ static void txp_pkt_cleanup(struct txp_pkt *pkt, OSSL_QUIC_TX_PACKETISER *txp);
 static int txp_pkt_postgen_update_pkt_overhead(struct txp_pkt *pkt,
                                                OSSL_QUIC_TX_PACKETISER *txp);
 static int txp_pkt_append_padding(struct txp_pkt *pkt,
-                                  OSSL_QUIC_TX_PACKETISER *txp, size_t num_bytes);
+                                  OSSL_QUIC_TX_PACKETISER *txp,
+                                  size_t num_bytes);
 static int txp_pkt_commit(OSSL_QUIC_TX_PACKETISER *txp, struct txp_pkt *pkt,
                           uint32_t archetype, int *txpim_pkt_reffed);
 static uint32_t txp_determine_archetype(OSSL_QUIC_TX_PACKETISER *txp,
                                         uint64_t cc_limit);
 
-OSSL_QUIC_TX_PACKETISER *ossl_quic_tx_packetiser_new(const OSSL_QUIC_TX_PACKETISER_ARGS *args)
+OSSL_QUIC_TX_PACKETISER *ossl_quic_tx_packetiser_new(
+    const OSSL_QUIC_TX_PACKETISER_ARGS *args)
 {
     OSSL_QUIC_TX_PACKETISER *txp;
 
@@ -616,9 +618,10 @@ int ossl_quic_tx_packetiser_set_peer(OSSL_QUIC_TX_PACKETISER *txp,
 }
 
 void ossl_quic_tx_packetiser_set_ack_tx_cb(OSSL_QUIC_TX_PACKETISER *txp,
-                                           void (*cb)(const OSSL_QUIC_FRAME_ACK *ack,
-                                                      uint32_t pn_space,
-                                                      void *arg),
+                                           void (*cb)(
+                                               const OSSL_QUIC_FRAME_ACK *ack,
+                                               uint32_t pn_space,
+                                               void *arg),
                                            void *cb_arg)
 {
     txp->ack_tx_cb      = cb;
@@ -639,18 +642,21 @@ int ossl_quic_tx_packetiser_discard_enc_level(OSSL_QUIC_TX_PACKETISER *txp,
     return 1;
 }
 
-void ossl_quic_tx_packetiser_notify_handshake_complete(OSSL_QUIC_TX_PACKETISER *txp)
+void ossl_quic_tx_packetiser_notify_handshake_complete(
+    OSSL_QUIC_TX_PACKETISER *txp)
 {
     txp->handshake_complete = 1;
 }
 
-void ossl_quic_tx_packetiser_schedule_handshake_done(OSSL_QUIC_TX_PACKETISER *txp)
+void ossl_quic_tx_packetiser_schedule_handshake_done(
+    OSSL_QUIC_TX_PACKETISER *txp)
 {
     txp->want_handshake_done = 1;
 }
 
-void ossl_quic_tx_packetiser_schedule_ack_eliciting(OSSL_QUIC_TX_PACKETISER *txp,
-                                                    uint32_t pn_space)
+void ossl_quic_tx_packetiser_schedule_ack_eliciting(
+    OSSL_QUIC_TX_PACKETISER *txp,
+    uint32_t pn_space)
 {
     txp->force_ack_eliciting |= (1UL << pn_space);
 }
@@ -759,7 +765,8 @@ int ossl_quic_tx_packetiser_generate(OSSL_QUIC_TX_PACKETISER *txp,
     uint32_t conn_close_enc_level = QUIC_ENC_LEVEL_NUM;
     struct txp_pkt pkt[QUIC_ENC_LEVEL_NUM];
     size_t pkts_done = 0;
-    uint64_t cc_limit = txp->args.cc_method->get_tx_allowance(txp->args.cc_data);
+    uint64_t cc_limit =
+        txp->args.cc_method->get_tx_allowance(txp->args.cc_data);
     int need_padding = 0, txpim_pkt_reffed;
 
     for (enc_level = QUIC_ENC_LEVEL_INITIAL;
@@ -812,8 +819,8 @@ int ossl_quic_tx_packetiser_generate(OSSL_QUIC_TX_PACKETISER *txp,
             need_padding = 1;
 
         pkt[enc_level].geom.hwm = running_total
-            + pkt[enc_level].h.bytes_appended
-            + pkt[enc_level].geom.pkt_overhead;
+                                  + pkt[enc_level].h.bytes_appended
+                                  + pkt[enc_level].geom.pkt_overhead;
     }
 
     /* 3. Packet Adjustment */
@@ -845,7 +852,7 @@ int ossl_quic_tx_packetiser_generate(OSSL_QUIC_TX_PACKETISER *txp,
 
                 txp_pkt_postgen_update_pkt_overhead(&pkt[enc_level], txp);
                 total_dgram_size += pkt[enc_level].geom.pkt_overhead
-                    + pkt[enc_level].h.bytes_appended;
+                                    + pkt[enc_level].h.bytes_appended;
             }
 
         if (pad_el != QUIC_ENC_LEVEL_NUM && total_dgram_size < min_dpl) {
@@ -894,7 +901,7 @@ int ossl_quic_tx_packetiser_generate(OSSL_QUIC_TX_PACKETISER *txp,
         if (rc) {
             status->sent_ack_eliciting
                 = status->sent_ack_eliciting
-                || pkt[enc_level].tpkt->ackm_pkt.is_ack_eliciting;
+                  || pkt[enc_level].tpkt->ackm_pkt.is_ack_eliciting;
 
             if (enc_level == QUIC_ENC_LEVEL_HANDSHAKE)
                 status->sent_handshake
@@ -926,7 +933,8 @@ out:
     return res;
 }
 
-static const struct archetype_data archetypes[QUIC_ENC_LEVEL_NUM][TX_PACKETISER_ARCHETYPE_NUM] = {
+static const struct archetype_data archetypes[QUIC_ENC_LEVEL_NUM][
+    TX_PACKETISER_ARCHETYPE_NUM] = {
     /* EL 0(INITIAL) */
     {
         /* EL 0(INITIAL) - Archetype 0(NORMAL) */
@@ -1205,7 +1213,7 @@ static int txp_determine_geometry(OSSL_QUIC_TX_PACKETISER *txp,
 
     /* Get information about packet archetype. */
     if (!txp_get_archetype_data(enc_level, archetype, &geom->adata))
-       return 0;
+        return 0;
 
     /* Assemble packet header. */
     phdr->type          = ossl_quic_enc_level_to_pkt_type(enc_level);
@@ -1393,7 +1401,8 @@ static int txp_should_try_staging(OSSL_QUIC_TX_PACKETISER *txp,
 
     /* Does the connection-level RXFC want to produce a frame? */
     if (a.allow_conn_fc && (txp->want_max_data
-        || ossl_quic_rxfc_has_cwm_changed(txp->args.conn_rxfc, 0)))
+                            || ossl_quic_rxfc_has_cwm_changed(txp->args.
+                                                              conn_rxfc, 0)))
         return 1;
 
     /* Do we want to produce a MAX_STREAMS frame? */
@@ -1423,34 +1432,36 @@ static int txp_should_try_staging(OSSL_QUIC_TX_PACKETISER *txp,
 
     /* Does the CFQ have any frames queued for this PN space? */
     if (enc_level != QUIC_ENC_LEVEL_0RTT)
-        for (cfq_item = ossl_quic_cfq_get_priority_head(txp->args.cfq, pn_space);
+        for (cfq_item =
+                 ossl_quic_cfq_get_priority_head(txp->args.cfq, pn_space);
              cfq_item != NULL;
-             cfq_item = ossl_quic_cfq_item_get_priority_next(cfq_item, pn_space)) {
+             cfq_item =
+                 ossl_quic_cfq_item_get_priority_next(cfq_item, pn_space)) {
             uint64_t frame_type = ossl_quic_cfq_item_get_frame_type(cfq_item);
 
             switch (frame_type) {
-            case OSSL_QUIC_FRAME_TYPE_NEW_CONN_ID:
-                if (a.allow_new_conn_id)
-                    return 1;
-                break;
-            case OSSL_QUIC_FRAME_TYPE_RETIRE_CONN_ID:
-                if (a.allow_retire_conn_id)
-                    return 1;
-                break;
-            case OSSL_QUIC_FRAME_TYPE_NEW_TOKEN:
-                if (a.allow_new_token)
-                    return 1;
-                break;
-            case OSSL_QUIC_FRAME_TYPE_PATH_RESPONSE:
-                if (a.allow_path_response)
-                    return 1;
-                break;
-            default:
-                if (a.allow_cfq_other)
-                    return 1;
-                break;
+                case OSSL_QUIC_FRAME_TYPE_NEW_CONN_ID:
+                    if (a.allow_new_conn_id)
+                        return 1;
+                    break;
+                case OSSL_QUIC_FRAME_TYPE_RETIRE_CONN_ID:
+                    if (a.allow_retire_conn_id)
+                        return 1;
+                    break;
+                case OSSL_QUIC_FRAME_TYPE_NEW_TOKEN:
+                    if (a.allow_new_token)
+                        return 1;
+                    break;
+                case OSSL_QUIC_FRAME_TYPE_PATH_RESPONSE:
+                    if (a.allow_path_response)
+                        return 1;
+                    break;
+                default:
+                    if (a.allow_cfq_other)
+                        return 1;
+                    break;
             }
-       }
+        }
 
     if (a.allow_stream_rel && txp->handshake_complete) {
         QUIC_STREAM_ITER it;
@@ -1550,40 +1561,40 @@ static void on_regen_notify(uint64_t frame_type, uint64_t stream_id,
             txp->want_ack |= (1UL << pkt->ackm_pkt.pkt_space);
             break;
         case OSSL_QUIC_FRAME_TYPE_MAX_STREAM_DATA:
-            {
-                QUIC_STREAM *s
-                    = ossl_quic_stream_map_get_by_id(txp->args.qsm, stream_id);
+        {
+            QUIC_STREAM *s
+                = ossl_quic_stream_map_get_by_id(txp->args.qsm, stream_id);
 
-                if (s == NULL)
-                    return;
+            if (s == NULL)
+                return;
 
-                s->want_max_stream_data = 1;
-                ossl_quic_stream_map_update_state(txp->args.qsm, s);
-            }
-            break;
+            s->want_max_stream_data = 1;
+            ossl_quic_stream_map_update_state(txp->args.qsm, s);
+        }
+        break;
         case OSSL_QUIC_FRAME_TYPE_STOP_SENDING:
-            {
-                QUIC_STREAM *s
-                    = ossl_quic_stream_map_get_by_id(txp->args.qsm, stream_id);
+        {
+            QUIC_STREAM *s
+                = ossl_quic_stream_map_get_by_id(txp->args.qsm, stream_id);
 
-                if (s == NULL)
-                    return;
+            if (s == NULL)
+                return;
 
-                ossl_quic_stream_map_schedule_stop_sending(txp->args.qsm, s);
-            }
-            break;
+            ossl_quic_stream_map_schedule_stop_sending(txp->args.qsm, s);
+        }
+        break;
         case OSSL_QUIC_FRAME_TYPE_RESET_STREAM:
-            {
-                QUIC_STREAM *s
-                    = ossl_quic_stream_map_get_by_id(txp->args.qsm, stream_id);
+        {
+            QUIC_STREAM *s
+                = ossl_quic_stream_map_get_by_id(txp->args.qsm, stream_id);
 
-                if (s == NULL)
-                    return;
+            if (s == NULL)
+                return;
 
-                s->want_reset_stream = 1;
-                ossl_quic_stream_map_update_state(txp->args.qsm, s);
-            }
-            break;
+            s->want_reset_stream = 1;
+            ossl_quic_stream_map_update_state(txp->args.qsm, s);
+        }
+        break;
         default:
             assert(0);
             break;
@@ -1656,15 +1667,17 @@ static int txp_pkt_postgen_update_pkt_overhead(struct txp_pkt *pkt,
          */
         return 1;
 
-    if (!ossl_qtx_calculate_ciphertext_payload_len(txp->args.qtx, pkt->h.enc_level,
+    if (!ossl_qtx_calculate_ciphertext_payload_len(txp->args.qtx,
+                                                   pkt->h.enc_level,
                                                    pkt->h.bytes_appended,
                                                    &ciphertext_len))
         return 0;
 
     pkt->phdr.len = ciphertext_len;
 
-    hdr_len = ossl_quic_wire_get_encoded_pkt_hdr_len(pkt->phdr.dst_conn_id.id_len,
-                                                     &pkt->phdr);
+    hdr_len = ossl_quic_wire_get_encoded_pkt_hdr_len(
+        pkt->phdr.dst_conn_id.id_len,
+        &pkt->phdr);
 
     pkt->geom.pkt_overhead = hdr_len + ciphertext_len - pkt->h.bytes_appended;
     return 1;
@@ -1677,33 +1690,33 @@ static void on_confirm_notify(uint64_t frame_type, uint64_t stream_id,
 
     switch (frame_type) {
         case OSSL_QUIC_FRAME_TYPE_STOP_SENDING:
-            {
-                QUIC_STREAM *s
-                    = ossl_quic_stream_map_get_by_id(txp->args.qsm, stream_id);
+        {
+            QUIC_STREAM *s
+                = ossl_quic_stream_map_get_by_id(txp->args.qsm, stream_id);
 
-                if (s == NULL)
-                    return;
+            if (s == NULL)
+                return;
 
-                s->acked_stop_sending = 1;
-                ossl_quic_stream_map_update_state(txp->args.qsm, s);
-            }
-            break;
+            s->acked_stop_sending = 1;
+            ossl_quic_stream_map_update_state(txp->args.qsm, s);
+        }
+        break;
         case OSSL_QUIC_FRAME_TYPE_RESET_STREAM:
-            {
-                QUIC_STREAM *s
-                    = ossl_quic_stream_map_get_by_id(txp->args.qsm, stream_id);
+        {
+            QUIC_STREAM *s
+                = ossl_quic_stream_map_get_by_id(txp->args.qsm, stream_id);
 
-                if (s == NULL)
-                    return;
+            if (s == NULL)
+                return;
 
-                /*
-                 * We must already be in RESET_SENT or RESET_RECVD if we are
-                 * here, so we don't need to check state here.
-                 */
-                ossl_quic_stream_map_notify_reset_stream_acked(txp->args.qsm, s);
-                ossl_quic_stream_map_update_state(txp->args.qsm, s);
-            }
-            break;
+            /*
+             * We must already be in RESET_SENT or RESET_RECVD if we are
+             * here, so we don't need to check state here.
+             */
+            ossl_quic_stream_map_notify_reset_stream_acked(txp->args.qsm, s);
+            ossl_quic_stream_map_update_state(txp->args.qsm, s);
+        }
+        break;
         default:
             assert(0);
             break;
@@ -1711,7 +1724,8 @@ static void on_confirm_notify(uint64_t frame_type, uint64_t stream_id,
 }
 
 static int txp_pkt_append_padding(struct txp_pkt *pkt,
-                                  OSSL_QUIC_TX_PACKETISER *txp, size_t num_bytes)
+                                  OSSL_QUIC_TX_PACKETISER *txp,
+                                  size_t num_bytes)
 {
     WPACKET *wpkt;
 
@@ -1790,7 +1804,7 @@ static int try_commit_conn_close(OSSL_QUIC_TX_PACKETISER *txp, size_t n)
 }
 
 void ossl_quic_tx_packetiser_record_received_closing_bytes(
-        OSSL_QUIC_TX_PACKETISER *txp, size_t n)
+    OSSL_QUIC_TX_PACKETISER *txp, size_t n)
 {
     txp->closing_bytes_recv += n;
 }
@@ -1878,8 +1892,8 @@ static int txp_generate_pre_token(OSSL_QUIC_TX_PACKETISER *txp,
         }
 
         if (ossl_quic_wire_encode_frame_conn_close(wpkt, pf)
-                && WPACKET_get_total_written(wpkt, &l)
-                && try_commit_conn_close(txp, l)) {
+            && WPACKET_get_total_written(wpkt, &l)
+            && try_commit_conn_close(txp, l)) {
             if (!tx_helper_commit(h))
                 return 0;
 
@@ -1940,7 +1954,7 @@ static int determine_len(size_t space_left, size_t orig_len,
                        8, OSSL_QUIC_VLINT_8B_MAX,
                        &hdr_len[3], &payload_len[3]);
 
-   for (i = OSSL_NELEM(valid) - 1; i >= 0; --i)
+    for (i = OSSL_NELEM(valid) - 1; i >= 0; --i)
         if (valid[i] && payload_len[i] >= chosen_payload_len) {
             chosen_payload_len = payload_len[i];
             chosen_hdr_len     = hdr_len[i];
@@ -2135,7 +2149,8 @@ static int txp_plan_stream_chunk(OSSL_QUIC_TX_PACKETISER *txp,
     fc_swm      = ossl_quic_txfc_get_swm(stream_txfc);
     fc_limit    = fc_swm + fc_credit;
 
-    if (chunk->shdr.len > 0 && chunk->shdr.offset + chunk->shdr.len > fc_limit) {
+    if (chunk->shdr.len > 0 &&
+        chunk->shdr.offset + chunk->shdr.len > fc_limit) {
         chunk->shdr.len = (fc_limit <= chunk->shdr.offset)
             ? 0 : fc_limit - chunk->shdr.offset;
         chunk->shdr.is_fin = 0;
@@ -2278,7 +2293,8 @@ static int txp_generate_stream_frames(OSSL_QUIC_TX_PACKETISER *txp,
             shdr->has_explicit_len = 1;
             hdr_len_explicit = payload_len_explicit = 0;
             if (!determine_stream_len(h, shdr, space_left,
-                                      &hdr_len_explicit, &payload_len_explicit)) {
+                                      &hdr_len_explicit,
+                                      &payload_len_explicit)) {
                 *packet_full = 1;
                 rc = 1;
                 goto err; /* can't fit anything */
@@ -2427,7 +2443,8 @@ static int txp_generate_stream_related(OSSL_QUIC_TX_PACKETISER *txp,
         if (stream->want_reset_stream) {
             OSSL_QUIC_FRAME_RESET_STREAM f;
 
-            if (!ossl_assert(stream->send_state == QUIC_SSTREAM_STATE_RESET_SENT))
+            if (!ossl_assert(stream->send_state ==
+                             QUIC_SSTREAM_STATE_RESET_SENT))
                 return 0;
 
             wpkt = tx_helper_begin(h);
@@ -2458,7 +2475,8 @@ static int txp_generate_stream_related(OSSL_QUIC_TX_PACKETISER *txp,
              * parties; if we happen to send a RESET_STREAM that consumes more
              * flow control credit, make sure we account for that.
              */
-            if (!ossl_assert(f.final_size <= ossl_quic_txfc_get_swm(&stream->txfc)))
+            if (!ossl_assert(f.final_size <=
+                             ossl_quic_txfc_get_swm(&stream->txfc)))
                 return 0;
 
             stream->txp_txfc_new_credit_consumed
@@ -2521,7 +2539,8 @@ static int txp_generate_stream_related(OSSL_QUIC_TX_PACKETISER *txp,
                                             snext,
                                             have_ack_eliciting,
                                             &packet_full,
-                                            &stream->txp_txfc_new_credit_consumed,
+                                            &stream->
+                                            txp_txfc_new_credit_consumed,
                                             conn_consumed)) {
                 /* Fatal error (allocation, etc.) */
                 txp_enlink_tmp(tmp_head, stream);
@@ -2628,7 +2647,8 @@ static int txp_generate_for_el(OSSL_QUIC_TX_PACKETISER *txp,
     /* MAX_STREAMS_BIDI (Regenerate) */
     if (a.allow_conn_fc
         && (txp->want_max_streams_bidi
-            || ossl_quic_rxfc_has_cwm_changed(txp->args.max_streams_bidi_rxfc, 0))
+            || ossl_quic_rxfc_has_cwm_changed(txp->args.max_streams_bidi_rxfc,
+                                              0))
         && tx_helper_get_space_left(h) >= MIN_FRAME_SIZE_MAX_STREAMS_BIDI) {
         WPACKET *wpkt = tx_helper_begin(h);
         uint64_t max_streams
@@ -2637,7 +2657,7 @@ static int txp_generate_for_el(OSSL_QUIC_TX_PACKETISER *txp,
         if (wpkt == NULL)
             goto fatal_err;
 
-        if (ossl_quic_wire_encode_frame_max_streams(wpkt, /*is_uni=*/0,
+        if (ossl_quic_wire_encode_frame_max_streams(wpkt, /*is_uni=*/ 0,
                                                     max_streams)) {
             tpkt->had_max_streams_bidi_frame = 1;
             have_ack_eliciting               = 1;
@@ -2654,7 +2674,8 @@ static int txp_generate_for_el(OSSL_QUIC_TX_PACKETISER *txp,
     /* MAX_STREAMS_UNI (Regenerate) */
     if (a.allow_conn_fc
         && (txp->want_max_streams_uni
-            || ossl_quic_rxfc_has_cwm_changed(txp->args.max_streams_uni_rxfc, 0))
+            || ossl_quic_rxfc_has_cwm_changed(txp->args.max_streams_uni_rxfc,
+                                              0))
         && tx_helper_get_space_left(h) >= MIN_FRAME_SIZE_MAX_STREAMS_UNI) {
         WPACKET *wpkt = tx_helper_begin(h);
         uint64_t max_streams
@@ -2663,7 +2684,7 @@ static int txp_generate_for_el(OSSL_QUIC_TX_PACKETISER *txp,
         if (wpkt == NULL)
             goto fatal_err;
 
-        if (ossl_quic_wire_encode_frame_max_streams(wpkt, /*is_uni=*/1,
+        if (ossl_quic_wire_encode_frame_max_streams(wpkt, /*is_uni=*/ 1,
                                                     max_streams)) {
             tpkt->had_max_streams_uni_frame = 1;
             have_ack_eliciting              = 1;
@@ -2802,7 +2823,8 @@ static int txp_generate_for_el(OSSL_QUIC_TX_PACKETISER *txp,
         can_be_non_inflight = 0;
 
     /* ACKM Data */
-    tpkt->ackm_pkt.num_bytes        = h->bytes_appended + pkt->geom.pkt_overhead;
+    tpkt->ackm_pkt.num_bytes        = h->bytes_appended +
+                                      pkt->geom.pkt_overhead;
     tpkt->ackm_pkt.pkt_num          = txp->next_pn[pn_space];
     /* largest_acked is set in txp_generate_pre_token */
     tpkt->ackm_pkt.pkt_space        = pn_space;
@@ -2947,7 +2969,8 @@ static int txp_pkt_commit(OSSL_QUIC_TX_PACKETISER *txp,
 
         if (stream->txp_txfc_new_credit_consumed > 0) {
             if (!ossl_assert(ossl_quic_txfc_consume_credit(&stream->txfc,
-                                                           stream->txp_txfc_new_credit_consumed)))
+                                                           stream->
+                                                           txp_txfc_new_credit_consumed)))
                 /*
                  * Should not be possible, but we should continue with our
                  * bookkeeping as we have already committed the packet to the
@@ -3122,13 +3145,16 @@ OSSL_TIME ossl_quic_tx_packetiser_get_deadline(OSSL_QUIC_TX_PACKETISER *txp)
         if (ossl_qtx_is_enc_level_provisioned(txp->args.qtx, enc_level)) {
             pn_space = ossl_quic_enc_level_to_pn_space(enc_level);
             deadline = ossl_time_min(deadline,
-                                     ossl_ackm_get_ack_deadline(txp->args.ackm, pn_space));
+                                     ossl_ackm_get_ack_deadline(txp->args.ackm,
+                                                                pn_space));
         }
 
     /* When will CC let us send more? */
     if (txp->args.cc_method->get_tx_allowance(txp->args.cc_data) == 0)
         deadline = ossl_time_min(deadline,
-                                 txp->args.cc_method->get_wakeup_deadline(txp->args.cc_data));
+                                 txp->args.cc_method->get_wakeup_deadline(txp->
+                                                                          args.
+                                                                          cc_data));
 
     return deadline;
 }

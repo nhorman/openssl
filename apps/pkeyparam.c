@@ -56,37 +56,37 @@ int pkeyparam_main(int argc, char **argv)
     prog = opt_init(argc, argv, pkeyparam_options);
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_EOF:
-        case OPT_ERR:
- opthelp:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto end;
-        case OPT_HELP:
-            opt_help(pkeyparam_options);
-            ret = 0;
-            goto end;
-        case OPT_IN:
-            infile = opt_arg();
-            break;
-        case OPT_OUT:
-            outfile = opt_arg();
-            break;
-        case OPT_ENGINE:
-            e = setup_engine(opt_arg(), 0);
-            break;
-        case OPT_TEXT:
-            text = 1;
-            break;
-        case OPT_NOOUT:
-            noout = 1;
-            break;
-        case OPT_CHECK:
-            check = 1;
-            break;
-        case OPT_PROV_CASES:
-            if (!opt_provider(o))
+            case OPT_EOF:
+            case OPT_ERR:
+opthelp:
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
                 goto end;
-            break;
+            case OPT_HELP:
+                opt_help(pkeyparam_options);
+                ret = 0;
+                goto end;
+            case OPT_IN:
+                infile = opt_arg();
+                break;
+            case OPT_OUT:
+                outfile = opt_arg();
+                break;
+            case OPT_ENGINE:
+                e = setup_engine(opt_arg(), 0);
+                break;
+            case OPT_TEXT:
+                text = 1;
+                break;
+            case OPT_NOOUT:
+                noout = 1;
+                break;
+            case OPT_CHECK:
+                check = 1;
+                break;
+            case OPT_PROV_CASES:
+                if (!opt_provider(o))
+                    goto end;
+                break;
         }
     }
 
@@ -142,7 +142,7 @@ int pkeyparam_main(int argc, char **argv)
 
     ret = EXIT_SUCCESS;
 
- end:
+end:
     EVP_PKEY_CTX_free(ctx);
     EVP_PKEY_free(pkey);
     release_engine(e);

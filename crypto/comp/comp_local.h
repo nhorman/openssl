@@ -13,8 +13,8 @@ struct comp_method_st {
     int (*init) (COMP_CTX *ctx);
     void (*finish) (COMP_CTX *ctx);
     ossl_ssize_t (*compress) (COMP_CTX *ctx,
-                             unsigned char *out, size_t olen,
-                             unsigned char *in, size_t ilen);
+                              unsigned char *out, size_t olen,
+                              unsigned char *in, size_t ilen);
     ossl_ssize_t (*expand) (COMP_CTX *ctx,
                             unsigned char *out, size_t olen,
                             unsigned char *in, size_t ilen);

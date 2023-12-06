@@ -208,7 +208,7 @@ static int test_sstream_simple(void)
         goto err;
 
     testresult = 1;
- err:
+err:
     ossl_quic_sstream_free(sstream);
     return testresult;
 }
@@ -265,7 +265,8 @@ static int test_sstream_bulk(int idx)
     ref_src_cur = ref_src_buf;
     do {
         l = (test_random() % init_size) + 1;
-        if (!TEST_true(ossl_quic_sstream_append(sstream, src_buf, l, &consumed)))
+        if (!TEST_true(ossl_quic_sstream_append(sstream, src_buf, l,
+                                                &consumed)))
             goto err;
 
         memcpy(ref_src_cur, src_buf, consumed);
@@ -329,7 +330,7 @@ static int test_sstream_bulk(int idx)
         goto err;
 
     testresult = 1;
- err:
+err:
     OPENSSL_free(src_buf);
     OPENSSL_free(dst_buf);
     OPENSSL_free(ref_src_buf);
@@ -393,7 +394,8 @@ static int test_rstream_simple(int idx)
                                                 simple_data + 5, 10, 0))
         || !TEST_true(ossl_quic_rstream_queue_data(rstream, NULL,
                                                    sizeof(simple_data) - 1,
-                                                   simple_data + sizeof(simple_data) - 1,
+                                                   simple_data +
+                                                   sizeof(simple_data) - 1,
                                                    1, 1))
         || !TEST_true(ossl_quic_rstream_peek(rstream, buf, sizeof(buf),
                                              &readbytes, &fin))
@@ -401,7 +403,8 @@ static int test_rstream_simple(int idx)
         || !TEST_size_t_eq(readbytes, 0)
         || !TEST_true(ossl_quic_rstream_queue_data(rstream, NULL,
                                                    sizeof(simple_data) - 10,
-                                                   simple_data + sizeof(simple_data) - 10,
+                                                   simple_data +
+                                                   sizeof(simple_data) - 10,
                                                    10, 1))
         || !TEST_true(ossl_quic_rstream_queue_data(rstream, NULL, 0,
                                                    simple_data, 1, 0))
@@ -448,7 +451,8 @@ static int test_rstream_simple(int idx)
                                                    0, 1))
         || (use_rbuf
             && !TEST_true(ossl_quic_rstream_resize_rbuf(rstream,
-                                                        2 * sizeof(simple_data))))
+                                                        2 *
+                                                        sizeof(simple_data))))
         || (use_rbuf && !TEST_true(ossl_quic_rstream_move_to_rbuf(rstream)))
         || !TEST_true(read_fn(rstream, buf + 14, 5, &readbytes, &fin))
         || !TEST_false(fin)
@@ -467,7 +471,7 @@ static int test_rstream_simple(int idx)
 
     ret = 1;
 
- err:
+err:
     ossl_quic_rstream_free(rstream);
     return ret;
 }
@@ -514,7 +518,7 @@ static int test_rstream_random(int idx)
                 queued_max = off + size;
 
             if (test_random() % 5 != 0)
-               continue;
+                continue;
 
             /* random overlapping retransmit */
             off = read_off + test_random() % 50;
@@ -552,13 +556,15 @@ static int test_rstream_random(int idx)
         queued_min = read_off;
         if (test_random() % 50 == 0)
             if (!TEST_true(ossl_quic_rstream_resize_rbuf(rstream,
-                                                         queued_max - read_off + 1))
+                                                         queued_max - read_off +
+                                                         1))
                 || !TEST_true(ossl_quic_rstream_move_to_rbuf(rstream)))
                 goto err;
         if (!fin_set && queued_max >= data_size - test_random() % 200) {
             fin_set = 1;
             /* Queue empty fin frame */
-            if (!TEST_true(ossl_quic_rstream_queue_data(rstream, NULL, data_size,
+            if (!TEST_true(ossl_quic_rstream_queue_data(rstream, NULL,
+                                                        data_size,
                                                         NULL, 0, 1)))
                 goto err;
         }
@@ -588,7 +594,7 @@ static int test_rstream_random(int idx)
 
     ret = 1;
 
- err:
+err:
     ossl_quic_rstream_free(rstream);
     OPENSSL_free(bulk_data);
     OPENSSL_free(read_buf);

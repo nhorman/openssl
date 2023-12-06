@@ -86,75 +86,75 @@ int asn1parse_main(int argc, char **argv)
 
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_EOF:
-        case OPT_ERR:
- opthelp:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto end;
-        case OPT_HELP:
-            opt_help(asn1parse_options);
-            ret = 0;
-            goto end;
-        case OPT_INFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_ASN1, &informat))
-                goto opthelp;
-            break;
-        case OPT_IN:
-            infile = opt_arg();
-            break;
-        case OPT_OUT:
-            derfile = opt_arg();
-            break;
-        case OPT_INDENT:
-            indent = 1;
-            break;
-        case OPT_NOOUT:
-            noout = 1;
-            break;
-        case OPT_OID:
-            oidfile = opt_arg();
-            break;
-        case OPT_OFFSET:
-            offset = strtol(opt_arg(), NULL, 0);
-            break;
-        case OPT_LENGTH:
-            length = strtol(opt_arg(), NULL, 0);
-            break;
-        case OPT_DUMP:
-            dump = -1;
-            break;
-        case OPT_DLIMIT:
-            dump = strtol(opt_arg(), NULL, 0);
-            break;
-        case OPT_STRPARSE:
-            sk_OPENSSL_STRING_push(osk, opt_arg());
-            break;
-        case OPT_GENSTR:
-            genstr = opt_arg();
-            break;
-        case OPT_GENCONF:
-            genconf = opt_arg();
-            break;
-        case OPT_STRICTPEM:
-            /* accepted for backward compatibility */
-            informat = FORMAT_PEM;
-            break;
-        case OPT_ITEM:
-            it = ASN1_ITEM_lookup(opt_arg());
-            if (it == NULL) {
-                size_t tmp;
-
-                BIO_printf(bio_err, "Unknown item name %s\n", opt_arg());
-                BIO_puts(bio_err, "Supported types:\n");
-                for (tmp = 0;; tmp++) {
-                    it = ASN1_ITEM_get(tmp);
-                    if (it == NULL)
-                        break;
-                    BIO_printf(bio_err, "    %s\n", it->sname);
-                }
+            case OPT_EOF:
+            case OPT_ERR:
+opthelp:
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
                 goto end;
-            }
-            break;
+            case OPT_HELP:
+                opt_help(asn1parse_options);
+                ret = 0;
+                goto end;
+            case OPT_INFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_ASN1, &informat))
+                    goto opthelp;
+                break;
+            case OPT_IN:
+                infile = opt_arg();
+                break;
+            case OPT_OUT:
+                derfile = opt_arg();
+                break;
+            case OPT_INDENT:
+                indent = 1;
+                break;
+            case OPT_NOOUT:
+                noout = 1;
+                break;
+            case OPT_OID:
+                oidfile = opt_arg();
+                break;
+            case OPT_OFFSET:
+                offset = strtol(opt_arg(), NULL, 0);
+                break;
+            case OPT_LENGTH:
+                length = strtol(opt_arg(), NULL, 0);
+                break;
+            case OPT_DUMP:
+                dump = -1;
+                break;
+            case OPT_DLIMIT:
+                dump = strtol(opt_arg(), NULL, 0);
+                break;
+            case OPT_STRPARSE:
+                sk_OPENSSL_STRING_push(osk, opt_arg());
+                break;
+            case OPT_GENSTR:
+                genstr = opt_arg();
+                break;
+            case OPT_GENCONF:
+                genconf = opt_arg();
+                break;
+            case OPT_STRICTPEM:
+                /* accepted for backward compatibility */
+                informat = FORMAT_PEM;
+                break;
+            case OPT_ITEM:
+                it = ASN1_ITEM_lookup(opt_arg());
+                if (it == NULL) {
+                    size_t tmp;
+
+                    BIO_printf(bio_err, "Unknown item name %s\n", opt_arg());
+                    BIO_puts(bio_err, "Supported types:\n");
+                    for (tmp = 0;; tmp++) {
+                        it = ASN1_ITEM_get(tmp);
+                        if (it == NULL)
+                            break;
+                        BIO_printf(bio_err, "    %s\n", it->sname);
+                    }
+                    goto end;
+                }
+                break;
         }
     }
 
@@ -173,7 +173,8 @@ int asn1parse_main(int argc, char **argv)
     if ((in = bio_open_default(infile, 'r', informat)) == NULL)
         goto end;
 
-    if (derfile && (derout = bio_open_default(derfile, 'w', FORMAT_ASN1)) == NULL)
+    if (derfile &&
+        (derout = bio_open_default(derfile, 'w', FORMAT_ASN1)) == NULL)
         goto end;
 
     if ((buf = BUF_MEM_new()) == NULL)
@@ -300,7 +301,7 @@ int asn1parse_main(int argc, char **argv)
         }
     }
     ret = 0;
- end:
+end:
     BIO_free(derout);
     BIO_free(in);
     BIO_free(b64);
@@ -354,7 +355,7 @@ static int do_generate(char *genstr, const char *genconf, BUF_MEM *buf)
     ASN1_TYPE_free(atyp);
     return len;
 
- err:
+err:
     NCONF_free(cnf);
     ASN1_TYPE_free(atyp);
     return -1;

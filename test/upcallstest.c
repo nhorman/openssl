@@ -20,7 +20,7 @@ static const OSSL_ALGORITHM *obj_query(void *provctx, int operation_id,
 }
 
 static const OSSL_DISPATCH obj_dispatch_table[] = {
-    { OSSL_FUNC_PROVIDER_QUERY_OPERATION, (void (*)(void))obj_query },
+    { OSSL_FUNC_PROVIDER_QUERY_OPERATION, (void (*)(void)) obj_query },
     OSSL_DISPATCH_END
 };
 
@@ -56,26 +56,27 @@ static int obj_provider_init(const OSSL_CORE_HANDLE *handle,
 
     for (; in->function_id != 0; in++) {
         switch (in->function_id) {
-        case OSSL_FUNC_CORE_OBJ_ADD_SIGID:
-            c_obj_add_sigid = OSSL_FUNC_core_obj_add_sigid(in);
-            break;
-        case OSSL_FUNC_CORE_OBJ_CREATE:
-            c_obj_create = OSSL_FUNC_core_obj_create(in);
-            break;
-            break;
-        default:
-            /* Just ignore anything we don't understand */
-            break;
+            case OSSL_FUNC_CORE_OBJ_ADD_SIGID:
+                c_obj_add_sigid = OSSL_FUNC_core_obj_add_sigid(in);
+                break;
+            case OSSL_FUNC_CORE_OBJ_CREATE:
+                c_obj_create = OSSL_FUNC_core_obj_create(in);
+                break;
+                break;
+            default:
+                /* Just ignore anything we don't understand */
+                break;
         }
     }
 
     if (!c_obj_create(handle, DIGEST_OID, DIGEST_SN, DIGEST_LN)
-            || !c_obj_create(handle, SIG_OID, SIG_SN, SIG_LN)
-            || !c_obj_create(handle, SIGALG_OID, SIGALG_SN, SIGALG_LN))
+        || !c_obj_create(handle, SIG_OID, SIG_SN, SIG_LN)
+        || !c_obj_create(handle, SIGALG_OID, SIGALG_SN, SIGALG_LN))
         return 0;
 
     if (!c_obj_create(handle, NODIG_SIG_OID, NODIG_SIG_SN, NODIG_SIG_LN)
-            || !c_obj_create(handle, NODIG_SIGALG_OID, NODIG_SIGALG_SN, NODIG_SIGALG_LN))
+        || !c_obj_create(handle, NODIG_SIGALG_OID, NODIG_SIGALG_SN,
+                         NODIG_SIGALG_LN))
         return 0;
 
     if (!c_obj_add_sigid(handle, SIGALG_OID, DIGEST_SN, SIG_LN))
@@ -103,25 +104,25 @@ static int obj_create_test(void)
 
     if (!TEST_true(OSSL_PROVIDER_add_builtin(libctx, "obj-prov",
                                              obj_provider_init))
-            || !TEST_ptr(objprov = OSSL_PROVIDER_load(libctx, "obj-prov")))
+        || !TEST_ptr(objprov = OSSL_PROVIDER_load(libctx, "obj-prov")))
         goto err;
 
     /* Check that the provider created the OIDs/NIDs we expected */
     sigalgnid = OBJ_txt2nid(SIGALG_OID);
     if (!TEST_int_ne(sigalgnid, NID_undef)
-            || !TEST_true(OBJ_find_sigid_algs(sigalgnid, &digestnid, &signid))
-            || !TEST_int_ne(digestnid, NID_undef)
-            || !TEST_int_ne(signid, NID_undef)
-            || !TEST_int_eq(digestnid, OBJ_sn2nid(DIGEST_SN))
-            || !TEST_int_eq(signid, OBJ_ln2nid(SIG_LN)))
+        || !TEST_true(OBJ_find_sigid_algs(sigalgnid, &digestnid, &signid))
+        || !TEST_int_ne(digestnid, NID_undef)
+        || !TEST_int_ne(signid, NID_undef)
+        || !TEST_int_eq(digestnid, OBJ_sn2nid(DIGEST_SN))
+        || !TEST_int_eq(signid, OBJ_ln2nid(SIG_LN)))
         goto err;
 
     /* Check empty digest alg storage capability */
     sigalgnid = OBJ_txt2nid(NODIG_SIGALG_OID);
     if (!TEST_int_ne(sigalgnid, NID_undef)
-            || !TEST_true(OBJ_find_sigid_algs(sigalgnid, &digestnid, &signid))
-            || !TEST_int_eq(digestnid, NID_undef)
-            || !TEST_int_ne(signid, NID_undef))
+        || !TEST_true(OBJ_find_sigid_algs(sigalgnid, &digestnid, &signid))
+        || !TEST_int_eq(digestnid, NID_undef)
+        || !TEST_int_ne(signid, NID_undef))
         goto err;
 
     /* Testing OBJ_find_sigid_by_algs */
@@ -151,7 +152,7 @@ static int obj_create_test(void)
         return 0;
 
     testresult = 1;
- err:
+err:
     OSSL_PROVIDER_unload(objprov);
     OSSL_LIB_CTX_free(libctx);
     return testresult;

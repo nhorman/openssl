@@ -208,10 +208,10 @@ static int siphash_set_params(void *vmacctx, const OSSL_PARAM *params)
             return 0;
     }
     if ((p = OSSL_PARAM_locate_const(params, OSSL_MAC_PARAM_C_ROUNDS)) != NULL
-            && !OSSL_PARAM_get_uint(p, &ctx->crounds))
+        && !OSSL_PARAM_get_uint(p, &ctx->crounds))
         return 0;
     if ((p = OSSL_PARAM_locate_const(params, OSSL_MAC_PARAM_D_ROUNDS)) != NULL
-            && !OSSL_PARAM_get_uint(p, &ctx->drounds))
+        && !OSSL_PARAM_get_uint(p, &ctx->drounds))
         return 0;
     if ((p = OSSL_PARAM_locate_const(params, OSSL_MAC_PARAM_KEY)) != NULL)
         if (p->data_type != OSSL_PARAM_OCTET_STRING
@@ -221,17 +221,17 @@ static int siphash_set_params(void *vmacctx, const OSSL_PARAM *params)
 }
 
 const OSSL_DISPATCH ossl_siphash_functions[] = {
-    { OSSL_FUNC_MAC_NEWCTX, (void (*)(void))siphash_new },
-    { OSSL_FUNC_MAC_DUPCTX, (void (*)(void))siphash_dup },
-    { OSSL_FUNC_MAC_FREECTX, (void (*)(void))siphash_free },
-    { OSSL_FUNC_MAC_INIT, (void (*)(void))siphash_init },
-    { OSSL_FUNC_MAC_UPDATE, (void (*)(void))siphash_update },
-    { OSSL_FUNC_MAC_FINAL, (void (*)(void))siphash_final },
+    { OSSL_FUNC_MAC_NEWCTX, (void (*)(void)) siphash_new },
+    { OSSL_FUNC_MAC_DUPCTX, (void (*)(void)) siphash_dup },
+    { OSSL_FUNC_MAC_FREECTX, (void (*)(void)) siphash_free },
+    { OSSL_FUNC_MAC_INIT, (void (*)(void)) siphash_init },
+    { OSSL_FUNC_MAC_UPDATE, (void (*)(void)) siphash_update },
+    { OSSL_FUNC_MAC_FINAL, (void (*)(void)) siphash_final },
     { OSSL_FUNC_MAC_GETTABLE_CTX_PARAMS,
-      (void (*)(void))siphash_gettable_ctx_params },
-    { OSSL_FUNC_MAC_GET_CTX_PARAMS, (void (*)(void))siphash_get_ctx_params },
+      (void (*)(void)) siphash_gettable_ctx_params },
+    { OSSL_FUNC_MAC_GET_CTX_PARAMS, (void (*)(void)) siphash_get_ctx_params },
     { OSSL_FUNC_MAC_SETTABLE_CTX_PARAMS,
-      (void (*)(void))siphash_settable_ctx_params },
-    { OSSL_FUNC_MAC_SET_CTX_PARAMS, (void (*)(void))siphash_set_params },
+      (void (*)(void)) siphash_settable_ctx_params },
+    { OSSL_FUNC_MAC_SET_CTX_PARAMS, (void (*)(void)) siphash_set_params },
     OSSL_DISPATCH_END
 };

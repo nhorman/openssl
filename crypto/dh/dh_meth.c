@@ -111,13 +111,14 @@ int DH_meth_set_generate_key(DH_METHOD *dhm, int (*generate_key) (DH *))
 }
 
 int (*DH_meth_get_compute_key(const DH_METHOD *dhm))
-        (unsigned char *key, const BIGNUM *pub_key, DH *dh)
+(unsigned char *key, const BIGNUM *pub_key, DH *dh)
 {
     return dhm->compute_key;
 }
 
 int DH_meth_set_compute_key(DH_METHOD *dhm,
-        int (*compute_key) (unsigned char *key, const BIGNUM *pub_key, DH *dh))
+                            int (*compute_key) (unsigned char *key,
+                                                const BIGNUM *pub_key, DH *dh))
 {
     dhm->compute_key = compute_key;
     return 1;
@@ -125,15 +126,17 @@ int DH_meth_set_compute_key(DH_METHOD *dhm,
 
 
 int (*DH_meth_get_bn_mod_exp(const DH_METHOD *dhm))
-    (const DH *, BIGNUM *, const BIGNUM *, const BIGNUM *, const BIGNUM *,
-     BN_CTX *, BN_MONT_CTX *)
+(const DH *, BIGNUM *, const BIGNUM *, const BIGNUM *, const BIGNUM *,
+ BN_CTX *, BN_MONT_CTX *)
 {
     return dhm->bn_mod_exp;
 }
 
 int DH_meth_set_bn_mod_exp(DH_METHOD *dhm,
-    int (*bn_mod_exp) (const DH *, BIGNUM *, const BIGNUM *, const BIGNUM *,
-                       const BIGNUM *, BN_CTX *, BN_MONT_CTX *))
+                           int (*bn_mod_exp) (const DH *, BIGNUM *,
+                                              const BIGNUM *, const BIGNUM *,
+                                              const BIGNUM *, BN_CTX *,
+                                              BN_MONT_CTX *))
 {
     dhm->bn_mod_exp = bn_mod_exp;
     return 1;
@@ -162,13 +165,14 @@ int DH_meth_set_finish(DH_METHOD *dhm, int (*finish) (DH *))
 }
 
 int (*DH_meth_get_generate_params(const DH_METHOD *dhm))
-        (DH *, int, int, BN_GENCB *)
+(DH *, int, int, BN_GENCB *)
 {
     return dhm->generate_params;
 }
 
 int DH_meth_set_generate_params(DH_METHOD *dhm,
-        int (*generate_params) (DH *, int, int, BN_GENCB *))
+                                int (*generate_params) (DH *, int, int,
+                                                        BN_GENCB *))
 {
     dhm->generate_params = generate_params;
     return 1;

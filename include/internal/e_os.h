@@ -32,8 +32,8 @@
 # define set_sys_error(e)        errno=(e)
 
 /********************************************************************
- The Microsoft section
- ********************************************************************/
+   The Microsoft section
+********************************************************************/
 # if defined(OPENSSL_SYS_WIN32) && !defined(WIN32)
 #  define WIN32
 # endif
@@ -84,39 +84,39 @@
 
 #  ifdef WINDOWS
 #   if !defined(_WIN32_WCE) && !defined(_WIN32_WINNT)
-       /*
-        * Defining _WIN32_WINNT here in e_os.h implies certain "discipline."
-        * Most notably we ought to check for availability of each specific
-        * routine that was introduced after denoted _WIN32_WINNT with
-        * GetProcAddress(). Normally newer functions are masked with higher
-        * _WIN32_WINNT in SDK headers. So that if you wish to use them in
-        * some module, you'd need to override _WIN32_WINNT definition in
-        * the target module in order to "reach for" prototypes, but replace
-        * calls to new functions with indirect calls. Alternatively it
-        * might be possible to achieve the goal by /DELAYLOAD-ing .DLLs
-        * and check for current OS version instead.
-        */
+/*
+ * Defining _WIN32_WINNT here in e_os.h implies certain "discipline."
+ * Most notably we ought to check for availability of each specific
+ * routine that was introduced after denoted _WIN32_WINNT with
+ * GetProcAddress(). Normally newer functions are masked with higher
+ * _WIN32_WINNT in SDK headers. So that if you wish to use them in
+ * some module, you'd need to override _WIN32_WINNT definition in
+ * the target module in order to "reach for" prototypes, but replace
+ * calls to new functions with indirect calls. Alternatively it
+ * might be possible to achieve the goal by /DELAYLOAD-ing .DLLs
+ * and check for current OS version instead.
+ */
 #    define _WIN32_WINNT 0x0501
 #   endif
 #   if defined(_WIN32_WINNT) || defined(_WIN32_WCE)
-       /*
-        * Just like defining _WIN32_WINNT including winsock2.h implies
-        * certain "discipline" for maintaining [broad] binary compatibility.
-        * As long as structures are invariant among Winsock versions,
-        * it's sufficient to check for specific Winsock2 API availability
-        * at run-time [DSO_global_lookup is recommended]...
-        */
+/*
+ * Just like defining _WIN32_WINNT including winsock2.h implies
+ * certain "discipline" for maintaining [broad] binary compatibility.
+ * As long as structures are invariant among Winsock versions,
+ * it's sufficient to check for specific Winsock2 API availability
+ * at run-time [DSO_global_lookup is recommended]...
+ */
 #    include <winsock2.h>
 #    include <ws2tcpip.h>
-       /*
-        * Clang-based C++Builder 10.3.3 toolchains cannot find C inline
-        * definitions at link-time.  This header defines WspiapiLoad() as an
-        * __inline function.  https://quality.embarcadero.com/browse/RSP-33806
-        */
+/*
+ * Clang-based C++Builder 10.3.3 toolchains cannot find C inline
+ * definitions at link-time.  This header defines WspiapiLoad() as an
+ * __inline function.  https://quality.embarcadero.com/browse/RSP-33806
+ */
 #    if !defined(__BORLANDC__) || !defined(__clang__)
 #     include <wspiapi.h>
 #    endif
-       /* yes, they have to be #included prior to <windows.h> */
+/* yes, they have to be #included prior to <windows.h> */
 #   endif
 #   include <windows.h>
 #   include <stdio.h>
@@ -138,7 +138,8 @@ static __inline unsigned int _strlen31(const char *str)
 }
 #   endif
 #   include <malloc.h>
-#   if defined(_MSC_VER) && !defined(_WIN32_WCE) && !defined(_DLL) && defined(stdin)
+#   if defined(_MSC_VER) && !defined(_WIN32_WCE) && !defined(_DLL) && \
+    defined(stdin)
 #    if _MSC_VER>=1300 && _MSC_VER<1600
 #     undef stdin
 #     undef stdout
@@ -190,10 +191,10 @@ FILE *__iob_func(void);
 
 #  ifdef OPENSSL_SYS_VMS
 #   define VMS 1
-  /*
-   * some programs don't include stdlib, so exit() and others give implicit
-   * function warnings
-   */
+/*
+ * some programs don't include stdlib, so exit() and others give implicit
+ * function warnings
+ */
 #   include <stdlib.h>
 #   if defined(__DECC)
 #    include <unistd.h>
@@ -201,38 +202,38 @@ FILE *__iob_func(void);
 #    include <unixlib.h>
 #   endif
 #   define LIST_SEPARATOR_CHAR ','
-  /* We don't have any well-defined random devices on VMS, yet... */
+/* We don't have any well-defined random devices on VMS, yet... */
 #   undef DEVRANDOM
-  /*-
-     We need to do this since VMS has the following coding on status codes:
+/*-
+   We need to do this since VMS has the following coding on status codes:
 
-     Bits 0-2: status type: 0 = warning, 1 = success, 2 = error, 3 = info ...
-               The important thing to know is that odd numbers are considered
-               good, while even ones are considered errors.
-     Bits 3-15: actual status number
-     Bits 16-27: facility number.  0 is considered "unknown"
-     Bits 28-31: control bits.  If bit 28 is set, the shell won't try to
-                 output the message (which, for random codes, just looks ugly)
+   Bits 0-2: status type: 0 = warning, 1 = success, 2 = error, 3 = info ...
+             The important thing to know is that odd numbers are considered
+             good, while even ones are considered errors.
+   Bits 3-15: actual status number
+   Bits 16-27: facility number.  0 is considered "unknown"
+   Bits 28-31: control bits.  If bit 28 is set, the shell won't try to
+               output the message (which, for random codes, just looks ugly)
 
-     So, what we do here is to change 0 to 1 to get the default success status,
-     and everything else is shifted up to fit into the status number field, and
-     the status is tagged as an error, which is what is wanted here.
+   So, what we do here is to change 0 to 1 to get the default success status,
+   and everything else is shifted up to fit into the status number field, and
+   the status is tagged as an error, which is what is wanted here.
 
-     Finally, we add the VMS C facility code 0x35a000, because there are some
-     programs, such as Perl, that will reinterpret the code back to something
-     POSIX.  'man perlvms' explains it further.
+   Finally, we add the VMS C facility code 0x35a000, because there are some
+   programs, such as Perl, that will reinterpret the code back to something
+   POSIX.  'man perlvms' explains it further.
 
-     NOTE: the perlvms manual wants to turn all codes 2 to 255 into success
-     codes (status type = 1).  I couldn't disagree more.  Fortunately, the
-     status type doesn't seem to bother Perl.
-     -- Richard Levitte
-  */
+   NOTE: the perlvms manual wants to turn all codes 2 to 255 into success
+   codes (status type = 1).  I couldn't disagree more.  Fortunately, the
+   status type doesn't seem to bother Perl.
+   -- Richard Levitte
+ */
 #   define EXIT(n)  exit((n) ? (((n) << 3) | 2 | 0x10000000 | 0x35a000) : 1)
 
 #   define DEFAULT_HOME "SYS$LOGIN:"
 
 #  else
-     /* !defined VMS */
+/* !defined VMS */
 #   include <unistd.h>
 #   include <sys/types.h>
 #   ifdef OPENSSL_SYS_WIN32_CYGWIN
@@ -293,27 +294,27 @@ struct servent *getservbyname(const char *name, const char *proto);
 #  include <netdb.h>
 #  define getservbyname(name,proto)          getservbyname((char*)name,proto)
 #  define gethostbyname(name)                gethostbyname((char*)name)
-#  define ioctlsocket(a,b,c)	ioctl(a,b,c)
+#  define ioctlsocket(a,b,c)    ioctl(a,b,c)
 #  ifdef NO_GETPID
 inline int nssgetpid(void);
 #   ifndef NSSGETPID_MACRO
 #    define NSSGETPID_MACRO
 #    include <cextdecs.h(PROCESSHANDLE_GETMINE_)>
 #    include <cextdecs.h(PROCESSHANDLE_DECOMPOSE_)>
-       inline int nssgetpid(void)
-       {
-         short phandle[10]={0};
-         union pseudo_pid {
-          struct {
-           short cpu;
-           short pin;
-         } cpu_pin ;
-         int ppid;
-        } ppid = { 0 };
-        PROCESSHANDLE_GETMINE_(phandle);
-        PROCESSHANDLE_DECOMPOSE_(phandle, &ppid.cpu_pin.cpu, &ppid.cpu_pin.pin);
-        return ppid.ppid;
-       }
+inline int nssgetpid(void)
+{
+    short phandle[10]={0};
+    union pseudo_pid {
+        struct {
+            short cpu;
+            short pin;
+        } cpu_pin;
+        int ppid;
+    } ppid = { 0 };
+    PROCESSHANDLE_GETMINE_(phandle);
+    PROCESSHANDLE_DECOMPOSE_(phandle, &ppid.cpu_pin.cpu, &ppid.cpu_pin.pin);
+    return ppid.ppid;
+}
 #    define getpid(a) nssgetpid(a)
 #   endif /* NSSGETPID_MACRO */
 #  endif /* NO_GETPID */
@@ -323,22 +324,22 @@ inline int nssgetpid(void);
 /*#  define bind(a,b,c) bind(a,(struct sockaddr *)b,c)*/
 /*#  define sendto(a,b,c,d,e,f) sendto(a,(char*)b,c,d,(struct sockaddr *)e,f)*/
 #  if defined(OPENSSL_THREADS) && !defined(_PUT_MODEL_)
-  /*
-   * HPNS SPT threads
-   */
+/*
+ * HPNS SPT threads
+ */
 #   define  SPT_THREAD_SIGNAL 1
 #   define  SPT_THREAD_AWARE 1
 #   include <spthread.h>
 #   undef close
 #   define close spt_close
 /*
-#   define get_last_socket_error()	errno
-#   define clear_socket_error()	errno=0
-#   define ioctlsocket(a,b,c)	ioctl(a,b,c)
-#   define closesocket(s)		close(s)
-#   define readsocket(s,b,n)	read((s),(char*)(b),(n))
-#   define writesocket(s,b,n)	write((s),(char*)(b),(n)
-*/
+ #   define get_last_socket_error()	errno
+ #   define clear_socket_error()	errno=0
+ #   define ioctlsocket(a,b,c)	ioctl(a,b,c)
+ #   define closesocket(s)		close(s)
+ #   define readsocket(s,b,n)	read((s),(char*)(b),(n))
+ #   define writesocket(s,b,n)	write((s),(char*)(b),(n)
+ */
 #   define accept(a,b,c)        accept(a,(struct sockaddr *)b,c)
 #   define recvfrom(a,b,c,d,e,f) recvfrom(a,b,(socklen_t)c,d,e,f)
 #  endif
@@ -349,13 +350,13 @@ inline int nssgetpid(void);
 # endif
 
 # ifndef OPENSSL_NO_SECURE_MEMORY
-   /* unistd.h defines _POSIX_VERSION */
+/* unistd.h defines _POSIX_VERSION */
 #  if (defined(OPENSSL_SYS_UNIX) \
-        && ( (defined(_POSIX_VERSION) && _POSIX_VERSION >= 200112L)      \
-             || defined(__sun) || defined(__hpux) || defined(__sgi)      \
-             || defined(__osf__) )) \
-      || defined(_WIN32)
-      /* secure memory is implemented */
+    && ( (defined(_POSIX_VERSION) && _POSIX_VERSION >= 200112L)      \
+    || defined(__sun) || defined(__hpux) || defined(__sgi)      \
+    || defined(__osf__) )) \
+    || defined(_WIN32)
+/* secure memory is implemented */
 #   else
 #     define OPENSSL_NO_SECURE_MEMORY
 #   endif
@@ -375,7 +376,7 @@ inline int nssgetpid(void);
 #  define strcasecmp _stricmp
 #  define strncasecmp _strnicmp
 # elif !defined(_POSIX_C_SOURCE) || _POSIX_C_SOURCE < 200809L \
-     || defined(OPENSSL_SYS_TANDEM)
+    || defined(OPENSSL_SYS_TANDEM)
 #  ifndef OPENSSL_NO_LOCALE
 #   define OPENSSL_NO_LOCALE
 #  endif

@@ -72,7 +72,7 @@ static int test_provider(OSSL_LIB_CTX **libctx, const char *name,
     EVP_set_default_properties(*libctx, "");
     if (dolegacycheck) {
         if (!TEST_true(OSSL_PROVIDER_get_params(prov, digest_check))
-                || !TEST_true(digestsuccess))
+            || !TEST_true(digestsuccess))
             goto err;
 
         /*
@@ -80,24 +80,24 @@ static int test_provider(OSSL_LIB_CTX **libctx, const char *name,
          * own properties explicitly
          */
         if (!TEST_true(OSSL_PROVIDER_get_params(prov, stop_property_mirror))
-                || !TEST_true(stopsuccess))
+            || !TEST_true(stopsuccess))
             goto err;
         EVP_set_default_properties(*libctx, "fips=yes");
         if (!TEST_true(OSSL_PROVIDER_get_params(prov, digest_check))
-                || !TEST_true(digestsuccess))
+            || !TEST_true(digestsuccess))
             goto err;
         EVP_set_default_properties(*libctx, "");
     }
     if (!TEST_true(OSSL_PROVIDER_get_params(prov, greeting_request))
-            || !TEST_ptr(greeting = greeting_request[0].data)
-            || !TEST_size_t_gt(greeting_request[0].data_size, 0)
-            || !TEST_str_eq(greeting, expected_greeting))
+        || !TEST_ptr(greeting = greeting_request[0].data)
+        || !TEST_size_t_gt(greeting_request[0].data_size, 0)
+        || !TEST_str_eq(greeting, expected_greeting))
         goto err;
 
     /* Make sure we got the error we were expecting */
     err = ERR_peek_last_error();
     if (!TEST_int_gt(err, 0)
-            || !TEST_int_eq(ERR_GET_REASON(err), 1))
+        || !TEST_int_eq(ERR_GET_REASON(err), 1))
         goto err;
 
     OSSL_PROVIDER_unload(legacy);
@@ -106,7 +106,7 @@ static int test_provider(OSSL_LIB_CTX **libctx, const char *name,
     if (dolegacycheck) {
         /* Legacy provider should also be unloaded from child libctx */
         if (!TEST_true(OSSL_PROVIDER_get_params(prov, digest_check))
-                || !TEST_false(digestsuccess))
+            || !TEST_false(digestsuccess))
             goto err;
         /*
          * Loading the legacy provider again should make it available again in
@@ -117,15 +117,15 @@ static int test_provider(OSSL_LIB_CTX **libctx, const char *name,
         legacy = OSSL_PROVIDER_load(*libctx, "legacy");
         deflt = OSSL_PROVIDER_load(*libctx, "default");
         if (!TEST_ptr(deflt)
-                || !TEST_true(OSSL_PROVIDER_available(*libctx, "default")))
+            || !TEST_true(OSSL_PROVIDER_available(*libctx, "default")))
             goto err;
         OSSL_PROVIDER_unload(deflt);
         deflt = NULL;
         if (!TEST_ptr(legacy)
-                || !TEST_false(OSSL_PROVIDER_available(*libctx, "default"))
-                || !TEST_true(OSSL_PROVIDER_get_params(prov, digest_check))
-                || !TEST_true(digestsuccess))
-        goto err;
+            || !TEST_false(OSSL_PROVIDER_available(*libctx, "default"))
+            || !TEST_true(OSSL_PROVIDER_get_params(prov, digest_check))
+            || !TEST_true(digestsuccess))
+            goto err;
         OSSL_PROVIDER_unload(legacy);
         legacy = NULL;
     }
@@ -147,7 +147,7 @@ static int test_provider(OSSL_LIB_CTX **libctx, const char *name,
     /* We print out all the data to make sure it can still be accessed */
     ERR_print_errors_fp(stderr);
     ok = 1;
- err:
+err:
     OSSL_PROVIDER_unload(base);
     OSSL_PROVIDER_unload(deflt);
     OSSL_PROVIDER_unload(legacy);
@@ -170,7 +170,8 @@ static int test_provider_ex(OSSL_LIB_CTX **libctx, const char *name)
     OSSL_PARAM *params = NULL;
 
     if (!TEST_ptr(bld = OSSL_PARAM_BLD_new())
-        || !TEST_true(OSSL_PARAM_BLD_push_utf8_string(bld, "greeting", custom_buf,
+        || !TEST_true(OSSL_PARAM_BLD_push_utf8_string(bld, "greeting",
+                                                      custom_buf,
                                                       strlen(custom_buf)))
         || !TEST_ptr(params = OSSL_PARAM_BLD_to_param(bld))) {
         goto err;
@@ -180,15 +181,15 @@ static int test_provider_ex(OSSL_LIB_CTX **libctx, const char *name)
         goto err;
 
     if (!TEST_true(OSSL_PROVIDER_get_params(prov, greeting_request))
-            || !TEST_ptr(greeting = greeting_request[0].data)
-            || !TEST_size_t_gt(greeting_request[0].data_size, 0)
-            || !TEST_str_eq(greeting, custom_buf))
+        || !TEST_ptr(greeting = greeting_request[0].data)
+        || !TEST_size_t_gt(greeting_request[0].data_size, 0)
+        || !TEST_str_eq(greeting, custom_buf))
         goto err;
 
     /* Make sure we got the error we were expecting */
     err = ERR_peek_last_error();
     if (!TEST_int_gt(err, 0)
-            || !TEST_int_eq(ERR_GET_REASON(err), 1))
+        || !TEST_int_eq(ERR_GET_REASON(err), 1))
         goto err;
 
     if (!TEST_true(OSSL_PROVIDER_unload(prov)))
@@ -205,7 +206,7 @@ static int test_provider_ex(OSSL_LIB_CTX **libctx, const char *name)
     /* We print out all the data to make sure it can still be accessed */
     ERR_print_errors_fp(stderr);
     ok = 1;
- err:
+err:
     OSSL_PARAM_BLD_free(bld);
     OSSL_PARAM_free(params);
     OSSL_PROVIDER_unload(prov);
@@ -312,13 +313,13 @@ int setup_tests(void)
 
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_TEST_CASES:
-            break;
-        case OPT_LOADED:
-            loaded = 1;
-            break;
-        default:
-            return 0;
+            case OPT_TEST_CASES:
+                break;
+            case OPT_LOADED:
+                loaded = 1;
+                break;
+            default:
+                return 0;
         }
     }
 

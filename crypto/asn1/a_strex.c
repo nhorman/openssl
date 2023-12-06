@@ -23,13 +23,15 @@
  * other options.
  */
 
-#define CHARTYPE_BS_ESC         (ASN1_STRFLGS_ESC_2253 | CHARTYPE_FIRST_ESC_2253 | CHARTYPE_LAST_ESC_2253)
+#define CHARTYPE_BS_ESC         (ASN1_STRFLGS_ESC_2253 | \
+                                 CHARTYPE_FIRST_ESC_2253 | \
+                                 CHARTYPE_LAST_ESC_2253)
 
 #define ESC_FLAGS (ASN1_STRFLGS_ESC_2253 | \
-                  ASN1_STRFLGS_ESC_2254 | \
-                  ASN1_STRFLGS_ESC_QUOTE | \
-                  ASN1_STRFLGS_ESC_CTRL | \
-                  ASN1_STRFLGS_ESC_MSB)
+                   ASN1_STRFLGS_ESC_2254 | \
+                   ASN1_STRFLGS_ESC_QUOTE | \
+                   ASN1_STRFLGS_ESC_CTRL | \
+                   ASN1_STRFLGS_ESC_MSB)
 
 /*
  * Three IO functions for sending data to memory, a BIO and a FILE
@@ -150,20 +152,20 @@ static int do_buf(unsigned char *buf, int buflen,
     charwidth = type & BUF_TYPE_WIDTH_MASK;
 
     switch (charwidth) {
-    case 4:
-        if (buflen & 3) {
-            ERR_raise(ERR_LIB_ASN1, ASN1_R_INVALID_UNIVERSALSTRING_LENGTH);
-            return -1;
-        }
-        break;
-    case 2:
-        if (buflen & 1) {
-            ERR_raise(ERR_LIB_ASN1, ASN1_R_INVALID_BMPSTRING_LENGTH);
-            return -1;
-        }
-        break;
-    default:
-        break;
+        case 4:
+            if (buflen & 3) {
+                ERR_raise(ERR_LIB_ASN1, ASN1_R_INVALID_UNIVERSALSTRING_LENGTH);
+                return -1;
+            }
+            break;
+        case 2:
+            if (buflen & 1) {
+                ERR_raise(ERR_LIB_ASN1, ASN1_R_INVALID_BMPSTRING_LENGTH);
+                return -1;
+            }
+            break;
+        default:
+            break;
     }
 
     while (p != q) {
@@ -173,31 +175,31 @@ static int do_buf(unsigned char *buf, int buflen,
             orflags = 0;
 
         switch (charwidth) {
-        case 4:
-            c = ((unsigned long)*p++) << 24;
-            c |= ((unsigned long)*p++) << 16;
-            c |= ((unsigned long)*p++) << 8;
-            c |= *p++;
-            break;
+            case 4:
+                c = ((unsigned long)*p++) << 24;
+                c |= ((unsigned long)*p++) << 16;
+                c |= ((unsigned long)*p++) << 8;
+                c |= *p++;
+                break;
 
-        case 2:
-            c = ((unsigned long)*p++) << 8;
-            c |= *p++;
-            break;
+            case 2:
+                c = ((unsigned long)*p++) << 8;
+                c |= *p++;
+                break;
 
-        case 1:
-            c = *p++;
-            break;
+            case 1:
+                c = *p++;
+                break;
 
-        case 0:
-            i = UTF8_getc(p, buflen, &c);
-            if (i < 0)
-                return -1;      /* Invalid UTF8String */
-            buflen -= i;
-            p += i;
-            break;
-        default:
-            return -1;          /* invalid width */
+            case 0:
+                i = UTF8_getc(p, buflen, &c);
+                if (i < 0)
+                    return -1;  /* Invalid UTF8String */
+                buflen -= i;
+                p += i;
+                break;
+            default:
+                return -1;      /* invalid width */
         }
         if (p == q && flags & ASN1_STRFLGS_ESC_2253)
             orflags = CHARTYPE_LAST_ESC_2253;
@@ -303,21 +305,21 @@ static const signed char tag2nbyte[] = {
     -1, -1, -1, -1, -1,         /* 0-4 */
     -1, -1, -1, -1, -1,         /* 5-9 */
     -1, -1,                     /* 10-11 */
-     0,                         /* 12 V_ASN1_UTF8STRING */
+    0,                          /* 12 V_ASN1_UTF8STRING */
     -1, -1, -1, -1, -1,         /* 13-17 */
-     1,                         /* 18 V_ASN1_NUMERICSTRING */
-     1,                         /* 19 V_ASN1_PRINTABLESTRING */
-     1,                         /* 20 V_ASN1_T61STRING */
+    1,                          /* 18 V_ASN1_NUMERICSTRING */
+    1,                          /* 19 V_ASN1_PRINTABLESTRING */
+    1,                          /* 20 V_ASN1_T61STRING */
     -1,                         /* 21 */
-     1,                         /* 22 V_ASN1_IA5STRING */
-     1,                         /* 23 V_ASN1_UTCTIME */
-     1,                         /* 24 V_ASN1_GENERALIZEDTIME */
+    1,                          /* 22 V_ASN1_IA5STRING */
+    1,                          /* 23 V_ASN1_UTCTIME */
+    1,                          /* 24 V_ASN1_GENERALIZEDTIME */
     -1,                         /* 25 */
-     1,                         /* 26 V_ASN1_ISO64STRING */
+    1,                          /* 26 V_ASN1_ISO64STRING */
     -1,                         /* 27 */
-     4,                         /* 28 V_ASN1_UNIVERSALSTRING */
+    4,                          /* 28 V_ASN1_UNIVERSALSTRING */
     -1,                         /* 29 */
-     2                          /* 30 V_ASN1_BMPSTRING */
+    2                           /* 30 V_ASN1_BMPSTRING */
 };
 
 /*
@@ -438,39 +440,39 @@ static int do_name_ex(char_io *io_ch, void *arg, const X509_NAME *n,
     if (!do_indent(io_ch, arg, indent))
         return -1;
     switch (flags & XN_FLAG_SEP_MASK) {
-    case XN_FLAG_SEP_MULTILINE:
-        sep_dn = "\n";
-        sep_dn_len = 1;
-        sep_mv = " + ";
-        sep_mv_len = 3;
-        break;
+        case XN_FLAG_SEP_MULTILINE:
+            sep_dn = "\n";
+            sep_dn_len = 1;
+            sep_mv = " + ";
+            sep_mv_len = 3;
+            break;
 
-    case XN_FLAG_SEP_COMMA_PLUS:
-        sep_dn = ",";
-        sep_dn_len = 1;
-        sep_mv = "+";
-        sep_mv_len = 1;
-        indent = 0;
-        break;
+        case XN_FLAG_SEP_COMMA_PLUS:
+            sep_dn = ",";
+            sep_dn_len = 1;
+            sep_mv = "+";
+            sep_mv_len = 1;
+            indent = 0;
+            break;
 
-    case XN_FLAG_SEP_CPLUS_SPC:
-        sep_dn = ", ";
-        sep_dn_len = 2;
-        sep_mv = " + ";
-        sep_mv_len = 3;
-        indent = 0;
-        break;
+        case XN_FLAG_SEP_CPLUS_SPC:
+            sep_dn = ", ";
+            sep_dn_len = 2;
+            sep_mv = " + ";
+            sep_mv_len = 3;
+            indent = 0;
+            break;
 
-    case XN_FLAG_SEP_SPLUS_SPC:
-        sep_dn = "; ";
-        sep_dn_len = 2;
-        sep_mv = " + ";
-        sep_mv_len = 3;
-        indent = 0;
-        break;
+        case XN_FLAG_SEP_SPLUS_SPC:
+            sep_dn = "; ";
+            sep_dn_len = 2;
+            sep_mv = " + ";
+            sep_mv_len = 3;
+            indent = 0;
+            break;
 
-    default:
-        return -1;
+        default:
+            return -1;
     }
 
     if (flags & XN_FLAG_SPC_EQ) {
@@ -589,7 +591,8 @@ int ASN1_STRING_print_ex(BIO *out, const ASN1_STRING *str, unsigned long flags)
 }
 
 #ifndef OPENSSL_NO_STDIO
-int ASN1_STRING_print_ex_fp(FILE *fp, const ASN1_STRING *str, unsigned long flags)
+int ASN1_STRING_print_ex_fp(FILE *fp, const ASN1_STRING *str,
+                            unsigned long flags)
 {
     return do_print_ex(send_fp_chars, fp, flags, str);
 }

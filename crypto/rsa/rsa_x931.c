@@ -106,17 +106,17 @@ int RSA_padding_check_X931(unsigned char *to, int tlen,
 int RSA_X931_hash_id(int nid)
 {
     switch (nid) {
-    case NID_sha1:
-        return 0x33;
+        case NID_sha1:
+            return 0x33;
 
-    case NID_sha256:
-        return 0x34;
+        case NID_sha256:
+            return 0x34;
 
-    case NID_sha384:
-        return 0x36;
+        case NID_sha384:
+            return 0x36;
 
-    case NID_sha512:
-        return 0x35;
+        case NID_sha512:
+            return 0x35;
 
     }
     return -1;

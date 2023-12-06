@@ -22,7 +22,8 @@
 
 /* Extract a private key from a PKCS8 structure */
 
-EVP_PKEY *evp_pkcs82pkey_legacy(const PKCS8_PRIV_KEY_INFO *p8, OSSL_LIB_CTX *libctx,
+EVP_PKEY *evp_pkcs82pkey_legacy(const PKCS8_PRIV_KEY_INFO *p8,
+                                OSSL_LIB_CTX *libctx,
                                 const char *propq)
 {
     EVP_PKEY *pkey = NULL;
@@ -59,7 +60,7 @@ EVP_PKEY *evp_pkcs82pkey_legacy(const PKCS8_PRIV_KEY_INFO *p8, OSSL_LIB_CTX *lib
 
     return pkey;
 
- error:
+error:
     EVP_PKEY_free(pkey);
     return NULL;
 }
@@ -78,12 +79,12 @@ EVP_PKEY *EVP_PKCS82PKEY_ex(const PKCS8_PRIV_KEY_INFO *p8, OSSL_LIB_CTX *libctx,
     char keytype[OSSL_MAX_NAME_SIZE];
 
     if (p8 == NULL
-            || !PKCS8_pkey_get0(&algoid, NULL, NULL, NULL, p8)
-            || !OBJ_obj2txt(keytype, sizeof(keytype), algoid, 0))
+        || !PKCS8_pkey_get0(&algoid, NULL, NULL, NULL, p8)
+        || !OBJ_obj2txt(keytype, sizeof(keytype), algoid, 0))
         return NULL;
 
     if ((encoded_len = i2d_PKCS8_PRIV_KEY_INFO(p8, &encoded_data)) <= 0
-            || encoded_data == NULL)
+        || encoded_data == NULL)
         return NULL;
 
     p8_data = encoded_data;
@@ -171,10 +172,10 @@ PKCS8_PRIV_KEY_INFO *EVP_PKEY2PKCS8(const EVP_PKEY *pkey)
         }
     }
     goto end;
- error:
+error:
     PKCS8_PRIV_KEY_INFO_free(p8);
     p8 = NULL;
- end:
+end:
     OSSL_ENCODER_CTX_free(ctx);
     return p8;
 

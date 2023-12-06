@@ -24,20 +24,20 @@
  */
 struct ring_buf {
     void       *start;
-    size_t      alloc;        /* size of buffer allocation in bytes */
+    size_t alloc;             /* size of buffer allocation in bytes */
 
     /*
      * Logical offset of the head (where we append to). This is the current size
      * of the QUIC stream. This increases monotonically.
      */
-    uint64_t    head_offset;
+    uint64_t head_offset;
 
     /*
      * Logical offset of the cull tail. Data is no longer needed and is
      * deallocated as the cull tail advances, which occurs as data is
      * acknowledged. This increases monotonically.
      */
-    uint64_t    ctail_offset;
+    uint64_t ctail_offset;
 };
 
 OSSL_SAFE_MATH_UNSIGNED(u64, uint64_t)
@@ -84,9 +84,9 @@ static ossl_inline int ring_buf_write_at(struct ring_buf *r,
     avail = ring_buf_avail(r);
     if (logical_offset < r->ctail_offset
         || safe_add_u64(logical_offset, buf_len, &err)
-           > safe_add_u64(r->head_offset, avail, &err)
+        > safe_add_u64(r->head_offset, avail, &err)
         || safe_add_u64(r->head_offset, buf_len, &err)
-           > MAX_OFFSET
+        > MAX_OFFSET
         || err)
         return 0;
 
@@ -143,9 +143,10 @@ static ossl_inline size_t ring_buf_push(struct ring_buf *r,
     return pushed;
 }
 
-static ossl_inline const unsigned char *ring_buf_get_ptr(const struct ring_buf *r,
-                                                         uint64_t logical_offset,
-                                                         size_t *max_len)
+static ossl_inline const unsigned char *ring_buf_get_ptr(
+    const struct ring_buf *r,
+    uint64_t logical_offset,
+    size_t *max_len)
 {
     unsigned char *start = r->start;
     size_t idx;

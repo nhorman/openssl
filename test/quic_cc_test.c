@@ -51,37 +51,37 @@ typedef struct net_pkt_st {
     /*
      * The time at which the packet was sent.
      */
-    OSSL_TIME   tx_time;
+    OSSL_TIME tx_time;
 
     /*
      * The time at which the simulated packet arrives at the RX side (success)
      * or is dropped (!success).
      */
-    OSSL_TIME   arrive_time;
+    OSSL_TIME arrive_time;
 
     /*
      * The time at which the transmitting side makes a determination of
      * acknowledgement (if success) or loss (if !success).
      */
-    OSSL_TIME   determination_time;
+    OSSL_TIME determination_time;
 
     /*
      * Current earliest time there is something to be done for this packet.
      * min(arrive_time, determination_time).
      */
-    OSSL_TIME   next_time;
+    OSSL_TIME next_time;
 
     /* 1 if the packet will be successfully delivered, 0 if it is to be lost. */
-    int         success;
+    int success;
 
     /* 1 if we have already processed packet arrival. */
-    int         arrived;
+    int arrived;
 
     /* Size of simulated packet in bytes. */
-    size_t      size;
+    size_t size;
 
     /* pqueue internal index. */
-    size_t      idx;
+    size_t idx;
 } NET_PKT;
 
 DEFINE_PRIORITY_QUEUE_OF(NET_PKT);
@@ -282,7 +282,7 @@ static FILE *logfile;
 #endif
 
 static int dump_state(const OSSL_CC_METHOD *ccm, OSSL_CC_DATA *cc,
-                                  struct net_sim *s)
+                      struct net_sim *s)
 {
 #ifdef GENERATE_LOG
     uint64_t cwnd_size, cur_bytes, state;
@@ -446,7 +446,8 @@ static int test_simulate(void)
     {
         uint64_t estimated_capacity = cwnd_sample_sum / cwnd_sample_count;
 
-        double error = ((double)estimated_capacity / (double)actual_capacity) - 1.0;
+        double error = ((double)estimated_capacity / (double)actual_capacity) -
+                       1.0;
 
         TEST_info("est = %6llu kB/s, act=%6llu kB/s (error=%.02f%%)\n",
                   (unsigned long long)estimated_capacity,
@@ -614,13 +615,13 @@ int setup_tests(void)
 #ifdef GENERATE_LOG
     logfile = fopen("quic_cc_stats.csv", "w");
     fprintf(logfile,
-        "\"Time\","
-        "\"TX Allowance\","
-        "\"CWND Size\","
-        "\"Bytes in Flight\","
-        "\"Total Acked\",\"Total Lost\","
-        "\"Capacity\",\"Spare Capacity\","
-        "\"State\"\n");
+            "\"Time\","
+            "\"TX Allowance\","
+            "\"CWND Size\","
+            "\"Bytes in Flight\","
+            "\"Total Acked\",\"Total Lost\","
+            "\"Capacity\",\"Spare Capacity\","
+            "\"State\"\n");
 #endif
 
     ADD_TEST(test_simulate);

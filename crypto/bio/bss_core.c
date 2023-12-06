@@ -130,7 +130,8 @@ BIO *BIO_new_from_core_bio(OSSL_LIB_CTX *libctx, OSSL_CORE_BIO *corebio)
     BIO_CORE_GLOBALS *bcgbl = get_globals(libctx);
 
     /* Check the library context has been initialised with the callbacks */
-    if (bcgbl == NULL || (bcgbl->c_bio_write_ex == NULL && bcgbl->c_bio_read_ex == NULL))
+    if (bcgbl == NULL ||
+        (bcgbl->c_bio_write_ex == NULL && bcgbl->c_bio_read_ex == NULL))
         return NULL;
 
     if ((outbio = BIO_new_ex(libctx, BIO_s_core())) == NULL)
@@ -149,38 +150,38 @@ int ossl_bio_init_core(OSSL_LIB_CTX *libctx, const OSSL_DISPATCH *fns)
     BIO_CORE_GLOBALS *bcgbl = get_globals(libctx);
 
     if (bcgbl == NULL)
-	    return 0;
+        return 0;
 
     for (; fns->function_id != 0; fns++) {
         switch (fns->function_id) {
-        case OSSL_FUNC_BIO_READ_EX:
-            if (bcgbl->c_bio_read_ex == NULL)
-                bcgbl->c_bio_read_ex = OSSL_FUNC_BIO_read_ex(fns);
-            break;
-        case OSSL_FUNC_BIO_WRITE_EX:
-            if (bcgbl->c_bio_write_ex == NULL)
-                bcgbl->c_bio_write_ex = OSSL_FUNC_BIO_write_ex(fns);
-            break;
-        case OSSL_FUNC_BIO_GETS:
-            if (bcgbl->c_bio_gets == NULL)
-                bcgbl->c_bio_gets = OSSL_FUNC_BIO_gets(fns);
-            break;
-        case OSSL_FUNC_BIO_PUTS:
-            if (bcgbl->c_bio_puts == NULL)
-                bcgbl->c_bio_puts = OSSL_FUNC_BIO_puts(fns);
-            break;
-        case OSSL_FUNC_BIO_CTRL:
-            if (bcgbl->c_bio_ctrl == NULL)
-                bcgbl->c_bio_ctrl = OSSL_FUNC_BIO_ctrl(fns);
-            break;
-        case OSSL_FUNC_BIO_UP_REF:
-            if (bcgbl->c_bio_up_ref == NULL)
-                bcgbl->c_bio_up_ref = OSSL_FUNC_BIO_up_ref(fns);
-            break;
-        case OSSL_FUNC_BIO_FREE:
-            if (bcgbl->c_bio_free == NULL)
-                bcgbl->c_bio_free = OSSL_FUNC_BIO_free(fns);
-            break;
+            case OSSL_FUNC_BIO_READ_EX:
+                if (bcgbl->c_bio_read_ex == NULL)
+                    bcgbl->c_bio_read_ex = OSSL_FUNC_BIO_read_ex(fns);
+                break;
+            case OSSL_FUNC_BIO_WRITE_EX:
+                if (bcgbl->c_bio_write_ex == NULL)
+                    bcgbl->c_bio_write_ex = OSSL_FUNC_BIO_write_ex(fns);
+                break;
+            case OSSL_FUNC_BIO_GETS:
+                if (bcgbl->c_bio_gets == NULL)
+                    bcgbl->c_bio_gets = OSSL_FUNC_BIO_gets(fns);
+                break;
+            case OSSL_FUNC_BIO_PUTS:
+                if (bcgbl->c_bio_puts == NULL)
+                    bcgbl->c_bio_puts = OSSL_FUNC_BIO_puts(fns);
+                break;
+            case OSSL_FUNC_BIO_CTRL:
+                if (bcgbl->c_bio_ctrl == NULL)
+                    bcgbl->c_bio_ctrl = OSSL_FUNC_BIO_ctrl(fns);
+                break;
+            case OSSL_FUNC_BIO_UP_REF:
+                if (bcgbl->c_bio_up_ref == NULL)
+                    bcgbl->c_bio_up_ref = OSSL_FUNC_BIO_up_ref(fns);
+                break;
+            case OSSL_FUNC_BIO_FREE:
+                if (bcgbl->c_bio_free == NULL)
+                    bcgbl->c_bio_free = OSSL_FUNC_BIO_free(fns);
+                break;
         }
     }
 

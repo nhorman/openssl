@@ -235,7 +235,7 @@ static int mem_write(BIO *b, const char *in, int inl)
     memcpy(bbm->buf->data + blen, in, inl);
     *bbm->readp = *bbm->buf;
     ret = inl;
- end:
+end:
     return ret;
 }
 
@@ -258,82 +258,82 @@ static long mem_ctrl(BIO *b, int cmd, long num, void *ptr)
     remain = bm->length;
 
     switch (cmd) {
-    case BIO_CTRL_RESET:
-        bm = bbm->buf;
-        if (bm->data != NULL) {
-            if (!(b->flags & BIO_FLAGS_MEM_RDONLY)) {
-                if (!(b->flags & BIO_FLAGS_NONCLEAR_RST)) {
-                    memset(bm->data, 0, bm->max);
-                    bm->length = 0;
-                }
-                *bbm->readp = *bbm->buf;
-            } else {
-                /* For read only case just reset to the start again */
-                *bbm->buf = *bbm->readp;
-            }
-        }
-        break;
-    case BIO_C_FILE_SEEK:
-        if (num < 0 || num > off + remain)
-            return -1;   /* Can't see outside of the current buffer */
-
-        bm->data = (num != 0) ? bo->data + num : bo->data;
-        bm->length = bo->length - num;
-        bm->max = bo->max - num;
-        off = num;
-        /* FALLTHRU */
-    case BIO_C_FILE_TELL:
-        ret = off;
-        break;
-    case BIO_CTRL_EOF:
-        ret = (long)(bm->length == 0);
-        break;
-    case BIO_C_SET_BUF_MEM_EOF_RETURN:
-        b->num = (int)num;
-        break;
-    case BIO_CTRL_INFO:
-        ret = (long)bm->length;
-        if (ptr != NULL) {
-            pptr = (char **)ptr;
-            *pptr = (char *)(bm->data);
-        }
-        break;
-    case BIO_C_SET_BUF_MEM:
-        mem_buf_free(b);
-        b->shutdown = (int)num;
-        bbm->buf = ptr;
-        *bbm->readp = *bbm->buf;
-        break;
-    case BIO_C_GET_BUF_MEM_PTR:
-        if (ptr != NULL) {
-            if (!(b->flags & BIO_FLAGS_MEM_RDONLY))
-                mem_buf_sync(b);
+        case BIO_CTRL_RESET:
             bm = bbm->buf;
-            pptr = (char **)ptr;
-            *pptr = (char *)bm;
-        }
-        break;
-    case BIO_CTRL_GET_CLOSE:
-        ret = (long)b->shutdown;
-        break;
-    case BIO_CTRL_SET_CLOSE:
-        b->shutdown = (int)num;
-        break;
-    case BIO_CTRL_WPENDING:
-        ret = 0L;
-        break;
-    case BIO_CTRL_PENDING:
-        ret = (long)bm->length;
-        break;
-    case BIO_CTRL_DUP:
-    case BIO_CTRL_FLUSH:
-        ret = 1;
-        break;
-    case BIO_CTRL_PUSH:
-    case BIO_CTRL_POP:
-    default:
-        ret = 0;
-        break;
+            if (bm->data != NULL) {
+                if (!(b->flags & BIO_FLAGS_MEM_RDONLY)) {
+                    if (!(b->flags & BIO_FLAGS_NONCLEAR_RST)) {
+                        memset(bm->data, 0, bm->max);
+                        bm->length = 0;
+                    }
+                    *bbm->readp = *bbm->buf;
+                } else {
+                    /* For read only case just reset to the start again */
+                    *bbm->buf = *bbm->readp;
+                }
+            }
+            break;
+        case BIO_C_FILE_SEEK:
+            if (num < 0 || num > off + remain)
+                return -1; /* Can't see outside of the current buffer */
+
+            bm->data = (num != 0) ? bo->data + num : bo->data;
+            bm->length = bo->length - num;
+            bm->max = bo->max - num;
+            off = num;
+        /* FALLTHRU */
+        case BIO_C_FILE_TELL:
+            ret = off;
+            break;
+        case BIO_CTRL_EOF:
+            ret = (long)(bm->length == 0);
+            break;
+        case BIO_C_SET_BUF_MEM_EOF_RETURN:
+            b->num = (int)num;
+            break;
+        case BIO_CTRL_INFO:
+            ret = (long)bm->length;
+            if (ptr != NULL) {
+                pptr = (char **)ptr;
+                *pptr = (char *)(bm->data);
+            }
+            break;
+        case BIO_C_SET_BUF_MEM:
+            mem_buf_free(b);
+            b->shutdown = (int)num;
+            bbm->buf = ptr;
+            *bbm->readp = *bbm->buf;
+            break;
+        case BIO_C_GET_BUF_MEM_PTR:
+            if (ptr != NULL) {
+                if (!(b->flags & BIO_FLAGS_MEM_RDONLY))
+                    mem_buf_sync(b);
+                bm = bbm->buf;
+                pptr = (char **)ptr;
+                *pptr = (char *)bm;
+            }
+            break;
+        case BIO_CTRL_GET_CLOSE:
+            ret = (long)b->shutdown;
+            break;
+        case BIO_CTRL_SET_CLOSE:
+            b->shutdown = (int)num;
+            break;
+        case BIO_CTRL_WPENDING:
+            ret = 0L;
+            break;
+        case BIO_CTRL_PENDING:
+            ret = (long)bm->length;
+            break;
+        case BIO_CTRL_DUP:
+        case BIO_CTRL_FLUSH:
+            ret = 1;
+            break;
+        case BIO_CTRL_PUSH:
+        case BIO_CTRL_POP:
+        default:
+            ret = 0;
+            break;
     }
     return ret;
 }

@@ -130,7 +130,7 @@ int ossl_prop_defn_set(OSSL_LIB_CTX *ctx, const char *prop,
     }
     OPENSSL_free(p);
     res = 0;
- end:
+end:
     ossl_lib_ctx_unlock(ctx);
     return res;
 }

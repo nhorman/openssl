@@ -74,9 +74,9 @@ static int ecx_init(void *vecxctx, void *vkey,
         return 0;
 
     if (ecxctx == NULL
-            || key == NULL
-            || key->keylen != ecxctx->keylen
-            || !ossl_ecx_key_up_ref(key)) {
+        || key == NULL
+        || key->keylen != ecxctx->keylen
+        || !ossl_ecx_key_up_ref(key)) {
         ERR_raise(ERR_LIB_PROV, ERR_R_INTERNAL_ERROR);
         return 0;
     }
@@ -96,9 +96,9 @@ static int ecx_set_peer(void *vecxctx, void *vkey)
         return 0;
 
     if (ecxctx == NULL
-            || key == NULL
-            || key->keylen != ecxctx->keylen
-            || !ossl_ecx_key_up_ref(key)) {
+        || key == NULL
+        || key->keylen != ecxctx->keylen
+        || !ossl_ecx_key_up_ref(key)) {
         ERR_raise(ERR_LIB_PROV, ERR_R_INTERNAL_ERROR);
         return 0;
     }
@@ -159,21 +159,21 @@ static void *ecx_dupctx(void *vecxctx)
 }
 
 const OSSL_DISPATCH ossl_x25519_keyexch_functions[] = {
-    { OSSL_FUNC_KEYEXCH_NEWCTX, (void (*)(void))x25519_newctx },
-    { OSSL_FUNC_KEYEXCH_INIT, (void (*)(void))ecx_init },
-    { OSSL_FUNC_KEYEXCH_DERIVE, (void (*)(void))ecx_derive },
-    { OSSL_FUNC_KEYEXCH_SET_PEER, (void (*)(void))ecx_set_peer },
-    { OSSL_FUNC_KEYEXCH_FREECTX, (void (*)(void))ecx_freectx },
-    { OSSL_FUNC_KEYEXCH_DUPCTX, (void (*)(void))ecx_dupctx },
+    { OSSL_FUNC_KEYEXCH_NEWCTX, (void (*)(void)) x25519_newctx },
+    { OSSL_FUNC_KEYEXCH_INIT, (void (*)(void)) ecx_init },
+    { OSSL_FUNC_KEYEXCH_DERIVE, (void (*)(void)) ecx_derive },
+    { OSSL_FUNC_KEYEXCH_SET_PEER, (void (*)(void)) ecx_set_peer },
+    { OSSL_FUNC_KEYEXCH_FREECTX, (void (*)(void)) ecx_freectx },
+    { OSSL_FUNC_KEYEXCH_DUPCTX, (void (*)(void)) ecx_dupctx },
     OSSL_DISPATCH_END
 };
 
 const OSSL_DISPATCH ossl_x448_keyexch_functions[] = {
-    { OSSL_FUNC_KEYEXCH_NEWCTX, (void (*)(void))x448_newctx },
-    { OSSL_FUNC_KEYEXCH_INIT, (void (*)(void))ecx_init },
-    { OSSL_FUNC_KEYEXCH_DERIVE, (void (*)(void))ecx_derive },
-    { OSSL_FUNC_KEYEXCH_SET_PEER, (void (*)(void))ecx_set_peer },
-    { OSSL_FUNC_KEYEXCH_FREECTX, (void (*)(void))ecx_freectx },
-    { OSSL_FUNC_KEYEXCH_DUPCTX, (void (*)(void))ecx_dupctx },
+    { OSSL_FUNC_KEYEXCH_NEWCTX, (void (*)(void)) x448_newctx },
+    { OSSL_FUNC_KEYEXCH_INIT, (void (*)(void)) ecx_init },
+    { OSSL_FUNC_KEYEXCH_DERIVE, (void (*)(void)) ecx_derive },
+    { OSSL_FUNC_KEYEXCH_SET_PEER, (void (*)(void)) ecx_set_peer },
+    { OSSL_FUNC_KEYEXCH_FREECTX, (void (*)(void)) ecx_freectx },
+    { OSSL_FUNC_KEYEXCH_DUPCTX, (void (*)(void)) ecx_dupctx },
     OSSL_DISPATCH_END
 };

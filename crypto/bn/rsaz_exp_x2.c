@@ -25,7 +25,8 @@ NON_EMPTY_TRANSLATION_UNIT
 # include <string.h>
 
 # define ALIGN_OF(ptr, boundary) \
-    ((unsigned char *)(ptr) + (boundary - (((size_t)(ptr)) & (boundary - 1))))
+        ((unsigned char *)(ptr) + \
+         (boundary - (((size_t)(ptr)) & (boundary - 1))))
 
 /* Internal radix */
 # define DIGIT_SIZE (52)
@@ -37,7 +38,7 @@ NON_EMPTY_TRANSLATION_UNIT
 
 /* Number of registers required to hold |digits_num| amount of qword digits */
 # define NUMBER_OF_REGISTERS(digits_num, register_size)            \
-    (((digits_num) * 64 + (register_size) - 1) / (register_size))
+        (((digits_num) * 64 + (register_size) - 1) / (register_size))
 
 static ossl_inline uint64_t get_digit(const uint8_t *in, int in_len);
 static ossl_inline void put_digit(uint8_t *out, int out_len, uint64_t digit);
@@ -164,7 +165,7 @@ int ossl_rsaz_mod_exp_avx512_x2(BN_ULONG *res1,
     BN_ULONG *storage = NULL;
     BN_ULONG *storage_aligned = NULL;
     int storage_len_bytes = 7 * regs_capacity * sizeof(BN_ULONG)
-                           + 64 /* alignment */;
+                            + 64 /* alignment */;
 
     const BN_ULONG *exp[2] = {0};
     BN_ULONG k0[2] = {0};
@@ -172,17 +173,17 @@ int ossl_rsaz_mod_exp_avx512_x2(BN_ULONG *res1,
     AMM amm = NULL;
 
     switch (factor_size) {
-    case 1024:
-        amm = ossl_rsaz_amm52x20_x1_ifma256;
-        break;
-    case 1536:
-        amm = ossl_rsaz_amm52x30_x1_ifma256;
-        break;
-    case 2048:
-        amm = ossl_rsaz_amm52x40_x1_ifma256;
-        break;
-    default:
-        goto err;
+        case 1024:
+            amm = ossl_rsaz_amm52x20_x1_ifma256;
+            break;
+        case 1536:
+            amm = ossl_rsaz_amm52x30_x1_ifma256;
+            break;
+        case 2048:
+            amm = ossl_rsaz_amm52x40_x1_ifma256;
+            break;
+        default:
+            goto err;
     }
 
     storage = (BN_ULONG *)OPENSSL_malloc(storage_len_bytes);
@@ -252,8 +253,8 @@ int ossl_rsaz_mod_exp_avx512_x2(BN_ULONG *res1,
     /* bn_reduce_once_in_place expects number of BN_ULONG, not bit size */
     factor_size /= sizeof(BN_ULONG) * 8;
 
-    bn_reduce_once_in_place(res1, /*carry=*/0, m1, storage, factor_size);
-    bn_reduce_once_in_place(res2, /*carry=*/0, m2, storage, factor_size);
+    bn_reduce_once_in_place(res1, /*carry=*/ 0, m1, storage, factor_size);
+    bn_reduce_once_in_place(res2, /*carry=*/ 0, m2, storage, factor_size);
 
 err:
     if (storage != NULL) {
@@ -307,9 +308,9 @@ int RSAZ_mod_exp_x2_ifma256(BN_ULONG *out,
     int exp_win_mask = (1U << exp_win_size) - 1;
 
     /*
-    * Number of digits (64-bit words) in redundant representation to handle
-    * modulus bits
-    */
+     * Number of digits (64-bit words) in redundant representation to handle
+     * modulus bits
+     */
     int red_digits = 0;
     int exp_digits = 0;
 
@@ -337,35 +338,35 @@ int RSAZ_mod_exp_x2_ifma256(BN_ULONG *out,
 # define DAMS(r,a,m,k0) damm((r),(a),(a),(m),(k0))
 
     switch (modulus_bitsize) {
-    case 1024:
-        red_digits = 20;
-        exp_digits = 16;
-        damm = ossl_rsaz_amm52x20_x2_ifma256;
-        extract = ossl_extract_multiplier_2x20_win5;
-        break;
-    case 1536:
-        /* Extended with 2 digits padding to avoid mask ops in high YMM register */
-        red_digits = 30 + 2;
-        exp_digits = 24;
-        damm = ossl_rsaz_amm52x30_x2_ifma256;
-        extract = ossl_extract_multiplier_2x30_win5;
-        break;
-    case 2048:
-        red_digits = 40;
-        exp_digits = 32;
-        damm = ossl_rsaz_amm52x40_x2_ifma256;
-        extract = ossl_extract_multiplier_2x40_win5;
-        break;
-    default:
-        goto err;
+        case 1024:
+            red_digits = 20;
+            exp_digits = 16;
+            damm = ossl_rsaz_amm52x20_x2_ifma256;
+            extract = ossl_extract_multiplier_2x20_win5;
+            break;
+        case 1536:
+            /* Extended with 2 digits padding to avoid mask ops in high YMM register */
+            red_digits = 30 + 2;
+            exp_digits = 24;
+            damm = ossl_rsaz_amm52x30_x2_ifma256;
+            extract = ossl_extract_multiplier_2x30_win5;
+            break;
+        case 2048:
+            red_digits = 40;
+            exp_digits = 32;
+            damm = ossl_rsaz_amm52x40_x2_ifma256;
+            extract = ossl_extract_multiplier_2x40_win5;
+            break;
+        default:
+            goto err;
     }
 
     storage_len_bytes = (2 * red_digits                         /* red_Y     */
-                       + 2 * red_digits                         /* red_X     */
-                       + 2 * red_digits * (1U << exp_win_size)  /* red_table */
-                       + 2 * (exp_digits + 1))                  /* expz      */
-                       * sizeof(BN_ULONG)
-                       + 64;                                    /* alignment */
+                         + 2 * red_digits                       /* red_X     */
+                         + 2 * red_digits * (1U << exp_win_size) /* red_table */
+                         + 2 * (exp_digits + 1))                /* expz      */
+                        * sizeof(BN_ULONG)
+                        + 64;                                   /* alignment */
 
     storage = (BN_ULONG *)OPENSSL_zalloc(storage_len_bytes);
     if (storage == NULL)
@@ -433,10 +434,12 @@ int RSAZ_mod_exp_x2_ifma256(BN_ULONG *out,
         red_table_idx_0 >>= exp_chunk_shift;
         red_table_idx_1 >>= exp_chunk_shift;
 
-        extract(&red_Y[0 * red_digits], (const BN_ULONG*)red_table, (int)red_table_idx_0, (int)red_table_idx_1);
+        extract(&red_Y[0 * red_digits], (const BN_ULONG*)red_table,
+                (int)red_table_idx_0, (int)red_table_idx_1);
 
         /* Process other exp windows */
-        for (exp_bit_no -= exp_win_size; exp_bit_no >= 0; exp_bit_no -= exp_win_size) {
+        for (exp_bit_no -= exp_win_size; exp_bit_no >= 0;
+             exp_bit_no -= exp_win_size) {
             /* Extract pre-computed multiplier from the table */
             {
                 BN_ULONG T;
@@ -474,7 +477,8 @@ int RSAZ_mod_exp_x2_ifma256(BN_ULONG *out,
                     red_table_idx_1 &= table_idx_mask;
                 }
 
-                extract(&red_X[0 * red_digits], (const BN_ULONG*)red_table, (int)red_table_idx_0, (int)red_table_idx_1);
+                extract(&red_X[0 * red_digits], (const BN_ULONG*)red_table,
+                        (int)red_table_idx_0, (int)red_table_idx_1);
             }
 
             /* Series of squaring */
@@ -484,7 +488,8 @@ int RSAZ_mod_exp_x2_ifma256(BN_ULONG *out,
             DAMS((BN_ULONG*)red_Y, (const BN_ULONG*)red_Y, m, k0);
             DAMS((BN_ULONG*)red_Y, (const BN_ULONG*)red_Y, m, k0);
 
-            damm((BN_ULONG*)red_Y, (const BN_ULONG*)red_Y, (const BN_ULONG*)red_X, m, k0);
+            damm((BN_ULONG*)red_Y, (const BN_ULONG*)red_Y,
+                 (const BN_ULONG*)red_X, m, k0);
         }
     }
 
@@ -548,7 +553,8 @@ static void to_words52(BN_ULONG *out, int out_len,
 
     in_str = (uint8_t *)in;
 
-    for (; in_bitsize >= (2 * DIGIT_SIZE); in_bitsize -= (2 * DIGIT_SIZE), out += 2) {
+    for (; in_bitsize >= (2 * DIGIT_SIZE);
+         in_bitsize -= (2 * DIGIT_SIZE), out += 2) {
         uint64_t digit;
 
         memcpy(&digit, in_str, sizeof(digit));
@@ -613,7 +619,7 @@ static void from_words52(BN_ULONG *out, int out_bitsize, const BN_ULONG *in)
         uint8_t *out_str = (uint8_t *)out;
 
         for (; out_bitsize >= (2 * DIGIT_SIZE);
-               out_bitsize -= (2 * DIGIT_SIZE), in += 2) {
+             out_bitsize -= (2 * DIGIT_SIZE), in += 2) {
             uint64_t digit;
 
             digit = in[0];
@@ -629,7 +635,7 @@ static void from_words52(BN_ULONG *out, int out_bitsize, const BN_ULONG *in)
             out_str += 6;
             out_bitsize -= DIGIT_SIZE;
             put_digit(out_str, BITS2WORD8_SIZE(out_bitsize),
-                        (in[1] << 4 | in[0] >> 48));
+                      (in[1] << 4 | in[0] >> 48));
         } else if (out_bitsize) {
             put_digit(out_str, BITS2WORD8_SIZE(out_bitsize), in[0]);
         }

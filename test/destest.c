@@ -178,13 +178,13 @@ static unsigned char cipher_ecb2[NUM_TESTS - 1][8] = {
 };
 
 static unsigned char cbc_key[8] =
-    { 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef };
+{ 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef };
 static unsigned char cbc2_key[8] =
-    { 0xf1, 0xe0, 0xd3, 0xc2, 0xb5, 0xa4, 0x97, 0x86 };
+{ 0xf1, 0xe0, 0xd3, 0xc2, 0xb5, 0xa4, 0x97, 0x86 };
 static unsigned char cbc3_key[8] =
-    { 0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10 };
+{ 0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10 };
 static unsigned char cbc_iv[8] =
-    { 0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10 };
+{ 0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10 };
 /*
  * Changed the following text constant to binary so it will work on ebcdic
  * machines :-)
@@ -209,7 +209,7 @@ static unsigned char cbc_ok[32] = {
 #  error "SCREW_THE_PARITY is not meant to be defined."
 #  error "Original vectors are preserved for reference only."
 static unsigned char cbc2_key[8] =
-    { 0xf0, 0xe1, 0xd2, 0xc3, 0xb4, 0xa5, 0x96, 0x87 };
+{ 0xf0, 0xe1, 0xd2, 0xc3, 0xb4, 0xa5, 0x96, 0x87 };
 static unsigned char xcbc_ok[32] = {
     0x86, 0x74, 0x81, 0x0D, 0x61, 0xA4, 0xA5, 0x48,
     0xB9, 0x93, 0x03, 0xE1, 0xB8, 0xBB, 0xBD, 0xBD,
@@ -240,9 +240,9 @@ static unsigned char pcbc_ok[32] = {
 };
 
 static unsigned char cfb_key[8] =
-    { 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef };
+{ 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef };
 static unsigned char cfb_iv[8] =
-    { 0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef };
+{ 0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef };
 static unsigned char cfb_buf1[40], cfb_buf2[40], cfb_tmp[8];
 static unsigned char plain[24] = {
     0x4e, 0x6f, 0x77, 0x20, 0x69, 0x73,
@@ -277,9 +277,9 @@ static unsigned char cfb_cipher64[24] = {
 };
 
 static unsigned char ofb_key[8] =
-    { 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef };
+{ 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef };
 static unsigned char ofb_iv[8] =
-    { 0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef };
+{ 0x12, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xef };
 static unsigned char ofb_buf1[24], ofb_buf2[24], ofb_tmp[8];
 static unsigned char ofb_cipher[24] = {
     0xf3, 0x09, 0x62, 0x49, 0xc7, 0xf4, 0x6e, 0x51,
@@ -288,7 +288,7 @@ static unsigned char ofb_cipher[24] = {
 };
 static DES_LONG cbc_cksum_ret = 0xF7FE62B4L;
 static unsigned char cbc_cksum_data[8] =
-    { 0x1D, 0x26, 0x93, 0x97, 0xf7, 0xfe, 0x62, 0xb4 };
+{ 0x1D, 0x26, 0x93, 0x97, 0xf7, 0xfe, 0x62, 0xb4 };
 
 static char *pt(const unsigned char *p, char buf[DATA_BUF_SIZE])
 {
@@ -719,11 +719,11 @@ static int test_des_key_wrap(int idx)
 
     /* Some sanity checks and cipher loading */
     if (!TEST_size_t_le(in_bytes, sizeof(in))
-            || !TEST_ptr(cipher = EVP_CIPHER_fetch(NULL, "DES3-WRAP", NULL))
-            || !TEST_int_eq(bs = EVP_CIPHER_get_block_size(cipher), 8)
-            || !TEST_size_t_eq(bs * 3u, sizeof(key))
-            || !TEST_true(in_bytes % bs == 0)
-            || !TEST_ptr(ctx = EVP_CIPHER_CTX_new()))
+        || !TEST_ptr(cipher = EVP_CIPHER_fetch(NULL, "DES3-WRAP", NULL))
+        || !TEST_int_eq(bs = EVP_CIPHER_get_block_size(cipher), 8)
+        || !TEST_size_t_eq(bs * 3u, sizeof(key))
+        || !TEST_true(in_bytes % bs == 0)
+        || !TEST_ptr(ctx = EVP_CIPHER_CTX_new()))
         goto err;
 
     /* Create random data to end to end test */
@@ -738,8 +738,8 @@ static int test_des_key_wrap(int idx)
     /* Wrap / encrypt the key */
     clen_upd = sizeof(c_txt);
     if (!TEST_true(EVP_EncryptInit(ctx, cipher, key, NULL))
-            || !TEST_true(EVP_EncryptUpdate(ctx, c_txt, &clen_upd,
-                                            in, in_bytes)))
+        || !TEST_true(EVP_EncryptUpdate(ctx, c_txt, &clen_upd,
+                                        in, in_bytes)))
         goto err;
 
     expect = (in_bytes + (bs - 1)) / bs * bs + 2 * bs;
@@ -748,15 +748,15 @@ static int test_des_key_wrap(int idx)
 
     clen_fin = sizeof(c_txt) - clen_upd;
     if (!TEST_true(EVP_EncryptFinal(ctx, c_txt + clen_upd, &clen_fin))
-            || !TEST_int_eq(clen_fin, 0))
+        || !TEST_int_eq(clen_fin, 0))
         goto err;
     clen = clen_upd + clen_fin;
 
     /* Decrypt the wrapped key */
     plen_upd = sizeof(p_txt);
     if (!TEST_true(EVP_DecryptInit(ctx, cipher, key, NULL))
-            || !TEST_true(EVP_DecryptUpdate(ctx, p_txt, &plen_upd,
-                                            c_txt, clen)))
+        || !TEST_true(EVP_DecryptUpdate(ctx, p_txt, &plen_upd,
+                                        c_txt, clen)))
         goto err;
     plen_fin = sizeof(p_txt) - plen_upd;
     if (!TEST_true(EVP_DecryptFinal(ctx, p_txt + plen_upd, &plen_fin)))
@@ -766,7 +766,7 @@ static int test_des_key_wrap(int idx)
     if (!TEST_mem_eq(in, in_bytes, p_txt, plen))
         goto err;
     res = 1;
- err:
+err:
     EVP_CIPHER_free(cipher);
     EVP_CIPHER_CTX_free(ctx);
     return res;
@@ -808,7 +808,7 @@ static struct {
 
 static int test_des_weak_keys(int n)
 {
-    const_DES_cblock *key = (unsigned char (*)[8])weak_keys[n].key;
+    const_DES_cblock *key = (unsigned char (*)[8]) weak_keys[n].key;
 
     return TEST_int_eq(DES_is_weak_key(key), weak_keys[n].expect);
 }
@@ -834,7 +834,7 @@ static struct {
 
 static int test_des_check_bad_parity(int n)
 {
-    const_DES_cblock *key = (unsigned char (*)[8])bad_parity_keys[n].key;
+    const_DES_cblock *key = (unsigned char (*)[8]) bad_parity_keys[n].key;
 
     return TEST_int_eq(DES_check_key_parity(key), bad_parity_keys[n].expect);
 }
@@ -848,14 +848,14 @@ static int test_des_two_key(void)
     unsigned char key[16];
 
     if (!TEST_ptr(cipher = EVP_CIPHER_fetch(NULL, "DES-EDE-ECB", NULL))
-            || !TEST_ptr(ctx = EVP_CIPHER_CTX_new())
-            || !EVP_CipherInit_ex(ctx, cipher, NULL, NULL, NULL, 1)
-            || !EVP_CIPHER_CTX_set_key_length(ctx, sizeof(key))
-            || !EVP_CIPHER_CTX_rand_key(ctx, key))
+        || !TEST_ptr(ctx = EVP_CIPHER_CTX_new())
+        || !EVP_CipherInit_ex(ctx, cipher, NULL, NULL, NULL, 1)
+        || !EVP_CIPHER_CTX_set_key_length(ctx, sizeof(key))
+        || !EVP_CIPHER_CTX_rand_key(ctx, key))
         goto err;
 
     res = 1;
- err:
+err:
     EVP_CIPHER_free(cipher);
     EVP_CIPHER_CTX_free(ctx);
     return res;

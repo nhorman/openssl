@@ -541,7 +541,7 @@ X509_REQ *load_csr(const char *file, int format, const char *desc)
     else
         print_format_error(format, OPT_FMT_PEMDER);
 
- end:
+end:
     if (req == NULL) {
         ERR_print_errors(bio_err);
         if (desc != NULL)
@@ -579,9 +579,11 @@ X509_REQ *load_csr_autofmt(const char *infile, int format,
         int ret = do_X509_REQ_verify(csr, pkey, vfyopts);
 
         if (pkey == NULL || ret < 0)
-            BIO_puts(bio_err, "Warning: error while verifying CSR self-signature\n");
+            BIO_puts(bio_err,
+                     "Warning: error while verifying CSR self-signature\n");
         else if (ret == 0)
-            BIO_puts(bio_err, "Warning: CSR self-signature does not match the contents\n");
+            BIO_puts(bio_err,
+                     "Warning: CSR self-signature does not match the contents\n");
         return csr;
     }
     return csr;
@@ -792,9 +794,9 @@ STACK_OF(X509) *load_certs_multifile(char *files, const char *pass,
     }
     return result;
 
- oom:
+oom:
     BIO_printf(bio_err, "out of memory\n");
- err:
+err:
     OSSL_STACK_OF_X509_free(certs);
     OSSL_STACK_OF_X509_free(result);
     return NULL;
@@ -891,27 +893,27 @@ int load_crls(const char *uri, STACK_OF(X509_CRL) **crls,
 static const char *format2string(int format)
 {
     switch (format) {
-    case FORMAT_PEM:
-        return "PEM";
-    case FORMAT_ASN1:
-        return "DER";
+        case FORMAT_PEM:
+            return "PEM";
+        case FORMAT_ASN1:
+            return "DER";
     }
     return NULL;
 }
 
 /* Set type expectation, but clear it if objects of different types expected. */
 #define SET_EXPECT(val) \
-    (expect = expect < 0 ? (val) : (expect == (val) ? (val) : 0))
+        (expect = expect < 0 ? (val) : (expect == (val) ? (val) : 0))
 #define SET_EXPECT1(pvar, val) \
-    if ((pvar) != NULL) { \
-        *(pvar) = NULL; \
-        SET_EXPECT(val); \
-    }
+        if ((pvar) != NULL) { \
+            *(pvar) = NULL; \
+            SET_EXPECT(val); \
+        }
 #define FAIL_NAME \
-    (ppkey != NULL ? "private key" : ppubkey != NULL ? "public key" :  \
-     pparams != NULL ? "key parameters" :                              \
-     pcert != NULL ? "certificate" : pcerts != NULL ? "certificates" : \
-     pcrl != NULL ? "CRL" : pcrls != NULL ? "CRLs" : NULL)
+        (ppkey != NULL ? "private key" : ppubkey != NULL ? "public key" :  \
+         pparams != NULL ? "key parameters" :                              \
+         pcert != NULL ? "certificate" : pcerts != NULL ? "certificates" : \
+         pcrl != NULL ? "CRL" : pcrls != NULL ? "CRLs" : NULL)
 /*
  * Load those types of credentials for which the result pointer is not NULL.
  * Reads from stdio if uri is NULL and maybe_stdin is nonzero.
@@ -987,7 +989,8 @@ int load_key_certs_crls(const char *uri, int format, int maybe_stdin,
 
         if (!maybe_stdin) {
             if (!quiet)
-                BIO_printf(bio_err, "No filename or uri specified for loading\n");
+                BIO_printf(bio_err,
+                           "No filename or uri specified for loading\n");
             goto end;
         }
         uri = "<stdin>";
@@ -1034,58 +1037,60 @@ int load_key_certs_crls(const char *uri, int format, int maybe_stdin,
 
         type = OSSL_STORE_INFO_get_type(info);
         switch (type) {
-        case OSSL_STORE_INFO_PKEY:
-            if (ppkey != NULL) {
-                ok = (*ppkey = OSSL_STORE_INFO_get1_PKEY(info)) != NULL;
-                if (ok)
-                    ppkey = NULL;
-                break;
-            }
+            case OSSL_STORE_INFO_PKEY:
+                if (ppkey != NULL) {
+                    ok = (*ppkey = OSSL_STORE_INFO_get1_PKEY(info)) != NULL;
+                    if (ok)
+                        ppkey = NULL;
+                    break;
+                }
             /*
              * An EVP_PKEY with private parts also holds the public parts,
              * so if the caller asked for a public key, and we got a private
              * key, we can still pass it back.
              */
             /* fall through */
-        case OSSL_STORE_INFO_PUBKEY:
-            if (ppubkey != NULL) {
-                ok = (*ppubkey = OSSL_STORE_INFO_get1_PUBKEY(info)) != NULL;
-                if (ok)
-                    ppubkey = NULL;
-            }
-            break;
-        case OSSL_STORE_INFO_PARAMS:
-            if (pparams != NULL) {
-                ok = (*pparams = OSSL_STORE_INFO_get1_PARAMS(info)) != NULL;
-                if (ok)
-                    pparams = NULL;
-            }
-            break;
-        case OSSL_STORE_INFO_CERT:
-            if (pcert != NULL) {
-                ok = (*pcert = OSSL_STORE_INFO_get1_CERT(info)) != NULL;
-                if (ok)
-                    pcert = NULL;
-            } else if (pcerts != NULL) {
-                ok = X509_add_cert(*pcerts,
-                                   OSSL_STORE_INFO_get1_CERT(info),
-                                   X509_ADD_FLAG_DEFAULT);
-            }
-            ncerts += ok;
-            break;
-        case OSSL_STORE_INFO_CRL:
-            if (pcrl != NULL) {
-                ok = (*pcrl = OSSL_STORE_INFO_get1_CRL(info)) != NULL;
-                if (ok)
-                    pcrl = NULL;
-            } else if (pcrls != NULL) {
-                ok = sk_X509_CRL_push(*pcrls, OSSL_STORE_INFO_get1_CRL(info));
-            }
-            ncrls += ok;
-            break;
-        default:
-            /* skip any other type */
-            break;
+            case OSSL_STORE_INFO_PUBKEY:
+                if (ppubkey != NULL) {
+                    ok = (*ppubkey = OSSL_STORE_INFO_get1_PUBKEY(info)) != NULL;
+                    if (ok)
+                        ppubkey = NULL;
+                }
+                break;
+            case OSSL_STORE_INFO_PARAMS:
+                if (pparams != NULL) {
+                    ok = (*pparams = OSSL_STORE_INFO_get1_PARAMS(info)) != NULL;
+                    if (ok)
+                        pparams = NULL;
+                }
+                break;
+            case OSSL_STORE_INFO_CERT:
+                if (pcert != NULL) {
+                    ok = (*pcert = OSSL_STORE_INFO_get1_CERT(info)) != NULL;
+                    if (ok)
+                        pcert = NULL;
+                } else if (pcerts != NULL) {
+                    ok = X509_add_cert(*pcerts,
+                                       OSSL_STORE_INFO_get1_CERT(info),
+                                       X509_ADD_FLAG_DEFAULT);
+                }
+                ncerts += ok;
+                break;
+            case OSSL_STORE_INFO_CRL:
+                if (pcrl != NULL) {
+                    ok = (*pcrl = OSSL_STORE_INFO_get1_CRL(info)) != NULL;
+                    if (ok)
+                        pcrl = NULL;
+                } else if (pcrls != NULL) {
+                    ok =
+                        sk_X509_CRL_push(*pcrls,
+                                         OSSL_STORE_INFO_get1_CRL(info));
+                }
+                ncrls += ok;
+                break;
+            default:
+                /* skip any other type */
+                break;
         }
         OSSL_STORE_INFO_free(info);
         if (!ok) {
@@ -1096,7 +1101,7 @@ int load_key_certs_crls(const char *uri, int format, int maybe_stdin,
         }
     }
 
- end:
+end:
     OSSL_STORE_close(ctx);
     if (ncerts > 0)
         pcerts = NULL;
@@ -1268,7 +1273,7 @@ int copy_extensions(X509 *x, X509_REQ *req, int copy_type)
     }
     ret = 1;
 
- end:
+end:
     sk_X509_EXTENSION_pop_free(exts, X509_EXTENSION_free);
     return ret;
 }
@@ -1446,7 +1451,7 @@ X509_STORE *setup_verify(const char *CAfile, int noCAfile,
 
     ERR_clear_error();
     return store;
- end:
+end:
     ERR_print_errors(bio_err);
     X509_STORE_free(store);
     return NULL;
@@ -1467,8 +1472,8 @@ static int index_serial_cmp(const OPENSSL_CSTRING *a,
 {
     const char *aa, *bb;
 
-    for (aa = a[DB_serial]; *aa == '0'; aa++) ;
-    for (bb = b[DB_serial]; *bb == '0'; bb++) ;
+    for (aa = a[DB_serial]; *aa == '0'; aa++);
+    for (bb = b[DB_serial]; *bb == '0'; bb++);
     return strcmp(aa, bb);
 }
 
@@ -1540,7 +1545,7 @@ BIGNUM *load_serial(const char *serialfile, int *exists, int create,
         *retai = ai;
         ai = NULL;
     }
- err:
+err:
     if (ret == NULL)
         ERR_print_errors(bio_err);
     BIO_free(in);
@@ -1591,7 +1596,7 @@ int save_serial(const char *serialfile, const char *suffix,
         *retai = ai;
         ai = NULL;
     }
- err:
+err:
     if (!ret)
         ERR_print_errors(bio_err);
     BIO_free_all(out);
@@ -1624,7 +1629,7 @@ int rotate_serial(const char *serialfile, const char *new_suffix,
 #ifdef ENOTDIR
         && errno != ENOTDIR
 #endif
-        ) {
+       ) {
         BIO_printf(bio_err,
                    "Unable to rename %s to %s\n", serialfile, buf[1]);
         perror("reason");
@@ -1638,7 +1643,7 @@ int rotate_serial(const char *serialfile, const char *new_suffix,
         goto err;
     }
     return 1;
- err:
+err:
     ERR_print_errors(bio_err);
     return 0;
 }
@@ -1659,7 +1664,7 @@ int rand_serial(BIGNUM *b, ASN1_INTEGER *ai)
 
     ret = 1;
 
- error:
+error:
 
     if (btmp != b)
         BN_free(btmp);
@@ -1722,7 +1727,7 @@ CA_DB *load_index(const char *dbfile, DB_ATTR *db_attr)
     retdb->dbst = dbst;
 #endif
 
- err:
+err:
     ERR_print_errors(bio_err);
     NCONF_free(dbattr_conf);
     TXT_DB_free(tmpdb);
@@ -1753,7 +1758,7 @@ int index_index(CA_DB *db)
         goto err;
     }
     return 1;
- err:
+err:
     ERR_print_errors(bio_err);
     return 0;
 }
@@ -1800,7 +1805,7 @@ int save_index(const char *dbfile, const char *suffix, CA_DB *db)
     BIO_free(out);
 
     return 1;
- err:
+err:
     ERR_print_errors(bio_err);
     return 0;
 }
@@ -1836,7 +1841,7 @@ int rotate_index(const char *dbfile, const char *new_suffix,
 #ifdef ENOTDIR
         && errno != ENOTDIR
 #endif
-        ) {
+       ) {
         BIO_printf(bio_err, "Unable to rename %s to %s\n", dbfile, buf[1]);
         perror("reason");
         goto err;
@@ -1851,7 +1856,7 @@ int rotate_index(const char *dbfile, const char *new_suffix,
 #ifdef ENOTDIR
         && errno != ENOTDIR
 #endif
-        ) {
+       ) {
         BIO_printf(bio_err, "Unable to rename %s to %s\n", buf[4], buf[3]);
         perror("reason");
         rename(dbfile, buf[0]);
@@ -1867,7 +1872,7 @@ int rotate_index(const char *dbfile, const char *new_suffix,
         goto err;
     }
     return 1;
- err:
+err:
     ERR_print_errors(bio_err);
     return 0;
 }
@@ -1885,18 +1890,18 @@ int parse_yesno(const char *str, int def)
 {
     if (str) {
         switch (*str) {
-        case 'f':              /* false */
-        case 'F':              /* FALSE */
-        case 'n':              /* no */
-        case 'N':              /* NO */
-        case '0':              /* 0 */
-            return 0;
-        case 't':              /* true */
-        case 'T':              /* TRUE */
-        case 'y':              /* yes */
-        case 'Y':              /* YES */
-        case '1':              /* 1 */
-            return 1;
+            case 'f':          /* false */
+            case 'F':          /* FALSE */
+            case 'n':          /* no */
+            case 'N':          /* NO */
+            case '0':          /* 0 */
+                return 0;
+            case 't':          /* true */
+            case 'T':          /* TRUE */
+            case 'y':          /* yes */
+            case 'Y':          /* YES */
+            case '1':          /* 1 */
+                return 1;
         }
     }
     return def;
@@ -2009,7 +2014,7 @@ X509_NAME *parse_name(const char *cp, int chtype, int canmulti,
     OPENSSL_free(work);
     return n;
 
- err:
+err:
     X509_NAME_free(n);
     OPENSSL_free(work);
     return NULL;
@@ -2073,7 +2078,7 @@ int pkey_ctrl_string(EVP_PKEY_CTX *ctx, const char *value)
     vtmp++;
     rv = EVP_PKEY_CTX_ctrl_str(ctx, stmp, vtmp);
 
- err:
+err:
     OPENSSL_free(stmp);
     return rv;
 }
@@ -2279,14 +2284,14 @@ static int do_sign_init(EVP_MD_CTX *ctx, EVP_PKEY *pkey,
      * for this algorithm.
      */
     if (EVP_PKEY_get_default_digest_name(pkey, def_md, sizeof(def_md)) == 2
-            && strcmp(def_md, "UNDEF") == 0) {
+        && strcmp(def_md, "UNDEF") == 0) {
         /* The signing algorithm requires there to be no digest */
         md = NULL;
     }
 
     return EVP_DigestSignInit_ex(ctx, &pkctx, md, app_get0_libctx(),
                                  app_get0_propq(), pkey, NULL)
-        && do_pkey_ctx_init(pkctx, sigopts);
+           && do_pkey_ctx_init(pkctx, sigopts);
 }
 
 static int adapt_keyid_ext(X509 *cert, X509V3_CTX *ext_ctx,
@@ -2356,7 +2361,7 @@ int do_X509_sign(X509 *cert, int force_v1, EVP_PKEY *pkey, const char *md,
 
     if (mctx != NULL && do_sign_init(mctx, pkey, md, sigopts) > 0)
         rv = (X509_sign_ctx(cert, mctx) > 0);
- end:
+end:
     EVP_MD_CTX_free(mctx);
     return rv;
 }
@@ -2513,18 +2518,21 @@ static const char *tls_error_hint(void)
         return NULL; /* likely no TLS error */
 
     switch (ERR_GET_REASON(err)) {
-    case SSL_R_WRONG_VERSION_NUMBER:
-        return "The server does not support (a suitable version of) TLS";
-    case SSL_R_UNKNOWN_PROTOCOL:
-        return "The server does not support HTTPS";
-    case SSL_R_CERTIFICATE_VERIFY_FAILED:
-        return "Cannot authenticate server via its TLS certificate, likely due to mismatch with our trusted TLS certs or missing revocation status";
-    case SSL_AD_REASON_OFFSET + TLS1_AD_UNKNOWN_CA:
-        return "Server did not accept our TLS certificate, likely due to mismatch with server's trust anchor or missing revocation status";
-    case SSL_AD_REASON_OFFSET + SSL3_AD_HANDSHAKE_FAILURE:
-        return "TLS handshake failure. Possibly the server requires our TLS certificate but did not receive it";
-    default:
-        return NULL; /* no hint available for TLS error */
+        case SSL_R_WRONG_VERSION_NUMBER:
+            return "The server does not support (a suitable version of) TLS";
+        case SSL_R_UNKNOWN_PROTOCOL:
+            return "The server does not support HTTPS";
+        case SSL_R_CERTIFICATE_VERIFY_FAILED:
+            return
+                "Cannot authenticate server via its TLS certificate, likely due to mismatch with our trusted TLS certs or missing revocation status";
+        case SSL_AD_REASON_OFFSET + TLS1_AD_UNKNOWN_CA:
+            return
+                "Server did not accept our TLS certificate, likely due to mismatch with server's trust anchor or missing revocation status";
+        case SSL_AD_REASON_OFFSET + SSL3_AD_HANDSHAKE_FAILURE:
+            return
+                "TLS handshake failure. Possibly the server requires our TLS certificate but did not receive it";
+        default:
+            return NULL; /* no hint available for TLS error */
     }
 }
 
@@ -2560,14 +2568,15 @@ BIO *app_http_tls_cb(BIO *bio, void *arg, int connect, int detail)
         X509_STORE *ts = SSL_CTX_get_cert_store(ssl_ctx);
         X509_VERIFY_PARAM *vpm = X509_STORE_get0_param(ts);
         const char *host = vpm == NULL ? NULL :
-            X509_VERIFY_PARAM_get0_host(vpm, 0 /* first hostname */);
+                           X509_VERIFY_PARAM_get0_host(vpm,
+                                                       0 /* first hostname */);
 
         /* adapt after fixing callback design flaw, see #17088 */
         if ((info->use_proxy
              && !OSSL_HTTP_proxy_connect(bio, info->server, info->port,
                                          NULL, NULL, /* no proxy credentials */
                                          info->timeout, bio_err, opt_getprog()))
-                || (sbio = BIO_new(BIO_f_ssl())) == NULL) {
+            || (sbio = BIO_new(BIO_f_ssl())) == NULL) {
             return NULL;
         }
         if ((ssl = SSL_new(ssl_ctx)) == NULL) {
@@ -2631,7 +2640,8 @@ ASN1_VALUE *app_http_get_asn1(const char *url, const char *proxy,
     info.server = server;
     info.port = port;
     info.use_proxy = /* workaround for callback design flaw, see #17088 */
-        OSSL_HTTP_adapt_proxy(proxy, no_proxy, server, use_ssl) != NULL;
+                     OSSL_HTTP_adapt_proxy(proxy, no_proxy, server,
+                                           use_ssl) != NULL;
     info.timeout = timeout;
     info.ssl_ctx = ssl_ctx;
     mem = OSSL_HTTP_get(url, proxy, no_proxy, NULL /* bio */, NULL /* rbio */,
@@ -2641,7 +2651,7 @@ ASN1_VALUE *app_http_get_asn1(const char *url, const char *proxy,
     resp = ASN1_item_d2i_bio(it, mem, NULL);
     BIO_free(mem);
 
- end:
+end:
     OPENSSL_free(server);
     OPENSSL_free(port);
     return resp;
@@ -2668,7 +2678,8 @@ ASN1_VALUE *app_http_post_asn1(const char *host, const char *port,
     info.server = host;
     info.port = port;
     info.use_proxy = /* workaround for callback design flaw, see #17088 */
-        OSSL_HTTP_adapt_proxy(proxy, no_proxy, host, use_ssl) != NULL;
+                     OSSL_HTTP_adapt_proxy(proxy, no_proxy, host,
+                                           use_ssl) != NULL;
     info.timeout = timeout;
     info.ssl_ctx = ssl_ctx;
     rsp = OSSL_HTTP_transfer(NULL, host, port, path, use_ssl,
@@ -2717,13 +2728,13 @@ static int WIN32_rename(const char *from, const char *to)
 # if !defined(_WIN32_WCE) || _WIN32_WCE >= 101
         if (!MultiByteToWideChar(CP_ACP, 0, from, flen, (WCHAR *)tfrom, flen))
 # endif
-            for (i = 0; i < flen; i++)
-                tfrom[i] = (TCHAR)from[i];
+        for (i = 0; i < flen; i++)
+            tfrom[i] = (TCHAR)from[i];
 # if !defined(_WIN32_WCE) || _WIN32_WCE >= 101
         if (!MultiByteToWideChar(CP_ACP, 0, to, tlen, (WCHAR *)tto, tlen))
 # endif
-            for (i = 0; i < tlen; i++)
-                tto[i] = (TCHAR)to[i];
+        for (i = 0; i < tlen; i++)
+            tto[i] = (TCHAR)to[i];
     }
 
     if (MoveFile(tfrom, tto))
@@ -2740,9 +2751,9 @@ static int WIN32_rename(const char *from, const char *to)
         errno = EACCES;
     else
         errno = EINVAL;         /* we could map more codes... */
- err:
+err:
     ret = -1;
- ok:
+ok:
     if (tfrom != NULL && tfrom != (TCHAR *)from)
         free(tfrom);
     return ret;
@@ -2766,10 +2777,10 @@ double app_tminterval(int stop, int usertime)
             proc = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE,
                                GetCurrentProcessId());
         if (proc == NULL)
-            proc = (HANDLE) - 1;
+            proc = (HANDLE) -1;
     }
 
-    if (usertime && proc != (HANDLE) - 1) {
+    if (usertime && proc != (HANDLE) -1) {
         FILETIME junk;
 
         GetProcessTimes(proc, &junk, &junk, &junk, &now);
@@ -3068,12 +3079,12 @@ static const char *modestr(char mode, int format)
     OPENSSL_assert(mode == 'a' || mode == 'r' || mode == 'w');
 
     switch (mode) {
-    case 'a':
-        return FMT_istext(format) ? "a" : "ab";
-    case 'r':
-        return FMT_istext(format) ? "r" : "rb";
-    case 'w':
-        return FMT_istext(format) ? "w" : "wb";
+        case 'a':
+            return FMT_istext(format) ? "a" : "ab";
+        case 'r':
+            return FMT_istext(format) ? "r" : "rb";
+        case 'w':
+            return FMT_istext(format) ? "w" : "wb";
     }
     /* The assert above should make sure we never reach this point */
     return NULL;
@@ -3082,12 +3093,12 @@ static const char *modestr(char mode, int format)
 static const char *modeverb(char mode)
 {
     switch (mode) {
-    case 'a':
-        return "appending";
-    case 'r':
-        return "reading";
-    case 'w':
-        return "writing";
+        case 'a':
+            return "appending";
+        case 'r':
+            return "reading";
+        case 'w':
+            return "writing";
     }
     return "(doing something)";
 }
@@ -3135,7 +3146,7 @@ BIO *bio_open_owner(const char *filename, int format, int private)
         fd = open(filename, mode, 0600, "ctx=bin");
     else
 # endif
-        fd = open(filename, mode, 0600);
+    fd = open(filename, mode, 0600);
     if (fd < 0)
         goto err;
     fp = fdopen(fd, modestr('w', format));
@@ -3152,7 +3163,7 @@ BIO *bio_open_owner(const char *filename, int format, int private)
     if (b != NULL)
         return b;
 
- err:
+err:
     BIO_printf(bio_err, "%s: Can't open \"%s\" for writing, %s\n",
                opt_getprog(), filename, strerror(errno));
     ERR_print_errors(bio_err);

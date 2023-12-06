@@ -191,8 +191,8 @@ static int put_encoder_in_store(void *store, void *method,
         return 0;
 
     return ossl_method_store_add(store, prov, id, propdef, method,
-                                 (int (*)(void *))OSSL_ENCODER_up_ref,
-                                 (void (*)(void *))OSSL_ENCODER_free);
+                                 (int (*)(void *)) OSSL_ENCODER_up_ref,
+                                 (void (*)(void *)) OSSL_ENCODER_free);
 }
 
 /* Create and populate a encoder method */
@@ -206,68 +206,70 @@ static void *encoder_from_algorithm(int id, const OSSL_ALGORITHM *algodef,
     if ((encoder = ossl_encoder_new()) == NULL)
         return NULL;
     encoder->base.id = id;
-    if ((encoder->base.name = ossl_algorithm_get1_first_name(algodef)) == NULL) {
+    if ((encoder->base.name = ossl_algorithm_get1_first_name(algodef)) ==
+        NULL) {
         OSSL_ENCODER_free(encoder);
         return NULL;
     }
     encoder->base.algodef = algodef;
     if ((encoder->base.parsed_propdef
-         = ossl_parse_property(libctx, algodef->property_definition)) == NULL) {
+             = ossl_parse_property(libctx,
+                                   algodef->property_definition)) == NULL) {
         OSSL_ENCODER_free(encoder);
         return NULL;
     }
 
     for (; fns->function_id != 0; fns++) {
         switch (fns->function_id) {
-        case OSSL_FUNC_ENCODER_NEWCTX:
-            if (encoder->newctx == NULL)
-                encoder->newctx =
-                    OSSL_FUNC_encoder_newctx(fns);
-            break;
-        case OSSL_FUNC_ENCODER_FREECTX:
-            if (encoder->freectx == NULL)
-                encoder->freectx =
-                    OSSL_FUNC_encoder_freectx(fns);
-            break;
-        case OSSL_FUNC_ENCODER_GET_PARAMS:
-            if (encoder->get_params == NULL)
-                encoder->get_params =
-                    OSSL_FUNC_encoder_get_params(fns);
-            break;
-        case OSSL_FUNC_ENCODER_GETTABLE_PARAMS:
-            if (encoder->gettable_params == NULL)
-                encoder->gettable_params =
-                    OSSL_FUNC_encoder_gettable_params(fns);
-            break;
-        case OSSL_FUNC_ENCODER_SET_CTX_PARAMS:
-            if (encoder->set_ctx_params == NULL)
-                encoder->set_ctx_params =
-                    OSSL_FUNC_encoder_set_ctx_params(fns);
-            break;
-        case OSSL_FUNC_ENCODER_SETTABLE_CTX_PARAMS:
-            if (encoder->settable_ctx_params == NULL)
-                encoder->settable_ctx_params =
-                    OSSL_FUNC_encoder_settable_ctx_params(fns);
-            break;
-        case OSSL_FUNC_ENCODER_DOES_SELECTION:
-            if (encoder->does_selection == NULL)
-                encoder->does_selection =
-                    OSSL_FUNC_encoder_does_selection(fns);
-            break;
-        case OSSL_FUNC_ENCODER_ENCODE:
-            if (encoder->encode == NULL)
-                encoder->encode = OSSL_FUNC_encoder_encode(fns);
-            break;
-        case OSSL_FUNC_ENCODER_IMPORT_OBJECT:
-            if (encoder->import_object == NULL)
-                encoder->import_object =
-                    OSSL_FUNC_encoder_import_object(fns);
-            break;
-        case OSSL_FUNC_ENCODER_FREE_OBJECT:
-            if (encoder->free_object == NULL)
-                encoder->free_object =
-                    OSSL_FUNC_encoder_free_object(fns);
-            break;
+            case OSSL_FUNC_ENCODER_NEWCTX:
+                if (encoder->newctx == NULL)
+                    encoder->newctx =
+                        OSSL_FUNC_encoder_newctx(fns);
+                break;
+            case OSSL_FUNC_ENCODER_FREECTX:
+                if (encoder->freectx == NULL)
+                    encoder->freectx =
+                        OSSL_FUNC_encoder_freectx(fns);
+                break;
+            case OSSL_FUNC_ENCODER_GET_PARAMS:
+                if (encoder->get_params == NULL)
+                    encoder->get_params =
+                        OSSL_FUNC_encoder_get_params(fns);
+                break;
+            case OSSL_FUNC_ENCODER_GETTABLE_PARAMS:
+                if (encoder->gettable_params == NULL)
+                    encoder->gettable_params =
+                        OSSL_FUNC_encoder_gettable_params(fns);
+                break;
+            case OSSL_FUNC_ENCODER_SET_CTX_PARAMS:
+                if (encoder->set_ctx_params == NULL)
+                    encoder->set_ctx_params =
+                        OSSL_FUNC_encoder_set_ctx_params(fns);
+                break;
+            case OSSL_FUNC_ENCODER_SETTABLE_CTX_PARAMS:
+                if (encoder->settable_ctx_params == NULL)
+                    encoder->settable_ctx_params =
+                        OSSL_FUNC_encoder_settable_ctx_params(fns);
+                break;
+            case OSSL_FUNC_ENCODER_DOES_SELECTION:
+                if (encoder->does_selection == NULL)
+                    encoder->does_selection =
+                        OSSL_FUNC_encoder_does_selection(fns);
+                break;
+            case OSSL_FUNC_ENCODER_ENCODE:
+                if (encoder->encode == NULL)
+                    encoder->encode = OSSL_FUNC_encoder_encode(fns);
+                break;
+            case OSSL_FUNC_ENCODER_IMPORT_OBJECT:
+                if (encoder->import_object == NULL)
+                    encoder->import_object =
+                        OSSL_FUNC_encoder_import_object(fns);
+                break;
+            case OSSL_FUNC_ENCODER_FREE_OBJECT:
+                if (encoder->free_object == NULL)
+                    encoder->free_object =
+                        OSSL_FUNC_encoder_free_object(fns);
+                break;
         }
     }
     /*

@@ -40,7 +40,8 @@ int ossl_crypto_thread_native_spawn(CRYPTO_THREAD *thread)
     if (handle == NULL)
         goto fail;
 
-    *handle = (HANDLE)_beginthreadex(NULL, 0, &thread_start_thunk, thread, 0, NULL);
+    *handle = (HANDLE)_beginthreadex(NULL, 0, &thread_start_thunk, thread, 0,
+                                     NULL);
     if (*handle == NULL)
         goto fail;
 
@@ -53,7 +54,8 @@ fail:
     return 0;
 }
 
-int ossl_crypto_thread_native_perform_join(CRYPTO_THREAD *thread, CRYPTO_THREAD_RETVAL *retval)
+int ossl_crypto_thread_native_perform_join(CRYPTO_THREAD *thread,
+                                           CRYPTO_THREAD_RETVAL *retval)
 {
     DWORD thread_retval;
     HANDLE *handle;
@@ -281,8 +283,8 @@ static int determine_timeout(OSSL_TIME deadline, DWORD *w_timeout_p)
  */
 typedef struct legacy_condvar_st {
     CRYPTO_MUTEX    *int_m;       /* internal mutex */
-    HANDLE          sema;         /* main wait semaphore */
-    HANDLE          prewait_sema; /* prewait semaphore */
+    HANDLE sema;                  /* main wait semaphore */
+    HANDLE prewait_sema;          /* prewait semaphore */
     /*
      * All of the following fields are protected by int_m.
      *
@@ -290,11 +292,11 @@ typedef struct legacy_condvar_st {
      * num_wait. num_wait can decrease for other reasons (for example due to a
      * wait operation timing out).
      */
-    size_t          num_wait;     /* Num. threads currently blocked */
-    size_t          num_wake;     /* Num. threads due to wake up */
-    size_t          num_prewait;  /* Num. threads in prewait */
-    size_t          gen;          /* Prewait generation */
-    int             closed;       /* Is closed? */
+    size_t num_wait;              /* Num. threads currently blocked */
+    size_t num_wake;              /* Num. threads due to wake up */
+    size_t num_prewait;           /* Num. threads in prewait */
+    size_t gen;                   /* Prewait generation */
+    int closed;                   /* Is closed? */
 } LEGACY_CONDVAR;
 
 CRYPTO_CONDVAR *ossl_crypto_condvar_new(void)
@@ -315,7 +317,8 @@ CRYPTO_CONDVAR *ossl_crypto_condvar_new(void)
         return NULL;
     }
 
-    if ((cv->prewait_sema = CreateSemaphoreA(NULL, 0, LONG_MAX, NULL)) == NULL) {
+    if ((cv->prewait_sema =
+             CreateSemaphoreA(NULL, 0, LONG_MAX, NULL)) == NULL) {
         CloseHandle(cv->sema);
         ossl_crypto_mutex_free(&cv->int_m);
         OPENSSL_free(cv);
@@ -447,7 +450,8 @@ void ossl_crypto_condvar_wait_timeout(CRYPTO_CONDVAR *cv_, CRYPTO_MUTEX *ext_m,
                  */
                 cv->closed = 0;
                 if (cv->num_prewait > 0) {
-                    ReleaseSemaphore(cv->prewait_sema, (LONG)cv->num_prewait, NULL);
+                    ReleaseSemaphore(cv->prewait_sema, (LONG)cv->num_prewait,
+                                     NULL);
                     cv->num_prewait = 0;
                     ++cv->gen;
                 }

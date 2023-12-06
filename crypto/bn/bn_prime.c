@@ -104,17 +104,17 @@ int BN_GENCB_call(BN_GENCB *cb, int a, int b)
     if (!cb)
         return 1;
     switch (cb->ver) {
-    case 1:
-        /* Deprecated-style callbacks */
-        if (!cb->cb.cb_1)
+        case 1:
+            /* Deprecated-style callbacks */
+            if (!cb->cb.cb_1)
+                return 1;
+            cb->cb.cb_1(a, b, cb->arg);
             return 1;
-        cb->cb.cb_1(a, b, cb->arg);
-        return 1;
-    case 2:
-        /* New-style callbacks */
-        return cb->cb.cb_2(a, b, cb);
-    default:
-        break;
+        case 2:
+            /* New-style callbacks */
+            return cb->cb.cb_2(a, b, cb);
+        default:
+            break;
     }
     /* Unrecognised callback type */
     return 0;
@@ -152,7 +152,7 @@ int BN_generate_prime_ex2(BIGNUM *ret, int bits, int safe,
     t = BN_CTX_get(ctx);
     if (t == NULL)
         goto err;
- loop:
+loop:
     /* make a random number and set the top and bottom bits */
     if (add == NULL) {
         if (!probable_prime(ret, bits, safe, mods, ctx))
@@ -200,7 +200,7 @@ int BN_generate_prime_ex2(BIGNUM *ret, int bits, int safe,
     }
     /* we have a prime :-) */
     found = 1;
- err:
+err:
     OPENSSL_free(mods);
     BN_CTX_end(ctx);
     bn_check_top(ret);
@@ -365,12 +365,12 @@ int ossl_bn_miller_rabin_is_prime(const BIGNUM *w, int iterations, BN_CTX *ctx,
     b = BN_CTX_get(ctx);
 
     if (!(b != NULL
-            /* w1 := w - 1 */
-            && BN_copy(w1, w)
-            && BN_sub_word(w1, 1)
-            /* w3 := w - 3 */
-            && BN_copy(w3, w)
-            && BN_sub_word(w3, 3)))
+          /* w1 := w - 1 */
+          && BN_copy(w1, w)
+          && BN_sub_word(w1, 1)
+          /* w3 := w - 3 */
+          && BN_copy(w3, w)
+          && BN_sub_word(w3, 3)))
         goto err;
 
     /* check w is larger than 3, otherwise the random b will be too small */
@@ -397,7 +397,7 @@ int ossl_bn_miller_rabin_is_prime(const BIGNUM *w, int iterations, BN_CTX *ctx,
     for (i = 0; i < iterations; ++i) {
         /* (Step 4.1) obtain a Random string of bits b where 1 < b < w-1 */
         if (!BN_priv_rand_range_ex(b, w3, 0, ctx)
-                || !BN_add_word(b, 2)) /* 1 < b < w-1 */
+            || !BN_add_word(b, 2))     /* 1 < b < w-1 */
             goto err;
 
         if (enhanced) {
@@ -454,7 +454,7 @@ composite:
         }
         ret = 1;
         goto err;
-outer_loop: ;
+outer_loop:;
         /* (Step 4.1.5) */
         if (!BN_GENCB_call(cb, 1, i))
             goto err;
@@ -492,7 +492,7 @@ static int probable_prime(BIGNUM *rnd, int bits, int safe, prime_t *mods,
     int trial_divisions = calc_trial_divisions(bits);
     BN_ULONG maxdelta = BN_MASK2 - primes[trial_divisions - 1];
 
- again:
+again:
     if (!BN_priv_rand_ex(rnd, bits, BN_RAND_TOP_TWO, BN_RAND_BOTTOM_ODD, 0,
                          ctx))
         return 0;
@@ -506,7 +506,7 @@ static int probable_prime(BIGNUM *rnd, int bits, int safe, prime_t *mods,
         mods[i] = (prime_t) mod;
     }
     delta = 0;
- loop:
+loop:
     for (i = 1; i < trial_divisions; i++) {
         /*
          * check that rnd is a prime and also that
@@ -516,7 +516,7 @@ static int probable_prime(BIGNUM *rnd, int bits, int safe, prime_t *mods,
          * we check only the primes up to sqrt(rnd)
          */
         if (bits <= 31 && delta <= 0x7fffffff
-                && square(primes[i]) > BN_get_word(rnd) + delta)
+            && square(primes[i]) > BN_get_word(rnd) + delta)
             break;
         if (safe ? (mods[i] + delta) % primes[i] <= 1
                  : (mods[i] + delta) % primes[i] == 0) {
@@ -559,7 +559,7 @@ static int probable_prime_dh(BIGNUM *rnd, int bits, int safe, prime_t *mods,
     if (maxdelta > BN_MASK2 - BN_get_word(add))
         maxdelta = BN_MASK2 - BN_get_word(add);
 
- again:
+again:
     if (!BN_rand_ex(rnd, bits, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ODD, 0, ctx))
         goto err;
 
@@ -578,7 +578,7 @@ static int probable_prime_dh(BIGNUM *rnd, int bits, int safe, prime_t *mods,
     }
 
     if (BN_num_bits(rnd) < bits
-            || BN_get_word(rnd) < (safe ? 5u : 3u)) {
+        || BN_get_word(rnd) < (safe ? 5u : 3u)) {
         if (!BN_add(rnd, rnd, add))
             goto err;
     }
@@ -591,11 +591,11 @@ static int probable_prime_dh(BIGNUM *rnd, int bits, int safe, prime_t *mods,
         mods[i] = (prime_t) mod;
     }
     delta = 0;
- loop:
+loop:
     for (i = 1; i < trial_divisions; i++) {
         /* check that rnd is a prime */
         if (bits <= 31 && delta <= 0x7fffffff
-                && square(primes[i]) > BN_get_word(rnd) + delta)
+            && square(primes[i]) > BN_get_word(rnd) + delta)
             break;
         /* rnd mod p == 1 implies q = (rnd-1)/2 is divisible by p */
         if (safe ? (mods[i] + delta) % primes[i] <= 1
@@ -610,7 +610,7 @@ static int probable_prime_dh(BIGNUM *rnd, int bits, int safe, prime_t *mods,
         goto err;
     ret = 1;
 
- err:
+err:
     BN_CTX_end(ctx);
     bn_check_top(rnd);
     return ret;

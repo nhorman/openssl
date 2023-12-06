@@ -126,7 +126,7 @@ int X509V3_EXT_print(BIO *out, X509_EXTENSION *ext, unsigned long flag,
     } else
         ok = 0;
 
- err:
+err:
     sk_CONF_VALUE_pop_free(nval, X509V3_conf_free);
     OPENSSL_free(value);
     if (method->it)
@@ -157,8 +157,8 @@ int X509V3_extensions_print(BIO *bp, const char *title,
         ex = sk_X509_EXTENSION_value(exts, i);
         obj = X509_EXTENSION_get_object(ex);
         if ((flag & X509_FLAG_EXTENSIONS_ONLY_KID) != 0
-                && OBJ_obj2nid(obj) != NID_subject_key_identifier
-                && OBJ_obj2nid(obj) != NID_authority_key_identifier)
+            && OBJ_obj2nid(obj) != NID_subject_key_identifier
+            && OBJ_obj2nid(obj) != NID_authority_key_identifier)
             continue;
         if (indent && BIO_printf(bp, "%*s", indent, "") <= 0)
             return 0;
@@ -181,23 +181,23 @@ static int unknown_ext_print(BIO *out, const unsigned char *ext, int extlen,
 {
     switch (flag & X509V3_EXT_UNKNOWN_MASK) {
 
-    case X509V3_EXT_DEFAULT:
-        return 0;
+        case X509V3_EXT_DEFAULT:
+            return 0;
 
-    case X509V3_EXT_ERROR_UNKNOWN:
-        if (supported)
-            BIO_printf(out, "%*s<Parse Error>", indent, "");
-        else
-            BIO_printf(out, "%*s<Not Supported>", indent, "");
-        return 1;
+        case X509V3_EXT_ERROR_UNKNOWN:
+            if (supported)
+                BIO_printf(out, "%*s<Parse Error>", indent, "");
+            else
+                BIO_printf(out, "%*s<Not Supported>", indent, "");
+            return 1;
 
-    case X509V3_EXT_PARSE_UNKNOWN:
-        return ASN1_parse_dump(out, ext, extlen, indent, -1);
-    case X509V3_EXT_DUMP_UNKNOWN:
-        return BIO_dump_indent(out, (const char *)ext, extlen, indent);
+        case X509V3_EXT_PARSE_UNKNOWN:
+            return ASN1_parse_dump(out, ext, extlen, indent, -1);
+        case X509V3_EXT_DUMP_UNKNOWN:
+            return BIO_dump_indent(out, (const char *)ext, extlen, indent);
 
-    default:
-        return 1;
+        default:
+            return 1;
     }
 }
 

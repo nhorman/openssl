@@ -59,7 +59,7 @@ PKCS7 *PKCS7_sign_ex(X509 *signcert, EVP_PKEY *pkey, STACK_OF(X509) *certs,
     if (PKCS7_final(p7, data, flags))
         return p7;
 
- err:
+err:
     PKCS7_free(p7);
     return NULL;
 }
@@ -173,7 +173,7 @@ PKCS7_SIGNER_INFO *PKCS7_sign_add_signer(PKCS7 *p7, X509 *signcert,
         }
     }
     return si;
- err:
+err:
     sk_X509_ALGOR_pop_free(smcap, X509_ALGOR_free);
     return NULL;
 }
@@ -347,7 +347,7 @@ int PKCS7_verify(PKCS7 *p7, STACK_OF(X509) *certs, X509_STORE *store,
 
     ret = 1;
 
- err:
+err:
     X509_STORE_CTX_free(cert_ctx);
     OPENSSL_free(buf);
     if (indata != NULL)
@@ -455,7 +455,7 @@ PKCS7 *PKCS7_encrypt_ex(STACK_OF(X509) *certs, BIO *in,
     if (PKCS7_final(p7, in, flags))
         return p7;
 
- err:
+err:
 
     BIO_free_all(p7bio);
     PKCS7_free(p7);

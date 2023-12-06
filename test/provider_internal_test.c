@@ -64,7 +64,8 @@ static int test_builtin_provider(void)
 
     ret =
         TEST_ptr(prov =
-                 ossl_provider_new(NULL, name, PROVIDER_INIT_FUNCTION_NAME, NULL, 0))
+                     ossl_provider_new(NULL, name, PROVIDER_INIT_FUNCTION_NAME,
+                                       NULL, 0))
         && test_provider(prov, expected_greeting1(name));
 
     EVP_set_default_properties(NULL, "");
@@ -107,9 +108,9 @@ static int test_cache_flushes(void)
     int ret = 0;
 
     if (!TEST_ptr(ctx = OSSL_LIB_CTX_new())
-            || !TEST_ptr(prov = OSSL_PROVIDER_load(ctx, "default"))
-            || !TEST_true(OSSL_PROVIDER_available(ctx, "default"))
-            || !TEST_ptr(md = EVP_MD_fetch(ctx, "SHA256", NULL)))
+        || !TEST_ptr(prov = OSSL_PROVIDER_load(ctx, "default"))
+        || !TEST_true(OSSL_PROVIDER_available(ctx, "default"))
+        || !TEST_ptr(md = EVP_MD_fetch(ctx, "SHA256", NULL)))
         goto err;
     EVP_MD_free(md);
     md = NULL;
@@ -120,7 +121,8 @@ static int test_cache_flushes(void)
         goto err;
 
     if (!TEST_ptr_null(md = EVP_MD_fetch(ctx, "SHA256", NULL))) {
-        const char *provname = OSSL_PROVIDER_get0_name(EVP_MD_get0_provider(md));
+        const char *provname =
+            OSSL_PROVIDER_get0_name(EVP_MD_get0_provider(md));
 
         if (OSSL_PROVIDER_available(NULL, provname))
             TEST_info("%s provider is available\n", provname);
@@ -129,7 +131,7 @@ static int test_cache_flushes(void)
     }
 
     ret = 1;
- err:
+err:
     OSSL_PROVIDER_unload(prov);
     EVP_MD_free(md);
     OSSL_LIB_CTX_free(ctx);

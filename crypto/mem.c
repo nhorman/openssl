@@ -202,7 +202,7 @@ void *CRYPTO_malloc(size_t num, const char *file, int line)
     ptr = malloc(num);
     if (ptr != NULL)
         return ptr;
- err:
+err:
     /*
      * ossl_err_get_state_int() in err.c uses CRYPTO_zalloc(num, NULL, 0) for
      * ERR_STATE allocation. Prevent mem alloc error loop while reporting error.

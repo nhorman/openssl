@@ -262,9 +262,12 @@ static int test_thread_native_multiple_joins(void)
 {
     CRYPTO_THREAD *t, *t1, *t2;
 
-    t = ossl_crypto_thread_native_start(test_thread_native_multiple_joins_fn1, NULL, 1);
-    t1 = ossl_crypto_thread_native_start(test_thread_native_multiple_joins_fn2, t, 1);
-    t2 = ossl_crypto_thread_native_start(test_thread_native_multiple_joins_fn3, t, 1);
+    t = ossl_crypto_thread_native_start(test_thread_native_multiple_joins_fn1,
+                                        NULL, 1);
+    t1 = ossl_crypto_thread_native_start(test_thread_native_multiple_joins_fn2,
+                                         t, 1);
+    t2 = ossl_crypto_thread_native_start(test_thread_native_multiple_joins_fn3,
+                                         t, 1);
 
     if (!TEST_ptr(t) || !TEST_ptr(t1) || !TEST_ptr(t2))
         return 0;

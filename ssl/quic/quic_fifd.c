@@ -95,11 +95,13 @@ static void on_acked(void *arg)
                                 fifd->confirm_frame_arg);
 
         if (ossl_quic_sstream_is_totally_acked(sstream))
-            fifd->sstream_updated(chunks[i].stream_id, fifd->sstream_updated_arg);
+            fifd->sstream_updated(chunks[i].stream_id,
+                                  fifd->sstream_updated_arg);
     }
 
     /* GCR */
-    for (cfq_item = pkt->retx_head; cfq_item != NULL; cfq_item = cfq_item_next) {
+    for (cfq_item = pkt->retx_head; cfq_item != NULL;
+         cfq_item = cfq_item_next) {
         cfq_item_next = cfq_item->pkt_next;
         ossl_quic_cfq_release(fifd->cfq, cfq_item);
     }
@@ -175,7 +177,8 @@ static void on_lost(void *arg)
     }
 
     /* GCR */
-    for (cfq_item = pkt->retx_head; cfq_item != NULL; cfq_item = cfq_item_next) {
+    for (cfq_item = pkt->retx_head; cfq_item != NULL;
+         cfq_item = cfq_item_next) {
         cfq_item_next = cfq_item->pkt_next;
         ossl_quic_cfq_mark_lost(fifd->cfq, cfq_item, UINT32_MAX);
     }
@@ -226,7 +229,8 @@ static void on_discarded(void *arg)
      */
 
     /* GCR */
-    for (cfq_item = pkt->retx_head; cfq_item != NULL; cfq_item = cfq_item_next) {
+    for (cfq_item = pkt->retx_head; cfq_item != NULL;
+         cfq_item = cfq_item_next) {
         cfq_item_next = cfq_item->pkt_next;
         ossl_quic_cfq_release(fifd->cfq, cfq_item);
     }
@@ -282,7 +286,7 @@ int ossl_quic_fifd_pkt_commit(QUIC_FIFD *fifd, QUIC_TXPIM_PKT *pkt)
         if (chunks[i].has_fin
             && !ossl_quic_sstream_mark_transmitted_fin(sstream,
                                                        chunks[i].end + 1))
-                return 0;
+            return 0;
     }
 
     /* Inform the ACKM. */

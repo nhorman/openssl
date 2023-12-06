@@ -112,253 +112,258 @@ _dopr(char **sbuffer,
             state = DP_S_DONE;
 
         switch (state) {
-        case DP_S_DEFAULT:
-            if (ch == '%')
-                state = DP_S_FLAGS;
-            else
+            case DP_S_DEFAULT:
+                if (ch == '%')
+                    state = DP_S_FLAGS;
+                else
                 if (!doapr_outch(sbuffer, buffer, &currlen, maxlen, ch))
                     return 0;
-            ch = *format++;
-            break;
-        case DP_S_FLAGS:
-            switch (ch) {
-            case '-':
-                flags |= DP_F_MINUS;
                 ch = *format++;
                 break;
-            case '+':
-                flags |= DP_F_PLUS;
-                ch = *format++;
+            case DP_S_FLAGS:
+                switch (ch) {
+                    case '-':
+                        flags |= DP_F_MINUS;
+                        ch = *format++;
+                        break;
+                    case '+':
+                        flags |= DP_F_PLUS;
+                        ch = *format++;
+                        break;
+                    case ' ':
+                        flags |= DP_F_SPACE;
+                        ch = *format++;
+                        break;
+                    case '#':
+                        flags |= DP_F_NUM;
+                        ch = *format++;
+                        break;
+                    case '0':
+                        flags |= DP_F_ZERO;
+                        ch = *format++;
+                        break;
+                    default:
+                        state = DP_S_MIN;
+                        break;
+                }
                 break;
-            case ' ':
-                flags |= DP_F_SPACE;
-                ch = *format++;
-                break;
-            case '#':
-                flags |= DP_F_NUM;
-                ch = *format++;
-                break;
-            case '0':
-                flags |= DP_F_ZERO;
-                ch = *format++;
-                break;
-            default:
-                state = DP_S_MIN;
-                break;
-            }
-            break;
-        case DP_S_MIN:
-            if (ossl_isdigit(ch)) {
-                min = 10 * min + char_to_int(ch);
-                ch = *format++;
-            } else if (ch == '*') {
-                min = va_arg(args, int);
-                ch = *format++;
-                state = DP_S_DOT;
-            } else
-                state = DP_S_DOT;
-            break;
-        case DP_S_DOT:
-            if (ch == '.') {
-                state = DP_S_MAX;
-                ch = *format++;
-            } else
-                state = DP_S_MOD;
-            break;
-        case DP_S_MAX:
-            if (ossl_isdigit(ch)) {
-                if (max < 0)
-                    max = 0;
-                max = 10 * max + char_to_int(ch);
-                ch = *format++;
-            } else if (ch == '*') {
-                max = va_arg(args, int);
-                ch = *format++;
-                state = DP_S_MOD;
-            } else
-                state = DP_S_MOD;
-            break;
-        case DP_S_MOD:
-            switch (ch) {
-            case 'h':
-                cflags = DP_C_SHORT;
-                ch = *format++;
-                break;
-            case 'l':
-                if (*format == 'l') {
-                    cflags = DP_C_LLONG;
-                    format++;
+            case DP_S_MIN:
+                if (ossl_isdigit(ch)) {
+                    min = 10 * min + char_to_int(ch);
+                    ch = *format++;
+                } else if (ch == '*') {
+                    min = va_arg(args, int);
+                    ch = *format++;
+                    state = DP_S_DOT;
                 } else
-                    cflags = DP_C_LONG;
-                ch = *format++;
+                    state = DP_S_DOT;
                 break;
-            case 'q':
-            case 'j':
-                cflags = DP_C_LLONG;
-                ch = *format++;
+            case DP_S_DOT:
+                if (ch == '.') {
+                    state = DP_S_MAX;
+                    ch = *format++;
+                } else
+                    state = DP_S_MOD;
                 break;
-            case 'L':
-                cflags = DP_C_LDOUBLE;
-                ch = *format++;
+            case DP_S_MAX:
+                if (ossl_isdigit(ch)) {
+                    if (max < 0)
+                        max = 0;
+                    max = 10 * max + char_to_int(ch);
+                    ch = *format++;
+                } else if (ch == '*') {
+                    max = va_arg(args, int);
+                    ch = *format++;
+                    state = DP_S_MOD;
+                } else
+                    state = DP_S_MOD;
                 break;
-            case 'z':
-                cflags = DP_C_SIZE;
-                ch = *format++;
-                break;
-            default:
-                break;
-            }
-            state = DP_S_CONV;
-            break;
-        case DP_S_CONV:
-            switch (ch) {
-            case 'd':
-            case 'i':
-                switch (cflags) {
-                case DP_C_SHORT:
-                    value = (short int)va_arg(args, int);
-                    break;
-                case DP_C_LONG:
-                    value = va_arg(args, long int);
-                    break;
-                case DP_C_LLONG:
-                    value = va_arg(args, int64_t);
-                    break;
-                case DP_C_SIZE:
-                    value = va_arg(args, ossl_ssize_t);
-                    break;
-                default:
-                    value = va_arg(args, int);
-                    break;
+            case DP_S_MOD:
+                switch (ch) {
+                    case 'h':
+                        cflags = DP_C_SHORT;
+                        ch = *format++;
+                        break;
+                    case 'l':
+                        if (*format == 'l') {
+                            cflags = DP_C_LLONG;
+                            format++;
+                        } else
+                            cflags = DP_C_LONG;
+                        ch = *format++;
+                        break;
+                    case 'q':
+                    case 'j':
+                        cflags = DP_C_LLONG;
+                        ch = *format++;
+                        break;
+                    case 'L':
+                        cflags = DP_C_LDOUBLE;
+                        ch = *format++;
+                        break;
+                    case 'z':
+                        cflags = DP_C_SIZE;
+                        ch = *format++;
+                        break;
+                    default:
+                        break;
                 }
-                if (!fmtint(sbuffer, buffer, &currlen, maxlen, value, 10, min,
-                            max, flags))
-                    return 0;
+                state = DP_S_CONV;
                 break;
-            case 'X':
-                flags |= DP_F_UP;
-                /* FALLTHROUGH */
-            case 'x':
-            case 'o':
-            case 'u':
-                flags |= DP_F_UNSIGNED;
-                switch (cflags) {
-                case DP_C_SHORT:
-                    value = (unsigned short int)va_arg(args, unsigned int);
-                    break;
-                case DP_C_LONG:
-                    value = va_arg(args, unsigned long int);
-                    break;
-                case DP_C_LLONG:
-                    value = va_arg(args, uint64_t);
-                    break;
-                case DP_C_SIZE:
-                    value = va_arg(args, size_t);
-                    break;
-                default:
-                    value = va_arg(args, unsigned int);
-                    break;
-                }
-                if (!fmtint(sbuffer, buffer, &currlen, maxlen, value,
-                            ch == 'o' ? 8 : (ch == 'u' ? 10 : 16),
-                            min, max, flags))
-                    return 0;
-                break;
+            case DP_S_CONV:
+                switch (ch) {
+                    case 'd':
+                    case 'i':
+                        switch (cflags) {
+                            case DP_C_SHORT:
+                                value = (short int)va_arg(args, int);
+                                break;
+                            case DP_C_LONG:
+                                value = va_arg(args, long int);
+                                break;
+                            case DP_C_LLONG:
+                                value = va_arg(args, int64_t);
+                                break;
+                            case DP_C_SIZE:
+                                value = va_arg(args, ossl_ssize_t);
+                                break;
+                            default:
+                                value = va_arg(args, int);
+                                break;
+                        }
+                        if (!fmtint(sbuffer, buffer, &currlen, maxlen, value,
+                                    10, min,
+                                    max, flags))
+                            return 0;
+                        break;
+                    case 'X':
+                        flags |= DP_F_UP;
+                    /* FALLTHROUGH */
+                    case 'x':
+                    case 'o':
+                    case 'u':
+                        flags |= DP_F_UNSIGNED;
+                        switch (cflags) {
+                            case DP_C_SHORT:
+                                value = (unsigned short int)va_arg(args,
+                                                                   unsigned int);
+                                break;
+                            case DP_C_LONG:
+                                value = va_arg(args, unsigned long int);
+                                break;
+                            case DP_C_LLONG:
+                                value = va_arg(args, uint64_t);
+                                break;
+                            case DP_C_SIZE:
+                                value = va_arg(args, size_t);
+                                break;
+                            default:
+                                value = va_arg(args, unsigned int);
+                                break;
+                        }
+                        if (!fmtint(sbuffer, buffer, &currlen, maxlen, value,
+                                    ch == 'o' ? 8 : (ch == 'u' ? 10 : 16),
+                                    min, max, flags))
+                            return 0;
+                        break;
 #ifndef OPENSSL_SYS_UEFI
-            case 'f':
-                if (cflags == DP_C_LDOUBLE)
-                    fvalue = va_arg(args, LDOUBLE);
-                else
-                    fvalue = va_arg(args, double);
-                if (!fmtfp(sbuffer, buffer, &currlen, maxlen, fvalue, min, max,
-                           flags, F_FORMAT))
-                    return 0;
-                break;
-            case 'E':
-                flags |= DP_F_UP;
-                /* fall through */
-            case 'e':
-                if (cflags == DP_C_LDOUBLE)
-                    fvalue = va_arg(args, LDOUBLE);
-                else
-                    fvalue = va_arg(args, double);
-                if (!fmtfp(sbuffer, buffer, &currlen, maxlen, fvalue, min, max,
-                           flags, E_FORMAT))
-                    return 0;
-                break;
-            case 'G':
-                flags |= DP_F_UP;
-                /* fall through */
-            case 'g':
-                if (cflags == DP_C_LDOUBLE)
-                    fvalue = va_arg(args, LDOUBLE);
-                else
-                    fvalue = va_arg(args, double);
-                if (!fmtfp(sbuffer, buffer, &currlen, maxlen, fvalue, min, max,
-                           flags, G_FORMAT))
-                    return 0;
-                break;
+                    case 'f':
+                        if (cflags == DP_C_LDOUBLE)
+                            fvalue = va_arg(args, LDOUBLE);
+                        else
+                            fvalue = va_arg(args, double);
+                        if (!fmtfp(sbuffer, buffer, &currlen, maxlen, fvalue,
+                                   min, max,
+                                   flags, F_FORMAT))
+                            return 0;
+                        break;
+                    case 'E':
+                        flags |= DP_F_UP;
+                    /* fall through */
+                    case 'e':
+                        if (cflags == DP_C_LDOUBLE)
+                            fvalue = va_arg(args, LDOUBLE);
+                        else
+                            fvalue = va_arg(args, double);
+                        if (!fmtfp(sbuffer, buffer, &currlen, maxlen, fvalue,
+                                   min, max,
+                                   flags, E_FORMAT))
+                            return 0;
+                        break;
+                    case 'G':
+                        flags |= DP_F_UP;
+                    /* fall through */
+                    case 'g':
+                        if (cflags == DP_C_LDOUBLE)
+                            fvalue = va_arg(args, LDOUBLE);
+                        else
+                            fvalue = va_arg(args, double);
+                        if (!fmtfp(sbuffer, buffer, &currlen, maxlen, fvalue,
+                                   min, max,
+                                   flags, G_FORMAT))
+                            return 0;
+                        break;
 #else
-            case 'f':
-            case 'E':
-            case 'e':
-            case 'G':
-            case 'g':
-                /* not implemented for UEFI */
-                ERR_raise(ERR_LIB_BIO, ERR_R_UNSUPPORTED);
-                return 0;
+                    case 'f':
+                    case 'E':
+                    case 'e':
+                    case 'G':
+                    case 'g':
+                        /* not implemented for UEFI */
+                        ERR_raise(ERR_LIB_BIO, ERR_R_UNSUPPORTED);
+                        return 0;
 #endif
-            case 'c':
-                if (!doapr_outch(sbuffer, buffer, &currlen, maxlen,
-                                 va_arg(args, int)))
-                    return 0;
-                break;
-            case 's':
-                strvalue = va_arg(args, char *);
-                if (max < 0) {
-                    if (buffer)
-                        max = INT_MAX;
-                    else
-                        max = *maxlen;
+                    case 'c':
+                        if (!doapr_outch(sbuffer, buffer, &currlen, maxlen,
+                                         va_arg(args, int)))
+                            return 0;
+                        break;
+                    case 's':
+                        strvalue = va_arg(args, char *);
+                        if (max < 0) {
+                            if (buffer)
+                                max = INT_MAX;
+                            else
+                                max = *maxlen;
+                        }
+                        if (!fmtstr(sbuffer, buffer, &currlen, maxlen, strvalue,
+                                    flags, min, max))
+                            return 0;
+                        break;
+                    case 'p':
+                        value = (size_t)va_arg(args, void *);
+                        if (!fmtint(sbuffer, buffer, &currlen, maxlen,
+                                    value, 16, min, max, flags | DP_F_NUM))
+                            return 0;
+                        break;
+                    case 'n':
+                    {
+                        int *num;
+                        num = va_arg(args, int *);
+                        *num = currlen;
+                    }
+                    break;
+                    case '%':
+                        if (!doapr_outch(sbuffer, buffer, &currlen, maxlen, ch))
+                            return 0;
+                        break;
+                    case 'w':
+                        /* not supported yet, treat as next char */
+                        format++;
+                        break;
+                    default:
+                        /* unknown, skip */
+                        break;
                 }
-                if (!fmtstr(sbuffer, buffer, &currlen, maxlen, strvalue,
-                            flags, min, max))
-                    return 0;
+                ch = *format++;
+                state = DP_S_DEFAULT;
+                flags = cflags = min = 0;
+                max = -1;
                 break;
-            case 'p':
-                value = (size_t)va_arg(args, void *);
-                if (!fmtint(sbuffer, buffer, &currlen, maxlen,
-                            value, 16, min, max, flags | DP_F_NUM))
-                    return 0;
-                break;
-            case 'n':
-                {
-                    int *num;
-                    num = va_arg(args, int *);
-                    *num = currlen;
-                }
-                break;
-            case '%':
-                if (!doapr_outch(sbuffer, buffer, &currlen, maxlen, ch))
-                    return 0;
-                break;
-            case 'w':
-                /* not supported yet, treat as next char */
-                format++;
+            case DP_S_DONE:
                 break;
             default:
-                /* unknown, skip */
                 break;
-            }
-            ch = *format++;
-            state = DP_S_DEFAULT;
-            flags = cflags = min = 0;
-            max = -1;
-            break;
-        case DP_S_DONE:
-            break;
-        default:
-            break;
         }
     }
     /*
@@ -465,7 +470,7 @@ fmtint(char **sbuffer,
         caps = 1;
     do {
         convert[place++] = (caps ? "0123456789ABCDEF" : "0123456789abcdef")
-            [uvalue % (unsigned)base];
+                           [uvalue % (unsigned)base];
         uvalue = (uvalue / (unsigned)base);
     } while (uvalue && (place < (int)sizeof(convert)));
     if (place == sizeof(convert))
@@ -602,7 +607,7 @@ fmtfp(char **sbuffer,
         } else if (fvalue < 0.0001) {
             realstyle = E_FORMAT;
         } else if ((max == 0 && fvalue >= 10)
-                    || (max > 0 && fvalue >= pow_10(max))) {
+                   || (max > 0 && fvalue >= pow_10(max))) {
             realstyle = E_FORMAT;
         } else {
             realstyle = F_FORMAT;
@@ -800,13 +805,13 @@ fmtfp(char **sbuffer,
         else
             ech = 'E';
         if (!doapr_outch(sbuffer, buffer, currlen, maxlen, ech))
-                return 0;
+            return 0;
         if (exp < 0) {
             if (!doapr_outch(sbuffer, buffer, currlen, maxlen, '-'))
-                    return 0;
+                return 0;
         } else {
             if (!doapr_outch(sbuffer, buffer, currlen, maxlen, '+'))
-                    return 0;
+                return 0;
         }
         while (eplace > 0) {
             if (!doapr_outch(sbuffer, buffer, currlen, maxlen,
@@ -902,7 +907,7 @@ int BIO_vprintf(BIO *bio, const char *format, va_list args)
 
     dynbuf = NULL;
     if (!_dopr(&hugebufp, &dynbuf, &hugebufsize, &retlen, &ignored, format,
-                args)) {
+               args)) {
         OPENSSL_free(dynbuf);
         return -1;
     }

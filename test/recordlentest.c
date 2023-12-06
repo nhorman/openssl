@@ -39,7 +39,7 @@ static int write_record(BIO *b, size_t len, uint8_t rectype, int recversion)
     header[4] = len & 0xff;
 
     if (!BIO_write_ex(b, header, SSL3_RT_HEADER_LENGTH, &written)
-            || written != SSL3_RT_HEADER_LENGTH)
+        || written != SSL3_RT_HEADER_LENGTH)
         return 0;
 
     while (len > 0) {
@@ -51,7 +51,7 @@ static int write_record(BIO *b, size_t len, uint8_t rectype, int recversion)
             outlen = len;
 
         if (!BIO_write_ex(b, buf, outlen, &written)
-                || written != outlen)
+            || written != outlen)
             return 0;
 
         len -= outlen;
@@ -71,7 +71,7 @@ static int fail_due_to_record_overflow(int enc)
         reason = SSL_R_DATA_LENGTH_TOO_LONG;
 
     if (ERR_GET_LIB(err) == ERR_LIB_SSL
-            && ERR_GET_REASON(err) == reason)
+        && ERR_GET_REASON(err) == reason)
         return 1;
 
     return 0;
@@ -91,13 +91,13 @@ static int test_record_overflow(int idx)
 
 #ifdef OPENSSL_NO_TLS1_2
     if (idx == TEST_ENCRYPTED_OVERFLOW_TLS1_2_OK
-            || idx == TEST_ENCRYPTED_OVERFLOW_TLS1_2_NOT_OK)
+        || idx == TEST_ENCRYPTED_OVERFLOW_TLS1_2_NOT_OK)
         return 1;
 #endif
 #if defined(OPENSSL_NO_TLS1_3) \
     || (defined(OPENSSL_NO_EC) && defined(OPENSSL_NO_DH))
     if (idx == TEST_ENCRYPTED_OVERFLOW_TLS1_3_OK
-            || idx == TEST_ENCRYPTED_OVERFLOW_TLS1_3_NOT_OK)
+        || idx == TEST_ENCRYPTED_OVERFLOW_TLS1_3_NOT_OK)
         return 1;
 #endif
 
@@ -108,7 +108,7 @@ static int test_record_overflow(int idx)
         goto end;
 
     if (idx == TEST_ENCRYPTED_OVERFLOW_TLS1_2_OK
-            || idx == TEST_ENCRYPTED_OVERFLOW_TLS1_2_NOT_OK) {
+        || idx == TEST_ENCRYPTED_OVERFLOW_TLS1_2_NOT_OK) {
         len = SSL3_RT_MAX_ENCRYPTED_LENGTH;
 #ifndef OPENSSL_NO_COMP
         len -= SSL3_RT_MAX_COMPRESSED_OVERHEAD;
@@ -126,7 +126,7 @@ static int test_record_overflow(int idx)
     serverbio = SSL_get_rbio(serverssl);
 
     if (idx == TEST_PLAINTEXT_OVERFLOW_OK
-            || idx == TEST_PLAINTEXT_OVERFLOW_NOT_OK) {
+        || idx == TEST_PLAINTEXT_OVERFLOW_NOT_OK) {
         len = SSL3_RT_MAX_PLAIN_LENGTH;
 
         if (idx == TEST_PLAINTEXT_OVERFLOW_NOT_OK)
@@ -151,7 +151,7 @@ static int test_record_overflow(int idx)
         goto end;
 
     if (idx == TEST_ENCRYPTED_OVERFLOW_TLS1_2_NOT_OK
-            || idx == TEST_ENCRYPTED_OVERFLOW_TLS1_3_NOT_OK) {
+        || idx == TEST_ENCRYPTED_OVERFLOW_TLS1_3_NOT_OK) {
         overf_expected = 1;
         len++;
     } else {
@@ -170,10 +170,10 @@ static int test_record_overflow(int idx)
     if (!TEST_int_eq(fail_due_to_record_overflow(1), overf_expected))
         goto end;
 
- success:
+success:
     testresult = 1;
 
- end:
+end:
     SSL_free(serverssl);
     SSL_free(clientssl);
     SSL_CTX_free(sctx);
@@ -191,7 +191,7 @@ int setup_tests(void)
     }
 
     if (!TEST_ptr(cert = test_get_argument(0))
-            || !TEST_ptr(privkey = test_get_argument(1)))
+        || !TEST_ptr(privkey = test_get_argument(1)))
         return 0;
 
     ADD_ALL_TESTS(test_record_overflow, TOTAL_RECORD_OVERFLOW_TESTS);

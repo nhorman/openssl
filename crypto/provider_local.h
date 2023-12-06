@@ -20,7 +20,7 @@ typedef struct {
     char *path;
     OSSL_provider_init_fn *init;
     STACK_OF(INFOPAIR) *parameters;
-    unsigned int is_fallback:1;
+    unsigned int is_fallback : 1;
 } OSSL_PROVIDER_INFO;
 
 extern const OSSL_PROVIDER_INFO ossl_predefined_providers[];

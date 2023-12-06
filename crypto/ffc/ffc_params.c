@@ -206,7 +206,7 @@ int ossl_ffc_params_cmp(const FFC_PARAMS *a, const FFC_PARAMS *b, int ignore_q)
 }
 
 int ossl_ffc_params_todata(const FFC_PARAMS *ffc, OSSL_PARAM_BLD *bld,
-                      OSSL_PARAM params[])
+                           OSSL_PARAM params[])
 {
     int test_flags;
 
@@ -264,7 +264,7 @@ int ossl_ffc_params_todata(const FFC_PARAMS *ffc, OSSL_PARAM_BLD *bld,
         && !ossl_param_build_set_utf8_string(bld, params,
                                              OSSL_PKEY_PARAM_FFC_DIGEST,
                                              ffc->mdname))
-       return 0;
+        return 0;
     if (ffc->mdprops != NULL
         && !ossl_param_build_set_utf8_string(bld, params,
                                              OSSL_PKEY_PARAM_FFC_DIGEST_PROPS,

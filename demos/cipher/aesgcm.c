@@ -101,7 +101,7 @@ int aes_gcm_encrypt(void)
      * IV length parameter.
      * For demonstration purposes the IV is being set here. In a compliant
      * application the IV would be generated internally so the iv passed in
-     * would be NULL. 
+     * would be NULL.
      */
     if (!EVP_EncryptInit_ex2(ctx, cipher, gcm_key, gcm_iv, params))
         goto err;
@@ -192,7 +192,8 @@ int aes_gcm_decrypt(void)
 
     /* Set expected tag value. */
     params[0] = OSSL_PARAM_construct_octet_string(OSSL_CIPHER_PARAM_AEAD_TAG,
-                                                  (void*)gcm_tag, sizeof(gcm_tag));
+                                                  (void*)gcm_tag,
+                                                  sizeof(gcm_tag));
 
     if (!EVP_CIPHER_CTX_set_params(ctx, params))
         goto err;

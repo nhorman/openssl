@@ -56,21 +56,21 @@
 
 # define SPARC_PIC_THUNK(reg)    \
         .align  32;             \
-.Lpic_thunk:                    \
+    .Lpic_thunk:                    \
         jmp     %o7 + 8;        \
-         add    %o7, reg, reg;
+        add    %o7, reg, reg;
 
 # define SPARC_PIC_THUNK_CALL(reg)                       \
         sethi   %hi(_GLOBAL_OFFSET_TABLE_-4), reg;      \
-        call    .Lpic_thunk;                            \
-         or     reg, %lo(_GLOBAL_OFFSET_TABLE_+4), reg;
+        call.Lpic_thunk;                            \
+        or     reg, %lo(_GLOBAL_OFFSET_TABLE_+4), reg;
 
 # if 1
 #  define SPARC_SETUP_GOT_REG(reg)       SPARC_PIC_THUNK_CALL(reg)
 # else
 #  define SPARC_SETUP_GOT_REG(reg)       \
         sethi   %hi(_GLOBAL_OFFSET_TABLE_-4), reg;      \
-        call    .+8;                                    \
+        call.+8;                                    \
         or      reg,%lo(_GLOBAL_OFFSET_TABLE_+4), reg;  \
         add     %o7, reg, reg
 # endif
@@ -78,7 +78,7 @@
 # if defined(__arch64__)
 
 #  define SPARC_LOAD_ADDRESS(SYM, reg)   \
-        setx    SYM, %o7, reg;
+        setx SYM, %o7, reg;
 #  define LDPTR          ldx
 #  define SIZE_T_CC      %xcc
 #  define STACK_FRAME    192
@@ -88,7 +88,7 @@
 # else
 
 #  define SPARC_LOAD_ADDRESS(SYM, reg)   \
-        set     SYM, reg;
+        set SYM, reg;
 #  define LDPTR          ld
 #  define SIZE_T_CC      %icc
 #  define STACK_FRAME    112
@@ -112,7 +112,7 @@
 #  define SPARC_LOAD_ADDRESS_LEAF(SYM, reg, tmp) \
         mov     %o7, tmp;                       \
         SPARC_LOAD_ADDRESS(SYM, reg)            \
-        mov     tmp, %o7;
+        mov tmp, %o7;
 # endif
 
 # ifndef __ASSEMBLER__

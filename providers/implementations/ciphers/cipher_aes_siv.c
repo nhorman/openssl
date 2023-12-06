@@ -251,54 +251,63 @@ static const OSSL_PARAM *aes_siv_settable_ctx_params(ossl_unused void *cctx,
 }
 
 #define IMPLEMENT_cipher(alg, lc, UCMODE, flags, kbits, blkbits, ivbits)       \
-static OSSL_FUNC_cipher_newctx_fn alg##kbits##lc##_newctx;                     \
-static OSSL_FUNC_cipher_freectx_fn alg##_##lc##_freectx;                       \
-static OSSL_FUNC_cipher_dupctx_fn lc##_dupctx;                                 \
-static OSSL_FUNC_cipher_encrypt_init_fn lc##_einit;                            \
-static OSSL_FUNC_cipher_decrypt_init_fn lc##_dinit;                            \
-static OSSL_FUNC_cipher_update_fn lc##_stream_update;                          \
-static OSSL_FUNC_cipher_final_fn lc##_stream_final;                            \
-static OSSL_FUNC_cipher_cipher_fn lc##_cipher;                                 \
-static OSSL_FUNC_cipher_get_params_fn alg##_##kbits##_##lc##_get_params;       \
-static OSSL_FUNC_cipher_get_ctx_params_fn alg##_##lc##_get_ctx_params;         \
-static OSSL_FUNC_cipher_gettable_ctx_params_fn                                 \
-            alg##_##lc##_gettable_ctx_params;                                  \
-static OSSL_FUNC_cipher_set_ctx_params_fn alg##_##lc##_set_ctx_params;         \
-static OSSL_FUNC_cipher_settable_ctx_params_fn                                 \
-            alg##_##lc##_settable_ctx_params;                                  \
-static int alg##_##kbits##_##lc##_get_params(OSSL_PARAM params[])              \
-{                                                                              \
-    return ossl_cipher_generic_get_params(params, EVP_CIPH_##UCMODE##_MODE,    \
-                                          flags, 2*kbits, blkbits, ivbits);    \
-}                                                                              \
-static void *alg##kbits##lc##_newctx(void *provctx)                            \
-{                                                                              \
-    return alg##_##lc##_newctx(provctx, 2*kbits, EVP_CIPH_##UCMODE##_MODE,     \
-                               flags);                                         \
-}                                                                              \
-const OSSL_DISPATCH ossl_##alg##kbits##lc##_functions[] = {                    \
-    { OSSL_FUNC_CIPHER_NEWCTX, (void (*)(void))alg##kbits##lc##_newctx },      \
-    { OSSL_FUNC_CIPHER_FREECTX, (void (*)(void))alg##_##lc##_freectx },        \
-    { OSSL_FUNC_CIPHER_DUPCTX, (void (*)(void)) lc##_dupctx },                 \
-    { OSSL_FUNC_CIPHER_ENCRYPT_INIT, (void (*)(void)) lc##_einit },            \
-    { OSSL_FUNC_CIPHER_DECRYPT_INIT, (void (*)(void)) lc##_dinit },            \
-    { OSSL_FUNC_CIPHER_UPDATE, (void (*)(void)) lc##_stream_update },          \
-    { OSSL_FUNC_CIPHER_FINAL, (void (*)(void)) lc##_stream_final },            \
-    { OSSL_FUNC_CIPHER_CIPHER, (void (*)(void)) lc##_cipher },                 \
-    { OSSL_FUNC_CIPHER_GET_PARAMS,                                             \
-      (void (*)(void)) alg##_##kbits##_##lc##_get_params },                    \
-    { OSSL_FUNC_CIPHER_GETTABLE_PARAMS,                                        \
-      (void (*)(void))ossl_cipher_generic_gettable_params },                   \
-    { OSSL_FUNC_CIPHER_GET_CTX_PARAMS,                                         \
-      (void (*)(void)) alg##_##lc##_get_ctx_params },                          \
-    { OSSL_FUNC_CIPHER_GETTABLE_CTX_PARAMS,                                    \
-      (void (*)(void)) alg##_##lc##_gettable_ctx_params },                     \
-    { OSSL_FUNC_CIPHER_SET_CTX_PARAMS,                                         \
-      (void (*)(void)) alg##_##lc##_set_ctx_params },                          \
-    { OSSL_FUNC_CIPHER_SETTABLE_CTX_PARAMS,                                    \
-      (void (*)(void)) alg##_##lc##_settable_ctx_params },                     \
-    OSSL_DISPATCH_END                                                          \
-};
+        static OSSL_FUNC_cipher_newctx_fn alg ## kbits ## lc ## _newctx;                     \
+        static OSSL_FUNC_cipher_freectx_fn alg ## _ ## lc ## _freectx;                       \
+        static OSSL_FUNC_cipher_dupctx_fn lc ## _dupctx;                                 \
+        static OSSL_FUNC_cipher_encrypt_init_fn lc ## _einit;                            \
+        static OSSL_FUNC_cipher_decrypt_init_fn lc ## _dinit;                            \
+        static OSSL_FUNC_cipher_update_fn lc ## _stream_update;                          \
+        static OSSL_FUNC_cipher_final_fn lc ## _stream_final;                            \
+        static OSSL_FUNC_cipher_cipher_fn lc ## _cipher;                                 \
+        static OSSL_FUNC_cipher_get_params_fn alg ## _ ## kbits ## _ ## lc ## \
+        _get_params;       \
+        static OSSL_FUNC_cipher_get_ctx_params_fn alg ## _ ## lc ## \
+        _get_ctx_params;         \
+        static OSSL_FUNC_cipher_gettable_ctx_params_fn                                 \
+        alg ## _ ## lc ## _gettable_ctx_params;                                  \
+        static OSSL_FUNC_cipher_set_ctx_params_fn alg ## _ ## lc ## \
+        _set_ctx_params;         \
+        static OSSL_FUNC_cipher_settable_ctx_params_fn                                 \
+        alg ## _ ## lc ## _settable_ctx_params;                                  \
+        static int alg ## _ ## kbits ## _ ## lc ## _get_params( \
+            OSSL_PARAM params[])              \
+        {                                                                              \
+            return ossl_cipher_generic_get_params(params, \
+                                                  EVP_CIPH_ ## UCMODE ## _MODE,    \
+                                                  flags, 2*kbits, blkbits, \
+                                                  ivbits);    \
+        }                                                                              \
+        static void *alg ## kbits ## lc ## _newctx(void *provctx)                            \
+        {                                                                              \
+            return alg ## _ ## lc ## _newctx(provctx, 2*kbits, \
+                                             EVP_CIPH_ ## UCMODE ## _MODE,     \
+                                             flags);                                         \
+        }                                                                              \
+        const OSSL_DISPATCH ossl_ ## alg ## kbits ## lc ## _functions[] = {                    \
+            { OSSL_FUNC_CIPHER_NEWCTX, \
+              (void (*)(void)) alg ## kbits ## lc ## _newctx },      \
+            { OSSL_FUNC_CIPHER_FREECTX, \
+              (void (*)(void)) alg ## _ ## lc ## _freectx },        \
+            { OSSL_FUNC_CIPHER_DUPCTX, (void (*)(void)) lc ## _dupctx },                 \
+            { OSSL_FUNC_CIPHER_ENCRYPT_INIT, (void (*)(void)) lc ## _einit },            \
+            { OSSL_FUNC_CIPHER_DECRYPT_INIT, (void (*)(void)) lc ## _dinit },            \
+            { OSSL_FUNC_CIPHER_UPDATE, (void (*)(void)) lc ## _stream_update },          \
+            { OSSL_FUNC_CIPHER_FINAL, (void (*)(void)) lc ## _stream_final },            \
+            { OSSL_FUNC_CIPHER_CIPHER, (void (*)(void)) lc ## _cipher },                 \
+            { OSSL_FUNC_CIPHER_GET_PARAMS,                                             \
+              (void (*)(void)) alg ## _ ## kbits ## _ ## lc ## _get_params },                    \
+            { OSSL_FUNC_CIPHER_GETTABLE_PARAMS,                                        \
+              (void (*)(void)) ossl_cipher_generic_gettable_params },                   \
+            { OSSL_FUNC_CIPHER_GET_CTX_PARAMS,                                         \
+              (void (*)(void)) alg ## _ ## lc ## _get_ctx_params },                          \
+            { OSSL_FUNC_CIPHER_GETTABLE_CTX_PARAMS,                                    \
+              (void (*)(void)) alg ## _ ## lc ## _gettable_ctx_params },                     \
+            { OSSL_FUNC_CIPHER_SET_CTX_PARAMS,                                         \
+              (void (*)(void)) alg ## _ ## lc ## _set_ctx_params },                          \
+            { OSSL_FUNC_CIPHER_SETTABLE_CTX_PARAMS,                                    \
+              (void (*)(void)) alg ## _ ## lc ## _settable_ctx_params },                     \
+            OSSL_DISPATCH_END                                                          \
+        };
 
 IMPLEMENT_cipher(aes, siv, SIV, SIV_FLAGS, 128, 8, 0)
 IMPLEMENT_cipher(aes, siv, SIV, SIV_FLAGS, 192, 8, 0)

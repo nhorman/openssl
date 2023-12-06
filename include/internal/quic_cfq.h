@@ -100,12 +100,12 @@ void ossl_quic_cfq_free(QUIC_CFQ *cfq);
 typedef void (cfq_free_cb)(unsigned char *buf, size_t buf_len, void *arg);
 
 QUIC_CFQ_ITEM *ossl_quic_cfq_add_frame(QUIC_CFQ            *cfq,
-                                       uint32_t             priority,
-                                       uint32_t             pn_space,
-                                       uint64_t             frame_type,
-                                       uint32_t             flags,
+                                       uint32_t priority,
+                                       uint32_t pn_space,
+                                       uint64_t frame_type,
+                                       uint32_t flags,
                                        const unsigned char *encoded,
-                                       size_t               encoded_len,
+                                       size_t encoded_len,
                                        cfq_free_cb         *free_cb,
                                        void                *free_cb_arg);
 

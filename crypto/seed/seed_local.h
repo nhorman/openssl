@@ -46,7 +46,11 @@ typedef unsigned int seed_word;
 
 
 # define char2word(c, i)  \
-        (i) = ((((seed_word)(c)[0]) << 24) | (((seed_word)(c)[1]) << 16) | (((seed_word)(c)[2]) << 8) | ((seed_word)(c)[3]))
+        (i) = \
+            ((((seed_word)(c)[0]) << \
+    24) | \
+             (((seed_word)(c)[1]) << \
+    16) | (((seed_word)(c)[2]) << 8) | ((seed_word)(c)[3]))
 
 # define word2char(l, c)  \
         *((c)+0) = (unsigned char)((l)>>24) & 0xff; \
@@ -58,15 +62,15 @@ typedef unsigned int seed_word;
         (T0) = (X3);                                     \
         (X3) = (((X3)<<8) ^ ((X4)>>24)) & 0xffffffff;    \
         (X4) = (((X4)<<8) ^ ((T0)>>24)) & 0xffffffff;    \
-        (T0) = ((X1) + (X3) - (KC))     & 0xffffffff;    \
-        (T1) = ((X2) + (KC) - (X4))     & 0xffffffff
+        (T0) = ((X1) + (X3) -(KC))     & 0xffffffff;    \
+        (T1) = ((X2) + (KC) -(X4))     & 0xffffffff
 
 # define KEYSCHEDULE_UPDATE1(T0, T1, X1, X2, X3, X4, KC)  \
         (T0) = (X1);                                     \
         (X1) = (((X1)>>8) ^ ((X2)<<24)) & 0xffffffff;    \
         (X2) = (((X2)>>8) ^ ((T0)<<24)) & 0xffffffff;    \
-        (T0) = ((X1) + (X3) - (KC))     & 0xffffffff;     \
-        (T1) = ((X2) + (KC) - (X4))     & 0xffffffff
+        (T0) = ((X1) + (X3) -(KC))     & 0xffffffff;     \
+        (T1) = ((X2) + (KC) -(X4))     & 0xffffffff
 
 # define KEYUPDATE_TEMP(T0, T1, K)   \
         (K)[0] = G_FUNC((T0));      \

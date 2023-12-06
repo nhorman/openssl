@@ -166,15 +166,15 @@ static int x509_object_cmp(const X509_OBJECT *const *a,
     if (ret)
         return ret;
     switch ((*a)->type) {
-    case X509_LU_X509:
-        ret = X509_subject_name_cmp((*a)->data.x509, (*b)->data.x509);
-        break;
-    case X509_LU_CRL:
-        ret = X509_CRL_cmp((*a)->data.crl, (*b)->data.crl);
-        break;
-    case X509_LU_NONE:
-        /* abort(); */
-        return 0;
+        case X509_LU_X509:
+            ret = X509_subject_name_cmp((*a)->data.x509, (*b)->data.x509);
+            break;
+        case X509_LU_CRL:
+            ret = X509_CRL_cmp((*a)->data.crl, (*b)->data.crl);
+            break;
+        case X509_LU_NONE:
+            /* abort(); */
+            return 0;
     }
     return ret;
 }
@@ -448,12 +448,12 @@ int X509_STORE_add_crl(X509_STORE *xs, X509_CRL *x)
 int X509_OBJECT_up_ref_count(X509_OBJECT *a)
 {
     switch (a->type) {
-    case X509_LU_NONE:
-        break;
-    case X509_LU_X509:
-        return X509_up_ref(a->data.x509);
-    case X509_LU_CRL:
-        return X509_CRL_up_ref(a->data.crl);
+        case X509_LU_NONE:
+            break;
+        case X509_LU_X509:
+            return X509_up_ref(a->data.x509);
+        case X509_LU_CRL:
+            return X509_CRL_up_ref(a->data.crl);
     }
     return 1;
 }
@@ -492,14 +492,14 @@ static void x509_object_free_internal(X509_OBJECT *a)
     if (a == NULL)
         return;
     switch (a->type) {
-    case X509_LU_NONE:
-        break;
-    case X509_LU_X509:
-        X509_free(a->data.x509);
-        break;
-    case X509_LU_CRL:
-        X509_CRL_free(a->data.crl);
-        break;
+        case X509_LU_NONE:
+            break;
+        case X509_LU_X509:
+            X509_free(a->data.x509);
+            break;
+        case X509_LU_CRL:
+            X509_CRL_free(a->data.crl);
+            break;
     }
 }
 
@@ -541,18 +541,18 @@ static int x509_object_idx_cnt(STACK_OF(X509_OBJECT) *h, X509_LOOKUP_TYPE type,
 
     stmp.type = type;
     switch (type) {
-    case X509_LU_X509:
-        stmp.data.x509 = &x509_s;
-        x509_s.cert_info.subject = (X509_NAME *)name; /* won't modify it */
-        break;
-    case X509_LU_CRL:
-        stmp.data.crl = &crl_s;
-        crl_s.crl.issuer = (X509_NAME *)name; /* won't modify it */
-        break;
-    case X509_LU_NONE:
-    default:
-        /* abort(); */
-        return -1;
+        case X509_LU_X509:
+            stmp.data.x509 = &x509_s;
+            x509_s.cert_info.subject = (X509_NAME *)name; /* won't modify it */
+            break;
+        case X509_LU_CRL:
+            stmp.data.crl = &crl_s;
+            crl_s.crl.issuer = (X509_NAME *)name; /* won't modify it */
+            break;
+        case X509_LU_NONE:
+        default:
+            /* abort(); */
+            return -1;
     }
 
     /* Assumes h is locked for read if applicable */
@@ -610,9 +610,9 @@ STACK_OF(X509) *X509_STORE_get1_all_certs(X509_STORE *store)
     X509_STORE_unlock(store);
     return sk;
 
- err:
+err:
     X509_STORE_unlock(store);
- out_free:
+out_free:
     OSSL_STACK_OF_X509_free(sk);
     return NULL;
 }
@@ -673,7 +673,7 @@ STACK_OF(X509) *X509_STORE_CTX_get1_certs(X509_STORE_CTX *ctx,
             return NULL;
         }
     }
- end:
+end:
     X509_STORE_unlock(store);
     return sk;
 }
@@ -924,7 +924,8 @@ void X509_STORE_set_check_revocation(X509_STORE *xs,
     xs->check_revocation = cb;
 }
 
-X509_STORE_CTX_check_revocation_fn X509_STORE_get_check_revocation(const X509_STORE *xs)
+X509_STORE_CTX_check_revocation_fn X509_STORE_get_check_revocation(
+    const X509_STORE *xs)
 {
     return xs->check_revocation;
 }

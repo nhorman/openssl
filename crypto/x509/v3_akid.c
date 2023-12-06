@@ -49,7 +49,8 @@ static STACK_OF(CONF_VALUE) *i2v_AUTHORITY_KEYID(X509V3_EXT_METHOD *method,
             ERR_raise(ERR_LIB_X509V3, ERR_R_ASN1_LIB);
             return NULL;
         }
-        if (!X509V3_add_value((akeyid->issuer || akeyid->serial) ? "keyid" : NULL,
+        if (!X509V3_add_value((akeyid->issuer ||
+                               akeyid->serial) ? "keyid" : NULL,
                               tmp, &extlist)) {
             OPENSSL_free(tmp);
             ERR_raise(ERR_LIB_X509V3, ERR_R_X509_LIB);
@@ -78,7 +79,7 @@ static STACK_OF(CONF_VALUE) *i2v_AUTHORITY_KEYID(X509V3_EXT_METHOD *method,
         OPENSSL_free(tmp);
     }
     return extlist;
- err:
+err:
     if (origextlist == NULL)
         sk_CONF_VALUE_pop_free(extlist, X509V3_conf_free);
     return NULL;
@@ -224,7 +225,7 @@ static AUTHORITY_KEYID *v2i_AUTHORITY_KEYID(X509V3_EXT_METHOD *method,
 
     return akeyid;
 
- err:
+err:
     sk_GENERAL_NAME_free(gens);
     GENERAL_NAME_free(gen);
     X509_NAME_free(isname);

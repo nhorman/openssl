@@ -76,7 +76,8 @@ static int setup_selftest_pairwise_failure(const char *type)
 
     /* Setup a callback that corrupts the pairwise self tests and causes failures */
     self_test_args.type = type;
-    OSSL_SELF_TEST_set_callback(libctx, self_test_on_pairwise_fail, &self_test_args);
+    OSSL_SELF_TEST_set_callback(libctx, self_test_on_pairwise_fail,
+                                &self_test_args);
 
     ret = 1;
 err:
@@ -103,7 +104,8 @@ static int test_keygen_pairwise_failure(void)
             type = OSSL_SELF_TEST_TYPE_PCT_KAT;
         if (!TEST_true(setup_selftest_pairwise_failure(type)))
             goto err;
-        if (!TEST_ptr_null(pkey = EVP_PKEY_Q_keygen(libctx, NULL, "EC", "P-256")))
+        if (!TEST_ptr_null(pkey = EVP_PKEY_Q_keygen(libctx, NULL, "EC",
+                                                    "P-256")))
             goto err;
     } else if (strncmp(pairwise_name, "dsa", 3) == 0) {
         if (strcmp(pairwise_name, "dsakat") == 0)
@@ -112,7 +114,8 @@ static int test_keygen_pairwise_failure(void)
             goto err;
         if (!TEST_ptr(bio = BIO_new_file(dsaparam_file, "r")))
             goto err;
-        if (!TEST_ptr(pParams = PEM_read_bio_Parameters_ex(bio, NULL, libctx, NULL)))
+        if (!TEST_ptr(pParams =
+                          PEM_read_bio_Parameters_ex(bio, NULL, libctx, NULL)))
             goto err;
         if (!TEST_ptr(ctx = EVP_PKEY_CTX_new_from_pkey(libctx, pParams, NULL)))
             goto err;
@@ -139,20 +142,20 @@ int setup_tests(void)
 
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_CONFIG_FILE:
-            config_file = opt_arg();
-            break;
-        case OPT_PAIRWISETEST:
-            pairwise_name = opt_arg();
-            break;
-        case OPT_DSAPARAM:
-            dsaparam_file = opt_arg();
-            break;
-        case OPT_TEST_CASES:
-           break;
-        default:
-        case OPT_ERR:
-            return 0;
+            case OPT_CONFIG_FILE:
+                config_file = opt_arg();
+                break;
+            case OPT_PAIRWISETEST:
+                pairwise_name = opt_arg();
+                break;
+            case OPT_DSAPARAM:
+                dsaparam_file = opt_arg();
+                break;
+            case OPT_TEST_CASES:
+                break;
+            default:
+            case OPT_ERR:
+                return 0;
         }
     }
 

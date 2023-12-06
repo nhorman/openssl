@@ -92,57 +92,60 @@ static int test_client_hello(int currtest)
         goto end;
 
     switch (currtest) {
-    case TEST_SET_SESSION_TICK_DATA_VER_NEG:
+        case TEST_SET_SESSION_TICK_DATA_VER_NEG:
 #if !defined(OPENSSL_NO_TLS1_3) && defined(OPENSSL_NO_TLS1_2)
-        /* TLSv1.3 is enabled and TLSv1.2 is disabled so can't do this test */
-        SSL_CTX_free(ctx);
-        return 1;
+            /* TLSv1.3 is enabled and TLSv1.2 is disabled so can't do this test */
+            SSL_CTX_free(ctx);
+            return 1;
 #else
-        /* Testing for session tickets <= TLS1.2; not relevant for 1.3 */
-        if (!TEST_true(SSL_CTX_set_max_proto_version(ctx, TLS1_2_VERSION)))
-            goto end;
-#endif
-        break;
-
-    case TEST_ADD_PADDING_AND_PSK:
-        /*
-         * In this case we're doing TLSv1.3 and we're sending a PSK so the
-         * ClientHello is already going to be quite long. To avoid getting one
-         * that is too long for this test we use a restricted ciphersuite list
-         */
-        if (!TEST_false(SSL_CTX_set_cipher_list(ctx, "")))
-            goto end;
-        ERR_clear_error();
-         /* Fall through */
-    case TEST_ADD_PADDING:
-    case TEST_PADDING_NOT_NEEDED:
-        SSL_CTX_set_options(ctx, SSL_OP_TLSEXT_PADDING);
-        /* Make sure we get a consistent size across TLS versions */
-        SSL_CTX_clear_options(ctx, SSL_OP_ENABLE_MIDDLEBOX_COMPAT);
-        /*
-         * Add some dummy ALPN protocols so that the ClientHello is at least
-         * F5_WORKAROUND_MIN_MSG_LEN bytes long - meaning padding will be
-         * needed.
-         */
-        if (currtest == TEST_ADD_PADDING) {
-             if (!TEST_false(SSL_CTX_set_alpn_protos(ctx,
-                                    (unsigned char *)alpn_prots,
-                                    sizeof(alpn_prots) - 1)))
+            /* Testing for session tickets <= TLS1.2; not relevant for 1.3 */
+            if (!TEST_true(SSL_CTX_set_max_proto_version(ctx, TLS1_2_VERSION)))
                 goto end;
-        /*
-         * Otherwise we need to make sure we have a small enough message to
-         * not need padding.
-         */
-        } else if (!TEST_true(SSL_CTX_set_cipher_list(ctx,
-                              "AES128-SHA"))
-                   || !TEST_true(SSL_CTX_set_ciphersuites(ctx,
-                                 "TLS_AES_128_GCM_SHA256"))) {
-            goto end;
-        }
-        break;
+#endif
+            break;
 
-    default:
-        goto end;
+        case TEST_ADD_PADDING_AND_PSK:
+            /*
+             * In this case we're doing TLSv1.3 and we're sending a PSK so the
+             * ClientHello is already going to be quite long. To avoid getting one
+             * that is too long for this test we use a restricted ciphersuite list
+             */
+            if (!TEST_false(SSL_CTX_set_cipher_list(ctx, "")))
+                goto end;
+            ERR_clear_error();
+        /* Fall through */
+        case TEST_ADD_PADDING:
+        case TEST_PADDING_NOT_NEEDED:
+            SSL_CTX_set_options(ctx, SSL_OP_TLSEXT_PADDING);
+            /* Make sure we get a consistent size across TLS versions */
+            SSL_CTX_clear_options(ctx, SSL_OP_ENABLE_MIDDLEBOX_COMPAT);
+            /*
+             * Add some dummy ALPN protocols so that the ClientHello is at least
+             * F5_WORKAROUND_MIN_MSG_LEN bytes long - meaning padding will be
+             * needed.
+             */
+            if (currtest == TEST_ADD_PADDING) {
+                if (!TEST_false(SSL_CTX_set_alpn_protos(ctx,
+                                                        (unsigned char *)
+                                                        alpn_prots,
+                                                        sizeof(alpn_prots) -
+                                                        1)))
+                    goto end;
+                /*
+                 * Otherwise we need to make sure we have a small enough message to
+                 * not need padding.
+                 */
+            } else if (!TEST_true(SSL_CTX_set_cipher_list(ctx,
+                                                          "AES128-SHA"))
+                       || !TEST_true(SSL_CTX_set_ciphersuites(ctx,
+                                                              "TLS_AES_128_GCM_SHA256")))
+            {
+                goto end;
+            }
+            break;
+
+        default:
+            goto end;
     }
 
     con = SSL_new(ctx);
@@ -165,7 +168,7 @@ static int test_client_hello(int currtest)
          * too old.
          */
         if (!TEST_true(SSL_SESSION_set_time(sess, (long)time(NULL)))
-                || !TEST_true(SSL_set_session(con, sess)))
+            || !TEST_true(SSL_set_session(con, sess)))
             goto end;
     }
 
@@ -192,33 +195,33 @@ static int test_client_hello(int currtest)
     }
 
     if (!TEST_long_ge(len = BIO_get_mem_data(wbio, (char **)&data), 0)
-            || !TEST_true(PACKET_buf_init(&pkt, data, len))
-               /* Skip the record header */
-            || !PACKET_forward(&pkt, SSL3_RT_HEADER_LENGTH))
+        || !TEST_true(PACKET_buf_init(&pkt, data, len))
+        /* Skip the record header */
+        || !PACKET_forward(&pkt, SSL3_RT_HEADER_LENGTH))
         goto end;
 
     msglen = PACKET_remaining(&pkt);
 
     /* Skip the handshake message header */
     if (!TEST_true(PACKET_forward(&pkt, SSL3_HM_HEADER_LENGTH))
-               /* Skip client version and random */
-            || !TEST_true(PACKET_forward(&pkt, CLIENT_VERSION_LEN
-                                               + SSL3_RANDOM_SIZE))
-               /* Skip session id */
-            || !TEST_true(PACKET_get_length_prefixed_1(&pkt, &pkt2))
-               /* Skip ciphers */
-            || !TEST_true(PACKET_get_length_prefixed_2(&pkt, &pkt2))
-               /* Skip compression */
-            || !TEST_true(PACKET_get_length_prefixed_1(&pkt, &pkt2))
-               /* Extensions len */
-            || !TEST_true(PACKET_as_length_prefixed_2(&pkt, &pkt2)))
+        /* Skip client version and random */
+        || !TEST_true(PACKET_forward(&pkt, CLIENT_VERSION_LEN
+                                     + SSL3_RANDOM_SIZE))
+        /* Skip session id */
+        || !TEST_true(PACKET_get_length_prefixed_1(&pkt, &pkt2))
+        /* Skip ciphers */
+        || !TEST_true(PACKET_get_length_prefixed_2(&pkt, &pkt2))
+        /* Skip compression */
+        || !TEST_true(PACKET_get_length_prefixed_1(&pkt, &pkt2))
+        /* Extensions len */
+        || !TEST_true(PACKET_as_length_prefixed_2(&pkt, &pkt2)))
         goto end;
 
     /* Loop through all extensions */
     while (PACKET_remaining(&pkt2)) {
 
         if (!TEST_true(PACKET_get_net_2(&pkt2, &type))
-                || !TEST_true(PACKET_get_length_prefixed_2(&pkt2, &pkt3)))
+            || !TEST_true(PACKET_get_length_prefixed_2(&pkt2, &pkt3)))
             goto end;
 
         if (type == TLSEXT_TYPE_session_ticket) {
@@ -235,7 +238,7 @@ static int test_client_hello(int currtest)
             if (!TEST_false(currtest == TEST_PADDING_NOT_NEEDED))
                 goto end;
             else if (TEST_true(currtest == TEST_ADD_PADDING
-                    || currtest == TEST_ADD_PADDING_AND_PSK))
+                               || currtest == TEST_ADD_PADDING_AND_PSK))
                 testresult = TEST_true(msglen == F5_WORKAROUND_MAX_MSG_LEN);
         }
     }

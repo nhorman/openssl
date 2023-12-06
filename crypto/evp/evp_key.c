@@ -70,7 +70,7 @@ int EVP_read_pw_string_min(char *buf, int min, int len, const char *prompt,
         goto end;
     ret = UI_process(ui);
     OPENSSL_cleanse(buff, BUFSIZ);
- end:
+end:
     UI_free(ui);
     return ret;
 }
@@ -147,7 +147,7 @@ int EVP_BytesToKey(const EVP_CIPHER *type, const EVP_MD *md,
             break;
     }
     rv = EVP_CIPHER_get_key_length(type);
- err:
+err:
     EVP_MD_CTX_free(c);
     OPENSSL_cleanse(md_buf, sizeof(md_buf));
     return rv;

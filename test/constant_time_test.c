@@ -260,18 +260,18 @@ static int test_binops(int i)
         unsigned int b = test_values[j];
 
         if (!test_select(a, b)
-                || !test_binary_op(&constant_time_lt, "ct_lt",
-                                   a, b, a < b)
-                || !test_binary_op(&constant_time_lt, "constant_time_lt",
-                                   b, a, b < a)
-                || !test_binary_op(&constant_time_ge, "constant_time_ge",
-                                   a, b, a >= b)
-                || !test_binary_op(&constant_time_ge, "constant_time_ge",
-                                   b, a, b >= a)
-                || !test_binary_op(&constant_time_eq, "constant_time_eq",
-                                   a, b, a == b)
-                || !test_binary_op(&constant_time_eq, "constant_time_eq",
-                                   b, a, b == a))
+            || !test_binary_op(&constant_time_lt, "ct_lt",
+                               a, b, a < b)
+            || !test_binary_op(&constant_time_lt, "constant_time_lt",
+                               b, a, b < a)
+            || !test_binary_op(&constant_time_ge, "constant_time_ge",
+                               a, b, a >= b)
+            || !test_binary_op(&constant_time_ge, "constant_time_ge",
+                               b, a, b >= a)
+            || !test_binary_op(&constant_time_eq, "constant_time_eq",
+                               a, b, a == b)
+            || !test_binary_op(&constant_time_eq, "constant_time_eq",
+                               b, a, b == a))
             ret = 0;
     }
     return ret;
@@ -287,17 +287,17 @@ static int test_binops_8(int i)
         unsigned int b = test_values_8[j];
 
         if (!test_binary_op_8(&constant_time_lt_8, "constant_time_lt_8",
-                                     a, b, a < b)
-                || !test_binary_op_8(&constant_time_lt_8, "constant_time_lt_8",
-                                     b, a, b < a)
-                || !test_binary_op_8(&constant_time_ge_8, "constant_time_ge_8",
-                                     a, b, a >= b)
-                || !test_binary_op_8(&constant_time_ge_8, "constant_time_ge_8",
-                                     b, a, b >= a)
-                || !test_binary_op_8(&constant_time_eq_8, "constant_time_eq_8",
-                                     a, b, a == b)
-                || !test_binary_op_8(&constant_time_eq_8, "constant_time_eq_8",
-                                     b, a, b == a))
+                              a, b, a < b)
+            || !test_binary_op_8(&constant_time_lt_8, "constant_time_lt_8",
+                                 b, a, b < a)
+            || !test_binary_op_8(&constant_time_ge_8, "constant_time_ge_8",
+                                 a, b, a >= b)
+            || !test_binary_op_8(&constant_time_ge_8, "constant_time_ge_8",
+                                 b, a, b >= a)
+            || !test_binary_op_8(&constant_time_eq_8, "constant_time_eq_8",
+                                 a, b, a == b)
+            || !test_binary_op_8(&constant_time_eq_8, "constant_time_eq_8",
+                                 b, a, b == a))
             ret = 0;
     }
     return ret;
@@ -313,19 +313,19 @@ static int test_binops_s(int i)
         size_t b = test_values_s[j];
 
         if (!test_select_s(a, b)
-                || !test_eq_s(a, b)
-                || !test_binary_op_s(&constant_time_lt_s, "constant_time_lt_s",
-                                     a, b, a < b)
-                || !test_binary_op_s(&constant_time_lt_s, "constant_time_lt_s",
-                                     b, a, b < a)
-                || !test_binary_op_s(&constant_time_ge_s, "constant_time_ge_s",
-                                     a, b, a >= b)
-                || !test_binary_op_s(&constant_time_ge_s, "constant_time_ge_s",
-                                     b, a, b >= a)
-                || !test_binary_op_s(&constant_time_eq_s, "constant_time_eq_s",
-                                     a, b, a == b)
-                || !test_binary_op_s(&constant_time_eq_s, "constant_time_eq_s",
-                                     b, a, b == a))
+            || !test_eq_s(a, b)
+            || !test_binary_op_s(&constant_time_lt_s, "constant_time_lt_s",
+                                 a, b, a < b)
+            || !test_binary_op_s(&constant_time_lt_s, "constant_time_lt_s",
+                                 b, a, b < a)
+            || !test_binary_op_s(&constant_time_ge_s, "constant_time_ge_s",
+                                 a, b, a >= b)
+            || !test_binary_op_s(&constant_time_ge_s, "constant_time_ge_s",
+                                 b, a, b >= a)
+            || !test_binary_op_s(&constant_time_eq_s, "constant_time_eq_s",
+                                 a, b, a == b)
+            || !test_binary_op_s(&constant_time_eq_s, "constant_time_eq_s",
+                                 b, a, b == a))
             ret = 0;
     }
     return ret;
@@ -341,8 +341,8 @@ static int test_signed(int i)
         int d = signed_test_values[j];
 
         if (!test_select_int(c, d)
-                || !test_eq_int(c, d)
-                || !test_eq_int_8(c, d))
+            || !test_eq_int(c, d)
+            || !test_eq_int_8(c, d))
             ret = 0;
     }
     return ret;
@@ -388,7 +388,7 @@ static int test_64values(int i)
 
         if (!test_binary_op_64(&constant_time_lt_64, "constant_time_lt_64",
                                g, h, g < h)
-                || !test_select_64(g, h)) {
+            || !test_select_64(g, h)) {
             TEST_info("test_64values failed i=%d j=%d", i, j);
             ret = 0;
         }

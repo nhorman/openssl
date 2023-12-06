@@ -44,13 +44,15 @@ const OPTIONS verify_options[] = {
     {"engine", OPT_ENGINE, 's', "Use engine, possibly a hardware device"},
 #endif
     {"verbose", OPT_VERBOSE, '-',
-        "Print extra information about the operations being performed."},
-    {"nameopt", OPT_NAMEOPT, 's', "Certificate subject/issuer name printing options"},
+     "Print extra information about the operations being performed."},
+    {"nameopt", OPT_NAMEOPT, 's',
+     "Certificate subject/issuer name printing options"},
 
     OPT_SECTION("Certificate chain"),
     {"trusted", OPT_TRUSTED, '<', "A file of trusted certificates"},
     {"CAfile", OPT_CAFILE, '<', "A file of trusted certificates"},
-    {"CApath", OPT_CAPATH, '/', "A directory of files with trusted certificates"},
+    {"CApath", OPT_CAPATH, '/',
+     "A directory of files with trusted certificates"},
     {"CAstore", OPT_CASTORE, ':', "URI to a store of trusted certificates"},
     {"no-CAfile", OPT_NOCAFILE, '-',
      "Do not load the default trusted certificates file"},
@@ -60,11 +62,11 @@ const OPTIONS verify_options[] = {
      "Do not load trusted certificates from the default certificates store"},
     {"untrusted", OPT_UNTRUSTED, '<', "A file of untrusted certificates"},
     {"CRLfile", OPT_CRLFILE, '<',
-        "File containing one or more CRL's (in PEM format) to load"},
+     "File containing one or more CRL's (in PEM format) to load"},
     {"crl_download", OPT_CRL_DOWNLOAD, '-',
-        "Try downloading CRL information for certificates via their CDP entries"},
+     "Try downloading CRL information for certificates via their CDP entries"},
     {"show_chain", OPT_SHOW_CHAIN, '-',
-        "Display information about the certificate chain"},
+     "Display information about the certificate chain"},
 
     OPT_V_OPTIONS,
     {"vfyopt", OPT_VFYOPT, 's', "Verification parameter in n:v form"},
@@ -95,102 +97,104 @@ int verify_main(int argc, char **argv)
     prog = opt_init(argc, argv, verify_options);
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_EOF:
-        case OPT_ERR:
- opthelp:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto end;
-        case OPT_HELP:
-            opt_help(verify_options);
-            BIO_printf(bio_err, "\nRecognized certificate chain purposes:\n");
-            for (i = 0; i < X509_PURPOSE_get_count(); i++) {
-                X509_PURPOSE *ptmp = X509_PURPOSE_get0(i);
+            case OPT_EOF:
+            case OPT_ERR:
+opthelp:
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
+                goto end;
+            case OPT_HELP:
+                opt_help(verify_options);
+                BIO_printf(bio_err,
+                           "\nRecognized certificate chain purposes:\n");
+                for (i = 0; i < X509_PURPOSE_get_count(); i++) {
+                    X509_PURPOSE *ptmp = X509_PURPOSE_get0(i);
 
-                BIO_printf(bio_err, "  %-15s  %s\n",
-                        X509_PURPOSE_get0_sname(ptmp),
-                        X509_PURPOSE_get0_name(ptmp));
-            }
+                    BIO_printf(bio_err, "  %-15s  %s\n",
+                               X509_PURPOSE_get0_sname(ptmp),
+                               X509_PURPOSE_get0_name(ptmp));
+                }
 
-            BIO_printf(bio_err, "Recognized certificate policy names:\n");
-            for (i = 0; i < X509_VERIFY_PARAM_get_count(); i++) {
-                const X509_VERIFY_PARAM *vptmp = X509_VERIFY_PARAM_get0(i);
+                BIO_printf(bio_err, "Recognized certificate policy names:\n");
+                for (i = 0; i < X509_VERIFY_PARAM_get_count(); i++) {
+                    const X509_VERIFY_PARAM *vptmp = X509_VERIFY_PARAM_get0(i);
 
-                BIO_printf(bio_err, "  %s\n",
-                        X509_VERIFY_PARAM_get0_name(vptmp));
-            }
-            ret = 0;
-            goto end;
-        case OPT_V_CASES:
-            if (!opt_verify(o, vpm))
+                    BIO_printf(bio_err, "  %s\n",
+                               X509_VERIFY_PARAM_get0_name(vptmp));
+                }
+                ret = 0;
                 goto end;
-            vpmtouched++;
-            break;
-        case OPT_CAPATH:
-            CApath = opt_arg();
-            break;
-        case OPT_CAFILE:
-            CAfile = opt_arg();
-            break;
-        case OPT_CASTORE:
-            CAstore = opt_arg();
-            break;
-        case OPT_NOCAPATH:
-            noCApath = 1;
-            break;
-        case OPT_NOCAFILE:
-            noCAfile = 1;
-            break;
-        case OPT_NOCASTORE:
-            noCAstore = 1;
-            break;
-        case OPT_UNTRUSTED:
-            /* Zero or more times */
-            if (!load_certs(opt_arg(), 0, &untrusted, NULL,
-                            "untrusted certificates"))
-                goto end;
-            break;
-        case OPT_TRUSTED:
-            /* Zero or more times */
-            noCAfile = 1;
-            noCApath = 1;
-            noCAstore = 1;
-            if (!load_certs(opt_arg(), 0, &trusted, NULL, "trusted certificates"))
-                goto end;
-            break;
-        case OPT_CRLFILE:
-            /* Zero or more times */
-            if (!load_crls(opt_arg(), &crls, NULL, "other CRLs"))
-                goto end;
-            break;
-        case OPT_CRL_DOWNLOAD:
-            crl_download = 1;
-            break;
-        case OPT_ENGINE:
-            if ((e = setup_engine(opt_arg(), 0)) == NULL) {
-                /* Failure message already displayed */
-                goto end;
-            }
-            break;
-        case OPT_SHOW_CHAIN:
-            show_chain = 1;
-            break;
-        case OPT_NAMEOPT:
-            if (!set_nameopt(opt_arg()))
-                goto end;
-            break;
-        case OPT_VFYOPT:
-            if (!vfyopts)
-                vfyopts = sk_OPENSSL_STRING_new_null();
-            if (!vfyopts || !sk_OPENSSL_STRING_push(vfyopts, opt_arg()))
-                goto opthelp;
-            break;
-        case OPT_VERBOSE:
-            v_verbose = 1;
-            break;
-        case OPT_PROV_CASES:
-            if (!opt_provider(o))
-                goto end;
-            break;
+            case OPT_V_CASES:
+                if (!opt_verify(o, vpm))
+                    goto end;
+                vpmtouched++;
+                break;
+            case OPT_CAPATH:
+                CApath = opt_arg();
+                break;
+            case OPT_CAFILE:
+                CAfile = opt_arg();
+                break;
+            case OPT_CASTORE:
+                CAstore = opt_arg();
+                break;
+            case OPT_NOCAPATH:
+                noCApath = 1;
+                break;
+            case OPT_NOCAFILE:
+                noCAfile = 1;
+                break;
+            case OPT_NOCASTORE:
+                noCAstore = 1;
+                break;
+            case OPT_UNTRUSTED:
+                /* Zero or more times */
+                if (!load_certs(opt_arg(), 0, &untrusted, NULL,
+                                "untrusted certificates"))
+                    goto end;
+                break;
+            case OPT_TRUSTED:
+                /* Zero or more times */
+                noCAfile = 1;
+                noCApath = 1;
+                noCAstore = 1;
+                if (!load_certs(opt_arg(), 0, &trusted, NULL,
+                                "trusted certificates"))
+                    goto end;
+                break;
+            case OPT_CRLFILE:
+                /* Zero or more times */
+                if (!load_crls(opt_arg(), &crls, NULL, "other CRLs"))
+                    goto end;
+                break;
+            case OPT_CRL_DOWNLOAD:
+                crl_download = 1;
+                break;
+            case OPT_ENGINE:
+                if ((e = setup_engine(opt_arg(), 0)) == NULL) {
+                    /* Failure message already displayed */
+                    goto end;
+                }
+                break;
+            case OPT_SHOW_CHAIN:
+                show_chain = 1;
+                break;
+            case OPT_NAMEOPT:
+                if (!set_nameopt(opt_arg()))
+                    goto end;
+                break;
+            case OPT_VFYOPT:
+                if (!vfyopts)
+                    vfyopts = sk_OPENSSL_STRING_new_null();
+                if (!vfyopts || !sk_OPENSSL_STRING_push(vfyopts, opt_arg()))
+                    goto opthelp;
+                break;
+            case OPT_VERBOSE:
+                v_verbose = 1;
+                break;
+            case OPT_PROV_CASES:
+                if (!opt_provider(o))
+                    goto end;
+                break;
         }
     }
 
@@ -231,7 +235,7 @@ int verify_main(int argc, char **argv)
                 ret = -1;
     }
 
- end:
+end:
     X509_VERIFY_PARAM_free(vpm);
     X509_STORE_free(store);
     OSSL_STACK_OF_X509_free(untrusted);
@@ -317,7 +321,7 @@ static int check(X509_STORE *ctx, const char *file,
     }
     X509_STORE_CTX_free(csc);
 
- end:
+end:
     if (i <= 0)
         ERR_print_errors(bio_err);
     X509_free(x);
@@ -333,15 +337,15 @@ static int cb(int ok, X509_STORE_CTX *ctx)
     if (!ok) {
         if (current_cert != NULL) {
             X509_NAME_print_ex(bio_err,
-                            X509_get_subject_name(current_cert),
-                            0, get_nameopt());
+                               X509_get_subject_name(current_cert),
+                               0, get_nameopt());
             BIO_printf(bio_err, "\n");
         }
         BIO_printf(bio_err, "%serror %d at %d depth lookup: %s\n",
-               X509_STORE_CTX_get0_parent_ctx(ctx) ? "[CRL path] " : "",
-               cert_error,
-               X509_STORE_CTX_get_error_depth(ctx),
-               X509_verify_cert_error_string(cert_error));
+                   X509_STORE_CTX_get0_parent_ctx(ctx) ? "[CRL path] " : "",
+                   cert_error,
+                   X509_STORE_CTX_get_error_depth(ctx),
+                   X509_verify_cert_error_string(cert_error));
 
         /*
          * Pretend that some errors are ok, so they don't stop further
@@ -350,37 +354,37 @@ static int cb(int ok, X509_STORE_CTX *ctx)
          * no actual errors, even if the returned value was positive.
          */
         switch (cert_error) {
-        case X509_V_ERR_NO_EXPLICIT_POLICY:
-            policies_print(ctx);
+            case X509_V_ERR_NO_EXPLICIT_POLICY:
+                policies_print(ctx);
             /* fall through */
-        case X509_V_ERR_CERT_HAS_EXPIRED:
+            case X509_V_ERR_CERT_HAS_EXPIRED:
             /* Continue even if the leaf is a self-signed cert */
-        case X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT:
+            case X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT:
             /* Continue after extension errors too */
-        case X509_V_ERR_INVALID_CA:
-        case X509_V_ERR_INVALID_NON_CA:
-        case X509_V_ERR_PATH_LENGTH_EXCEEDED:
-        case X509_V_ERR_CRL_HAS_EXPIRED:
-        case X509_V_ERR_CRL_NOT_YET_VALID:
-        case X509_V_ERR_UNHANDLED_CRITICAL_EXTENSION:
+            case X509_V_ERR_INVALID_CA:
+            case X509_V_ERR_INVALID_NON_CA:
+            case X509_V_ERR_PATH_LENGTH_EXCEEDED:
+            case X509_V_ERR_CRL_HAS_EXPIRED:
+            case X509_V_ERR_CRL_NOT_YET_VALID:
+            case X509_V_ERR_UNHANDLED_CRITICAL_EXTENSION:
             /* errors due to strict conformance checking (-x509_strict) */
-        case X509_V_ERR_INVALID_PURPOSE:
-        case X509_V_ERR_PATHLEN_INVALID_FOR_NON_CA:
-        case X509_V_ERR_PATHLEN_WITHOUT_KU_KEY_CERT_SIGN:
-        case X509_V_ERR_CA_BCONS_NOT_CRITICAL:
-        case X509_V_ERR_CA_CERT_MISSING_KEY_USAGE:
-        case X509_V_ERR_KU_KEY_CERT_SIGN_INVALID_FOR_NON_CA:
-        case X509_V_ERR_ISSUER_NAME_EMPTY:
-        case X509_V_ERR_SUBJECT_NAME_EMPTY:
-        case X509_V_ERR_EMPTY_SUBJECT_SAN_NOT_CRITICAL:
-        case X509_V_ERR_EMPTY_SUBJECT_ALT_NAME:
-        case X509_V_ERR_SIGNATURE_ALGORITHM_INCONSISTENCY:
-        case X509_V_ERR_AUTHORITY_KEY_IDENTIFIER_CRITICAL:
-        case X509_V_ERR_SUBJECT_KEY_IDENTIFIER_CRITICAL:
-        case X509_V_ERR_MISSING_AUTHORITY_KEY_IDENTIFIER:
-        case X509_V_ERR_MISSING_SUBJECT_KEY_IDENTIFIER:
-        case X509_V_ERR_EXTENSIONS_REQUIRE_VERSION_3:
-            ok = 1;
+            case X509_V_ERR_INVALID_PURPOSE:
+            case X509_V_ERR_PATHLEN_INVALID_FOR_NON_CA:
+            case X509_V_ERR_PATHLEN_WITHOUT_KU_KEY_CERT_SIGN:
+            case X509_V_ERR_CA_BCONS_NOT_CRITICAL:
+            case X509_V_ERR_CA_CERT_MISSING_KEY_USAGE:
+            case X509_V_ERR_KU_KEY_CERT_SIGN_INVALID_FOR_NON_CA:
+            case X509_V_ERR_ISSUER_NAME_EMPTY:
+            case X509_V_ERR_SUBJECT_NAME_EMPTY:
+            case X509_V_ERR_EMPTY_SUBJECT_SAN_NOT_CRITICAL:
+            case X509_V_ERR_EMPTY_SUBJECT_ALT_NAME:
+            case X509_V_ERR_SIGNATURE_ALGORITHM_INCONSISTENCY:
+            case X509_V_ERR_AUTHORITY_KEY_IDENTIFIER_CRITICAL:
+            case X509_V_ERR_SUBJECT_KEY_IDENTIFIER_CRITICAL:
+            case X509_V_ERR_MISSING_AUTHORITY_KEY_IDENTIFIER:
+            case X509_V_ERR_MISSING_SUBJECT_KEY_IDENTIFIER:
+            case X509_V_ERR_EXTENSIONS_REQUIRE_VERSION_3:
+                ok = 1;
         }
         return ok;
 

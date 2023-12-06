@@ -70,14 +70,20 @@ typedef struct _iosb {           /* Copied from IOSBDEF.H for Alpha  */
 
 #  if !defined(__VAXC)
 #   define iosb$w_status iosb$r_io_get.iosb$r_io_64.iosb$w_status
-#   define iosb$w_bcnt iosb$r_io_get.iosb$r_io_64.iosb$r_devdepend.iosb$r_bcnt_16.iosb$w_bcnt
-#   define iosb$r_l        iosb$r_io_get.iosb$r_io_64.iosb$r_devdepend.iosb$r_bcnt_16.iosb$r_l
+#   define iosb$w_bcnt iosb$r_io_get.iosb$r_io_64.iosb$r_devdepend. \
+        iosb$r_bcnt_16.iosb$w_bcnt
+#   define iosb$r_l        iosb$r_io_get.iosb$r_io_64.iosb$r_devdepend. \
+        iosb$r_bcnt_16.iosb$r_l
 #   define iosb$l_dev_depend iosb$r_l.iosb$l_dev_depend
 #   define iosb$l_pid iosb$r_l.iosb$l_pid
-#   define iosb$l_bcnt iosb$r_io_get.iosb$r_io_64.iosb$r_devdepend.iosb$r_bcnt_32.iosb$l_bcnt
-#   define iosb$w_dev_depend_high iosb$r_io_get.iosb$r_io_64.iosb$r_devdepend.iosb$r_bcnt_32.iosb$w_dev_depend_high
-#   define iosb$l_getxxi_status iosb$r_io_get.iosb$r_get_64.iosb$r_l_status.iosb$l_getxxi_status
-#   define iosb$l_reg_status iosb$r_io_get.iosb$r_get_64.iosb$r_l_status.iosb$l_reg_status
+#   define iosb$l_bcnt iosb$r_io_get.iosb$r_io_64.iosb$r_devdepend. \
+        iosb$r_bcnt_32.iosb$l_bcnt
+#   define iosb$w_dev_depend_high iosb$r_io_get.iosb$r_io_64.iosb$r_devdepend. \
+        iosb$r_bcnt_32.iosb$w_dev_depend_high
+#   define iosb$l_getxxi_status iosb$r_io_get.iosb$r_get_64.iosb$r_l_status. \
+        iosb$l_getxxi_status
+#   define iosb$l_reg_status iosb$r_io_get.iosb$r_get_64.iosb$r_l_status. \
+        iosb$l_reg_status
 #  endif          /* #if !defined(__VAXC) */
 
 # endif  /* End of IOSBDEF */
@@ -144,7 +150,7 @@ int main (int argc, char *argv[], char *envp[])
         ** Process the terminal input
         */
         LogMessage ("Waiting on terminal I/O ...\n");
-        len = recv (TermSock, TermBuff, sizeof(TermBuff), 0) ;
+        len = recv (TermSock, TermBuff, sizeof(TermBuff), 0);
         TermBuff[len] = '\0';
         LogMessage ("Received terminal I/O [%s]", TermBuff);
 
@@ -167,106 +173,109 @@ int main (int argc, char *argv[], char *envp[])
 int TerminalSocket (int FunctionCode, int *ReturnSocket)
 {
     int status;
-    $DESCRIPTOR (TerminalDeviceDesc, "SYS$COMMAND");
+    $ DESCRIPTOR (TerminalDeviceDesc, "SYS$COMMAND");
 
     /*
     ** Process the requested function code
     */
     switch (FunctionCode) {
-    case TERM_SOCK_CREATE:
-        /*
-        ** Create a socket pair
-        */
-        status = CreateSocketPair (AF_INET, SOCK_STREAM, 0, TerminalSocketPair);
-        if (status == -1) {
-            LogMessage ("TerminalSocket: CreateSocketPair () - %08X", status);
-            if (TerminalSocketPair[0])
+        case TERM_SOCK_CREATE:
+            /*
+            ** Create a socket pair
+            */
+            status = CreateSocketPair (AF_INET, SOCK_STREAM, 0,
+                                       TerminalSocketPair);
+            if (status == -1) {
+                LogMessage ("TerminalSocket: CreateSocketPair () - %08X",
+                            status);
+                if (TerminalSocketPair[0])
+                    close (TerminalSocketPair[0]);
+                if (TerminalSocketPair[1])
+                    close (TerminalSocketPair[1]);
+                return TERM_SOCK_FAILURE;
+            }
+
+            /*
+            ** Assign a channel to the terminal device
+            */
+            status = sys$assign (&TerminalDeviceDesc,
+                                 &TerminalDeviceChan,
+                                 0, 0, 0);
+            if (!(status & 1)) {
+                LogMessage ("TerminalSocket: SYS$ASSIGN () - %08X", status);
                 close (TerminalSocketPair[0]);
-            if (TerminalSocketPair[1])
                 close (TerminalSocketPair[1]);
-            return TERM_SOCK_FAILURE;
-        }
+                return TERM_SOCK_FAILURE;
+            }
 
-        /*
-        ** Assign a channel to the terminal device
-        */
-        status = sys$assign (&TerminalDeviceDesc,
-                             &TerminalDeviceChan,
-                             0, 0, 0);
-        if (! (status & 1)) {
-            LogMessage ("TerminalSocket: SYS$ASSIGN () - %08X", status);
+            /*
+            ** Queue an async IO to the terminal device
+            */
+            status = sys$qio (EFN$C_ENF,
+                              TerminalDeviceChan,
+                              IO$_READVBLK,
+                              &TerminalDeviceIosb,
+                              TerminalDeviceAst,
+                              0,
+                              TerminalDeviceBuff,
+                              sizeof(TerminalDeviceBuff) - 2,
+                              0, 0, 0, 0);
+            if (!(status & 1)) {
+                LogMessage ("TerminalSocket: SYS$QIO () - %08X", status);
+                close (TerminalSocketPair[0]);
+                close (TerminalSocketPair[1]);
+                return TERM_SOCK_FAILURE;
+            }
+
+            /*
+            ** Return the input side of the socket pair
+            */
+            *ReturnSocket = TerminalSocketPair[1];
+            break;
+
+        case TERM_SOCK_DELETE:
+            /*
+            ** Cancel any pending IO on the terminal channel
+            */
+            status = sys$cancel (TerminalDeviceChan);
+            if (!(status & 1)) {
+                LogMessage ("TerminalSocket: SYS$CANCEL () - %08X", status);
+                close (TerminalSocketPair[0]);
+                close (TerminalSocketPair[1]);
+                return TERM_SOCK_FAILURE;
+            }
+
+            /*
+            ** Deassign the terminal channel
+            */
+            status = sys$dassgn (TerminalDeviceChan);
+            if (!(status & 1)) {
+                LogMessage ("TerminalSocket: SYS$DASSGN () - %08X", status);
+                close (TerminalSocketPair[0]);
+                close (TerminalSocketPair[1]);
+                return TERM_SOCK_FAILURE;
+            }
+
+            /*
+            ** Close the terminal socket pair
+            */
             close (TerminalSocketPair[0]);
             close (TerminalSocketPair[1]);
+
+            /*
+            ** Return the initialized socket
+            */
+            *ReturnSocket = 0;
+            break;
+
+        default:
+            /*
+            ** Invalid function code
+            */
+            LogMessage ("TerminalSocket: Invalid Function Code - %d",
+                        FunctionCode);
             return TERM_SOCK_FAILURE;
-        }
-
-        /*
-        ** Queue an async IO to the terminal device
-        */
-        status = sys$qio (EFN$C_ENF,
-                          TerminalDeviceChan,
-                          IO$_READVBLK,
-                          &TerminalDeviceIosb,
-                          TerminalDeviceAst,
-                          0,
-                          TerminalDeviceBuff,
-                          sizeof(TerminalDeviceBuff) - 2,
-                          0, 0, 0, 0);
-        if (! (status & 1)) {
-            LogMessage ("TerminalSocket: SYS$QIO () - %08X", status);
-            close (TerminalSocketPair[0]);
-            close (TerminalSocketPair[1]);
-            return TERM_SOCK_FAILURE;
-        }
-
-        /*
-        ** Return the input side of the socket pair
-        */
-        *ReturnSocket = TerminalSocketPair[1];
-        break;
-
-    case TERM_SOCK_DELETE:
-        /*
-        ** Cancel any pending IO on the terminal channel
-        */
-        status = sys$cancel (TerminalDeviceChan);
-        if (! (status & 1)) {
-            LogMessage ("TerminalSocket: SYS$CANCEL () - %08X", status);
-            close (TerminalSocketPair[0]);
-            close (TerminalSocketPair[1]);
-            return TERM_SOCK_FAILURE;
-        }
-
-        /*
-        ** Deassign the terminal channel
-        */
-        status = sys$dassgn (TerminalDeviceChan);
-        if (! (status & 1)) {
-            LogMessage ("TerminalSocket: SYS$DASSGN () - %08X", status);
-            close (TerminalSocketPair[0]);
-            close (TerminalSocketPair[1]);
-            return TERM_SOCK_FAILURE;
-        }
-
-        /*
-        ** Close the terminal socket pair
-        */
-        close (TerminalSocketPair[0]);
-        close (TerminalSocketPair[1]);
-
-        /*
-        ** Return the initialized socket
-        */
-        *ReturnSocket = 0;
-        break;
-
-    default:
-        /*
-        ** Invalid function code
-        */
-        LogMessage ("TerminalSocket: Invalid Function Code - %d", FunctionCode);
-        return TERM_SOCK_FAILURE;
-        break;
+            break;
     }
 
     /*
@@ -287,7 +296,7 @@ static int CreateSocketPair (int SocketFamily,
     struct dsc$descriptor AscTimeDesc = {0, DSC$K_DTYPE_T, DSC$K_CLASS_S, NULL};
     static const char* LocalHostAddr = {"127.0.0.1"};
     unsigned short TcpAcceptChan = 0,
-        TcpDeviceChan = 0;
+                   TcpDeviceChan = 0;
     unsigned long BinTimeBuff[2];
     struct sockaddr_in sin;
     char AscTimeBuff[32];
@@ -304,7 +313,7 @@ static int CreateSocketPair (int SocketFamily,
     int SockDesc1 = 0,
         SockDesc2 = 0;
     SPTB sptb;
-    $DESCRIPTOR (TcpDeviceDesc, "TCPIP$DEVICE");
+    $ DESCRIPTOR (TcpDeviceDesc, "TCPIP$DEVICE");
 
     /*
     ** Create a socket
@@ -357,7 +366,7 @@ static int CreateSocketPair (int SocketFamily,
     AscTimeDesc.dsc$w_length = strlen (AscTimeBuff);
     AscTimeDesc.dsc$a_pointer = AscTimeBuff;
     status = sys$bintim (&AscTimeDesc, BinTimeBuff);
-    if (! (status & 1)) {
+    if (!(status & 1)) {
         LogMessage ("CreateSocketPair: SYS$BINTIM () - %08X", status);
         close (SockDesc1);
         return -1;
@@ -368,7 +377,7 @@ static int CreateSocketPair (int SocketFamily,
     ** This is the channel that ends up being connected to.
     */
     status = sys$assign (&TcpDeviceDesc, &TcpDeviceChan, 0, 0, 0);
-    if (! (status & 1)) {
+    if (!(status & 1)) {
         LogMessage ("CreateSocketPair: SYS$ASSIGN () - %08X", status);
         close (SockDesc1);
         return -1;
@@ -389,7 +398,7 @@ static int CreateSocketPair (int SocketFamily,
                       0, 0, 0, 0, 0,
                       &TcpDeviceChan,
                       0, 0);
-    if (! (status & 1)) {
+    if (!(status & 1)) {
         LogMessage ("CreateSocketPair: SYS$QIO () - %08X", status);
         close (SockDesc1);
         sys$dassgn (TcpDeviceChan);
@@ -405,7 +414,7 @@ static int CreateSocketPair (int SocketFamily,
         sys$cancel (TcpAcceptChan);
         close (SockDesc1);
         sys$dassgn (TcpDeviceChan);
-        return (-1) ;
+        return (-1);
     }
 
     /*
@@ -423,7 +432,7 @@ static int CreateSocketPair (int SocketFamily,
                          SocketPairTimeoutAst,
                          &sptb,
                          0);
-    if (! (status & 1)) {
+    if (!(status & 1)) {
         LogMessage ("CreateSocketPair: SYS$SETIMR () - %08X", status);
         sys$cancel (TcpAcceptChan);
         close (SockDesc1);
@@ -435,10 +444,10 @@ static int CreateSocketPair (int SocketFamily,
     /*
     ** Now issue the connect
     */
-    memset ((char *) &sin, 0, sizeof(sin)) ;
+    memset ((char *) &sin, 0, sizeof(sin));
     sin.sin_family = SocketFamily;
-    sin.sin_addr.s_addr = inet_addr (LocalHostAddr) ;
-    sin.sin_port = LocalHostPort ;
+    sin.sin_addr.s_addr = inet_addr (LocalHostAddr);
+    sin.sin_port = LocalHostPort;
 
     status = connect (SockDesc2, (struct sockaddr *) &sin, sizeof(sin));
     if (status < 0) {
@@ -457,7 +466,7 @@ static int CreateSocketPair (int SocketFamily,
     ** a timeout.
     */
     status = sys$synch (EFN$C_ENF, &iosb);
-    if (! (iosb.iosb$w_status & 1)) {
+    if (!(iosb.iosb$w_status & 1)) {
         if (iosb.iosb$w_status == SS$_ABORT)
             LogMessage ("CreateSocketPair: SYS$QIO(iosb) timeout");
         else {
@@ -478,11 +487,11 @@ static int CreateSocketPair (int SocketFamily,
     */
     sys$cantim (&sptb, 0);
 
-    close (SockDesc1) ;
-    SocketPair[0] = SockDesc2 ;
+    close (SockDesc1);
+    SocketPair[0] = SockDesc2;
     SocketPair[1] = socket_fd (TcpDeviceChan);
 
-    return (0) ;
+    return (0);
 
 }
 

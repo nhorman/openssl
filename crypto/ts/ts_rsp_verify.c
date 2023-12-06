@@ -130,8 +130,8 @@ int TS_RESP_verify_signature(PKCS7 *token, STACK_OF(X509) *certs,
     untrusted = sk_X509_new_reserve(NULL, sk_X509_num(certs)
                                     + sk_X509_num(token->d.sign->cert));
     if (untrusted == NULL
-            || !X509_add_certs(untrusted, certs, 0)
-            || !X509_add_certs(untrusted, token->d.sign->cert, 0))
+        || !X509_add_certs(untrusted, certs, 0)
+        || !X509_add_certs(untrusted, token->d.sign->cert, 0))
         goto err;
     if (!ts_verify_cert(store, untrusted, signer, &chain))
         goto err;
@@ -155,7 +155,7 @@ int TS_RESP_verify_signature(PKCS7 *token, STACK_OF(X509) *certs,
     }
     ret = 1;
 
- err:
+err:
     BIO_free_all(p7bio);
     sk_X509_free(untrusted);
     OSSL_STACK_OF_X509_free(chain);
@@ -258,7 +258,7 @@ int TS_RESP_verify_response(TS_VERIFY_CTX *ctx, TS_RESP *response)
         goto err;
     ret = 1;
 
- err:
+err:
     return ret;
 }
 
@@ -302,7 +302,7 @@ static int int_ts_RESP_verify_token(TS_VERIFY_CTX *ctx,
 
     /* Some options require us to also check the signature */
     if (((flags & TS_VFY_SIGNER) && tsa_name != NULL)
-            || (flags & TS_VFY_TSA_NAME)) {
+        || (flags & TS_VFY_TSA_NAME)) {
         flags |= TS_VFY_SIGNATURE;
     }
 
@@ -341,7 +341,7 @@ static int int_ts_RESP_verify_token(TS_VERIFY_CTX *ctx,
     }
     ret = 1;
 
- err:
+err:
     X509_free(signer);
     X509_ALGOR_free(md_alg);
     OPENSSL_free(imprint);
@@ -472,7 +472,7 @@ static int ts_compute_imprint(BIO *data, TS_TST_INFO *tst_info,
     EVP_MD_CTX_free(md_ctx);
 
     return 1;
- err:
+err:
     EVP_MD_CTX_free(md_ctx);
     EVP_MD_free(md);
     X509_ALGOR_free(*md_alg);
@@ -504,8 +504,8 @@ static int ts_check_imprints(X509_ALGOR *algor_a,
     }
 
     ret = len_a == (unsigned)ASN1_STRING_length(b->hashed_msg) &&
-        memcmp(imprint_a, ASN1_STRING_get0_data(b->hashed_msg), len_a) == 0;
- err:
+          memcmp(imprint_a, ASN1_STRING_get0_data(b->hashed_msg), len_a) == 0;
+err:
     if (!ret)
         ERR_raise(ERR_LIB_TS, TS_R_MESSAGE_IMPRINT_MISMATCH);
     return ret;

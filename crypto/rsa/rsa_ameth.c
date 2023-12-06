@@ -91,15 +91,15 @@ static int rsa_pub_decode(EVP_PKEY *pkey, const X509_PUBKEY *pubkey)
 
     RSA_clear_flags(rsa, RSA_FLAG_TYPE_MASK);
     switch (pkey->ameth->pkey_id) {
-    case EVP_PKEY_RSA:
-        RSA_set_flags(rsa, RSA_FLAG_TYPE_RSA);
-        break;
-    case EVP_PKEY_RSA_PSS:
-        RSA_set_flags(rsa, RSA_FLAG_TYPE_RSASSAPSS);
-        break;
-    default:
-        /* Leave the type bits zero */
-        break;
+        case EVP_PKEY_RSA:
+            RSA_set_flags(rsa, RSA_FLAG_TYPE_RSA);
+            break;
+        case EVP_PKEY_RSA_PSS:
+            RSA_set_flags(rsa, RSA_FLAG_TYPE_RSASSAPSS);
+            break;
+        default:
+            /* Leave the type bits zero */
+            break;
     }
 
     if (!EVP_PKEY_assign(pkey, pkey->ameth->pkey_id, rsa)) {
@@ -116,7 +116,7 @@ static int rsa_pub_cmp(const EVP_PKEY *a, const EVP_PKEY *b)
      * cards.
      */
     if (((RSA_flags(a->pkey.rsa) & RSA_METHOD_FLAG_NO_CHECK))
-            || (RSA_flags(b->pkey.rsa) & RSA_METHOD_FLAG_NO_CHECK)) {
+        || (RSA_flags(b->pkey.rsa) & RSA_METHOD_FLAG_NO_CHECK)) {
         return 1;
     }
 
@@ -291,7 +291,7 @@ static int rsa_pss_param_print(BIO *bp, int pss_key, RSA_PSS_PARAMS *pss,
 
     rv = 1;
 
- err:
+err:
     X509_ALGOR_free(maskHash);
     return rv;
 
@@ -356,23 +356,23 @@ static int pkey_rsa_print(BIO *bp, const EVP_PKEY *pkey, int off, int priv)
                 if (!BIO_indent(bp, off, 128))
                     goto err;
                 switch (j) {
-                case 0:
-                    if (BIO_printf(bp, "prime%d:", i + 3) <= 0)
-                        goto err;
-                    bn = pinfo->r;
-                    break;
-                case 1:
-                    if (BIO_printf(bp, "exponent%d:", i + 3) <= 0)
-                        goto err;
-                    bn = pinfo->d;
-                    break;
-                case 2:
-                    if (BIO_printf(bp, "coefficient%d:", i + 3) <= 0)
-                        goto err;
-                    bn = pinfo->t;
-                    break;
-                default:
-                    break;
+                    case 0:
+                        if (BIO_printf(bp, "prime%d:", i + 3) <= 0)
+                            goto err;
+                        bn = pinfo->r;
+                        break;
+                    case 1:
+                        if (BIO_printf(bp, "exponent%d:", i + 3) <= 0)
+                            goto err;
+                        bn = pinfo->d;
+                        break;
+                    case 2:
+                        if (BIO_printf(bp, "coefficient%d:", i + 3) <= 0)
+                            goto err;
+                        bn = pinfo->t;
+                        break;
+                    default:
+                        break;
                 }
                 if (!ASN1_bn_print(bp, "", bn, NULL, off))
                     goto err;
@@ -382,7 +382,7 @@ static int pkey_rsa_print(BIO *bp, const EVP_PKEY *pkey, int off, int priv)
     if (pkey_is_pss(pkey) && !rsa_pss_param_print(bp, 1, x->pss, off))
         goto err;
     ret = 1;
- err:
+err:
     return ret;
 }
 
@@ -424,22 +424,22 @@ static int rsa_pkey_ctrl(EVP_PKEY *pkey, int op, long arg1, void *arg2)
     int min_saltlen;
 
     switch (op) {
-    case ASN1_PKEY_CTRL_DEFAULT_MD_NID:
-        if (pkey->pkey.rsa->pss != NULL) {
-            if (!ossl_rsa_pss_get_param(pkey->pkey.rsa->pss, &md, &mgf1md,
-                                        &min_saltlen)) {
-                ERR_raise(ERR_LIB_RSA, ERR_R_INTERNAL_ERROR);
-                return 0;
+        case ASN1_PKEY_CTRL_DEFAULT_MD_NID:
+            if (pkey->pkey.rsa->pss != NULL) {
+                if (!ossl_rsa_pss_get_param(pkey->pkey.rsa->pss, &md, &mgf1md,
+                                            &min_saltlen)) {
+                    ERR_raise(ERR_LIB_RSA, ERR_R_INTERNAL_ERROR);
+                    return 0;
+                }
+                *(int *)arg2 = EVP_MD_get_type(md);
+                /* Return of 2 indicates this MD is mandatory */
+                return 2;
             }
-            *(int *)arg2 = EVP_MD_get_type(md);
-            /* Return of 2 indicates this MD is mandatory */
-            return 2;
-        }
-        *(int *)arg2 = NID_sha256;
-        return 1;
+            *(int *)arg2 = NID_sha256;
+            return 1;
 
-    default:
-        return -2;
+        default:
+            return -2;
     }
 }
 
@@ -510,7 +510,7 @@ RSA_PSS_PARAMS *ossl_rsa_pss_params_create(const EVP_MD *sigmd,
     if (!ossl_x509_algor_new_from_md(&pss->maskHash, mgf1md))
         goto err;
     return pss;
- err:
+err:
     RSA_PSS_PARAMS_free(pss);
     return NULL;
 }
@@ -580,7 +580,7 @@ int ossl_rsa_pss_to_ctx(EVP_MD_CTX *ctx, EVP_PKEY_CTX *pkctx,
     /* Carry on */
     rv = 1;
 
- err:
+err:
     RSA_PSS_PARAMS_free(pss);
     return rv;
 }
@@ -618,7 +618,7 @@ int ossl_rsa_pss_get_param(const RSA_PSS_PARAMS *pss, const EVP_MD **pmd,
 
     return ossl_rsa_pss_get_param_unverified(pss, pmd, pmgf1md, psaltlen,
                                              &trailerField)
-        && rsa_pss_verify_param(pmd, pmgf1md, psaltlen, &trailerField);
+           && rsa_pss_verify_param(pmd, pmgf1md, psaltlen, &trailerField);
 }
 
 /*
@@ -682,8 +682,8 @@ static int rsa_item_sign(EVP_MD_CTX *ctx, const ASN1_ITEM *it, const void *asn,
             }
             if (!X509_ALGOR_set0(alg1, OBJ_nid2obj(EVP_PKEY_RSA_PSS),
                                  V_ASN1_SEQUENCE, os1)) {
-                    ASN1_STRING_free(os1);
-                    return 0;
+                ASN1_STRING_free(os1);
+                return 0;
             }
             return 3;
         }
@@ -738,8 +738,8 @@ static int rsa_sig_info_set(X509_SIG_INFO *siginf, const X509_ALGOR *sigalg,
      * match and salt length must equal digest size
      */
     if ((mdnid == NID_sha256 || mdnid == NID_sha384 || mdnid == NID_sha512)
-            && mdnid == EVP_MD_get_type(mgf1md)
-            && saltlen == EVP_MD_get_size(md))
+        && mdnid == EVP_MD_get_type(mgf1md)
+        && saltlen == EVP_MD_get_size(md))
         flags = X509_SIG_INFO_TLS;
     else
         flags = 0;
@@ -764,7 +764,7 @@ static int rsa_sig_info_set(X509_SIG_INFO *siginf, const X509_ALGOR *sigalg,
     X509_SIG_INFO_set(siginf, mdnid, EVP_PKEY_RSA_PSS, secbits,
                       flags);
     rv = 1;
-    err:
+err:
     RSA_PSS_PARAMS_free(pss);
     return rv;
 }
@@ -833,7 +833,7 @@ static int rsa_int_export_to(const EVP_PKEY *from, int rsa_type,
     /* We export, the provider imports */
     rv = importer(to_keydata, selection, params);
 
- err:
+err:
     OSSL_PARAM_free(params);
     OSSL_PARAM_BLD_free(tmpl);
     return rv;
@@ -862,50 +862,51 @@ static int rsa_int_import_from(const OSSL_PARAM params[], void *vpctx,
         goto err;
 
     switch (rsa_type) {
-    case RSA_FLAG_TYPE_RSA:
-        /*
-         * Were PSS parameters filled in?
-         * In that case, something's wrong
-         */
-        if (!ossl_rsa_pss_params_30_is_unrestricted(&rsa_pss_params))
-            goto err;
-        break;
-    case RSA_FLAG_TYPE_RSASSAPSS:
-        /*
-         * Were PSS parameters filled in?  In that case, create the old
-         * RSA_PSS_PARAMS structure.  Otherwise, this is an unrestricted key.
-         */
-        if (!ossl_rsa_pss_params_30_is_unrestricted(&rsa_pss_params)) {
-            /* Create the older RSA_PSS_PARAMS from RSA_PSS_PARAMS_30 data */
-            int mdnid = ossl_rsa_pss_params_30_hashalg(&rsa_pss_params);
-            int mgf1mdnid = ossl_rsa_pss_params_30_maskgenhashalg(&rsa_pss_params);
-            int saltlen = ossl_rsa_pss_params_30_saltlen(&rsa_pss_params);
-            const EVP_MD *md = EVP_get_digestbynid(mdnid);
-            const EVP_MD *mgf1md = EVP_get_digestbynid(mgf1mdnid);
-
-            if ((rsa->pss = ossl_rsa_pss_params_create(md, mgf1md,
-                                                       saltlen)) == NULL)
+        case RSA_FLAG_TYPE_RSA:
+            /*
+             * Were PSS parameters filled in?
+             * In that case, something's wrong
+             */
+            if (!ossl_rsa_pss_params_30_is_unrestricted(&rsa_pss_params))
                 goto err;
-        }
-        break;
-    default:
-        /* RSA key sub-types we don't know how to handle yet */
-        goto err;
+            break;
+        case RSA_FLAG_TYPE_RSASSAPSS:
+            /*
+             * Were PSS parameters filled in?  In that case, create the old
+             * RSA_PSS_PARAMS structure.  Otherwise, this is an unrestricted key.
+             */
+            if (!ossl_rsa_pss_params_30_is_unrestricted(&rsa_pss_params)) {
+                /* Create the older RSA_PSS_PARAMS from RSA_PSS_PARAMS_30 data */
+                int mdnid = ossl_rsa_pss_params_30_hashalg(&rsa_pss_params);
+                int mgf1mdnid = ossl_rsa_pss_params_30_maskgenhashalg(
+                    &rsa_pss_params);
+                int saltlen = ossl_rsa_pss_params_30_saltlen(&rsa_pss_params);
+                const EVP_MD *md = EVP_get_digestbynid(mdnid);
+                const EVP_MD *mgf1md = EVP_get_digestbynid(mgf1mdnid);
+
+                if ((rsa->pss = ossl_rsa_pss_params_create(md, mgf1md,
+                                                           saltlen)) == NULL)
+                    goto err;
+            }
+            break;
+        default:
+            /* RSA key sub-types we don't know how to handle yet */
+            goto err;
     }
 
     if (!ossl_rsa_fromdata(rsa, params, 1))
         goto err;
 
     switch (rsa_type) {
-    case RSA_FLAG_TYPE_RSA:
-        ok = EVP_PKEY_assign_RSA(pkey, rsa);
-        break;
-    case RSA_FLAG_TYPE_RSASSAPSS:
-        ok = EVP_PKEY_assign(pkey, EVP_PKEY_RSA_PSS, rsa);
-        break;
+        case RSA_FLAG_TYPE_RSA:
+            ok = EVP_PKEY_assign_RSA(pkey, rsa);
+            break;
+        case RSA_FLAG_TYPE_RSASSAPSS:
+            ok = EVP_PKEY_assign(pkey, EVP_PKEY_RSA_PSS, rsa);
+            break;
     }
 
- err:
+err:
     if (!ok)
         RSA_free(rsa);
     return ok;
@@ -957,90 +958,91 @@ static int rsa_pkey_copy(EVP_PKEY *to, EVP_PKEY *from)
 
 const EVP_PKEY_ASN1_METHOD ossl_rsa_asn1_meths[2] = {
     {
-     EVP_PKEY_RSA,
-     EVP_PKEY_RSA,
-     ASN1_PKEY_SIGPARAM_NULL,
+        EVP_PKEY_RSA,
+        EVP_PKEY_RSA,
+        ASN1_PKEY_SIGPARAM_NULL,
 
-     "RSA",
-     "OpenSSL RSA method",
+        "RSA",
+        "OpenSSL RSA method",
 
-     rsa_pub_decode,
-     rsa_pub_encode,
-     rsa_pub_cmp,
-     rsa_pub_print,
+        rsa_pub_decode,
+        rsa_pub_encode,
+        rsa_pub_cmp,
+        rsa_pub_print,
 
-     rsa_priv_decode,
-     rsa_priv_encode,
-     rsa_priv_print,
+        rsa_priv_decode,
+        rsa_priv_encode,
+        rsa_priv_print,
 
-     int_rsa_size,
-     rsa_bits,
-     rsa_security_bits,
+        int_rsa_size,
+        rsa_bits,
+        rsa_security_bits,
 
-     0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
 
-     rsa_sig_print,
-     int_rsa_free,
-     rsa_pkey_ctrl,
-     old_rsa_priv_decode,
-     old_rsa_priv_encode,
-     rsa_item_verify,
-     rsa_item_sign,
-     rsa_sig_info_set,
-     rsa_pkey_check,
+        rsa_sig_print,
+        int_rsa_free,
+        rsa_pkey_ctrl,
+        old_rsa_priv_decode,
+        old_rsa_priv_encode,
+        rsa_item_verify,
+        rsa_item_sign,
+        rsa_sig_info_set,
+        rsa_pkey_check,
 
-     0, 0,
-     0, 0, 0, 0,
+        0, 0,
+        0, 0, 0, 0,
 
-     rsa_pkey_dirty_cnt,
-     rsa_pkey_export_to,
-     rsa_pkey_import_from,
-     rsa_pkey_copy
+        rsa_pkey_dirty_cnt,
+        rsa_pkey_export_to,
+        rsa_pkey_import_from,
+        rsa_pkey_copy
     },
 
     {
-     EVP_PKEY_RSA2,
-     EVP_PKEY_RSA,
-     ASN1_PKEY_ALIAS}
+        EVP_PKEY_RSA2,
+        EVP_PKEY_RSA,
+        ASN1_PKEY_ALIAS
+    }
 };
 
 const EVP_PKEY_ASN1_METHOD ossl_rsa_pss_asn1_meth = {
-     EVP_PKEY_RSA_PSS,
-     EVP_PKEY_RSA_PSS,
-     ASN1_PKEY_SIGPARAM_NULL,
+    EVP_PKEY_RSA_PSS,
+    EVP_PKEY_RSA_PSS,
+    ASN1_PKEY_SIGPARAM_NULL,
 
-     "RSA-PSS",
-     "OpenSSL RSA-PSS method",
+    "RSA-PSS",
+    "OpenSSL RSA-PSS method",
 
-     rsa_pub_decode,
-     rsa_pub_encode,
-     rsa_pub_cmp,
-     rsa_pub_print,
+    rsa_pub_decode,
+    rsa_pub_encode,
+    rsa_pub_cmp,
+    rsa_pub_print,
 
-     rsa_priv_decode,
-     rsa_priv_encode,
-     rsa_priv_print,
+    rsa_priv_decode,
+    rsa_priv_encode,
+    rsa_priv_print,
 
-     int_rsa_size,
-     rsa_bits,
-     rsa_security_bits,
+    int_rsa_size,
+    rsa_bits,
+    rsa_security_bits,
 
-     0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0,
 
-     rsa_sig_print,
-     int_rsa_free,
-     rsa_pkey_ctrl,
-     0, 0,
-     rsa_item_verify,
-     rsa_item_sign,
-     rsa_sig_info_set,
-     rsa_pkey_check,
+    rsa_sig_print,
+    int_rsa_free,
+    rsa_pkey_ctrl,
+    0, 0,
+    rsa_item_verify,
+    rsa_item_sign,
+    rsa_sig_info_set,
+    rsa_pkey_check,
 
-     0, 0,
-     0, 0, 0, 0,
+    0, 0,
+    0, 0, 0, 0,
 
-     rsa_pkey_dirty_cnt,
-     rsa_pss_pkey_export_to,
-     rsa_pss_pkey_import_from,
-     rsa_pkey_copy
+    rsa_pkey_dirty_cnt,
+    rsa_pss_pkey_export_to,
+    rsa_pss_pkey_import_from,
+    rsa_pkey_copy
 };

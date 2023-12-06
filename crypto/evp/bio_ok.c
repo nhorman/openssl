@@ -51,10 +51,10 @@
         adds special prefix to the stream. In order to avoid known plain-text
         attacks this prefix is generated as follows:
 
-                *) digest is initialized with random seed instead of
+ *) digest is initialized with random seed instead of
                 standardized one.
-                *) same seed is written to output
-                *) well-known text is then hashed and the output
+ *) same seed is written to output
+ *) well-known text is then hashed and the output
                 of the digest is also written to output.
 
         reader can now read the seed from stream, hash the same string
@@ -66,7 +66,7 @@
         this code and I cannot change this easily without making existing
         data files unreadable.
 
-*/
+ */
 
 #include <stdio.h>
 #include <errno.h>
@@ -329,75 +329,75 @@ static long ok_ctrl(BIO *b, int cmd, long num, void *ptr)
     next = BIO_next(b);
 
     switch (cmd) {
-    case BIO_CTRL_RESET:
-        ctx->buf_len = 0;
-        ctx->buf_off = 0;
-        ctx->buf_len_save = 0;
-        ctx->buf_off_save = 0;
-        ctx->cont = 1;
-        ctx->finished = 0;
-        ctx->blockout = 0;
-        ctx->sigio = 1;
-        ret = BIO_ctrl(next, cmd, num, ptr);
-        break;
-    case BIO_CTRL_EOF:         /* More to read */
-        if (ctx->cont <= 0)
-            ret = 1;
-        else
+        case BIO_CTRL_RESET:
+            ctx->buf_len = 0;
+            ctx->buf_off = 0;
+            ctx->buf_len_save = 0;
+            ctx->buf_off_save = 0;
+            ctx->cont = 1;
+            ctx->finished = 0;
+            ctx->blockout = 0;
+            ctx->sigio = 1;
             ret = BIO_ctrl(next, cmd, num, ptr);
-        break;
-    case BIO_CTRL_PENDING:     /* More to read in buffer */
-    case BIO_CTRL_WPENDING:    /* More to read in buffer */
-        ret = ctx->blockout ? ctx->buf_len - ctx->buf_off : 0;
-        if (ret <= 0)
-            ret = BIO_ctrl(next, cmd, num, ptr);
-        break;
-    case BIO_CTRL_FLUSH:
-        /* do a final write */
-        if (ctx->blockout == 0)
-            if (!block_out(b))
-                return 0;
+            break;
+        case BIO_CTRL_EOF:     /* More to read */
+            if (ctx->cont <= 0)
+                ret = 1;
+            else
+                ret = BIO_ctrl(next, cmd, num, ptr);
+            break;
+        case BIO_CTRL_PENDING: /* More to read in buffer */
+        case BIO_CTRL_WPENDING: /* More to read in buffer */
+            ret = ctx->blockout ? ctx->buf_len - ctx->buf_off : 0;
+            if (ret <= 0)
+                ret = BIO_ctrl(next, cmd, num, ptr);
+            break;
+        case BIO_CTRL_FLUSH:
+            /* do a final write */
+            if (ctx->blockout == 0)
+                if (!block_out(b))
+                    return 0;
 
-        while (ctx->blockout) {
-            i = ok_write(b, NULL, 0);
-            if (i < 0) {
-                ret = i;
-                break;
+            while (ctx->blockout) {
+                i = ok_write(b, NULL, 0);
+                if (i < 0) {
+                    ret = i;
+                    break;
+                }
             }
-        }
 
-        ctx->finished = 1;
-        ctx->buf_off = ctx->buf_len = 0;
-        ctx->cont = (int)ret;
+            ctx->finished = 1;
+            ctx->buf_off = ctx->buf_len = 0;
+            ctx->cont = (int)ret;
 
-        /* Finally flush the underlying BIO */
-        ret = BIO_ctrl(next, cmd, num, ptr);
-        BIO_copy_next_retry(b);
-        break;
-    case BIO_C_DO_STATE_MACHINE:
-        BIO_clear_retry_flags(b);
-        ret = BIO_ctrl(next, cmd, num, ptr);
-        BIO_copy_next_retry(b);
-        break;
-    case BIO_CTRL_INFO:
-        ret = (long)ctx->cont;
-        break;
-    case BIO_C_SET_MD:
-        md = ptr;
-        if (!EVP_DigestInit_ex(ctx->md, md, NULL))
-            return 0;
-        BIO_set_init(b, 1);
-        break;
-    case BIO_C_GET_MD:
-        if (BIO_get_init(b)) {
-            ppmd = ptr;
-            *ppmd = EVP_MD_CTX_get0_md(ctx->md);
-        } else
-            ret = 0;
-        break;
-    default:
-        ret = BIO_ctrl(next, cmd, num, ptr);
-        break;
+            /* Finally flush the underlying BIO */
+            ret = BIO_ctrl(next, cmd, num, ptr);
+            BIO_copy_next_retry(b);
+            break;
+        case BIO_C_DO_STATE_MACHINE:
+            BIO_clear_retry_flags(b);
+            ret = BIO_ctrl(next, cmd, num, ptr);
+            BIO_copy_next_retry(b);
+            break;
+        case BIO_CTRL_INFO:
+            ret = (long)ctx->cont;
+            break;
+        case BIO_C_SET_MD:
+            md = ptr;
+            if (!EVP_DigestInit_ex(ctx->md, md, NULL))
+                return 0;
+            BIO_set_init(b, 1);
+            break;
+        case BIO_C_GET_MD:
+            if (BIO_get_init(b)) {
+                ppmd = ptr;
+                *ppmd = EVP_MD_CTX_get0_md(ctx->md);
+            } else
+                ret = 0;
+            break;
+        default:
+            ret = BIO_ctrl(next, cmd, num, ptr);
+            break;
     }
     return ret;
 }
@@ -466,7 +466,7 @@ static int sig_out(BIO *b)
     ctx->blockout = 1;
     ctx->sigio = 0;
     return 1;
- berr:
+berr:
     BIO_clear_retry_flags(b);
     return 0;
 }
@@ -516,7 +516,7 @@ static int sig_in(BIO *b)
         ctx->cont = 0;
     }
     return 1;
- berr:
+berr:
     BIO_clear_retry_flags(b);
     return 0;
 }
@@ -547,7 +547,7 @@ static int block_out(BIO *b)
     ctx->buf_len += md_size;
     ctx->blockout = 1;
     return 1;
- berr:
+berr:
     BIO_clear_retry_flags(b);
     return 0;
 }
@@ -594,7 +594,7 @@ static int block_in(BIO *b)
         ctx->cont = 0;
     }
     return 1;
- berr:
+berr:
     BIO_clear_retry_flags(b);
     return 0;
 }

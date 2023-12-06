@@ -164,7 +164,7 @@ static unsigned char cbc_key[16] = {
     0xf0, 0xe1, 0xd2, 0xc3, 0xb4, 0xa5, 0x96, 0x87
 };
 static unsigned char cbc_iv[8] =
-    { 0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10 };
+{ 0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10 };
 static char cbc_data[40] = "7654321 Now is the time for ";
 static unsigned char cbc_ok[32] = {
     0x6B, 0x77, 0xB4, 0xD6, 0x30, 0x06, 0xDE, 0xE6,
@@ -196,7 +196,7 @@ static unsigned char key_test[KEY_TEST_NUM] = {
 };
 
 static unsigned char key_data[8] =
-    { 0xFE, 0xDC, 0xBA, 0x98, 0x76, 0x54, 0x32, 0x10 };
+{ 0xFE, 0xDC, 0xBA, 0x98, 0x76, 0x54, 0x32, 0x10 };
 
 static unsigned char key_out[KEY_TEST_NUM][8] = {
     {0xF9, 0xAD, 0x59, 0x7C, 0x49, 0xDB, 0x00, 0x5E},
@@ -446,7 +446,8 @@ const OPTIONS *test_get_options(void)
 {
     static const OPTIONS test_options[] = {
         OPT_TEST_OPTIONS_DEFAULT_USAGE,
-        { "print", OPT_PRINT, '-', "Output test tables instead of running tests"},
+        { "print", OPT_PRINT, '-',
+          "Output test tables instead of running tests"},
         { NULL }
     };
     return test_options;
@@ -466,13 +467,13 @@ int setup_tests(void)
 
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_PRINT:
-            print_test_data();
-            return 1;
-        case OPT_TEST_CASES:
-            break;
-        default:
-           return 0;
+            case OPT_PRINT:
+                print_test_data();
+                return 1;
+            case OPT_TEST_CASES:
+                break;
+            default:
+                return 0;
         }
     }
 

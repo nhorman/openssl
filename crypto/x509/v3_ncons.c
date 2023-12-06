@@ -54,16 +54,16 @@ const X509V3_EXT_METHOD ossl_v3_name_constraints = {
 };
 
 ASN1_SEQUENCE(GENERAL_SUBTREE) = {
-        ASN1_SIMPLE(GENERAL_SUBTREE, base, GENERAL_NAME),
-        ASN1_IMP_OPT(GENERAL_SUBTREE, minimum, ASN1_INTEGER, 0),
-        ASN1_IMP_OPT(GENERAL_SUBTREE, maximum, ASN1_INTEGER, 1)
+    ASN1_SIMPLE(GENERAL_SUBTREE, base, GENERAL_NAME),
+    ASN1_IMP_OPT(GENERAL_SUBTREE, minimum, ASN1_INTEGER, 0),
+    ASN1_IMP_OPT(GENERAL_SUBTREE, maximum, ASN1_INTEGER, 1)
 } ASN1_SEQUENCE_END(GENERAL_SUBTREE)
 
 ASN1_SEQUENCE(NAME_CONSTRAINTS) = {
-        ASN1_IMP_SEQUENCE_OF_OPT(NAME_CONSTRAINTS, permittedSubtrees,
-                                                        GENERAL_SUBTREE, 0),
-        ASN1_IMP_SEQUENCE_OF_OPT(NAME_CONSTRAINTS, excludedSubtrees,
-                                                        GENERAL_SUBTREE, 1),
+    ASN1_IMP_SEQUENCE_OF_OPT(NAME_CONSTRAINTS, permittedSubtrees,
+                             GENERAL_SUBTREE, 0),
+    ASN1_IMP_SEQUENCE_OF_OPT(NAME_CONSTRAINTS, excludedSubtrees,
+                             GENERAL_SUBTREE, 1),
 } ASN1_SEQUENCE_END(NAME_CONSTRAINTS)
 
 
@@ -72,7 +72,7 @@ IMPLEMENT_ASN1_ALLOC_FUNCTIONS(NAME_CONSTRAINTS)
 
 
 #define IA5_OFFSET_LEN(ia5base, offset) \
-    ((ia5base)->length - ((unsigned char *)(offset) - (ia5base)->data))
+        ((ia5base)->length - ((unsigned char *)(offset) - (ia5base)->data))
 
 /* Like memchr but for ASN1_IA5STRING. Additionally you can specify the
  * starting point to search from
@@ -172,7 +172,7 @@ static void *v2i_NAME_CONSTRAINTS(const X509V3_EXT_METHOD *method,
 
     return ncons;
 
- err:
+err:
     NAME_CONSTRAINTS_free(ncons);
     GENERAL_SUBTREE_free(sub);
 
@@ -221,7 +221,7 @@ static int print_nc_ipadd(BIO *bp, ASN1_OCTET_STRING *ip)
     char *ip1 = ossl_ipaddr_to_asc(ip->data, len1);
     char *ip2 = ossl_ipaddr_to_asc(ip->data + len1, len2);
     int ret = ip1 != NULL && ip2 != NULL
-        && BIO_printf(bp, "IP:%s/%s", ip1, ip2) > 0;
+              && BIO_printf(bp, "IP:%s/%s", ip1, ip2) > 0;
 
     OPENSSL_free(ip1);
     OPENSSL_free(ip2);
@@ -551,37 +551,38 @@ static int nc_match_single(int effective_type, GENERAL_NAME *gen,
                            GENERAL_NAME *base)
 {
     switch (gen->type) {
-    case GEN_OTHERNAME:
-        switch (effective_type) {
+        case GEN_OTHERNAME:
+            switch (effective_type) {
+                case GEN_EMAIL:
+                    /*
+                     * We are here only when we have SmtpUTF8 name,
+                     * so we match the value of othername with base->d.rfc822Name
+                     */
+                    return nc_email_eai(gen->d.otherName->value,
+                                        base->d.rfc822Name);
+
+                default:
+                    return X509_V_ERR_UNSUPPORTED_CONSTRAINT_TYPE;
+            }
+
+        case GEN_DIRNAME:
+            return nc_dn(gen->d.directoryName, base->d.directoryName);
+
+        case GEN_DNS:
+            return nc_dns(gen->d.dNSName, base->d.dNSName);
+
         case GEN_EMAIL:
-            /*
-             * We are here only when we have SmtpUTF8 name,
-             * so we match the value of othername with base->d.rfc822Name
-             */
-            return nc_email_eai(gen->d.otherName->value, base->d.rfc822Name);
+            return nc_email(gen->d.rfc822Name, base->d.rfc822Name);
+
+        case GEN_URI:
+            return nc_uri(gen->d.uniformResourceIdentifier,
+                          base->d.uniformResourceIdentifier);
+
+        case GEN_IPADD:
+            return nc_ip(gen->d.iPAddress, base->d.iPAddress);
 
         default:
             return X509_V_ERR_UNSUPPORTED_CONSTRAINT_TYPE;
-        }
-
-    case GEN_DIRNAME:
-        return nc_dn(gen->d.directoryName, base->d.directoryName);
-
-    case GEN_DNS:
-        return nc_dns(gen->d.dNSName, base->d.dNSName);
-
-    case GEN_EMAIL:
-        return nc_email(gen->d.rfc822Name, base->d.rfc822Name);
-
-    case GEN_URI:
-        return nc_uri(gen->d.uniformResourceIdentifier,
-                      base->d.uniformResourceIdentifier);
-
-    case GEN_IPADD:
-        return nc_ip(gen->d.iPAddress, base->d.iPAddress);
-
-    default:
-        return X509_V_ERR_UNSUPPORTED_CONSTRAINT_TYPE;
     }
 
 }
@@ -702,12 +703,12 @@ static int nc_email_eai(ASN1_TYPE *emltype, ASN1_IA5STRING *base)
     emlptr = emlat + 1;
     emlhostlen = IA5_OFFSET_LEN(eml, emlptr);
     if (emlhostlen != strlen(ulabel)
-            || ia5ncasecmp(ulabel, emlptr, emlhostlen) != 0) {
+        || ia5ncasecmp(ulabel, emlptr, emlhostlen) != 0) {
         ret = X509_V_ERR_PERMITTED_VIOLATION;
         goto end;
     }
 
- end:
+end:
     OPENSSL_free(baseptr);
     return ret;
 }
@@ -768,9 +769,9 @@ static int nc_uri(ASN1_IA5STRING *uri, ASN1_IA5STRING *base)
 
     /* Check for foo:// and skip past it */
     if (p == NULL
-            || IA5_OFFSET_LEN(uri, p) < 3
-            || p[1] != '/'
-            || p[2] != '/')
+        || IA5_OFFSET_LEN(uri, p) < 3
+        || p[1] != '/'
+        || p[2] != '/')
         return X509_V_ERR_UNSUPPORTED_NAME_SYNTAX;
     hostptr = p + 3;
 

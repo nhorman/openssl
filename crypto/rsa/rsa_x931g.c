@@ -139,7 +139,7 @@ int RSA_X931_derive_ex(RSA *rsa, BIGNUM *p1, BIGNUM *p2, BIGNUM *q1,
 
     rsa->dirty_cnt++;
     ret = 1;
- err:
+err:
     BN_CTX_end(ctx);
     BN_CTX_free(ctx);
     BN_CTX_free(ctx2);
@@ -193,7 +193,7 @@ int RSA_X931_generate_key_ex(RSA *rsa, int bits, const BIGNUM *e,
     rsa->dirty_cnt++;
     ok = 1;
 
- error:
+error:
     BN_CTX_end(ctx);
     BN_CTX_free(ctx);
 

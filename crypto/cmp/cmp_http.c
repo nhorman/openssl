@@ -33,11 +33,11 @@ static int keep_alive(int keep_alive, int body_type)
          * Ask for persistent connection only if may need more round trips.
          * Do so even with disableConfirm because polling might be needed.
          */
-            && body_type != OSSL_CMP_PKIBODY_IR
-            && body_type != OSSL_CMP_PKIBODY_CR
-            && body_type != OSSL_CMP_PKIBODY_P10CR
-            && body_type != OSSL_CMP_PKIBODY_KUR
-            && body_type != OSSL_CMP_PKIBODY_POLLREQ)
+        && body_type != OSSL_CMP_PKIBODY_IR
+        && body_type != OSSL_CMP_PKIBODY_CR
+        && body_type != OSSL_CMP_PKIBODY_P10CR
+        && body_type != OSSL_CMP_PKIBODY_KUR
+        && body_type != OSSL_CMP_PKIBODY_POLLREQ)
         keep_alive = 0;
     return keep_alive;
 }
@@ -98,7 +98,7 @@ OSSL_CMP_MSG *OSSL_CMP_MSG_http_perform(OSSL_CMP_CTX *ctx,
      */
     if (res != NULL)
         ossl_cmp_debug(ctx, "finished reading response from CMP server");
- err:
+err:
     sk_CONF_VALUE_pop_free(headers, X509V3_conf_free);
     return res;
 }

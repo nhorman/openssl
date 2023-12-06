@@ -33,8 +33,10 @@ OSSL_provider_init_fn ossl_legacy_provider_init;
 /* Extended test macros to allow passing file & line number */
 #define TEST_FL_ptr(a)               test_ptr(file, line, #a, a)
 #define TEST_FL_mem_eq(a, m, b, n)   test_mem_eq(file, line, #a, #b, a, m, b, n)
-#define TEST_FL_strn_eq(a, b, n)     test_strn_eq(file, line, #a, #b, a, n, b, n)
-#define TEST_FL_strn2_eq(a, m, b, n) test_strn_eq(file, line, #a, #b, a, m, b, n)
+#define TEST_FL_strn_eq(a, b, n)     test_strn_eq(file, line, #a, #b, a, n, b, \
+                                                  n)
+#define TEST_FL_strn2_eq(a, m, b, n) test_strn_eq(file, line, #a, #b, a, m, b, \
+                                                  n)
 #define TEST_FL_int_eq(a, b)         test_int_eq(file, line, #a, #b, a, b)
 #define TEST_FL_int_ge(a, b)         test_int_ge(file, line, #a, #b, a, b)
 #define TEST_FL_int_gt(a, b)         test_int_gt(file, line, #a, #b, a, b)
@@ -105,7 +107,8 @@ static EVP_PKEY *make_template(const char *type, OSSL_PARAM *genparams)
 }
 #endif
 
-#if !defined(OPENSSL_NO_DH) || !defined(OPENSSL_NO_DSA) || !defined(OPENSSL_NO_EC)
+#if !defined(OPENSSL_NO_DH) || !defined(OPENSSL_NO_DSA) || \
+    !defined(OPENSSL_NO_EC)
 static EVP_PKEY *make_key(const char *type, EVP_PKEY *template,
                           OSSL_PARAM *genparams)
 {
@@ -172,31 +175,36 @@ static int test_encode_decode(const char *file, const int line,
      * encoding |pkey2| as well.  That last encoding is for checking and
      * dumping purposes.
      */
-    if (!TEST_true(encode_cb(file, line, &encoded, &encoded_len, pkey, selection,
+    if (!TEST_true(encode_cb(file, line, &encoded, &encoded_len, pkey,
+                             selection,
                              output_type, output_structure, pass, pcipher)))
         goto end;
 
     if ((flags & FLAG_FAIL_IF_FIPS) != 0 && is_fips && !is_fips_3_0_0) {
         if (TEST_false(decode_cb(file, line, (void **)&pkey2, encoded,
-                                  encoded_len, output_type, output_structure,
-                                  (flags & FLAG_DECODE_WITH_TYPE ? type : NULL),
-                                  selection, pass)))
+                                 encoded_len, output_type, output_structure,
+                                 (flags & FLAG_DECODE_WITH_TYPE ? type : NULL),
+                                 selection, pass)))
             ok = 1;
         goto end;
     }
 
     if (!TEST_true(check_cb(file, line, type, encoded, encoded_len))
-        || !TEST_true(decode_cb(file, line, (void **)&pkey2, encoded, encoded_len,
+        || !TEST_true(decode_cb(file, line, (void **)&pkey2, encoded,
+                                encoded_len,
                                 output_type, output_structure,
                                 (flags & FLAG_DECODE_WITH_TYPE ? type : NULL),
                                 selection, pass))
         || ((output_structure == NULL
              || strcmp(output_structure, "type-specific") != 0)
-            && !TEST_true(decode_cb(file, line, (void **)&pkey3, encoded, encoded_len,
+            && !TEST_true(decode_cb(file, line, (void **)&pkey3, encoded,
+                                    encoded_len,
                                     output_type, output_structure,
-                                    (flags & FLAG_DECODE_WITH_TYPE ? type : NULL),
+                                    (flags &
+                                     FLAG_DECODE_WITH_TYPE ? type : NULL),
                                     0, pass)))
-        || !TEST_true(encode_cb(file, line, &encoded2, &encoded2_len, pkey2, selection,
+        || !TEST_true(encode_cb(file, line, &encoded2, &encoded2_len, pkey2,
+                                selection,
                                 output_type, output_structure, pass, pcipher)))
         goto end;
 
@@ -222,7 +230,7 @@ static int test_encode_decode(const char *file, const int line,
         goto end;
 
     ok = 1;
- end:
+end:
     if (!ok) {
         if (encoded != NULL && encoded_len != 0)
             dump_cb("|pkey| encoded", encoded, encoded_len);
@@ -254,13 +262,13 @@ static int encode_EVP_PKEY_prov(const char *file, const int line,
     int ok = 0;
 
     if (!TEST_FL_ptr(ectx = OSSL_ENCODER_CTX_new_for_pkey(pkey, selection,
-                                                       output_type,
-                                                       output_structure,
-                                                       testpropq))
+                                                          output_type,
+                                                          output_structure,
+                                                          testpropq))
         || !TEST_FL_int_gt(OSSL_ENCODER_CTX_get_num_encoders(ectx), 0)
         || (pass != NULL
             && !TEST_FL_true(OSSL_ENCODER_CTX_set_passphrase(ectx, upass,
-                                                          strlen(pass))))
+                                                             strlen(pass))))
         || (pcipher != NULL
             && !TEST_FL_true(OSSL_ENCODER_CTX_set_cipher(ectx, pcipher, NULL)))
         || !TEST_FL_ptr(mem_ser = BIO_new(BIO_s_mem()))
@@ -274,7 +282,7 @@ static int encode_EVP_PKEY_prov(const char *file, const int line,
     mem_buf->data = NULL;
     mem_buf->length = 0;
     ok = 1;
- end:
+end:
     BIO_free(mem_ser);
     OSSL_ENCODER_CTX_free(ectx);
     return ok;
@@ -315,17 +323,18 @@ static int decode_EVP_PKEY_prov(const char *file, const int line,
                                         : ((i == 1) ? NULL : badtype);
 
         if (!TEST_FL_ptr(dctx = OSSL_DECODER_CTX_new_for_pkey(&testpkey,
-                                                           testtype,
-                                                           structure_type,
-                                                           keytype,
-                                                           selection,
-                                                           testctx, testpropq))
+                                                              testtype,
+                                                              structure_type,
+                                                              keytype,
+                                                              selection,
+                                                              testctx,
+                                                              testpropq))
             || (pass != NULL
                 && !OSSL_DECODER_CTX_set_passphrase(dctx, upass, strlen(pass)))
             || !TEST_FL_int_gt(BIO_reset(encoded_bio), 0)
-               /* We expect to fail when using a bad input type */
+            /* We expect to fail when using a bad input type */
             || !TEST_FL_int_eq(OSSL_DECODER_from_bio(dctx, encoded_bio),
-                            (i == 2) ? 0 : 1))
+                               (i == 2) ? 0 : 1))
             goto end;
         OSSL_DECODER_CTX_free(dctx);
         dctx = NULL;
@@ -347,7 +356,7 @@ static int decode_EVP_PKEY_prov(const char *file, const int line,
     *object = pkey;
     pkey = NULL;
 
- end:
+end:
     EVP_PKEY_free(pkey);
     EVP_PKEY_free(testpkey);
     BIO_free(encoded_bio);
@@ -372,14 +381,15 @@ static int encode_EVP_PKEY_legacy_PEM(const char *file, const int line,
 
     if (pcipher != NULL && pass != NULL) {
         passlen = strlen(pass);
-        if (!TEST_FL_ptr(cipher = EVP_CIPHER_fetch(testctx, pcipher, testpropq)))
+        if (!TEST_FL_ptr(cipher =
+                             EVP_CIPHER_fetch(testctx, pcipher, testpropq)))
             goto end;
     }
     if (!TEST_FL_ptr(mem_ser = BIO_new(BIO_s_mem()))
         || !TEST_FL_true(PEM_write_bio_PrivateKey_traditional(mem_ser, pkey,
-                                                           cipher,
-                                                           upass, passlen,
-                                                           NULL, NULL))
+                                                              cipher,
+                                                              upass, passlen,
+                                                              NULL, NULL))
         || !TEST_FL_true(BIO_get_mem_ptr(mem_ser, &mem_buf) > 0)
         || !TEST_FL_ptr(*encoded = mem_buf->data)
         || !TEST_FL_long_gt(*encoded_len = mem_buf->length, 0))
@@ -389,7 +399,7 @@ static int encode_EVP_PKEY_legacy_PEM(const char *file, const int line,
     mem_buf->data = NULL;
     mem_buf->length = 0;
     ok = 1;
- end:
+end:
     BIO_free(mem_ser);
     EVP_CIPHER_free(cipher);
     return ok;
@@ -428,7 +438,7 @@ static int encode_EVP_PKEY_MSBLOB(const char *file, const int line,
     mem_buf->data = NULL;
     mem_buf->length = 0;
     ok = 1;
- end:
+end:
     BIO_free(mem_ser);
     return ok;
 }
@@ -455,10 +465,11 @@ static int encode_EVP_PKEY_PVK(const char *file, const int line,
     int ok = 0;
 
     if (!TEST_FL_true(ossl_assert((selection
-                                & OSSL_KEYMGMT_SELECT_PRIVATE_KEY) != 0))
+                                   & OSSL_KEYMGMT_SELECT_PRIVATE_KEY) != 0))
         || !TEST_FL_ptr(mem_ser = BIO_new(BIO_s_mem()))
         || !TEST_FL_int_ge(i2b_PVK_bio_ex(mem_ser, pkey, enc,
-                                          pass_pw, (void *)pass, testctx, testpropq), 0)
+                                          pass_pw, (void *)pass, testctx,
+                                          testpropq), 0)
         || !TEST_FL_true(BIO_get_mem_ptr(mem_ser, &mem_buf) > 0)
         || !TEST_FL_ptr(*encoded = mem_buf->data)
         || !TEST_FL_long_gt(*encoded_len = mem_buf->length, 0))
@@ -468,7 +479,7 @@ static int encode_EVP_PKEY_PVK(const char *file, const int line,
     mem_buf->data = NULL;
     mem_buf->length = 0;
     ok = 1;
- end:
+end:
     BIO_free(mem_ser);
     return ok;
 }
@@ -569,7 +580,7 @@ static int check_unprotected_PKCS8_PEM(const char *file, const int line,
         "-----BEGIN " PEM_STRING_PKCS8INF "-----";
 
     return TEST_FL_strn_eq(data, expected_pem_header,
-                        sizeof(expected_pem_header) - 1);
+                           sizeof(expected_pem_header) - 1);
 }
 
 static int test_unprotected_via_PEM(const char *type, EVP_PKEY *key, int fips)
@@ -618,14 +629,16 @@ static int check_params_PEM(const char *file, const int line,
 
     return
         TEST_FL_int_gt(BIO_snprintf(expected_pem_header,
-                                 sizeof(expected_pem_header),
-                                 "-----BEGIN %s PARAMETERS-----", type), 0)
-        && TEST_FL_strn_eq(data, expected_pem_header, strlen(expected_pem_header));
+                                    sizeof(expected_pem_header),
+                                    "-----BEGIN %s PARAMETERS-----", type), 0)
+        && TEST_FL_strn_eq(data, expected_pem_header, strlen(
+                               expected_pem_header));
 }
 
 static int test_params_via_DER(const char *type, EVP_PKEY *key)
 {
-    return test_encode_decode(__FILE__, __LINE__, type, key, OSSL_KEYMGMT_SELECT_DOMAIN_PARAMETERS,
+    return test_encode_decode(__FILE__, __LINE__, type, key,
+                              OSSL_KEYMGMT_SELECT_DOMAIN_PARAMETERS,
                               "DER", "type-specific", NULL, NULL,
                               encode_EVP_PKEY_prov, decode_EVP_PKEY_prov,
                               test_mem, check_params_DER,
@@ -634,7 +647,8 @@ static int test_params_via_DER(const char *type, EVP_PKEY *key)
 
 static int test_params_via_PEM(const char *type, EVP_PKEY *key)
 {
-    return test_encode_decode(__FILE__, __LINE__, type, key, OSSL_KEYMGMT_SELECT_DOMAIN_PARAMETERS,
+    return test_encode_decode(__FILE__, __LINE__, type, key,
+                              OSSL_KEYMGMT_SELECT_DOMAIN_PARAMETERS,
                               "PEM", "type-specific", NULL, NULL,
                               encode_EVP_PKEY_prov, decode_EVP_PKEY_prov,
                               test_text, check_params_PEM,
@@ -650,15 +664,17 @@ static int check_unprotected_legacy_PEM(const char *file, const int line,
 
     return
         TEST_FL_int_gt(BIO_snprintf(expected_pem_header,
-                                 sizeof(expected_pem_header),
-                                 "-----BEGIN %s PRIVATE KEY-----", type), 0)
-        && TEST_FL_strn_eq(data, expected_pem_header, strlen(expected_pem_header));
+                                    sizeof(expected_pem_header),
+                                    "-----BEGIN %s PRIVATE KEY-----", type), 0)
+        && TEST_FL_strn_eq(data, expected_pem_header, strlen(
+                               expected_pem_header));
 }
 
 static int test_unprotected_via_legacy_PEM(const char *type, EVP_PKEY *key)
 {
     if (!default_libctx || is_fips)
-        return TEST_skip("Test not available if using a non-default library context or FIPS provider");
+        return TEST_skip(
+            "Test not available if using a non-default library context or FIPS provider");
 
     return test_encode_decode(__FILE__, __LINE__, type, key,
                               OSSL_KEYMGMT_SELECT_KEYPAIR
@@ -747,7 +763,7 @@ static int check_protected_PKCS8_PEM(const char *file, const int line,
         "-----BEGIN " PEM_STRING_PKCS8 "-----";
 
     return TEST_FL_strn_eq(data, expected_pem_header,
-                        sizeof(expected_pem_header) - 1);
+                           sizeof(expected_pem_header) - 1);
 }
 
 static int test_protected_via_PEM(const char *type, EVP_PKEY *key, int fips)
@@ -770,16 +786,18 @@ static int check_protected_legacy_PEM(const char *file, const int line,
 
     return
         TEST_FL_int_gt(BIO_snprintf(expected_pem_header,
-                                 sizeof(expected_pem_header),
-                                 "-----BEGIN %s PRIVATE KEY-----", type), 0)
-        && TEST_FL_strn_eq(data, expected_pem_header, strlen(expected_pem_header))
+                                    sizeof(expected_pem_header),
+                                    "-----BEGIN %s PRIVATE KEY-----", type), 0)
+        && TEST_FL_strn_eq(data, expected_pem_header, strlen(
+                               expected_pem_header))
         && TEST_FL_ptr(strstr(data, "\nDEK-Info: "));
 }
 
 static int test_protected_via_legacy_PEM(const char *type, EVP_PKEY *key)
 {
     if (!default_libctx || is_fips)
-        return TEST_skip("Test not available if using a non-default library context or FIPS provider");
+        return TEST_skip(
+            "Test not available if using a non-default library context or FIPS provider");
 
     return test_encode_decode(__FILE__, __LINE__, type, key,
                               OSSL_KEYMGMT_SELECT_KEYPAIR
@@ -799,11 +817,11 @@ static int test_protected_via_PVK(const char *type, EVP_PKEY *key)
         return TEST_skip("Legacy provider not available");
 
     ret = test_encode_decode(__FILE__, __LINE__, type, key,
-                              OSSL_KEYMGMT_SELECT_KEYPAIR
-                              | OSSL_KEYMGMT_SELECT_DOMAIN_PARAMETERS,
-                              "PVK", NULL, pass, NULL,
-                              encode_EVP_PKEY_PVK, decode_EVP_PKEY_prov,
-                              test_mem, check_PVK, dump_der, 0);
+                             OSSL_KEYMGMT_SELECT_KEYPAIR
+                             | OSSL_KEYMGMT_SELECT_DOMAIN_PARAMETERS,
+                             "PVK", NULL, pass, NULL,
+                             encode_EVP_PKEY_PVK, decode_EVP_PKEY_prov,
+                             test_mem, check_PVK, dump_der, 0);
     OSSL_PROVIDER_unload(lgcyprov);
     return ret;
 }
@@ -839,7 +857,7 @@ static int check_public_PEM(const char *file, const int line,
 
     return
         TEST_FL_strn_eq(data, expected_pem_header,
-                     sizeof(expected_pem_header) - 1);
+                        sizeof(expected_pem_header) - 1);
 }
 
 static int test_public_via_PEM(const char *type, EVP_PKEY *key, int fips)
@@ -871,123 +889,124 @@ static int test_public_via_MSBLOB(const char *type, EVP_PKEY *key)
                               | OSSL_KEYMGMT_SELECT_DOMAIN_PARAMETERS,
                               "MSBLOB", NULL, NULL, NULL,
                               encode_EVP_PKEY_MSBLOB, decode_EVP_PKEY_prov,
-                              test_mem, check_public_MSBLOB, dump_der, 0);
+                              test_mem, check_public_MSBLOB, dump_der,
+                              0);
 }
 
 #define KEYS(KEYTYPE)                           \
-    static EVP_PKEY *key_##KEYTYPE = NULL
+        static EVP_PKEY *key_ ## KEYTYPE = NULL
 #define MAKE_KEYS(KEYTYPE, KEYTYPEstr, params)                          \
-    ok = ok                                                             \
-        && TEST_ptr(key_##KEYTYPE = make_key(KEYTYPEstr, NULL, params))
+        ok = ok                                                             \
+             && TEST_ptr(key_ ## KEYTYPE = make_key(KEYTYPEstr, NULL, params))
 #define FREE_KEYS(KEYTYPE)                                              \
-    EVP_PKEY_free(key_##KEYTYPE);                                       \
+        EVP_PKEY_free(key_ ## KEYTYPE);                                       \
 
 #define DOMAIN_KEYS(KEYTYPE)                    \
-    static EVP_PKEY *template_##KEYTYPE = NULL; \
-    static EVP_PKEY *key_##KEYTYPE = NULL
+        static EVP_PKEY *template_ ## KEYTYPE = NULL; \
+        static EVP_PKEY *key_ ## KEYTYPE = NULL
 #define MAKE_DOMAIN_KEYS(KEYTYPE, KEYTYPEstr, params)                   \
-    ok = ok                                                             \
-        && TEST_ptr(template_##KEYTYPE =                                \
-                    make_template(KEYTYPEstr, params))                  \
-        && TEST_ptr(key_##KEYTYPE =                                     \
-                    make_key(KEYTYPEstr, template_##KEYTYPE, NULL))
+        ok = ok                                                             \
+             && TEST_ptr(template_ ## KEYTYPE =                                \
+                             make_template(KEYTYPEstr, params))                  \
+             && TEST_ptr(key_ ## KEYTYPE =                                     \
+                             make_key(KEYTYPEstr, template_ ## KEYTYPE, NULL))
 #define FREE_DOMAIN_KEYS(KEYTYPE)                                       \
-    EVP_PKEY_free(template_##KEYTYPE);                                  \
-    EVP_PKEY_free(key_##KEYTYPE)
+        EVP_PKEY_free(template_ ## KEYTYPE);                                  \
+        EVP_PKEY_free(key_ ## KEYTYPE)
 
 #define IMPLEMENT_TEST_SUITE(KEYTYPE, KEYTYPEstr, fips)                 \
-    static int test_unprotected_##KEYTYPE##_via_DER(void)               \
-    {                                                                   \
-        return test_unprotected_via_DER(KEYTYPEstr, key_##KEYTYPE, fips); \
-    }                                                                   \
-    static int test_unprotected_##KEYTYPE##_via_PEM(void)               \
-    {                                                                   \
-        return test_unprotected_via_PEM(KEYTYPEstr, key_##KEYTYPE, fips); \
-    }                                                                   \
-    static int test_protected_##KEYTYPE##_via_DER(void)                 \
-    {                                                                   \
-        return test_protected_via_DER(KEYTYPEstr, key_##KEYTYPE, fips); \
-    }                                                                   \
-    static int test_protected_##KEYTYPE##_via_PEM(void)                 \
-    {                                                                   \
-        return test_protected_via_PEM(KEYTYPEstr, key_##KEYTYPE, fips); \
-    }                                                                   \
-    static int test_public_##KEYTYPE##_via_DER(void)                    \
-    {                                                                   \
-        return test_public_via_DER(KEYTYPEstr, key_##KEYTYPE, fips);    \
-    }                                                                   \
-    static int test_public_##KEYTYPE##_via_PEM(void)                    \
-    {                                                                   \
-        return test_public_via_PEM(KEYTYPEstr, key_##KEYTYPE, fips);    \
-    }
+        static int test_unprotected_ ## KEYTYPE ## _via_DER(void)               \
+        {                                                                   \
+            return test_unprotected_via_DER(KEYTYPEstr, key_ ## KEYTYPE, fips); \
+        }                                                                   \
+        static int test_unprotected_ ## KEYTYPE ## _via_PEM(void)               \
+        {                                                                   \
+            return test_unprotected_via_PEM(KEYTYPEstr, key_ ## KEYTYPE, fips); \
+        }                                                                   \
+        static int test_protected_ ## KEYTYPE ## _via_DER(void)                 \
+        {                                                                   \
+            return test_protected_via_DER(KEYTYPEstr, key_ ## KEYTYPE, fips); \
+        }                                                                   \
+        static int test_protected_ ## KEYTYPE ## _via_PEM(void)                 \
+        {                                                                   \
+            return test_protected_via_PEM(KEYTYPEstr, key_ ## KEYTYPE, fips); \
+        }                                                                   \
+        static int test_public_ ## KEYTYPE ## _via_DER(void)                    \
+        {                                                                   \
+            return test_public_via_DER(KEYTYPEstr, key_ ## KEYTYPE, fips);    \
+        }                                                                   \
+        static int test_public_ ## KEYTYPE ## _via_PEM(void)                    \
+        {                                                                   \
+            return test_public_via_PEM(KEYTYPEstr, key_ ## KEYTYPE, fips);    \
+        }
 
 #define ADD_TEST_SUITE(KEYTYPE)                                 \
-    ADD_TEST(test_unprotected_##KEYTYPE##_via_DER);             \
-    ADD_TEST(test_unprotected_##KEYTYPE##_via_PEM);             \
-    ADD_TEST(test_protected_##KEYTYPE##_via_DER);               \
-    ADD_TEST(test_protected_##KEYTYPE##_via_PEM);               \
-    ADD_TEST(test_public_##KEYTYPE##_via_DER);                  \
-    ADD_TEST(test_public_##KEYTYPE##_via_PEM)
+        ADD_TEST(test_unprotected_ ## KEYTYPE ## _via_DER);             \
+        ADD_TEST(test_unprotected_ ## KEYTYPE ## _via_PEM);             \
+        ADD_TEST(test_protected_ ## KEYTYPE ## _via_DER);               \
+        ADD_TEST(test_protected_ ## KEYTYPE ## _via_PEM);               \
+        ADD_TEST(test_public_ ## KEYTYPE ## _via_DER);                  \
+        ADD_TEST(test_public_ ## KEYTYPE ## _via_PEM)
 
 #define IMPLEMENT_TEST_SUITE_PARAMS(KEYTYPE, KEYTYPEstr)           \
-    static int test_params_##KEYTYPE##_via_DER(void)               \
-    {                                                              \
-        return test_params_via_DER(KEYTYPEstr, key_##KEYTYPE);     \
-    }                                                              \
-    static int test_params_##KEYTYPE##_via_PEM(void)               \
-    {                                                              \
-        return test_params_via_PEM(KEYTYPEstr, key_##KEYTYPE);     \
-    }
+        static int test_params_ ## KEYTYPE ## _via_DER(void)               \
+        {                                                              \
+            return test_params_via_DER(KEYTYPEstr, key_ ## KEYTYPE);     \
+        }                                                              \
+        static int test_params_ ## KEYTYPE ## _via_PEM(void)               \
+        {                                                              \
+            return test_params_via_PEM(KEYTYPEstr, key_ ## KEYTYPE);     \
+        }
 
 #define ADD_TEST_SUITE_PARAMS(KEYTYPE)                          \
-    ADD_TEST(test_params_##KEYTYPE##_via_DER);                  \
-    ADD_TEST(test_params_##KEYTYPE##_via_PEM)
+        ADD_TEST(test_params_ ## KEYTYPE ## _via_DER);                  \
+        ADD_TEST(test_params_ ## KEYTYPE ## _via_PEM)
 
 #define IMPLEMENT_TEST_SUITE_LEGACY(KEYTYPE, KEYTYPEstr)                \
-    static int test_unprotected_##KEYTYPE##_via_legacy_PEM(void)        \
-    {                                                                   \
-        return                                                          \
-            test_unprotected_via_legacy_PEM(KEYTYPEstr, key_##KEYTYPE); \
-    }                                                                   \
-    static int test_protected_##KEYTYPE##_via_legacy_PEM(void)          \
-    {                                                                   \
-        return                                                          \
-            test_protected_via_legacy_PEM(KEYTYPEstr, key_##KEYTYPE);   \
-    }
+        static int test_unprotected_ ## KEYTYPE ## _via_legacy_PEM(void)        \
+        {                                                                   \
+            return                                                          \
+                test_unprotected_via_legacy_PEM(KEYTYPEstr, key_ ## KEYTYPE); \
+        }                                                                   \
+        static int test_protected_ ## KEYTYPE ## _via_legacy_PEM(void)          \
+        {                                                                   \
+            return                                                          \
+                test_protected_via_legacy_PEM(KEYTYPEstr, key_ ## KEYTYPE);   \
+        }
 
 #define ADD_TEST_SUITE_LEGACY(KEYTYPE)                                  \
-    ADD_TEST(test_unprotected_##KEYTYPE##_via_legacy_PEM);              \
-    ADD_TEST(test_protected_##KEYTYPE##_via_legacy_PEM)
+        ADD_TEST(test_unprotected_ ## KEYTYPE ## _via_legacy_PEM);              \
+        ADD_TEST(test_protected_ ## KEYTYPE ## _via_legacy_PEM)
 
 #define IMPLEMENT_TEST_SUITE_MSBLOB(KEYTYPE, KEYTYPEstr)                \
-    static int test_unprotected_##KEYTYPE##_via_MSBLOB(void)            \
-    {                                                                   \
-        return test_unprotected_via_MSBLOB(KEYTYPEstr, key_##KEYTYPE);  \
-    }                                                                   \
-    static int test_public_##KEYTYPE##_via_MSBLOB(void)                 \
-    {                                                                   \
-        return test_public_via_MSBLOB(KEYTYPEstr, key_##KEYTYPE);       \
-    }
+        static int test_unprotected_ ## KEYTYPE ## _via_MSBLOB(void)            \
+        {                                                                   \
+            return test_unprotected_via_MSBLOB(KEYTYPEstr, key_ ## KEYTYPE);  \
+        }                                                                   \
+        static int test_public_ ## KEYTYPE ## _via_MSBLOB(void)                 \
+        {                                                                   \
+            return test_public_via_MSBLOB(KEYTYPEstr, key_ ## KEYTYPE);       \
+        }
 
 #define ADD_TEST_SUITE_MSBLOB(KEYTYPE)                                  \
-    ADD_TEST(test_unprotected_##KEYTYPE##_via_MSBLOB);                  \
-    ADD_TEST(test_public_##KEYTYPE##_via_MSBLOB)
+        ADD_TEST(test_unprotected_ ## KEYTYPE ## _via_MSBLOB);                  \
+        ADD_TEST(test_public_ ## KEYTYPE ## _via_MSBLOB)
 
 #define IMPLEMENT_TEST_SUITE_UNPROTECTED_PVK(KEYTYPE, KEYTYPEstr)       \
-    static int test_unprotected_##KEYTYPE##_via_PVK(void)               \
-    {                                                                   \
-        return test_unprotected_via_PVK(KEYTYPEstr, key_##KEYTYPE);     \
-    }
+        static int test_unprotected_ ## KEYTYPE ## _via_PVK(void)               \
+        {                                                                   \
+            return test_unprotected_via_PVK(KEYTYPEstr, key_ ## KEYTYPE);     \
+        }
 # define ADD_TEST_SUITE_UNPROTECTED_PVK(KEYTYPE)                        \
-    ADD_TEST(test_unprotected_##KEYTYPE##_via_PVK)
+        ADD_TEST(test_unprotected_ ## KEYTYPE ## _via_PVK)
 #ifndef OPENSSL_NO_RC4
 # define IMPLEMENT_TEST_SUITE_PROTECTED_PVK(KEYTYPE, KEYTYPEstr)        \
-    static int test_protected_##KEYTYPE##_via_PVK(void)                 \
-    {                                                                   \
-        return test_protected_via_PVK(KEYTYPEstr, key_##KEYTYPE);       \
-    }
+        static int test_protected_ ## KEYTYPE ## _via_PVK(void)                 \
+        {                                                                   \
+            return test_protected_via_PVK(KEYTYPEstr, key_ ## KEYTYPE);       \
+        }
 # define ADD_TEST_SUITE_PROTECTED_PVK(KEYTYPE)                          \
-    ADD_TEST(test_protected_##KEYTYPE##_via_PVK)
+        ADD_TEST(test_protected_ ## KEYTYPE ## _via_PVK)
 #endif
 
 #ifndef OPENSSL_NO_DH
@@ -1109,17 +1128,21 @@ static int do_create_ec_explicit_prime_params(OSSL_PARAM_BLD *bld,
            && TEST_ptr(BN_bin2bn(b_data, sizeof(b_data), b))
            && TEST_ptr(BN_bin2bn(order_data, sizeof(order_data), order))
            && TEST_true(OSSL_PARAM_BLD_push_utf8_string(bld,
-                            OSSL_PKEY_PARAM_EC_FIELD_TYPE, SN_X9_62_prime_field,
-                            0))
-           && TEST_true(OSSL_PARAM_BLD_push_BN(bld, OSSL_PKEY_PARAM_EC_P, prime))
+                                                        OSSL_PKEY_PARAM_EC_FIELD_TYPE,
+                                                        SN_X9_62_prime_field,
+                                                        0))
+           && TEST_true(OSSL_PARAM_BLD_push_BN(bld, OSSL_PKEY_PARAM_EC_P,
+                                               prime))
            && TEST_true(OSSL_PARAM_BLD_push_BN(bld, OSSL_PKEY_PARAM_EC_A, a))
            && TEST_true(OSSL_PARAM_BLD_push_BN(bld, OSSL_PKEY_PARAM_EC_B, b))
            && TEST_true(OSSL_PARAM_BLD_push_BN(bld,
-                            OSSL_PKEY_PARAM_EC_ORDER, order))
+                                               OSSL_PKEY_PARAM_EC_ORDER, order))
            && TEST_true(OSSL_PARAM_BLD_push_octet_string(bld,
-                            OSSL_PKEY_PARAM_EC_GENERATOR, gen, gen_len))
+                                                         OSSL_PKEY_PARAM_EC_GENERATOR,
+                                                         gen, gen_len))
            && TEST_true(OSSL_PARAM_BLD_push_octet_string(bld,
-                            OSSL_PKEY_PARAM_EC_SEED, seed, sizeof(seed)))
+                                                         OSSL_PKEY_PARAM_EC_SEED,
+                                                         seed, sizeof(seed)))
            && TEST_true(OSSL_PARAM_BLD_push_BN(bld, OSSL_PKEY_PARAM_EC_COFACTOR,
                                                BN_value_one()));
 }
@@ -1198,17 +1221,20 @@ static int do_create_ec_explicit_trinomial_params(OSSL_PARAM_BLD *bld,
            && TEST_ptr(BN_bin2bn(a_data, sizeof(a_data), a))
            && TEST_ptr(BN_bin2bn(b_data, sizeof(b_data), b))
            && TEST_ptr(BN_bin2bn(order_data, sizeof(order_data), order))
-           && TEST_ptr(BN_bin2bn(cofactor_data, sizeof(cofactor_data), cofactor))
+           && TEST_ptr(BN_bin2bn(cofactor_data, sizeof(cofactor_data),
+                                 cofactor))
            && TEST_true(OSSL_PARAM_BLD_push_utf8_string(bld,
-                            OSSL_PKEY_PARAM_EC_FIELD_TYPE,
-                            SN_X9_62_characteristic_two_field, 0))
+                                                        OSSL_PKEY_PARAM_EC_FIELD_TYPE,
+                                                        SN_X9_62_characteristic_two_field,
+                                                        0))
            && TEST_true(OSSL_PARAM_BLD_push_BN(bld, OSSL_PKEY_PARAM_EC_P, poly))
            && TEST_true(OSSL_PARAM_BLD_push_BN(bld, OSSL_PKEY_PARAM_EC_A, a))
            && TEST_true(OSSL_PARAM_BLD_push_BN(bld, OSSL_PKEY_PARAM_EC_B, b))
            && TEST_true(OSSL_PARAM_BLD_push_BN(bld,
-                            OSSL_PKEY_PARAM_EC_ORDER, order))
+                                               OSSL_PKEY_PARAM_EC_ORDER, order))
            && TEST_true(OSSL_PARAM_BLD_push_octet_string(bld,
-                            OSSL_PKEY_PARAM_EC_GENERATOR, gen, gen_len))
+                                                         OSSL_PKEY_PARAM_EC_GENERATOR,
+                                                         gen, gen_len))
            && TEST_true(OSSL_PARAM_BLD_push_BN(bld, OSSL_PKEY_PARAM_EC_COFACTOR,
                                                cofactor));
 }
@@ -1303,25 +1329,25 @@ int setup_tests(void)
 
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_CONTEXT:
-            default_libctx = 0;
-            break;
-        case OPT_PROVIDER_NAME:
-            prov_name = opt_arg();
-            break;
-        case OPT_CONFIG_FILE:
-            config_file = opt_arg();
-            break;
-        case OPT_RSA_FILE:
-            rsa_file = opt_arg();
-            break;
-        case OPT_RSA_PSS_FILE:
-            rsa_pss_file = opt_arg();
-            break;
-        case OPT_TEST_CASES:
-            break;
-        default:
-            return 0;
+            case OPT_CONTEXT:
+                default_libctx = 0;
+                break;
+            case OPT_PROVIDER_NAME:
+                prov_name = opt_arg();
+                break;
+            case OPT_CONFIG_FILE:
+                config_file = opt_arg();
+                break;
+            case OPT_RSA_FILE:
+                rsa_file = opt_arg();
+                break;
+            case OPT_RSA_PSS_FILE:
+                rsa_pss_file = opt_arg();
+                break;
+            case OPT_TEST_CASES:
+                break;
+            default:
+                return 0;
         }
     }
 
@@ -1332,7 +1358,8 @@ int setup_tests(void)
         if (!test_get_libctx(NULL, NULL, config_file, &deflprov, prov_name))
             return 0;
     } else {
-        if (!test_get_libctx(&testctx, &nullprov, config_file, &deflprov, prov_name))
+        if (!test_get_libctx(&testctx, &nullprov, config_file, &deflprov,
+                             prov_name))
             return 0;
     }
 
@@ -1347,7 +1374,8 @@ int setup_tests(void)
      * attempt to load legacy.so that might be dynamically linked against
      * libcrypto. Instead we use a built-in version of the legacy provider.
      */
-    if (!OSSL_PROVIDER_add_builtin(testctx, "legacy", ossl_legacy_provider_init))
+    if (!OSSL_PROVIDER_add_builtin(testctx, "legacy",
+                                   ossl_legacy_provider_init))
         return 0;
 #endif
 
@@ -1363,17 +1391,21 @@ int setup_tests(void)
         || !TEST_ptr(bld_prime = OSSL_PARAM_BLD_new())
         || !create_ec_explicit_prime_params_namedcurve(bld_prime_nc)
         || !create_ec_explicit_prime_params(bld_prime)
-        || !TEST_ptr(ec_explicit_prime_params_nc = OSSL_PARAM_BLD_to_param(bld_prime_nc))
-        || !TEST_ptr(ec_explicit_prime_params_explicit = OSSL_PARAM_BLD_to_param(bld_prime))
+        || !TEST_ptr(ec_explicit_prime_params_nc =
+                         OSSL_PARAM_BLD_to_param(bld_prime_nc))
+        || !TEST_ptr(ec_explicit_prime_params_explicit =
+                         OSSL_PARAM_BLD_to_param(bld_prime))
 # ifndef OPENSSL_NO_EC2M
         || !TEST_ptr(bld_tri_nc = OSSL_PARAM_BLD_new())
         || !TEST_ptr(bld_tri = OSSL_PARAM_BLD_new())
         || !create_ec_explicit_trinomial_params_namedcurve(bld_tri_nc)
         || !create_ec_explicit_trinomial_params(bld_tri)
-        || !TEST_ptr(ec_explicit_tri_params_nc = OSSL_PARAM_BLD_to_param(bld_tri_nc))
-        || !TEST_ptr(ec_explicit_tri_params_explicit = OSSL_PARAM_BLD_to_param(bld_tri))
+        || !TEST_ptr(ec_explicit_tri_params_nc =
+                         OSSL_PARAM_BLD_to_param(bld_tri_nc))
+        || !TEST_ptr(ec_explicit_tri_params_explicit =
+                         OSSL_PARAM_BLD_to_param(bld_tri))
 # endif
-        )
+       )
         return 0;
 #endif
 
@@ -1391,8 +1423,10 @@ int setup_tests(void)
 #ifndef OPENSSL_NO_EC
     TEST_info("Generating EC keys...");
     MAKE_DOMAIN_KEYS(EC, "EC", EC_params);
-    MAKE_DOMAIN_KEYS(ECExplicitPrimeNamedCurve, "EC", ec_explicit_prime_params_nc);
-    MAKE_DOMAIN_KEYS(ECExplicitPrime2G, "EC", ec_explicit_prime_params_explicit);
+    MAKE_DOMAIN_KEYS(ECExplicitPrimeNamedCurve, "EC",
+                     ec_explicit_prime_params_nc);
+    MAKE_DOMAIN_KEYS(ECExplicitPrime2G, "EC",
+                     ec_explicit_prime_params_explicit);
 # ifndef OPENSSL_NO_EC2M
     MAKE_DOMAIN_KEYS(ECExplicitTriNamedCurve, "EC", ec_explicit_tri_params_nc);
     MAKE_DOMAIN_KEYS(ECExplicitTri2G, "EC", ec_explicit_tri_params_explicit);

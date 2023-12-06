@@ -88,7 +88,7 @@ int RSA_verify_ASN1_OCTET_STRING(int dtype,
     } else {
         ret = 1;
     }
- err:
+err:
     ASN1_OCTET_STRING_free(sig);
     OPENSSL_clear_free(s, (unsigned int)siglen);
     return ret;

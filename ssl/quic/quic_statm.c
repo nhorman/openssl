@@ -39,14 +39,21 @@ void ossl_statm_update_rtt(OSSL_STATM *statm,
      */
 
     adjusted_rtt = latest_rtt;
-    if (ossl_time_compare(latest_rtt, ossl_time_add(statm->min_rtt, ack_delay)) >= 0)
+    if (ossl_time_compare(latest_rtt,
+                          ossl_time_add(statm->min_rtt, ack_delay)) >= 0)
         adjusted_rtt = ossl_time_subtract(latest_rtt, ack_delay);
 
-    statm->rtt_variance = ossl_time_divide(ossl_time_add(ossl_time_multiply(statm->rtt_variance, 3),
-                                                         ossl_time_abs_difference(statm->smoothed_rtt,
-                                                                              adjusted_rtt)), 4);
-    statm->smoothed_rtt = ossl_time_divide(ossl_time_add(ossl_time_multiply(statm->smoothed_rtt, 7),
-                                                         adjusted_rtt), 8);
+    statm->rtt_variance =
+        ossl_time_divide(ossl_time_add(ossl_time_multiply(statm->rtt_variance,
+                                                          3),
+                                       ossl_time_abs_difference(
+                                           statm->smoothed_rtt,
+                                           adjusted_rtt)),
+                         4);
+    statm->smoothed_rtt =
+        ossl_time_divide(ossl_time_add(ossl_time_multiply(statm->smoothed_rtt,
+                                                          7),
+                                       adjusted_rtt), 8);
 }
 
 /* RFC 9002 kInitialRtt value. RFC recommended value. */

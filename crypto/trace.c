@@ -36,7 +36,7 @@ static const BIO  *current_channel = NULL;
  * callback function.
  */
 static int trace_write(BIO *b, const char *buf,
-                               size_t num, size_t *written);
+                       size_t num, size_t *written);
 static int trace_puts(BIO *b, const char *str);
 static long trace_ctrl(BIO *channel, int cmd, long argl, void *argp);
 static int trace_free(BIO *b);
@@ -88,13 +88,13 @@ static long trace_ctrl(BIO *channel, int cmd, long argl, void *argp)
     struct trace_data_st *ctx = BIO_get_data(channel);
 
     switch (cmd) {
-    case OSSL_TRACE_CTRL_BEGIN:
-    case OSSL_TRACE_CTRL_END:
-        /* We know that the callback is likely to return 0 here */
-        ctx->callback("", 0, ctx->category, cmd, ctx->data);
-        return 1;
-    default:
-        break;
+        case OSSL_TRACE_CTRL_BEGIN:
+        case OSSL_TRACE_CTRL_END:
+            /* We know that the callback is likely to return 0 here */
+            ctx->callback("", 0, ctx->category, cmd, ctx->data);
+            return 1;
+        default:
+            break;
     }
     return -2;                   /* Unsupported */
 }
@@ -117,7 +117,7 @@ struct trace_category_st {
     const char * const name;
     const int num;
 };
-#define TRACE_CATEGORY_(name)       { #name, OSSL_TRACE_CATEGORY_##name }
+#define TRACE_CATEGORY_(name)       { #name, OSSL_TRACE_CATEGORY_ ## name }
 
 static const struct trace_category_st
     trace_categories[OSSL_TRACE_CATEGORY_NUM] = {
@@ -195,20 +195,20 @@ enum {
 static int trace_attach_cb(int category, int type, const void *data)
 {
     switch (type) {
-    case CHANNEL:
-        OSSL_TRACE2(TRACE, "Attach channel %p to category '%s'\n",
-                    data, trace_categories[category].name);
-        break;
-    case PREFIX:
-        OSSL_TRACE2(TRACE, "Attach prefix \"%s\" to category '%s'\n",
-                    (const char *)data, trace_categories[category].name);
-        break;
-    case SUFFIX:
-        OSSL_TRACE2(TRACE, "Attach suffix \"%s\" to category '%s'\n",
-                    (const char *)data, trace_categories[category].name);
-        break;
-    default:                     /* No clue */
-        break;
+        case CHANNEL:
+            OSSL_TRACE2(TRACE, "Attach channel %p to category '%s'\n",
+                        data, trace_categories[category].name);
+            break;
+        case PREFIX:
+            OSSL_TRACE2(TRACE, "Attach prefix \"%s\" to category '%s'\n",
+                        (const char *)data, trace_categories[category].name);
+            break;
+        case SUFFIX:
+            OSSL_TRACE2(TRACE, "Attach suffix \"%s\" to category '%s'\n",
+                        (const char *)data, trace_categories[category].name);
+            break;
+        default:                 /* No clue */
+            break;
     }
     return 1;
 }
@@ -216,20 +216,20 @@ static int trace_attach_cb(int category, int type, const void *data)
 static int trace_detach_cb(int category, int type, const void *data)
 {
     switch (type) {
-    case CHANNEL:
-        OSSL_TRACE2(TRACE, "Detach channel %p from category '%s'\n",
-                    data, trace_categories[category].name);
-        break;
-    case PREFIX:
-        OSSL_TRACE2(TRACE, "Detach prefix \"%s\" from category '%s'\n",
-                    (const char *)data, trace_categories[category].name);
-        break;
-    case SUFFIX:
-        OSSL_TRACE2(TRACE, "Detach suffix \"%s\" from category '%s'\n",
-                    (const char *)data, trace_categories[category].name);
-        break;
-    default:                     /* No clue */
-        break;
+        case CHANNEL:
+            OSSL_TRACE2(TRACE, "Detach channel %p from category '%s'\n",
+                        data, trace_categories[category].name);
+            break;
+        case PREFIX:
+            OSSL_TRACE2(TRACE, "Detach prefix \"%s\" from category '%s'\n",
+                        (const char *)data, trace_categories[category].name);
+            break;
+        case SUFFIX:
+            OSSL_TRACE2(TRACE, "Detach suffix \"%s\" from category '%s'\n",
+                        (const char *)data, trace_categories[category].name);
+            break;
+        default:                 /* No clue */
+            break;
     }
     return 1;
 }
@@ -370,21 +370,21 @@ int OSSL_trace_set_channel(int category, BIO *channel)
 static int trace_attach_w_callback_cb(int category, int type, const void *data)
 {
     switch (type) {
-    case CHANNEL:
-        OSSL_TRACE2(TRACE,
-                    "Attach channel %p to category '%s' (with callback)\n",
-                    data, trace_categories[category].name);
-        break;
-    case PREFIX:
-        OSSL_TRACE2(TRACE, "Attach prefix \"%s\" to category '%s'\n",
-                    (const char *)data, trace_categories[category].name);
-        break;
-    case SUFFIX:
-        OSSL_TRACE2(TRACE, "Attach suffix \"%s\" to category '%s'\n",
-                    (const char *)data, trace_categories[category].name);
-        break;
-    default:                     /* No clue */
-        break;
+        case CHANNEL:
+            OSSL_TRACE2(TRACE,
+                        "Attach channel %p to category '%s' (with callback)\n",
+                        data, trace_categories[category].name);
+            break;
+        case PREFIX:
+            OSSL_TRACE2(TRACE, "Attach prefix \"%s\" to category '%s'\n",
+                        (const char *)data, trace_categories[category].name);
+            break;
+        case SUFFIX:
+            OSSL_TRACE2(TRACE, "Attach suffix \"%s\" to category '%s'\n",
+                        (const char *)data, trace_categories[category].name);
+            break;
+        default:                 /* No clue */
+            break;
     }
     return 1;
 }
@@ -402,7 +402,7 @@ int OSSL_trace_set_callback(int category, OSSL_trace_cb callback, void *data)
     if (callback != NULL) {
         if ((channel = BIO_new(&trace_method)) == NULL
             || (trace_data =
-                OPENSSL_zalloc(sizeof(struct trace_data_st))) == NULL)
+                    OPENSSL_zalloc(sizeof(struct trace_data_st))) == NULL)
             goto err;
 
         trace_data->callback = callback;
@@ -418,7 +418,7 @@ int OSSL_trace_set_callback(int category, OSSL_trace_cb callback, void *data)
 
     return 1;
 
- err:
+err:
     BIO_free(channel);
     OPENSSL_free(trace_data);
 #endif
@@ -486,16 +486,16 @@ BIO *OSSL_trace_begin(int category)
             return NULL;
         current_channel = channel;
         switch (trace_channels[category].type) {
-        case SIMPLE_CHANNEL:
-            if (prefix != NULL) {
-                (void)BIO_puts(channel, prefix);
-                (void)BIO_puts(channel, "\n");
-            }
-            break;
-        case CALLBACK_CHANNEL:
-            (void)BIO_ctrl(channel, OSSL_TRACE_CTRL_BEGIN,
-                           prefix == NULL ? 0 : strlen(prefix), prefix);
-            break;
+            case SIMPLE_CHANNEL:
+                if (prefix != NULL) {
+                    (void)BIO_puts(channel, prefix);
+                    (void)BIO_puts(channel, "\n");
+                }
+                break;
+            case CALLBACK_CHANNEL:
+                (void)BIO_ctrl(channel, OSSL_TRACE_CTRL_BEGIN,
+                               prefix == NULL ? 0 : strlen(prefix), prefix);
+                break;
         }
     }
 #endif
@@ -515,16 +515,16 @@ void OSSL_trace_end(int category, BIO *channel)
         && ossl_assert(channel == current_channel)) {
         (void)BIO_flush(channel);
         switch (trace_channels[category].type) {
-        case SIMPLE_CHANNEL:
-            if (suffix != NULL) {
-                (void)BIO_puts(channel, suffix);
-                (void)BIO_puts(channel, "\n");
-            }
-            break;
-        case CALLBACK_CHANNEL:
-            (void)BIO_ctrl(channel, OSSL_TRACE_CTRL_END,
-                           suffix == NULL ? 0 : strlen(suffix), suffix);
-            break;
+            case SIMPLE_CHANNEL:
+                if (suffix != NULL) {
+                    (void)BIO_puts(channel, suffix);
+                    (void)BIO_puts(channel, "\n");
+                }
+                break;
+            case CALLBACK_CHANNEL:
+                (void)BIO_ctrl(channel, OSSL_TRACE_CTRL_END,
+                               suffix == NULL ? 0 : strlen(suffix), suffix);
+                break;
         }
         current_channel = NULL;
         CRYPTO_THREAD_unlock(trace_lock);

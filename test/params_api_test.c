@@ -207,7 +207,9 @@ static int test_param_uint(int n)
 {
     unsigned int in, out;
     unsigned char buf[MAX_LEN], cmp[sizeof(unsigned int)];
-    const size_t len = raw_values[n].len >= sizeof(unsigned int) ? sizeof(unsigned int) : raw_values[n].len;
+    const size_t len = raw_values[n].len >=
+                       sizeof(unsigned int) ? sizeof(unsigned int) : raw_values[
+        n].len;
     OSSL_PARAM param = OSSL_PARAM_uint("a", NULL);
 
     memset(buf, 0, sizeof(buf));
@@ -226,7 +228,8 @@ static int test_param_uint(int n)
     if (!TEST_mem_eq(cmp, sizeof(in), raw_values[n].value, sizeof(in)))
         return 0;
     param.data = &out;
-    return test_param_type_extra(&param, raw_values[n].value, sizeof(unsigned int));
+    return test_param_type_extra(&param, raw_values[n].value,
+                                 sizeof(unsigned int));
 }
 
 static int test_param_ulong(int n)
@@ -253,7 +256,8 @@ static int test_param_ulong(int n)
     if (!TEST_mem_eq(cmp, sizeof(in), raw_values[n].value, sizeof(in)))
         return 0;
     param.data = &out;
-    return test_param_type_extra(&param, raw_values[n].value, sizeof(unsigned long int));
+    return test_param_type_extra(&param, raw_values[n].value,
+                                 sizeof(unsigned long int));
 }
 
 static int test_param_int32(int n)
@@ -465,7 +469,8 @@ static int test_param_signed_bignum(int n)
         goto err;
 
     /* raw_values are little endian */
-    if (!TEST_false(!!(raw_values[n].value[len - 1] & 0x80) ^ BN_is_negative(b)))
+    if (!TEST_false(!!(raw_values[n].value[len - 1] &
+                       0x80) ^ BN_is_negative(b)))
         goto err;
     if (!TEST_true(OSSL_PARAM_set_BN(&param, b)))
         goto err;
@@ -547,19 +552,19 @@ static int test_param_construct(int tstid)
     params[n] = OSSL_PARAM_construct_end();
 
     switch (tstid) {
-    case 0:
-        p = params;
-        break;
-    case 1:
-        p = OSSL_PARAM_merge(params, params_empty);
-        break;
-    case 2:
-        p = OSSL_PARAM_dup(params);
-        break;
-    default:
-        p1 = OSSL_PARAM_dup(params);
-        p = OSSL_PARAM_merge(p1, params_empty);
-        break;
+        case 0:
+            p = params;
+            break;
+        case 1:
+            p = OSSL_PARAM_merge(params, params_empty);
+            break;
+        case 2:
+            p = OSSL_PARAM_dup(params);
+            break;
+        default:
+            p1 = OSSL_PARAM_dup(params);
+            p = OSSL_PARAM_merge(p1, params_empty);
+            break;
     }
 
     /* Search failure */
@@ -685,19 +690,19 @@ static int test_param_modified(void)
     param->data = &a;
     param[1].data = &b;
     if (!TEST_false(OSSL_PARAM_modified(param))
-            && !TEST_true(OSSL_PARAM_set_int32(param, 1234))
-            && !TEST_true(OSSL_PARAM_modified(param))
-            && !TEST_false(OSSL_PARAM_modified(param + 1))
-            && !TEST_true(OSSL_PARAM_set_int32(param + 1, 1))
-            && !TEST_true(OSSL_PARAM_modified(param + 1)))
+        && !TEST_true(OSSL_PARAM_set_int32(param, 1234))
+        && !TEST_true(OSSL_PARAM_modified(param))
+        && !TEST_false(OSSL_PARAM_modified(param + 1))
+        && !TEST_true(OSSL_PARAM_set_int32(param + 1, 1))
+        && !TEST_true(OSSL_PARAM_modified(param + 1)))
         return 0;
     OSSL_PARAM_set_all_unmodified(param);
     if (!TEST_false(OSSL_PARAM_modified(param))
-            && !TEST_true(OSSL_PARAM_set_int32(param, 4321))
-            && !TEST_true(OSSL_PARAM_modified(param))
-            && !TEST_false(OSSL_PARAM_modified(param + 1))
-            && !TEST_true(OSSL_PARAM_set_int32(param + 1, 2))
-            && !TEST_true(OSSL_PARAM_modified(param + 1)))
+        && !TEST_true(OSSL_PARAM_set_int32(param, 4321))
+        && !TEST_true(OSSL_PARAM_modified(param))
+        && !TEST_false(OSSL_PARAM_modified(param + 1))
+        && !TEST_true(OSSL_PARAM_set_int32(param + 1, 2))
+        && !TEST_true(OSSL_PARAM_modified(param + 1)))
         return 0;
     return 1;
 }

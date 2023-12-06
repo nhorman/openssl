@@ -240,7 +240,7 @@ static TESTDATA x509_cmp_tests[] = {
         "170217180154Zlongtrailinggarbage", V_ASN1_UTCTIME, 0, 0,
     },
     {
-         /* Swapped type. */
+        /* Swapped type. */
         "20170217180154Z", V_ASN1_UTCTIME, 0, 0,
     },
     {
@@ -267,7 +267,7 @@ static int test_x509_cmp_time(int idx)
     result = X509_cmp_time(&t, &x509_cmp_tests[idx].cmp_time);
     if (!TEST_int_eq(result, x509_cmp_tests[idx].expected)) {
         TEST_info("test_x509_cmp_time(%d) failed: expected %d, got %d\n",
-                idx, x509_cmp_tests[idx].expected, result);
+                  idx, x509_cmp_tests[idx].expected, result);
         return 0;
     }
     return 1;
@@ -303,20 +303,22 @@ static int test_X509_cmp_timeframe_vpm(const X509_VERIFY_PARAM *vpm,
                                        ASN1_TIME *asn1_after)
 {
     int always_0 = vpm != NULL
-        && (X509_VERIFY_PARAM_get_flags(vpm) & X509_V_FLAG_USE_CHECK_TIME) == 0
-        && (X509_VERIFY_PARAM_get_flags(vpm) & X509_V_FLAG_NO_CHECK_TIME) != 0;
+                   && (X509_VERIFY_PARAM_get_flags(vpm) &
+                       X509_V_FLAG_USE_CHECK_TIME) == 0
+                   && (X509_VERIFY_PARAM_get_flags(vpm) &
+                       X509_V_FLAG_NO_CHECK_TIME) != 0;
 
     return asn1_before != NULL && asn1_mid != NULL && asn1_after != NULL
-        && TEST_int_eq(X509_cmp_timeframe(vpm, asn1_before, asn1_after), 0)
-        && TEST_int_eq(X509_cmp_timeframe(vpm, asn1_before, NULL), 0)
-        && TEST_int_eq(X509_cmp_timeframe(vpm, NULL, asn1_after), 0)
-        && TEST_int_eq(X509_cmp_timeframe(vpm, NULL, NULL), 0)
-        && TEST_int_eq(X509_cmp_timeframe(vpm, asn1_after, asn1_after),
-                       always_0 ? 0 : -1)
-        && TEST_int_eq(X509_cmp_timeframe(vpm, asn1_before, asn1_before),
-                       always_0 ? 0 : 1)
-        && TEST_int_eq(X509_cmp_timeframe(vpm, asn1_after, asn1_before),
-                       always_0 ? 0 : 1);
+           && TEST_int_eq(X509_cmp_timeframe(vpm, asn1_before, asn1_after), 0)
+           && TEST_int_eq(X509_cmp_timeframe(vpm, asn1_before, NULL), 0)
+           && TEST_int_eq(X509_cmp_timeframe(vpm, NULL, asn1_after), 0)
+           && TEST_int_eq(X509_cmp_timeframe(vpm, NULL, NULL), 0)
+           && TEST_int_eq(X509_cmp_timeframe(vpm, asn1_after, asn1_after),
+                          always_0 ? 0 : -1)
+           && TEST_int_eq(X509_cmp_timeframe(vpm, asn1_before, asn1_before),
+                          always_0 ? 0 : 1)
+           && TEST_int_eq(X509_cmp_timeframe(vpm, asn1_after, asn1_before),
+                          always_0 ? 0 : 1);
 }
 
 static int test_X509_cmp_timeframe(void)
@@ -332,13 +334,15 @@ static int test_X509_cmp_timeframe(void)
     if (vpm == NULL)
         goto finish;
     res = test_X509_cmp_timeframe_vpm(NULL, asn1_before, asn1_mid, asn1_after)
-        && test_X509_cmp_timeframe_vpm(vpm, asn1_before, asn1_mid, asn1_after);
+          && test_X509_cmp_timeframe_vpm(vpm, asn1_before, asn1_mid,
+                                         asn1_after);
 
     X509_VERIFY_PARAM_set_time(vpm, now);
     res = res
-        && test_X509_cmp_timeframe_vpm(vpm, asn1_before, asn1_mid, asn1_after)
-        && X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_NO_CHECK_TIME)
-        && test_X509_cmp_timeframe_vpm(vpm, asn1_before, asn1_mid, asn1_after);
+          && test_X509_cmp_timeframe_vpm(vpm, asn1_before, asn1_mid, asn1_after)
+          && X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_NO_CHECK_TIME)
+          && test_X509_cmp_timeframe_vpm(vpm, asn1_before, asn1_mid,
+                                         asn1_after);
 
     X509_VERIFY_PARAM_free(vpm);
 finish:
@@ -367,7 +371,7 @@ static int test_x509_time(int idx)
     /* time string parsing result is always checked against what's expected */
     if (!TEST_int_eq(result, x509_format_tests[idx].expected)) {
         TEST_info("test_x509_time(%d) failed: expected %d, got %d\n",
-                idx, x509_format_tests[idx].expected, result);
+                  idx, x509_format_tests[idx].expected, result);
         goto out;
     }
 
@@ -375,7 +379,7 @@ static int test_x509_time(int idx)
     if (t != NULL && x509_format_tests[idx].expected_type != -1) {
         if (!TEST_int_eq(t->type, x509_format_tests[idx].expected_type)) {
             TEST_info("test_x509_time(%d) failed: expected_type %d, got %d\n",
-                    idx, x509_format_tests[idx].expected_type, t->type);
+                      idx, x509_format_tests[idx].expected_type, t->type);
             goto out;
         }
     }
@@ -383,11 +387,12 @@ static int test_x509_time(int idx)
     /* if t is not NULL but expected_string is NULL, it is an 'OK' case too */
     if (t != NULL && x509_format_tests[idx].expected_string) {
         if (!TEST_mem_eq((const char *)t->data, t->length,
-                    x509_format_tests[idx].expected_string,
-                    strlen(x509_format_tests[idx].expected_string))) {
-            TEST_info("test_x509_time(%d) failed: expected_string %s, got %.*s\n",
-                    idx, x509_format_tests[idx].expected_string, t->length,
-                    t->data);
+                         x509_format_tests[idx].expected_string,
+                         strlen(x509_format_tests[idx].expected_string))) {
+            TEST_info(
+                "test_x509_time(%d) failed: expected_string %s, got %.*s\n",
+                idx, x509_format_tests[idx].expected_string, t->length,
+                t->data);
             goto out;
         }
     }
@@ -479,7 +484,7 @@ static int test_days(int n)
 }
 
 #define construct_asn1_time(s, t, e) \
-    { { sizeof(s) - 1, t, (unsigned char*)s, 0 }, e }
+        { { sizeof(s) - 1, t, (unsigned char*)s, 0 }, e }
 
 static const struct {
     ASN1_TIME asn1;
@@ -487,25 +492,25 @@ static const struct {
 } x509_print_tests_rfc_822 [] = {
     /* Generalized Time */
     construct_asn1_time("20170731222050Z", V_ASN1_GENERALIZEDTIME,
-            "Jul 31 22:20:50 2017 GMT"),
+                        "Jul 31 22:20:50 2017 GMT"),
     /* Generalized Time, no seconds */
     construct_asn1_time("201707312220Z", V_ASN1_GENERALIZEDTIME,
-            "Jul 31 22:20:00 2017 GMT"),
+                        "Jul 31 22:20:00 2017 GMT"),
     /* Generalized Time, fractional seconds (3 digits) */
     construct_asn1_time("20170731222050.123Z", V_ASN1_GENERALIZEDTIME,
-            "Jul 31 22:20:50.123 2017 GMT"),
+                        "Jul 31 22:20:50.123 2017 GMT"),
     /* Generalized Time, fractional seconds (1 digit) */
     construct_asn1_time("20170731222050.1Z", V_ASN1_GENERALIZEDTIME,
-            "Jul 31 22:20:50.1 2017 GMT"),
+                        "Jul 31 22:20:50.1 2017 GMT"),
     /* Generalized Time, fractional seconds (0 digit) */
     construct_asn1_time("20170731222050.Z", V_ASN1_GENERALIZEDTIME,
-            "Bad time value"),
+                        "Bad time value"),
     /* UTC Time */
     construct_asn1_time("170731222050Z", V_ASN1_UTCTIME,
-            "Jul 31 22:20:50 2017 GMT"),
+                        "Jul 31 22:20:50 2017 GMT"),
     /* UTC Time, no seconds */
     construct_asn1_time("1707312220Z", V_ASN1_UTCTIME,
-            "Jul 31 22:20:00 2017 GMT"),
+                        "Jul 31 22:20:00 2017 GMT"),
 };
 
 static const struct {
@@ -514,25 +519,25 @@ static const struct {
 } x509_print_tests_iso_8601 [] = {
     /* Generalized Time */
     construct_asn1_time("20170731222050Z", V_ASN1_GENERALIZEDTIME,
-            "2017-07-31 22:20:50Z"),
+                        "2017-07-31 22:20:50Z"),
     /* Generalized Time, no seconds */
     construct_asn1_time("201707312220Z", V_ASN1_GENERALIZEDTIME,
-            "2017-07-31 22:20:00Z"),
+                        "2017-07-31 22:20:00Z"),
     /* Generalized Time, fractional seconds (3 digits) */
     construct_asn1_time("20170731222050.123Z", V_ASN1_GENERALIZEDTIME,
-            "2017-07-31 22:20:50.123Z"),
+                        "2017-07-31 22:20:50.123Z"),
     /* Generalized Time, fractional seconds (1 digit) */
     construct_asn1_time("20170731222050.1Z", V_ASN1_GENERALIZEDTIME,
-            "2017-07-31 22:20:50.1Z"),
+                        "2017-07-31 22:20:50.1Z"),
     /* Generalized Time, fractional seconds (0 digit) */
     construct_asn1_time("20170731222050.Z", V_ASN1_GENERALIZEDTIME,
-            "Bad time value"),
+                        "Bad time value"),
     /* UTC Time */
     construct_asn1_time("170731222050Z", V_ASN1_UTCTIME,
-            "2017-07-31 22:20:50Z"),
+                        "2017-07-31 22:20:50Z"),
     /* UTC Time, no seconds */
     construct_asn1_time("1707312220Z", V_ASN1_UTCTIME,
-            "2017-07-31 22:20:00Z"),
+                        "2017-07-31 22:20:00Z"),
 };
 
 static int test_x509_time_print_rfc_822(int idx)
@@ -545,7 +550,8 @@ static int test_x509_time_print_rfc_822(int idx)
     if (!TEST_ptr(m = BIO_new(BIO_s_mem())))
         goto err;
 
-    rv = ASN1_TIME_print_ex(m, &x509_print_tests_rfc_822[idx].asn1, ASN1_DTFLGS_RFC822);
+    rv = ASN1_TIME_print_ex(m, &x509_print_tests_rfc_822[idx].asn1,
+                            ASN1_DTFLGS_RFC822);
     readable = x509_print_tests_rfc_822[idx].readable;
 
     if (rv == 0 && !TEST_str_eq(readable, "Bad time value")) {
@@ -558,7 +564,7 @@ static int test_x509_time_print_rfc_822(int idx)
         goto err;
 
     ret = 1;
- err:
+err:
     BIO_free(m);
     return ret;
 }
@@ -573,7 +579,8 @@ static int test_x509_time_print_iso_8601(int idx)
     if (!TEST_ptr(m = BIO_new(BIO_s_mem())))
         goto err;
 
-    rv = ASN1_TIME_print_ex(m, &x509_print_tests_iso_8601[idx].asn1, ASN1_DTFLGS_ISO8601);
+    rv = ASN1_TIME_print_ex(m, &x509_print_tests_iso_8601[idx].asn1,
+                            ASN1_DTFLGS_ISO8601);
     readable = x509_print_tests_iso_8601[idx].readable;
 
     if (rv == 0 && !TEST_str_eq(readable, "Bad time value")) {
@@ -586,7 +593,7 @@ static int test_x509_time_print_iso_8601(int idx)
         goto err;
 
     ret = 1;
- err:
+err:
     BIO_free(m);
     return ret;
 }
@@ -598,7 +605,9 @@ int setup_tests(void)
     ADD_ALL_TESTS(test_x509_cmp_time, OSSL_NELEM(x509_cmp_tests));
     ADD_ALL_TESTS(test_x509_time, OSSL_NELEM(x509_format_tests));
     ADD_ALL_TESTS(test_days, OSSL_NELEM(day_of_week_tests));
-    ADD_ALL_TESTS(test_x509_time_print_rfc_822, OSSL_NELEM(x509_print_tests_rfc_822));
-    ADD_ALL_TESTS(test_x509_time_print_iso_8601, OSSL_NELEM(x509_print_tests_iso_8601));
+    ADD_ALL_TESTS(test_x509_time_print_rfc_822,
+                  OSSL_NELEM(x509_print_tests_rfc_822));
+    ADD_ALL_TESTS(test_x509_time_print_iso_8601,
+                  OSSL_NELEM(x509_print_tests_iso_8601));
     return 1;
 }

@@ -230,7 +230,7 @@ static int ecdsa_sign_setup(EC_KEY *eckey, BN_CTX *ctx_in,
     *rp = r;
     *kinvp = k;
     ret = 1;
- err:
+err:
     if (!ret) {
         BN_clear_free(k);
         BN_clear_free(r);
@@ -377,7 +377,7 @@ ECDSA_SIG *ossl_ecdsa_simple_sign_sig(const unsigned char *dgst, int dgst_len,
     } while (1);
 
     ok = 1;
- err:
+err:
     if (!ok) {
         ECDSA_SIG_free(ret);
         ret = NULL;
@@ -413,7 +413,7 @@ int ossl_ecdsa_verify(int type, const unsigned char *dgst, int dgst_len,
     if (derlen != sig_len || memcmp(sigbuf, der, derlen) != 0)
         goto err;
     ret = ECDSA_do_verify(dgst, dgst_len, s, eckey);
- err:
+err:
     OPENSSL_free(der);
     ECDSA_SIG_free(s);
     return ret;
@@ -522,7 +522,7 @@ int ossl_ecdsa_simple_verify_sig(const unsigned char *dgst, int dgst_len,
     }
     /*  if the signature is correct u1 is equal to sig->r */
     ret = (BN_ucmp(u1, sig->r) == 0);
- err:
+err:
     BN_CTX_end(ctx);
     BN_CTX_free(ctx);
     EC_POINT_free(point);

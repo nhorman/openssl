@@ -26,9 +26,12 @@
 # include "s390x_arch.h"
 
 # define S390X_CAN_SIGN(edtype)                                                \
-((OPENSSL_s390xcap_P.pcc[1] & S390X_CAPBIT(S390X_SCALAR_MULTIPLY_##edtype))    \
-&& (OPENSSL_s390xcap_P.kdsa[0] & S390X_CAPBIT(S390X_EDDSA_SIGN_##edtype))      \
-&& (OPENSSL_s390xcap_P.kdsa[0] & S390X_CAPBIT(S390X_EDDSA_VERIFY_##edtype)))
+        ((OPENSSL_s390xcap_P.pcc[1] &S390X_CAPBIT(S390X_SCALAR_MULTIPLY_ ## \
+                                                  edtype))    \
+         && (OPENSSL_s390xcap_P.kdsa[0] &S390X_CAPBIT(S390X_EDDSA_SIGN_ ## \
+                                                      edtype))      \
+         && (OPENSSL_s390xcap_P.kdsa[0] &S390X_CAPBIT(S390X_EDDSA_VERIFY_ ## \
+                                                      edtype)))
 
 static int s390x_ed25519_digestsign(const ECX_KEY *edkey, unsigned char *sig,
                                     const unsigned char *tbs, size_t tbslen);
@@ -119,7 +122,7 @@ static OSSL_FUNC_signature_settable_ctx_params_fn eddsa_settable_ctx_params;
                     is in ASCII (8 octets).
 
    Note above that x is the pre-hash flag, and y is the context string.
-*/
+ */
 
 typedef struct {
     OSSL_LIB_CTX *libctx;
@@ -128,7 +131,7 @@ typedef struct {
     /* The Algorithm Identifier of the signature algorithm */
     unsigned char aid_buf[OSSL_MAX_ALGORITHM_ID_SIZE];
     unsigned char *aid;
-    size_t  aid_len;
+    size_t aid_len;
 
     /* id indicating the EdDSA instance */
     int instance_id;
@@ -202,21 +205,23 @@ static int eddsa_digest_signverify_init(void *vpeddsactx, const char *mdname,
      * anything that needs an AlgorithmIdentifier.
      */
     peddsactx->aid_len = 0;
-    ret = WPACKET_init_der(&pkt, peddsactx->aid_buf, sizeof(peddsactx->aid_buf));
+    ret =
+        WPACKET_init_der(&pkt, peddsactx->aid_buf, sizeof(peddsactx->aid_buf));
     switch (edkey->type) {
-    case ECX_KEY_TYPE_ED25519:
-        ret = ret && ossl_DER_w_algorithmIdentifier_ED25519(&pkt, -1, edkey);
-        peddsactx->instance_id = ID_Ed25519;
-        break;
-    case ECX_KEY_TYPE_ED448:
-        ret = ret && ossl_DER_w_algorithmIdentifier_ED448(&pkt, -1, edkey);
-        peddsactx->instance_id = ID_Ed448;
-        break;
-    default:
-        /* Should never happen */
-        ERR_raise(ERR_LIB_PROV, ERR_R_INTERNAL_ERROR);
-        ossl_ecx_key_free(edkey);
-        return 0;
+        case ECX_KEY_TYPE_ED25519:
+            ret = ret &&
+                  ossl_DER_w_algorithmIdentifier_ED25519(&pkt, -1, edkey);
+            peddsactx->instance_id = ID_Ed25519;
+            break;
+        case ECX_KEY_TYPE_ED448:
+            ret = ret && ossl_DER_w_algorithmIdentifier_ED448(&pkt, -1, edkey);
+            peddsactx->instance_id = ID_Ed448;
+            break;
+        default:
+            /* Should never happen */
+            ERR_raise(ERR_LIB_PROV, ERR_R_INTERNAL_ERROR);
+            ossl_ecx_key_free(edkey);
+            return 0;
     }
     if (ret && WPACKET_finish(&pkt)) {
         WPACKET_get_total_written(&pkt, &peddsactx->aid_len);
@@ -260,9 +265,9 @@ int ed25519_digest_sign(void *vpeddsactx, unsigned char *sigret,
     /* s390x_ed25519_digestsign() does not yet support dom2 or context-strings.
        fall back to non-accelerated sign if those options are set. */
     if (S390X_CAN_SIGN(ED25519)
-            && !peddsactx->dom2_flag
-            && !peddsactx->context_string_flag
-            && peddsactx->context_string_len == 0) {
+        && !peddsactx->dom2_flag
+        && !peddsactx->context_string_flag
+        && peddsactx->context_string_len == 0) {
         if (s390x_ed25519_digestsign(edkey, sigret, tbs, tbslen) == 0) {
             ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SIGN);
             return 0;
@@ -273,17 +278,20 @@ int ed25519_digest_sign(void *vpeddsactx, unsigned char *sigret,
 #endif /* S390X_EC_ASM */
 
     if (peddsactx->prehash_flag) {
-        if (!EVP_Q_digest(peddsactx->libctx, SN_sha512, NULL, tbs, tbslen, md, &mdlen)
-                || mdlen != EDDSA_PREHASH_OUTPUT_LEN)
+        if (!EVP_Q_digest(peddsactx->libctx, SN_sha512, NULL, tbs, tbslen, md,
+                          &mdlen)
+            || mdlen != EDDSA_PREHASH_OUTPUT_LEN)
             return 0;
         tbs = md;
         tbslen = mdlen;
     }
 
     if (ossl_ed25519_sign(sigret, tbs, tbslen, edkey->pubkey, edkey->privkey,
-            peddsactx->dom2_flag, peddsactx->prehash_flag, peddsactx->context_string_flag,
-            peddsactx->context_string, peddsactx->context_string_len,
-            peddsactx->libctx, NULL) == 0) {
+                          peddsactx->dom2_flag, peddsactx->prehash_flag,
+                          peddsactx->context_string_flag,
+                          peddsactx->context_string,
+                          peddsactx->context_string_len,
+                          peddsactx->libctx, NULL) == 0) {
         ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SIGN);
         return 0;
     }
@@ -306,13 +314,13 @@ static int ed448_shake256(OSSL_LIB_CTX *libctx,
         goto err;
 
     if (!EVP_DigestInit_ex(hash_ctx, shake256, NULL)
-            || !EVP_DigestUpdate(hash_ctx, in, inlen)
-            || !EVP_DigestFinalXOF(hash_ctx, out, outlen))
+        || !EVP_DigestUpdate(hash_ctx, in, inlen)
+        || !EVP_DigestFinalXOF(hash_ctx, out, outlen))
         goto err;
 
     ret = 1;
 
- err:
+err:
     EVP_MD_CTX_free(hash_ctx);
     EVP_MD_free(shake256);
     return ret;
@@ -346,8 +354,8 @@ int ed448_digest_sign(void *vpeddsactx, unsigned char *sigret,
     /* s390x_ed448_digestsign() does not yet support context-strings or pre-hashing.
        fall back to non-accelerated sign if a context-string or pre-hasing is provided. */
     if (S390X_CAN_SIGN(ED448)
-            && peddsactx->context_string_len == 0
-            && peddsactx->prehash_flag == 0) {
+        && peddsactx->context_string_len == 0
+        && peddsactx->prehash_flag == 0) {
         if (s390x_ed448_digestsign(edkey, sigret, tbs, tbslen) == 0) {
             ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SIGN);
             return 0;
@@ -366,7 +374,8 @@ int ed448_digest_sign(void *vpeddsactx, unsigned char *sigret,
 
     if (ossl_ed448_sign(peddsactx->libctx, sigret, tbs, tbslen,
                         edkey->pubkey, edkey->privkey,
-                        peddsactx->context_string, peddsactx->context_string_len,
+                        peddsactx->context_string,
+                        peddsactx->context_string_len,
                         peddsactx->prehash_flag, edkey->propq) == 0) {
         ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SIGN);
         return 0;
@@ -391,24 +400,27 @@ int ed25519_digest_verify(void *vpeddsactx, const unsigned char *sig,
     /* s390x_ed25519_digestverify() does not yet support dom2 or context-strings.
        fall back to non-accelerated verify if those options are set. */
     if (S390X_CAN_SIGN(ED25519)
-            && !peddsactx->dom2_flag
-            && !peddsactx->context_string_flag
-            && peddsactx->context_string_len == 0) {
+        && !peddsactx->dom2_flag
+        && !peddsactx->context_string_flag
+        && peddsactx->context_string_len == 0) {
         return s390x_ed25519_digestverify(edkey, sig, tbs, tbslen);
     }
 #endif /* S390X_EC_ASM */
 
     if (peddsactx->prehash_flag) {
-        if (!EVP_Q_digest(peddsactx->libctx, SN_sha512, NULL, tbs, tbslen, md, &mdlen)
-                || mdlen != EDDSA_PREHASH_OUTPUT_LEN)
+        if (!EVP_Q_digest(peddsactx->libctx, SN_sha512, NULL, tbs, tbslen, md,
+                          &mdlen)
+            || mdlen != EDDSA_PREHASH_OUTPUT_LEN)
             return 0;
         tbs = md;
         tbslen = mdlen;
     }
 
     return ossl_ed25519_verify(tbs, tbslen, sig, edkey->pubkey,
-                               peddsactx->dom2_flag, peddsactx->prehash_flag, peddsactx->context_string_flag,
-                               peddsactx->context_string, peddsactx->context_string_len,
+                               peddsactx->dom2_flag, peddsactx->prehash_flag,
+                               peddsactx->context_string_flag,
+                               peddsactx->context_string,
+                               peddsactx->context_string_len,
                                peddsactx->libctx, edkey->propq);
 }
 
@@ -428,8 +440,8 @@ int ed448_digest_verify(void *vpeddsactx, const unsigned char *sig,
     /* s390x_ed448_digestverify() does not yet support context-strings or pre-hashing.
        fall back to non-accelerated verify if a context-string or pre-hasing is provided. */
     if (S390X_CAN_SIGN(ED448)
-            && peddsactx->context_string_len == 0
-            && peddsactx->prehash_flag == 0) {
+        && peddsactx->context_string_len == 0
+        && peddsactx->prehash_flag == 0) {
         return s390x_ed448_digestverify(edkey, sig, tbs, tbslen);
     }
 #endif /* S390X_EC_ASM */
@@ -442,7 +454,8 @@ int ed448_digest_verify(void *vpeddsactx, const unsigned char *sig,
     }
 
     return ossl_ed448_verify(peddsactx->libctx, tbs, tbslen, sig, edkey->pubkey,
-                             peddsactx->context_string, peddsactx->context_string_len,
+                             peddsactx->context_string,
+                             peddsactx->context_string_len,
                              peddsactx->prehash_flag, edkey->propq);
 }
 
@@ -477,7 +490,7 @@ static void *eddsa_dupctx(void *vpeddsactx)
     dstctx->key = srcctx->key;
 
     return dstctx;
- err:
+err:
     eddsa_freectx(dstctx);
     return NULL;
 }
@@ -526,7 +539,8 @@ static int eddsa_set_ctx_params(void *vpeddsactx, const OSSL_PARAM params[])
         char instance_name[OSSL_MAX_NAME_SIZE] = "";
         char *pinstance_name = instance_name;
 
-        if (!OSSL_PARAM_get_utf8_string(p, &pinstance_name, sizeof(instance_name)))
+        if (!OSSL_PARAM_get_utf8_string(p, &pinstance_name,
+                                        sizeof(instance_name)))
             return 0;
 
         if (OPENSSL_strcasecmp(pinstance_name, SN_Ed25519) == 0) {
@@ -568,7 +582,9 @@ static int eddsa_set_ctx_params(void *vpeddsactx, const OSSL_PARAM params[])
     if (p != NULL) {
         void *vp_context_string = peddsactx->context_string;
 
-        if (!OSSL_PARAM_get_octet_string(p, &vp_context_string, sizeof(peddsactx->context_string), &(peddsactx->context_string_len))) {
+        if (!OSSL_PARAM_get_octet_string(p, &vp_context_string,
+                                         sizeof(peddsactx->context_string),
+                                         &(peddsactx->context_string_len))) {
             peddsactx->context_string_len = 0;
             return 0;
         }
@@ -590,44 +606,48 @@ static const OSSL_PARAM *eddsa_settable_ctx_params(ossl_unused void *vpeddsactx,
 }
 
 const OSSL_DISPATCH ossl_ed25519_signature_functions[] = {
-    { OSSL_FUNC_SIGNATURE_NEWCTX, (void (*)(void))eddsa_newctx },
+    { OSSL_FUNC_SIGNATURE_NEWCTX, (void (*)(void)) eddsa_newctx },
     { OSSL_FUNC_SIGNATURE_DIGEST_SIGN_INIT,
-      (void (*)(void))eddsa_digest_signverify_init },
+      (void (*)(void)) eddsa_digest_signverify_init },
     { OSSL_FUNC_SIGNATURE_DIGEST_SIGN,
-      (void (*)(void))ed25519_digest_sign },
+      (void (*)(void)) ed25519_digest_sign },
     { OSSL_FUNC_SIGNATURE_DIGEST_VERIFY_INIT,
-      (void (*)(void))eddsa_digest_signverify_init },
+      (void (*)(void)) eddsa_digest_signverify_init },
     { OSSL_FUNC_SIGNATURE_DIGEST_VERIFY,
-      (void (*)(void))ed25519_digest_verify },
-    { OSSL_FUNC_SIGNATURE_FREECTX, (void (*)(void))eddsa_freectx },
-    { OSSL_FUNC_SIGNATURE_DUPCTX, (void (*)(void))eddsa_dupctx },
-    { OSSL_FUNC_SIGNATURE_GET_CTX_PARAMS, (void (*)(void))eddsa_get_ctx_params },
+      (void (*)(void)) ed25519_digest_verify },
+    { OSSL_FUNC_SIGNATURE_FREECTX, (void (*)(void)) eddsa_freectx },
+    { OSSL_FUNC_SIGNATURE_DUPCTX, (void (*)(void)) eddsa_dupctx },
+    { OSSL_FUNC_SIGNATURE_GET_CTX_PARAMS,
+      (void (*)(void)) eddsa_get_ctx_params },
     { OSSL_FUNC_SIGNATURE_GETTABLE_CTX_PARAMS,
-      (void (*)(void))eddsa_gettable_ctx_params },
-    { OSSL_FUNC_SIGNATURE_SET_CTX_PARAMS, (void (*)(void))eddsa_set_ctx_params },
+      (void (*)(void)) eddsa_gettable_ctx_params },
+    { OSSL_FUNC_SIGNATURE_SET_CTX_PARAMS,
+      (void (*)(void)) eddsa_set_ctx_params },
     { OSSL_FUNC_SIGNATURE_SETTABLE_CTX_PARAMS,
-      (void (*)(void))eddsa_settable_ctx_params },
+      (void (*)(void)) eddsa_settable_ctx_params },
     OSSL_DISPATCH_END
 };
 
 const OSSL_DISPATCH ossl_ed448_signature_functions[] = {
-    { OSSL_FUNC_SIGNATURE_NEWCTX, (void (*)(void))eddsa_newctx },
+    { OSSL_FUNC_SIGNATURE_NEWCTX, (void (*)(void)) eddsa_newctx },
     { OSSL_FUNC_SIGNATURE_DIGEST_SIGN_INIT,
-      (void (*)(void))eddsa_digest_signverify_init },
+      (void (*)(void)) eddsa_digest_signverify_init },
     { OSSL_FUNC_SIGNATURE_DIGEST_SIGN,
-      (void (*)(void))ed448_digest_sign },
+      (void (*)(void)) ed448_digest_sign },
     { OSSL_FUNC_SIGNATURE_DIGEST_VERIFY_INIT,
-      (void (*)(void))eddsa_digest_signverify_init },
+      (void (*)(void)) eddsa_digest_signverify_init },
     { OSSL_FUNC_SIGNATURE_DIGEST_VERIFY,
-      (void (*)(void))ed448_digest_verify },
-    { OSSL_FUNC_SIGNATURE_FREECTX, (void (*)(void))eddsa_freectx },
-    { OSSL_FUNC_SIGNATURE_DUPCTX, (void (*)(void))eddsa_dupctx },
-    { OSSL_FUNC_SIGNATURE_GET_CTX_PARAMS, (void (*)(void))eddsa_get_ctx_params },
+      (void (*)(void)) ed448_digest_verify },
+    { OSSL_FUNC_SIGNATURE_FREECTX, (void (*)(void)) eddsa_freectx },
+    { OSSL_FUNC_SIGNATURE_DUPCTX, (void (*)(void)) eddsa_dupctx },
+    { OSSL_FUNC_SIGNATURE_GET_CTX_PARAMS,
+      (void (*)(void)) eddsa_get_ctx_params },
     { OSSL_FUNC_SIGNATURE_GETTABLE_CTX_PARAMS,
-      (void (*)(void))eddsa_gettable_ctx_params },
-    { OSSL_FUNC_SIGNATURE_SET_CTX_PARAMS, (void (*)(void))eddsa_set_ctx_params },
+      (void (*)(void)) eddsa_gettable_ctx_params },
+    { OSSL_FUNC_SIGNATURE_SET_CTX_PARAMS,
+      (void (*)(void)) eddsa_set_ctx_params },
     { OSSL_FUNC_SIGNATURE_SETTABLE_CTX_PARAMS,
-      (void (*)(void))eddsa_settable_ctx_params },
+      (void (*)(void)) eddsa_settable_ctx_params },
     OSSL_DISPATCH_END
 };
 

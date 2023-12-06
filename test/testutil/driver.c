@@ -34,7 +34,7 @@ typedef struct test_info {
     int num;
 
     /* flags */
-    int subtest:1;
+    int subtest : 1;
 } TEST_INFO;
 
 static TEST_INFO all_tests[1024];
@@ -66,7 +66,7 @@ void add_test(const char *test_case_name, int (*test_fn) (void))
     ++num_test_cases;
 }
 
-void add_all_tests(const char *test_case_name, int(*test_fn)(int idx),
+void add_all_tests(const char *test_case_name, int (*test_fn)(int idx),
                    int num, int subtest)
 {
     assert(num_tests != OSSL_NELEM(all_tests));
@@ -196,37 +196,37 @@ static int process_shared_options(void)
     opt_begin();
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        /* Ignore any test options at this level */
-        default:
-            break;
-        case OPT_ERR:
-            return ret;
-        case OPT_TEST_HELP:
-            opt_help(test_get_options());
-            return 0;
-        case OPT_TEST_LIST:
-            show_list = 1;
-            break;
-        case OPT_TEST_SINGLE:
-            flag_test = opt_flag();
-            testname = opt_arg();
-            break;
-        case OPT_TEST_ITERATION:
-            flag_iter = opt_flag();
-            if (!opt_int(opt_arg(), &single_iter))
-                goto end;
-            break;
-        case OPT_TEST_INDENT:
-            if (!opt_int(opt_arg(), &value))
-                goto end;
-            level = 4 * value;
-            test_adjust_streams_tap_level(level);
-            break;
-        case OPT_TEST_SEED:
-            if (!opt_int(opt_arg(), &value))
-                goto end;
-            set_seed(value);
-            break;
+            /* Ignore any test options at this level */
+            default:
+                break;
+            case OPT_ERR:
+                return ret;
+            case OPT_TEST_HELP:
+                opt_help(test_get_options());
+                return 0;
+            case OPT_TEST_LIST:
+                show_list = 1;
+                break;
+            case OPT_TEST_SINGLE:
+                flag_test = opt_flag();
+                testname = opt_arg();
+                break;
+            case OPT_TEST_ITERATION:
+                flag_iter = opt_flag();
+                if (!opt_int(opt_arg(), &single_iter))
+                    goto end;
+                break;
+            case OPT_TEST_INDENT:
+                if (!opt_int(opt_arg(), &value))
+                    goto end;
+                level = 4 * value;
+                test_adjust_streams_tap_level(level);
+                break;
+            case OPT_TEST_SEED:
+                if (!opt_int(opt_arg(), &value))
+                    goto end;
+                set_seed(value);
+                break;
         }
     }
     if (!check_single_test_params(testname, flag_test, flag_iter))

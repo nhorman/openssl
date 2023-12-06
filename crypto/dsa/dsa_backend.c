@@ -57,7 +57,7 @@ int ossl_dsa_key_fromdata(DSA *dsa, const OSSL_PARAM params[],
 
     return 1;
 
- err:
+err:
     BN_clear_free(priv_key);
     BN_free(pub_key);
     return 0;
@@ -114,7 +114,7 @@ DSA *ossl_dsa_dup(const DSA *dsa, int selection)
 
     return dupkey;
 
- err:
+err:
     DSA_free(dupkey);
     return NULL;
 }
@@ -180,14 +180,14 @@ DSA *ossl_dsa_key_from_pkcs8(const PKCS8_PRIV_KEY_INFO *p8inf,
 
     goto done;
 
- decerr:
+decerr:
     ERR_raise(ERR_LIB_DSA, DSA_R_DECODE_ERROR);
- dsaerr:
+dsaerr:
     BN_free(dsa_privkey);
     BN_free(dsa_pubkey);
     DSA_free(dsa);
     dsa = NULL;
- done:
+done:
     BN_CTX_free(ctx);
     ASN1_STRING_clear_free(privkey);
     return dsa;

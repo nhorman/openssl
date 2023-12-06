@@ -83,7 +83,8 @@ BIO *ossl_cms_EncryptedContent_init_bio(CMS_EncryptedContentInfo *ec,
     if (enc) {
         calg->algorithm = OBJ_nid2obj(EVP_CIPHER_CTX_get_type(ctx));
         if (calg->algorithm == NULL || calg->algorithm->nid == NID_undef) {
-            ERR_raise(ERR_LIB_CMS, CMS_R_UNSUPPORTED_CONTENT_ENCRYPTION_ALGORITHM);
+            ERR_raise(ERR_LIB_CMS,
+                      CMS_R_UNSUPPORTED_CONTENT_ENCRYPTION_ALGORITHM);
             goto err;
         }
         /* Generate a random IV if we need one */
@@ -106,8 +107,8 @@ BIO *ossl_cms_EncryptedContent_init_bio(CMS_EncryptedContentInfo *ec,
         if ((EVP_CIPHER_get_flags(cipher) & EVP_CIPH_FLAG_AEAD_CIPHER)) {
             piv = aparams.iv;
             if (ec->taglen > 0
-                    && EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_TAG,
-                                           ec->taglen, ec->tag) <= 0) {
+                && EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_TAG,
+                                       ec->taglen, ec->tag) <= 0) {
                 ERR_raise(ERR_LIB_CMS, CMS_R_CIPHER_AEAD_SET_TAG_ERROR);
                 goto err;
             }
@@ -189,7 +190,7 @@ BIO *ossl_cms_EncryptedContent_init_bio(CMS_EncryptedContentInfo *ec,
     }
     ok = 1;
 
- err:
+err:
     EVP_CIPHER_free(fetched_ciph);
     if (!keep_key || !ok) {
         OPENSSL_clear_free(ec->key, ec->keylen);

@@ -55,7 +55,7 @@ typedef enum {
 } ECX_KEY_TYPE;
 
 #define KEYTYPE2NID(type) \
-    ((type) == ECX_KEY_TYPE_X25519 \
+        ((type) == ECX_KEY_TYPE_X25519 \
      ?  EVP_PKEY_X25519 \
      : ((type) == ECX_KEY_TYPE_X448 \
         ? EVP_PKEY_X448 \
@@ -66,7 +66,7 @@ typedef enum {
 struct ecx_key_st {
     OSSL_LIB_CTX *libctx;
     char *propq;
-    unsigned int haspubkey:1;
+    unsigned int haspubkey : 1;
     unsigned char pubkey[MAX_KEYLEN];
     unsigned char *privkey;
     size_t keylen;
@@ -98,18 +98,21 @@ ossl_ed25519_public_from_private(OSSL_LIB_CTX *ctx, uint8_t out_public_key[32],
 int
 ossl_ed25519_sign(uint8_t *out_sig, const uint8_t *tbs, size_t tbs_len,
                   const uint8_t public_key[32], const uint8_t private_key[32],
-                  const uint8_t dom2flag, const uint8_t phflag, const uint8_t csflag,
+                  const uint8_t dom2flag, const uint8_t phflag,
+                  const uint8_t csflag,
                   const uint8_t *context, size_t context_len,
                   OSSL_LIB_CTX *libctx, const char *propq);
 int
 ossl_ed25519_verify(const uint8_t *tbs, size_t tbs_len,
                     const uint8_t signature[64], const uint8_t public_key[32],
-                    const uint8_t dom2flag, const uint8_t phflag, const uint8_t csflag,
+                    const uint8_t dom2flag, const uint8_t phflag,
+                    const uint8_t csflag,
                     const uint8_t *context, size_t context_len,
                     OSSL_LIB_CTX *libctx, const char *propq);
 int
 ossl_ed448_public_from_private(OSSL_LIB_CTX *ctx, uint8_t out_public_key[57],
-                               const uint8_t private_key[57], const char *propq);
+                               const uint8_t private_key[57],
+                               const char *propq);
 int
 ossl_ed448_sign(OSSL_LIB_CTX *ctx, uint8_t *out_sig,
                 const uint8_t *message, size_t message_len,

@@ -51,18 +51,18 @@ static int req_cb(int operation, ASN1_VALUE **pval, const ASN1_ITEM *it,
     X509_REQ *ret = (X509_REQ *)*pval;
 
     switch (operation) {
-    case ASN1_OP_D2I_PRE:
-        ASN1_OCTET_STRING_free(ret->distinguishing_id);
+        case ASN1_OP_D2I_PRE:
+            ASN1_OCTET_STRING_free(ret->distinguishing_id);
         /* fall through */
-    case ASN1_OP_NEW_POST:
-        ret->distinguishing_id = NULL;
-        break;
+        case ASN1_OP_NEW_POST:
+            ret->distinguishing_id = NULL;
+            break;
 
-    case ASN1_OP_FREE_POST:
-        ASN1_OCTET_STRING_free(ret->distinguishing_id);
-        OPENSSL_free(ret->propq);
-        break;
-    case ASN1_OP_DUP_POST:
+        case ASN1_OP_FREE_POST:
+            ASN1_OCTET_STRING_free(ret->distinguishing_id);
+            OPENSSL_free(ret->propq);
+            break;
+        case ASN1_OP_DUP_POST:
         {
             X509_REQ *old = exarg;
 
@@ -87,14 +87,14 @@ static int req_cb(int operation, ASN1_VALUE **pval, const ASN1_ITEM *it,
             }
         }
         break;
-    case ASN1_OP_GET0_LIBCTX:
+        case ASN1_OP_GET0_LIBCTX:
         {
             OSSL_LIB_CTX **libctx = exarg;
 
             *libctx = ret->libctx;
         }
         break;
-    case ASN1_OP_GET0_PROPQ:
+        case ASN1_OP_GET0_PROPQ:
         {
             const char **propq = exarg;
 
@@ -107,21 +107,21 @@ static int req_cb(int operation, ASN1_VALUE **pval, const ASN1_ITEM *it,
 }
 
 ASN1_SEQUENCE_enc(X509_REQ_INFO, enc, rinf_cb) = {
-        ASN1_SIMPLE(X509_REQ_INFO, version, ASN1_INTEGER),
-        ASN1_SIMPLE(X509_REQ_INFO, subject, X509_NAME),
-        ASN1_SIMPLE(X509_REQ_INFO, pubkey, X509_PUBKEY),
-        /* This isn't really OPTIONAL but it gets round invalid
-         * encodings
-         */
-        ASN1_IMP_SET_OF_OPT(X509_REQ_INFO, attributes, X509_ATTRIBUTE, 0)
+    ASN1_SIMPLE(X509_REQ_INFO, version, ASN1_INTEGER),
+    ASN1_SIMPLE(X509_REQ_INFO, subject, X509_NAME),
+    ASN1_SIMPLE(X509_REQ_INFO, pubkey, X509_PUBKEY),
+    /* This isn't really OPTIONAL but it gets round invalid
+     * encodings
+     */
+    ASN1_IMP_SET_OF_OPT(X509_REQ_INFO, attributes, X509_ATTRIBUTE, 0)
 } ASN1_SEQUENCE_END_enc(X509_REQ_INFO, X509_REQ_INFO)
 
 IMPLEMENT_ASN1_FUNCTIONS(X509_REQ_INFO)
 
 ASN1_SEQUENCE_ref(X509_REQ, req_cb) = {
-        ASN1_EMBED(X509_REQ, req_info, X509_REQ_INFO),
-        ASN1_EMBED(X509_REQ, sig_alg, X509_ALGOR),
-        ASN1_SIMPLE(X509_REQ, signature, ASN1_BIT_STRING)
+    ASN1_EMBED(X509_REQ, req_info, X509_REQ_INFO),
+    ASN1_EMBED(X509_REQ, sig_alg, X509_ALGOR),
+    ASN1_SIMPLE(X509_REQ, signature, ASN1_BIT_STRING)
 } ASN1_SEQUENCE_END_ref(X509_REQ, X509_REQ)
 
 IMPLEMENT_ASN1_FUNCTIONS(X509_REQ)

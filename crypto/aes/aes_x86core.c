@@ -82,13 +82,13 @@ static void prefetch256(const void *table)
 
 #if (defined(_WIN32) || defined(_WIN64)) && !defined(__MINGW32__)
 typedef unsigned __int64 u64;
-#define U64(C)  C##UI64
+#define U64(C)  C ## UI64
 #elif defined(__arch64__)
 typedef unsigned long u64;
-#define U64(C)  C##UL
+#define U64(C)  C ## UL
 #else
 typedef unsigned long long u64;
-#define U64(C)  C##ULL
+#define U64(C)  C ## ULL
 #endif
 
 #undef ROTATE
@@ -97,36 +97,37 @@ typedef unsigned long long u64;
 #elif defined(__ICC)
 # define ROTATE(a,n)    _rotl(a,n)
 #elif defined(__GNUC__) && __GNUC__>=2
-# if defined(__i386) || defined(__i386__) || defined(__x86_64) || defined(__x86_64__)
+# if defined(__i386) || defined(__i386__) || defined(__x86_64) || \
+    defined(__x86_64__)
 #   define ROTATE(a,n)  ({ register unsigned int ret;   \
-                asm (           \
-                "roll %1,%0"        \
-                : "=r"(ret)     \
-                : "I"(n), "0"(a)    \
-                : "cc");        \
-               ret;             \
-            })
+                           asm (           \
+                               "roll %1,%0"        \
+                               : "=r" (ret)     \
+                               : "I" (n), "0" (a)    \
+                               : "cc");        \
+                           ret;             \
+                         })
 # endif
 #endif
 /*-
-Te [x] = S [x].[02, 01, 01, 03, 02, 01, 01, 03];
-Te0[x] = S [x].[02, 01, 01, 03];
-Te1[x] = S [x].[03, 02, 01, 01];
-Te2[x] = S [x].[01, 03, 02, 01];
-Te3[x] = S [x].[01, 01, 03, 02];
-*/
+   Te [x] = S [x].[02, 01, 01, 03, 02, 01, 01, 03];
+   Te0[x] = S [x].[02, 01, 01, 03];
+   Te1[x] = S [x].[03, 02, 01, 01];
+   Te2[x] = S [x].[01, 03, 02, 01];
+   Te3[x] = S [x].[01, 01, 03, 02];
+ */
 #define Te0 (u32)((u64*)((u8*)Te+0))
 #define Te1 (u32)((u64*)((u8*)Te+3))
 #define Te2 (u32)((u64*)((u8*)Te+2))
 #define Te3 (u32)((u64*)((u8*)Te+1))
 /*-
-Td [x] = Si[x].[0e, 09, 0d, 0b, 0e, 09, 0d, 0b];
-Td0[x] = Si[x].[0e, 09, 0d, 0b];
-Td1[x] = Si[x].[0b, 0e, 09, 0d];
-Td2[x] = Si[x].[0d, 0b, 0e, 09];
-Td3[x] = Si[x].[09, 0d, 0b, 0e];
-Td4[x] = Si[x].[01];
-*/
+   Td [x] = Si[x].[0e, 09, 0d, 0b, 0e, 09, 0d, 0b];
+   Td0[x] = Si[x].[0e, 09, 0d, 0b];
+   Td1[x] = Si[x].[0b, 0e, 09, 0d];
+   Td2[x] = Si[x].[0d, 0b, 0e, 09];
+   Td3[x] = Si[x].[09, 0d, 0b, 0e];
+   Td4[x] = Si[x].[01];
+ */
 #define Td0 (u32)((u64*)((u8*)Td+0))
 #define Td1 (u32)((u64*)((u8*)Td+3))
 #define Td2 (u32)((u64*)((u8*)Td+2))
@@ -502,11 +503,11 @@ int AES_set_encrypt_key(const unsigned char *userKey, const int bits,
         while (1) {
             temp  = rk[3];
             rk[4] = rk[0] ^
-                ((u32)Te4[(temp >>  8) & 0xff]      ) ^
-                ((u32)Te4[(temp >> 16) & 0xff] <<  8) ^
-                ((u32)Te4[(temp >> 24)       ] << 16) ^
-                ((u32)Te4[(temp      ) & 0xff] << 24) ^
-                rcon[i];
+                    ((u32)Te4[(temp >>  8) & 0xff]      ) ^
+                    ((u32)Te4[(temp >> 16) & 0xff] <<  8) ^
+                    ((u32)Te4[(temp >> 24)       ] << 16) ^
+                    ((u32)Te4[(temp      ) & 0xff] << 24) ^
+                    rcon[i];
             rk[5] = rk[1] ^ rk[4];
             rk[6] = rk[2] ^ rk[5];
             rk[7] = rk[3] ^ rk[6];
@@ -522,11 +523,11 @@ int AES_set_encrypt_key(const unsigned char *userKey, const int bits,
         while (1) {
             temp = rk[ 5];
             rk[ 6] = rk[ 0] ^
-                ((u32)Te4[(temp >>  8) & 0xff]      ) ^
-                ((u32)Te4[(temp >> 16) & 0xff] <<  8) ^
-                ((u32)Te4[(temp >> 24)       ] << 16) ^
-                ((u32)Te4[(temp      ) & 0xff] << 24) ^
-                rcon[i];
+                     ((u32)Te4[(temp >>  8) & 0xff]      ) ^
+                     ((u32)Te4[(temp >> 16) & 0xff] <<  8) ^
+                     ((u32)Te4[(temp >> 24)       ] << 16) ^
+                     ((u32)Te4[(temp      ) & 0xff] << 24) ^
+                     rcon[i];
             rk[ 7] = rk[ 1] ^ rk[ 6];
             rk[ 8] = rk[ 2] ^ rk[ 7];
             rk[ 9] = rk[ 3] ^ rk[ 8];
@@ -544,11 +545,11 @@ int AES_set_encrypt_key(const unsigned char *userKey, const int bits,
         while (1) {
             temp = rk[ 7];
             rk[ 8] = rk[ 0] ^
-                ((u32)Te4[(temp >>  8) & 0xff]      ) ^
-                ((u32)Te4[(temp >> 16) & 0xff] <<  8) ^
-                ((u32)Te4[(temp >> 24)       ] << 16) ^
-                ((u32)Te4[(temp      ) & 0xff] << 24) ^
-                rcon[i];
+                     ((u32)Te4[(temp >>  8) & 0xff]      ) ^
+                     ((u32)Te4[(temp >> 16) & 0xff] <<  8) ^
+                     ((u32)Te4[(temp >> 24)       ] << 16) ^
+                     ((u32)Te4[(temp      ) & 0xff] << 24) ^
+                     rcon[i];
             rk[ 9] = rk[ 1] ^ rk[ 8];
             rk[10] = rk[ 2] ^ rk[ 9];
             rk[11] = rk[ 3] ^ rk[10];
@@ -557,16 +558,16 @@ int AES_set_encrypt_key(const unsigned char *userKey, const int bits,
             }
             temp = rk[11];
             rk[12] = rk[ 4] ^
-                ((u32)Te4[(temp      ) & 0xff]      ) ^
-                ((u32)Te4[(temp >>  8) & 0xff] <<  8) ^
-                ((u32)Te4[(temp >> 16) & 0xff] << 16) ^
-                ((u32)Te4[(temp >> 24)       ] << 24);
+                     ((u32)Te4[(temp      ) & 0xff]      ) ^
+                     ((u32)Te4[(temp >>  8) & 0xff] <<  8) ^
+                     ((u32)Te4[(temp >> 16) & 0xff] << 16) ^
+                     ((u32)Te4[(temp >> 24)       ] << 24);
             rk[13] = rk[ 5] ^ rk[12];
             rk[14] = rk[ 6] ^ rk[13];
             rk[15] = rk[ 7] ^ rk[14];
 
             rk += 8;
-            }
+        }
     }
     return 0;
 }
@@ -606,24 +607,24 @@ int AES_set_decrypt_key(const unsigned char *userKey, const int bits,
             tp1 = rk[j];
             m = tp1 & 0x80808080;
             tp2 = ((tp1 & 0x7f7f7f7f) << 1) ^
-                ((m - (m >> 7)) & 0x1b1b1b1b);
+                  ((m - (m >> 7)) & 0x1b1b1b1b);
             m = tp2 & 0x80808080;
             tp4 = ((tp2 & 0x7f7f7f7f) << 1) ^
-                ((m - (m >> 7)) & 0x1b1b1b1b);
+                  ((m - (m >> 7)) & 0x1b1b1b1b);
             m = tp4 & 0x80808080;
             tp8 = ((tp4 & 0x7f7f7f7f) << 1) ^
-                ((m - (m >> 7)) & 0x1b1b1b1b);
+                  ((m - (m >> 7)) & 0x1b1b1b1b);
             tp9 = tp8 ^ tp1;
             tpb = tp9 ^ tp2;
             tpd = tp9 ^ tp4;
             tpe = tp8 ^ tp4 ^ tp2;
 #if defined(ROTATE)
             rk[j] = tpe ^ ROTATE(tpd,16) ^
-                ROTATE(tp9,8) ^ ROTATE(tpb,24);
+                    ROTATE(tp9,8) ^ ROTATE(tpb,24);
 #else
             rk[j] = tpe ^ (tpd >> 16) ^ (tpd << 16) ^
-                (tp9 >> 24) ^ (tp9 << 8) ^
-                (tpb >> 8) ^ (tpb << 24);
+                    (tp9 >> 24) ^ (tp9 << 8) ^
+                    (tpb >> 8) ^ (tpb << 24);
 #endif
         }
 #else
@@ -704,39 +705,38 @@ void AES_encrypt(const unsigned char *in, unsigned char *out,
             r0 = t[i];
             r1 = r0 & 0x80808080;
             r2 = ((r0 & 0x7f7f7f7f) << 1) ^
-                ((r1 - (r1 >> 7)) & 0x1b1b1b1b);
+                 ((r1 - (r1 >> 7)) & 0x1b1b1b1b);
 #if defined(ROTATE)
             t[i] = r2 ^ ROTATE(r2,24) ^ ROTATE(r0,24) ^
-                ROTATE(r0,16) ^ ROTATE(r0,8);
+                   ROTATE(r0,16) ^ ROTATE(r0,8);
 #else
             t[i] = r2 ^ ((r2 ^ r0) << 24) ^ ((r2 ^ r0) >> 8) ^
-                (r0 << 16) ^ (r0 >> 16) ^
-                (r0 << 8) ^ (r0 >> 24);
+                   (r0 << 16) ^ (r0 >> 16) ^
+                   (r0 << 8) ^ (r0 >> 24);
 #endif
             t[i] ^= rk[4+i];
-        }
-    }
+        }}
 #else
     t[0] =  Te0[(s0      ) & 0xff] ^
-        Te1[(s1 >>  8) & 0xff] ^
-        Te2[(s2 >> 16) & 0xff] ^
-        Te3[(s3 >> 24)       ] ^
-        rk[4];
+           Te1[(s1 >>  8) & 0xff] ^
+           Te2[(s2 >> 16) & 0xff] ^
+           Te3[(s3 >> 24)       ] ^
+           rk[4];
     t[1] =  Te0[(s1      ) & 0xff] ^
-        Te1[(s2 >>  8) & 0xff] ^
-        Te2[(s3 >> 16) & 0xff] ^
-        Te3[(s0 >> 24)       ] ^
-        rk[5];
+           Te1[(s2 >>  8) & 0xff] ^
+           Te2[(s3 >> 16) & 0xff] ^
+           Te3[(s0 >> 24)       ] ^
+           rk[5];
     t[2] =  Te0[(s2      ) & 0xff] ^
-        Te1[(s3 >>  8) & 0xff] ^
-        Te2[(s0 >> 16) & 0xff] ^
-        Te3[(s1 >> 24)       ] ^
-        rk[6];
+           Te1[(s3 >>  8) & 0xff] ^
+           Te2[(s0 >> 16) & 0xff] ^
+           Te3[(s1 >> 24)       ] ^
+           rk[6];
     t[3] =  Te0[(s3      ) & 0xff] ^
-        Te1[(s0 >>  8) & 0xff] ^
-        Te2[(s1 >> 16) & 0xff] ^
-        Te3[(s2 >> 24)       ] ^
-        rk[7];
+           Te1[(s0 >>  8) & 0xff] ^
+           Te2[(s1 >> 16) & 0xff] ^
+           Te3[(s2 >> 24)       ] ^
+           rk[7];
 #endif
     s0 = t[0]; s1 = t[1]; s2 = t[2]; s3 = t[3];
 
@@ -771,39 +771,39 @@ void AES_encrypt(const unsigned char *in, unsigned char *out,
                 r0 = t[i];
                 r1 = r0 & 0x80808080;
                 r2 = ((r0 & 0x7f7f7f7f) << 1) ^
-                    ((r1 - (r1 >> 7)) & 0x1b1b1b1b);
+                     ((r1 - (r1 >> 7)) & 0x1b1b1b1b);
 #if defined(ROTATE)
                 t[i] = r2 ^ ROTATE(r2,24) ^ ROTATE(r0,24) ^
-                    ROTATE(r0,16) ^ ROTATE(r0,8);
+                       ROTATE(r0,16) ^ ROTATE(r0,8);
 #else
                 t[i] = r2 ^ ((r2 ^ r0) << 24) ^ ((r2 ^ r0) >> 8) ^
-                    (r0 << 16) ^ (r0 >> 16) ^
-                    (r0 << 8) ^ (r0 >> 24);
+                       (r0 << 16) ^ (r0 >> 16) ^
+                       (r0 << 8) ^ (r0 >> 24);
 #endif
                 t[i] ^= rk[i];
             }
         }
 #else
         t[0] =  Te0[(s0      ) & 0xff] ^
-            Te1[(s1 >>  8) & 0xff] ^
-            Te2[(s2 >> 16) & 0xff] ^
-            Te3[(s3 >> 24)       ] ^
-            rk[0];
+               Te1[(s1 >>  8) & 0xff] ^
+               Te2[(s2 >> 16) & 0xff] ^
+               Te3[(s3 >> 24)       ] ^
+               rk[0];
         t[1] =  Te0[(s1      ) & 0xff] ^
-            Te1[(s2 >>  8) & 0xff] ^
-            Te2[(s3 >> 16) & 0xff] ^
-            Te3[(s0 >> 24)       ] ^
-            rk[1];
+               Te1[(s2 >>  8) & 0xff] ^
+               Te2[(s3 >> 16) & 0xff] ^
+               Te3[(s0 >> 24)       ] ^
+               rk[1];
         t[2] =  Te0[(s2      ) & 0xff] ^
-            Te1[(s3 >>  8) & 0xff] ^
-            Te2[(s0 >> 16) & 0xff] ^
-            Te3[(s1 >> 24)       ] ^
-            rk[2];
+               Te1[(s3 >>  8) & 0xff] ^
+               Te2[(s0 >> 16) & 0xff] ^
+               Te3[(s1 >> 24)       ] ^
+               rk[2];
         t[3] =  Te0[(s3      ) & 0xff] ^
-            Te1[(s0 >>  8) & 0xff] ^
-            Te2[(s1 >> 16) & 0xff] ^
-            Te3[(s2 >> 24)       ] ^
-            rk[3];
+               Te1[(s0 >>  8) & 0xff] ^
+               Te2[(s1 >> 16) & 0xff] ^
+               Te3[(s2 >> 24)       ] ^
+               rk[3];
 #endif
         s0 = t[0]; s1 = t[1]; s2 = t[2]; s3 = t[3];
     }
@@ -815,29 +815,29 @@ void AES_encrypt(const unsigned char *in, unsigned char *out,
     prefetch256(Te4);
 
     *(u32*)(out+0) =
-           (u32)Te4[(s0      ) & 0xff]       ^
-           (u32)Te4[(s1 >>  8) & 0xff] <<  8 ^
-           (u32)Te4[(s2 >> 16) & 0xff] << 16 ^
-           (u32)Te4[(s3 >> 24)       ] << 24 ^
-        rk[0];
+        (u32)Te4[(s0      ) & 0xff]       ^
+        (u32)Te4[(s1 >>  8) & 0xff] <<  8 ^
+            (u32)Te4[(s2 >> 16) & 0xff] << 16 ^
+            (u32)Te4[(s3 >> 24)       ] << 24 ^
+            rk[0];
     *(u32*)(out+4) =
-           (u32)Te4[(s1      ) & 0xff]       ^
-           (u32)Te4[(s2 >>  8) & 0xff] <<  8 ^
-           (u32)Te4[(s3 >> 16) & 0xff] << 16 ^
-           (u32)Te4[(s0 >> 24)       ] << 24 ^
-        rk[1];
+        (u32)Te4[(s1      ) & 0xff]       ^
+        (u32)Te4[(s2 >>  8) & 0xff] <<  8 ^
+            (u32)Te4[(s3 >> 16) & 0xff] << 16 ^
+            (u32)Te4[(s0 >> 24)       ] << 24 ^
+            rk[1];
     *(u32*)(out+8) =
-           (u32)Te4[(s2      ) & 0xff]       ^
-           (u32)Te4[(s3 >>  8) & 0xff] <<  8 ^
-           (u32)Te4[(s0 >> 16) & 0xff] << 16 ^
-           (u32)Te4[(s1 >> 24)       ] << 24 ^
-        rk[2];
+        (u32)Te4[(s2      ) & 0xff]       ^
+        (u32)Te4[(s3 >>  8) & 0xff] <<  8 ^
+            (u32)Te4[(s0 >> 16) & 0xff] << 16 ^
+            (u32)Te4[(s1 >> 24)       ] << 24 ^
+            rk[2];
     *(u32*)(out+12) =
-           (u32)Te4[(s3      ) & 0xff]       ^
-           (u32)Te4[(s0 >>  8) & 0xff] <<  8 ^
-           (u32)Te4[(s1 >> 16) & 0xff] << 16 ^
-           (u32)Te4[(s2 >> 24)       ] << 24 ^
-        rk[3];
+        (u32)Te4[(s3      ) & 0xff]       ^
+        (u32)Te4[(s0 >>  8) & 0xff] <<  8 ^
+            (u32)Te4[(s1 >> 16) & 0xff] << 16 ^
+            (u32)Te4[(s2 >> 24)       ] << 24 ^
+            rk[3];
 #else
     *(u32*)(out+0) =
         (Te2[(s0      ) & 0xff] & 0x000000ffU) ^
@@ -919,49 +919,49 @@ void AES_decrypt(const unsigned char *in, unsigned char *out,
             tp1 = t[i];
             m = tp1 & 0x80808080;
             tp2 = ((tp1 & 0x7f7f7f7f) << 1) ^
-                ((m - (m >> 7)) & 0x1b1b1b1b);
+                  ((m - (m >> 7)) & 0x1b1b1b1b);
             m = tp2 & 0x80808080;
             tp4 = ((tp2 & 0x7f7f7f7f) << 1) ^
-                ((m - (m >> 7)) & 0x1b1b1b1b);
+                  ((m - (m >> 7)) & 0x1b1b1b1b);
             m = tp4 & 0x80808080;
             tp8 = ((tp4 & 0x7f7f7f7f) << 1) ^
-                ((m - (m >> 7)) & 0x1b1b1b1b);
+                  ((m - (m >> 7)) & 0x1b1b1b1b);
             tp9 = tp8 ^ tp1;
             tpb = tp9 ^ tp2;
             tpd = tp9 ^ tp4;
             tpe = tp8 ^ tp4 ^ tp2;
 #if defined(ROTATE)
             t[i] = tpe ^ ROTATE(tpd,16) ^
-                ROTATE(tp9,8) ^ ROTATE(tpb,24);
+                   ROTATE(tp9,8) ^ ROTATE(tpb,24);
 #else
             t[i] = tpe ^ (tpd >> 16) ^ (tpd << 16) ^
-                (tp9 >> 24) ^ (tp9 << 8) ^
-                (tpb >> 8) ^ (tpb << 24);
+                   (tp9 >> 24) ^ (tp9 << 8) ^
+                   (tpb >> 8) ^ (tpb << 24);
 #endif
             t[i] ^= rk[4+i];
         }
     }
 #else
     t[0] =  Td0[(s0      ) & 0xff] ^
-        Td1[(s3 >>  8) & 0xff] ^
-        Td2[(s2 >> 16) & 0xff] ^
-        Td3[(s1 >> 24)       ] ^
-        rk[4];
+           Td1[(s3 >>  8) & 0xff] ^
+           Td2[(s2 >> 16) & 0xff] ^
+           Td3[(s1 >> 24)       ] ^
+           rk[4];
     t[1] =  Td0[(s1      ) & 0xff] ^
-        Td1[(s0 >>  8) & 0xff] ^
-        Td2[(s3 >> 16) & 0xff] ^
-        Td3[(s2 >> 24)       ] ^
-        rk[5];
+           Td1[(s0 >>  8) & 0xff] ^
+           Td2[(s3 >> 16) & 0xff] ^
+           Td3[(s2 >> 24)       ] ^
+           rk[5];
     t[2] =  Td0[(s2      ) & 0xff] ^
-        Td1[(s1 >>  8) & 0xff] ^
-        Td2[(s0 >> 16) & 0xff] ^
-        Td3[(s3 >> 24)       ] ^
-        rk[6];
+           Td1[(s1 >>  8) & 0xff] ^
+           Td2[(s0 >> 16) & 0xff] ^
+           Td3[(s3 >> 24)       ] ^
+           rk[6];
     t[3] =  Td0[(s3      ) & 0xff] ^
-        Td1[(s2 >>  8) & 0xff] ^
-        Td2[(s1 >> 16) & 0xff] ^
-        Td3[(s0 >> 24)       ] ^
-        rk[7];
+           Td1[(s2 >>  8) & 0xff] ^
+           Td2[(s1 >> 16) & 0xff] ^
+           Td3[(s0 >> 24)       ] ^
+           rk[7];
 #endif
     s0 = t[0]; s1 = t[1]; s2 = t[2]; s3 = t[3];
 
@@ -987,60 +987,60 @@ void AES_decrypt(const unsigned char *in, unsigned char *out,
                (u32)Td4[(s1 >> 16) & 0xff] << 16 ^
                (u32)Td4[(s0 >> 24)       ] << 24;
 
-    /* now do the linear transform using words */
-    {
-        int i;
-        u32 tp1, tp2, tp4, tp8, tp9, tpb, tpd, tpe, m;
+        /* now do the linear transform using words */
+        {
+            int i;
+            u32 tp1, tp2, tp4, tp8, tp9, tpb, tpd, tpe, m;
 
-        for (i = 0; i < 4; i++) {
-            tp1 = t[i];
-            m = tp1 & 0x80808080;
-            tp2 = ((tp1 & 0x7f7f7f7f) << 1) ^
-                ((m - (m >> 7)) & 0x1b1b1b1b);
-            m = tp2 & 0x80808080;
-            tp4 = ((tp2 & 0x7f7f7f7f) << 1) ^
-                ((m - (m >> 7)) & 0x1b1b1b1b);
-            m = tp4 & 0x80808080;
-            tp8 = ((tp4 & 0x7f7f7f7f) << 1) ^
-                ((m - (m >> 7)) & 0x1b1b1b1b);
-            tp9 = tp8 ^ tp1;
-            tpb = tp9 ^ tp2;
-            tpd = tp9 ^ tp4;
-            tpe = tp8 ^ tp4 ^ tp2;
+            for (i = 0; i < 4; i++) {
+                tp1 = t[i];
+                m = tp1 & 0x80808080;
+                tp2 = ((tp1 & 0x7f7f7f7f) << 1) ^
+                      ((m - (m >> 7)) & 0x1b1b1b1b);
+                m = tp2 & 0x80808080;
+                tp4 = ((tp2 & 0x7f7f7f7f) << 1) ^
+                      ((m - (m >> 7)) & 0x1b1b1b1b);
+                m = tp4 & 0x80808080;
+                tp8 = ((tp4 & 0x7f7f7f7f) << 1) ^
+                      ((m - (m >> 7)) & 0x1b1b1b1b);
+                tp9 = tp8 ^ tp1;
+                tpb = tp9 ^ tp2;
+                tpd = tp9 ^ tp4;
+                tpe = tp8 ^ tp4 ^ tp2;
 #if defined(ROTATE)
-            t[i] = tpe ^ ROTATE(tpd,16) ^
-                ROTATE(tp9,8) ^ ROTATE(tpb,24);
+                t[i] = tpe ^ ROTATE(tpd,16) ^
+                       ROTATE(tp9,8) ^ ROTATE(tpb,24);
 #else
-            t[i] = tpe ^ (tpd >> 16) ^ (tpd << 16) ^
-                (tp9 >> 24) ^ (tp9 << 8) ^
-                (tpb >> 8) ^ (tpb << 24);
+                t[i] = tpe ^ (tpd >> 16) ^ (tpd << 16) ^
+                       (tp9 >> 24) ^ (tp9 << 8) ^
+                       (tpb >> 8) ^ (tpb << 24);
 #endif
-            t[i] ^= rk[i];
+                t[i] ^= rk[i];
+            }
         }
-    }
 #else
-    t[0] =  Td0[(s0      ) & 0xff] ^
-        Td1[(s3 >>  8) & 0xff] ^
-        Td2[(s2 >> 16) & 0xff] ^
-        Td3[(s1 >> 24)       ] ^
-        rk[0];
-    t[1] =  Td0[(s1      ) & 0xff] ^
-        Td1[(s0 >>  8) & 0xff] ^
-        Td2[(s3 >> 16) & 0xff] ^
-        Td3[(s2 >> 24)       ] ^
-        rk[1];
-    t[2] =  Td0[(s2      ) & 0xff] ^
-        Td1[(s1 >>  8) & 0xff] ^
-        Td2[(s0 >> 16) & 0xff] ^
-        Td3[(s3 >> 24)       ] ^
-        rk[2];
-    t[3] =  Td0[(s3      ) & 0xff] ^
-        Td1[(s2 >>  8) & 0xff] ^
-        Td2[(s1 >> 16) & 0xff] ^
-        Td3[(s0 >> 24)       ] ^
-        rk[3];
+        t[0] =  Td0[(s0      ) & 0xff] ^
+               Td1[(s3 >>  8) & 0xff] ^
+               Td2[(s2 >> 16) & 0xff] ^
+               Td3[(s1 >> 24)       ] ^
+               rk[0];
+        t[1] =  Td0[(s1      ) & 0xff] ^
+               Td1[(s0 >>  8) & 0xff] ^
+               Td2[(s3 >> 16) & 0xff] ^
+               Td3[(s2 >> 24)       ] ^
+               rk[1];
+        t[2] =  Td0[(s2      ) & 0xff] ^
+               Td1[(s1 >>  8) & 0xff] ^
+               Td2[(s0 >> 16) & 0xff] ^
+               Td3[(s3 >> 24)       ] ^
+               rk[2];
+        t[3] =  Td0[(s3      ) & 0xff] ^
+               Td1[(s2 >>  8) & 0xff] ^
+               Td2[(s1 >> 16) & 0xff] ^
+               Td3[(s0 >> 24)       ] ^
+               rk[3];
 #endif
-    s0 = t[0]; s1 = t[1]; s2 = t[2]; s3 = t[3];
+        s0 = t[0]; s1 = t[1]; s2 = t[2]; s3 = t[3];
     }
     /*
      * apply last round and

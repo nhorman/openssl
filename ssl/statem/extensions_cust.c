@@ -87,8 +87,8 @@ custom_ext_method *custom_ext_find(const custom_ext_methods *exts,
 
     for (i = 0; i < exts->meths_count; i++, meth++) {
         if (ext_type == meth->ext_type
-                && (role == ENDPOINT_BOTH || role == meth->role
-                    || meth->role == ENDPOINT_BOTH)) {
+            && (role == ENDPOINT_BOTH || role == meth->role
+                || meth->role == ENDPOINT_BOTH)) {
             if (idx != NULL)
                 *idx = i;
             return meth;
@@ -151,7 +151,7 @@ int custom_ext_parse(SSL_CONNECTION *s, unsigned int context,
      * extensions in the response messages
      */
     if ((context & (SSL_EXT_CLIENT_HELLO | SSL_EXT_TLS1_3_CERTIFICATE_REQUEST))
-            != 0)
+        != 0)
         meth->ext_flags |= SSL_EXT_FLAG_RECEIVED;
 
     /* If no parse function set return success */
@@ -222,11 +222,12 @@ int custom_ext_add(SSL_CONNECTION *s, int context, WPACKET *pkt, X509 *x,
         }
 
         if (!WPACKET_put_bytes_u16(pkt, meth->ext_type)
-                || !WPACKET_start_sub_packet_u16(pkt)
-                || (outlen > 0 && !WPACKET_memcpy(pkt, out, outlen))
-                || !WPACKET_close(pkt)) {
+            || !WPACKET_start_sub_packet_u16(pkt)
+            || (outlen > 0 && !WPACKET_memcpy(pkt, out, outlen))
+            || !WPACKET_close(pkt)) {
             if (meth->free_cb != NULL)
-                meth->free_cb(SSL_CONNECTION_GET_SSL(s), meth->ext_type, context,
+                meth->free_cb(SSL_CONNECTION_GET_SSL(
+                                  s), meth->ext_type, context,
                               out, meth->add_arg);
             if (!for_comp)
                 SSLfatal(s, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
@@ -313,7 +314,7 @@ int custom_exts_copy(custom_ext_methods *dst, const custom_ext_methods *src)
             methdst->add_arg = OPENSSL_memdup(methsrc->add_arg,
                                               sizeof(custom_ext_add_cb_wrap));
             methdst->parse_arg = OPENSSL_memdup(methsrc->parse_arg,
-                                            sizeof(custom_ext_parse_cb_wrap));
+                                                sizeof(custom_ext_parse_cb_wrap));
 
             if (methdst->add_arg == NULL || methdst->parse_arg == NULL)
                 err = 1;
@@ -381,9 +382,9 @@ int ossl_tls_add_custom_ext_intern(SSL_CTX *ctx, custom_ext_methods *exts,
      * these two things may not play well together.
      */
     if (ext_type == TLSEXT_TYPE_signed_certificate_timestamp
-            && (context & SSL_EXT_CLIENT_HELLO) != 0
-            && ctx != NULL
-            && SSL_CTX_ct_is_enabled(ctx))
+        && (context & SSL_EXT_CLIENT_HELLO) != 0
+        && ctx != NULL
+        && SSL_CTX_ct_is_enabled(ctx))
         return 0;
 #endif
 
@@ -392,7 +393,7 @@ int ossl_tls_add_custom_ext_intern(SSL_CTX *ctx, custom_ext_methods *exts,
      * for extension types that previously were not supported, but now are.
      */
     if (SSL_extension_supported(ext_type)
-            && ext_type != TLSEXT_TYPE_signed_certificate_timestamp)
+        && ext_type != TLSEXT_TYPE_signed_certificate_timestamp)
         return 0;
 
     /* Extension type must fit in 16 bits */
@@ -508,45 +509,45 @@ int SSL_extension_supported(unsigned int ext_type)
 {
     switch (ext_type) {
         /* Internally supported extensions. */
-    case TLSEXT_TYPE_application_layer_protocol_negotiation:
-    case TLSEXT_TYPE_ec_point_formats:
-    case TLSEXT_TYPE_supported_groups:
-    case TLSEXT_TYPE_key_share:
+        case TLSEXT_TYPE_application_layer_protocol_negotiation:
+        case TLSEXT_TYPE_ec_point_formats:
+        case TLSEXT_TYPE_supported_groups:
+        case TLSEXT_TYPE_key_share:
 #ifndef OPENSSL_NO_NEXTPROTONEG
-    case TLSEXT_TYPE_next_proto_neg:
+        case TLSEXT_TYPE_next_proto_neg:
 #endif
-    case TLSEXT_TYPE_padding:
-    case TLSEXT_TYPE_renegotiate:
-    case TLSEXT_TYPE_max_fragment_length:
-    case TLSEXT_TYPE_server_name:
-    case TLSEXT_TYPE_session_ticket:
-    case TLSEXT_TYPE_signature_algorithms:
+        case TLSEXT_TYPE_padding:
+        case TLSEXT_TYPE_renegotiate:
+        case TLSEXT_TYPE_max_fragment_length:
+        case TLSEXT_TYPE_server_name:
+        case TLSEXT_TYPE_session_ticket:
+        case TLSEXT_TYPE_signature_algorithms:
 #ifndef OPENSSL_NO_SRP
-    case TLSEXT_TYPE_srp:
+        case TLSEXT_TYPE_srp:
 #endif
 #ifndef OPENSSL_NO_OCSP
-    case TLSEXT_TYPE_status_request:
+        case TLSEXT_TYPE_status_request:
 #endif
 #ifndef OPENSSL_NO_CT
-    case TLSEXT_TYPE_signed_certificate_timestamp:
+        case TLSEXT_TYPE_signed_certificate_timestamp:
 #endif
 #ifndef OPENSSL_NO_SRTP
-    case TLSEXT_TYPE_use_srtp:
+        case TLSEXT_TYPE_use_srtp:
 #endif
-    case TLSEXT_TYPE_encrypt_then_mac:
-    case TLSEXT_TYPE_supported_versions:
-    case TLSEXT_TYPE_extended_master_secret:
-    case TLSEXT_TYPE_psk_kex_modes:
-    case TLSEXT_TYPE_cookie:
-    case TLSEXT_TYPE_early_data:
-    case TLSEXT_TYPE_certificate_authorities:
-    case TLSEXT_TYPE_psk:
-    case TLSEXT_TYPE_post_handshake_auth:
-    case TLSEXT_TYPE_compress_certificate:
-    case TLSEXT_TYPE_client_cert_type:
-    case TLSEXT_TYPE_server_cert_type:
-        return 1;
-    default:
-        return 0;
+        case TLSEXT_TYPE_encrypt_then_mac:
+        case TLSEXT_TYPE_supported_versions:
+        case TLSEXT_TYPE_extended_master_secret:
+        case TLSEXT_TYPE_psk_kex_modes:
+        case TLSEXT_TYPE_cookie:
+        case TLSEXT_TYPE_early_data:
+        case TLSEXT_TYPE_certificate_authorities:
+        case TLSEXT_TYPE_psk:
+        case TLSEXT_TYPE_post_handshake_auth:
+        case TLSEXT_TYPE_compress_certificate:
+        case TLSEXT_TYPE_client_cert_type:
+        case TLSEXT_TYPE_server_cert_type:
+            return 1;
+        default:
+            return 0;
     }
 }

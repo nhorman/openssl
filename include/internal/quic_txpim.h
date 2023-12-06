@@ -26,7 +26,7 @@ typedef struct quic_fifd_st QUIC_FIFD;
 
 typedef struct quic_txpim_pkt_st {
     /* ACKM-specific data. Caller should fill this. */
-    OSSL_ACKM_TX_PKT    ackm_pkt;
+    OSSL_ACKM_TX_PKT ackm_pkt;
 
     /* Linked list of CFQ items in this packet. */
     QUIC_CFQ_ITEM      *retx_head;
@@ -35,12 +35,12 @@ typedef struct quic_txpim_pkt_st {
     QUIC_FIFD          *fifd;
 
     /* Regenerate-strategy frames. */
-    unsigned int        had_handshake_done_frame    : 1;
-    unsigned int        had_max_data_frame          : 1;
-    unsigned int        had_max_streams_bidi_frame  : 1;
-    unsigned int        had_max_streams_uni_frame   : 1;
-    unsigned int        had_ack_frame               : 1;
-    unsigned int        had_conn_close              : 1;
+    unsigned int had_handshake_done_frame    : 1;
+    unsigned int had_max_data_frame          : 1;
+    unsigned int had_max_streams_bidi_frame  : 1;
+    unsigned int had_max_streams_uni_frame   : 1;
+    unsigned int had_ack_frame               : 1;
+    unsigned int had_conn_close              : 1;
 
     /* Private data follows. */
 } QUIC_TXPIM_PKT;
@@ -48,29 +48,29 @@ typedef struct quic_txpim_pkt_st {
 /* Represents a range of bytes in an application or CRYPTO stream. */
 typedef struct quic_txpim_chunk_st {
     /* The stream ID, or UINT64_MAX for the CRYPTO stream. */
-    uint64_t        stream_id;
+    uint64_t stream_id;
     /*
      * The inclusive range of bytes in the stream. Exceptionally, if end <
      * start, designates a frame of zero length (used for FIN-only frames). In
      * this case end is the number of the final byte (i.e., one less than the
      * final size of the stream).
      */
-    uint64_t        start, end;
+    uint64_t start, end;
     /*
      * Whether a FIN was sent for this stream in the packet. Not valid for
      * CRYPTO stream.
      */
-    unsigned int    has_fin : 1;
+    unsigned int has_fin : 1;
     /*
      * If set, a STOP_SENDING frame was sent for this stream ID. (If no data was
      * sent for the stream, set end < start.)
      */
-    unsigned int    has_stop_sending : 1;
+    unsigned int has_stop_sending : 1;
     /*
      * If set, a RESET_STREAM frame was sent for this stream ID. (If no data was
      * sent for the stream, set end < start.)
      */
-    unsigned int    has_reset_stream : 1;
+    unsigned int has_reset_stream : 1;
 } QUIC_TXPIM_CHUNK;
 
 QUIC_TXPIM *ossl_quic_txpim_new(void);
@@ -114,7 +114,8 @@ void ossl_quic_txpim_pkt_add_cfq_item(QUIC_TXPIM_PKT *fpkt,
  *
  * The chunks are sorted by (stream_id, start) in ascending order.
  */
-const QUIC_TXPIM_CHUNK *ossl_quic_txpim_pkt_get_chunks(const QUIC_TXPIM_PKT *fpkt);
+const QUIC_TXPIM_CHUNK *ossl_quic_txpim_pkt_get_chunks(
+    const QUIC_TXPIM_PKT *fpkt);
 
 /*
  * Returns the number of entries in the array returned by

@@ -166,7 +166,8 @@ static int do_test(int use_thread_assist, int use_fake_time, int use_inject)
         goto err;
 
     if (use_fake_time)
-        if (!TEST_true(ossl_quic_conn_set_override_now_cb(c_ssl, fake_now, NULL)))
+        if (!TEST_true(ossl_quic_conn_set_override_now_cb(c_ssl, fake_now,
+                                                          NULL)))
             goto err;
 
     /* 0 is a success for SSL_set_alpn_protos() */
@@ -247,8 +248,10 @@ static int do_test(int use_thread_assist, int use_fake_time, int use_inject)
 
         if (s_begin_write && s_total_written < sizeof(msg1) - 1) {
             if (!TEST_true(ossl_quic_tserver_write(tserver, 0,
-                                                   (unsigned char *)msg2 + s_total_written,
-                                                   sizeof(msg1) - 1 - s_total_written, &l)))
+                                                   (unsigned char *)msg2 +
+                                                   s_total_written,
+                                                   sizeof(msg1) - 1 -
+                                                   s_total_written, &l)))
                 goto err;
 
             s_total_written += l;
@@ -326,7 +329,8 @@ static int do_test(int use_thread_assist, int use_fake_time, int use_inject)
                 if (!TEST_true(SSL_get_event_timeout(c_ssl, &tv, &isinf)))
                     goto err;
                 if (!isinf && ossl_time_compare(ossl_time_zero(),
-                                                ossl_time_from_timeval(tv)) >= 0)
+                                                ossl_time_from_timeval(tv)) >=
+                    0)
                     OSSL_sleep(100); /* Ensure CPU scheduling for test purposes */
             } else {
                 c_done_idle_test = 1;
@@ -369,11 +373,13 @@ static int do_test(int use_thread_assist, int use_fake_time, int use_inject)
                 rmsg.data       = scratch_buf;
                 rmsg.data_len   = sizeof(scratch_buf);
 
-                if (!BIO_recvmmsg(c_net_bio, &rmsg, sizeof(rmsg), 1, 0, &msgs_processed)
+                if (!BIO_recvmmsg(c_net_bio, &rmsg, sizeof(rmsg), 1, 0,
+                                  &msgs_processed)
                     || msgs_processed == 0 || rmsg.data_len == 0)
                     break;
 
-                if (!TEST_true(SSL_inject_net_dgram(c_ssl, rmsg.data, rmsg.data_len,
+                if (!TEST_true(SSL_inject_net_dgram(c_ssl, rmsg.data,
+                                                    rmsg.data_len,
                                                     NULL, NULL)))
                     goto err;
             }
@@ -425,7 +431,7 @@ int setup_tests(void)
     }
 
     if (!TEST_ptr(certfile = test_get_argument(0))
-            || !TEST_ptr(keyfile = test_get_argument(1)))
+        || !TEST_ptr(keyfile = test_get_argument(1)))
         return 0;
 
     if ((fake_time_lock = CRYPTO_THREAD_lock_new()) == NULL)

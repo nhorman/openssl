@@ -232,15 +232,17 @@ struct ossl_record_method_st {
      * multiple records in one go and buffer them.
      */
     int (*read_record)(OSSL_RECORD_LAYER *rl, void **rechandle, int *rversion,
-                      uint8_t *type, const unsigned char **data, size_t *datalen,
-                      uint16_t *epoch, unsigned char *seq_num);
+                       uint8_t *type, const unsigned char **data,
+                       size_t *datalen,
+                       uint16_t *epoch, unsigned char *seq_num);
     /*
      * Release length bytes from a buffer associated with a record previously
      * read with read_record. Once all the bytes from a record are released, the
      * whole record and its associated buffer is released. Records are
      * guaranteed to be released in the order that they are read.
      */
-    int (*release_record)(OSSL_RECORD_LAYER *rl, void *rechandle, size_t length);
+    int (*release_record)(OSSL_RECORD_LAYER *rl, void *rechandle,
+                          size_t length);
 
     /*
      * In the event that a fatal error is returned from the functions above then

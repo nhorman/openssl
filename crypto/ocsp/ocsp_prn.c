@@ -127,7 +127,7 @@ int OCSP_REQUEST_print(BIO *bp, OCSP_REQUEST *o, unsigned long flags)
         }
     }
     return 1;
- err:
+err:
     return 0;
 }
 
@@ -172,12 +172,12 @@ int OCSP_RESPONSE_print(BIO *bp, OCSP_RESPONSE *o, unsigned long flags)
 
     rid = &rd->responderId;
     switch (rid->type) {
-    case V_OCSP_RESPID_NAME:
-        X509_NAME_print_ex(bp, rid->value.byName, 0, XN_FLAG_ONELINE);
-        break;
-    case V_OCSP_RESPID_KEY:
-        i2a_ASN1_STRING(bp, rid->value.byKey, 0);
-        break;
+        case V_OCSP_RESPID_NAME:
+            X509_NAME_print_ex(bp, rid->value.byName, 0, XN_FLAG_ONELINE);
+            break;
+        case V_OCSP_RESPID_KEY:
+            i2a_ASN1_STRING(bp, rid->value.byKey, 0);
+            break;
     }
 
     if (BIO_printf(bp, "\n    Produced At: ") <= 0)
@@ -242,7 +242,7 @@ int OCSP_RESPONSE_print(BIO *bp, OCSP_RESPONSE *o, unsigned long flags)
     }
 
     ret = 1;
- err:
+err:
     OCSP_BASICRESP_free(br);
     return ret;
 }

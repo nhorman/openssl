@@ -91,7 +91,7 @@ void DES_cfb_encrypt(const unsigned char *in, unsigned char *out, int numbits,
                 else
                     for (i = 0; i < 8; ++i)
                         ovec[i] = ovec[i + num] << rem |
-                            ovec[i + num + 1] >> (8 - rem);
+                                  ovec[i + num + 1] >> (8 - rem);
 #ifdef L_ENDIAN
                 v0 = sh[0], v1 = sh[1];
 #else
@@ -134,7 +134,7 @@ void DES_cfb_encrypt(const unsigned char *in, unsigned char *out, int numbits,
                 else
                     for (i = 0; i < 8; ++i)
                         ovec[i] = ovec[i + num] << rem |
-                            ovec[i + num + 1] >> (8 - rem);
+                                  ovec[i + num + 1] >> (8 - rem);
 #ifdef L_ENDIAN
                 v0 = sh[0], v1 = sh[1];
 #else

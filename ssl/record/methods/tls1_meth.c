@@ -86,20 +86,20 @@ static int tls1_set_crypto_state(OSSL_RECORD_LAYER *rl, int level,
 
     if (EVP_CIPHER_get_mode(ciph) == EVP_CIPH_GCM_MODE) {
         if (!EVP_CipherInit_ex(ciph_ctx, ciph, NULL, key, NULL, enc)
-                || EVP_CIPHER_CTX_ctrl(ciph_ctx, EVP_CTRL_GCM_SET_IV_FIXED,
-                                       (int)ivlen, iv) <= 0) {
+            || EVP_CIPHER_CTX_ctrl(ciph_ctx, EVP_CTRL_GCM_SET_IV_FIXED,
+                                   (int)ivlen, iv) <= 0) {
             ERR_raise(ERR_LIB_SSL, ERR_R_INTERNAL_ERROR);
             return OSSL_RECORD_RETURN_FATAL;
         }
     } else if (EVP_CIPHER_get_mode(ciph) == EVP_CIPH_CCM_MODE) {
         if (!EVP_CipherInit_ex(ciph_ctx, ciph, NULL, NULL, NULL, enc)
-                || EVP_CIPHER_CTX_ctrl(ciph_ctx, EVP_CTRL_AEAD_SET_IVLEN, 12,
-                                       NULL) <= 0
-                || EVP_CIPHER_CTX_ctrl(ciph_ctx, EVP_CTRL_AEAD_SET_TAG,
-                                       (int)taglen, NULL) <= 0
-                || EVP_CIPHER_CTX_ctrl(ciph_ctx, EVP_CTRL_CCM_SET_IV_FIXED,
-                                       (int)ivlen, iv) <= 0
-                || !EVP_CipherInit_ex(ciph_ctx, NULL, NULL, key, NULL, enc)) {
+            || EVP_CIPHER_CTX_ctrl(ciph_ctx, EVP_CTRL_AEAD_SET_IVLEN, 12,
+                                   NULL) <= 0
+            || EVP_CIPHER_CTX_ctrl(ciph_ctx, EVP_CTRL_AEAD_SET_TAG,
+                                   (int)taglen, NULL) <= 0
+            || EVP_CIPHER_CTX_ctrl(ciph_ctx, EVP_CTRL_CCM_SET_IV_FIXED,
+                                   (int)ivlen, iv) <= 0
+            || !EVP_CipherInit_ex(ciph_ctx, NULL, NULL, key, NULL, enc)) {
             ERR_raise(ERR_LIB_SSL, ERR_R_INTERNAL_ERROR);
             return OSSL_RECORD_RETURN_FATAL;
         }
@@ -118,7 +118,7 @@ static int tls1_set_crypto_state(OSSL_RECORD_LAYER *rl, int level,
         return OSSL_RECORD_RETURN_FATAL;
     }
     if (EVP_CIPHER_get0_provider(ciph) != NULL
-            && !ossl_set_tls_provider_parameters(rl, ciph_ctx, ciph, md))
+        && !ossl_set_tls_provider_parameters(rl, ciph_ctx, ciph, md))
         return OSSL_RECORD_RETURN_FATAL;
 
     /* Calculate the explicit IV length */
@@ -203,11 +203,13 @@ static int tls1_cipher(OSSL_RECORD_LAYER *rl, TLS_RL_RECORD *recs,
         if (ivlen > 1) {
             for (ctr = 0; ctr < n_recs; ctr++) {
                 if (recs[ctr].data != recs[ctr].input) {
-                    RLAYERfatal(rl, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
+                    RLAYERfatal(rl, SSL_AD_INTERNAL_ERROR,
+                                ERR_R_INTERNAL_ERROR);
                     return 0;
                 } else if (RAND_bytes_ex(rl->libctx, recs[ctr].input,
                                          ivlen, 0) <= 0) {
-                    RLAYERfatal(rl, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
+                    RLAYERfatal(rl, SSL_AD_INTERNAL_ERROR,
+                                ERR_R_INTERNAL_ERROR);
                     return 0;
                 }
             }
@@ -224,7 +226,7 @@ static int tls1_cipher(OSSL_RECORD_LAYER *rl, TLS_RL_RECORD *recs,
 
     if (n_recs > 1) {
         if ((EVP_CIPHER_get_flags(EVP_CIPHER_CTX_get0_cipher(ds))
-                 & EVP_CIPH_FLAG_PIPELINE) == 0) {
+             & EVP_CIPH_FLAG_PIPELINE) == 0) {
             /*
              * We shouldn't have been called with pipeline data if the
              * cipher doesn't support pipelining
@@ -237,7 +239,7 @@ static int tls1_cipher(OSSL_RECORD_LAYER *rl, TLS_RL_RECORD *recs,
         reclen[ctr] = recs[ctr].length;
 
         if ((EVP_CIPHER_get_flags(EVP_CIPHER_CTX_get0_cipher(ds))
-                 & EVP_CIPH_FLAG_AEAD_CIPHER) != 0) {
+             & EVP_CIPH_FLAG_AEAD_CIPHER) != 0) {
             unsigned char *seq;
 
             seq = rl->sequence;
@@ -400,7 +402,7 @@ static int tls1_cipher(OSSL_RECORD_LAYER *rl, TLS_RL_RECORD *recs,
         tmpr = EVP_Cipher(ds, recs[0].data, recs[0].input,
                           (unsigned int)reclen[0]);
         if ((EVP_CIPHER_get_flags(EVP_CIPHER_CTX_get0_cipher(ds))
-                 & EVP_CIPH_FLAG_CUSTOM_CIPHER) != 0
+             & EVP_CIPH_FLAG_CUSTOM_CIPHER) != 0
             ? (tmpr < 0)
             : (tmpr == 0)) {
             /* AEAD can fail to verify MAC */
@@ -432,16 +434,21 @@ static int tls1_cipher(OSSL_RECORD_LAYER *rl, TLS_RL_RECORD *recs,
                  * with a random MAC if padding is invalid
                  */
                 if (!tls1_cbc_remove_padding_and_mac(&recs[ctr].length,
-                                        recs[ctr].orig_len,
-                                        recs[ctr].data,
-                                        (macs != NULL) ? &macs[ctr].mac : NULL,
-                                        (macs != NULL) ? &macs[ctr].alloced
+                                                     recs[ctr].orig_len,
+                                                     recs[ctr].data,
+                                                     (macs !=
+                                                      NULL) ? &macs[ctr].mac :
+                                                     NULL,
+                                                     (macs !=
+                                                      NULL) ? &macs[ctr].alloced
                                                        : NULL,
-                                        bs,
-                                        pad ? (size_t)pad : macsize,
-                                        (EVP_CIPHER_get_flags(enc)
-                                        & EVP_CIPH_FLAG_AEAD_CIPHER) != 0,
-                                        rl->libctx))
+                                                     bs,
+                                                     pad ? (size_t)pad : macsize,
+                                                     (EVP_CIPHER_get_flags(enc)
+                                                      &
+                                                      EVP_CIPH_FLAG_AEAD_CIPHER)
+                                                     != 0,
+                                                     rl->libctx))
                     return 0;
             }
         }
@@ -449,7 +456,8 @@ static int tls1_cipher(OSSL_RECORD_LAYER *rl, TLS_RL_RECORD *recs,
     return 1;
 }
 
-static int tls1_mac(OSSL_RECORD_LAYER *rl, TLS_RL_RECORD *rec, unsigned char *md,
+static int tls1_mac(OSSL_RECORD_LAYER *rl, TLS_RL_RECORD *rec,
+                    unsigned char *md,
                     int sending)
 {
     unsigned char *seq = rl->sequence;
@@ -478,8 +486,8 @@ static int tls1_mac(OSSL_RECORD_LAYER *rl, TLS_RL_RECORD *rec, unsigned char *md
     }
 
     if (!rl->isdtls
-            && rl->tlstree
-            && EVP_MD_CTX_ctrl(mac_ctx, EVP_MD_CTRL_TLSTREE, 0, seq) <= 0)
+        && rl->tlstree
+        && EVP_MD_CTX_ctrl(mac_ctx, EVP_MD_CTRL_TLSTREE, 0, seq) <= 0)
         goto end;
 
     if (rl->isdtls) {
@@ -535,7 +543,7 @@ static int tls1_mac(OSSL_RECORD_LAYER *rl, TLS_RL_RECORD *rec, unsigned char *md
         BIO_dump_indent(trc_out, md, md_size, 4);
     } OSSL_TRACE_END(TLS);
     ret = 1;
- end:
+end:
     EVP_MD_CTX_free(hmac);
     return ret;
 }
@@ -543,22 +551,22 @@ static int tls1_mac(OSSL_RECORD_LAYER *rl, TLS_RL_RECORD *rec, unsigned char *md
 #if defined(SSL3_ALIGN_PAYLOAD) && SSL3_ALIGN_PAYLOAD != 0
 # ifndef OPENSSL_NO_COMP
 #  define MAX_PREFIX_LEN ((SSL3_ALIGN_PAYLOAD - 1) \
-                           + SSL3_RT_SEND_MAX_ENCRYPTED_OVERHEAD \
-                           + SSL3_RT_HEADER_LENGTH \
-                           + SSL3_RT_MAX_COMPRESSED_OVERHEAD)
+                          + SSL3_RT_SEND_MAX_ENCRYPTED_OVERHEAD \
+                          + SSL3_RT_HEADER_LENGTH \
+                          + SSL3_RT_MAX_COMPRESSED_OVERHEAD)
 # else
 #  define MAX_PREFIX_LEN ((SSL3_ALIGN_PAYLOAD - 1) \
-                           + SSL3_RT_SEND_MAX_ENCRYPTED_OVERHEAD \
-                           + SSL3_RT_HEADER_LENGTH)
+                          + SSL3_RT_SEND_MAX_ENCRYPTED_OVERHEAD \
+                          + SSL3_RT_HEADER_LENGTH)
 # endif /* OPENSSL_NO_COMP */
 #else
 # ifndef OPENSSL_NO_COMP
 #  define MAX_PREFIX_LEN (SSL3_RT_SEND_MAX_ENCRYPTED_OVERHEAD \
-                           + SSL3_RT_HEADER_LENGTH \
-                           + SSL3_RT_MAX_COMPRESSED_OVERHEAD)
+                          + SSL3_RT_HEADER_LENGTH \
+                          + SSL3_RT_MAX_COMPRESSED_OVERHEAD)
 # else
 #  define MAX_PREFIX_LEN (SSL3_RT_SEND_MAX_ENCRYPTED_OVERHEAD \
-                           + SSL3_RT_HEADER_LENGTH)
+                          + SSL3_RT_HEADER_LENGTH)
 # endif /* OPENSSL_NO_COMP */
 #endif
 

@@ -92,7 +92,7 @@ size_t ossl_rand_get_nonce(ossl_unused OSSL_LIB_CTX *ctx,
         goto err;
     ret   = ossl_rand_pool_length(pool);
     *pout = ossl_rand_pool_detach(pool);
- err:
+err:
     ossl_rand_pool_free(pool);
     return ret;
 }

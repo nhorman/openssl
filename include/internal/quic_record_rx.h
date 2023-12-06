@@ -32,19 +32,19 @@ typedef struct ossl_qrx_args_st {
     QUIC_DEMUX     *demux;
 
     /* Length of connection IDs used in short-header packets in bytes. */
-    size_t          short_conn_id_len;
+    size_t short_conn_id_len;
 
     /*
      * Maximum number of deferred datagrams buffered at any one time.
      * Suggested value: 32.
      */
-    size_t          max_deferred;
+    size_t max_deferred;
 
     /* Initial reference PN used for RX. */
-    QUIC_PN         init_largest_pn[QUIC_PN_SPACE_NUM];
+    QUIC_PN init_largest_pn[QUIC_PN_SPACE_NUM];
 
     /* Initial key phase. For debugging use only; always 0 in real use. */
-    unsigned char   init_key_phase_bit;
+    unsigned char init_key_phase_bit;
 } OSSL_QRX_ARGS;
 
 /* Instantiates a new QRX. */
@@ -184,11 +184,11 @@ int ossl_qrx_remove_dst_conn_id(OSSL_QRX *qrx,
  * Returns 1 on success or 0 on failure.
  */
 int ossl_qrx_provide_secret(OSSL_QRX              *qrx,
-                            uint32_t               enc_level,
-                            uint32_t               suite_id,
+                            uint32_t enc_level,
+                            uint32_t suite_id,
                             EVP_MD                *md,
                             const unsigned char   *secret,
-                            size_t                 secret_len);
+                            size_t secret_len);
 
 /*
  * Informs the QRX that it can now discard key material for a given EL. The QRX
@@ -233,16 +233,16 @@ typedef struct ossl_qrx_pkt_st {
      * for this is so that the user can enforce minimum datagram sizes (e.g. for
      * datagrams containing INITIAL packets), as required by RFC 9000.
      */
-    size_t              datagram_len;
+    size_t datagram_len;
 
     /* The PN which was decoded for the packet, if the packet has a PN field. */
-    QUIC_PN             pn;
+    QUIC_PN pn;
 
     /*
      * Time the packet was received, or ossl_time_zero() if the demuxer is not
      * using a now() function.
      */
-    OSSL_TIME           time;
+    OSSL_TIME time;
 
     /* The QRX which was used to receive the packet. */
     OSSL_QRX            *qrx;
@@ -251,7 +251,7 @@ typedef struct ossl_qrx_pkt_st {
      * The key epoch the packet was received with. Always 0 for non-1-RTT
      * packets.
      */
-    uint64_t            key_epoch;
+    uint64_t key_epoch;
 } OSSL_QRX_PKT;
 
 /*
@@ -511,7 +511,7 @@ uint64_t ossl_qrx_get_key_epoch(OSSL_QRX *qrx);
  * cb_arg is an opaque value passed to cb. pn is the PN of the packet.
  * Since key update is only supported for 1-RTT packets, the PN is always
  * in the Application Data PN space.
-*/
+ */
 typedef void (ossl_qrx_key_update_cb)(QUIC_PN pn, void *arg);
 
 int ossl_qrx_set_key_update_cb(OSSL_QRX *qrx,

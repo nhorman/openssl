@@ -44,7 +44,8 @@ fail:
     return NULL;
 }
 
-int ossl_crypto_thread_native_join(CRYPTO_THREAD *thread, CRYPTO_THREAD_RETVAL *retval)
+int ossl_crypto_thread_native_join(CRYPTO_THREAD *thread,
+                                   CRYPTO_THREAD_RETVAL *retval)
 {
     uint64_t req_state_mask;
 

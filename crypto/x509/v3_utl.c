@@ -66,7 +66,7 @@ static int x509v3_add_len_value(const char *name, const char *value,
     if (!sk_CONF_VALUE_push(*extlist, vtmp))
         goto err;
     return 1;
- err:
+err:
     if (sk_allocated) {
         sk_CONF_VALUE_free(*extlist);
         *extlist = NULL;
@@ -287,7 +287,7 @@ int X509V3_get_value_bool(const CONF_VALUE *value, int *asn1_bool)
         *asn1_bool = 0;
         return 1;
     }
- err:
+err:
     ERR_raise(ERR_LIB_X509V3, X509V3_R_INVALID_BOOLEAN_STRING);
     X509V3_conf_add_error_name_value(value);
     return 0;
@@ -331,45 +331,45 @@ STACK_OF(CONF_VALUE) *X509V3_parse_list(const char *line)
          p++) {
 
         switch (state) {
-        case HDR_NAME:
-            if (c == ':') {
-                state = HDR_VALUE;
-                *p = 0;
-                ntmp = strip_spaces(q);
-                if (!ntmp) {
-                    ERR_raise(ERR_LIB_X509V3, X509V3_R_INVALID_EMPTY_NAME);
-                    goto err;
+            case HDR_NAME:
+                if (c == ':') {
+                    state = HDR_VALUE;
+                    *p = 0;
+                    ntmp = strip_spaces(q);
+                    if (!ntmp) {
+                        ERR_raise(ERR_LIB_X509V3, X509V3_R_INVALID_EMPTY_NAME);
+                        goto err;
+                    }
+                    q = p + 1;
+                } else if (c == ',') {
+                    *p = 0;
+                    ntmp = strip_spaces(q);
+                    q = p + 1;
+                    if (!ntmp) {
+                        ERR_raise(ERR_LIB_X509V3, X509V3_R_INVALID_EMPTY_NAME);
+                        goto err;
+                    }
+                    if (!X509V3_add_value(ntmp, NULL, &values)) {
+                        goto err;
+                    }
                 }
-                q = p + 1;
-            } else if (c == ',') {
-                *p = 0;
-                ntmp = strip_spaces(q);
-                q = p + 1;
-                if (!ntmp) {
-                    ERR_raise(ERR_LIB_X509V3, X509V3_R_INVALID_EMPTY_NAME);
-                    goto err;
-                }
-                if (!X509V3_add_value(ntmp, NULL, &values)) {
-                    goto err;
-                }
-            }
-            break;
+                break;
 
-        case HDR_VALUE:
-            if (c == ',') {
-                state = HDR_NAME;
-                *p = 0;
-                vtmp = strip_spaces(q);
-                if (!vtmp) {
-                    ERR_raise(ERR_LIB_X509V3, X509V3_R_INVALID_NULL_VALUE);
-                    goto err;
+            case HDR_VALUE:
+                if (c == ',') {
+                    state = HDR_NAME;
+                    *p = 0;
+                    vtmp = strip_spaces(q);
+                    if (!vtmp) {
+                        ERR_raise(ERR_LIB_X509V3, X509V3_R_INVALID_NULL_VALUE);
+                        goto err;
+                    }
+                    if (!X509V3_add_value(ntmp, vtmp, &values)) {
+                        goto err;
+                    }
+                    ntmp = NULL;
+                    q = p + 1;
                 }
-                if (!X509V3_add_value(ntmp, vtmp, &values)) {
-                    goto err;
-                }
-                ntmp = NULL;
-                q = p + 1;
-            }
 
         }
     }
@@ -396,7 +396,7 @@ STACK_OF(CONF_VALUE) *X509V3_parse_list(const char *line)
     OPENSSL_free(linebuf);
     return values;
 
- err:
+err:
     OPENSSL_free(linebuf);
     sk_CONF_VALUE_pop_free(values, X509V3_conf_free);
     return NULL;
@@ -473,7 +473,7 @@ STACK_OF(OPENSSL_STRING) *X509_get1_ocsp(X509 *x)
         if (OBJ_obj2nid(ad->method) == NID_ad_OCSP) {
             if (ad->location->type == GEN_URI) {
                 if (!append_ia5
-                    (&ret, ad->location->d.uniformResourceIdentifier))
+                        (&ret, ad->location->d.uniformResourceIdentifier))
                     break;
             }
         }
@@ -930,7 +930,7 @@ static int do_x509_check(X509 *x, const char *chk, size_t chklen,
 
                         /* Positive on success, negative on error! */
                         if ((rv = do_check_string(cstr, 0, equal, flags,
-                                                chk, chklen, peername)) != 0)
+                                                  chk, chklen, peername)) != 0)
                             break;
                     }
                 } else
@@ -1045,22 +1045,23 @@ char *ossl_ipaddr_to_asc(unsigned char *p, int len)
     int i = 0, remain = 0, bytes = 0;
 
     switch (len) {
-    case 4: /* IPv4 */
-        BIO_snprintf(buf, sizeof(buf), "%d.%d.%d.%d", p[0], p[1], p[2], p[3]);
-        break;
-    case 16: /* IPv6 */
-        for (out = buf, i = 8, remain = sizeof(buf);
-             i-- > 0 && bytes >= 0;
-             remain -= bytes, out += bytes) {
-            const char *template = (i > 0 ? "%X:" : "%X");
+        case 4: /* IPv4 */
+            BIO_snprintf(buf, sizeof(buf), "%d.%d.%d.%d", p[0], p[1], p[2],
+                         p[3]);
+            break;
+        case 16: /* IPv6 */
+            for (out = buf, i = 8, remain = sizeof(buf);
+                 i-- > 0 && bytes >= 0;
+                 remain -= bytes, out += bytes) {
+                const char *template = (i > 0 ? "%X:" : "%X");
 
-            bytes = BIO_snprintf(out, remain, template, p[0] << 8 | p[1]);
-            p += 2;
-        }
-        break;
-    default:
-        BIO_snprintf(buf, sizeof(buf), "<invalid length=%d>", len);
-        break;
+                bytes = BIO_snprintf(out, remain, template, p[0] << 8 | p[1]);
+                p += 2;
+            }
+            break;
+        default:
+            BIO_snprintf(buf, sizeof(buf), "<invalid length=%d>", len);
+            break;
     }
     return OPENSSL_strdup(buf);
 }
@@ -1130,7 +1131,7 @@ ASN1_OCTET_STRING *a2i_IPADDRESS_NC(const char *ipasc)
 
     return ret;
 
- err:
+err:
     OPENSSL_free(iptmp);
     ASN1_OCTET_STRING_free(ret);
     return NULL;
@@ -1210,7 +1211,7 @@ static int ipv6_from_asc(unsigned char *v6, const char *in)
         /* More than three zeroes is an error */
         if (v6stat.zero_cnt > 3) {
             return 0;
-        /* Can only have three zeroes if nothing else present */
+            /* Can only have three zeroes if nothing else present */
         } else if (v6stat.zero_cnt == 3) {
             if (v6stat.total > 0)
                 return 0;

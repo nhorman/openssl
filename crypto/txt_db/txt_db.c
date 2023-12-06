@@ -113,7 +113,7 @@ TXT_DB *TXT_DB_read(BIO *in, int num)
     }
     BUF_MEM_free(buf);
     return ret;
- err:
+err:
     BUF_MEM_free(buf);
     if (ret != NULL) {
         sk_OPENSSL_PSTRING_free(ret->data);
@@ -226,7 +226,7 @@ long TXT_DB_write(BIO *out, TXT_DB *db)
         tot += j;
     }
     ret = tot;
- err:
+err:
     BUF_MEM_free(buf);
     return ret;
 }
@@ -263,7 +263,7 @@ int TXT_DB_insert(TXT_DB *db, OPENSSL_STRING *row)
         goto err1;
     return 1;
 
- err1:
+err1:
     db->error = DB_ERROR_MALLOC;
     while (i-- > 0) {
         if (db->index[i] != NULL) {
@@ -272,7 +272,7 @@ int TXT_DB_insert(TXT_DB *db, OPENSSL_STRING *row)
             (void)lh_OPENSSL_STRING_delete(db->index[i], row);
         }
     }
- err:
+err:
     return 0;
 }
 

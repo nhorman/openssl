@@ -129,7 +129,7 @@ signed char *bn_compute_wNAF(const BIGNUM *scalar, int w, size_t *ret_len)
     *ret_len = j;
     return r;
 
- err:
+err:
     OPENSSL_free(r);
     return NULL;
 }

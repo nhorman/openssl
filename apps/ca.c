@@ -26,7 +26,8 @@
 #ifndef W_OK
 # ifdef OPENSSL_SYS_VMS
 #  include <unistd.h>
-# elif !defined(OPENSSL_SYS_VXWORKS) && !defined(OPENSSL_SYS_WINDOWS) && !defined(OPENSSL_SYS_TANDEM)
+# elif !defined(OPENSSL_SYS_VXWORKS) && !defined(OPENSSL_SYS_WINDOWS) && \
+    !defined(OPENSSL_SYS_TANDEM)
 #  include <sys/file.h>
 # endif
 #endif
@@ -99,7 +100,8 @@ static int certify(X509 **xret, const char *infile, int informat,
                    const char *enddate,
                    long days, int batch, const char *ext_sect, CONF *conf,
                    int verbose, unsigned long certopt, unsigned long nameopt,
-                   int default_op, int ext_copy, int selfsign, unsigned long dateopt);
+                   int default_op, int ext_copy, int selfsign,
+                   unsigned long dateopt);
 static int certify_cert(X509 **xret, const char *infile, int certformat,
                         const char *passin, EVP_PKEY *pkey, X509 *x509,
                         const char *dgst,
@@ -108,26 +110,32 @@ static int certify_cert(X509 **xret, const char *infile, int certformat,
                         STACK_OF(CONF_VALUE) *policy, CA_DB *db,
                         BIGNUM *serial, const char *subj, unsigned long chtype,
                         int multirdn, int email_dn, const char *startdate,
-                        const char *enddate, long days, int batch, const char *ext_sect,
+                        const char *enddate, long days, int batch,
+                        const char *ext_sect,
                         CONF *conf, int verbose, unsigned long certopt,
-                        unsigned long nameopt, int default_op, int ext_copy, unsigned long dateopt);
+                        unsigned long nameopt, int default_op, int ext_copy,
+                        unsigned long dateopt);
 static int certify_spkac(X509 **xret, const char *infile, EVP_PKEY *pkey,
                          X509 *x509, const char *dgst,
                          STACK_OF(OPENSSL_STRING) *sigopts,
                          STACK_OF(CONF_VALUE) *policy, CA_DB *db,
                          BIGNUM *serial, const char *subj, unsigned long chtype,
                          int multirdn, int email_dn, const char *startdate,
-                         const char *enddate, long days, const char *ext_sect, CONF *conf,
+                         const char *enddate, long days, const char *ext_sect,
+                         CONF *conf,
                          int verbose, unsigned long certopt,
-                         unsigned long nameopt, int default_op, int ext_copy, unsigned long dateopt);
+                         unsigned long nameopt, int default_op, int ext_copy,
+                         unsigned long dateopt);
 static int do_body(X509 **xret, EVP_PKEY *pkey, X509 *x509,
                    const char *dgst, STACK_OF(OPENSSL_STRING) *sigopts,
                    STACK_OF(CONF_VALUE) *policy, CA_DB *db, BIGNUM *serial,
                    const char *subj, unsigned long chtype, int multirdn,
-                   int email_dn, const char *startdate, const char *enddate, long days,
+                   int email_dn, const char *startdate, const char *enddate,
+                   long days,
                    int batch, int verbose, X509_REQ *req, const char *ext_sect,
                    CONF *conf, unsigned long certopt, unsigned long nameopt,
-                   int default_op, int ext_copy, int selfsign, unsigned long dateopt);
+                   int default_op, int ext_copy, int selfsign,
+                   unsigned long dateopt);
 static int get_certificate_status(const char *ser_status, CA_DB *db);
 static int check_time_format(const char *str);
 static int do_revoke(X509 *x509, CA_DB *db, REVINFO_TYPE rev_type,
@@ -172,7 +180,8 @@ const OPTIONS ca_options[] = {
      "CSR input format to use (PEM or DER; by default try PEM first)"},
     {"infiles", OPT_INFILES, '-', "The last argument, requests to process"},
     {"out", OPT_OUT, '>', "Where to put the output file(s)"},
-    {"dateopt", OPT_DATEOPT, 's', "Datetime format used for printing. (rfc_822/iso_8601). Default is rfc_822."},
+    {"dateopt", OPT_DATEOPT, 's',
+     "Datetime format used for printing. (rfc_822/iso_8601). Default is rfc_822."},
     {"notext", OPT_NOTEXT, '-', "Do not print the generated certificate"},
     {"batch", OPT_BATCH, '-', "Don't ask questions"},
     {"msie_hack", OPT_MSIE_HACK, '-',
@@ -306,196 +315,198 @@ int ca_main(int argc, char **argv)
     prog = opt_init(argc, argv, ca_options);
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_EOF:
-        case OPT_ERR:
+            case OPT_EOF:
+            case OPT_ERR:
 opthelp:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto end;
-        case OPT_HELP:
-            opt_help(ca_options);
-            ret = 0;
-            goto end;
-        case OPT_IN:
-            req = 1;
-            infile = opt_arg();
-            break;
-        case OPT_INFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &informat))
-                goto opthelp;
-            break;
-        case OPT_OUT:
-            outfile = opt_arg();
-            break;
-        case OPT_DATEOPT:
-            if (!set_dateopt(&dateopt, opt_arg()))
-                goto opthelp;
-            break;
-        case OPT_VERBOSE:
-            verbose = 1;
-            break;
-        case OPT_QUIET:
-            verbose = 0;
-            break;
-        case OPT_CONFIG:
-            configfile = opt_arg();
-            break;
-        case OPT_NAME:
-            section = opt_arg();
-            break;
-        case OPT_SUBJ:
-            subj = opt_arg();
-            /* preserve=1; */
-            break;
-        case OPT_UTF8:
-            chtype = MBSTRING_UTF8;
-            break;
-        case OPT_RAND_SERIAL:
-            rand_ser = 1;
-            break;
-        case OPT_CREATE_SERIAL:
-            create_ser = 1;
-            break;
-        case OPT_MULTIVALUE_RDN:
-            /* obsolete */
-            break;
-        case OPT_STARTDATE:
-            startdate = opt_arg();
-            break;
-        case OPT_ENDDATE:
-            enddate = opt_arg();
-            break;
-        case OPT_DAYS:
-            days = atoi(opt_arg());
-            break;
-        case OPT_MD:
-            dgst = opt_arg();
-            break;
-        case OPT_POLICY:
-            policy = opt_arg();
-            break;
-        case OPT_KEYFILE:
-            keyfile = opt_arg();
-            break;
-        case OPT_KEYFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_ANY, &keyformat))
-                goto opthelp;
-            break;
-        case OPT_PASSIN:
-            passinarg = opt_arg();
-            break;
-        case OPT_R_CASES:
-            if (!opt_rand(o))
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
                 goto end;
-            break;
-        case OPT_PROV_CASES:
-            if (!opt_provider(o))
+            case OPT_HELP:
+                opt_help(ca_options);
+                ret = 0;
                 goto end;
-            break;
-        case OPT_KEY:
-            passin = opt_arg();
-            break;
-        case OPT_CERT:
-            certfile = opt_arg();
-            break;
-        case OPT_CERTFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_ANY, &certformat))
-                goto opthelp;
-            break;
-        case OPT_SELFSIGN:
-            selfsign = 1;
-            break;
-        case OPT_OUTDIR:
-            outdir = opt_arg();
-            break;
-        case OPT_SIGOPT:
-            if (sigopts == NULL)
-                sigopts = sk_OPENSSL_STRING_new_null();
-            if (sigopts == NULL || !sk_OPENSSL_STRING_push(sigopts, opt_arg()))
-                goto end;
-            break;
-        case OPT_VFYOPT:
-            if (vfyopts == NULL)
-                vfyopts = sk_OPENSSL_STRING_new_null();
-            if (vfyopts == NULL || !sk_OPENSSL_STRING_push(vfyopts, opt_arg()))
-                goto end;
-            break;
-        case OPT_NOTEXT:
-            notext = 1;
-            break;
-        case OPT_BATCH:
-            batch = 1;
-            break;
-        case OPT_PRESERVEDN:
-            preserve = 1;
-            break;
-        case OPT_NOEMAILDN:
-            email_dn = 0;
-            break;
-        case OPT_GENCRL:
-            gencrl = 1;
-            break;
-        case OPT_MSIE_HACK:
-            msie_hack = 1;
-            break;
-        case OPT_CRL_LASTUPDATE:
-            crl_lastupdate = opt_arg();
-            break;
-        case OPT_CRL_NEXTUPDATE:
-            crl_nextupdate = opt_arg();
-            break;
-        case OPT_CRLDAYS:
-            crldays = atol(opt_arg());
-            break;
-        case OPT_CRLHOURS:
-            crlhours = atol(opt_arg());
-            break;
-        case OPT_CRLSEC:
-            crlsec = atol(opt_arg());
-            break;
-        case OPT_INFILES:
-            req = 1;
-            goto end_of_options;
-        case OPT_SS_CERT:
-            ss_cert_file = opt_arg();
-            req = 1;
-            break;
-        case OPT_SPKAC:
-            spkac_file = opt_arg();
-            req = 1;
-            break;
-        case OPT_REVOKE:
-            infile = opt_arg();
-            dorevoke = 1;
-            break;
-        case OPT_VALID:
-            infile = opt_arg();
-            dorevoke = 2;
-            break;
-        case OPT_EXTENSIONS:
-            extensions = opt_arg();
-            break;
-        case OPT_EXTFILE:
-            extfile = opt_arg();
-            break;
-        case OPT_STATUS:
-            ser_status = opt_arg();
-            break;
-        case OPT_UPDATEDB:
-            doupdatedb = 1;
-            break;
-        case OPT_CRLEXTS:
-            crl_ext = opt_arg();
-            break;
-        case OPT_CRL_REASON:   /* := REV_CRL_REASON */
-        case OPT_CRL_HOLD:
-        case OPT_CRL_COMPROMISE:
-        case OPT_CRL_CA_COMPROMISE:
-            rev_arg = opt_arg();
-            rev_type = (o - OPT_CRL_REASON) + REV_CRL_REASON;
-            break;
-        case OPT_ENGINE:
-            e = setup_engine(opt_arg(), 0);
-            break;
+            case OPT_IN:
+                req = 1;
+                infile = opt_arg();
+                break;
+            case OPT_INFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &informat))
+                    goto opthelp;
+                break;
+            case OPT_OUT:
+                outfile = opt_arg();
+                break;
+            case OPT_DATEOPT:
+                if (!set_dateopt(&dateopt, opt_arg()))
+                    goto opthelp;
+                break;
+            case OPT_VERBOSE:
+                verbose = 1;
+                break;
+            case OPT_QUIET:
+                verbose = 0;
+                break;
+            case OPT_CONFIG:
+                configfile = opt_arg();
+                break;
+            case OPT_NAME:
+                section = opt_arg();
+                break;
+            case OPT_SUBJ:
+                subj = opt_arg();
+                /* preserve=1; */
+                break;
+            case OPT_UTF8:
+                chtype = MBSTRING_UTF8;
+                break;
+            case OPT_RAND_SERIAL:
+                rand_ser = 1;
+                break;
+            case OPT_CREATE_SERIAL:
+                create_ser = 1;
+                break;
+            case OPT_MULTIVALUE_RDN:
+                /* obsolete */
+                break;
+            case OPT_STARTDATE:
+                startdate = opt_arg();
+                break;
+            case OPT_ENDDATE:
+                enddate = opt_arg();
+                break;
+            case OPT_DAYS:
+                days = atoi(opt_arg());
+                break;
+            case OPT_MD:
+                dgst = opt_arg();
+                break;
+            case OPT_POLICY:
+                policy = opt_arg();
+                break;
+            case OPT_KEYFILE:
+                keyfile = opt_arg();
+                break;
+            case OPT_KEYFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_ANY, &keyformat))
+                    goto opthelp;
+                break;
+            case OPT_PASSIN:
+                passinarg = opt_arg();
+                break;
+            case OPT_R_CASES:
+                if (!opt_rand(o))
+                    goto end;
+                break;
+            case OPT_PROV_CASES:
+                if (!opt_provider(o))
+                    goto end;
+                break;
+            case OPT_KEY:
+                passin = opt_arg();
+                break;
+            case OPT_CERT:
+                certfile = opt_arg();
+                break;
+            case OPT_CERTFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_ANY, &certformat))
+                    goto opthelp;
+                break;
+            case OPT_SELFSIGN:
+                selfsign = 1;
+                break;
+            case OPT_OUTDIR:
+                outdir = opt_arg();
+                break;
+            case OPT_SIGOPT:
+                if (sigopts == NULL)
+                    sigopts = sk_OPENSSL_STRING_new_null();
+                if (sigopts == NULL ||
+                    !sk_OPENSSL_STRING_push(sigopts, opt_arg()))
+                    goto end;
+                break;
+            case OPT_VFYOPT:
+                if (vfyopts == NULL)
+                    vfyopts = sk_OPENSSL_STRING_new_null();
+                if (vfyopts == NULL ||
+                    !sk_OPENSSL_STRING_push(vfyopts, opt_arg()))
+                    goto end;
+                break;
+            case OPT_NOTEXT:
+                notext = 1;
+                break;
+            case OPT_BATCH:
+                batch = 1;
+                break;
+            case OPT_PRESERVEDN:
+                preserve = 1;
+                break;
+            case OPT_NOEMAILDN:
+                email_dn = 0;
+                break;
+            case OPT_GENCRL:
+                gencrl = 1;
+                break;
+            case OPT_MSIE_HACK:
+                msie_hack = 1;
+                break;
+            case OPT_CRL_LASTUPDATE:
+                crl_lastupdate = opt_arg();
+                break;
+            case OPT_CRL_NEXTUPDATE:
+                crl_nextupdate = opt_arg();
+                break;
+            case OPT_CRLDAYS:
+                crldays = atol(opt_arg());
+                break;
+            case OPT_CRLHOURS:
+                crlhours = atol(opt_arg());
+                break;
+            case OPT_CRLSEC:
+                crlsec = atol(opt_arg());
+                break;
+            case OPT_INFILES:
+                req = 1;
+                goto end_of_options;
+            case OPT_SS_CERT:
+                ss_cert_file = opt_arg();
+                req = 1;
+                break;
+            case OPT_SPKAC:
+                spkac_file = opt_arg();
+                req = 1;
+                break;
+            case OPT_REVOKE:
+                infile = opt_arg();
+                dorevoke = 1;
+                break;
+            case OPT_VALID:
+                infile = opt_arg();
+                dorevoke = 2;
+                break;
+            case OPT_EXTENSIONS:
+                extensions = opt_arg();
+                break;
+            case OPT_EXTFILE:
+                extfile = opt_arg();
+                break;
+            case OPT_STATUS:
+                ser_status = opt_arg();
+                break;
+            case OPT_UPDATEDB:
+                doupdatedb = 1;
+                break;
+            case OPT_CRLEXTS:
+                crl_ext = opt_arg();
+                break;
+            case OPT_CRL_REASON: /* := REV_CRL_REASON */
+            case OPT_CRL_HOLD:
+            case OPT_CRL_COMPROMISE:
+            case OPT_CRL_CA_COMPROMISE:
+                rev_arg = opt_arg();
+                rev_type = (o - OPT_CRL_REASON) + REV_CRL_REASON;
+                break;
+            case OPT_ENGINE:
+                e = setup_engine(opt_arg(), 0);
+                break;
         }
     }
 
@@ -558,7 +569,9 @@ end_of_options:
 
         db = load_index(dbfile, &db_attr);
         if (db == NULL) {
-            BIO_printf(bio_err, "Problem with index file: %s (could not load/parse file)\n", dbfile);
+            BIO_printf(bio_err,
+                       "Problem with index file: %s (could not load/parse file)\n",
+                       dbfile);
             goto end;
         }
 
@@ -597,7 +610,8 @@ end_of_options:
             && (certfile = lookup_conf(conf, section, ENV_CERTIFICATE)) == NULL)
             goto end;
 
-        x509 = load_cert_pass(certfile, certformat, 1, passin, "CA certificate");
+        x509 =
+            load_cert_pass(certfile, certformat, 1, passin, "CA certificate");
         if (x509 == NULL)
             goto end;
 
@@ -677,7 +691,9 @@ end_of_options:
 
     db = load_index(dbfile, &db_attr);
     if (db == NULL) {
-        BIO_printf(bio_err, "Problem with index file: %s (could not load/parse file)\n", dbfile);
+        BIO_printf(bio_err,
+                   "Problem with index file: %s (could not load/parse file)\n",
+                   dbfile);
         goto end;
     }
 
@@ -783,7 +799,8 @@ end_of_options:
         }
     }
 
-    def_ret = EVP_PKEY_get_default_digest_name(pkey, def_dgst, sizeof(def_dgst));
+    def_ret =
+        EVP_PKEY_get_default_digest_name(pkey, def_dgst, sizeof(def_dgst));
     /*
      * EVP_PKEY_get_default_digest_name() returns 2 if the digest is
      * mandatory for this algorithm.
@@ -978,7 +995,8 @@ end_of_options:
                         sigopts, vfyopts, attribs, db,
                         serial, subj, chtype, multirdn, email_dn, startdate,
                         enddate, days, batch, extensions, conf, verbose,
-                        certopt, get_nameopt(), default_op, ext_copy, selfsign, dateopt);
+                        certopt,
+                        get_nameopt(), default_op, ext_copy, selfsign, dateopt);
             if (j < 0)
                 goto end;
             if (j > 0) {
@@ -999,7 +1017,8 @@ end_of_options:
                         attribs, db,
                         serial, subj, chtype, multirdn, email_dn, startdate,
                         enddate, days, batch, extensions, conf, verbose,
-                        certopt, get_nameopt(), default_op, ext_copy, selfsign, dateopt);
+                        certopt,
+                        get_nameopt(), default_op, ext_copy, selfsign, dateopt);
             if (j < 0)
                 goto end;
             if (j > 0) {
@@ -1044,7 +1063,7 @@ end_of_options:
                        sk_X509_num(cert_sk));
 
             if (serialfile != NULL
-                    && !save_serial(serialfile, "new", serial, NULL))
+                && !save_serial(serialfile, "new", serial, NULL))
                 goto end;
 
             if (!save_index(dbfile, "new", db))
@@ -1112,7 +1131,7 @@ end_of_options:
         if (sk_X509_num(cert_sk)) {
             /* Rename the database and the serial file */
             if (serialfile != NULL
-                    && !rotate_serial(serialfile, "new", "old"))
+                && !rotate_serial(serialfile, "new", "old"))
                 goto end;
 
             if (!rotate_index(dbfile, "new", "old"))
@@ -1136,7 +1155,8 @@ end_of_options:
             X509V3_set_nconf(&ctx, conf);
             if (!X509V3_EXT_add_nconf(conf, &ctx, crl_ext, NULL)) {
                 BIO_printf(bio_err,
-                           "Error checking CRL extension section %s\n", crl_ext);
+                           "Error checking CRL extension section %s\n",
+                           crl_ext);
                 ret = 1;
                 goto end;
             }
@@ -1153,14 +1173,14 @@ end_of_options:
 
         if (!crldays && !crlhours && !crlsec) {
             if (!app_conf_try_number(conf, section,
-                                  ENV_DEFAULT_CRL_DAYS, &crldays))
+                                     ENV_DEFAULT_CRL_DAYS, &crldays))
                 crldays = 0;
             if (!app_conf_try_number(conf, section,
-                                  ENV_DEFAULT_CRL_HOURS, &crlhours))
+                                     ENV_DEFAULT_CRL_HOURS, &crlhours))
                 crlhours = 0;
         }
         if ((crl_nextupdate == NULL) &&
-                (crldays == 0) && (crlhours == 0) && (crlsec == 0)) {
+            (crldays == 0) && (crlhours == 0) && (crlsec == 0)) {
             BIO_printf(bio_err,
                        "cannot lookup how long until the next CRL is issued\n");
             goto end;
@@ -1168,7 +1188,8 @@ end_of_options:
 
         if (verbose)
             BIO_printf(bio_err, "making CRL\n");
-        if ((crl = X509_CRL_new_ex(app_get0_libctx(), app_get0_propq())) == NULL)
+        if ((crl =
+                 X509_CRL_new_ex(app_get0_libctx(), app_get0_propq())) == NULL)
             goto end;
         if (!X509_CRL_set_issuer_name(crl, X509_get_subject_name(x509)))
             goto end;
@@ -1229,7 +1250,8 @@ end_of_options:
             if (crl_ext != NULL)
                 if (!X509V3_EXT_CRL_add_nconf(conf, &crlctx, crl_ext, crl)) {
                     BIO_printf(bio_err,
-                               "Error adding CRL extensions from section %s\n", crl_ext);
+                               "Error adding CRL extensions from section %s\n",
+                               crl_ext);
                     goto end;
                 }
             if (crlnumberfile != NULL) {
@@ -1250,7 +1272,7 @@ end_of_options:
 
         /* we have a CRL number that need updating */
         if (crlnumberfile != NULL
-                && !save_serial(crlnumberfile, "new", crlnumber, NULL))
+            && !save_serial(crlnumberfile, "new", crlnumber, NULL))
             goto end;
 
         BN_free(crlnumber);
@@ -1268,7 +1290,7 @@ end_of_options:
 
         /* Rename the crlnumber file */
         if (crlnumberfile != NULL
-                && !rotate_serial(crlnumberfile, "new", "old"))
+            && !rotate_serial(crlnumberfile, "new", "old"))
             goto end;
 
     }
@@ -1302,7 +1324,7 @@ end_of_options:
     }
     ret = 0;
 
- end:
+end:
     if (ret)
         ERR_print_errors(bio_err);
     BIO_free_all(Sout);
@@ -1331,7 +1353,8 @@ static char *lookup_conf(const CONF *conf, const char *section, const char *tag)
 {
     char *entry = NCONF_get_string(conf, section, tag);
     if (entry == NULL)
-        BIO_printf(bio_err, "variable lookup failed for %s::%s\n", section, tag);
+        BIO_printf(bio_err, "variable lookup failed for %s::%s\n", section,
+                   tag);
     return entry;
 }
 
@@ -1346,7 +1369,8 @@ static int certify(X509 **xret, const char *infile, int informat,
                    const char *enddate,
                    long days, int batch, const char *ext_sect, CONF *lconf,
                    int verbose, unsigned long certopt, unsigned long nameopt,
-                   int default_op, int ext_copy, int selfsign, unsigned long dateopt)
+                   int default_op, int ext_copy, int selfsign,
+                   unsigned long dateopt)
 {
     X509_REQ *req = NULL;
     EVP_PKEY *pktmp = NULL;
@@ -1387,7 +1411,7 @@ static int certify(X509 **xret, const char *infile, int informat,
                  verbose, req, ext_sect, lconf, certopt, nameopt, default_op,
                  ext_copy, selfsign, dateopt);
 
- end:
+end:
     ERR_print_errors(bio_err);
     X509_REQ_free(req);
     return ok;
@@ -1401,9 +1425,11 @@ static int certify_cert(X509 **xret, const char *infile, int certformat,
                         STACK_OF(CONF_VALUE) *policy, CA_DB *db,
                         BIGNUM *serial, const char *subj, unsigned long chtype,
                         int multirdn, int email_dn, const char *startdate,
-                        const char *enddate, long days, int batch, const char *ext_sect,
+                        const char *enddate, long days, int batch,
+                        const char *ext_sect,
                         CONF *lconf, int verbose, unsigned long certopt,
-                        unsigned long nameopt, int default_op, int ext_copy, unsigned long dateopt)
+                        unsigned long nameopt, int default_op, int ext_copy,
+                        unsigned long dateopt)
 {
     X509 *template_cert = NULL;
     X509_REQ *rreq = NULL;
@@ -1444,7 +1470,7 @@ static int certify_cert(X509 **xret, const char *infile, int certformat,
                  verbose, rreq, ext_sect, lconf, certopt, nameopt, default_op,
                  ext_copy, 0, dateopt);
 
- end:
+end:
     X509_REQ_free(rreq);
     X509_free(template_cert);
     return ok;
@@ -1454,10 +1480,12 @@ static int do_body(X509 **xret, EVP_PKEY *pkey, X509 *x509,
                    const char *dgst, STACK_OF(OPENSSL_STRING) *sigopts,
                    STACK_OF(CONF_VALUE) *policy, CA_DB *db, BIGNUM *serial,
                    const char *subj, unsigned long chtype, int multirdn,
-                   int email_dn, const char *startdate, const char *enddate, long days,
+                   int email_dn, const char *startdate, const char *enddate,
+                   long days,
                    int batch, int verbose, X509_REQ *req, const char *ext_sect,
                    CONF *lconf, unsigned long certopt, unsigned long nameopt,
-                   int default_op, int ext_copy, int selfsign, unsigned long dateopt)
+                   int default_op, int ext_copy, int selfsign,
+                   unsigned long dateopt)
 {
     const X509_NAME *name = NULL;
     X509_NAME *CAname = NULL, *subject = NULL;
@@ -1602,12 +1630,13 @@ static int do_body(X509 **xret, EVP_PKEY *pkey, X509 *x509,
 
                 last2 = -1;
 
- again2:
+again2:
                 j = X509_NAME_get_index_by_OBJ(CAname, obj, last2);
                 if ((j < 0) && (last2 == -1)) {
                     BIO_printf(bio_err,
                                "The %s field does not exist in the CA certificate,\n"
-                               "the 'policy' is misconfigured\n", cv->name);
+                               "the 'policy' is misconfigured\n",
+                               cv->name);
                     goto end;
                 }
                 if (j >= 0) {
@@ -1932,7 +1961,7 @@ static int do_body(X509 **xret, EVP_PKEY *pkey, X509 *x509,
     }
     irow = NULL;
     ok = 1;
- end:
+end:
     if (ok != 1) {
         for (i = 0; i < DB_NUMBER; i++)
             OPENSSL_free(row[i]);
@@ -1968,7 +1997,8 @@ static int certify_spkac(X509 **xret, const char *infile, EVP_PKEY *pkey,
                          int multirdn, int email_dn, const char *startdate,
                          const char *enddate, long days, const char *ext_sect,
                          CONF *lconf, int verbose, unsigned long certopt,
-                         unsigned long nameopt, int default_op, int ext_copy, unsigned long dateopt)
+                         unsigned long nameopt, int default_op, int ext_copy,
+                         unsigned long dateopt)
 {
     STACK_OF(CONF_VALUE) *sk = NULL;
     LHASH_OF(CONF_VALUE) *parms = NULL;
@@ -2082,7 +2112,7 @@ static int certify_spkac(X509 **xret, const char *infile, EVP_PKEY *pkey,
                  chtype, multirdn, email_dn, startdate, enddate, days, 1,
                  verbose, req, ext_sect, lconf, certopt, nameopt, default_op,
                  ext_copy, 0, dateopt);
- end:
+end:
     X509_REQ_free(req);
     CONF_free(parms);
     NETSCAPE_SPKI_free(spki);
@@ -2196,7 +2226,7 @@ static int do_revoke(X509 *x509, CA_DB *db, REVINFO_TYPE rev_type,
         rrow[DB_rev_date] = rev_str;
     }
     ok = 1;
- end:
+end:
     for (i = 0; i < DB_NUMBER; i++)
         OPENSSL_free(row[i]);
     return ok;
@@ -2262,7 +2292,7 @@ static int get_certificate_status(const char *serial, CA_DB *db)
                    row[DB_serial], rrow[DB_type][0]);
         ok = -1;
     }
- end:
+end:
     for (i = 0; i < DB_NUMBER; i++) {
         OPENSSL_free(row[i]);
     }
@@ -2353,53 +2383,53 @@ static char *make_revocation_str(REVINFO_TYPE rev_type, const char *rev_arg)
     int i;
 
     switch (rev_type) {
-    case REV_NONE:
-    case REV_VALID:
-        break;
+        case REV_NONE:
+        case REV_VALID:
+            break;
 
-    case REV_CRL_REASON:
-        for (i = 0; i < 8; i++) {
-            if (OPENSSL_strcasecmp(rev_arg, crl_reasons[i]) == 0) {
-                reason = crl_reasons[i];
-                break;
+        case REV_CRL_REASON:
+            for (i = 0; i < 8; i++) {
+                if (OPENSSL_strcasecmp(rev_arg, crl_reasons[i]) == 0) {
+                    reason = crl_reasons[i];
+                    break;
+                }
             }
-        }
-        if (reason == NULL) {
-            BIO_printf(bio_err, "Unknown CRL reason %s\n", rev_arg);
-            return NULL;
-        }
-        break;
+            if (reason == NULL) {
+                BIO_printf(bio_err, "Unknown CRL reason %s\n", rev_arg);
+                return NULL;
+            }
+            break;
 
-    case REV_HOLD:
-        /* Argument is an OID */
-        otmp = OBJ_txt2obj(rev_arg, 0);
-        ASN1_OBJECT_free(otmp);
+        case REV_HOLD:
+            /* Argument is an OID */
+            otmp = OBJ_txt2obj(rev_arg, 0);
+            ASN1_OBJECT_free(otmp);
 
-        if (otmp == NULL) {
-            BIO_printf(bio_err, "Invalid object identifier %s\n", rev_arg);
-            return NULL;
-        }
+            if (otmp == NULL) {
+                BIO_printf(bio_err, "Invalid object identifier %s\n", rev_arg);
+                return NULL;
+            }
 
-        reason = "holdInstruction";
-        other = rev_arg;
-        break;
+            reason = "holdInstruction";
+            other = rev_arg;
+            break;
 
-    case REV_KEY_COMPROMISE:
-    case REV_CA_COMPROMISE:
-        /* Argument is the key compromise time  */
-        if (!ASN1_GENERALIZEDTIME_set_string(NULL, rev_arg)) {
-            BIO_printf(bio_err,
-                       "Invalid time format %s. Need YYYYMMDDHHMMSSZ\n",
-                       rev_arg);
-            return NULL;
-        }
-        other = rev_arg;
-        if (rev_type == REV_KEY_COMPROMISE)
-            reason = "keyTime";
-        else
-            reason = "CAkeyTime";
+        case REV_KEY_COMPROMISE:
+        case REV_CA_COMPROMISE:
+            /* Argument is the key compromise time  */
+            if (!ASN1_GENERALIZEDTIME_set_string(NULL, rev_arg)) {
+                BIO_printf(bio_err,
+                           "Invalid time format %s. Need YYYYMMDDHHMMSSZ\n",
+                           rev_arg);
+                return NULL;
+            }
+            other = rev_arg;
+            if (rev_type == REV_KEY_COMPROMISE)
+                reason = "keyTime";
+            else
+                reason = "CAkeyTime";
 
-        break;
+            break;
     }
 
     revtm = X509_gmtime_adj(NULL, 0);
@@ -2465,12 +2495,12 @@ static int make_revoked(X509_REVOKED *rev, const char *str)
 
     if (rev && comp_time) {
         if (X509_REVOKED_add1_ext_i2d
-            (rev, NID_invalidity_date, comp_time, 0, 0) <= 0)
+                (rev, NID_invalidity_date, comp_time, 0, 0) <= 0)
             goto end;
     }
     if (rev && hold) {
         if (X509_REVOKED_add1_ext_i2d
-            (rev, NID_hold_instruction_code, hold, 0, 0) <= 0)
+                (rev, NID_hold_instruction_code, hold, 0, 0) <= 0)
             goto end;
     }
 
@@ -2479,7 +2509,7 @@ static int make_revoked(X509_REVOKED *rev, const char *str)
     else
         ret = 1;
 
- end:
+end:
 
     OPENSSL_free(tmp);
     ASN1_OBJECT_free(hold);
@@ -2634,7 +2664,7 @@ int unpack_revinfo(ASN1_TIME **prevtm, int *preason, ASN1_OBJECT **phold,
 
     ret = 1;
 
- end:
+end:
 
     OPENSSL_free(tmp);
     ASN1_GENERALIZEDTIME_free(comp_time);

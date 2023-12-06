@@ -100,8 +100,8 @@ int RSA_meth_set0_app_data(RSA_METHOD *meth, void *app_data)
 }
 
 int (*RSA_meth_get_pub_enc(const RSA_METHOD *meth))
-    (int flen, const unsigned char *from,
-     unsigned char *to, RSA *rsa, int padding)
+(int flen, const unsigned char *from,
+ unsigned char *to, RSA *rsa, int padding)
 {
     return meth->rsa_pub_enc;
 }
@@ -116,8 +116,8 @@ int RSA_meth_set_pub_enc(RSA_METHOD *meth,
 }
 
 int (*RSA_meth_get_pub_dec(const RSA_METHOD *meth))
-    (int flen, const unsigned char *from,
-     unsigned char *to, RSA *rsa, int padding)
+(int flen, const unsigned char *from,
+ unsigned char *to, RSA *rsa, int padding)
 {
     return meth->rsa_pub_dec;
 }
@@ -132,8 +132,8 @@ int RSA_meth_set_pub_dec(RSA_METHOD *meth,
 }
 
 int (*RSA_meth_get_priv_enc(const RSA_METHOD *meth))
-    (int flen, const unsigned char *from,
-     unsigned char *to, RSA *rsa, int padding)
+(int flen, const unsigned char *from,
+ unsigned char *to, RSA *rsa, int padding)
 {
     return meth->rsa_priv_enc;
 }
@@ -148,8 +148,8 @@ int RSA_meth_set_priv_enc(RSA_METHOD *meth,
 }
 
 int (*RSA_meth_get_priv_dec(const RSA_METHOD *meth))
-    (int flen, const unsigned char *from,
-     unsigned char *to, RSA *rsa, int padding)
+(int flen, const unsigned char *from,
+ unsigned char *to, RSA *rsa, int padding)
 {
     return meth->rsa_priv_dec;
 }
@@ -163,9 +163,9 @@ int RSA_meth_set_priv_dec(RSA_METHOD *meth,
     return 1;
 }
 
-    /* Can be null */
+/* Can be null */
 int (*RSA_meth_get_mod_exp(const RSA_METHOD *meth))
-    (BIGNUM *r0, const BIGNUM *i, RSA *rsa, BN_CTX *ctx)
+(BIGNUM *r0, const BIGNUM *i, RSA *rsa, BN_CTX *ctx)
 {
     return meth->rsa_mod_exp;
 }
@@ -178,10 +178,10 @@ int RSA_meth_set_mod_exp(RSA_METHOD *meth,
     return 1;
 }
 
-    /* Can be null */
+/* Can be null */
 int (*RSA_meth_get_bn_mod_exp(const RSA_METHOD *meth))
-    (BIGNUM *r, const BIGNUM *a, const BIGNUM *p,
-     const BIGNUM *m, BN_CTX *ctx, BN_MONT_CTX *m_ctx)
+(BIGNUM *r, const BIGNUM *a, const BIGNUM *p,
+ const BIGNUM *m, BN_CTX *ctx, BN_MONT_CTX *m_ctx)
 {
     return meth->bn_mod_exp;
 }
@@ -198,7 +198,7 @@ int RSA_meth_set_bn_mod_exp(RSA_METHOD *meth,
     return 1;
 }
 
-    /* called at new */
+/* called at new */
 int (*RSA_meth_get_init(const RSA_METHOD *meth)) (RSA *rsa)
 {
     return meth->init;
@@ -210,7 +210,7 @@ int RSA_meth_set_init(RSA_METHOD *meth, int (*init) (RSA *rsa))
     return 1;
 }
 
-    /* called at free */
+/* called at free */
 int (*RSA_meth_get_finish(const RSA_METHOD *meth)) (RSA *rsa)
 {
     return meth->finish;
@@ -223,10 +223,10 @@ int RSA_meth_set_finish(RSA_METHOD *meth, int (*finish) (RSA *rsa))
 }
 
 int (*RSA_meth_get_sign(const RSA_METHOD *meth))
-    (int type,
-     const unsigned char *m, unsigned int m_length,
-     unsigned char *sigret, unsigned int *siglen,
-     const RSA *rsa)
+(int type,
+ const unsigned char *m, unsigned int m_length,
+ unsigned char *sigret, unsigned int *siglen,
+ const RSA *rsa)
 {
     return meth->rsa_sign;
 }
@@ -242,9 +242,9 @@ int RSA_meth_set_sign(RSA_METHOD *meth,
 }
 
 int (*RSA_meth_get_verify(const RSA_METHOD *meth))
-    (int dtype, const unsigned char *m,
-     unsigned int m_length, const unsigned char *sigbuf,
-     unsigned int siglen, const RSA *rsa)
+(int dtype, const unsigned char *m,
+ unsigned int m_length, const unsigned char *sigbuf,
+ unsigned int siglen, const RSA *rsa)
 {
     return meth->rsa_verify;
 }
@@ -260,7 +260,7 @@ int RSA_meth_set_verify(RSA_METHOD *meth,
 }
 
 int (*RSA_meth_get_keygen(const RSA_METHOD *meth))
-    (RSA *rsa, int bits, BIGNUM *e, BN_GENCB *cb)
+(RSA *rsa, int bits, BIGNUM *e, BN_GENCB *cb)
 {
     return meth->rsa_keygen;
 }
@@ -274,7 +274,7 @@ int RSA_meth_set_keygen(RSA_METHOD *meth,
 }
 
 int (*RSA_meth_get_multi_prime_keygen(const RSA_METHOD *meth))
-    (RSA *rsa, int bits, int primes, BIGNUM *e, BN_GENCB *cb)
+(RSA *rsa, int bits, int primes, BIGNUM *e, BN_GENCB *cb)
 {
     return meth->rsa_multi_prime_keygen;
 }

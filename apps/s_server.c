@@ -100,7 +100,8 @@ static int use_zc_sendfile = 0;
 
 static const char *session_id_prefix = NULL;
 
-static const unsigned char cert_type_rpk[] = { TLSEXT_cert_type_rpk, TLSEXT_cert_type_x509 };
+static const unsigned char cert_type_rpk[] =
+{ TLSEXT_cert_type_rpk, TLSEXT_cert_type_x509 };
 static int enable_client_rpk = 0;
 
 #ifndef OPENSSL_NO_DTLS
@@ -155,10 +156,11 @@ static unsigned int psk_server_cb(SSL *ssl, const char *identity,
     /* here we could lookup the given identity e.g. from a database */
     if (strcmp(identity, psk_identity) != 0) {
         BIO_printf(bio_s_out, "PSK warning: client identity not what we expected"
-                   " (got '%s' expected '%s')\n", identity, psk_identity);
+                   " (got '%s' expected '%s')\n", identity,
+                   psk_identity);
     } else {
-      if (s_debug)
-        BIO_printf(bio_s_out, "PSK client identity found\n");
+        if (s_debug)
+            BIO_printf(bio_s_out, "PSK client identity found\n");
     }
 
     /* convert the PSK key to binary */
@@ -182,7 +184,7 @@ static unsigned int psk_server_cb(SSL *ssl, const char *identity,
     if (s_debug)
         BIO_printf(bio_s_out, "fetched PSK len=%ld\n", key_len);
     return key_len;
- out_err:
+out_err:
     if (s_debug)
         BIO_printf(bio_err, "Error in PSK server callback\n");
     (void)BIO_flush(bio_err);
@@ -200,7 +202,7 @@ static int psk_find_session_cb(SSL *ssl, const unsigned char *identity,
     const SSL_CIPHER *cipher = NULL;
 
     if (strlen(psk_identity) != identity_len
-            || memcmp(psk_identity, identity, identity_len) != 0) {
+        || memcmp(psk_identity, identity, identity_len) != 0) {
         *sess = NULL;
         return 1;
     }
@@ -228,9 +230,9 @@ static int psk_find_session_cb(SSL *ssl, const unsigned char *identity,
 
     tmpsess = SSL_SESSION_new();
     if (tmpsess == NULL
-            || !SSL_SESSION_set1_master_key(tmpsess, key, key_len)
-            || !SSL_SESSION_set_cipher(tmpsess, cipher)
-            || !SSL_SESSION_set_protocol_version(tmpsess, SSL_version(ssl))) {
+        || !SSL_SESSION_set1_master_key(tmpsess, key, key_len)
+        || !SSL_SESSION_set_cipher(tmpsess, cipher)
+        || !SSL_SESSION_set_protocol_version(tmpsess, SSL_version(ssl))) {
         OPENSSL_free(key);
         SSL_SESSION_free(tmpsess);
         return 0;
@@ -369,12 +371,12 @@ static long ebcdic_ctrl(BIO *b, int cmd, long num, void *ptr)
     if (next == NULL)
         return 0;
     switch (cmd) {
-    case BIO_CTRL_DUP:
-        ret = 0L;
-        break;
-    default:
-        ret = BIO_ctrl(next, cmd, num, ptr);
-        break;
+        case BIO_CTRL_DUP:
+            ret = 0L;
+            break;
+        default:
+            ret = BIO_ctrl(next, cmd, num, ptr);
+            break;
     }
     return ret;
 }
@@ -428,7 +430,8 @@ static int ssl_servername_cb(SSL *s, int *ad, void *arg)
         BIO_printf(p->biodebug, "Hostname in TLS extension: \"");
         while ((uc = *cp++) != 0)
             BIO_printf(p->biodebug,
-                       (((uc) & ~127) == 0) && isprint(uc) ? "%c" : "\\x%02x", uc);
+                       (((uc) & ~127) == 0) && isprint(
+                           uc) ? "%c" : "\\x%02x", uc);
         BIO_printf(p->biodebug, "\"\n");
     }
 
@@ -551,9 +554,9 @@ static int get_ocsp_resp_from_responder(SSL *s, tlsextstatusctx *srctx,
     ret = SSL_TLSEXT_ERR_OK;
     goto done;
 
- err:
+err:
     ret = SSL_TLSEXT_ERR_ALERT_FATAL;
- done:
+done:
     /*
      * If we parsed aia we need to free; otherwise they were copied and we
      * don't
@@ -616,7 +619,7 @@ static int cert_status_cb(SSL *s, void *arg)
 
     ret = SSL_TLSEXT_ERR_OK;
 
- err:
+err:
     if (ret != SSL_TLSEXT_ERR_OK)
         ERR_print_errors(bio_err);
 
@@ -670,8 +673,8 @@ static int alpn_cb(SSL *s, const unsigned char **out, unsigned char *outlen,
     }
 
     if (SSL_select_next_proto
-        ((unsigned char **)out, outlen, alpn_ctx->data, alpn_ctx->len, in,
-         inlen) != OPENSSL_NPN_NEGOTIATED) {
+            ((unsigned char **)out, outlen, alpn_ctx->data, alpn_ctx->len, in,
+            inlen) != OPENSSL_NPN_NEGOTIATED) {
         return SSL_TLSEXT_ERR_ALERT_FATAL;
     }
 
@@ -748,7 +751,8 @@ const OPTIONS s_server_options[] = {
     {"port", OPT_PORT, 'p',
      "TCP/IP port to listen on for connections (default is " PORT ")"},
     {"accept", OPT_ACCEPT, 's',
-     "TCP/IP optional host and port to listen on for connections (default is *:" PORT ")"},
+     "TCP/IP optional host and port to listen on for connections (default is *:"
+     PORT ")"},
 #ifdef AF_UNIX
     {"unix", OPT_UNIX, 's', "Unix domain socket to accept on"},
     {"unlink", OPT_UNLINK, '-', "For -unix, unlink existing socket first"},
@@ -774,8 +778,10 @@ const OPTIONS s_server_options[] = {
     {"verify", OPT_VERIFY, 'n', "Turn on peer certificate verification"},
     {"Verify", OPT_UPPER_V_VERIFY, 'n',
      "Turn on peer certificate verification, must have a cert"},
-    {"nameopt", OPT_NAMEOPT, 's', "Certificate subject/issuer name printing options"},
-    {"cert", OPT_CERT, '<', "Server certificate file to use; default " TEST_CERT},
+    {"nameopt", OPT_NAMEOPT, 's',
+     "Certificate subject/issuer name printing options"},
+    {"cert", OPT_CERT, '<',
+     "Server certificate file to use; default " TEST_CERT},
     {"cert2", OPT_CERT2, '<',
      "Certificate file to use for servername; default " TEST_CERT2},
     {"certform", OPT_CERTFORM, 'F',
@@ -924,9 +930,12 @@ const OPTIONS s_server_options[] = {
     {"early_data", OPT_EARLY_DATA, '-', "Attempt to read early data"},
     {"num_tickets", OPT_S_NUM_TICKETS, 'n',
      "The number of TLSv1.3 session tickets that a server will automatically issue" },
-    {"anti_replay", OPT_ANTI_REPLAY, '-', "Switch on anti-replay protection (default)"},
-    {"no_anti_replay", OPT_NO_ANTI_REPLAY, '-', "Switch off anti-replay protection"},
-    {"http_server_binmode", OPT_HTTP_SERVER_BINMODE, '-', "opening files in binary mode when acting as http server (-WWW and -HTTP)"},
+    {"anti_replay", OPT_ANTI_REPLAY, '-',
+     "Switch on anti-replay protection (default)"},
+    {"no_anti_replay", OPT_NO_ANTI_REPLAY, '-',
+     "Switch off anti-replay protection"},
+    {"http_server_binmode", OPT_HTTP_SERVER_BINMODE, '-',
+     "opening files in binary mode when acting as http server (-WWW and -HTTP)"},
     {"no_ca_names", OPT_NOCANAMES, '-',
      "Disable TLS Extension CA Names"},
     {"stateless", OPT_STATELESS, '-', "Require TLSv1.3 cookies"},
@@ -974,10 +983,13 @@ const OPTIONS s_server_options[] = {
 #ifndef OPENSSL_NO_KTLS
     {"ktls", OPT_KTLS, '-', "Enable Kernel TLS for sending and receiving"},
     {"sendfile", OPT_SENDFILE, '-', "Use sendfile to response file with -WWW"},
-    {"zerocopy_sendfile", OPT_USE_ZC_SENDFILE, '-', "Use zerocopy mode of KTLS sendfile"},
+    {"zerocopy_sendfile", OPT_USE_ZC_SENDFILE, '-',
+     "Use zerocopy mode of KTLS sendfile"},
 #endif
-    {"enable_server_rpk", OPT_ENABLE_SERVER_RPK, '-', "Enable raw public keys (RFC7250) from the server"},
-    {"enable_client_rpk", OPT_ENABLE_CLIENT_RPK, '-', "Enable raw public keys (RFC7250) from the client"},
+    {"enable_server_rpk", OPT_ENABLE_SERVER_RPK, '-',
+     "Enable raw public keys (RFC7250) from the server"},
+    {"enable_client_rpk", OPT_ENABLE_CLIENT_RPK, '-',
+     "Enable raw public keys (RFC7250) from the client"},
     OPT_R_OPTIONS,
     OPT_S_OPTIONS,
     OPT_V_OPTIONS,
@@ -987,8 +999,9 @@ const OPTIONS s_server_options[] = {
 };
 
 #define IS_PROT_FLAG(o) \
- (o == OPT_SSL3 || o == OPT_TLS1 || o == OPT_TLS1_1 || o == OPT_TLS1_2 \
-  || o == OPT_TLS1_3 || o == OPT_DTLS || o == OPT_DTLS1 || o == OPT_DTLS1_2)
+        (o == OPT_SSL3 || o == OPT_TLS1 || o == OPT_TLS1_1 || o == OPT_TLS1_2 \
+         || o == OPT_TLS1_3 || o == OPT_DTLS || o == OPT_DTLS1 || \
+         o == OPT_DTLS1_2)
 
 int s_server_main(int argc, char *argv[])
 {
@@ -1052,7 +1065,8 @@ int s_server_main(int argc, char *argv[])
     int min_version = 0, max_version = 0, prot_opt = 0, no_prot_opt = 0;
     int s_server_verify = SSL_VERIFY_NONE;
     int s_server_session_id_context = 1; /* anything will do */
-    const char *s_cert_file = TEST_CERT, *s_key_file = NULL, *s_chain_file = NULL;
+    const char *s_cert_file = TEST_CERT, *s_key_file = NULL,
+               *s_chain_file = NULL;
     const char *s_cert_file2 = TEST_CERT2, *s_key_file2 = NULL;
     char *s_dcert_file = NULL, *s_dkey_file = NULL, *s_dchain_file = NULL;
 #ifndef OPENSSL_NO_OCSP
@@ -1115,579 +1129,585 @@ int s_server_main(int argc, char *argv[])
             goto end;
         }
         switch (o) {
-        case OPT_EOF:
-        case OPT_ERR:
- opthelp:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto end;
-        case OPT_HELP:
-            opt_help(s_server_options);
-            ret = 0;
-            goto end;
+            case OPT_EOF:
+            case OPT_ERR:
+opthelp:
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
+                goto end;
+            case OPT_HELP:
+                opt_help(s_server_options);
+                ret = 0;
+                goto end;
 
-        case OPT_4:
-#ifdef AF_UNIX
-            if (socket_family == AF_UNIX) {
-                OPENSSL_free(host); host = NULL;
-                OPENSSL_free(port); port = NULL;
-            }
-#endif
-            socket_family = AF_INET;
-            break;
-        case OPT_6:
-            if (1) {
-#ifdef AF_INET6
+            case OPT_4:
 #ifdef AF_UNIX
                 if (socket_family == AF_UNIX) {
                     OPENSSL_free(host); host = NULL;
                     OPENSSL_free(port); port = NULL;
                 }
 #endif
-                socket_family = AF_INET6;
-            } else {
-#endif
-                BIO_printf(bio_err, "%s: IPv6 domain sockets unsupported\n", prog);
-                goto end;
-            }
-            break;
-        case OPT_PORT:
+                socket_family = AF_INET;
+                break;
+            case OPT_6:
+                if (1) {
+#ifdef AF_INET6
 #ifdef AF_UNIX
-            if (socket_family == AF_UNIX) {
-                socket_family = AF_UNSPEC;
-            }
+                    if (socket_family == AF_UNIX) {
+                        OPENSSL_free(host); host = NULL;
+                        OPENSSL_free(port); port = NULL;
+                    }
 #endif
-            OPENSSL_free(port); port = NULL;
-            OPENSSL_free(host); host = NULL;
-            if (BIO_parse_hostserv(opt_arg(), NULL, &port, BIO_PARSE_PRIO_SERV) < 1) {
-                BIO_printf(bio_err,
-                           "%s: -port argument malformed or ambiguous\n",
-                           port);
-                goto end;
-            }
-            break;
-        case OPT_ACCEPT:
+                    socket_family = AF_INET6;
+                } else {
+#endif
+                    BIO_printf(bio_err, "%s: IPv6 domain sockets unsupported\n",
+                               prog);
+                    goto end;
+                }
+                break;
+            case OPT_PORT:
 #ifdef AF_UNIX
-            if (socket_family == AF_UNIX) {
-                socket_family = AF_UNSPEC;
-            }
+                if (socket_family == AF_UNIX) {
+                    socket_family = AF_UNSPEC;
+                }
 #endif
-            OPENSSL_free(port); port = NULL;
-            OPENSSL_free(host); host = NULL;
-            if (BIO_parse_hostserv(opt_arg(), &host, &port, BIO_PARSE_PRIO_SERV) < 1) {
-                BIO_printf(bio_err,
-                           "%s: -accept argument malformed or ambiguous\n",
-                           port);
-                goto end;
-            }
-            break;
+                OPENSSL_free(port); port = NULL;
+                OPENSSL_free(host); host = NULL;
+                if (BIO_parse_hostserv(opt_arg(), NULL, &port,
+                                       BIO_PARSE_PRIO_SERV) < 1) {
+                    BIO_printf(bio_err,
+                               "%s: -port argument malformed or ambiguous\n",
+                               port);
+                    goto end;
+                }
+                break;
+            case OPT_ACCEPT:
 #ifdef AF_UNIX
-        case OPT_UNIX:
-            socket_family = AF_UNIX;
-            OPENSSL_free(host); host = OPENSSL_strdup(opt_arg());
-            if (host == NULL)
-                goto end;
-            OPENSSL_free(port); port = NULL;
-            break;
-        case OPT_UNLINK:
-            unlink_unix_path = 1;
-            break;
+                if (socket_family == AF_UNIX) {
+                    socket_family = AF_UNSPEC;
+                }
 #endif
-        case OPT_NACCEPT:
-            naccept = atol(opt_arg());
-            break;
-        case OPT_VERIFY:
-            s_server_verify = SSL_VERIFY_PEER | SSL_VERIFY_CLIENT_ONCE;
-            verify_args.depth = atoi(opt_arg());
-            if (!s_quiet)
-                BIO_printf(bio_err, "verify depth is %d\n", verify_args.depth);
-            break;
-        case OPT_UPPER_V_VERIFY:
-            s_server_verify =
-                SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT |
-                SSL_VERIFY_CLIENT_ONCE;
-            verify_args.depth = atoi(opt_arg());
-            if (!s_quiet)
-                BIO_printf(bio_err,
-                           "verify depth is %d, must return a certificate\n",
-                           verify_args.depth);
-            break;
-        case OPT_CONTEXT:
-            context = (unsigned char *)opt_arg();
-            break;
-        case OPT_CERT:
-            s_cert_file = opt_arg();
-            break;
-        case OPT_NAMEOPT:
-            if (!set_nameopt(opt_arg()))
-                goto end;
-            break;
-        case OPT_CRL:
-            crl_file = opt_arg();
-            break;
-        case OPT_CRL_DOWNLOAD:
-            crl_download = 1;
-            break;
-        case OPT_SERVERINFO:
-            s_serverinfo_file = opt_arg();
-            break;
-        case OPT_CERTFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_ANY, &s_cert_format))
-                goto opthelp;
-            break;
-        case OPT_KEY:
-            s_key_file = opt_arg();
-            break;
-        case OPT_KEYFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_ANY, &s_key_format))
-                goto opthelp;
-            break;
-        case OPT_PASS:
-            passarg = opt_arg();
-            break;
-        case OPT_CERT_CHAIN:
-            s_chain_file = opt_arg();
-            break;
-        case OPT_DHPARAM:
-            dhfile = opt_arg();
-            break;
-        case OPT_DCERTFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_ANY, &s_dcert_format))
-                goto opthelp;
-            break;
-        case OPT_DCERT:
-            s_dcert_file = opt_arg();
-            break;
-        case OPT_DKEYFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_ANY, &s_dkey_format))
-                goto opthelp;
-            break;
-        case OPT_DPASS:
-            dpassarg = opt_arg();
-            break;
-        case OPT_DKEY:
-            s_dkey_file = opt_arg();
-            break;
-        case OPT_DCERT_CHAIN:
-            s_dchain_file = opt_arg();
-            break;
-        case OPT_NOCERT:
-            nocert = 1;
-            break;
-        case OPT_CAPATH:
-            CApath = opt_arg();
-            break;
-        case OPT_NOCAPATH:
-            noCApath = 1;
-            break;
-        case OPT_CHAINCAPATH:
-            chCApath = opt_arg();
-            break;
-        case OPT_VERIFYCAPATH:
-            vfyCApath = opt_arg();
-            break;
-        case OPT_CASTORE:
-            CAstore = opt_arg();
-            break;
-        case OPT_NOCASTORE:
-            noCAstore = 1;
-            break;
-        case OPT_CHAINCASTORE:
-            chCAstore = opt_arg();
-            break;
-        case OPT_VERIFYCASTORE:
-            vfyCAstore = opt_arg();
-            break;
-        case OPT_NO_CACHE:
-            no_cache = 1;
-            break;
-        case OPT_EXT_CACHE:
-            ext_cache = 1;
-            break;
-        case OPT_CRLFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &crl_format))
-                goto opthelp;
-            break;
-        case OPT_S_CASES:
-        case OPT_S_NUM_TICKETS:
-        case OPT_ANTI_REPLAY:
-        case OPT_NO_ANTI_REPLAY:
-            if (ssl_args == NULL)
-                ssl_args = sk_OPENSSL_STRING_new_null();
-            if (ssl_args == NULL
-                || !sk_OPENSSL_STRING_push(ssl_args, opt_flag())
-                || !sk_OPENSSL_STRING_push(ssl_args, opt_arg())) {
-                BIO_printf(bio_err, "%s: Memory allocation failure\n", prog);
-                goto end;
-            }
-            break;
-        case OPT_V_CASES:
-            if (!opt_verify(o, vpm))
-                goto end;
-            vpmtouched++;
-            break;
-        case OPT_X_CASES:
-            if (!args_excert(o, &exc))
-                goto end;
-            break;
-        case OPT_VERIFY_RET_ERROR:
-            verify_args.return_error = 1;
-            break;
-        case OPT_VERIFY_QUIET:
-            verify_args.quiet = 1;
-            break;
-        case OPT_BUILD_CHAIN:
-            build_chain = 1;
-            break;
-        case OPT_CAFILE:
-            CAfile = opt_arg();
-            break;
-        case OPT_NOCAFILE:
-            noCAfile = 1;
-            break;
-        case OPT_CHAINCAFILE:
-            chCAfile = opt_arg();
-            break;
-        case OPT_VERIFYCAFILE:
-            vfyCAfile = opt_arg();
-            break;
-        case OPT_NBIO:
-            s_nbio = 1;
-            break;
-        case OPT_NBIO_TEST:
-            s_nbio = s_nbio_test = 1;
-            break;
-        case OPT_IGN_EOF:
-            s_ign_eof = 1;
-            break;
-        case OPT_NO_IGN_EOF:
-            s_ign_eof = 0;
-            break;
-        case OPT_DEBUG:
-            s_debug = 1;
-            break;
-        case OPT_TLSEXTDEBUG:
-            s_tlsextdebug = 1;
-            break;
-        case OPT_STATUS:
+                OPENSSL_free(port); port = NULL;
+                OPENSSL_free(host); host = NULL;
+                if (BIO_parse_hostserv(opt_arg(), &host, &port,
+                                       BIO_PARSE_PRIO_SERV) < 1) {
+                    BIO_printf(bio_err,
+                               "%s: -accept argument malformed or ambiguous\n",
+                               port);
+                    goto end;
+                }
+                break;
+#ifdef AF_UNIX
+            case OPT_UNIX:
+                socket_family = AF_UNIX;
+                OPENSSL_free(host); host = OPENSSL_strdup(opt_arg());
+                if (host == NULL)
+                    goto end;
+                OPENSSL_free(port); port = NULL;
+                break;
+            case OPT_UNLINK:
+                unlink_unix_path = 1;
+                break;
+#endif
+            case OPT_NACCEPT:
+                naccept = atol(opt_arg());
+                break;
+            case OPT_VERIFY:
+                s_server_verify = SSL_VERIFY_PEER | SSL_VERIFY_CLIENT_ONCE;
+                verify_args.depth = atoi(opt_arg());
+                if (!s_quiet)
+                    BIO_printf(bio_err, "verify depth is %d\n",
+                               verify_args.depth);
+                break;
+            case OPT_UPPER_V_VERIFY:
+                s_server_verify =
+                    SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT |
+                    SSL_VERIFY_CLIENT_ONCE;
+                verify_args.depth = atoi(opt_arg());
+                if (!s_quiet)
+                    BIO_printf(bio_err,
+                               "verify depth is %d, must return a certificate\n",
+                               verify_args.depth);
+                break;
+            case OPT_CONTEXT:
+                context = (unsigned char *)opt_arg();
+                break;
+            case OPT_CERT:
+                s_cert_file = opt_arg();
+                break;
+            case OPT_NAMEOPT:
+                if (!set_nameopt(opt_arg()))
+                    goto end;
+                break;
+            case OPT_CRL:
+                crl_file = opt_arg();
+                break;
+            case OPT_CRL_DOWNLOAD:
+                crl_download = 1;
+                break;
+            case OPT_SERVERINFO:
+                s_serverinfo_file = opt_arg();
+                break;
+            case OPT_CERTFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_ANY, &s_cert_format))
+                    goto opthelp;
+                break;
+            case OPT_KEY:
+                s_key_file = opt_arg();
+                break;
+            case OPT_KEYFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_ANY, &s_key_format))
+                    goto opthelp;
+                break;
+            case OPT_PASS:
+                passarg = opt_arg();
+                break;
+            case OPT_CERT_CHAIN:
+                s_chain_file = opt_arg();
+                break;
+            case OPT_DHPARAM:
+                dhfile = opt_arg();
+                break;
+            case OPT_DCERTFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_ANY, &s_dcert_format))
+                    goto opthelp;
+                break;
+            case OPT_DCERT:
+                s_dcert_file = opt_arg();
+                break;
+            case OPT_DKEYFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_ANY, &s_dkey_format))
+                    goto opthelp;
+                break;
+            case OPT_DPASS:
+                dpassarg = opt_arg();
+                break;
+            case OPT_DKEY:
+                s_dkey_file = opt_arg();
+                break;
+            case OPT_DCERT_CHAIN:
+                s_dchain_file = opt_arg();
+                break;
+            case OPT_NOCERT:
+                nocert = 1;
+                break;
+            case OPT_CAPATH:
+                CApath = opt_arg();
+                break;
+            case OPT_NOCAPATH:
+                noCApath = 1;
+                break;
+            case OPT_CHAINCAPATH:
+                chCApath = opt_arg();
+                break;
+            case OPT_VERIFYCAPATH:
+                vfyCApath = opt_arg();
+                break;
+            case OPT_CASTORE:
+                CAstore = opt_arg();
+                break;
+            case OPT_NOCASTORE:
+                noCAstore = 1;
+                break;
+            case OPT_CHAINCASTORE:
+                chCAstore = opt_arg();
+                break;
+            case OPT_VERIFYCASTORE:
+                vfyCAstore = opt_arg();
+                break;
+            case OPT_NO_CACHE:
+                no_cache = 1;
+                break;
+            case OPT_EXT_CACHE:
+                ext_cache = 1;
+                break;
+            case OPT_CRLFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &crl_format))
+                    goto opthelp;
+                break;
+            case OPT_S_CASES:
+            case OPT_S_NUM_TICKETS:
+            case OPT_ANTI_REPLAY:
+            case OPT_NO_ANTI_REPLAY:
+                if (ssl_args == NULL)
+                    ssl_args = sk_OPENSSL_STRING_new_null();
+                if (ssl_args == NULL
+                    || !sk_OPENSSL_STRING_push(ssl_args, opt_flag())
+                    || !sk_OPENSSL_STRING_push(ssl_args, opt_arg())) {
+                    BIO_printf(bio_err, "%s: Memory allocation failure\n",
+                               prog);
+                    goto end;
+                }
+                break;
+            case OPT_V_CASES:
+                if (!opt_verify(o, vpm))
+                    goto end;
+                vpmtouched++;
+                break;
+            case OPT_X_CASES:
+                if (!args_excert(o, &exc))
+                    goto end;
+                break;
+            case OPT_VERIFY_RET_ERROR:
+                verify_args.return_error = 1;
+                break;
+            case OPT_VERIFY_QUIET:
+                verify_args.quiet = 1;
+                break;
+            case OPT_BUILD_CHAIN:
+                build_chain = 1;
+                break;
+            case OPT_CAFILE:
+                CAfile = opt_arg();
+                break;
+            case OPT_NOCAFILE:
+                noCAfile = 1;
+                break;
+            case OPT_CHAINCAFILE:
+                chCAfile = opt_arg();
+                break;
+            case OPT_VERIFYCAFILE:
+                vfyCAfile = opt_arg();
+                break;
+            case OPT_NBIO:
+                s_nbio = 1;
+                break;
+            case OPT_NBIO_TEST:
+                s_nbio = s_nbio_test = 1;
+                break;
+            case OPT_IGN_EOF:
+                s_ign_eof = 1;
+                break;
+            case OPT_NO_IGN_EOF:
+                s_ign_eof = 0;
+                break;
+            case OPT_DEBUG:
+                s_debug = 1;
+                break;
+            case OPT_TLSEXTDEBUG:
+                s_tlsextdebug = 1;
+                break;
+            case OPT_STATUS:
 #ifndef OPENSSL_NO_OCSP
-            s_tlsextstatus = 1;
+                s_tlsextstatus = 1;
 #endif
-            break;
-        case OPT_STATUS_VERBOSE:
+                break;
+            case OPT_STATUS_VERBOSE:
 #ifndef OPENSSL_NO_OCSP
-            s_tlsextstatus = tlscstatp.verbose = 1;
+                s_tlsextstatus = tlscstatp.verbose = 1;
 #endif
-            break;
-        case OPT_STATUS_TIMEOUT:
+                break;
+            case OPT_STATUS_TIMEOUT:
 #ifndef OPENSSL_NO_OCSP
-            s_tlsextstatus = 1;
-            tlscstatp.timeout = atoi(opt_arg());
+                s_tlsextstatus = 1;
+                tlscstatp.timeout = atoi(opt_arg());
 #endif
-            break;
-        case OPT_PROXY:
+                break;
+            case OPT_PROXY:
 #ifndef OPENSSL_NO_OCSP
-            tlscstatp.proxy = opt_arg();
+                tlscstatp.proxy = opt_arg();
 #endif
-            break;
-        case OPT_NO_PROXY:
+                break;
+            case OPT_NO_PROXY:
 #ifndef OPENSSL_NO_OCSP
-            tlscstatp.no_proxy = opt_arg();
+                tlscstatp.no_proxy = opt_arg();
 #endif
-            break;
-        case OPT_STATUS_URL:
+                break;
+            case OPT_STATUS_URL:
 #ifndef OPENSSL_NO_OCSP
-            s_tlsextstatus = 1;
-            if (!OSSL_HTTP_parse_url(opt_arg(), &tlscstatp.use_ssl, NULL,
-                                     &tlscstatp.host, &tlscstatp.port, NULL,
-                                     &tlscstatp.path, NULL, NULL)) {
-                BIO_printf(bio_err, "Error parsing -status_url argument\n");
-                goto end;
-            }
+                s_tlsextstatus = 1;
+                if (!OSSL_HTTP_parse_url(opt_arg(), &tlscstatp.use_ssl, NULL,
+                                         &tlscstatp.host, &tlscstatp.port, NULL,
+                                         &tlscstatp.path, NULL, NULL)) {
+                    BIO_printf(bio_err, "Error parsing -status_url argument\n");
+                    goto end;
+                }
 #endif
-            break;
-        case OPT_STATUS_FILE:
+                break;
+            case OPT_STATUS_FILE:
 #ifndef OPENSSL_NO_OCSP
-            s_tlsextstatus = 1;
-            tlscstatp.respin = opt_arg();
+                s_tlsextstatus = 1;
+                tlscstatp.respin = opt_arg();
 #endif
-            break;
-        case OPT_MSG:
-            s_msg = 1;
-            break;
-        case OPT_MSGFILE:
-            bio_s_msg = BIO_new_file(opt_arg(), "w");
-            if (bio_s_msg == NULL) {
-                BIO_printf(bio_err, "Error writing file %s\n", opt_arg());
-                goto end;
-            }
-            break;
-        case OPT_TRACE:
+                break;
+            case OPT_MSG:
+                s_msg = 1;
+                break;
+            case OPT_MSGFILE:
+                bio_s_msg = BIO_new_file(opt_arg(), "w");
+                if (bio_s_msg == NULL) {
+                    BIO_printf(bio_err, "Error writing file %s\n", opt_arg());
+                    goto end;
+                }
+                break;
+            case OPT_TRACE:
 #ifndef OPENSSL_NO_SSL_TRACE
-            s_msg = 2;
+                s_msg = 2;
 #endif
-            break;
-        case OPT_SECURITY_DEBUG:
-            sdebug = 1;
-            break;
-        case OPT_SECURITY_DEBUG_VERBOSE:
-            sdebug = 2;
-            break;
-        case OPT_STATE:
-            state = 1;
-            break;
-        case OPT_CRLF:
-            s_crlf = 1;
-            break;
-        case OPT_QUIET:
-            s_quiet = 1;
-            break;
-        case OPT_BRIEF:
-            s_quiet = s_brief = verify_args.quiet = 1;
-            break;
-        case OPT_NO_DHE:
-            no_dhe = 1;
-            break;
-        case OPT_NO_RESUME_EPHEMERAL:
-            no_resume_ephemeral = 1;
-            break;
-        case OPT_PSK_IDENTITY:
-            psk_identity = opt_arg();
-            break;
-        case OPT_PSK_HINT:
+                break;
+            case OPT_SECURITY_DEBUG:
+                sdebug = 1;
+                break;
+            case OPT_SECURITY_DEBUG_VERBOSE:
+                sdebug = 2;
+                break;
+            case OPT_STATE:
+                state = 1;
+                break;
+            case OPT_CRLF:
+                s_crlf = 1;
+                break;
+            case OPT_QUIET:
+                s_quiet = 1;
+                break;
+            case OPT_BRIEF:
+                s_quiet = s_brief = verify_args.quiet = 1;
+                break;
+            case OPT_NO_DHE:
+                no_dhe = 1;
+                break;
+            case OPT_NO_RESUME_EPHEMERAL:
+                no_resume_ephemeral = 1;
+                break;
+            case OPT_PSK_IDENTITY:
+                psk_identity = opt_arg();
+                break;
+            case OPT_PSK_HINT:
 #ifndef OPENSSL_NO_PSK
-            psk_identity_hint = opt_arg();
+                psk_identity_hint = opt_arg();
 #endif
-            break;
-        case OPT_PSK:
-            for (p = psk_key = opt_arg(); *p; p++) {
-                if (isxdigit(_UC(*p)))
-                    continue;
-                BIO_printf(bio_err, "Not a hex number '%s'\n", psk_key);
-                goto end;
-            }
-            break;
-        case OPT_PSK_SESS:
-            psksessf = opt_arg();
-            break;
-        case OPT_SRPVFILE:
+                break;
+            case OPT_PSK:
+                for (p = psk_key = opt_arg(); *p; p++) {
+                    if (isxdigit(_UC(*p)))
+                        continue;
+                    BIO_printf(bio_err, "Not a hex number '%s'\n", psk_key);
+                    goto end;
+                }
+                break;
+            case OPT_PSK_SESS:
+                psksessf = opt_arg();
+                break;
+            case OPT_SRPVFILE:
 #ifndef OPENSSL_NO_SRP
-            srp_verifier_file = opt_arg();
-            if (min_version < TLS1_VERSION)
-                min_version = TLS1_VERSION;
+                srp_verifier_file = opt_arg();
+                if (min_version < TLS1_VERSION)
+                    min_version = TLS1_VERSION;
 #endif
-            break;
-        case OPT_SRPUSERSEED:
+                break;
+            case OPT_SRPUSERSEED:
 #ifndef OPENSSL_NO_SRP
-            srpuserseed = opt_arg();
-            if (min_version < TLS1_VERSION)
+                srpuserseed = opt_arg();
+                if (min_version < TLS1_VERSION)
+                    min_version = TLS1_VERSION;
+#endif
+                break;
+            case OPT_REV:
+                rev = 1;
+                break;
+            case OPT_WWW:
+                www = 1;
+                break;
+            case OPT_UPPER_WWW:
+                www = 2;
+                break;
+            case OPT_HTTP:
+                www = 3;
+                break;
+            case OPT_SSL_CONFIG:
+                ssl_config = opt_arg();
+                break;
+            case OPT_SSL3:
+                min_version = SSL3_VERSION;
+                max_version = SSL3_VERSION;
+                break;
+            case OPT_TLS1_3:
+                min_version = TLS1_3_VERSION;
+                max_version = TLS1_3_VERSION;
+                break;
+            case OPT_TLS1_2:
+                min_version = TLS1_2_VERSION;
+                max_version = TLS1_2_VERSION;
+                break;
+            case OPT_TLS1_1:
+                min_version = TLS1_1_VERSION;
+                max_version = TLS1_1_VERSION;
+                break;
+            case OPT_TLS1:
                 min_version = TLS1_VERSION;
-#endif
-            break;
-        case OPT_REV:
-            rev = 1;
-            break;
-        case OPT_WWW:
-            www = 1;
-            break;
-        case OPT_UPPER_WWW:
-            www = 2;
-            break;
-        case OPT_HTTP:
-            www = 3;
-            break;
-        case OPT_SSL_CONFIG:
-            ssl_config = opt_arg();
-            break;
-        case OPT_SSL3:
-            min_version = SSL3_VERSION;
-            max_version = SSL3_VERSION;
-            break;
-        case OPT_TLS1_3:
-            min_version = TLS1_3_VERSION;
-            max_version = TLS1_3_VERSION;
-            break;
-        case OPT_TLS1_2:
-            min_version = TLS1_2_VERSION;
-            max_version = TLS1_2_VERSION;
-            break;
-        case OPT_TLS1_1:
-            min_version = TLS1_1_VERSION;
-            max_version = TLS1_1_VERSION;
-            break;
-        case OPT_TLS1:
-            min_version = TLS1_VERSION;
-            max_version = TLS1_VERSION;
-            break;
-        case OPT_DTLS:
+                max_version = TLS1_VERSION;
+                break;
+            case OPT_DTLS:
 #ifndef OPENSSL_NO_DTLS
-            meth = DTLS_server_method();
-            socket_type = SOCK_DGRAM;
+                meth = DTLS_server_method();
+                socket_type = SOCK_DGRAM;
 #endif
-            break;
-        case OPT_DTLS1:
+                break;
+            case OPT_DTLS1:
 #ifndef OPENSSL_NO_DTLS
-            meth = DTLS_server_method();
-            min_version = DTLS1_VERSION;
-            max_version = DTLS1_VERSION;
-            socket_type = SOCK_DGRAM;
+                meth = DTLS_server_method();
+                min_version = DTLS1_VERSION;
+                max_version = DTLS1_VERSION;
+                socket_type = SOCK_DGRAM;
 #endif
-            break;
-        case OPT_DTLS1_2:
+                break;
+            case OPT_DTLS1_2:
 #ifndef OPENSSL_NO_DTLS
-            meth = DTLS_server_method();
-            min_version = DTLS1_2_VERSION;
-            max_version = DTLS1_2_VERSION;
-            socket_type = SOCK_DGRAM;
+                meth = DTLS_server_method();
+                min_version = DTLS1_2_VERSION;
+                max_version = DTLS1_2_VERSION;
+                socket_type = SOCK_DGRAM;
 #endif
-            break;
-        case OPT_SCTP:
+                break;
+            case OPT_SCTP:
 #ifndef OPENSSL_NO_SCTP
-            protocol = IPPROTO_SCTP;
+                protocol = IPPROTO_SCTP;
 #endif
-            break;
-        case OPT_SCTP_LABEL_BUG:
+                break;
+            case OPT_SCTP_LABEL_BUG:
 #ifndef OPENSSL_NO_SCTP
-            sctp_label_bug = 1;
+                sctp_label_bug = 1;
 #endif
-            break;
-        case OPT_TIMEOUT:
+                break;
+            case OPT_TIMEOUT:
 #ifndef OPENSSL_NO_DTLS
-            enable_timeouts = 1;
+                enable_timeouts = 1;
 #endif
-            break;
-        case OPT_MTU:
+                break;
+            case OPT_MTU:
 #ifndef OPENSSL_NO_DTLS
-            socket_mtu = atol(opt_arg());
+                socket_mtu = atol(opt_arg());
 #endif
-            break;
-        case OPT_LISTEN:
+                break;
+            case OPT_LISTEN:
 #ifndef OPENSSL_NO_DTLS
-            dtlslisten = 1;
+                dtlslisten = 1;
 #endif
-            break;
-        case OPT_STATELESS:
-            stateless = 1;
-            break;
-        case OPT_ID_PREFIX:
-            session_id_prefix = opt_arg();
-            break;
-        case OPT_ENGINE:
+                break;
+            case OPT_STATELESS:
+                stateless = 1;
+                break;
+            case OPT_ID_PREFIX:
+                session_id_prefix = opt_arg();
+                break;
+            case OPT_ENGINE:
 #ifndef OPENSSL_NO_ENGINE
-            engine = setup_engine(opt_arg(), s_debug);
+                engine = setup_engine(opt_arg(), s_debug);
 #endif
-            break;
-        case OPT_R_CASES:
-            if (!opt_rand(o))
-                goto end;
-            break;
-        case OPT_PROV_CASES:
-            if (!opt_provider(o))
-                goto end;
-            break;
-        case OPT_SERVERNAME:
-            tlsextcbp.servername = opt_arg();
-            break;
-        case OPT_SERVERNAME_FATAL:
-            tlsextcbp.extension_error = SSL_TLSEXT_ERR_ALERT_FATAL;
-            break;
-        case OPT_CERT2:
-            s_cert_file2 = opt_arg();
-            break;
-        case OPT_KEY2:
-            s_key_file2 = opt_arg();
-            break;
-        case OPT_NEXTPROTONEG:
+                break;
+            case OPT_R_CASES:
+                if (!opt_rand(o))
+                    goto end;
+                break;
+            case OPT_PROV_CASES:
+                if (!opt_provider(o))
+                    goto end;
+                break;
+            case OPT_SERVERNAME:
+                tlsextcbp.servername = opt_arg();
+                break;
+            case OPT_SERVERNAME_FATAL:
+                tlsextcbp.extension_error = SSL_TLSEXT_ERR_ALERT_FATAL;
+                break;
+            case OPT_CERT2:
+                s_cert_file2 = opt_arg();
+                break;
+            case OPT_KEY2:
+                s_key_file2 = opt_arg();
+                break;
+            case OPT_NEXTPROTONEG:
 # ifndef OPENSSL_NO_NEXTPROTONEG
-            next_proto_neg_in = opt_arg();
+                next_proto_neg_in = opt_arg();
 #endif
-            break;
-        case OPT_ALPN:
-            alpn_in = opt_arg();
-            break;
-        case OPT_SRTP_PROFILES:
+                break;
+            case OPT_ALPN:
+                alpn_in = opt_arg();
+                break;
+            case OPT_SRTP_PROFILES:
 #ifndef OPENSSL_NO_SRTP
-            srtp_profiles = opt_arg();
+                srtp_profiles = opt_arg();
 #endif
-            break;
-        case OPT_KEYMATEXPORT:
-            keymatexportlabel = opt_arg();
-            break;
-        case OPT_KEYMATEXPORTLEN:
-            keymatexportlen = atoi(opt_arg());
-            break;
-        case OPT_ASYNC:
-            async = 1;
-            break;
-        case OPT_MAX_SEND_FRAG:
-            max_send_fragment = atoi(opt_arg());
-            break;
-        case OPT_SPLIT_SEND_FRAG:
-            split_send_fragment = atoi(opt_arg());
-            break;
-        case OPT_MAX_PIPELINES:
-            max_pipelines = atoi(opt_arg());
-            break;
-        case OPT_READ_BUF:
-            read_buf_len = atoi(opt_arg());
-            break;
-        case OPT_KEYLOG_FILE:
-            keylog_file = opt_arg();
-            break;
-        case OPT_MAX_EARLY:
-            max_early_data = atoi(opt_arg());
-            if (max_early_data < 0) {
-                BIO_printf(bio_err, "Invalid value for max_early_data\n");
-                goto end;
-            }
-            break;
-        case OPT_RECV_MAX_EARLY:
-            recv_max_early_data = atoi(opt_arg());
-            if (recv_max_early_data < 0) {
-                BIO_printf(bio_err, "Invalid value for recv_max_early_data\n");
-                goto end;
-            }
-            break;
-        case OPT_EARLY_DATA:
-            early_data = 1;
-            if (max_early_data == -1)
-                max_early_data = SSL3_RT_MAX_PLAIN_LENGTH;
-            break;
-        case OPT_HTTP_SERVER_BINMODE:
-            http_server_binmode = 1;
-            break;
-        case OPT_NOCANAMES:
-            no_ca_names = 1;
-            break;
-        case OPT_KTLS:
+                break;
+            case OPT_KEYMATEXPORT:
+                keymatexportlabel = opt_arg();
+                break;
+            case OPT_KEYMATEXPORTLEN:
+                keymatexportlen = atoi(opt_arg());
+                break;
+            case OPT_ASYNC:
+                async = 1;
+                break;
+            case OPT_MAX_SEND_FRAG:
+                max_send_fragment = atoi(opt_arg());
+                break;
+            case OPT_SPLIT_SEND_FRAG:
+                split_send_fragment = atoi(opt_arg());
+                break;
+            case OPT_MAX_PIPELINES:
+                max_pipelines = atoi(opt_arg());
+                break;
+            case OPT_READ_BUF:
+                read_buf_len = atoi(opt_arg());
+                break;
+            case OPT_KEYLOG_FILE:
+                keylog_file = opt_arg();
+                break;
+            case OPT_MAX_EARLY:
+                max_early_data = atoi(opt_arg());
+                if (max_early_data < 0) {
+                    BIO_printf(bio_err, "Invalid value for max_early_data\n");
+                    goto end;
+                }
+                break;
+            case OPT_RECV_MAX_EARLY:
+                recv_max_early_data = atoi(opt_arg());
+                if (recv_max_early_data < 0) {
+                    BIO_printf(bio_err,
+                               "Invalid value for recv_max_early_data\n");
+                    goto end;
+                }
+                break;
+            case OPT_EARLY_DATA:
+                early_data = 1;
+                if (max_early_data == -1)
+                    max_early_data = SSL3_RT_MAX_PLAIN_LENGTH;
+                break;
+            case OPT_HTTP_SERVER_BINMODE:
+                http_server_binmode = 1;
+                break;
+            case OPT_NOCANAMES:
+                no_ca_names = 1;
+                break;
+            case OPT_KTLS:
 #ifndef OPENSSL_NO_KTLS
-            enable_ktls = 1;
+                enable_ktls = 1;
 #endif
-            break;
-        case OPT_SENDFILE:
+                break;
+            case OPT_SENDFILE:
 #ifndef OPENSSL_NO_KTLS
-            use_sendfile = 1;
+                use_sendfile = 1;
 #endif
-            break;
-        case OPT_USE_ZC_SENDFILE:
+                break;
+            case OPT_USE_ZC_SENDFILE:
 #ifndef OPENSSL_NO_KTLS
-            use_zc_sendfile = 1;
+                use_zc_sendfile = 1;
 #endif
-            break;
-        case OPT_IGNORE_UNEXPECTED_EOF:
-            ignore_unexpected_eof = 1;
-            break;
-        case OPT_TFO:
-            tfo = 1;
-            break;
-        case OPT_CERT_COMP:
-            cert_comp = 1;
-            break;
-        case OPT_ENABLE_SERVER_RPK:
-            enable_server_rpk = 1;
-            break;
-        case OPT_ENABLE_CLIENT_RPK:
-            enable_client_rpk = 1;
-            break;
+                break;
+            case OPT_IGNORE_UNEXPECTED_EOF:
+                ignore_unexpected_eof = 1;
+                break;
+            case OPT_TFO:
+                tfo = 1;
+                break;
+            case OPT_CERT_COMP:
+                cert_comp = 1;
+                break;
+            case OPT_ENABLE_SERVER_RPK:
+                enable_server_rpk = 1;
+                break;
+            case OPT_ENABLE_CLIENT_RPK:
+                enable_client_rpk = 1;
+                break;
         }
     }
 
@@ -1752,12 +1772,14 @@ int s_server_main(int argc, char *argv[])
 
 #ifndef OPENSSL_NO_KTLS
     if (use_zc_sendfile && !use_sendfile) {
-        BIO_printf(bio_out, "Warning: -zerocopy_sendfile depends on -sendfile, enabling -sendfile now.\n");
+        BIO_printf(bio_out,
+                   "Warning: -zerocopy_sendfile depends on -sendfile, enabling -sendfile now.\n");
         use_sendfile = 1;
     }
 
     if (use_sendfile && enable_ktls == 0) {
-        BIO_printf(bio_out, "Warning: -sendfile depends on -ktls, enabling -ktls now.\n");
+        BIO_printf(bio_out,
+                   "Warning: -sendfile depends on -ktls, enabling -ktls now.\n");
         enable_ktls = 1;
     }
 
@@ -1805,7 +1827,7 @@ int s_server_main(int argc, char *argv[])
                 goto end;
 
             s_cert2 = load_cert_pass(s_cert_file2, s_cert_format, 1, pass,
-                                "second server certificate");
+                                     "second server certificate");
 
             if (s_cert2 == NULL)
                 goto end;
@@ -1967,14 +1989,16 @@ int s_server_main(int argc, char *argv[])
 
     if (max_send_fragment > 0
         && !SSL_CTX_set_max_send_fragment(ctx, max_send_fragment)) {
-        BIO_printf(bio_err, "%s: Max send fragment size %u is out of permitted range\n",
+        BIO_printf(bio_err,
+                   "%s: Max send fragment size %u is out of permitted range\n",
                    prog, max_send_fragment);
         goto end;
     }
 
     if (split_send_fragment > 0
         && !SSL_CTX_set_split_send_fragment(ctx, split_send_fragment)) {
-        BIO_printf(bio_err, "%s: Split send fragment size %u is out of permitted range\n",
+        BIO_printf(bio_err,
+                   "%s: Split send fragment size %u is out of permitted range\n",
                    prog, split_send_fragment);
         goto end;
     }
@@ -2089,7 +2113,8 @@ int s_server_main(int argc, char *argv[])
         EVP_PKEY *dhpkey = NULL;
 
         if (dhfile != NULL)
-            dhpkey = load_keyparams(dhfile, FORMAT_UNDEF, 0, "DH", "DH parameters");
+            dhpkey = load_keyparams(dhfile, FORMAT_UNDEF, 0, "DH",
+                                    "DH parameters");
         else if (s_cert_file != NULL)
             dhpkey = load_keyparams_suppress(s_cert_file, FORMAT_UNDEF, 0, "DH",
                                              "DH parameters", 1);
@@ -2185,10 +2210,12 @@ int s_server_main(int argc, char *argv[])
 
     if (psk_identity_hint != NULL) {
         if (min_version == TLS1_3_VERSION) {
-            BIO_printf(bio_s_out, "PSK warning: there is NO identity hint in TLSv1.3\n");
+            BIO_printf(bio_s_out,
+                       "PSK warning: there is NO identity hint in TLSv1.3\n");
         } else {
             if (!SSL_CTX_use_psk_identity_hint(ctx, psk_identity_hint)) {
-                BIO_printf(bio_err, "error setting PSK identity hint to context\n");
+                BIO_printf(bio_err,
+                           "error setting PSK identity hint to context\n");
                 ERR_print_errors(bio_err);
                 goto end;
             }
@@ -2230,14 +2257,17 @@ int s_server_main(int argc, char *argv[])
     SSL_CTX_set_cookie_verify_cb(ctx, verify_cookie_callback);
 
     /* Set TLS1.3 cookie generation and verification callbacks */
-    SSL_CTX_set_stateless_cookie_generate_cb(ctx, generate_stateless_cookie_callback);
-    SSL_CTX_set_stateless_cookie_verify_cb(ctx, verify_stateless_cookie_callback);
+    SSL_CTX_set_stateless_cookie_generate_cb(ctx,
+                                             generate_stateless_cookie_callback);
+    SSL_CTX_set_stateless_cookie_verify_cb(ctx,
+                                           verify_stateless_cookie_callback);
 
     if (ctx2 != NULL) {
         SSL_CTX_set_verify(ctx2, s_server_verify, verify_callback);
         if (!SSL_CTX_set_session_id_context(ctx2,
-                    (void *)&s_server_session_id_context,
-                    sizeof(s_server_session_id_context))) {
+                                            (void *)&s_server_session_id_context,
+                                            sizeof(s_server_session_id_context)))
+        {
             BIO_printf(bio_err, "error setting session id context\n");
             ERR_print_errors(bio_err);
             goto end;
@@ -2288,12 +2318,14 @@ int s_server_main(int argc, char *argv[])
             BIO_printf(bio_s_out, "Error compressing certs on ctx2\n");
     }
     if (enable_server_rpk)
-        if (!SSL_CTX_set1_server_cert_type(ctx, cert_type_rpk, sizeof(cert_type_rpk))) {
+        if (!SSL_CTX_set1_server_cert_type(ctx, cert_type_rpk,
+                                           sizeof(cert_type_rpk))) {
             BIO_printf(bio_s_out, "Error setting server certificate types\n");
             goto end;
         }
     if (enable_client_rpk)
-        if (!SSL_CTX_set1_client_cert_type(ctx, cert_type_rpk, sizeof(cert_type_rpk))) {
+        if (!SSL_CTX_set1_client_cert_type(ctx, cert_type_rpk,
+                                           sizeof(cert_type_rpk))) {
             BIO_printf(bio_s_out, "Error setting server certificate types\n");
             goto end;
         }
@@ -2315,7 +2347,7 @@ int s_server_main(int argc, char *argv[])
               server_cb, context, naccept, bio_s_out, tfo);
     print_stats(bio_s_out, ctx);
     ret = 0;
- end:
+end:
     SSL_CTX_free(ctx);
     SSL_SESSION_free(psksess);
     set_keylog_file(NULL, NULL);
@@ -2384,24 +2416,27 @@ static void print_stats(BIO *bio, SSL_CTX *ssl_ctx)
                SSL_CTX_sess_get_cache_size(ssl_ctx));
 }
 
-static long int count_reads_callback(BIO *bio, int cmd, const char *argp, size_t len,
-                                 int argi, long argl, int ret, size_t *processed)
+static long int count_reads_callback(BIO *bio, int cmd, const char *argp,
+                                     size_t len,
+                                     int argi, long argl, int ret,
+                                     size_t *processed)
 {
     unsigned int *p_counter = (unsigned int *)BIO_get_callback_arg(bio);
 
     switch (cmd) {
-    case BIO_CB_READ:  /* No break here */
-    case BIO_CB_GETS:
-        if (p_counter != NULL)
-            ++*p_counter;
-        break;
-    default:
-        break;
+        case BIO_CB_READ: /* No break here */
+        case BIO_CB_GETS:
+            if (p_counter != NULL)
+                ++*p_counter;
+            break;
+        default:
+            break;
     }
 
     if (s_debug) {
         BIO_set_callback_arg(bio, (char *)bio_s_out);
-        ret = (int)bio_dump_callback(bio, cmd, argp, len, argi, argl, ret, processed);
+        ret = (int)bio_dump_callback(bio, cmd, argp, len, argi, argl, ret,
+                                     processed);
         BIO_set_callback_arg(bio, (char *)p_counter);
     }
 
@@ -2468,7 +2503,7 @@ static int sv_body(int s, int stype, int prot, unsigned char *context)
             sbio = BIO_new_dgram_sctp(s, BIO_NOCLOSE);
         else
 # endif
-            sbio = BIO_new_dgram(s, BIO_NOCLOSE);
+        sbio = BIO_new_dgram(s, BIO_NOCLOSE);
         if (sbio == NULL) {
             BIO_printf(bio_err, "Unable to create BIO\n");
             ERR_print_errors(bio_err);
@@ -2507,11 +2542,11 @@ static int sv_body(int s, int stype, int prot, unsigned char *context)
 # ifndef OPENSSL_NO_SCTP
         if (prot != IPPROTO_SCTP)
 # endif
-            /* Turn on cookie exchange. Not necessary for SCTP */
-            SSL_set_options(con, SSL_OP_COOKIE_EXCHANGE);
+        /* Turn on cookie exchange. Not necessary for SCTP */
+        SSL_set_options(con, SSL_OP_COOKIE_EXCHANGE);
     } else
 #endif
-        sbio = BIO_new_socket(s, BIO_NOCLOSE);
+    sbio = BIO_new_socket(s, BIO_NOCLOSE);
 
     if (sbio == NULL) {
         BIO_printf(bio_err, "Unable to create BIO\n");
@@ -2543,7 +2578,7 @@ static int sv_body(int s, int stype, int prot, unsigned char *context)
             SSL_set_msg_callback(con, SSL_trace);
         else
 #endif
-            SSL_set_msg_callback(con, msg_cb);
+        SSL_set_msg_callback(con, msg_cb);
         SSL_set_msg_callback_arg(con, bio_s_msg ? bio_s_msg : bio_s_out);
     }
 
@@ -2563,15 +2598,15 @@ static int sv_body(int s, int stype, int prot, unsigned char *context)
                     break;
 
                 switch (SSL_get_error(con, 0)) {
-                case SSL_ERROR_WANT_WRITE:
-                case SSL_ERROR_WANT_ASYNC:
-                case SSL_ERROR_WANT_READ:
-                    /* Just keep trying - busy waiting */
-                    continue;
-                default:
-                    BIO_printf(bio_err, "Error reading early data\n");
-                    ERR_print_errors(bio_err);
-                    goto err;
+                    case SSL_ERROR_WANT_WRITE:
+                    case SSL_ERROR_WANT_ASYNC:
+                    case SSL_ERROR_WANT_READ:
+                        /* Just keep trying - busy waiting */
+                        continue;
+                    default:
+                        BIO_printf(bio_err, "Error reading early data\n");
+                        ERR_print_errors(bio_err);
+                        goto err;
                 }
             }
             if (readbytes > 0) {
@@ -2712,9 +2747,9 @@ static int sv_body(int s, int stype, int prot, unsigned char *context)
                     continue;
                 }
                 if ((buf[0] == 'K' || buf[0] == 'k')
-                        && ((buf[1] == '\n') || (buf[1] == '\r'))) {
+                    && ((buf[1] == '\n') || (buf[1] == '\r'))) {
                     SSL_key_update(con, buf[0] == 'K' ?
-                                        SSL_KEY_UPDATE_REQUESTED
+                                   SSL_KEY_UPDATE_REQUESTED
                                         : SSL_KEY_UPDATE_NOT_REQUESTED);
                     i = SSL_do_handshake(con);
                     printf("SSL_do_handshake -> %d\n", i);
@@ -2764,36 +2799,36 @@ static int sv_body(int s, int stype, int prot, unsigned char *context)
                 }
 #endif
                 switch (SSL_get_error(con, k)) {
-                case SSL_ERROR_NONE:
-                    break;
-                case SSL_ERROR_WANT_ASYNC:
-                    BIO_printf(bio_s_out, "Write BLOCK (Async)\n");
-                    (void)BIO_flush(bio_s_out);
-                    wait_for_async(con);
-                    break;
-                case SSL_ERROR_WANT_WRITE:
-                case SSL_ERROR_WANT_READ:
-                case SSL_ERROR_WANT_X509_LOOKUP:
-                    BIO_printf(bio_s_out, "Write BLOCK\n");
-                    (void)BIO_flush(bio_s_out);
-                    break;
-                case SSL_ERROR_WANT_ASYNC_JOB:
+                    case SSL_ERROR_NONE:
+                        break;
+                    case SSL_ERROR_WANT_ASYNC:
+                        BIO_printf(bio_s_out, "Write BLOCK (Async)\n");
+                        (void)BIO_flush(bio_s_out);
+                        wait_for_async(con);
+                        break;
+                    case SSL_ERROR_WANT_WRITE:
+                    case SSL_ERROR_WANT_READ:
+                    case SSL_ERROR_WANT_X509_LOOKUP:
+                        BIO_printf(bio_s_out, "Write BLOCK\n");
+                        (void)BIO_flush(bio_s_out);
+                        break;
+                    case SSL_ERROR_WANT_ASYNC_JOB:
                     /*
                      * This shouldn't ever happen in s_server. Treat as an error
                      */
-                case SSL_ERROR_SYSCALL:
-                case SSL_ERROR_SSL:
-                    BIO_printf(bio_s_out, "ERROR\n");
-                    (void)BIO_flush(bio_s_out);
-                    ERR_print_errors(bio_err);
-                    ret = 1;
-                    goto err;
+                    case SSL_ERROR_SYSCALL:
+                    case SSL_ERROR_SSL:
+                        BIO_printf(bio_s_out, "ERROR\n");
+                        (void)BIO_flush(bio_s_out);
+                        ERR_print_errors(bio_err);
+                        ret = 1;
+                        goto err;
                     /* break; */
-                case SSL_ERROR_ZERO_RETURN:
-                    BIO_printf(bio_s_out, "DONE\n");
-                    (void)BIO_flush(bio_s_out);
-                    ret = 1;
-                    goto err;
+                    case SSL_ERROR_ZERO_RETURN:
+                        BIO_printf(bio_s_out, "DONE\n");
+                        (void)BIO_flush(bio_s_out);
+                        ret = 1;
+                        goto err;
                 }
                 if (k > 0) {
                     l += k;
@@ -2810,7 +2845,7 @@ static int sv_body(int s, int stype, int prot, unsigned char *context)
              * init_ssl_connection
              */
             if ((!async || !SSL_waiting_for_async(con))
-                    && !SSL_is_init_finished(con)) {
+                && !SSL_is_init_finished(con)) {
                 /*
                  * Count number of reads during init_ssl_connection.
                  * It helps us to distinguish configuration errors from errors
@@ -2838,7 +2873,7 @@ static int sv_body(int s, int stype, int prot, unsigned char *context)
                     goto err;
                 }
             } else {
- again:
+again:
                 i = SSL_read(con, (char *)buf, bufsize);
 #ifndef OPENSSL_NO_SRP
                 while (SSL_get_error(con, i) == SSL_ERROR_WANT_X509_LOOKUP) {
@@ -2850,46 +2885,46 @@ static int sv_body(int s, int stype, int prot, unsigned char *context)
                 }
 #endif
                 switch (SSL_get_error(con, i)) {
-                case SSL_ERROR_NONE:
+                    case SSL_ERROR_NONE:
 #ifdef CHARSET_EBCDIC
-                    ascii2ebcdic(buf, buf, i);
+                        ascii2ebcdic(buf, buf, i);
 #endif
-                    raw_write_stdout(buf, (unsigned int)i);
-                    (void)BIO_flush(bio_s_out);
-                    if (SSL_has_pending(con))
-                        goto again;
-                    break;
-                case SSL_ERROR_WANT_ASYNC:
-                    BIO_printf(bio_s_out, "Read BLOCK (Async)\n");
-                    (void)BIO_flush(bio_s_out);
-                    wait_for_async(con);
-                    break;
-                case SSL_ERROR_WANT_WRITE:
-                case SSL_ERROR_WANT_READ:
-                    BIO_printf(bio_s_out, "Read BLOCK\n");
-                    (void)BIO_flush(bio_s_out);
-                    break;
-                case SSL_ERROR_WANT_ASYNC_JOB:
+                        raw_write_stdout(buf, (unsigned int)i);
+                        (void)BIO_flush(bio_s_out);
+                        if (SSL_has_pending(con))
+                            goto again;
+                        break;
+                    case SSL_ERROR_WANT_ASYNC:
+                        BIO_printf(bio_s_out, "Read BLOCK (Async)\n");
+                        (void)BIO_flush(bio_s_out);
+                        wait_for_async(con);
+                        break;
+                    case SSL_ERROR_WANT_WRITE:
+                    case SSL_ERROR_WANT_READ:
+                        BIO_printf(bio_s_out, "Read BLOCK\n");
+                        (void)BIO_flush(bio_s_out);
+                        break;
+                    case SSL_ERROR_WANT_ASYNC_JOB:
                     /*
                      * This shouldn't ever happen in s_server. Treat as an error
                      */
-                case SSL_ERROR_SYSCALL:
-                case SSL_ERROR_SSL:
-                    BIO_printf(bio_s_out, "ERROR\n");
-                    (void)BIO_flush(bio_s_out);
-                    ERR_print_errors(bio_err);
-                    ret = 1;
-                    goto err;
-                case SSL_ERROR_ZERO_RETURN:
-                    BIO_printf(bio_s_out, "DONE\n");
-                    (void)BIO_flush(bio_s_out);
-                    ret = 1;
-                    goto err;
+                    case SSL_ERROR_SYSCALL:
+                    case SSL_ERROR_SSL:
+                        BIO_printf(bio_s_out, "ERROR\n");
+                        (void)BIO_flush(bio_s_out);
+                        ERR_print_errors(bio_err);
+                        ret = 1;
+                        goto err;
+                    case SSL_ERROR_ZERO_RETURN:
+                        BIO_printf(bio_s_out, "DONE\n");
+                        (void)BIO_flush(bio_s_out);
+                        ret = 1;
+                        goto err;
                 }
             }
         }
     }
- err:
+err:
     if (con != NULL) {
         BIO_printf(bio_s_out, "shutting down SSL\n");
         do_ssl_shutdown(con);
@@ -2971,8 +3006,8 @@ static int init_ssl_connection(SSL *con)
 #ifdef CERT_CB_TEST_RETRY
             {
                 while (i <= 0
-                        && SSL_get_error(con, i) == SSL_ERROR_WANT_X509_LOOKUP
-                        && SSL_get_state(con) == TLS_ST_SR_CLNT_HELLO) {
+                       && SSL_get_error(con, i) == SSL_ERROR_WANT_X509_LOOKUP
+                       && SSL_get_state(con) == TLS_ST_SR_CLNT_HELLO) {
                     BIO_printf(bio_err,
                                "LOOKUP from certificate callback during accept\n");
                     i = SSL_accept(con);
@@ -3000,7 +3035,7 @@ static int init_ssl_connection(SSL *con)
 
     if (i <= 0) {
         if (((dtlslisten || stateless) && i == 0)
-                || (!dtlslisten && !stateless && retry)) {
+            || (!dtlslisten && !stateless && retry)) {
             BIO_printf(bio_s_out, "DELAY\n");
             return 1;
         }
@@ -3102,10 +3137,10 @@ static void print_connection_info(SSL *con)
         BIO_printf(bio_s_out, "    Length: %i bytes\n", keymatexportlen);
         exportedkeymat = app_malloc(keymatexportlen, "export key");
         if (SSL_export_keying_material(con, exportedkeymat,
-                                        keymatexportlen,
-                                        keymatexportlabel,
-                                        strlen(keymatexportlabel),
-                                        NULL, 0, 0) <= 0) {
+                                       keymatexportlen,
+                                       keymatexportlabel,
+                                       strlen(keymatexportlabel),
+                                       NULL, 0, 0) <= 0) {
             BIO_printf(bio_s_out, "    Error\n");
         } else {
             BIO_printf(bio_s_out, "    Keying material: ");
@@ -3226,7 +3261,7 @@ static int www_body(int s, int stype, int prot, unsigned char *context)
             SSL_set_msg_callback(con, SSL_trace);
         else
 #endif
-            SSL_set_msg_callback(con, msg_cb);
+        SSL_set_msg_callback(con, msg_cb);
         SSL_set_msg_callback_arg(con, bio_s_msg ? bio_s_msg : bio_s_out);
     }
 
@@ -3259,7 +3294,7 @@ static int www_body(int s, int stype, int prot, unsigned char *context)
 
         /* else we have data */
         if ((www == 1 && HAS_PREFIX(buf, "GET "))
-             || (www == 2 && HAS_PREFIX(buf, "GET /stats "))) {
+            || (www == 2 && HAS_PREFIX(buf, "GET /stats "))) {
             X509 *peer = NULL;
             STACK_OF(SSL_CIPHER) *sk;
             static const char *space = "                          ";
@@ -3309,18 +3344,18 @@ static int www_body(int s, int stype, int prot, unsigned char *context)
 
                 for (myp = local_argv[i]; *myp; myp++)
                     switch (*myp) {
-                    case '<':
-                        BIO_puts(io, "&lt;");
-                        break;
-                    case '>':
-                        BIO_puts(io, "&gt;");
-                        break;
-                    case '&':
-                        BIO_puts(io, "&amp;");
-                        break;
-                    default:
-                        BIO_write(io, myp, 1);
-                        break;
+                        case '<':
+                            BIO_puts(io, "&lt;");
+                            break;
+                        case '>':
+                            BIO_puts(io, "&gt;");
+                            break;
+                        case '&':
+                            BIO_puts(io, "&amp;");
+                            break;
+                        default:
+                            BIO_write(io, myp, 1);
+                            break;
                     }
                 BIO_write(io, " ", 1);
             }
@@ -3386,7 +3421,8 @@ static int www_body(int s, int stype, int prot, unsigned char *context)
             }
             BIO_puts(io, "</pre></BODY></HTML>\r\n\r\n");
             break;
-        } else if ((www == 2 || www == 3) && CHECK_AND_SKIP_PREFIX(p, "GET /")) {
+        } else if ((www == 2 || www == 3) &&
+                   CHECK_AND_SKIP_PREFIX(p, "GET /")) {
             BIO *file;
             char *e;
             static const char *text =
@@ -3404,15 +3440,15 @@ static int www_body(int s, int stype, int prot, unsigned char *context)
                 }
 
                 switch (dot) {
-                case 1:
-                    dot = (e[0] == '.') ? 2 : 0;
-                    break;
-                case 2:
-                    dot = (e[0] == '.') ? 3 : 0;
-                    break;
-                case 3:
-                    dot = (e[0] == '/' || e[0] == '\\') ? -1 : 0;
-                    break;
+                    case 1:
+                        dot = (e[0] == '.') ? 2 : 0;
+                        break;
+                    case 2:
+                        dot = (e[0] == '.') ? 3 : 0;
+                        break;
+                    case 3:
+                        dot = (e[0] == '/' || e[0] == '\\') ? -1 : 0;
+                        break;
                 }
                 if (dot == 0)
                     dot = (e[0] == '/' || e[0] == '\\') ? 1 : 0;
@@ -3471,7 +3507,8 @@ static int www_body(int s, int stype, int prot, unsigned char *context)
             /* send the file */
 #ifndef OPENSSL_NO_KTLS
             if (use_sendfile_for_req && !BIO_get_ktls_send(SSL_get_wbio(con))) {
-                BIO_printf(bio_err, "Warning: sendfile requested but KTLS is not available\n");
+                BIO_printf(bio_err,
+                           "Warning: sendfile requested but KTLS is not available\n");
                 use_sendfile_for_req = 0;
             }
             if (use_sendfile_for_req) {
@@ -3549,7 +3586,7 @@ static int www_body(int s, int stype, int prot, unsigned char *context)
                     }
                 }
             }
- write_error:
+write_error:
             BIO_free(file);
             break;
         }
@@ -3563,11 +3600,11 @@ static int www_body(int s, int stype, int prot, unsigned char *context)
         } else
             break;
     }
- end:
+end:
     /* make sure we reuse sessions */
     do_ssl_shutdown(con);
 
- err:
+err:
     OPENSSL_free(buf);
     BIO_free(ssl_bio);
     BIO_free_all(io);
@@ -3644,7 +3681,7 @@ static int rev_body(int s, int stype, int prot, unsigned char *context)
             SSL_set_msg_callback(con, SSL_trace);
         else
 #endif
-            SSL_set_msg_callback(con, msg_cb);
+        SSL_set_msg_callback(con, msg_cb);
         SSL_set_msg_callback_arg(con, bio_s_msg ? bio_s_msg : bio_s_out);
     }
 
@@ -3720,11 +3757,11 @@ static int rev_body(int s, int stype, int prot, unsigned char *context)
             }
         }
     }
- end:
+end:
     /* make sure we reuse sessions */
     do_ssl_shutdown(con);
 
- err:
+err:
 
     OPENSSL_free(buf);
     BIO_free(ssl_bio);
@@ -3751,7 +3788,7 @@ static int generate_session_id(SSL *ssl, unsigned char *id,
          */
         memcpy(id, session_id_prefix,
                (session_id_prefix_len < *id_len) ?
-                session_id_prefix_len : *id_len);
+               session_id_prefix_len : *id_len);
     }
     while (SSL_has_matching_session_id(ssl, id, *id_len) &&
            (++count < MAX_SESSION_ID_ATTEMPTS));

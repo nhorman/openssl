@@ -225,9 +225,11 @@ static const OSSL_ALGORITHM_CAPABLE deflt_ciphers[] = {
          ossl_cipher_capable_aes_cbc_hmac_sha1),
     ALGC(PROV_NAMES_AES_256_CBC_HMAC_SHA1, ossl_aes256cbc_hmac_sha1_functions,
          ossl_cipher_capable_aes_cbc_hmac_sha1),
-    ALGC(PROV_NAMES_AES_128_CBC_HMAC_SHA256, ossl_aes128cbc_hmac_sha256_functions,
-        ossl_cipher_capable_aes_cbc_hmac_sha256),
-    ALGC(PROV_NAMES_AES_256_CBC_HMAC_SHA256, ossl_aes256cbc_hmac_sha256_functions,
+    ALGC(PROV_NAMES_AES_128_CBC_HMAC_SHA256,
+         ossl_aes128cbc_hmac_sha256_functions,
+         ossl_cipher_capable_aes_cbc_hmac_sha256),
+    ALGC(PROV_NAMES_AES_256_CBC_HMAC_SHA256,
+         ossl_aes256cbc_hmac_sha256_functions,
          ossl_cipher_capable_aes_cbc_hmac_sha256),
 #ifndef OPENSSL_NO_ARIA
     ALG(PROV_NAMES_ARIA_256_GCM, ossl_aria256gcm_functions),
@@ -349,7 +351,8 @@ static const OSSL_ALGORITHM deflt_kdfs[] = {
     { PROV_NAMES_X963KDF, "provider=default", ossl_kdf_x963_kdf_functions },
     { PROV_NAMES_TLS1_PRF, "provider=default", ossl_kdf_tls1_prf_functions },
     { PROV_NAMES_KBKDF, "provider=default", ossl_kdf_kbkdf_functions },
-    { PROV_NAMES_X942KDF_ASN1, "provider=default", ossl_kdf_x942_kdf_functions },
+    { PROV_NAMES_X942KDF_ASN1, "provider=default",
+      ossl_kdf_x942_kdf_functions },
 #ifndef OPENSSL_NO_SCRYPT
     { PROV_NAMES_SCRYPT, "provider=default", ossl_kdf_scrypt_functions },
 #endif
@@ -375,7 +378,8 @@ static const OSSL_ALGORITHM deflt_keyexch[] = {
     { PROV_NAMES_X448, "provider=default", ossl_x448_keyexch_functions },
 # endif
 #endif
-    { PROV_NAMES_TLS1_PRF, "provider=default", ossl_kdf_tls1_prf_keyexch_functions },
+    { PROV_NAMES_TLS1_PRF, "provider=default",
+      ossl_kdf_tls1_prf_keyexch_functions },
     { PROV_NAMES_HKDF, "provider=default", ossl_kdf_hkdf_keyexch_functions },
     { PROV_NAMES_SCRYPT, "provider=default",
       ossl_kdf_scrypt_keyexch_functions },
@@ -398,7 +402,8 @@ static const OSSL_ALGORITHM deflt_signature[] = {
     { PROV_NAMES_RSA, "provider=default", ossl_rsa_signature_functions },
 #ifndef OPENSSL_NO_EC
 # ifndef OPENSSL_NO_ECX
-    { PROV_NAMES_ED25519, "provider=default", ossl_ed25519_signature_functions },
+    { PROV_NAMES_ED25519, "provider=default",
+      ossl_ed25519_signature_functions },
     { PROV_NAMES_ED448, "provider=default", ossl_ed448_signature_functions },
 # endif
     { PROV_NAMES_ECDSA, "provider=default", ossl_ecdsa_signature_functions },
@@ -406,7 +411,8 @@ static const OSSL_ALGORITHM deflt_signature[] = {
     { PROV_NAMES_SM2, "provider=default", ossl_sm2_signature_functions },
 # endif
 #endif
-    { PROV_NAMES_HMAC, "provider=default", ossl_mac_legacy_hmac_signature_functions },
+    { PROV_NAMES_HMAC, "provider=default",
+      ossl_mac_legacy_hmac_signature_functions },
     { PROV_NAMES_SIPHASH, "provider=default",
       ossl_mac_legacy_siphash_signature_functions },
 #ifndef OPENSSL_NO_POLY1305
@@ -414,7 +420,8 @@ static const OSSL_ALGORITHM deflt_signature[] = {
       ossl_mac_legacy_poly1305_signature_functions },
 #endif
 #ifndef OPENSSL_NO_CMAC
-    { PROV_NAMES_CMAC, "provider=default", ossl_mac_legacy_cmac_signature_functions },
+    { PROV_NAMES_CMAC, "provider=default",
+      ossl_mac_legacy_cmac_signature_functions },
 #endif
     { NULL, NULL, NULL }
 };
@@ -479,7 +486,8 @@ static const OSSL_ALGORITHM deflt_keymgmt[] = {
     { PROV_NAMES_SIPHASH, "provider=default", ossl_mac_legacy_keymgmt_functions,
       PROV_DESCS_SIPHASH_SIGN },
 #ifndef OPENSSL_NO_POLY1305
-    { PROV_NAMES_POLY1305, "provider=default", ossl_mac_legacy_keymgmt_functions,
+    { PROV_NAMES_POLY1305, "provider=default",
+      ossl_mac_legacy_keymgmt_functions,
       PROV_DESCS_POLY1305_SIGN },
 #endif
 #ifndef OPENSSL_NO_CMAC
@@ -509,7 +517,7 @@ static const OSSL_ALGORITHM deflt_decoder[] = {
 
 static const OSSL_ALGORITHM deflt_store[] = {
 #define STORE(name, _fips, func_table)                           \
-    { name, "provider=default,fips=" _fips, (func_table) },
+        { name, "provider=default,fips=" _fips, (func_table) },
 
 #include "stores.inc"
     { NULL, NULL, NULL }
@@ -521,32 +529,32 @@ static const OSSL_ALGORITHM *deflt_query(void *provctx, int operation_id,
 {
     *no_cache = 0;
     switch (operation_id) {
-    case OSSL_OP_DIGEST:
-        return deflt_digests;
-    case OSSL_OP_CIPHER:
-        return exported_ciphers;
-    case OSSL_OP_MAC:
-        return deflt_macs;
-    case OSSL_OP_KDF:
-        return deflt_kdfs;
-    case OSSL_OP_RAND:
-        return deflt_rands;
-    case OSSL_OP_KEYMGMT:
-        return deflt_keymgmt;
-    case OSSL_OP_KEYEXCH:
-        return deflt_keyexch;
-    case OSSL_OP_SIGNATURE:
-        return deflt_signature;
-    case OSSL_OP_ASYM_CIPHER:
-        return deflt_asym_cipher;
-    case OSSL_OP_KEM:
-        return deflt_asym_kem;
-    case OSSL_OP_ENCODER:
-        return deflt_encoder;
-    case OSSL_OP_DECODER:
-        return deflt_decoder;
-    case OSSL_OP_STORE:
-        return deflt_store;
+        case OSSL_OP_DIGEST:
+            return deflt_digests;
+        case OSSL_OP_CIPHER:
+            return exported_ciphers;
+        case OSSL_OP_MAC:
+            return deflt_macs;
+        case OSSL_OP_KDF:
+            return deflt_kdfs;
+        case OSSL_OP_RAND:
+            return deflt_rands;
+        case OSSL_OP_KEYMGMT:
+            return deflt_keymgmt;
+        case OSSL_OP_KEYEXCH:
+            return deflt_keyexch;
+        case OSSL_OP_SIGNATURE:
+            return deflt_signature;
+        case OSSL_OP_ASYM_CIPHER:
+            return deflt_asym_cipher;
+        case OSSL_OP_KEM:
+            return deflt_asym_kem;
+        case OSSL_OP_ENCODER:
+            return deflt_encoder;
+        case OSSL_OP_DECODER:
+            return deflt_decoder;
+        case OSSL_OP_STORE:
+            return deflt_store;
     }
     return NULL;
 }
@@ -560,12 +568,13 @@ static void deflt_teardown(void *provctx)
 
 /* Functions we provide to the core */
 static const OSSL_DISPATCH deflt_dispatch_table[] = {
-    { OSSL_FUNC_PROVIDER_TEARDOWN, (void (*)(void))deflt_teardown },
-    { OSSL_FUNC_PROVIDER_GETTABLE_PARAMS, (void (*)(void))deflt_gettable_params },
-    { OSSL_FUNC_PROVIDER_GET_PARAMS, (void (*)(void))deflt_get_params },
-    { OSSL_FUNC_PROVIDER_QUERY_OPERATION, (void (*)(void))deflt_query },
+    { OSSL_FUNC_PROVIDER_TEARDOWN, (void (*)(void)) deflt_teardown },
+    { OSSL_FUNC_PROVIDER_GETTABLE_PARAMS,
+      (void (*)(void)) deflt_gettable_params },
+    { OSSL_FUNC_PROVIDER_GET_PARAMS, (void (*)(void)) deflt_get_params },
+    { OSSL_FUNC_PROVIDER_QUERY_OPERATION, (void (*)(void)) deflt_query },
     { OSSL_FUNC_PROVIDER_GET_CAPABILITIES,
-      (void (*)(void))ossl_prov_get_capabilities },
+      (void (*)(void)) ossl_prov_get_capabilities },
     OSSL_DISPATCH_END
 };
 
@@ -580,22 +589,22 @@ int ossl_default_provider_init(const OSSL_CORE_HANDLE *handle,
     BIO_METHOD *corebiometh;
 
     if (!ossl_prov_bio_from_dispatch(in)
-            || !ossl_prov_seeding_from_dispatch(in))
+        || !ossl_prov_seeding_from_dispatch(in))
         return 0;
     for (; in->function_id != 0; in++) {
         switch (in->function_id) {
-        case OSSL_FUNC_CORE_GETTABLE_PARAMS:
-            c_gettable_params = OSSL_FUNC_core_gettable_params(in);
-            break;
-        case OSSL_FUNC_CORE_GET_PARAMS:
-            c_get_params = OSSL_FUNC_core_get_params(in);
-            break;
-        case OSSL_FUNC_CORE_GET_LIBCTX:
-            c_get_libctx = OSSL_FUNC_core_get_libctx(in);
-            break;
-        default:
-            /* Just ignore anything we don't understand */
-            break;
+            case OSSL_FUNC_CORE_GETTABLE_PARAMS:
+                c_gettable_params = OSSL_FUNC_core_gettable_params(in);
+                break;
+            case OSSL_FUNC_CORE_GET_PARAMS:
+                c_get_params = OSSL_FUNC_core_get_params(in);
+                break;
+            case OSSL_FUNC_CORE_GET_LIBCTX:
+                c_get_libctx = OSSL_FUNC_core_get_libctx(in);
+                break;
+            default:
+                /* Just ignore anything we don't understand */
+                break;
         }
     }
 
@@ -611,13 +620,13 @@ int ossl_default_provider_init(const OSSL_CORE_HANDLE *handle,
      * create their own library context.
      */
     if ((*provctx = ossl_prov_ctx_new()) == NULL
-            || (corebiometh = ossl_bio_prov_init_bio_method()) == NULL) {
+        || (corebiometh = ossl_bio_prov_init_bio_method()) == NULL) {
         ossl_prov_ctx_free(*provctx);
         *provctx = NULL;
         return 0;
     }
     ossl_prov_ctx_set0_libctx(*provctx,
-                                       (OSSL_LIB_CTX *)c_get_libctx(handle));
+                              (OSSL_LIB_CTX *)c_get_libctx(handle));
     ossl_prov_ctx_set0_handle(*provctx, handle);
     ossl_prov_ctx_set0_core_bio_method(*provctx, corebiometh);
 

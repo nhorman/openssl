@@ -99,39 +99,39 @@ struct quic_urxe_st {
      * should not be common as we will have a good idea of worst-case MTUs up
      * front.
      */
-    size_t          data_len, alloc_len;
+    size_t data_len, alloc_len;
 
     /*
      * Bitfields per packet. processed indicates the packet has been processed
      * and must not be processed again, hpr_removed indicates header protection
      * has already been removed. Used by QRX only; not used by the demuxer.
      */
-    uint64_t        processed, hpr_removed;
+    uint64_t processed, hpr_removed;
 
     /*
      * Address of peer we received the datagram from, and the local interface
      * address we received it on. If local address support is not enabled, local
      * is zeroed.
      */
-    BIO_ADDR        peer, local;
+    BIO_ADDR peer, local;
 
     /*
      * Time at which datagram was received (or ossl_time_zero()) if a now
      * function was not provided).
      */
-    OSSL_TIME       time;
+    OSSL_TIME time;
 
     /*
      * Used by the QRX to mark whether a datagram has been deferred. Used by the
      * QRX only; not used by the demuxer.
      */
-    char            deferred;
+    char deferred;
 
     /*
      * Used by the DEMUX to track if a URXE has been handed out. Used primarily
      * for debugging purposes.
      */
-    char            demux_state;
+    char demux_state;
 };
 
 /* Accessors for URXE buffer. */
@@ -287,8 +287,8 @@ void ossl_quic_demux_set_default_handler(QUIC_DEMUX *demux,
  * also be reset.
  */
 void ossl_quic_demux_set_stateless_reset_handler(
-        QUIC_DEMUX *demux,
-        ossl_quic_stateless_reset_cb_fn *cb, void *cb_arg);
+    QUIC_DEMUX *demux,
+    ossl_quic_stateless_reset_cb_fn *cb, void *cb_arg);
 
 /*
  * Releases a URXE back to the demuxer. No reference must be made to the URXE or

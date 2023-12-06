@@ -74,10 +74,10 @@ OCSP_RESPONSE *OCSP_response_create(int status, OCSP_BASICRESP *bs)
         goto err;
     rsp->responseBytes->responseType = OBJ_nid2obj(NID_id_pkix_OCSP_basic);
     if (!ASN1_item_pack
-        (bs, ASN1_ITEM_rptr(OCSP_BASICRESP), &rsp->responseBytes->response))
-         goto err;
+            (bs, ASN1_ITEM_rptr(OCSP_BASICRESP), &rsp->responseBytes->response))
+        goto err;
     return rsp;
- err:
+err:
     OCSP_RESPONSE_free(rsp);
     return NULL;
 }
@@ -114,41 +114,41 @@ OCSP_SINGLERESP *OCSP_basic_add1_status(OCSP_BASICRESP *rsp,
 
     cs = single->certStatus;
     switch (cs->type = status) {
-    case V_OCSP_CERTSTATUS_REVOKED:
-        if (!revtime) {
-            ERR_raise(ERR_LIB_OCSP, OCSP_R_NO_REVOKED_TIME);
-            goto err;
-        }
-        if ((cs->value.revoked = ri = OCSP_REVOKEDINFO_new()) == NULL)
-            goto err;
-        if (!ASN1_TIME_to_generalizedtime(revtime, &ri->revocationTime))
-            goto err;
-        if (reason != OCSP_REVOKED_STATUS_NOSTATUS) {
-            if ((ri->revocationReason = ASN1_ENUMERATED_new()) == NULL)
+        case V_OCSP_CERTSTATUS_REVOKED:
+            if (!revtime) {
+                ERR_raise(ERR_LIB_OCSP, OCSP_R_NO_REVOKED_TIME);
                 goto err;
-            if (!(ASN1_ENUMERATED_set(ri->revocationReason, reason)))
+            }
+            if ((cs->value.revoked = ri = OCSP_REVOKEDINFO_new()) == NULL)
                 goto err;
-        }
-        break;
+            if (!ASN1_TIME_to_generalizedtime(revtime, &ri->revocationTime))
+                goto err;
+            if (reason != OCSP_REVOKED_STATUS_NOSTATUS) {
+                if ((ri->revocationReason = ASN1_ENUMERATED_new()) == NULL)
+                    goto err;
+                if (!(ASN1_ENUMERATED_set(ri->revocationReason, reason)))
+                    goto err;
+            }
+            break;
 
-    case V_OCSP_CERTSTATUS_GOOD:
-        if ((cs->value.good = ASN1_NULL_new()) == NULL)
+        case V_OCSP_CERTSTATUS_GOOD:
+            if ((cs->value.good = ASN1_NULL_new()) == NULL)
+                goto err;
+            break;
+
+        case V_OCSP_CERTSTATUS_UNKNOWN:
+            if ((cs->value.unknown = ASN1_NULL_new()) == NULL)
+                goto err;
+            break;
+
+        default:
             goto err;
-        break;
-
-    case V_OCSP_CERTSTATUS_UNKNOWN:
-        if ((cs->value.unknown = ASN1_NULL_new()) == NULL)
-            goto err;
-        break;
-
-    default:
-        goto err;
 
     }
     if (!(sk_OCSP_SINGLERESP_push(rsp->tbsResponseData.responses, single)))
         goto err;
     return single;
- err:
+err:
     OCSP_SINGLERESP_free(single);
     return NULL;
 }
@@ -165,8 +165,8 @@ int OCSP_basic_add1_cert(OCSP_BASICRESP *resp, X509 *cert)
  * include one or more optional certificates in the response.
  */
 int OCSP_basic_sign_ctx(OCSP_BASICRESP *brsp,
-                    X509 *signer, EVP_MD_CTX *ctx,
-                    STACK_OF(X509) *certs, unsigned long flags)
+                        X509 *signer, EVP_MD_CTX *ctx,
+                        STACK_OF(X509) *certs, unsigned long flags)
 {
     OCSP_RESPID *rid;
     EVP_PKEY *pkey;
@@ -208,7 +208,7 @@ int OCSP_basic_sign_ctx(OCSP_BASICRESP *brsp,
         goto err;
 
     return 1;
- err:
+err:
     return 0;
 }
 
@@ -271,7 +271,7 @@ int OCSP_RESPID_set_by_key_ex(OCSP_RESPID *respid, X509 *cert,
     respid->value.byKey = byKey;
 
     ret = 1;
- err:
+err:
     EVP_MD_free(sha1);
     return ret;
 }
@@ -314,7 +314,7 @@ int OCSP_RESPID_match_ex(OCSP_RESPID *respid, X509 *cert, OSSL_LIB_CTX *libctx,
                              X509_get_subject_name(cert)) == 0;
     }
 
- err:
+err:
     EVP_MD_free(sha1);
     return ret;
 }

@@ -28,7 +28,8 @@
 
 #include <openssl/crypto.h>
 
-#if defined(OPENSSL_THREADS) && !defined(CRYPTO_TDEBUG) && defined(OPENSSL_SYS_WINDOWS)
+#if defined(OPENSSL_THREADS) && !defined(CRYPTO_TDEBUG) && \
+    defined(OPENSSL_SYS_WINDOWS)
 
 # ifdef USE_RWLOCK
 typedef struct {
@@ -212,7 +213,9 @@ int CRYPTO_THREAD_compare_id(CRYPTO_THREAD_ID a, CRYPTO_THREAD_ID b)
 
 int CRYPTO_atomic_add(int *val, int amount, int *ret, CRYPTO_RWLOCK *lock)
 {
-    *ret = (int)InterlockedExchangeAdd((long volatile *)val, (long)amount) + amount;
+    *ret =
+        (int)InterlockedExchangeAdd((long volatile *)val,
+                                    (long)amount) + amount;
     return 1;
 }
 

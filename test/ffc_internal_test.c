@@ -249,12 +249,12 @@ static int ffc_params_validate_pq_test(void)
 
     ossl_ffc_params_init(&params);
     if (!TEST_ptr(p = BN_bin2bn(dsa_2048_224_sha224_p,
-                                   sizeof(dsa_2048_224_sha224_p),
-                                   NULL)))
+                                sizeof(dsa_2048_224_sha224_p),
+                                NULL)))
         goto err;
     if (!TEST_ptr(q = BN_bin2bn(dsa_2048_224_sha224_q,
-                                   sizeof(dsa_2048_224_sha224_q),
-                                   NULL)))
+                                sizeof(dsa_2048_224_sha224_q),
+                                NULL)))
         goto err;
 
     /* No p */
@@ -626,7 +626,8 @@ static int ffc_private_gen_test(int index)
     if (!TEST_false(ossl_ffc_generate_private_key(ctx, params, 220, 112, priv)))
         goto err;
     /* fail since N > len(q) */
-    if (!TEST_false(ossl_ffc_generate_private_key(ctx, params, N + 1, 112, priv)))
+    if (!TEST_false(ossl_ffc_generate_private_key(ctx, params, N + 1, 112,
+                                                  priv)))
         goto err;
     /* s must be always set */
     if (!TEST_false(ossl_ffc_generate_private_key(ctx, params, N, 0, priv)))
@@ -638,13 +639,15 @@ static int ffc_private_gen_test(int index)
     if (!TEST_true(ossl_ffc_validate_private_key(params->q, priv, &res)))
         goto err;
     /* pass since 2s <= N < len(q) */
-    if (!TEST_true(ossl_ffc_generate_private_key(ctx, params, N / 2, 112, priv)))
+    if (!TEST_true(ossl_ffc_generate_private_key(ctx, params, N / 2, 112,
+                                                 priv)))
         goto err;
     if (!TEST_true(ossl_ffc_validate_private_key(params->q, priv, &res)))
         goto err;
     /* N is ignored in this case */
     if (!TEST_true(ossl_ffc_generate_private_key(ctx, params, 0,
-                                                 ossl_ifc_ffc_compute_security_bits(BN_num_bits(params->p)),
+                                                 ossl_ifc_ffc_compute_security_bits(
+                                                     BN_num_bits(params->p)),
                                                  priv)))
         goto err;
     if (!TEST_int_le(BN_num_bits(priv), 225))

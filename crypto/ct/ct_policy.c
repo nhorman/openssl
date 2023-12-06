@@ -102,7 +102,8 @@ X509* CT_POLICY_EVAL_CTX_get0_issuer(const CT_POLICY_EVAL_CTX *ctx)
     return ctx->issuer;
 }
 
-const CTLOG_STORE *CT_POLICY_EVAL_CTX_get0_log_store(const CT_POLICY_EVAL_CTX *ctx)
+const CTLOG_STORE *CT_POLICY_EVAL_CTX_get0_log_store(
+    const CT_POLICY_EVAL_CTX *ctx)
 {
     return ctx->log_store;
 }

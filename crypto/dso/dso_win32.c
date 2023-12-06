@@ -48,8 +48,8 @@ static HINSTANCE LoadLibraryA(LPCSTR lpLibFileName)
 #  if defined(_WIN32_WCE) && _WIN32_WCE>=101
     if (!MultiByteToWideChar(CP_ACP, 0, lpLibFileName, len_0, fnamw, len_0))
 #  endif
-        for (i = 0; i < len_0; i++)
-            fnamw[i] = (WCHAR)lpLibFileName[i];
+    for (i = 0; i < len_0; i++)
+        fnamw[i] = (WCHAR)lpLibFileName[i];
 
     return LoadLibraryW(fnamw);
 }
@@ -120,7 +120,7 @@ static int win32_load(DSO *dso)
     /* Success */
     dso->loaded_filename = filename;
     return 1;
- err:
+err:
     /* Cleanup ! */
     OPENSSL_free(filename);
     OPENSSL_free(p);
@@ -228,58 +228,58 @@ static struct file_st *win32_splitter(DSO *dso, const char *filename,
     do {
         last = filename[0];
         switch (last) {
-        case ':':
-            if (position != IN_DEVICE) {
-                ERR_raise(ERR_LIB_DSO, DSO_R_INCORRECT_FILE_SYNTAX);
-                OPENSSL_free(result);
-                return NULL;
-            }
-            result->device = start;
-            result->devicelen = (int)(filename - start);
-            position = IN_FILE;
-            start = ++filename;
-            result->dir = start;
-            break;
-        case '\\':
-        case '/':
-            if (position == IN_NODE) {
-                result->nodelen = (int)(filename - start);
+            case ':':
+                if (position != IN_DEVICE) {
+                    ERR_raise(ERR_LIB_DSO, DSO_R_INCORRECT_FILE_SYNTAX);
+                    OPENSSL_free(result);
+                    return NULL;
+                }
+                result->device = start;
+                result->devicelen = (int)(filename - start);
                 position = IN_FILE;
                 start = ++filename;
                 result->dir = start;
-            } else if (position == IN_DEVICE) {
-                position = IN_FILE;
-                filename++;
-                result->dir = start;
-                result->dirlen = (int)(filename - start);
-                start = filename;
-            } else {
-                filename++;
-                result->dirlen += (int)(filename - start);
-                start = filename;
-            }
-            break;
-        case '\0':
-            if (position == IN_NODE) {
-                result->nodelen = (int)(filename - start);
-            } else {
-                if (filename - start > 0) {
-                    if (assume_last_is_dir) {
-                        if (position == IN_DEVICE) {
-                            result->dir = start;
-                            result->dirlen = 0;
+                break;
+            case '\\':
+            case '/':
+                if (position == IN_NODE) {
+                    result->nodelen = (int)(filename - start);
+                    position = IN_FILE;
+                    start = ++filename;
+                    result->dir = start;
+                } else if (position == IN_DEVICE) {
+                    position = IN_FILE;
+                    filename++;
+                    result->dir = start;
+                    result->dirlen = (int)(filename - start);
+                    start = filename;
+                } else {
+                    filename++;
+                    result->dirlen += (int)(filename - start);
+                    start = filename;
+                }
+                break;
+            case '\0':
+                if (position == IN_NODE) {
+                    result->nodelen = (int)(filename - start);
+                } else {
+                    if (filename - start > 0) {
+                        if (assume_last_is_dir) {
+                            if (position == IN_DEVICE) {
+                                result->dir = start;
+                                result->dirlen = 0;
+                            }
+                            result->dirlen += (int)(filename - start);
+                        } else {
+                            result->file = start;
+                            result->filelen = (int)(filename - start);
                         }
-                        result->dirlen += (int)(filename - start);
-                    } else {
-                        result->file = start;
-                        result->filelen = (int)(filename - start);
                     }
                 }
-            }
-            break;
-        default:
-            filename++;
-            break;
+                break;
+            default:
+                filename++;
+                break;
         }
     }
     while (last);
@@ -351,10 +351,11 @@ static char *win32_joiner(DSO *dso, const struct file_st *file_split)
     while (file_split->predirlen > (start - file_split->predir)) {
         const char *end = openssl_strnchr(start, '/',
                                           file_split->predirlen - (start -
-                                                                   file_split->predir));
+                                                                   file_split->
+                                                                   predir));
         if (!end)
             end = start
-                + file_split->predirlen - (start - file_split->predir);
+                  + file_split->predirlen - (start - file_split->predir);
         strncpy(&result[offset], start, end - start);
         offset += (int)(end - start);
         result[offset] = '\\';
@@ -486,9 +487,9 @@ static const char *openssl_strnchr(const char *string, int c, size_t len)
 #  define DLLNAME "KERNEL32.DLL"
 # endif
 
-typedef HANDLE(WINAPI *CREATETOOLHELP32SNAPSHOT) (DWORD, DWORD);
-typedef BOOL(WINAPI *CLOSETOOLHELP32SNAPSHOT) (HANDLE);
-typedef BOOL(WINAPI *MODULE32) (HANDLE, MODULEENTRY32 *);
+typedef HANDLE (WINAPI *CREATETOOLHELP32SNAPSHOT) (DWORD, DWORD);
+typedef BOOL (WINAPI *CLOSETOOLHELP32SNAPSHOT) (HANDLE);
+typedef BOOL (WINAPI *MODULE32) (HANDLE, MODULEENTRY32 *);
 
 static int win32_pathbyaddr(void *addr, char *path, int sz)
 {
@@ -516,7 +517,7 @@ static int win32_pathbyaddr(void *addr, char *path, int sz)
     }
 
     create_snap = (CREATETOOLHELP32SNAPSHOT)
-        GetProcAddress(dll, "CreateToolhelp32Snapshot");
+                  GetProcAddress(dll, "CreateToolhelp32Snapshot");
     if (create_snap == NULL) {
         FreeLibrary(dll);
         ERR_raise(ERR_LIB_DSO, DSO_R_UNSUPPORTED);
@@ -525,7 +526,7 @@ static int win32_pathbyaddr(void *addr, char *path, int sz)
     /* We take the rest for granted... */
 # ifdef _WIN32_WCE
     close_snap = (CLOSETOOLHELP32SNAPSHOT)
-        GetProcAddress(dll, "CloseToolhelp32Snapshot");
+                 GetProcAddress(dll, "CloseToolhelp32Snapshot");
 # else
     close_snap = (CLOSETOOLHELP32SNAPSHOT) CloseHandle;
 # endif
@@ -615,7 +616,7 @@ static void *win32_globallookup(const char *name)
     }
 
     create_snap = (CREATETOOLHELP32SNAPSHOT)
-        GetProcAddress(dll, "CreateToolhelp32Snapshot");
+                  GetProcAddress(dll, "CreateToolhelp32Snapshot");
     if (create_snap == NULL) {
         FreeLibrary(dll);
         ERR_raise(ERR_LIB_DSO, DSO_R_UNSUPPORTED);
@@ -624,7 +625,7 @@ static void *win32_globallookup(const char *name)
     /* We take the rest for granted... */
 # ifdef _WIN32_WCE
     close_snap = (CLOSETOOLHELP32SNAPSHOT)
-        GetProcAddress(dll, "CloseToolhelp32Snapshot");
+                 GetProcAddress(dll, "CloseToolhelp32Snapshot");
 # else
     close_snap = (CLOSETOOLHELP32SNAPSHOT) CloseHandle;
 # endif

@@ -185,7 +185,7 @@ int CMS_RecipientInfo_kari_set0_pkey_and_peer(CMS_RecipientInfo *ri,
 
     kari->pctx = pctx;
     return 1;
- err:
+err:
     EVP_PKEY_CTX_free(pctx);
     return 0;
 }
@@ -239,7 +239,7 @@ static int cms_kek_cipher(unsigned char **pout, size_t *poutlen,
     *poutlen = (size_t)outlen;
     rv = 1;
 
- err:
+err:
     OPENSSL_cleanse(kek, keklen);
     if (!rv)
         OPENSSL_free(out);
@@ -274,7 +274,7 @@ int CMS_RecipientInfo_kari_decrypt(CMS_ContentInfo *cms,
     ec->keylen = ceklen;
     cek = NULL;
     rv = 1;
- err:
+err:
     OPENSSL_free(cek);
     return rv;
 }
@@ -305,7 +305,7 @@ static int cms_kari_create_ephemeral_key(CMS_KeyAgreeRecipientInfo *kari,
         goto err;
     kari->pctx = pctx;
     rv = 1;
- err:
+err:
     if (!rv)
         EVP_PKEY_CTX_free(pctx);
     EVP_PKEY_free(ekey);
@@ -326,11 +326,11 @@ static int cms_kari_set_originator_private_key(CMS_KeyAgreeRecipientInfo *kari,
     if (pctx == NULL)
         goto err;
     if (EVP_PKEY_derive_init(pctx) <= 0)
-         goto err;
+        goto err;
 
     kari->pctx = pctx;
     rv = 1;
- err:
+err:
     if (rv == 0)
         EVP_PKEY_CTX_free(pctx);
     return rv;
@@ -369,7 +369,8 @@ int ossl_cms_RecipientInfo_kari_init(CMS_RecipientInfo *ri,  X509 *recip,
         rek->rid->d.rKeyId = M_ASN1_new_of(CMS_RecipientKeyIdentifier);
         if (rek->rid->d.rKeyId == NULL)
             return 0;
-        if (!ossl_cms_set1_keyid(&rek->rid->d.rKeyId->subjectKeyIdentifier, recip))
+        if (!ossl_cms_set1_keyid(&rek->rid->d.rKeyId->subjectKeyIdentifier,
+                                 recip))
             return 0;
     } else {
         rek->rid->type = CMS_REK_ISSUER_SERIAL;
@@ -389,16 +390,16 @@ int ossl_cms_RecipientInfo_kari_init(CMS_RecipientInfo *ri,  X509 *recip,
             return 0;
 
         if (flags & CMS_USE_ORIGINATOR_KEYID) {
-             oik->type = CMS_OIK_KEYIDENTIFIER;
-             oik->d.subjectKeyIdentifier = ASN1_OCTET_STRING_new();
-             if (oik->d.subjectKeyIdentifier == NULL)
-                  return 0;
-             if (!ossl_cms_set1_keyid(&oik->d.subjectKeyIdentifier, originator))
-                  return 0;
+            oik->type = CMS_OIK_KEYIDENTIFIER;
+            oik->d.subjectKeyIdentifier = ASN1_OCTET_STRING_new();
+            if (oik->d.subjectKeyIdentifier == NULL)
+                return 0;
+            if (!ossl_cms_set1_keyid(&oik->d.subjectKeyIdentifier, originator))
+                return 0;
         } else {
-             oik->type = CMS_REK_ISSUER_SERIAL;
-             if (!ossl_cms_set1_ias(&oik->d.issuerAndSerialNumber, originator))
-                  return 0;
+            oik->type = CMS_REK_ISSUER_SERIAL;
+            if (!ossl_cms_set1_ias(&oik->d.issuerAndSerialNumber, originator))
+                return 0;
         }
 
         if (!cms_kari_set_originator_private_key(kari, originatorPrivKey))
@@ -435,13 +436,13 @@ static int cms_wrap_init(CMS_KeyAgreeRecipientInfo *kari,
         ret = EVP_CIPHER_meth_get_ctrl(cipher)(NULL, EVP_CTRL_GET_WRAP_CIPHER,
                                                0, &kekcipher);
         if (ret <= 0)
-             return 0;
+            return 0;
 
         if (kekcipher != NULL) {
-             if (EVP_CIPHER_get_mode(kekcipher) != EVP_CIPH_WRAP_MODE)
-                 return 0;
-             kekcipher_name = EVP_CIPHER_get0_name(kekcipher);
-             goto enc;
+            if (EVP_CIPHER_get_mode(kekcipher) != EVP_CIPH_WRAP_MODE)
+                return 0;
+            kekcipher_name = EVP_CIPHER_get0_name(kekcipher);
+            goto enc;
         }
     }
 

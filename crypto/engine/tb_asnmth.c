@@ -176,8 +176,8 @@ static void look_str_cb(int nid, STACK_OF(ENGINE) *sk, ENGINE *def, void *arg)
         EVP_PKEY_ASN1_METHOD *ameth;
         e->pkey_asn1_meths(e, &ameth, NULL, nid);
         if (ameth != NULL
-                && ((int)strlen(ameth->pem_str) == lk->len)
-                && OPENSSL_strncasecmp(ameth->pem_str, lk->str, lk->len) == 0) {
+            && ((int)strlen(ameth->pem_str) == lk->len)
+            && OPENSSL_strncasecmp(ameth->pem_str, lk->str, lk->len) == 0) {
             lk->e = e;
             lk->ameth = ameth;
             return;

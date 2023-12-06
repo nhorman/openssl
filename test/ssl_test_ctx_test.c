@@ -37,12 +37,12 @@ static int clientconf_eq(SSL_TEST_CLIENT_CONF *conf1,
                          SSL_TEST_CLIENT_CONF *conf2)
 {
     if (!TEST_int_eq(conf1->verify_callback, conf2->verify_callback)
-            || !TEST_int_eq(conf1->servername, conf2->servername)
-            || !TEST_str_eq(conf1->npn_protocols, conf2->npn_protocols)
-            || !TEST_str_eq(conf1->alpn_protocols, conf2->alpn_protocols)
-            || !TEST_int_eq(conf1->ct_validation, conf2->ct_validation)
-            || !TEST_int_eq(conf1->max_fragment_len_mode,
-                            conf2->max_fragment_len_mode))
+        || !TEST_int_eq(conf1->servername, conf2->servername)
+        || !TEST_str_eq(conf1->npn_protocols, conf2->npn_protocols)
+        || !TEST_str_eq(conf1->alpn_protocols, conf2->alpn_protocols)
+        || !TEST_int_eq(conf1->ct_validation, conf2->ct_validation)
+        || !TEST_int_eq(conf1->max_fragment_len_mode,
+                        conf2->max_fragment_len_mode))
         return 0;
     return 1;
 }
@@ -51,13 +51,13 @@ static int serverconf_eq(SSL_TEST_SERVER_CONF *serv,
                          SSL_TEST_SERVER_CONF *serv2)
 {
     if (!TEST_int_eq(serv->servername_callback, serv2->servername_callback)
-            || !TEST_str_eq(serv->npn_protocols, serv2->npn_protocols)
-            || !TEST_str_eq(serv->alpn_protocols, serv2->alpn_protocols)
-            || !TEST_int_eq(serv->broken_session_ticket,
-                            serv2->broken_session_ticket)
-            || !TEST_str_eq(serv->session_ticket_app_data,
-                            serv2->session_ticket_app_data)
-            || !TEST_int_eq(serv->cert_status, serv2->cert_status))
+        || !TEST_str_eq(serv->npn_protocols, serv2->npn_protocols)
+        || !TEST_str_eq(serv->alpn_protocols, serv2->alpn_protocols)
+        || !TEST_int_eq(serv->broken_session_ticket,
+                        serv2->broken_session_ticket)
+        || !TEST_str_eq(serv->session_ticket_app_data,
+                        serv2->session_ticket_app_data)
+        || !TEST_int_eq(serv->cert_status, serv2->cert_status))
         return 0;
     return 1;
 }
@@ -66,8 +66,8 @@ static int extraconf_eq(SSL_TEST_EXTRA_CONF *extra,
                         SSL_TEST_EXTRA_CONF *extra2)
 {
     if (!TEST_true(clientconf_eq(&extra->client, &extra2->client))
-            || !TEST_true(serverconf_eq(&extra->server, &extra2->server))
-            || !TEST_true(serverconf_eq(&extra->server2, &extra2->server2)))
+        || !TEST_true(serverconf_eq(&extra->server, &extra2->server))
+        || !TEST_true(serverconf_eq(&extra->server2, &extra2->server2)))
         return 0;
     return 1;
 }
@@ -75,34 +75,34 @@ static int extraconf_eq(SSL_TEST_EXTRA_CONF *extra,
 static int testctx_eq(SSL_TEST_CTX *ctx, SSL_TEST_CTX *ctx2)
 {
     if (!TEST_int_eq(ctx->method, ctx2->method)
-            || !TEST_int_eq(ctx->handshake_mode, ctx2->handshake_mode)
-            || !TEST_int_eq(ctx->app_data_size, ctx2->app_data_size)
-            || !TEST_int_eq(ctx->max_fragment_size, ctx2->max_fragment_size)
-            || !extraconf_eq(&ctx->extra, &ctx2->extra)
-            || !extraconf_eq(&ctx->resume_extra, &ctx2->resume_extra)
-            || !TEST_int_eq(ctx->expected_result, ctx2->expected_result)
-            || !TEST_int_eq(ctx->expected_client_alert,
-                            ctx2->expected_client_alert)
-            || !TEST_int_eq(ctx->expected_server_alert,
-                            ctx2->expected_server_alert)
-            || !TEST_int_eq(ctx->expected_protocol, ctx2->expected_protocol)
-            || !TEST_int_eq(ctx->expected_servername, ctx2->expected_servername)
-            || !TEST_int_eq(ctx->session_ticket_expected,
-                            ctx2->session_ticket_expected)
-            || !TEST_int_eq(ctx->compression_expected,
-                            ctx2->compression_expected)
-            || !TEST_str_eq(ctx->expected_npn_protocol,
-                            ctx2->expected_npn_protocol)
-            || !TEST_str_eq(ctx->expected_alpn_protocol,
-                            ctx2->expected_alpn_protocol)
-            || !TEST_str_eq(ctx->expected_cipher,
-                            ctx2->expected_cipher)
-            || !TEST_str_eq(ctx->expected_session_ticket_app_data,
-                            ctx2->expected_session_ticket_app_data)
-            || !TEST_int_eq(ctx->resumption_expected,
-                            ctx2->resumption_expected)
-            || !TEST_int_eq(ctx->session_id_expected,
-                            ctx2->session_id_expected))
+        || !TEST_int_eq(ctx->handshake_mode, ctx2->handshake_mode)
+        || !TEST_int_eq(ctx->app_data_size, ctx2->app_data_size)
+        || !TEST_int_eq(ctx->max_fragment_size, ctx2->max_fragment_size)
+        || !extraconf_eq(&ctx->extra, &ctx2->extra)
+        || !extraconf_eq(&ctx->resume_extra, &ctx2->resume_extra)
+        || !TEST_int_eq(ctx->expected_result, ctx2->expected_result)
+        || !TEST_int_eq(ctx->expected_client_alert,
+                        ctx2->expected_client_alert)
+        || !TEST_int_eq(ctx->expected_server_alert,
+                        ctx2->expected_server_alert)
+        || !TEST_int_eq(ctx->expected_protocol, ctx2->expected_protocol)
+        || !TEST_int_eq(ctx->expected_servername, ctx2->expected_servername)
+        || !TEST_int_eq(ctx->session_ticket_expected,
+                        ctx2->session_ticket_expected)
+        || !TEST_int_eq(ctx->compression_expected,
+                        ctx2->compression_expected)
+        || !TEST_str_eq(ctx->expected_npn_protocol,
+                        ctx2->expected_npn_protocol)
+        || !TEST_str_eq(ctx->expected_alpn_protocol,
+                        ctx2->expected_alpn_protocol)
+        || !TEST_str_eq(ctx->expected_cipher,
+                        ctx2->expected_cipher)
+        || !TEST_str_eq(ctx->expected_session_ticket_app_data,
+                        ctx2->expected_session_ticket_app_data)
+        || !TEST_int_eq(ctx->resumption_expected,
+                        ctx2->resumption_expected)
+        || !TEST_int_eq(ctx->session_id_expected,
+                        ctx2->session_id_expected))
         return 0;
     return 1;
 }
@@ -128,11 +128,11 @@ static int execute_test(SSL_TEST_CTX_TEST_FIXTURE *fixture)
 
     if (!TEST_ptr(ctx = SSL_TEST_CTX_create(conf, fixture->test_section,
                                             fixture->expected_ctx->libctx))
-            || !testctx_eq(ctx, fixture->expected_ctx))
+        || !testctx_eq(ctx, fixture->expected_ctx))
         goto err;
 
     success = 1;
- err:
+err:
     SSL_TEST_CTX_free(ctx);
     return success;
 }
@@ -144,9 +144,9 @@ static void tear_down(SSL_TEST_CTX_TEST_FIXTURE *fixture)
 }
 
 #define SETUP_SSL_TEST_CTX_TEST_FIXTURE() \
-    SETUP_TEST_FIXTURE(SSL_TEST_CTX_TEST_FIXTURE, set_up);
+        SETUP_TEST_FIXTURE(SSL_TEST_CTX_TEST_FIXTURE, set_up);
 #define EXECUTE_SSL_TEST_CTX_TEST() \
-    EXECUTE_TEST(execute_test, tear_down)
+        EXECUTE_TEST(execute_test, tear_down)
 
 static int test_empty_configuration(void)
 {
@@ -171,14 +171,16 @@ static int test_good_configuration(void)
     fixture->expected_ctx->expected_server_alert = 0;  /* No alert. */
     fixture->expected_ctx->expected_protocol = TLS1_1_VERSION;
     fixture->expected_ctx->expected_servername = SSL_TEST_SERVERNAME_SERVER2;
-    fixture->expected_ctx->session_ticket_expected = SSL_TEST_SESSION_TICKET_YES;
+    fixture->expected_ctx->session_ticket_expected =
+        SSL_TEST_SESSION_TICKET_YES;
     fixture->expected_ctx->compression_expected = SSL_TEST_COMPRESSION_NO;
     fixture->expected_ctx->session_id_expected = SSL_TEST_SESSION_ID_IGNORE;
     fixture->expected_ctx->resumption_expected = 1;
 
     fixture->expected_ctx->extra.client.verify_callback =
         SSL_TEST_VERIFY_REJECT_ALL;
-    fixture->expected_ctx->extra.client.servername = SSL_TEST_SERVERNAME_SERVER2;
+    fixture->expected_ctx->extra.client.servername =
+        SSL_TEST_SERVERNAME_SERVER2;
     fixture->expected_ctx->extra.client.npn_protocols =
         OPENSSL_strdup("foo,bar");
     if (!TEST_ptr(fixture->expected_ctx->extra.client.npn_protocols))
@@ -229,7 +231,8 @@ static int test_bad_configuration(int idx)
     SSL_TEST_CTX *ctx;
 
     if (!TEST_ptr_null(ctx = SSL_TEST_CTX_create(conf,
-                                                 bad_configurations[idx], NULL))) {
+                                                 bad_configurations[idx],
+                                                 NULL))) {
         SSL_TEST_CTX_free(ctx);
         return 0;
     }

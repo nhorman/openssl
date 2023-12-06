@@ -119,7 +119,7 @@ static int linebuffer_write(BIO *b, const char *in, int inl)
         const char *p;
         char c;
 
-        for (p = in, c = '\0'; p < in + inl && (c = *p) != '\n'; p++) ;
+        for (p = in, c = '\0'; p < in + inl && (c = *p) != '\n'; p++);
         if (c == '\n') {
             p++;
             foundnl = 1;
@@ -209,88 +209,88 @@ static long linebuffer_ctrl(BIO *b, int cmd, long num, void *ptr)
     ctx = (BIO_LINEBUFFER_CTX *)b->ptr;
 
     switch (cmd) {
-    case BIO_CTRL_RESET:
-        ctx->obuf_len = 0;
-        if (b->next_bio == NULL)
-            return 0;
-        ret = BIO_ctrl(b->next_bio, cmd, num, ptr);
-        break;
-    case BIO_CTRL_INFO:
-        ret = (long)ctx->obuf_len;
-        break;
-    case BIO_CTRL_WPENDING:
-        ret = (long)ctx->obuf_len;
-        if (ret == 0) {
+        case BIO_CTRL_RESET:
+            ctx->obuf_len = 0;
             if (b->next_bio == NULL)
                 return 0;
             ret = BIO_ctrl(b->next_bio, cmd, num, ptr);
-        }
-        break;
-    case BIO_C_SET_BUFF_SIZE:
-        if (num > INT_MAX)
-            return 0;
-        obs = (int)num;
-        p = ctx->obuf;
-        if ((obs > DEFAULT_LINEBUFFER_SIZE) && (obs != ctx->obuf_size)) {
-            p = OPENSSL_malloc((size_t)obs);
-            if (p == NULL)
-                return 0;
-        }
-        if (ctx->obuf != p) {
-            if (ctx->obuf_len > obs) {
-                ctx->obuf_len = obs;
+            break;
+        case BIO_CTRL_INFO:
+            ret = (long)ctx->obuf_len;
+            break;
+        case BIO_CTRL_WPENDING:
+            ret = (long)ctx->obuf_len;
+            if (ret == 0) {
+                if (b->next_bio == NULL)
+                    return 0;
+                ret = BIO_ctrl(b->next_bio, cmd, num, ptr);
             }
-            memcpy(p, ctx->obuf, ctx->obuf_len);
-            OPENSSL_free(ctx->obuf);
-            ctx->obuf = p;
-            ctx->obuf_size = obs;
-        }
-        break;
-    case BIO_C_DO_STATE_MACHINE:
-        if (b->next_bio == NULL)
-            return 0;
-        BIO_clear_retry_flags(b);
-        ret = BIO_ctrl(b->next_bio, cmd, num, ptr);
-        BIO_copy_next_retry(b);
-        break;
-
-    case BIO_CTRL_FLUSH:
-        if (b->next_bio == NULL)
-            return 0;
-        if (ctx->obuf_len <= 0) {
+            break;
+        case BIO_C_SET_BUFF_SIZE:
+            if (num > INT_MAX)
+                return 0;
+            obs = (int)num;
+            p = ctx->obuf;
+            if ((obs > DEFAULT_LINEBUFFER_SIZE) && (obs != ctx->obuf_size)) {
+                p = OPENSSL_malloc((size_t)obs);
+                if (p == NULL)
+                    return 0;
+            }
+            if (ctx->obuf != p) {
+                if (ctx->obuf_len > obs) {
+                    ctx->obuf_len = obs;
+                }
+                memcpy(p, ctx->obuf, ctx->obuf_len);
+                OPENSSL_free(ctx->obuf);
+                ctx->obuf = p;
+                ctx->obuf_size = obs;
+            }
+            break;
+        case BIO_C_DO_STATE_MACHINE:
+            if (b->next_bio == NULL)
+                return 0;
+            BIO_clear_retry_flags(b);
             ret = BIO_ctrl(b->next_bio, cmd, num, ptr);
             BIO_copy_next_retry(b);
             break;
-        }
 
-        for (;;) {
-            BIO_clear_retry_flags(b);
-            if (ctx->obuf_len > 0) {
-                r = BIO_write(b->next_bio, ctx->obuf, ctx->obuf_len);
+        case BIO_CTRL_FLUSH:
+            if (b->next_bio == NULL)
+                return 0;
+            if (ctx->obuf_len <= 0) {
+                ret = BIO_ctrl(b->next_bio, cmd, num, ptr);
                 BIO_copy_next_retry(b);
-                if (r <= 0)
-                    return (long)r;
-                if (r < ctx->obuf_len)
-                    memmove(ctx->obuf, ctx->obuf + r, ctx->obuf_len - r);
-                ctx->obuf_len -= r;
-            } else {
-                ctx->obuf_len = 0;
                 break;
             }
-        }
-        ret = BIO_ctrl(b->next_bio, cmd, num, ptr);
-        BIO_copy_next_retry(b);
-        break;
-    case BIO_CTRL_DUP:
-        dbio = (BIO *)ptr;
-        if (BIO_set_write_buffer_size(dbio, ctx->obuf_size) <= 0)
-            ret = 0;
-        break;
-    default:
-        if (b->next_bio == NULL)
-            return 0;
-        ret = BIO_ctrl(b->next_bio, cmd, num, ptr);
-        break;
+
+            for (;;) {
+                BIO_clear_retry_flags(b);
+                if (ctx->obuf_len > 0) {
+                    r = BIO_write(b->next_bio, ctx->obuf, ctx->obuf_len);
+                    BIO_copy_next_retry(b);
+                    if (r <= 0)
+                        return (long)r;
+                    if (r < ctx->obuf_len)
+                        memmove(ctx->obuf, ctx->obuf + r, ctx->obuf_len - r);
+                    ctx->obuf_len -= r;
+                } else {
+                    ctx->obuf_len = 0;
+                    break;
+                }
+            }
+            ret = BIO_ctrl(b->next_bio, cmd, num, ptr);
+            BIO_copy_next_retry(b);
+            break;
+        case BIO_CTRL_DUP:
+            dbio = (BIO *)ptr;
+            if (BIO_set_write_buffer_size(dbio, ctx->obuf_size) <= 0)
+                ret = 0;
+            break;
+        default:
+            if (b->next_bio == NULL)
+                return 0;
+            ret = BIO_ctrl(b->next_bio, cmd, num, ptr);
+            break;
     }
     return ret;
 }

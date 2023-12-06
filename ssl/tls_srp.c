@@ -142,7 +142,7 @@ int ssl_srp_ctx_init_intern(SSL_CONNECTION *s)
     s->srp_ctx.srp_Mask = ctx->srp_ctx.srp_Mask;
 
     return 1;
- err:
+err:
     OPENSSL_free(s->srp_ctx.login);
     OPENSSL_free(s->srp_ctx.info);
     BN_free(s->srp_ctx.N);
@@ -199,9 +199,10 @@ int ssl_srp_server_param_with_username_intern(SSL_CONNECTION *s, int *ad)
     *ad = SSL_AD_UNKNOWN_PSK_IDENTITY;
     if ((s->srp_ctx.TLS_ext_srp_username_callback != NULL) &&
         ((al =
-          s->srp_ctx.TLS_ext_srp_username_callback(SSL_CONNECTION_GET_SSL(s),
-                                                   ad,
-                                                   s->srp_ctx.SRP_cb_arg)) !=
+              s->srp_ctx.TLS_ext_srp_username_callback(SSL_CONNECTION_GET_SSL(s),
+                                                       ad,
+                                                       s->srp_ctx.SRP_cb_arg))
+         !=
          SSL_ERROR_NONE))
         return al;
 
@@ -220,8 +221,8 @@ int ssl_srp_server_param_with_username_intern(SSL_CONNECTION *s, int *ad)
     /* Calculate:  B = (kv + g^b) % N  */
 
     return ((s->srp_ctx.B =
-             SRP_Calc_B_ex(s->srp_ctx.b, s->srp_ctx.N, s->srp_ctx.g,
-                           s->srp_ctx.v, sctx->libctx, sctx->propq)) !=
+                 SRP_Calc_B_ex(s->srp_ctx.b, s->srp_ctx.N, s->srp_ctx.g,
+                               s->srp_ctx.v, sctx->libctx, sctx->propq)) !=
             NULL) ? SSL_ERROR_NONE : SSL3_AL_FATAL;
 }
 
@@ -347,7 +348,7 @@ int srp_generate_server_master_secret(SSL_CONNECTION *s)
     BN_bn2bin(K, tmp);
     /* Calls SSLfatal() as required */
     ret = ssl_generate_master_secret(s, tmp, tmp_len, 1);
- err:
+err:
     BN_clear_free(K);
     BN_clear_free(u);
     return ret;
@@ -366,26 +367,29 @@ int srp_generate_client_master_secret(SSL_CONNECTION *s)
      * Checks if b % n == 0
      */
     if (SRP_Verify_B_mod_N(s->srp_ctx.B, s->srp_ctx.N) == 0
-            || (u = SRP_Calc_u_ex(s->srp_ctx.A, s->srp_ctx.B, s->srp_ctx.N,
-                                  sctx->libctx, sctx->propq))
-               == NULL
-            || s->srp_ctx.SRP_give_srp_client_pwd_callback == NULL) {
+        || (u = SRP_Calc_u_ex(s->srp_ctx.A, s->srp_ctx.B, s->srp_ctx.N,
+                              sctx->libctx, sctx->propq))
+        == NULL
+        || s->srp_ctx.SRP_give_srp_client_pwd_callback == NULL) {
         SSLfatal(s, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
         goto err;
     }
-    if ((passwd = s->srp_ctx.SRP_give_srp_client_pwd_callback(SSL_CONNECTION_GET_SSL(s),
-                                                              s->srp_ctx.SRP_cb_arg))
-            == NULL) {
+    if ((passwd =
+             s->srp_ctx.SRP_give_srp_client_pwd_callback(SSL_CONNECTION_GET_SSL(
+                                                             s),
+                                                         s->srp_ctx.
+                                                         SRP_cb_arg))
+        == NULL) {
         SSLfatal(s, SSL_AD_INTERNAL_ERROR, SSL_R_CALLBACK_FAILED);
         goto err;
     }
     if ((x = SRP_Calc_x_ex(s->srp_ctx.s, s->srp_ctx.login, passwd,
                            sctx->libctx, sctx->propq)) == NULL
-            || (K = SRP_Calc_client_key_ex(s->srp_ctx.N, s->srp_ctx.B,
-                                           s->srp_ctx.g, x,
-                                           s->srp_ctx.a, u,
-                                           sctx->libctx,
-                                           sctx->propq)) == NULL) {
+        || (K = SRP_Calc_client_key_ex(s->srp_ctx.N, s->srp_ctx.B,
+                                       s->srp_ctx.g, x,
+                                       s->srp_ctx.a, u,
+                                       sctx->libctx,
+                                       sctx->propq)) == NULL) {
         SSLfatal(s, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
         goto err;
     }
@@ -398,7 +402,7 @@ int srp_generate_client_master_secret(SSL_CONNECTION *s)
     BN_bn2bin(K, tmp);
     /* Calls SSLfatal() as required */
     ret = ssl_generate_master_secret(s, tmp, tmp_len, 1);
- err:
+err:
     BN_clear_free(K);
     BN_clear_free(x);
     if (passwd != NULL)
@@ -541,7 +545,7 @@ int SSL_CTX_set_srp_verify_param_callback(SSL_CTX *ctx,
                                           int (*cb) (SSL *, void *))
 {
     return tls1_ctx_callback_ctrl(ctx, SSL_CTRL_SET_SRP_VERIFY_PARAM_CB,
-                                  (void (*)(void))cb);
+                                  (void (*)(void)) cb);
 }
 
 int SSL_CTX_set_srp_cb_arg(SSL_CTX *ctx, void *arg)
@@ -553,14 +557,14 @@ int SSL_CTX_set_srp_username_callback(SSL_CTX *ctx,
                                       int (*cb) (SSL *, int *, void *))
 {
     return tls1_ctx_callback_ctrl(ctx, SSL_CTRL_SET_TLS_EXT_SRP_USERNAME_CB,
-                                  (void (*)(void))cb);
+                                  (void (*)(void)) cb);
 }
 
 int SSL_CTX_set_srp_client_pwd_callback(SSL_CTX *ctx,
                                         char *(*cb) (SSL *, void *))
 {
     return tls1_ctx_callback_ctrl(ctx, SSL_CTRL_SET_SRP_GIVE_CLIENT_PWD_CB,
-                                  (void (*)(void))cb);
+                                  (void (*)(void)) cb);
 }
 
 #endif

@@ -13,11 +13,11 @@
 typedef struct quic_txpim_pkt_ex_st QUIC_TXPIM_PKT_EX;
 
 struct quic_txpim_pkt_ex_st {
-    QUIC_TXPIM_PKT              public;
+    QUIC_TXPIM_PKT public;
     QUIC_TXPIM_PKT_EX          *prev, *next;
     QUIC_TXPIM_CHUNK           *chunks;
-    size_t                      num_chunks, alloc_chunks;
-    unsigned int                chunks_need_sort : 1;
+    size_t num_chunks, alloc_chunks;
+    unsigned int chunks_need_sort : 1;
 };
 
 typedef struct quic_txpim_pkt_ex_list {
@@ -25,8 +25,8 @@ typedef struct quic_txpim_pkt_ex_list {
 } QUIC_TXPIM_PKT_EX_LIST;
 
 struct quic_txpim_st {
-    QUIC_TXPIM_PKT_EX_LIST  free_list;
-    size_t                  in_use;
+    QUIC_TXPIM_PKT_EX_LIST free_list;
+    size_t in_use;
 };
 
 #define MAX_ALLOC_CHUNKS 512
@@ -163,14 +163,16 @@ int ossl_quic_txpim_pkt_append_chunk(QUIC_TXPIM_PKT *fpkt,
     size_t new_alloc_chunks = ex->alloc_chunks;
 
     if (ex->num_chunks == ex->alloc_chunks) {
-        new_alloc_chunks = (ex->alloc_chunks == 0) ? 4 : ex->alloc_chunks * 8 / 5;
+        new_alloc_chunks =
+            (ex->alloc_chunks == 0) ? 4 : ex->alloc_chunks * 8 / 5;
         if (new_alloc_chunks > MAX_ALLOC_CHUNKS)
             new_alloc_chunks = MAX_ALLOC_CHUNKS;
         if (ex->num_chunks == new_alloc_chunks)
             return 0;
 
         new_chunk = OPENSSL_realloc(ex->chunks,
-                                    new_alloc_chunks * sizeof(QUIC_TXPIM_CHUNK));
+                                    new_alloc_chunks *
+                                    sizeof(QUIC_TXPIM_CHUNK));
         if (new_chunk == NULL)
             return 0;
 
@@ -200,7 +202,8 @@ static int compare(const void *a, const void *b)
     return 0;
 }
 
-const QUIC_TXPIM_CHUNK *ossl_quic_txpim_pkt_get_chunks(const QUIC_TXPIM_PKT *fpkt)
+const QUIC_TXPIM_CHUNK *ossl_quic_txpim_pkt_get_chunks(
+    const QUIC_TXPIM_PKT *fpkt)
 {
     QUIC_TXPIM_PKT_EX *ex = (QUIC_TXPIM_PKT_EX *)fpkt;
 

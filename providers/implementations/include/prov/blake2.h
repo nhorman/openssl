@@ -29,16 +29,16 @@
 # define BLAKE2B_PERSONALBYTES 16
 
 struct blake2s_param_st {
-    uint8_t  digest_length; /* 1 */
-    uint8_t  key_length;    /* 2 */
-    uint8_t  fanout;        /* 3 */
-    uint8_t  depth;         /* 4 */
-    uint8_t  leaf_length[4];/* 8 */
-    uint8_t  node_offset[6];/* 14 */
-    uint8_t  node_depth;    /* 15 */
-    uint8_t  inner_length;  /* 16 */
-    uint8_t  salt[BLAKE2S_SALTBYTES]; /* 24 */
-    uint8_t  personal[BLAKE2S_PERSONALBYTES];  /* 32 */
+    uint8_t digest_length;  /* 1 */
+    uint8_t key_length;     /* 2 */
+    uint8_t fanout;         /* 3 */
+    uint8_t depth;          /* 4 */
+    uint8_t leaf_length[4]; /* 8 */
+    uint8_t node_offset[6]; /* 14 */
+    uint8_t node_depth;     /* 15 */
+    uint8_t inner_length;   /* 16 */
+    uint8_t salt[BLAKE2S_SALTBYTES];  /* 24 */
+    uint8_t personal[BLAKE2S_PERSONALBYTES];   /* 32 */
 };
 
 typedef struct blake2s_param_st BLAKE2S_PARAM;
@@ -47,23 +47,23 @@ struct blake2s_ctx_st {
     uint32_t h[8];
     uint32_t t[2];
     uint32_t f[2];
-    uint8_t  buf[BLAKE2S_BLOCKBYTES];
-    size_t   buflen;
-    size_t   outlen;
+    uint8_t buf[BLAKE2S_BLOCKBYTES];
+    size_t buflen;
+    size_t outlen;
 };
 
 struct blake2b_param_st {
-    uint8_t  digest_length; /* 1 */
-    uint8_t  key_length;    /* 2 */
-    uint8_t  fanout;        /* 3 */
-    uint8_t  depth;         /* 4 */
-    uint8_t  leaf_length[4];/* 8 */
-    uint8_t  node_offset[8];/* 16 */
-    uint8_t  node_depth;    /* 17 */
-    uint8_t  inner_length;  /* 18 */
-    uint8_t  reserved[14];  /* 32 */
-    uint8_t  salt[BLAKE2B_SALTBYTES]; /* 48 */
-    uint8_t  personal[BLAKE2B_PERSONALBYTES];  /* 64 */
+    uint8_t digest_length;  /* 1 */
+    uint8_t key_length;     /* 2 */
+    uint8_t fanout;         /* 3 */
+    uint8_t depth;          /* 4 */
+    uint8_t leaf_length[4]; /* 8 */
+    uint8_t node_offset[8]; /* 16 */
+    uint8_t node_depth;     /* 17 */
+    uint8_t inner_length;   /* 18 */
+    uint8_t reserved[14];   /* 32 */
+    uint8_t salt[BLAKE2B_SALTBYTES];  /* 48 */
+    uint8_t personal[BLAKE2B_PERSONALBYTES];   /* 64 */
 };
 
 typedef struct blake2b_param_st BLAKE2B_PARAM;
@@ -72,9 +72,9 @@ struct blake2b_ctx_st {
     uint64_t h[8];
     uint64_t t[2];
     uint64_t f[2];
-    uint8_t  buf[BLAKE2B_BLOCKBYTES];
-    size_t   buflen;
-    size_t   outlen;
+    uint8_t buf[BLAKE2B_BLOCKBYTES];
+    size_t buflen;
+    size_t outlen;
 };
 
 #define BLAKE2B_DIGEST_LENGTH 64

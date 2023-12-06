@@ -25,9 +25,9 @@
 
 #ifndef AES_CBC_HMAC_SHA_CAPABLE
 # define IMPLEMENT_CIPHER(nm, sub, kbits, blkbits, ivbits, flags)              \
-const OSSL_DISPATCH ossl_##nm##kbits##sub##_functions[] = {                    \
-    OSSL_DISPATCH_END                                                              \
-};
+        const OSSL_DISPATCH ossl_ ## nm ## kbits ## sub ## _functions[] = {                    \
+            OSSL_DISPATCH_END                                                              \
+        };
 #else
 
 # define AES_CBC_HMAC_SHA_FLAGS (PROV_CIPHER_FLAG_AEAD                         \
@@ -47,8 +47,8 @@ static OSSL_FUNC_cipher_settable_ctx_params_fn aes_settable_ctx_params;
 # define aes_cipher ossl_cipher_generic_cipher
 
 static int aes_einit(void *ctx, const unsigned char *key, size_t keylen,
-                          const unsigned char *iv, size_t ivlen,
-                          const OSSL_PARAM params[])
+                     const unsigned char *iv, size_t ivlen,
+                     const OSSL_PARAM params[])
 {
     if (!ossl_cipher_generic_einit(ctx, key, keylen, iv, ivlen, NULL))
         return 0;
@@ -56,8 +56,8 @@ static int aes_einit(void *ctx, const unsigned char *key, size_t keylen,
 }
 
 static int aes_dinit(void *ctx, const unsigned char *key, size_t keylen,
-                          const unsigned char *iv, size_t ivlen,
-                          const OSSL_PARAM params[])
+                     const unsigned char *iv, size_t ivlen,
+                     const OSSL_PARAM params[])
 {
     if (!ossl_cipher_generic_dinit(ctx, key, keylen, iv, ivlen, NULL))
         return 0;
@@ -68,7 +68,8 @@ static const OSSL_PARAM cipher_aes_known_settable_ctx_params[] = {
     OSSL_PARAM_octet_string(OSSL_CIPHER_PARAM_AEAD_MAC_KEY, NULL, 0),
     OSSL_PARAM_octet_string(OSSL_CIPHER_PARAM_AEAD_TLS1_AAD, NULL, 0),
 # if !defined(OPENSSL_NO_MULTIBLOCK)
-    OSSL_PARAM_size_t(OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_MAX_SEND_FRAGMENT, NULL),
+    OSSL_PARAM_size_t(OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_MAX_SEND_FRAGMENT,
+                      NULL),
     OSSL_PARAM_size_t(OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_AAD, NULL),
     OSSL_PARAM_uint(OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_INTERLEAVE, NULL),
     OSSL_PARAM_octet_string(OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_ENC, NULL, 0),
@@ -87,7 +88,7 @@ static int aes_set_ctx_params(void *vctx, const OSSL_PARAM params[])
 {
     PROV_AES_HMAC_SHA_CTX *ctx = (PROV_AES_HMAC_SHA_CTX *)vctx;
     PROV_CIPHER_HW_AES_HMAC_SHA *hw =
-       (PROV_CIPHER_HW_AES_HMAC_SHA *)ctx->hw;
+        (PROV_CIPHER_HW_AES_HMAC_SHA *)ctx->hw;
     const OSSL_PARAM *p;
     int ret = 1;
 # if !defined(OPENSSL_NO_MULTIBLOCK)
@@ -108,9 +109,9 @@ static int aes_set_ctx_params(void *vctx, const OSSL_PARAM params[])
 
 # if !defined(OPENSSL_NO_MULTIBLOCK)
     p = OSSL_PARAM_locate_const(params,
-            OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_MAX_SEND_FRAGMENT);
+                                OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_MAX_SEND_FRAGMENT);
     if (p != NULL
-            && !OSSL_PARAM_get_size_t(p, &ctx->multiblock_max_send_fragment)) {
+        && !OSSL_PARAM_get_size_t(p, &ctx->multiblock_max_send_fragment)) {
         ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_GET_PARAMETER);
         return 0;
     }
@@ -126,7 +127,7 @@ static int aes_set_ctx_params(void *vctx, const OSSL_PARAM params[])
     p = OSSL_PARAM_locate_const(params, OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_AAD);
     if (p != NULL) {
         const OSSL_PARAM *p1 = OSSL_PARAM_locate_const(params,
-                                   OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_INTERLEAVE);
+                                                       OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_INTERLEAVE);
         if (p->data_type != OSSL_PARAM_OCTET_STRING
             || p1 == NULL
             || !OSSL_PARAM_get_uint(p1, &mb_param.interleave)) {
@@ -151,9 +152,9 @@ static int aes_set_ctx_params(void *vctx, const OSSL_PARAM params[])
     p = OSSL_PARAM_locate_const(params, OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_ENC);
     if (p != NULL) {
         const OSSL_PARAM *p1 = OSSL_PARAM_locate_const(params,
-                                   OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_INTERLEAVE);
+                                                       OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_INTERLEAVE);
         const OSSL_PARAM *pin = OSSL_PARAM_locate_const(params,
-                                    OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_ENC_IN);
+                                                        OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_ENC_IN);
 
         if (p->data_type != OSSL_PARAM_OCTET_STRING
             || pin == NULL
@@ -202,7 +203,7 @@ static int aes_set_ctx_params(void *vctx, const OSSL_PARAM params[])
             return 0;
         }
         if (ctx->base.tlsversion == SSL3_VERSION
-                || ctx->base.tlsversion == TLS1_VERSION) {
+            || ctx->base.tlsversion == TLS1_VERSION) {
             if (!ossl_assert(ctx->base.removetlsfixed >= AES_BLOCK_SIZE)) {
                 ERR_raise(ERR_LIB_PROV, ERR_R_INTERNAL_ERROR);
                 return 0;
@@ -223,10 +224,12 @@ static int aes_get_ctx_params(void *vctx, OSSL_PARAM params[])
     OSSL_PARAM *p;
 
 # if !defined(OPENSSL_NO_MULTIBLOCK)
-    p = OSSL_PARAM_locate(params, OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_MAX_BUFSIZE);
+    p =
+        OSSL_PARAM_locate(params,
+                          OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_MAX_BUFSIZE);
     if (p != NULL) {
         PROV_CIPHER_HW_AES_HMAC_SHA *hw =
-           (PROV_CIPHER_HW_AES_HMAC_SHA *)ctx->hw;
+            (PROV_CIPHER_HW_AES_HMAC_SHA *)ctx->hw;
         size_t len = hw->tls1_multiblock_max_bufsize(ctx);
 
         if (!OSSL_PARAM_set_size_t(p, len)) {
@@ -241,7 +244,9 @@ static int aes_get_ctx_params(void *vctx, OSSL_PARAM params[])
         return 0;
     }
 
-    p = OSSL_PARAM_locate(params, OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_AAD_PACKLEN);
+    p =
+        OSSL_PARAM_locate(params,
+                          OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_AAD_PACKLEN);
     if (p != NULL && !OSSL_PARAM_set_uint(p, ctx->multiblock_aad_packlen)) {
         ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
         return 0;
@@ -389,40 +394,48 @@ static void aes_cbc_hmac_sha256_freectx(void *vctx)
 }
 
 # define IMPLEMENT_CIPHER(nm, sub, kbits, blkbits, ivbits, flags)              \
-static OSSL_FUNC_cipher_newctx_fn nm##_##kbits##_##sub##_newctx;               \
-static void *nm##_##kbits##_##sub##_newctx(void *provctx)                      \
-{                                                                              \
-    return nm##_##sub##_newctx(provctx, kbits, blkbits, ivbits, flags);        \
-}                                                                              \
-static OSSL_FUNC_cipher_get_params_fn nm##_##kbits##_##sub##_get_params;       \
-static int nm##_##kbits##_##sub##_get_params(OSSL_PARAM params[])              \
-{                                                                              \
-    return ossl_cipher_generic_get_params(params, EVP_CIPH_CBC_MODE,           \
-                                          flags, kbits, blkbits, ivbits);      \
-}                                                                              \
-const OSSL_DISPATCH ossl_##nm##kbits##sub##_functions[] = {                    \
-    { OSSL_FUNC_CIPHER_NEWCTX, (void (*)(void))nm##_##kbits##_##sub##_newctx },\
-    { OSSL_FUNC_CIPHER_FREECTX, (void (*)(void))nm##_##sub##_freectx },        \
-    { OSSL_FUNC_CIPHER_DUPCTX,  (void (*)(void))nm##_##sub##_dupctx},          \
-    { OSSL_FUNC_CIPHER_ENCRYPT_INIT, (void (*)(void))nm##_einit },             \
-    { OSSL_FUNC_CIPHER_DECRYPT_INIT, (void (*)(void))nm##_dinit },             \
-    { OSSL_FUNC_CIPHER_UPDATE, (void (*)(void))nm##_update },                  \
-    { OSSL_FUNC_CIPHER_FINAL, (void (*)(void))nm##_final },                    \
-    { OSSL_FUNC_CIPHER_CIPHER, (void (*)(void))nm##_cipher },                  \
-    { OSSL_FUNC_CIPHER_GET_PARAMS,                                             \
-        (void (*)(void))nm##_##kbits##_##sub##_get_params },                   \
-    { OSSL_FUNC_CIPHER_GETTABLE_PARAMS,                                        \
-        (void (*)(void))nm##_gettable_params },                                \
-    { OSSL_FUNC_CIPHER_GET_CTX_PARAMS,                                         \
-         (void (*)(void))nm##_get_ctx_params },                                \
-    { OSSL_FUNC_CIPHER_GETTABLE_CTX_PARAMS,                                    \
-        (void (*)(void))nm##_gettable_ctx_params },                            \
-    { OSSL_FUNC_CIPHER_SET_CTX_PARAMS,                                         \
-        (void (*)(void))nm##_set_ctx_params },                                 \
-    { OSSL_FUNC_CIPHER_SETTABLE_CTX_PARAMS,                                    \
-        (void (*)(void))nm##_settable_ctx_params },                            \
-    OSSL_DISPATCH_END                                                          \
-};
+        static OSSL_FUNC_cipher_newctx_fn nm ## _ ## kbits ## _ ## sub ## \
+        _newctx;               \
+        static void *nm ## _ ## kbits ## _ ## sub ## _newctx(void *provctx)                      \
+        {                                                                              \
+            return nm ## _ ## sub ## _newctx(provctx, kbits, blkbits, ivbits, \
+                                             flags);        \
+        }                                                                              \
+        static OSSL_FUNC_cipher_get_params_fn nm ## _ ## kbits ## _ ## sub ## \
+        _get_params;       \
+        static int nm ## _ ## kbits ## _ ## sub ## _get_params( \
+            OSSL_PARAM params[])              \
+        {                                                                              \
+            return ossl_cipher_generic_get_params(params, EVP_CIPH_CBC_MODE,           \
+                                                  flags, kbits, blkbits, \
+                                                  ivbits);      \
+        }                                                                              \
+        const OSSL_DISPATCH ossl_ ## nm ## kbits ## sub ## _functions[] = {                    \
+            { OSSL_FUNC_CIPHER_NEWCTX, \
+              (void (*)(void)) nm ## _ ## kbits ## _ ## sub ## _newctx }, \
+            { OSSL_FUNC_CIPHER_FREECTX, \
+              (void (*)(void)) nm ## _ ## sub ## _freectx },        \
+            { OSSL_FUNC_CIPHER_DUPCTX, \
+              (void (*)(void)) nm ## _ ## sub ## _dupctx},          \
+            { OSSL_FUNC_CIPHER_ENCRYPT_INIT, (void (*)(void)) nm ## _einit },             \
+            { OSSL_FUNC_CIPHER_DECRYPT_INIT, (void (*)(void)) nm ## _dinit },             \
+            { OSSL_FUNC_CIPHER_UPDATE, (void (*)(void)) nm ## _update },                  \
+            { OSSL_FUNC_CIPHER_FINAL, (void (*)(void)) nm ## _final },                    \
+            { OSSL_FUNC_CIPHER_CIPHER, (void (*)(void)) nm ## _cipher },                  \
+            { OSSL_FUNC_CIPHER_GET_PARAMS,                                             \
+              (void (*)(void)) nm ## _ ## kbits ## _ ## sub ## _get_params },                   \
+            { OSSL_FUNC_CIPHER_GETTABLE_PARAMS,                                        \
+              (void (*)(void)) nm ## _gettable_params },                                \
+            { OSSL_FUNC_CIPHER_GET_CTX_PARAMS,                                         \
+              (void (*)(void)) nm ## _get_ctx_params },                                \
+            { OSSL_FUNC_CIPHER_GETTABLE_CTX_PARAMS,                                    \
+              (void (*)(void)) nm ## _gettable_ctx_params },                            \
+            { OSSL_FUNC_CIPHER_SET_CTX_PARAMS,                                         \
+              (void (*)(void)) nm ## _set_ctx_params },                                 \
+            { OSSL_FUNC_CIPHER_SETTABLE_CTX_PARAMS,                                    \
+              (void (*)(void)) nm ## _settable_ctx_params },                            \
+            OSSL_DISPATCH_END                                                          \
+        };
 
 #endif /* AES_CBC_HMAC_SHA_CAPABLE */
 

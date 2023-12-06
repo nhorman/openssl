@@ -16,16 +16,16 @@
 #include "crypto/x509.h"
 
 ASN1_SEQUENCE_enc(X509_CINF, enc, 0) = {
-        ASN1_EXP_OPT(X509_CINF, version, ASN1_INTEGER, 0),
-        ASN1_EMBED(X509_CINF, serialNumber, ASN1_INTEGER),
-        ASN1_EMBED(X509_CINF, signature, X509_ALGOR),
-        ASN1_SIMPLE(X509_CINF, issuer, X509_NAME),
-        ASN1_EMBED(X509_CINF, validity, X509_VAL),
-        ASN1_SIMPLE(X509_CINF, subject, X509_NAME),
-        ASN1_SIMPLE(X509_CINF, key, X509_PUBKEY),
-        ASN1_IMP_OPT(X509_CINF, issuerUID, ASN1_BIT_STRING, 1),
-        ASN1_IMP_OPT(X509_CINF, subjectUID, ASN1_BIT_STRING, 2),
-        ASN1_EXP_SEQUENCE_OF_OPT(X509_CINF, extensions, X509_EXTENSION, 3)
+    ASN1_EXP_OPT(X509_CINF, version, ASN1_INTEGER, 0),
+    ASN1_EMBED(X509_CINF, serialNumber, ASN1_INTEGER),
+    ASN1_EMBED(X509_CINF, signature, X509_ALGOR),
+    ASN1_SIMPLE(X509_CINF, issuer, X509_NAME),
+    ASN1_EMBED(X509_CINF, validity, X509_VAL),
+    ASN1_SIMPLE(X509_CINF, subject, X509_NAME),
+    ASN1_SIMPLE(X509_CINF, key, X509_PUBKEY),
+    ASN1_IMP_OPT(X509_CINF, issuerUID, ASN1_BIT_STRING, 1),
+    ASN1_IMP_OPT(X509_CINF, subjectUID, ASN1_BIT_STRING, 2),
+    ASN1_EXP_SEQUENCE_OF_OPT(X509_CINF, extensions, X509_EXTENSION, 3)
 } ASN1_SEQUENCE_END_enc(X509_CINF, X509_CINF)
 
 IMPLEMENT_ASN1_FUNCTIONS(X509_CINF)
@@ -40,65 +40,67 @@ static int x509_cb(int operation, ASN1_VALUE **pval, const ASN1_ITEM *it,
 
     switch (operation) {
 
-    case ASN1_OP_D2I_PRE:
-        CRYPTO_free_ex_data(CRYPTO_EX_INDEX_X509, ret, &ret->ex_data);
-        X509_CERT_AUX_free(ret->aux);
-        ASN1_OCTET_STRING_free(ret->skid);
-        AUTHORITY_KEYID_free(ret->akid);
-        CRL_DIST_POINTS_free(ret->crldp);
-        ossl_policy_cache_free(ret->policy_cache);
-        GENERAL_NAMES_free(ret->altname);
-        NAME_CONSTRAINTS_free(ret->nc);
+        case ASN1_OP_D2I_PRE:
+            CRYPTO_free_ex_data(CRYPTO_EX_INDEX_X509, ret, &ret->ex_data);
+            X509_CERT_AUX_free(ret->aux);
+            ASN1_OCTET_STRING_free(ret->skid);
+            AUTHORITY_KEYID_free(ret->akid);
+            CRL_DIST_POINTS_free(ret->crldp);
+            ossl_policy_cache_free(ret->policy_cache);
+            GENERAL_NAMES_free(ret->altname);
+            NAME_CONSTRAINTS_free(ret->nc);
 #ifndef OPENSSL_NO_RFC3779
-        sk_IPAddressFamily_pop_free(ret->rfc3779_addr, IPAddressFamily_free);
-        ASIdentifiers_free(ret->rfc3779_asid);
+            sk_IPAddressFamily_pop_free(ret->rfc3779_addr,
+                                        IPAddressFamily_free);
+            ASIdentifiers_free(ret->rfc3779_asid);
 #endif
-        ASN1_OCTET_STRING_free(ret->distinguishing_id);
+            ASN1_OCTET_STRING_free(ret->distinguishing_id);
 
         /* fall through */
 
-    case ASN1_OP_NEW_POST:
-        ret->ex_cached = 0;
-        ret->ex_kusage = 0;
-        ret->ex_xkusage = 0;
-        ret->ex_nscert = 0;
-        ret->ex_flags = 0;
-        ret->ex_pathlen = -1;
-        ret->ex_pcpathlen = -1;
-        ret->skid = NULL;
-        ret->akid = NULL;
-        ret->policy_cache = NULL;
-        ret->altname = NULL;
-        ret->nc = NULL;
+        case ASN1_OP_NEW_POST:
+            ret->ex_cached = 0;
+            ret->ex_kusage = 0;
+            ret->ex_xkusage = 0;
+            ret->ex_nscert = 0;
+            ret->ex_flags = 0;
+            ret->ex_pathlen = -1;
+            ret->ex_pcpathlen = -1;
+            ret->skid = NULL;
+            ret->akid = NULL;
+            ret->policy_cache = NULL;
+            ret->altname = NULL;
+            ret->nc = NULL;
 #ifndef OPENSSL_NO_RFC3779
-        ret->rfc3779_addr = NULL;
-        ret->rfc3779_asid = NULL;
+            ret->rfc3779_addr = NULL;
+            ret->rfc3779_asid = NULL;
 #endif
-        ret->distinguishing_id = NULL;
-        ret->aux = NULL;
-        ret->crldp = NULL;
-        if (!CRYPTO_new_ex_data(CRYPTO_EX_INDEX_X509, ret, &ret->ex_data))
-            return 0;
-        break;
+            ret->distinguishing_id = NULL;
+            ret->aux = NULL;
+            ret->crldp = NULL;
+            if (!CRYPTO_new_ex_data(CRYPTO_EX_INDEX_X509, ret, &ret->ex_data))
+                return 0;
+            break;
 
-    case ASN1_OP_FREE_POST:
-        CRYPTO_free_ex_data(CRYPTO_EX_INDEX_X509, ret, &ret->ex_data);
-        X509_CERT_AUX_free(ret->aux);
-        ASN1_OCTET_STRING_free(ret->skid);
-        AUTHORITY_KEYID_free(ret->akid);
-        CRL_DIST_POINTS_free(ret->crldp);
-        ossl_policy_cache_free(ret->policy_cache);
-        GENERAL_NAMES_free(ret->altname);
-        NAME_CONSTRAINTS_free(ret->nc);
+        case ASN1_OP_FREE_POST:
+            CRYPTO_free_ex_data(CRYPTO_EX_INDEX_X509, ret, &ret->ex_data);
+            X509_CERT_AUX_free(ret->aux);
+            ASN1_OCTET_STRING_free(ret->skid);
+            AUTHORITY_KEYID_free(ret->akid);
+            CRL_DIST_POINTS_free(ret->crldp);
+            ossl_policy_cache_free(ret->policy_cache);
+            GENERAL_NAMES_free(ret->altname);
+            NAME_CONSTRAINTS_free(ret->nc);
 #ifndef OPENSSL_NO_RFC3779
-        sk_IPAddressFamily_pop_free(ret->rfc3779_addr, IPAddressFamily_free);
-        ASIdentifiers_free(ret->rfc3779_asid);
+            sk_IPAddressFamily_pop_free(ret->rfc3779_addr,
+                                        IPAddressFamily_free);
+            ASIdentifiers_free(ret->rfc3779_asid);
 #endif
-        ASN1_OCTET_STRING_free(ret->distinguishing_id);
-        OPENSSL_free(ret->propq);
-        break;
+            ASN1_OCTET_STRING_free(ret->distinguishing_id);
+            OPENSSL_free(ret->propq);
+            break;
 
-    case ASN1_OP_DUP_POST:
+        case ASN1_OP_DUP_POST:
         {
             X509 *old = exarg;
 
@@ -106,7 +108,7 @@ static int x509_cb(int operation, ASN1_VALUE **pval, const ASN1_ITEM *it,
                 return 0;
         }
         break;
-    case ASN1_OP_GET0_LIBCTX:
+        case ASN1_OP_GET0_LIBCTX:
         {
             OSSL_LIB_CTX **libctx = exarg;
 
@@ -114,7 +116,7 @@ static int x509_cb(int operation, ASN1_VALUE **pval, const ASN1_ITEM *it,
         }
         break;
 
-    case ASN1_OP_GET0_PROPQ:
+        case ASN1_OP_GET0_PROPQ:
         {
             const char **propq = exarg;
 
@@ -122,17 +124,17 @@ static int x509_cb(int operation, ASN1_VALUE **pval, const ASN1_ITEM *it,
         }
         break;
 
-    default:
-        break;
+        default:
+            break;
     }
 
     return 1;
 }
 
 ASN1_SEQUENCE_ref(X509, x509_cb) = {
-        ASN1_EMBED(X509, cert_info, X509_CINF),
-        ASN1_EMBED(X509, sig_alg, X509_ALGOR),
-        ASN1_EMBED(X509, signature, ASN1_BIT_STRING)
+    ASN1_EMBED(X509, cert_info, X509_CINF),
+    ASN1_EMBED(X509, sig_alg, X509_ALGOR),
+    ASN1_EMBED(X509, signature, ASN1_BIT_STRING)
 } ASN1_SEQUENCE_END_ref(X509, X509)
 
 IMPLEMENT_ASN1_FUNCTIONS(X509)
@@ -208,7 +210,7 @@ X509 *d2i_X509_AUX(X509 **a, const unsigned char **pp, long length)
         goto err;
     *pp = q;
     return ret;
- err:
+err:
     if (freeret) {
         X509_free(ret);
         if (a)

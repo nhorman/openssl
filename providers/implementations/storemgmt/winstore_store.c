@@ -38,11 +38,11 @@ struct winstore_ctx_st {
     void                   *provctx;
     char                   *propq;
     unsigned char          *subject;
-    size_t                  subject_len;
+    size_t subject_len;
 
-    HCERTSTORE              win_store;
+    HCERTSTORE win_store;
     const CERT_CONTEXT     *win_ctx;
-    int                     state;
+    int state;
 
     OSSL_DECODER_CTX       *dctx;
 };
@@ -68,10 +68,11 @@ static void winstore_win_advance(struct winstore_ctx_st *ctx)
     name.pbData = ctx->subject;
 
     ctx->win_ctx = (name.cbData == 0 ? NULL :
-        CertFindCertificateInStore(ctx->win_store,
-                                   X509_ASN_ENCODING | PKCS_7_ASN_ENCODING,
-                                   0, CERT_FIND_SUBJECT_NAME,
-                                   &name, ctx->win_ctx));
+                    CertFindCertificateInStore(ctx->win_store,
+                                               X509_ASN_ENCODING |
+                                               PKCS_7_ASN_ENCODING,
+                                               0, CERT_FIND_SUBJECT_NAME,
+                                               &name, ctx->win_ctx));
 
     ctx->state = (ctx->win_ctx == NULL) ? STATE_EOF : STATE_READ;
 }
@@ -103,7 +104,8 @@ static void *winstore_attach(void *provctx, OSSL_CORE_BIO *cin)
     return NULL; /* not supported */
 }
 
-static const OSSL_PARAM *winstore_settable_ctx_params(void *loaderctx, const OSSL_PARAM params[])
+static const OSSL_PARAM *winstore_settable_ctx_params(void *loaderctx,
+                                                      const OSSL_PARAM params[])
 {
     static const OSSL_PARAM known_settable_ctx_params[] = {
         OSSL_PARAM_octet_string(OSSL_STORE_PARAM_SUBJECT, NULL, 0),
@@ -167,7 +169,7 @@ struct load_data_st {
 };
 
 static int load_construct(OSSL_DECODER_INSTANCE *decoder_inst,
-                           const OSSL_PARAM *params, void *construct_data)
+                          const OSSL_PARAM *params, void *construct_data)
 {
     struct load_data_st *data = construct_data;
     return data->object_cb(params, data->object_cbarg);
@@ -318,12 +320,14 @@ static int winstore_close(void *loaderctx)
 }
 
 const OSSL_DISPATCH ossl_winstore_store_functions[] = {
-    { OSSL_FUNC_STORE_OPEN, (void (*)(void))winstore_open },
-    { OSSL_FUNC_STORE_ATTACH, (void (*)(void))winstore_attach },
-    { OSSL_FUNC_STORE_SETTABLE_CTX_PARAMS, (void (*)(void))winstore_settable_ctx_params },
-    { OSSL_FUNC_STORE_SET_CTX_PARAMS, (void (*)(void))winstore_set_ctx_params },
-    { OSSL_FUNC_STORE_LOAD, (void (*)(void))winstore_load },
-    { OSSL_FUNC_STORE_EOF, (void (*)(void))winstore_eof },
-    { OSSL_FUNC_STORE_CLOSE, (void (*)(void))winstore_close },
+    { OSSL_FUNC_STORE_OPEN, (void (*)(void)) winstore_open },
+    { OSSL_FUNC_STORE_ATTACH, (void (*)(void)) winstore_attach },
+    { OSSL_FUNC_STORE_SETTABLE_CTX_PARAMS,
+      (void (*)(void)) winstore_settable_ctx_params },
+    { OSSL_FUNC_STORE_SET_CTX_PARAMS,
+      (void (*)(void)) winstore_set_ctx_params },
+    { OSSL_FUNC_STORE_LOAD, (void (*)(void)) winstore_load },
+    { OSSL_FUNC_STORE_EOF, (void (*)(void)) winstore_eof },
+    { OSSL_FUNC_STORE_CLOSE, (void (*)(void)) winstore_close },
     OSSL_DISPATCH_END,
 };

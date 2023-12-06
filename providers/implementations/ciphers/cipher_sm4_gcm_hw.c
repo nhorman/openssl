@@ -15,10 +15,10 @@
 #include "crypto/sm4_platform.h"
 
 # define SM4_GCM_HW_SET_KEY_CTR_FN(ks, fn_set_enc_key, fn_block, fn_ctr)       \
-    fn_set_enc_key(key, ks);                                                   \
-    CRYPTO_gcm128_init(&ctx->gcm, ks, (block128_f)fn_block);                   \
-    ctx->ctr = (ctr128_f)fn_ctr;                                               \
-    ctx->key_set = 1;
+        fn_set_enc_key(key, ks);                                                   \
+        CRYPTO_gcm128_init(&ctx->gcm, ks, (block128_f)fn_block);                   \
+        ctx->ctr = (ctr128_f)fn_ctr;                                               \
+        ctx->key_set = 1;
 
 static int sm4_gcm_initkey(PROV_GCM_CTX *ctx, const unsigned char *key,
                            size_t keylen)
@@ -32,14 +32,16 @@ static int sm4_gcm_initkey(PROV_GCM_CTX *ctx, const unsigned char *key,
         SM4_GCM_HW_SET_KEY_CTR_FN(ks, HWSM4_set_encrypt_key, HWSM4_encrypt,
                                   HWSM4_ctr32_encrypt_blocks);
 #  else /* HWSM4_ctr32_encrypt_blocks */
-        SM4_GCM_HW_SET_KEY_CTR_FN(ks, HWSM4_set_encrypt_key, HWSM4_encrypt, NULL);
+        SM4_GCM_HW_SET_KEY_CTR_FN(ks, HWSM4_set_encrypt_key, HWSM4_encrypt,
+                                  NULL);
 #  endif
     } else
 # endif /* HWSM4_CAPABLE */
 
 #ifdef VPSM4_EX_CAPABLE
     if (VPSM4_EX_CAPABLE) {
-        SM4_GCM_HW_SET_KEY_CTR_FN(ks, vpsm4_ex_set_encrypt_key, vpsm4_ex_encrypt,
+        SM4_GCM_HW_SET_KEY_CTR_FN(ks, vpsm4_ex_set_encrypt_key,
+                                  vpsm4_ex_encrypt,
                                   vpsm4_ex_ctr32_encrypt_blocks);
     } else
 #endif /* VPSM4_EX_CAPABLE */

@@ -23,31 +23,31 @@
 # define MAX_ITERATIONS 50
 
 # define SQR_nibble(w)   ((((w) & 8) << 3) \
-                       |  (((w) & 4) << 2) \
-                       |  (((w) & 2) << 1) \
-                       |   ((w) & 1))
+                          |  (((w) & 4) << 2) \
+                          |  (((w) & 2) << 1) \
+                          |   ((w) & 1))
 
 
 /* Platform-specific macros to accelerate squaring. */
 # if defined(SIXTY_FOUR_BIT) || defined(SIXTY_FOUR_BIT_LONG)
 #  define SQR1(w) \
-    SQR_nibble((w) >> 60) << 56 | SQR_nibble((w) >> 56) << 48 | \
-    SQR_nibble((w) >> 52) << 40 | SQR_nibble((w) >> 48) << 32 | \
-    SQR_nibble((w) >> 44) << 24 | SQR_nibble((w) >> 40) << 16 | \
-    SQR_nibble((w) >> 36) <<  8 | SQR_nibble((w) >> 32)
+        SQR_nibble((w) >> 60) << 56 | SQR_nibble((w) >> 56) << 48 | \
+            SQR_nibble((w) >> 52) << 40 | SQR_nibble((w) >> 48) << 32 | \
+            SQR_nibble((w) >> 44) << 24 | SQR_nibble((w) >> 40) << 16 | \
+            SQR_nibble((w) >> 36) <<  8 | SQR_nibble((w) >> 32)
 #  define SQR0(w) \
-    SQR_nibble((w) >> 28) << 56 | SQR_nibble((w) >> 24) << 48 | \
-    SQR_nibble((w) >> 20) << 40 | SQR_nibble((w) >> 16) << 32 | \
-    SQR_nibble((w) >> 12) << 24 | SQR_nibble((w) >>  8) << 16 | \
-    SQR_nibble((w) >>  4) <<  8 | SQR_nibble((w)      )
+        SQR_nibble((w) >> 28) << 56 | SQR_nibble((w) >> 24) << 48 | \
+            SQR_nibble((w) >> 20) << 40 | SQR_nibble((w) >> 16) << 32 | \
+            SQR_nibble((w) >> 12) << 24 | SQR_nibble((w) >>  8) << 16 | \
+            SQR_nibble((w) >>  4) <<  8 | SQR_nibble((w)      )
 # endif
 # ifdef THIRTY_TWO_BIT
 #  define SQR1(w) \
-    SQR_nibble((w) >> 28) << 24 | SQR_nibble((w) >> 24) << 16 | \
-    SQR_nibble((w) >> 20) <<  8 | SQR_nibble((w) >> 16)
+        SQR_nibble((w) >> 28) << 24 | SQR_nibble((w) >> 24) << 16 | \
+            SQR_nibble((w) >> 20) <<  8 | SQR_nibble((w) >> 16)
 #  define SQR0(w) \
-    SQR_nibble((w) >> 12) << 24 | SQR_nibble((w) >>  8) << 16 | \
-    SQR_nibble((w) >>  4) <<  8 | SQR_nibble((w)      )
+        SQR_nibble((w) >> 12) << 24 | SQR_nibble((w) >>  8) << 16 | \
+            SQR_nibble((w) >>  4) <<  8 | SQR_nibble((w)      )
 # endif
 
 # if !defined(OPENSSL_BN_ASM_GF2m)
@@ -450,7 +450,7 @@ int BN_GF2m_mod_mul_arr(BIGNUM *r, const BIGNUM *a, const BIGNUM *b,
         ret = 1;
     bn_check_top(r);
 
- err:
+err:
     BN_CTX_end(ctx);
     return ret;
 }
@@ -483,7 +483,7 @@ int BN_GF2m_mod_mul(BIGNUM *r, const BIGNUM *a, const BIGNUM *b,
     }
     ret = BN_GF2m_mod_mul_arr(r, a, b, arr, ctx);
     bn_check_top(r);
- err:
+err:
     OPENSSL_free(arr);
     return ret;
 }
@@ -513,7 +513,7 @@ int BN_GF2m_mod_sqr_arr(BIGNUM *r, const BIGNUM *a, const int p[],
         goto err;
     bn_check_top(r);
     ret = 1;
- err:
+err:
     BN_CTX_end(ctx);
     return ret;
 }
@@ -543,7 +543,7 @@ int BN_GF2m_mod_sqr(BIGNUM *r, const BIGNUM *a, const BIGNUM *p, BN_CTX *ctx)
     }
     ret = BN_GF2m_mod_sqr_arr(r, a, arr, ctx);
     bn_check_top(r);
- err:
+err:
     OPENSSL_free(arr);
     return ret;
 }
@@ -629,14 +629,14 @@ static int BN_GF2m_mod_inv_vartime(BIGNUM *r, const BIGNUM *a,
             udp[i] = 0;
         u->top = top;
         if (!bn_wexpand(b, top))
-          goto err;
+            goto err;
         bdp = b->d;
         bdp[0] = 1;
         for (i = 1; i < top; i++)
             bdp[i] = 0;
         b->top = top;
         if (!bn_wexpand(c, top))
-          goto err;
+            goto err;
         cdp = c->d;
         for (i = 0; i < top; i++)
             cdp[i] = 0;
@@ -710,7 +710,7 @@ static int BN_GF2m_mod_inv_vartime(BIGNUM *r, const BIGNUM *a,
     bn_check_top(r);
     ret = 1;
 
- err:
+err:
 # ifdef BN_DEBUG
     /* BN_CTX_end would complain about the expanded form */
     bn_correct_top(c);
@@ -756,7 +756,7 @@ int BN_GF2m_mod_inv(BIGNUM *r, const BIGNUM *a, const BIGNUM *p, BN_CTX *ctx)
 
     ret = 1;
 
- err:
+err:
     BN_CTX_end(ctx);
     return ret;
 }
@@ -783,7 +783,7 @@ int BN_GF2m_mod_inv_arr(BIGNUM *r, const BIGNUM *xx, const int p[],
     ret = BN_GF2m_mod_inv(r, xx, field, ctx);
     bn_check_top(r);
 
- err:
+err:
     BN_CTX_end(ctx);
     return ret;
 }
@@ -814,7 +814,7 @@ int BN_GF2m_mod_div(BIGNUM *r, const BIGNUM *y, const BIGNUM *x,
     bn_check_top(r);
     ret = 1;
 
- err:
+err:
     BN_CTX_end(ctx);
     return ret;
 }
@@ -843,7 +843,7 @@ int BN_GF2m_mod_div_arr(BIGNUM *r, const BIGNUM *yy, const BIGNUM *xx,
     ret = BN_GF2m_mod_div(r, yy, xx, field, ctx);
     bn_check_top(r);
 
- err:
+err:
     BN_CTX_end(ctx);
     return ret;
 }
@@ -888,7 +888,7 @@ int BN_GF2m_mod_exp_arr(BIGNUM *r, const BIGNUM *a, const BIGNUM *b,
         goto err;
     bn_check_top(r);
     ret = 1;
- err:
+err:
     BN_CTX_end(ctx);
     return ret;
 }
@@ -920,7 +920,7 @@ int BN_GF2m_mod_exp(BIGNUM *r, const BIGNUM *a, const BIGNUM *b,
     }
     ret = BN_GF2m_mod_exp_arr(r, a, b, arr, ctx);
     bn_check_top(r);
- err:
+err:
     OPENSSL_free(arr);
     return ret;
 }
@@ -952,7 +952,7 @@ int BN_GF2m_mod_sqrt_arr(BIGNUM *r, const BIGNUM *a, const int p[],
     ret = BN_GF2m_mod_exp_arr(r, a, u, p, ctx);
     bn_check_top(r);
 
- err:
+err:
     BN_CTX_end(ctx);
     return ret;
 }
@@ -982,7 +982,7 @@ int BN_GF2m_mod_sqrt(BIGNUM *r, const BIGNUM *a, const BIGNUM *p, BN_CTX *ctx)
     }
     ret = BN_GF2m_mod_sqrt_arr(r, a, arr, ctx);
     bn_check_top(r);
- err:
+err:
     OPENSSL_free(arr);
     return ret;
 }
@@ -1085,7 +1085,7 @@ int BN_GF2m_mod_solve_quad_arr(BIGNUM *r, const BIGNUM *a_, const int p[],
 
     ret = 1;
 
- err:
+err:
     BN_CTX_end(ctx);
     return ret;
 }
@@ -1116,7 +1116,7 @@ int BN_GF2m_mod_solve_quad(BIGNUM *r, const BIGNUM *a, const BIGNUM *p,
     }
     ret = BN_GF2m_mod_solve_quad_arr(r, a, arr, ctx);
     bn_check_top(r);
- err:
+err:
     OPENSSL_free(arr);
     return ret;
 }

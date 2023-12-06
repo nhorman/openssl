@@ -28,8 +28,9 @@ OSSL_ACKM *ossl_ackm_new(OSSL_TIME (*now)(void *arg),
 void ossl_ackm_free(OSSL_ACKM *ackm);
 
 void ossl_ackm_set_loss_detection_deadline_callback(OSSL_ACKM *ackm,
-                                                    void (*fn)(OSSL_TIME deadline,
-                                                               void *arg),
+                                                    void (*fn)(
+                                                        OSSL_TIME deadline,
+                                                        void *arg),
                                                     void *arg);
 
 void ossl_ackm_set_ack_deadline_callback(OSSL_ACKM *ackm,
@@ -44,7 +45,8 @@ void ossl_ackm_set_ack_deadline_callback(OSSL_ACKM *ackm,
  * ACK-eliciting packet. The peer communicates this value via a transport
  * parameter and it must be provided to the ACKM.
  */
-void ossl_ackm_set_rx_max_ack_delay(OSSL_ACKM *ackm, OSSL_TIME rx_max_ack_delay);
+void ossl_ackm_set_rx_max_ack_delay(OSSL_ACKM *ackm,
+                                    OSSL_TIME rx_max_ack_delay);
 
 /*
  * Configures the TX-side maximum ACK delay. This is the maximum amount of time
@@ -53,7 +55,8 @@ void ossl_ackm_set_rx_max_ack_delay(OSSL_ACKM *ackm, OSSL_TIME rx_max_ack_delay)
  * it must be accurately reported in the transport parameters we send to our
  * peer.
  */
-void ossl_ackm_set_tx_max_ack_delay(OSSL_ACKM *ackm, OSSL_TIME tx_max_ack_delay);
+void ossl_ackm_set_tx_max_ack_delay(OSSL_ACKM *ackm,
+                                    OSSL_TIME tx_max_ack_delay);
 
 typedef struct ossl_ackm_tx_pkt_st OSSL_ACKM_TX_PKT;
 struct ossl_ackm_tx_pkt_st {
@@ -82,7 +85,7 @@ struct ossl_ackm_tx_pkt_st {
      * One of the QUIC_PN_SPACE_* values. This qualifies the pkt_num field
      * into a packet number space.
      */
-    unsigned int pkt_space :2;
+    unsigned int pkt_space : 2;
 
     /*
      * 1 if the packet is in flight. A packet is considered 'in flight' if it is
@@ -91,19 +94,19 @@ struct ossl_ackm_tx_pkt_st {
      * numbered packet is not considered in flight is if it contains only ACK
      * frames (not even PADDING frames), as these frames can bypass CC.
      */
-    unsigned int is_inflight :1;
+    unsigned int is_inflight : 1;
 
     /*
      * 1 if the packet has one or more ACK-eliciting frames.
      * Note that if this is set, is_inflight must be set.
      */
-    unsigned int is_ack_eliciting :1;
+    unsigned int is_ack_eliciting : 1;
 
     /* 1 if the packet is a PTO probe. */
-    unsigned int is_pto_probe :1;
+    unsigned int is_pto_probe : 1;
 
     /* 1 if the packet is an MTU probe. */
-    unsigned int is_mtu_probe :1;
+    unsigned int is_mtu_probe : 1;
 
     /* Callback called if frames in this packet are lost. arg is cb_arg. */
     void (*on_lost)(void *arg);
@@ -116,7 +119,7 @@ struct ossl_ackm_tx_pkt_st {
     void (*on_discarded)(void *arg);
     void  *cb_arg;
 
-    /* 
+    /*
      * (Internal use fields; must be zero-initialized.)
      *
      * Keep a TX history list, anext is used to manifest
@@ -148,16 +151,16 @@ typedef struct ossl_ackm_rx_pkt_st {
      * One of the QUIC_PN_SPACE_* values. This qualifies the pkt_num field
      * into a packet number space.
      */
-    unsigned int pkt_space :2;
+    unsigned int pkt_space : 2;
 
     /* 1 if the packet has one or more ACK-eliciting frames. */
-    unsigned int is_ack_eliciting :1;
+    unsigned int is_ack_eliciting : 1;
 
     /*
      * One of the OSSL_ACKM_ECN_* values. This is the ECN labelling applied to
      * the received packet. If unknown, use OSSL_ACKM_ECN_NONE.
      */
-    unsigned int ecn :2;
+    unsigned int ecn : 2;
 } OSSL_ACKM_RX_PKT;
 
 int ossl_ackm_on_rx_packet(OSSL_ACKM *ackm, const OSSL_ACKM_RX_PKT *pkt);

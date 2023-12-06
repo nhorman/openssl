@@ -82,7 +82,7 @@ typedef struct {
     /* The Algorithm Identifier of the combined signature algorithm */
     unsigned char aid_buf[OSSL_MAX_ALGORITHM_ID_SIZE];
     unsigned char *aid;
-    size_t  aid_len;
+    size_t aid_len;
 
     /* main digest */
     EVP_MD *md;
@@ -190,7 +190,7 @@ static int dsa_signverify_init(void *vpdsactx, void *vdsa,
     PROV_DSA_CTX *pdsactx = (PROV_DSA_CTX *)vpdsactx;
 
     if (!ossl_prov_is_running()
-            || pdsactx == NULL)
+        || pdsactx == NULL)
         return 0;
 
     if (vdsa == NULL && pdsactx->dsa == NULL) {
@@ -302,7 +302,7 @@ static int dsa_digest_signverify_init(void *vpdsactx, const char *mdname,
 
     return 1;
 
- error:
+error:
     EVP_MD_CTX_free(pdsactx->mdctx);
     pdsactx->mdctx = NULL;
     return 0;
@@ -429,7 +429,7 @@ static void *dsa_dupctx(void *vpdsactx)
     if (srcctx->mdctx != NULL) {
         dstctx->mdctx = EVP_MD_CTX_new();
         if (dstctx->mdctx == NULL
-                || !EVP_MD_CTX_copy_ex(dstctx->mdctx, srcctx->mdctx))
+            || !EVP_MD_CTX_copy_ex(dstctx->mdctx, srcctx->mdctx))
             goto err;
     }
     if (srcctx->propq != NULL) {
@@ -439,7 +439,7 @@ static void *dsa_dupctx(void *vpdsactx)
     }
 
     return dstctx;
- err:
+err:
     dsa_freectx(dstctx);
     return NULL;
 }
@@ -577,38 +577,38 @@ static const OSSL_PARAM *dsa_settable_ctx_md_params(void *vpdsactx)
 }
 
 const OSSL_DISPATCH ossl_dsa_signature_functions[] = {
-    { OSSL_FUNC_SIGNATURE_NEWCTX, (void (*)(void))dsa_newctx },
-    { OSSL_FUNC_SIGNATURE_SIGN_INIT, (void (*)(void))dsa_sign_init },
-    { OSSL_FUNC_SIGNATURE_SIGN, (void (*)(void))dsa_sign },
-    { OSSL_FUNC_SIGNATURE_VERIFY_INIT, (void (*)(void))dsa_verify_init },
-    { OSSL_FUNC_SIGNATURE_VERIFY, (void (*)(void))dsa_verify },
+    { OSSL_FUNC_SIGNATURE_NEWCTX, (void (*)(void)) dsa_newctx },
+    { OSSL_FUNC_SIGNATURE_SIGN_INIT, (void (*)(void)) dsa_sign_init },
+    { OSSL_FUNC_SIGNATURE_SIGN, (void (*)(void)) dsa_sign },
+    { OSSL_FUNC_SIGNATURE_VERIFY_INIT, (void (*)(void)) dsa_verify_init },
+    { OSSL_FUNC_SIGNATURE_VERIFY, (void (*)(void)) dsa_verify },
     { OSSL_FUNC_SIGNATURE_DIGEST_SIGN_INIT,
-      (void (*)(void))dsa_digest_sign_init },
+      (void (*)(void)) dsa_digest_sign_init },
     { OSSL_FUNC_SIGNATURE_DIGEST_SIGN_UPDATE,
-      (void (*)(void))dsa_digest_signverify_update },
+      (void (*)(void)) dsa_digest_signverify_update },
     { OSSL_FUNC_SIGNATURE_DIGEST_SIGN_FINAL,
-      (void (*)(void))dsa_digest_sign_final },
+      (void (*)(void)) dsa_digest_sign_final },
     { OSSL_FUNC_SIGNATURE_DIGEST_VERIFY_INIT,
-      (void (*)(void))dsa_digest_verify_init },
+      (void (*)(void)) dsa_digest_verify_init },
     { OSSL_FUNC_SIGNATURE_DIGEST_VERIFY_UPDATE,
-      (void (*)(void))dsa_digest_signverify_update },
+      (void (*)(void)) dsa_digest_signverify_update },
     { OSSL_FUNC_SIGNATURE_DIGEST_VERIFY_FINAL,
-      (void (*)(void))dsa_digest_verify_final },
-    { OSSL_FUNC_SIGNATURE_FREECTX, (void (*)(void))dsa_freectx },
-    { OSSL_FUNC_SIGNATURE_DUPCTX, (void (*)(void))dsa_dupctx },
-    { OSSL_FUNC_SIGNATURE_GET_CTX_PARAMS, (void (*)(void))dsa_get_ctx_params },
+      (void (*)(void)) dsa_digest_verify_final },
+    { OSSL_FUNC_SIGNATURE_FREECTX, (void (*)(void)) dsa_freectx },
+    { OSSL_FUNC_SIGNATURE_DUPCTX, (void (*)(void)) dsa_dupctx },
+    { OSSL_FUNC_SIGNATURE_GET_CTX_PARAMS, (void (*)(void)) dsa_get_ctx_params },
     { OSSL_FUNC_SIGNATURE_GETTABLE_CTX_PARAMS,
-      (void (*)(void))dsa_gettable_ctx_params },
-    { OSSL_FUNC_SIGNATURE_SET_CTX_PARAMS, (void (*)(void))dsa_set_ctx_params },
+      (void (*)(void)) dsa_gettable_ctx_params },
+    { OSSL_FUNC_SIGNATURE_SET_CTX_PARAMS, (void (*)(void)) dsa_set_ctx_params },
     { OSSL_FUNC_SIGNATURE_SETTABLE_CTX_PARAMS,
-      (void (*)(void))dsa_settable_ctx_params },
+      (void (*)(void)) dsa_settable_ctx_params },
     { OSSL_FUNC_SIGNATURE_GET_CTX_MD_PARAMS,
-      (void (*)(void))dsa_get_ctx_md_params },
+      (void (*)(void)) dsa_get_ctx_md_params },
     { OSSL_FUNC_SIGNATURE_GETTABLE_CTX_MD_PARAMS,
-      (void (*)(void))dsa_gettable_ctx_md_params },
+      (void (*)(void)) dsa_gettable_ctx_md_params },
     { OSSL_FUNC_SIGNATURE_SET_CTX_MD_PARAMS,
-      (void (*)(void))dsa_set_ctx_md_params },
+      (void (*)(void)) dsa_set_ctx_md_params },
     { OSSL_FUNC_SIGNATURE_SETTABLE_CTX_MD_PARAMS,
-      (void (*)(void))dsa_settable_ctx_md_params },
+      (void (*)(void)) dsa_settable_ctx_md_params },
     OSSL_DISPATCH_END
 };

@@ -44,42 +44,46 @@
  * ctrlinf = "regCtrl" or "regInfo"
  */
 #define IMPLEMENT_CRMF_CTRL_FUNC(atyp, valt, ctrlinf)                        \
-valt *OSSL_CRMF_MSG_get0_##ctrlinf##_##atyp(const OSSL_CRMF_MSG *msg)        \
-{                                                                            \
-    int i;                                                                   \
-    STACK_OF(OSSL_CRMF_ATTRIBUTETYPEANDVALUE) *controls;                     \
-    OSSL_CRMF_ATTRIBUTETYPEANDVALUE *atav = NULL;                            \
+        valt *OSSL_CRMF_MSG_get0_ ## ctrlinf ## _ ## atyp( \
+            const OSSL_CRMF_MSG *msg)        \
+        {                                                                            \
+            int i;                                                                   \
+            STACK_OF(OSSL_CRMF_ATTRIBUTETYPEANDVALUE) *controls;                     \
+            OSSL_CRMF_ATTRIBUTETYPEANDVALUE *atav = NULL;                            \
                                                                              \
-    if (msg == NULL || msg->certReq == NULL)                                 \
-        return NULL;                                                         \
-    controls = msg->certReq->controls;                                       \
-    for (i = 0; i < sk_OSSL_CRMF_ATTRIBUTETYPEANDVALUE_num(controls); i++) { \
-        atav = sk_OSSL_CRMF_ATTRIBUTETYPEANDVALUE_value(controls, i);        \
-        if (OBJ_obj2nid(atav->type) == NID_id_##ctrlinf##_##atyp)            \
-            return atav->value.atyp;                                         \
-    }                                                                        \
-    return NULL;                                                             \
-}                                                                            \
+            if (msg == NULL || msg->certReq == NULL)                                 \
+            return NULL;                                                         \
+            controls = msg->certReq->controls;                                       \
+            for (i = 0; i < sk_OSSL_CRMF_ATTRIBUTETYPEANDVALUE_num(controls); \
+                 i++) { \
+                atav = sk_OSSL_CRMF_ATTRIBUTETYPEANDVALUE_value(controls, i);        \
+                if (OBJ_obj2nid(atav->type) == NID_id_ ## ctrlinf ## _ ## atyp)            \
+                return atav->value.atyp;                                         \
+            }                                                                        \
+            return NULL;                                                             \
+        }                                                                            \
  \
-int OSSL_CRMF_MSG_set1_##ctrlinf##_##atyp(OSSL_CRMF_MSG *msg, const valt *in) \
-{                                                                         \
-    OSSL_CRMF_ATTRIBUTETYPEANDVALUE *atav = NULL;                         \
+        int OSSL_CRMF_MSG_set1_ ## ctrlinf ## _ ## atyp(OSSL_CRMF_MSG *msg, \
+                                                        const valt *in) \
+        {                                                                         \
+            OSSL_CRMF_ATTRIBUTETYPEANDVALUE *atav = NULL;                         \
                                                                           \
-    if (msg == NULL || in == NULL)                                        \
-        goto err;                                                         \
-    if ((atav = OSSL_CRMF_ATTRIBUTETYPEANDVALUE_new()) == NULL)           \
-        goto err;                                                         \
-    if ((atav->type = OBJ_nid2obj(NID_id_##ctrlinf##_##atyp)) == NULL)    \
-        goto err;                                                         \
-    if ((atav->value.atyp = valt##_dup(in)) == NULL)                      \
-        goto err;                                                         \
-    if (!OSSL_CRMF_MSG_push0_##ctrlinf(msg, atav))                        \
-        goto err;                                                         \
-    return 1;                                                             \
- err:                                                                     \
-    OSSL_CRMF_ATTRIBUTETYPEANDVALUE_free(atav);                           \
-    return 0;                                                             \
-}
+            if (msg == NULL || in == NULL)                                        \
+            goto err;                                                         \
+            if ((atav = OSSL_CRMF_ATTRIBUTETYPEANDVALUE_new()) == NULL)           \
+            goto err;                                                         \
+            if ((atav->type = OBJ_nid2obj(NID_id_ ## ctrlinf ## _ ## atyp)) == \
+                NULL)    \
+            goto err;                                                         \
+            if ((atav->value.atyp = valt ## _dup(in)) == NULL)                      \
+            goto err;                                                         \
+            if (!OSSL_CRMF_MSG_push0_ ## ctrlinf(msg, atav))                        \
+            goto err;                                                         \
+            return 1;                                                             \
+err:                                                                     \
+            OSSL_CRMF_ATTRIBUTETYPEANDVALUE_free(atav);                           \
+            return 0;                                                             \
+        }
 
 /*-
  * Pushes the given control attribute into the controls stack of a CertRequest
@@ -106,7 +110,7 @@ static int OSSL_CRMF_MSG_push0_regCtrl(OSSL_CRMF_MSG *crm,
         goto err;
 
     return 1;
- err:
+err:
     if (new != 0) {
         sk_OSSL_CRMF_ATTRIBUTETYPEANDVALUE_free(crm->certReq->controls);
         crm->certReq->controls = NULL;
@@ -125,8 +129,8 @@ int OSSL_CRMF_MSG_set0_SinglePubInfo(OSSL_CRMF_SINGLEPUBINFO *spi,
                                      int method, GENERAL_NAME *nm)
 {
     if (spi == NULL
-            || method < OSSL_CRMF_PUB_METHOD_DONTCARE
-            || method > OSSL_CRMF_PUB_METHOD_LDAP) {
+        || method < OSSL_CRMF_PUB_METHOD_DONTCARE
+        || method > OSSL_CRMF_PUB_METHOD_LDAP) {
         ERR_raise(ERR_LIB_CRMF, ERR_R_PASSED_INVALID_ARGUMENT);
         return 0;
     }
@@ -139,8 +143,9 @@ int OSSL_CRMF_MSG_set0_SinglePubInfo(OSSL_CRMF_SINGLEPUBINFO *spi,
 }
 
 int
-OSSL_CRMF_MSG_PKIPublicationInfo_push0_SinglePubInfo(OSSL_CRMF_PKIPUBLICATIONINFO *pi,
-                                                     OSSL_CRMF_SINGLEPUBINFO *spi)
+OSSL_CRMF_MSG_PKIPublicationInfo_push0_SinglePubInfo(
+    OSSL_CRMF_PKIPUBLICATIONINFO *pi,
+    OSSL_CRMF_SINGLEPUBINFO *spi)
 {
     if (pi == NULL || spi == NULL) {
         ERR_raise(ERR_LIB_CRMF, CRMF_R_NULL_ARGUMENT);
@@ -154,12 +159,13 @@ OSSL_CRMF_MSG_PKIPublicationInfo_push0_SinglePubInfo(OSSL_CRMF_PKIPUBLICATIONINF
     return sk_OSSL_CRMF_SINGLEPUBINFO_push(pi->pubInfos, spi);
 }
 
-int OSSL_CRMF_MSG_set_PKIPublicationInfo_action(OSSL_CRMF_PKIPUBLICATIONINFO *pi,
-                                                int action)
+int OSSL_CRMF_MSG_set_PKIPublicationInfo_action(
+    OSSL_CRMF_PKIPUBLICATIONINFO *pi,
+    int action)
 {
     if (pi == NULL
-            || action < OSSL_CRMF_PUB_ACTION_DONTPUBLISH
-            || action > OSSL_CRMF_PUB_ACTION_PLEASEPUBLISH) {
+        || action < OSSL_CRMF_PUB_ACTION_DONTPUBLISH
+        || action > OSSL_CRMF_PUB_ACTION_PLEASEPUBLISH) {
         ERR_raise(ERR_LIB_CRMF, ERR_R_PASSED_INVALID_ARGUMENT);
         return 0;
     }
@@ -197,7 +203,7 @@ OSSL_CRMF_CERTID *OSSL_CRMF_CERTID_gen(const X509_NAME *issuer,
 
     return cid;
 
- err:
+err:
     OSSL_CRMF_CERTID_free(cid);
     return NULL;
 }
@@ -230,7 +236,7 @@ static int OSSL_CRMF_MSG_push0_regInfo(OSSL_CRMF_MSG *crm,
         goto err;
     return 1;
 
- err:
+err:
     if (info != NULL)
         crm->regInfo = NULL;
     sk_OSSL_CRMF_ATTRIBUTETYPEANDVALUE_free(info);
@@ -274,7 +280,8 @@ int OSSL_CRMF_MSG_set0_validity(OSSL_CRMF_MSG *crm,
 
 int OSSL_CRMF_MSG_set_certReqId(OSSL_CRMF_MSG *crm, int rid)
 {
-    if (crm == NULL || crm->certReq == NULL || crm->certReq->certReqId == NULL) {
+    if (crm == NULL || crm->certReq == NULL ||
+        crm->certReq->certReqId == NULL) {
         ERR_raise(ERR_LIB_CRMF, CRMF_R_NULL_ARGUMENT);
         return 0;
     }
@@ -351,7 +358,7 @@ int OSSL_CRMF_MSG_push0_extension(OSSL_CRMF_MSG *crm,
     if (!sk_X509_EXTENSION_push(tmpl->extensions, ext))
         goto err;
     return 1;
- err:
+err:
     if (new != 0) {
         sk_X509_EXTENSION_free(tmpl->extensions);
         tmpl->extensions = NULL;
@@ -382,7 +389,7 @@ static int create_popo_signature(OSSL_CRMF_POPOSIGNINGKEY *ps,
     }
 
     if (EVP_PKEY_get_default_digest_name(pkey, name, sizeof(name)) > 0
-            && strcmp(name, "UNDEF") == 0) /* at least for Ed25519, Ed448 */
+        && strcmp(name, "UNDEF") == 0)     /* at least for Ed25519, Ed448 */
         digest = NULL;
 
     return ASN1_item_sign_ex(ASN1_ITEM_rptr(OSSL_CRMF_CERTREQUEST),
@@ -410,12 +417,12 @@ int OSSL_CRMF_MSG_create_popo(int meth, OSSL_CRMF_MSG *crm,
     pp->type = meth;
 
     switch (meth) {
-    case OSSL_CRMF_POPO_RAVERIFIED:
-        if ((pp->value.raVerified = ASN1_NULL_new()) == NULL)
-            goto err;
-        break;
+        case OSSL_CRMF_POPO_RAVERIFIED:
+            if ((pp->value.raVerified = ASN1_NULL_new()) == NULL)
+                goto err;
+            break;
 
-    case OSSL_CRMF_POPO_SIGNATURE:
+        case OSSL_CRMF_POPO_SIGNATURE:
         {
             OSSL_CRMF_POPOSIGNINGKEY *ps = OSSL_CRMF_POPOSIGNINGKEY_new();
 
@@ -430,29 +437,31 @@ int OSSL_CRMF_MSG_create_popo(int meth, OSSL_CRMF_MSG *crm,
         }
         break;
 
-    case OSSL_CRMF_POPO_KEYENC:
-        if ((pp->value.keyEncipherment = OSSL_CRMF_POPOPRIVKEY_new()) == NULL)
-            goto err;
-        tag = ASN1_INTEGER_new();
-        pp->value.keyEncipherment->type =
-            OSSL_CRMF_POPOPRIVKEY_SUBSEQUENTMESSAGE;
-        pp->value.keyEncipherment->value.subsequentMessage = tag;
-        if (tag == NULL
+        case OSSL_CRMF_POPO_KEYENC:
+            if ((pp->value.keyEncipherment = OSSL_CRMF_POPOPRIVKEY_new()) ==
+                NULL)
+                goto err;
+            tag = ASN1_INTEGER_new();
+            pp->value.keyEncipherment->type =
+                OSSL_CRMF_POPOPRIVKEY_SUBSEQUENTMESSAGE;
+            pp->value.keyEncipherment->value.subsequentMessage = tag;
+            if (tag == NULL
                 || !ASN1_INTEGER_set(tag, OSSL_CRMF_SUBSEQUENTMESSAGE_ENCRCERT))
-            goto err;
-        break;
+                goto err;
+            break;
 
-    default:
-        ERR_raise(ERR_LIB_CRMF, CRMF_R_UNSUPPORTED_METHOD_FOR_CREATING_POPO);
-        goto err;
+        default:
+            ERR_raise(ERR_LIB_CRMF,
+                      CRMF_R_UNSUPPORTED_METHOD_FOR_CREATING_POPO);
+            goto err;
     }
 
- end:
+end:
     OSSL_CRMF_POPO_free(crm->popo);
     crm->popo = pp;
 
     return 1;
- err:
+err:
     OSSL_CRMF_POPO_free(pp);
     return 0;
 }
@@ -479,65 +488,67 @@ int OSSL_CRMF_MSGS_verify_popo(const OSSL_CRMF_MSGS *reqs,
     }
 
     switch (req->popo->type) {
-    case OSSL_CRMF_POPO_RAVERIFIED:
-        if (!acceptRAVerified) {
-            ERR_raise(ERR_LIB_CRMF, CRMF_R_POPO_RAVERIFIED_NOT_ACCEPTED);
-            return 0;
-        }
-        break;
-    case OSSL_CRMF_POPO_SIGNATURE:
-        pubkey = req->certReq->certTemplate->publicKey;
-        if (pubkey == NULL) {
-            ERR_raise(ERR_LIB_CRMF, CRMF_R_POPO_MISSING_PUBLIC_KEY);
-            return 0;
-        }
-        sig = req->popo->value.signature;
-        if (sig->poposkInput != NULL) {
-            /*
-             * According to RFC 4211: publicKey contains a copy of
-             * the public key from the certificate template. This MUST be
-             * exactly the same value as contained in the certificate template.
-             */
-            if (sig->poposkInput->publicKey == NULL) {
+        case OSSL_CRMF_POPO_RAVERIFIED:
+            if (!acceptRAVerified) {
+                ERR_raise(ERR_LIB_CRMF, CRMF_R_POPO_RAVERIFIED_NOT_ACCEPTED);
+                return 0;
+            }
+            break;
+        case OSSL_CRMF_POPO_SIGNATURE:
+            pubkey = req->certReq->certTemplate->publicKey;
+            if (pubkey == NULL) {
                 ERR_raise(ERR_LIB_CRMF, CRMF_R_POPO_MISSING_PUBLIC_KEY);
                 return 0;
             }
-            if (X509_PUBKEY_eq(pubkey, sig->poposkInput->publicKey) != 1) {
-                ERR_raise(ERR_LIB_CRMF, CRMF_R_POPO_INCONSISTENT_PUBLIC_KEY);
-                return 0;
-            }
+            sig = req->popo->value.signature;
+            if (sig->poposkInput != NULL) {
+                /*
+                 * According to RFC 4211: publicKey contains a copy of
+                 * the public key from the certificate template. This MUST be
+                 * exactly the same value as contained in the certificate template.
+                 */
+                if (sig->poposkInput->publicKey == NULL) {
+                    ERR_raise(ERR_LIB_CRMF, CRMF_R_POPO_MISSING_PUBLIC_KEY);
+                    return 0;
+                }
+                if (X509_PUBKEY_eq(pubkey, sig->poposkInput->publicKey) != 1) {
+                    ERR_raise(ERR_LIB_CRMF,
+                              CRMF_R_POPO_INCONSISTENT_PUBLIC_KEY);
+                    return 0;
+                }
 
-            /*
-             * Should check at this point the contents of the authInfo sub-field
-             * as requested in FR #19807 according to RFC 4211 section 4.1.
-             */
+                /*
+                 * Should check at this point the contents of the authInfo sub-field
+                 * as requested in FR #19807 according to RFC 4211 section 4.1.
+                 */
 
-            it = ASN1_ITEM_rptr(OSSL_CRMF_POPOSIGNINGKEYINPUT);
-            asn = sig->poposkInput;
-        } else {
-            if (req->certReq->certTemplate->subject == NULL) {
-                ERR_raise(ERR_LIB_CRMF, CRMF_R_POPO_MISSING_SUBJECT);
-                return 0;
+                it = ASN1_ITEM_rptr(OSSL_CRMF_POPOSIGNINGKEYINPUT);
+                asn = sig->poposkInput;
+            } else {
+                if (req->certReq->certTemplate->subject == NULL) {
+                    ERR_raise(ERR_LIB_CRMF, CRMF_R_POPO_MISSING_SUBJECT);
+                    return 0;
+                }
+                it = ASN1_ITEM_rptr(OSSL_CRMF_CERTREQUEST);
+                asn = req->certReq;
             }
-            it = ASN1_ITEM_rptr(OSSL_CRMF_CERTREQUEST);
-            asn = req->certReq;
-        }
-        if (ASN1_item_verify_ex(it, sig->algorithmIdentifier, sig->signature,
-                                asn, NULL, X509_PUBKEY_get0(pubkey), libctx,
-                                propq) < 1)
-            return 0;
-        break;
-    case OSSL_CRMF_POPO_KEYENC:
+            if (ASN1_item_verify_ex(it, sig->algorithmIdentifier,
+                                    sig->signature,
+                                    asn, NULL, X509_PUBKEY_get0(pubkey), libctx,
+                                    propq) < 1)
+                return 0;
+            break;
+        case OSSL_CRMF_POPO_KEYENC:
         /*
          * When OSSL_CMP_certrep_new() supports encrypted certs,
          * should return 1 if the type of req->popo->value.keyEncipherment
          * is OSSL_CRMF_POPOPRIVKEY_SUBSEQUENTMESSAGE and
          * its value.subsequentMessage == OSSL_CRMF_SUBSEQUENTMESSAGE_ENCRCERT
          */
-    case OSSL_CRMF_POPO_KEYAGREE:
-    default:
-        ERR_raise(ERR_LIB_CRMF, CRMF_R_UNSUPPORTED_POPO_METHOD);
-        return 0;
+        case OSSL_CRMF_POPO_KEYAGREE:
+        default:
+            ERR_raise(ERR_LIB_CRMF, CRMF_R_UNSUPPORTED_POPO_METHOD);
+            return 0;
     }
     return 1;
 }
@@ -575,7 +586,7 @@ X509_EXTENSIONS
 const X509_NAME *OSSL_CRMF_CERTID_get0_issuer(const OSSL_CRMF_CERTID *cid)
 {
     return cid != NULL && cid->issuer->type == GEN_DIRNAME ?
-        cid->issuer->d.directoryName : NULL;
+           cid->issuer->d.directoryName : NULL;
 }
 
 const ASN1_INTEGER *OSSL_CRMF_CERTID_get0_serialNumber(const OSSL_CRMF_CERTID
@@ -598,7 +609,8 @@ int OSSL_CRMF_CERTTEMPLATE_fill(OSSL_CRMF_CERTTEMPLATE *tmpl,
         ERR_raise(ERR_LIB_CRMF, CRMF_R_NULL_ARGUMENT);
         return 0;
     }
-    if (subject != NULL && !X509_NAME_set((X509_NAME **)&tmpl->subject, subject))
+    if (subject != NULL &&
+        !X509_NAME_set((X509_NAME **)&tmpl->subject, subject))
         return 0;
     if (issuer != NULL && !X509_NAME_set((X509_NAME **)&tmpl->issuer, issuer))
         return 0;
@@ -638,7 +650,7 @@ X509
     char name[OSSL_MAX_NAME_SIZE];
 
     if (ecert == NULL || ecert->symmAlg == NULL || ecert->encSymmKey == NULL
-            || ecert->encValue == NULL || pkey == NULL) {
+        || ecert->encValue == NULL || pkey == NULL) {
         ERR_raise(ERR_LIB_CRMF, CRMF_R_NULL_ARGUMENT);
         return NULL;
     }
@@ -683,15 +695,15 @@ X509
      */
     if ((p = outbuf = OPENSSL_malloc(ecert->encValue->length +
                                      EVP_CIPHER_get_block_size(cipher))) == NULL
-            || (evp_ctx = EVP_CIPHER_CTX_new()) == NULL)
+        || (evp_ctx = EVP_CIPHER_CTX_new()) == NULL)
         goto end;
     EVP_CIPHER_CTX_set_padding(evp_ctx, 0);
 
     if (!EVP_DecryptInit(evp_ctx, cipher, ek, iv)
-            || !EVP_DecryptUpdate(evp_ctx, outbuf, &outlen,
-                                  ecert->encValue->data,
-                                  ecert->encValue->length)
-            || !EVP_DecryptFinal(evp_ctx, outbuf + outlen, &n)) {
+        || !EVP_DecryptUpdate(evp_ctx, outbuf, &outlen,
+                              ecert->encValue->data,
+                              ecert->encValue->length)
+        || !EVP_DecryptFinal(evp_ctx, outbuf + outlen, &n)) {
         ERR_raise(ERR_LIB_CRMF, CRMF_R_ERROR_DECRYPTING_CERTIFICATE);
         goto end;
     }
@@ -702,7 +714,7 @@ X509
         goto end;
     if (d2i_X509(&cert, &p, outlen) == NULL)
         ERR_raise(ERR_LIB_CRMF, CRMF_R_ERROR_DECODING_CERTIFICATE);
- end:
+end:
     EVP_PKEY_CTX_free(pkctx);
     OPENSSL_free(outbuf);
     EVP_CIPHER_CTX_free(evp_ctx);

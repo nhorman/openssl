@@ -150,13 +150,14 @@ int ossl_ec_GFp_simple_set_compressed_coordinates(const EC_GROUP *group,
 
     ret = 1;
 
- err:
+err:
     BN_CTX_end(ctx);
     BN_CTX_free(new_ctx);
     return ret;
 }
 
-size_t ossl_ec_GFp_simple_point2oct(const EC_GROUP *group, const EC_POINT *point,
+size_t ossl_ec_GFp_simple_point2oct(const EC_GROUP *group,
+                                    const EC_POINT *point,
                                     point_conversion_form_t form,
                                     unsigned char *buf, size_t len, BN_CTX *ctx)
 {
@@ -264,7 +265,7 @@ size_t ossl_ec_GFp_simple_point2oct(const EC_GROUP *group, const EC_POINT *point
     BN_CTX_free(new_ctx);
     return ret;
 
- err:
+err:
     if (used_ctx)
         BN_CTX_end(ctx);
     BN_CTX_free(new_ctx);
@@ -365,7 +366,7 @@ int ossl_ec_GFp_simple_oct2point(const EC_GROUP *group, EC_POINT *point,
 
     ret = 1;
 
- err:
+err:
     BN_CTX_end(ctx);
     BN_CTX_free(new_ctx);
     return ret;

@@ -44,7 +44,8 @@ typedef enum OPTION_choice {
     OPT_CAKEYFORM, OPT_VFYOPT, OPT_SIGOPT, OPT_DAYS, OPT_PASSIN, OPT_EXTFILE,
     OPT_EXTENSIONS, OPT_IN, OPT_OUT, OPT_KEY, OPT_SIGNKEY, OPT_CA, OPT_CAKEY,
     OPT_CASERIAL, OPT_SET_SERIAL, OPT_NEW, OPT_FORCE_PUBKEY, OPT_SUBJ,
-    OPT_ADDTRUST, OPT_ADDREJECT, OPT_SETALIAS, OPT_CERTOPT, OPT_DATEOPT, OPT_NAMEOPT,
+    OPT_ADDTRUST, OPT_ADDREJECT, OPT_SETALIAS, OPT_CERTOPT, OPT_DATEOPT,
+    OPT_NAMEOPT,
     OPT_EMAIL, OPT_OCSP_URI, OPT_SERIAL, OPT_NEXT_SERIAL,
     OPT_MODULUS, OPT_PUBKEY, OPT_X509TOREQ, OPT_TEXT, OPT_HASH,
     OPT_ISSUER_HASH, OPT_SUBJECT, OPT_ISSUER, OPT_FINGERPRINT, OPT_DATES,
@@ -216,13 +217,13 @@ static X509_REQ *x509_to_req(X509 *cert, int ext_copy, const char *names)
         ASN1_OBJECT *obj = X509_EXTENSION_get_object(ex);
 
         if (OBJ_cmp(obj, skid) != 0 && OBJ_cmp(obj, akid) != 0
-                && !sk_X509_EXTENSION_push(exts, ex))
+            && !sk_X509_EXTENSION_push(exts, ex))
             goto err;
     }
 
     if (sk_X509_EXTENSION_num(exts) > 0) {
         if (ext_copy != EXT_COPY_UNSET && ext_copy != EXT_COPY_NONE
-                && !X509_REQ_add_extensions(req, exts)) {
+            && !X509_REQ_add_extensions(req, exts)) {
             BIO_printf(bio_err, "Error copying extensions from certificate\n");
             goto err;
         }
@@ -230,7 +231,7 @@ static X509_REQ *x509_to_req(X509 *cert, int ext_copy, const char *names)
     sk_X509_EXTENSION_free(exts);
     return req;
 
- err:
+err:
     sk_X509_EXTENSION_free(exts);
     X509_REQ_free(req);
     return NULL;
@@ -282,7 +283,8 @@ int x509_main(int argc, char **argv)
     int CAformat = FORMAT_UNDEF, CAkeyformat = FORMAT_UNDEF;
     unsigned long dateopt = ASN1_DTFLGS_RFC822;
     int fingerprint = 0, reqfile = 0, checkend = 0;
-    int informat = FORMAT_UNDEF, outformat = FORMAT_PEM, keyformat = FORMAT_UNDEF;
+    int informat = FORMAT_UNDEF, outformat = FORMAT_PEM,
+        keyformat = FORMAT_UNDEF;
     int next_serial = 0, subject_hash = 0, issuer_hash = 0, ocspid = 0;
     int noout = 0, CA_createserial = 0, email = 0;
     int ocsp_uri = 0, trustout = 0, clrtrust = 0, clrreject = 0, aliasout = 0;
@@ -307,291 +309,296 @@ int x509_main(int argc, char **argv)
     prog = opt_init(argc, argv, x509_options);
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_EOF:
-        case OPT_ERR:
- opthelp:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto err;
-        case OPT_HELP:
-            opt_help(x509_options);
-            ret = 0;
-            goto end;
-        case OPT_INFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &informat))
-                goto opthelp;
-            break;
-        case OPT_IN:
-            infile = opt_arg();
-            break;
-        case OPT_OUTFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_ANY, &outformat))
-                goto opthelp;
-            break;
-        case OPT_KEYFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_ANY, &keyformat))
-                goto opthelp;
-            break;
-        case OPT_CAFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_ANY, &CAformat))
-                goto opthelp;
-            break;
-        case OPT_CAKEYFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_ANY, &CAkeyformat))
-                goto opthelp;
-            break;
-        case OPT_OUT:
-            outfile = opt_arg();
-            break;
-        case OPT_REQ:
-            reqfile = 1;
-            break;
-
-        case OPT_DATEOPT:
-            if (!set_dateopt(&dateopt, opt_arg())) {
-                BIO_printf(bio_err,
-                           "Invalid date format: %s\n", opt_arg());
+            case OPT_EOF:
+            case OPT_ERR:
+opthelp:
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
                 goto err;
-            }
-            break;
-        case OPT_COPY_EXTENSIONS:
-            if (!set_ext_copy(&ext_copy, opt_arg())) {
-                BIO_printf(bio_err,
-                           "Invalid extension copy option: %s\n", opt_arg());
-                goto err;
-            }
-            break;
-
-        case OPT_SIGOPT:
-            if (!sigopts)
-                sigopts = sk_OPENSSL_STRING_new_null();
-            if (!sigopts || !sk_OPENSSL_STRING_push(sigopts, opt_arg()))
-                goto opthelp;
-            break;
-        case OPT_VFYOPT:
-            if (!vfyopts)
-                vfyopts = sk_OPENSSL_STRING_new_null();
-            if (!vfyopts || !sk_OPENSSL_STRING_push(vfyopts, opt_arg()))
-                goto opthelp;
-            break;
-        case OPT_DAYS:
-            days = atoi(opt_arg());
-            if (days < -1) {
-                BIO_printf(bio_err, "%s: -days parameter arg must be >= -1\n",
-                           prog);
-                goto err;
-            }
-            break;
-        case OPT_PASSIN:
-            passinarg = opt_arg();
-            break;
-        case OPT_EXTFILE:
-            extfile = opt_arg();
-            break;
-        case OPT_R_CASES:
-            if (!opt_rand(o))
+            case OPT_HELP:
+                opt_help(x509_options);
+                ret = 0;
                 goto end;
-            break;
-        case OPT_PROV_CASES:
-            if (!opt_provider(o))
-                goto end;
-            break;
-        case OPT_EXTENSIONS:
-            extsect = opt_arg();
-            break;
-        case OPT_KEY:
-        case OPT_SIGNKEY:
-            privkeyfile = opt_arg();
-            break;
-        case OPT_CA:
-            CAfile = opt_arg();
-            break;
-        case OPT_CAKEY:
-            CAkeyfile = opt_arg();
-            break;
-        case OPT_CASERIAL:
-            CAserial = opt_arg();
-            break;
-        case OPT_SET_SERIAL:
-            if (sno != NULL) {
-                BIO_printf(bio_err, "Serial number supplied twice\n");
-                goto opthelp;
-            }
-            if ((sno = s2i_ASN1_INTEGER(NULL, opt_arg())) == NULL)
-                goto opthelp;
-            break;
-        case OPT_NEW:
-            newcert = 1;
-            break;
-        case OPT_FORCE_PUBKEY:
-            pubkeyfile = opt_arg();
-            break;
-        case OPT_SUBJ:
-            subj = opt_arg();
-            break;
-        case OPT_ADDTRUST:
-            if (trust == NULL && (trust = sk_ASN1_OBJECT_new_null()) == NULL)
-                goto end;
-            if ((objtmp = OBJ_txt2obj(opt_arg(), 0)) == NULL) {
-                BIO_printf(bio_err, "%s: Invalid trust object value %s\n",
-                           prog, opt_arg());
-                goto opthelp;
-            }
-            sk_ASN1_OBJECT_push(trust, objtmp);
-            trustout = 1;
-            break;
-        case OPT_ADDREJECT:
-            if (reject == NULL && (reject = sk_ASN1_OBJECT_new_null()) == NULL)
-                goto end;
-            if ((objtmp = OBJ_txt2obj(opt_arg(), 0)) == NULL) {
-                BIO_printf(bio_err, "%s: Invalid reject object value %s\n",
-                           prog, opt_arg());
-                goto opthelp;
-            }
-            sk_ASN1_OBJECT_push(reject, objtmp);
-            trustout = 1;
-            break;
-        case OPT_SETALIAS:
-            alias = opt_arg();
-            trustout = 1;
-            break;
-        case OPT_CERTOPT:
-            if (!set_cert_ex(&certflag, opt_arg()))
-                goto opthelp;
-            break;
-        case OPT_NAMEOPT:
-            if (!set_nameopt(opt_arg()))
-                goto opthelp;
-            break;
-        case OPT_ENGINE:
-            e = setup_engine(opt_arg(), 0);
-            break;
-        case OPT_EMAIL:
-            email = ++num;
-            break;
-        case OPT_OCSP_URI:
-            ocsp_uri = ++num;
-            break;
-        case OPT_SERIAL:
-            serial = ++num;
-            break;
-        case OPT_NEXT_SERIAL:
-            next_serial = ++num;
-            break;
-        case OPT_MODULUS:
-            modulus = ++num;
-            break;
-        case OPT_PUBKEY:
-            print_pubkey = ++num;
-            break;
-        case OPT_X509TOREQ:
-            x509toreq = 1;
-            break;
-        case OPT_TEXT:
-            text = ++num;
-            break;
-        case OPT_SUBJECT:
-            subject = ++num;
-            break;
-        case OPT_ISSUER:
-            issuer = ++num;
-            break;
-        case OPT_FINGERPRINT:
-            fingerprint = ++num;
-            break;
-        case OPT_HASH:
-            subject_hash = ++num;
-            break;
-        case OPT_ISSUER_HASH:
-            issuer_hash = ++num;
-            break;
-        case OPT_PURPOSE:
-            pprint = ++num;
-            break;
-        case OPT_STARTDATE:
-            startdate = ++num;
-            break;
-        case OPT_ENDDATE:
-            enddate = ++num;
-            break;
-        case OPT_NOOUT:
-            noout = ++num;
-            break;
-        case OPT_EXT:
-            ext = ++num;
-            ext_names = opt_arg();
-            break;
-        case OPT_NOCERT:
-            nocert = 1;
-            break;
-        case OPT_TRUSTOUT:
-            trustout = 1;
-            break;
-        case OPT_CLRTRUST:
-            clrtrust = ++num;
-            break;
-        case OPT_CLRREJECT:
-            clrreject = ++num;
-            break;
-        case OPT_ALIAS:
-            aliasout = ++num;
-            break;
-        case OPT_CACREATESERIAL:
-            CA_createserial = 1;
-            break;
-        case OPT_CLREXT:
-            clrext = 1;
-            break;
-        case OPT_OCSPID:
-            ocspid = ++num;
-            break;
-        case OPT_BADSIG:
-            badsig = 1;
-            break;
-#ifndef OPENSSL_NO_MD5
-        case OPT_SUBJECT_HASH_OLD:
-            subject_hash_old = ++num;
-            break;
-        case OPT_ISSUER_HASH_OLD:
-            issuer_hash_old = ++num;
-            break;
-#else
-        case OPT_SUBJECT_HASH_OLD:
-        case OPT_ISSUER_HASH_OLD:
-            break;
-#endif
-        case OPT_DATES:
-            startdate = ++num;
-            enddate = ++num;
-            break;
-        case OPT_CHECKEND:
-            checkend = 1;
-            {
-                ossl_intmax_t temp = 0;
-                if (!opt_intmax(opt_arg(), &temp))
+            case OPT_INFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &informat))
                     goto opthelp;
-                checkoffset = (time_t)temp;
-                if ((ossl_intmax_t)checkoffset != temp) {
-                    BIO_printf(bio_err, "%s: Checkend time out of range %s\n",
+                break;
+            case OPT_IN:
+                infile = opt_arg();
+                break;
+            case OPT_OUTFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_ANY, &outformat))
+                    goto opthelp;
+                break;
+            case OPT_KEYFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_ANY, &keyformat))
+                    goto opthelp;
+                break;
+            case OPT_CAFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_ANY, &CAformat))
+                    goto opthelp;
+                break;
+            case OPT_CAKEYFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_ANY, &CAkeyformat))
+                    goto opthelp;
+                break;
+            case OPT_OUT:
+                outfile = opt_arg();
+                break;
+            case OPT_REQ:
+                reqfile = 1;
+                break;
+
+            case OPT_DATEOPT:
+                if (!set_dateopt(&dateopt, opt_arg())) {
+                    BIO_printf(bio_err,
+                               "Invalid date format: %s\n", opt_arg());
+                    goto err;
+                }
+                break;
+            case OPT_COPY_EXTENSIONS:
+                if (!set_ext_copy(&ext_copy, opt_arg())) {
+                    BIO_printf(bio_err,
+                               "Invalid extension copy option: %s\n",
+                               opt_arg());
+                    goto err;
+                }
+                break;
+
+            case OPT_SIGOPT:
+                if (!sigopts)
+                    sigopts = sk_OPENSSL_STRING_new_null();
+                if (!sigopts || !sk_OPENSSL_STRING_push(sigopts, opt_arg()))
+                    goto opthelp;
+                break;
+            case OPT_VFYOPT:
+                if (!vfyopts)
+                    vfyopts = sk_OPENSSL_STRING_new_null();
+                if (!vfyopts || !sk_OPENSSL_STRING_push(vfyopts, opt_arg()))
+                    goto opthelp;
+                break;
+            case OPT_DAYS:
+                days = atoi(opt_arg());
+                if (days < -1) {
+                    BIO_printf(bio_err,
+                               "%s: -days parameter arg must be >= -1\n",
+                               prog);
+                    goto err;
+                }
+                break;
+            case OPT_PASSIN:
+                passinarg = opt_arg();
+                break;
+            case OPT_EXTFILE:
+                extfile = opt_arg();
+                break;
+            case OPT_R_CASES:
+                if (!opt_rand(o))
+                    goto end;
+                break;
+            case OPT_PROV_CASES:
+                if (!opt_provider(o))
+                    goto end;
+                break;
+            case OPT_EXTENSIONS:
+                extsect = opt_arg();
+                break;
+            case OPT_KEY:
+            case OPT_SIGNKEY:
+                privkeyfile = opt_arg();
+                break;
+            case OPT_CA:
+                CAfile = opt_arg();
+                break;
+            case OPT_CAKEY:
+                CAkeyfile = opt_arg();
+                break;
+            case OPT_CASERIAL:
+                CAserial = opt_arg();
+                break;
+            case OPT_SET_SERIAL:
+                if (sno != NULL) {
+                    BIO_printf(bio_err, "Serial number supplied twice\n");
+                    goto opthelp;
+                }
+                if ((sno = s2i_ASN1_INTEGER(NULL, opt_arg())) == NULL)
+                    goto opthelp;
+                break;
+            case OPT_NEW:
+                newcert = 1;
+                break;
+            case OPT_FORCE_PUBKEY:
+                pubkeyfile = opt_arg();
+                break;
+            case OPT_SUBJ:
+                subj = opt_arg();
+                break;
+            case OPT_ADDTRUST:
+                if (trust == NULL &&
+                    (trust = sk_ASN1_OBJECT_new_null()) == NULL)
+                    goto end;
+                if ((objtmp = OBJ_txt2obj(opt_arg(), 0)) == NULL) {
+                    BIO_printf(bio_err, "%s: Invalid trust object value %s\n",
                                prog, opt_arg());
                     goto opthelp;
                 }
-            }
-            break;
-        case OPT_CHECKHOST:
-            checkhost = opt_arg();
-            break;
-        case OPT_CHECKEMAIL:
-            checkemail = opt_arg();
-            break;
-        case OPT_CHECKIP:
-            checkip = opt_arg();
-            break;
-        case OPT_PRESERVE_DATES:
-            preserve_dates = 1;
-            break;
-        case OPT_MD:
-            digest = opt_unknown();
-            break;
+                sk_ASN1_OBJECT_push(trust, objtmp);
+                trustout = 1;
+                break;
+            case OPT_ADDREJECT:
+                if (reject == NULL &&
+                    (reject = sk_ASN1_OBJECT_new_null()) == NULL)
+                    goto end;
+                if ((objtmp = OBJ_txt2obj(opt_arg(), 0)) == NULL) {
+                    BIO_printf(bio_err, "%s: Invalid reject object value %s\n",
+                               prog, opt_arg());
+                    goto opthelp;
+                }
+                sk_ASN1_OBJECT_push(reject, objtmp);
+                trustout = 1;
+                break;
+            case OPT_SETALIAS:
+                alias = opt_arg();
+                trustout = 1;
+                break;
+            case OPT_CERTOPT:
+                if (!set_cert_ex(&certflag, opt_arg()))
+                    goto opthelp;
+                break;
+            case OPT_NAMEOPT:
+                if (!set_nameopt(opt_arg()))
+                    goto opthelp;
+                break;
+            case OPT_ENGINE:
+                e = setup_engine(opt_arg(), 0);
+                break;
+            case OPT_EMAIL:
+                email = ++num;
+                break;
+            case OPT_OCSP_URI:
+                ocsp_uri = ++num;
+                break;
+            case OPT_SERIAL:
+                serial = ++num;
+                break;
+            case OPT_NEXT_SERIAL:
+                next_serial = ++num;
+                break;
+            case OPT_MODULUS:
+                modulus = ++num;
+                break;
+            case OPT_PUBKEY:
+                print_pubkey = ++num;
+                break;
+            case OPT_X509TOREQ:
+                x509toreq = 1;
+                break;
+            case OPT_TEXT:
+                text = ++num;
+                break;
+            case OPT_SUBJECT:
+                subject = ++num;
+                break;
+            case OPT_ISSUER:
+                issuer = ++num;
+                break;
+            case OPT_FINGERPRINT:
+                fingerprint = ++num;
+                break;
+            case OPT_HASH:
+                subject_hash = ++num;
+                break;
+            case OPT_ISSUER_HASH:
+                issuer_hash = ++num;
+                break;
+            case OPT_PURPOSE:
+                pprint = ++num;
+                break;
+            case OPT_STARTDATE:
+                startdate = ++num;
+                break;
+            case OPT_ENDDATE:
+                enddate = ++num;
+                break;
+            case OPT_NOOUT:
+                noout = ++num;
+                break;
+            case OPT_EXT:
+                ext = ++num;
+                ext_names = opt_arg();
+                break;
+            case OPT_NOCERT:
+                nocert = 1;
+                break;
+            case OPT_TRUSTOUT:
+                trustout = 1;
+                break;
+            case OPT_CLRTRUST:
+                clrtrust = ++num;
+                break;
+            case OPT_CLRREJECT:
+                clrreject = ++num;
+                break;
+            case OPT_ALIAS:
+                aliasout = ++num;
+                break;
+            case OPT_CACREATESERIAL:
+                CA_createserial = 1;
+                break;
+            case OPT_CLREXT:
+                clrext = 1;
+                break;
+            case OPT_OCSPID:
+                ocspid = ++num;
+                break;
+            case OPT_BADSIG:
+                badsig = 1;
+                break;
+#ifndef OPENSSL_NO_MD5
+            case OPT_SUBJECT_HASH_OLD:
+                subject_hash_old = ++num;
+                break;
+            case OPT_ISSUER_HASH_OLD:
+                issuer_hash_old = ++num;
+                break;
+#else
+            case OPT_SUBJECT_HASH_OLD:
+            case OPT_ISSUER_HASH_OLD:
+                break;
+#endif
+            case OPT_DATES:
+                startdate = ++num;
+                enddate = ++num;
+                break;
+            case OPT_CHECKEND:
+                checkend = 1;
+                {
+                    ossl_intmax_t temp = 0;
+                    if (!opt_intmax(opt_arg(), &temp))
+                        goto opthelp;
+                    checkoffset = (time_t)temp;
+                    if ((ossl_intmax_t)checkoffset != temp) {
+                        BIO_printf(bio_err,
+                                   "%s: Checkend time out of range %s\n",
+                                   prog, opt_arg());
+                        goto opthelp;
+                    }
+                }
+                break;
+            case OPT_CHECKHOST:
+                checkhost = opt_arg();
+                break;
+            case OPT_CHECKEMAIL:
+                checkemail = opt_arg();
+                break;
+            case OPT_CHECKIP:
+                checkip = opt_arg();
+                break;
+            case OPT_PRESERVE_DATES:
+                preserve_dates = 1;
+                break;
+            case OPT_MD:
+                digest = opt_unknown();
+                break;
         }
     }
     /* No extra arguments. */
@@ -652,19 +659,20 @@ int x509_main(int argc, char **argv)
         }
     }
     if (subj != NULL
-            && (fsubj = parse_name(subj, chtype, multirdn, "subject")) == NULL)
+        && (fsubj = parse_name(subj, chtype, multirdn, "subject")) == NULL)
         goto end;
 
     if (CAkeyfile == NULL)
         CAkeyfile = CAfile;
     if (CAfile != NULL) {
         if (privkeyfile != NULL) {
-            BIO_printf(bio_err, "Cannot use both -key/-signkey and -CA option\n");
+            BIO_printf(bio_err,
+                       "Cannot use both -key/-signkey and -CA option\n");
             goto err;
         }
     } else {
 #define WARN_NO_CA(opt) BIO_printf(bio_err, \
-        "Warning: ignoring " opt " option since -CA option is not given\n");
+                                   "Warning: ignoring " opt " option since -CA option is not given\n");
         if (CAkeyfile != NULL)
             WARN_NO_CA("-CAkey");
         if (CAkeyformat != FORMAT_UNDEF)
@@ -724,7 +732,8 @@ int x509_main(int argc, char **argv)
 
         print_name(bio_err, "subject=", X509_REQ_get_subject_name(req));
     } else if (!x509toreq && ext_copy != EXT_COPY_UNSET) {
-        BIO_printf(bio_err, "Warning: ignoring -copy_extensions since neither -x509toreq nor -req is given\n");
+        BIO_printf(bio_err,
+                   "Warning: ignoring -copy_extensions since neither -x509toreq nor -req is given\n");
     }
 
     if (reqfile || newcert) {
@@ -746,7 +755,8 @@ int x509_main(int argc, char **argv)
         }
         if (req != NULL && ext_copy != EXT_COPY_UNSET) {
             if (clrext && ext_copy != EXT_COPY_NONE) {
-                BIO_printf(bio_err, "Must not use -clrext together with -copy_extensions\n");
+                BIO_printf(bio_err,
+                           "Must not use -clrext together with -copy_extensions\n");
                 goto err;
             } else if (!copy_extensions(x, req, ext_copy)) {
                 BIO_printf(bio_err, "Error copying extensions from request\n");
@@ -859,11 +869,13 @@ int x509_main(int argc, char **argv)
 
     if (x509toreq) { /* also works in conjunction with -req */
         if (privkey == NULL) {
-            BIO_printf(bio_err, "Must specify request signing key using -key\n");
+            BIO_printf(bio_err,
+                       "Must specify request signing key using -key\n");
             goto err;
         }
         if (clrext && ext_copy != EXT_COPY_NONE) {
-            BIO_printf(bio_err, "Must not use -clrext together with -copy_extensions\n");
+            BIO_printf(bio_err,
+                       "Must not use -clrext together with -copy_extensions\n");
             goto err;
         }
         if ((rq = x509_to_req(x, ext_copy, ext_names)) == NULL)
@@ -872,7 +884,8 @@ int x509_main(int argc, char **argv)
             X509V3_set_nconf(&ext_ctx, extconf);
             if (!X509V3_EXT_REQ_add_nconf(extconf, &ext_ctx, extsect, rq)) {
                 BIO_printf(bio_err,
-                           "Error adding request extensions from section %s\n", extsect);
+                           "Error adding request extensions from section %s\n",
+                           extsect);
                 goto err;
             }
         }
@@ -932,7 +945,7 @@ int x509_main(int argc, char **argv)
             if (bnser == NULL)
                 goto end;
             if (!BN_add_word(bnser, 1)
-                    || (ser = BN_to_ASN1_INTEGER(bnser, NULL)) == NULL) {
+                || (ser = BN_to_ASN1_INTEGER(bnser, NULL)) == NULL) {
                 BN_free(bnser);
                 goto end;
             }
@@ -1026,7 +1039,8 @@ int x509_main(int argc, char **argv)
 
             BIO_printf(out, "%s Fingerprint=", fdigname);
             for (j = 0; j < (int)n; j++)
-                BIO_printf(out, "%02X%c", md[j], (j + 1 == (int)n) ? '\n' : ':');
+                BIO_printf(out, "%02X%c", md[j],
+                           (j + 1 == (int)n) ? '\n' : ':');
         } else if (i == ocspid) {
             X509_ocspid_print(out, x);
         } else if (i == ext) {
@@ -1072,10 +1086,10 @@ int x509_main(int argc, char **argv)
     ret = 0;
     goto end;
 
- err:
+err:
     ERR_print_errors(bio_err);
 
- end:
+end:
     NCONF_free(extconf);
     BIO_free_all(out);
     X509_STORE_free(ctx);
@@ -1130,7 +1144,7 @@ static ASN1_INTEGER *x509_load_serial(const char *CAfile,
     else
         bs = BN_to_ASN1_INTEGER(serial, NULL);
 
- end:
+end:
     OPENSSL_free(buf);
     BN_free(serial);
     return bs;
@@ -1264,7 +1278,7 @@ static int print_x509v3_exts(BIO *bio, X509 *x, const char *ext_names)
     }
 
     ret = X509V3_extensions_print(bio, NULL, exts2, 0, 0);
- end:
+end:
     sk_X509_EXTENSION_free(exts2);
     OPENSSL_free(names);
     OPENSSL_free(tmp_ext_names);

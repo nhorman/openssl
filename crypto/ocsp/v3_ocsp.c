@@ -136,7 +136,7 @@ static int i2r_ocsp_crlid(const X509V3_EXT_METHOD *method, void *in, BIO *bp,
             goto err;
     }
     return 1;
- err:
+err:
     return 0;
 }
 
@@ -200,7 +200,7 @@ static void *d2i_ocsp_nonce(void *a, const unsigned char **pp, long length)
         *pos = os;
     return os;
 
- err:
+err:
     if ((pos == NULL) || (*pos != os))
         ASN1_OCTET_STRING_free(os);
     ERR_raise(ERR_LIB_OCSP, ERR_R_ASN1_LIB);
@@ -259,6 +259,6 @@ static int i2r_ocsp_serviceloc(const X509V3_EXT_METHOD *method, void *in,
             goto err;
     }
     return 1;
- err:
+err:
     return 0;
 }

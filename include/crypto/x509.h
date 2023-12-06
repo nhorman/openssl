@@ -43,7 +43,7 @@ struct X509_name_st {
     /* canonical encoding used for rapid Name comparison */
     unsigned char *canon_enc;
     int canon_enclen;
-} /* X509_NAME */ ;
+} /* X509_NAME */;
 
 /* Signature info structure */
 
@@ -205,7 +205,7 @@ struct x509_st {
 
     OSSL_LIB_CTX *libctx;
     char *propq;
-} /* X509 */ ;
+} /* X509 */;
 
 /*
  * This is a used when verifying cert chains.  Since the gathering of the

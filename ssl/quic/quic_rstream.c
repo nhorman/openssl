@@ -1,11 +1,11 @@
 /*
-* Copyright 2022-2023 The OpenSSL Project Authors. All Rights Reserved.
-*
-* Licensed under the Apache License 2.0 (the "License").  You may not use
-* this file except in compliance with the License.  You can obtain a copy
-* in the file LICENSE in the source distribution or at
-* https://www.openssl.org/source/license.html
-*/
+ * Copyright 2022-2023 The OpenSSL Project Authors. All Rights Reserved.
+ *
+ * Licensed under the Apache License 2.0 (the "License").  You may not use
+ * this file except in compliance with the License.  You can obtain a copy
+ * in the file LICENSE in the source distribution or at
+ * https://www.openssl.org/source/license.html
+ */
 #include <openssl/err.h>
 #include "internal/common.h"
 #include "internal/time.h"
@@ -195,7 +195,8 @@ int ossl_quic_rstream_get_record(QUIC_RSTREAM *qrs,
     const unsigned char *record_ = NULL;
     size_t rec_len_, max_len;
 
-    if (!ossl_sframe_list_lock_head(&qrs->fl, &qrs->head_range, &record_, fin)) {
+    if (!ossl_sframe_list_lock_head(&qrs->fl, &qrs->head_range, &record_,
+                                    fin)) {
         /* No head frame to lock and return */
         *record = NULL;
         *rec_len = 0;

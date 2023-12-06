@@ -75,23 +75,23 @@
 
 /* SHA OIDs are of the form: (2 16 840 1 101 3 4 2 |n|) */
 #define ENCODE_DIGESTINFO_SHA(name, n, sz)                                     \
-static const unsigned char digestinfo_##name##_der[] = {                       \
-    ASN1_SEQUENCE, 0x11 + sz,                                                  \
-      ASN1_SEQUENCE, 0x0d,                                                     \
-        ASN1_OID, 0x09, 2 * 40 + 16, 0x86, 0x48, 1, 101, 3, 4, 2, n,           \
-        ASN1_NULL, 0x00,                                                       \
-      ASN1_OCTET_STRING, sz                                                    \
-};
+        static const unsigned char digestinfo_ ## name ## _der[] = {                       \
+            ASN1_SEQUENCE, 0x11 + sz,                                                  \
+            ASN1_SEQUENCE, 0x0d,                                                     \
+            ASN1_OID, 0x09, 2 * 40 + 16, 0x86, 0x48, 1, 101, 3, 4, 2, n,           \
+            ASN1_NULL, 0x00,                                                       \
+            ASN1_OCTET_STRING, sz                                                    \
+        };
 
 /* MD2, MD4 and MD5 OIDs are of the form: (1 2 840 113549 2 |n|) */
 #define ENCODE_DIGESTINFO_MD(name, n, sz)                                      \
-static const unsigned char digestinfo_##name##_der[] = {                       \
-    ASN1_SEQUENCE, 0x10 + sz,                                                  \
-      ASN1_SEQUENCE, 0x0c,                                                     \
-        ASN1_OID, 0x08, 1 * 40 + 2, 0x86, 0x48, 0x86, 0xf7, 0x0d, 2, n,        \
-        ASN1_NULL, 0x00,                                                       \
-      ASN1_OCTET_STRING, sz                                                    \
-};
+        static const unsigned char digestinfo_ ## name ## _der[] = {                       \
+            ASN1_SEQUENCE, 0x10 + sz,                                                  \
+            ASN1_SEQUENCE, 0x0c,                                                     \
+            ASN1_OID, 0x08, 1 * 40 + 2, 0x86, 0x48, 0x86, 0xf7, 0x0d, 2, n,        \
+            ASN1_NULL, 0x00,                                                       \
+            ASN1_OCTET_STRING, sz                                                    \
+        };
 
 #ifndef FIPS_MODULE
 # ifndef OPENSSL_NO_MD2
@@ -107,20 +107,20 @@ ENCODE_DIGESTINFO_MD(md5, 0x05, MD5_DIGEST_LENGTH)
 /* MDC-2 (2 5 8 3 101) */
 static const unsigned char digestinfo_mdc2_der[] = {
     ASN1_SEQUENCE, 0x0c + MDC2_DIGEST_LENGTH,
-      ASN1_SEQUENCE, 0x08,
-        ASN1_OID, 0x04, 2 * 40 + 5, 8, 3, 101,
-        ASN1_NULL, 0x00,
-      ASN1_OCTET_STRING, MDC2_DIGEST_LENGTH
+    ASN1_SEQUENCE, 0x08,
+    ASN1_OID, 0x04, 2 * 40 + 5, 8, 3, 101,
+    ASN1_NULL, 0x00,
+    ASN1_OCTET_STRING, MDC2_DIGEST_LENGTH
 };
 # endif
 # ifndef OPENSSL_NO_RMD160
 /* RIPEMD160 (1 3 36 3 2 1) */
 static const unsigned char digestinfo_ripemd160_der[] = {
     ASN1_SEQUENCE, 0x0d + RIPEMD160_DIGEST_LENGTH,
-      ASN1_SEQUENCE, 0x09,
-        ASN1_OID, 0x05, 1 * 40 + 3, 36, 3, 2, 1,
-        ASN1_NULL, 0x00,
-      ASN1_OCTET_STRING, RIPEMD160_DIGEST_LENGTH
+    ASN1_SEQUENCE, 0x09,
+    ASN1_OID, 0x05, 1 * 40 + 3, 36, 3, 2, 1,
+    ASN1_NULL, 0x00,
+    ASN1_OCTET_STRING, RIPEMD160_DIGEST_LENGTH
 };
 # endif
 #endif /* FIPS_MODULE */
@@ -128,10 +128,10 @@ static const unsigned char digestinfo_ripemd160_der[] = {
 /* SHA-1 (1 3 14 3 2 26) */
 static const unsigned char digestinfo_sha1_der[] = {
     ASN1_SEQUENCE, 0x0d + SHA_DIGEST_LENGTH,
-      ASN1_SEQUENCE, 0x09,
-        ASN1_OID, 0x05, 1 * 40 + 3, 14, 3, 2, 26,
-        ASN1_NULL, 0x00,
-      ASN1_OCTET_STRING, SHA_DIGEST_LENGTH
+    ASN1_SEQUENCE, 0x09,
+    ASN1_OID, 0x05, 1 * 40 + 3, 14, 3, 2, 26,
+    ASN1_NULL, 0x00,
+    ASN1_OCTET_STRING, SHA_DIGEST_LENGTH
 };
 
 ENCODE_DIGESTINFO_SHA(sha256, 0x01, SHA256_DIGEST_LENGTH)
@@ -146,9 +146,9 @@ ENCODE_DIGESTINFO_SHA(sha3_384, 0x09, SHA384_DIGEST_LENGTH)
 ENCODE_DIGESTINFO_SHA(sha3_512, 0x0a, SHA512_DIGEST_LENGTH)
 
 #define MD_CASE(name)                                                          \
-    case NID_##name:                                                           \
-        *len = sizeof(digestinfo_##name##_der);                                \
-        return digestinfo_##name##_der;
+            case NID_ ## name:                                                           \
+                *len = sizeof(digestinfo_ ## name ## _der);                                \
+                return digestinfo_ ## name ## _der;
 
 const unsigned char *ossl_rsa_digestinfo_encoding(int md_nid, size_t *len)
 {
@@ -181,14 +181,14 @@ const unsigned char *ossl_rsa_digestinfo_encoding(int md_nid, size_t *len)
     MD_CASE(sha3_256)
     MD_CASE(sha3_384)
     MD_CASE(sha3_512)
-    default:
-        return NULL;
+        default:
+            return NULL;
     }
 }
 
 #define MD_NID_CASE(name, sz)                                                  \
-    case NID_##name:                                                           \
-        return sz;
+            case NID_ ## name:                                                           \
+                return sz;
 
 static int digest_sz_from_nid(int nid)
 {
@@ -221,8 +221,8 @@ static int digest_sz_from_nid(int nid)
     MD_NID_CASE(sha3_256, SHA256_DIGEST_LENGTH)
     MD_NID_CASE(sha3_384, SHA384_DIGEST_LENGTH)
     MD_NID_CASE(sha3_512, SHA512_DIGEST_LENGTH)
-    default:
-        return 0;
+        default:
+            return 0;
     }
 }
 
@@ -422,7 +422,7 @@ int ossl_rsa_verify(int type, const unsigned char *m, unsigned int m_len,
             goto err;
 
         if (encoded_len != decrypt_len
-                || memcmp(encoded, decrypt_buf, encoded_len) != 0) {
+            || memcmp(encoded, decrypt_buf, encoded_len) != 0) {
             ERR_raise(ERR_LIB_RSA, RSA_R_BAD_SIGNATURE);
             goto err;
         }

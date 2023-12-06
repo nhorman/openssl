@@ -27,46 +27,46 @@ int ossl_prov_bio_from_dispatch(const OSSL_DISPATCH *fns)
 {
     for (; fns->function_id != 0; fns++) {
         switch (fns->function_id) {
-        case OSSL_FUNC_BIO_NEW_FILE:
-            if (c_bio_new_file == NULL)
-                c_bio_new_file = OSSL_FUNC_BIO_new_file(fns);
-            break;
-        case OSSL_FUNC_BIO_NEW_MEMBUF:
-            if (c_bio_new_membuf == NULL)
-                c_bio_new_membuf = OSSL_FUNC_BIO_new_membuf(fns);
-            break;
-        case OSSL_FUNC_BIO_READ_EX:
-            if (c_bio_read_ex == NULL)
-                c_bio_read_ex = OSSL_FUNC_BIO_read_ex(fns);
-            break;
-        case OSSL_FUNC_BIO_WRITE_EX:
-            if (c_bio_write_ex == NULL)
-                c_bio_write_ex = OSSL_FUNC_BIO_write_ex(fns);
-            break;
-        case OSSL_FUNC_BIO_GETS:
-            if (c_bio_gets == NULL)
-                c_bio_gets = OSSL_FUNC_BIO_gets(fns);
-            break;
-        case OSSL_FUNC_BIO_PUTS:
-            if (c_bio_puts == NULL)
-                c_bio_puts = OSSL_FUNC_BIO_puts(fns);
-            break;
-        case OSSL_FUNC_BIO_CTRL:
-            if (c_bio_ctrl == NULL)
-                c_bio_ctrl = OSSL_FUNC_BIO_ctrl(fns);
-            break;
-        case OSSL_FUNC_BIO_UP_REF:
-            if (c_bio_up_ref == NULL)
-                c_bio_up_ref = OSSL_FUNC_BIO_up_ref(fns);
-            break;
-        case OSSL_FUNC_BIO_FREE:
-            if (c_bio_free == NULL)
-                c_bio_free = OSSL_FUNC_BIO_free(fns);
-            break;
-        case OSSL_FUNC_BIO_VPRINTF:
-            if (c_bio_vprintf == NULL)
-                c_bio_vprintf = OSSL_FUNC_BIO_vprintf(fns);
-            break;
+            case OSSL_FUNC_BIO_NEW_FILE:
+                if (c_bio_new_file == NULL)
+                    c_bio_new_file = OSSL_FUNC_BIO_new_file(fns);
+                break;
+            case OSSL_FUNC_BIO_NEW_MEMBUF:
+                if (c_bio_new_membuf == NULL)
+                    c_bio_new_membuf = OSSL_FUNC_BIO_new_membuf(fns);
+                break;
+            case OSSL_FUNC_BIO_READ_EX:
+                if (c_bio_read_ex == NULL)
+                    c_bio_read_ex = OSSL_FUNC_BIO_read_ex(fns);
+                break;
+            case OSSL_FUNC_BIO_WRITE_EX:
+                if (c_bio_write_ex == NULL)
+                    c_bio_write_ex = OSSL_FUNC_BIO_write_ex(fns);
+                break;
+            case OSSL_FUNC_BIO_GETS:
+                if (c_bio_gets == NULL)
+                    c_bio_gets = OSSL_FUNC_BIO_gets(fns);
+                break;
+            case OSSL_FUNC_BIO_PUTS:
+                if (c_bio_puts == NULL)
+                    c_bio_puts = OSSL_FUNC_BIO_puts(fns);
+                break;
+            case OSSL_FUNC_BIO_CTRL:
+                if (c_bio_ctrl == NULL)
+                    c_bio_ctrl = OSSL_FUNC_BIO_ctrl(fns);
+                break;
+            case OSSL_FUNC_BIO_UP_REF:
+                if (c_bio_up_ref == NULL)
+                    c_bio_up_ref = OSSL_FUNC_BIO_up_ref(fns);
+                break;
+            case OSSL_FUNC_BIO_FREE:
+                if (c_bio_free == NULL)
+                    c_bio_free = OSSL_FUNC_BIO_free(fns);
+                break;
+            case OSSL_FUNC_BIO_VPRINTF:
+                if (c_bio_vprintf == NULL)
+                    c_bio_vprintf = OSSL_FUNC_BIO_vprintf(fns);
+                break;
         }
     }
 
@@ -95,7 +95,8 @@ int ossl_prov_bio_read_ex(OSSL_CORE_BIO *bio, void *data, size_t data_len,
     return c_bio_read_ex(bio, data, data_len, bytes_read);
 }
 
-int ossl_prov_bio_write_ex(OSSL_CORE_BIO *bio, const void *data, size_t data_len,
+int ossl_prov_bio_write_ex(OSSL_CORE_BIO *bio, const void *data,
+                           size_t data_len,
                            size_t *written)
 {
     if (c_bio_write_ex == NULL)
@@ -209,13 +210,13 @@ BIO_METHOD *ossl_bio_prov_init_bio_method(void)
 
     corebiometh = BIO_meth_new(BIO_TYPE_CORE_TO_PROV, "BIO to Core filter");
     if (corebiometh == NULL
-            || !BIO_meth_set_write_ex(corebiometh, bio_core_write_ex)
-            || !BIO_meth_set_read_ex(corebiometh, bio_core_read_ex)
-            || !BIO_meth_set_puts(corebiometh, bio_core_puts)
-            || !BIO_meth_set_gets(corebiometh, bio_core_gets)
-            || !BIO_meth_set_ctrl(corebiometh, bio_core_ctrl)
-            || !BIO_meth_set_create(corebiometh, bio_core_new)
-            || !BIO_meth_set_destroy(corebiometh, bio_core_free)) {
+        || !BIO_meth_set_write_ex(corebiometh, bio_core_write_ex)
+        || !BIO_meth_set_read_ex(corebiometh, bio_core_read_ex)
+        || !BIO_meth_set_puts(corebiometh, bio_core_puts)
+        || !BIO_meth_set_gets(corebiometh, bio_core_gets)
+        || !BIO_meth_set_ctrl(corebiometh, bio_core_ctrl)
+        || !BIO_meth_set_create(corebiometh, bio_core_new)
+        || !BIO_meth_set_destroy(corebiometh, bio_core_free)) {
         BIO_meth_free(corebiometh);
         return NULL;
     }

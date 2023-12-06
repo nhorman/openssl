@@ -31,7 +31,7 @@ struct evp_md_ctx_st {
      */
     void *algctx;
     EVP_MD *fetched_digest;
-} /* EVP_MD_CTX */ ;
+} /* EVP_MD_CTX */;
 
 struct evp_cipher_ctx_st {
     const EVP_CIPHER *cipher;
@@ -59,7 +59,7 @@ struct evp_cipher_ctx_st {
      */
     void *algctx;
     EVP_CIPHER *fetched_cipher;
-} /* EVP_CIPHER_CTX */ ;
+} /* EVP_CIPHER_CTX */;
 
 struct evp_mac_ctx_st {
     EVP_MAC *meth;               /* Method structure */
@@ -77,7 +77,7 @@ struct evp_kdf_ctx_st {
      * OSSL_FUNC_kdf_newctx()
      */
     void *algctx;
-} /* EVP_KDF_CTX */ ;
+} /* EVP_KDF_CTX */;
 
 struct evp_rand_ctx_st {
     EVP_RAND *meth;             /* Method structure */
@@ -89,7 +89,7 @@ struct evp_rand_ctx_st {
     EVP_RAND_CTX *parent;       /* Parent EVP_RAND or NULL if none */
     CRYPTO_REF_COUNT refcnt;    /* Context reference count */
     CRYPTO_RWLOCK *refcnt_lock;
-} /* EVP_RAND_CTX */ ;
+} /* EVP_RAND_CTX */;
 
 struct evp_keymgmt_st {
     int id;                      /* libcrypto internal */
@@ -132,7 +132,7 @@ struct evp_keymgmt_st {
     OSSL_FUNC_keymgmt_export_types_fn *export_types;
     OSSL_FUNC_keymgmt_export_types_ex_fn *export_types_ex;
     OSSL_FUNC_keymgmt_dup_fn *dup;
-} /* EVP_KEYMGMT */ ;
+} /* EVP_KEYMGMT */;
 
 struct evp_keyexch_st {
     int name_id;
@@ -236,7 +236,8 @@ int PKCS5_v2_PBKDF2_keyivgen(EVP_CIPHER_CTX *ctx, const char *pass,
 int PKCS5_v2_PBKDF2_keyivgen_ex(EVP_CIPHER_CTX *ctx, const char *pass,
                                 int passlen, ASN1_TYPE *param,
                                 const EVP_CIPHER *c, const EVP_MD *md,
-                                int en_de, OSSL_LIB_CTX *libctx, const char *propq);
+                                int en_de, OSSL_LIB_CTX *libctx,
+                                const char *propq);
 
 struct evp_Encode_Ctx_st {
     /* number saved in a partial encode/decode */
@@ -340,22 +341,22 @@ int evp_do_md_ctx_setparams(const EVP_MD *md, void *provctx,
 OSSL_PARAM *evp_pkey_to_param(EVP_PKEY *pkey, size_t *sz);
 
 #define M_check_autoarg(ctx, arg, arglen, err) \
-    if (ctx->pmeth->flags & EVP_PKEY_FLAG_AUTOARGLEN) {           \
-        size_t pksize = (size_t)EVP_PKEY_get_size(ctx->pkey);         \
+        if (ctx->pmeth->flags & EVP_PKEY_FLAG_AUTOARGLEN) {           \
+            size_t pksize = (size_t)EVP_PKEY_get_size(ctx->pkey);         \
                                                                   \
-        if (pksize == 0) {                                        \
-            ERR_raise(ERR_LIB_EVP, EVP_R_INVALID_KEY); /*ckerr_ignore*/ \
-            return 0;                                             \
-        }                                                         \
-        if (arg == NULL) {                                        \
-            *arglen = pksize;                                     \
-            return 1;                                             \
-        }                                                         \
-        if (*arglen < pksize) {                                   \
-            ERR_raise(ERR_LIB_EVP, EVP_R_BUFFER_TOO_SMALL); /*ckerr_ignore*/ \
-            return 0;                                             \
-        }                                                         \
-    }
+            if (pksize == 0) {                                        \
+                ERR_raise(ERR_LIB_EVP, EVP_R_INVALID_KEY); /*ckerr_ignore*/ \
+                return 0;                                             \
+            }                                                         \
+            if (arg == NULL) {                                        \
+                *arglen = pksize;                                     \
+                return 1;                                             \
+            }                                                         \
+            if (*arglen < pksize) {                                   \
+                ERR_raise(ERR_LIB_EVP, EVP_R_BUFFER_TOO_SMALL); /*ckerr_ignore*/ \
+                return 0;                                             \
+            }                                                         \
+        }
 
 void evp_pkey_ctx_free_old_ops(EVP_PKEY_CTX *ctx);
 void evp_cipher_free_int(EVP_CIPHER *md);

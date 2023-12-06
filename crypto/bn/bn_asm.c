@@ -446,35 +446,35 @@ BN_ULONG bn_sub_words(BN_ULONG *r, const BN_ULONG *a, const BN_ULONG *b,
  * overflow, because its high half cannot be all-ones.
  */
 #  define mul_add_c(a,b,c0,c1,c2)       do {    \
-        BN_ULONG hi;                            \
-        BN_ULLONG t = (BN_ULLONG)(a)*(b);       \
-        t += c0;                /* no carry */  \
-        c0 = (BN_ULONG)Lw(t);                   \
-        hi = (BN_ULONG)Hw(t);                   \
-        c1 = (c1+hi)&BN_MASK2; c2 += (c1<hi);   \
-        } while(0)
+            BN_ULONG hi;                            \
+            BN_ULLONG t = (BN_ULLONG)(a)*(b);       \
+            t += c0;            /* no carry */  \
+            c0 = (BN_ULONG)Lw(t);                   \
+            hi = (BN_ULONG)Hw(t);                   \
+            c1 = (c1+hi)&BN_MASK2; c2 += (c1<hi);   \
+} while(0)
 
 #  define mul_add_c2(a,b,c0,c1,c2)      do {    \
-        BN_ULONG hi;                            \
-        BN_ULLONG t = (BN_ULLONG)(a)*(b);       \
-        BN_ULLONG tt = t+c0;    /* no carry */  \
-        c0 = (BN_ULONG)Lw(tt);                  \
-        hi = (BN_ULONG)Hw(tt);                  \
-        c1 = (c1+hi)&BN_MASK2; c2 += (c1<hi);   \
-        t += c0;                /* no carry */  \
-        c0 = (BN_ULONG)Lw(t);                   \
-        hi = (BN_ULONG)Hw(t);                   \
-        c1 = (c1+hi)&BN_MASK2; c2 += (c1<hi);   \
-        } while(0)
+            BN_ULONG hi;                            \
+            BN_ULLONG t = (BN_ULLONG)(a)*(b);       \
+            BN_ULLONG tt = t+c0; /* no carry */  \
+            c0 = (BN_ULONG)Lw(tt);                  \
+            hi = (BN_ULONG)Hw(tt);                  \
+            c1 = (c1+hi)&BN_MASK2; c2 += (c1<hi);   \
+            t += c0;            /* no carry */  \
+            c0 = (BN_ULONG)Lw(t);                   \
+            hi = (BN_ULONG)Hw(t);                   \
+            c1 = (c1+hi)&BN_MASK2; c2 += (c1<hi);   \
+} while(0)
 
 #  define sqr_add_c(a,i,c0,c1,c2)       do {    \
-        BN_ULONG hi;                            \
-        BN_ULLONG t = (BN_ULLONG)a[i]*a[i];     \
-        t += c0;                /* no carry */  \
-        c0 = (BN_ULONG)Lw(t);                   \
-        hi = (BN_ULONG)Hw(t);                   \
-        c1 = (c1+hi)&BN_MASK2; c2 += (c1<hi);   \
-        } while(0)
+            BN_ULONG hi;                            \
+            BN_ULLONG t = (BN_ULLONG)a[i]*a[i];     \
+            t += c0;            /* no carry */  \
+            c0 = (BN_ULONG)Lw(t);                   \
+            hi = (BN_ULONG)Hw(t);                   \
+            c1 = (c1+hi)&BN_MASK2; c2 += (c1<hi);   \
+} while(0)
 
 #  define sqr_add_c2(a,i,j,c0,c1,c2) \
         mul_add_c2((a)[i],(a)[j],c0,c1,c2)
@@ -485,30 +485,30 @@ BN_ULONG bn_sub_words(BN_ULONG *r, const BN_ULONG *a, const BN_ULONG *b,
  * the high word of a multiplication result cannot be all-ones.
  */
 #  define mul_add_c(a,b,c0,c1,c2)       do {    \
-        BN_ULONG ta = (a), tb = (b);            \
-        BN_ULONG lo, hi;                        \
-        BN_UMULT_LOHI(lo,hi,ta,tb);             \
-        c0 += lo; hi += (c0<lo);                \
-        c1 += hi; c2 += (c1<hi);                \
-        } while(0)
+            BN_ULONG ta = (a), tb = (b);            \
+            BN_ULONG lo, hi;                        \
+            BN_UMULT_LOHI(lo,hi,ta,tb);             \
+            c0 += lo; hi += (c0<lo);                \
+            c1 += hi; c2 += (c1<hi);                \
+} while(0)
 
 #  define mul_add_c2(a,b,c0,c1,c2)      do {    \
-        BN_ULONG ta = (a), tb = (b);            \
-        BN_ULONG lo, hi, tt;                    \
-        BN_UMULT_LOHI(lo,hi,ta,tb);             \
-        c0 += lo; tt = hi + (c0<lo);            \
-        c1 += tt; c2 += (c1<tt);                \
-        c0 += lo; hi += (c0<lo);                \
-        c1 += hi; c2 += (c1<hi);                \
-        } while(0)
+            BN_ULONG ta = (a), tb = (b);            \
+            BN_ULONG lo, hi, tt;                    \
+            BN_UMULT_LOHI(lo,hi,ta,tb);             \
+            c0 += lo; tt = hi + (c0<lo);            \
+            c1 += tt; c2 += (c1<tt);                \
+            c0 += lo; hi += (c0<lo);                \
+            c1 += hi; c2 += (c1<hi);                \
+} while(0)
 
 #  define sqr_add_c(a,i,c0,c1,c2)       do {    \
-        BN_ULONG ta = (a)[i];                   \
-        BN_ULONG lo, hi;                        \
-        BN_UMULT_LOHI(lo,hi,ta,ta);             \
-        c0 += lo; hi += (c0<lo);                \
-        c1 += hi; c2 += (c1<hi);                \
-        } while(0)
+            BN_ULONG ta = (a)[i];                   \
+            BN_ULONG lo, hi;                        \
+            BN_UMULT_LOHI(lo,hi,ta,ta);             \
+            c0 += lo; hi += (c0<lo);                \
+            c1 += hi; c2 += (c1<hi);                \
+} while(0)
 
 #  define sqr_add_c2(a,i,j,c0,c1,c2)    \
         mul_add_c2((a)[i],(a)[j],c0,c1,c2)
@@ -519,30 +519,30 @@ BN_ULONG bn_sub_words(BN_ULONG *r, const BN_ULONG *a, const BN_ULONG *b,
  * the high word of a multiplication result cannot be all-ones.
  */
 #  define mul_add_c(a,b,c0,c1,c2)       do {    \
-        BN_ULONG ta = (a), tb = (b);            \
-        BN_ULONG lo = ta * tb;                  \
-        BN_ULONG hi = BN_UMULT_HIGH(ta,tb);     \
-        c0 += lo; hi += (c0<lo);                \
-        c1 += hi; c2 += (c1<hi);                \
-        } while(0)
+            BN_ULONG ta = (a), tb = (b);            \
+            BN_ULONG lo = ta * tb;                  \
+            BN_ULONG hi = BN_UMULT_HIGH(ta,tb);     \
+            c0 += lo; hi += (c0<lo);                \
+            c1 += hi; c2 += (c1<hi);                \
+} while(0)
 
 #  define mul_add_c2(a,b,c0,c1,c2)      do {    \
-        BN_ULONG ta = (a), tb = (b), tt;        \
-        BN_ULONG lo = ta * tb;                  \
-        BN_ULONG hi = BN_UMULT_HIGH(ta,tb);     \
-        c0 += lo; tt = hi + (c0<lo);            \
-        c1 += tt; c2 += (c1<tt);                \
-        c0 += lo; hi += (c0<lo);                \
-        c1 += hi; c2 += (c1<hi);                \
-        } while(0)
+            BN_ULONG ta = (a), tb = (b), tt;        \
+            BN_ULONG lo = ta * tb;                  \
+            BN_ULONG hi = BN_UMULT_HIGH(ta,tb);     \
+            c0 += lo; tt = hi + (c0<lo);            \
+            c1 += tt; c2 += (c1<tt);                \
+            c0 += lo; hi += (c0<lo);                \
+            c1 += hi; c2 += (c1<hi);                \
+} while(0)
 
 #  define sqr_add_c(a,i,c0,c1,c2)       do {    \
-        BN_ULONG ta = (a)[i];                   \
-        BN_ULONG lo = ta * ta;                  \
-        BN_ULONG hi = BN_UMULT_HIGH(ta,ta);     \
-        c0 += lo; hi += (c0<lo);                \
-        c1 += hi; c2 += (c1<hi);                \
-        } while(0)
+            BN_ULONG ta = (a)[i];                   \
+            BN_ULONG lo = ta * ta;                  \
+            BN_ULONG hi = BN_UMULT_HIGH(ta,ta);     \
+            c0 += lo; hi += (c0<lo);                \
+            c1 += hi; c2 += (c1<hi);                \
+} while(0)
 
 #  define sqr_add_c2(a,i,j,c0,c1,c2)      \
         mul_add_c2((a)[i],(a)[j],c0,c1,c2)
@@ -553,31 +553,31 @@ BN_ULONG bn_sub_words(BN_ULONG *r, const BN_ULONG *a, const BN_ULONG *b,
  * the high word of a multiplication result cannot be all-ones.
  */
 #  define mul_add_c(a,b,c0,c1,c2)       do {    \
-        BN_ULONG lo = LBITS(a), hi = HBITS(a);  \
-        BN_ULONG bl = LBITS(b), bh = HBITS(b);  \
-        mul64(lo,hi,bl,bh);                     \
-        c0 = (c0+lo)&BN_MASK2; hi += (c0<lo);   \
-        c1 = (c1+hi)&BN_MASK2; c2 += (c1<hi);   \
-        } while(0)
+            BN_ULONG lo = LBITS(a), hi = HBITS(a);  \
+            BN_ULONG bl = LBITS(b), bh = HBITS(b);  \
+            mul64(lo,hi,bl,bh);                     \
+            c0 = (c0+lo)&BN_MASK2; hi += (c0<lo);   \
+            c1 = (c1+hi)&BN_MASK2; c2 += (c1<hi);   \
+} while(0)
 
 #  define mul_add_c2(a,b,c0,c1,c2)      do {    \
-        BN_ULONG tt;                            \
-        BN_ULONG lo = LBITS(a), hi = HBITS(a);  \
-        BN_ULONG bl = LBITS(b), bh = HBITS(b);  \
-        mul64(lo,hi,bl,bh);                     \
-        tt = hi;                                \
-        c0 = (c0+lo)&BN_MASK2; tt += (c0<lo);   \
-        c1 = (c1+tt)&BN_MASK2; c2 += (c1<tt);   \
-        c0 = (c0+lo)&BN_MASK2; hi += (c0<lo);   \
-        c1 = (c1+hi)&BN_MASK2; c2 += (c1<hi);   \
-        } while(0)
+            BN_ULONG tt;                            \
+            BN_ULONG lo = LBITS(a), hi = HBITS(a);  \
+            BN_ULONG bl = LBITS(b), bh = HBITS(b);  \
+            mul64(lo,hi,bl,bh);                     \
+            tt = hi;                                \
+            c0 = (c0+lo)&BN_MASK2; tt += (c0<lo);   \
+            c1 = (c1+tt)&BN_MASK2; c2 += (c1<tt);   \
+            c0 = (c0+lo)&BN_MASK2; hi += (c0<lo);   \
+            c1 = (c1+hi)&BN_MASK2; c2 += (c1<hi);   \
+} while(0)
 
 #  define sqr_add_c(a,i,c0,c1,c2)       do {    \
-        BN_ULONG lo, hi;                        \
-        sqr64(lo,hi,(a)[i]);                    \
-        c0 = (c0+lo)&BN_MASK2; hi += (c0<lo);   \
-        c1 = (c1+hi)&BN_MASK2; c2 += (c1<hi);   \
-        } while(0)
+            BN_ULONG lo, hi;                        \
+            sqr64(lo,hi,(a)[i]);                    \
+            c0 = (c0+lo)&BN_MASK2; hi += (c0<lo);   \
+            c1 = (c1+hi)&BN_MASK2; c2 += (c1<hi);   \
+} while(0)
 
 #  define sqr_add_c2(a,i,j,c0,c1,c2) \
         mul_add_c2((a)[i],(a)[j],c0,c1,c2)
@@ -899,7 +899,7 @@ int bn_mul_mont(BN_ULONG *rp, const BN_ULONG *ap, const BN_ULONG *bp,
         c1 = (tp[num] + c0) & BN_MASK2;
         tp[num] = c1;
         tp[num + 1] = (c1 < c0 ? 1 : 0);
- enter:
+enter:
         c1 = tp[0];
         ml = (c1 * n0) & BN_MASK2;
         c0 = 0;

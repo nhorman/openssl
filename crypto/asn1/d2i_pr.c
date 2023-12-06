@@ -52,8 +52,8 @@ d2i_PrivateKey_decoder(int keytype, EVP_PKEY **a, const unsigned char **pp,
     ERR_pop_to_mark();
     if (p8info != NULL) {
         if (key_name == NULL
-                && PKCS8_pkey_get0(&algoid, NULL, NULL, NULL, p8info)
-                && OBJ_obj2txt(keytypebuf, sizeof(keytypebuf), algoid, 0))
+            && PKCS8_pkey_get0(&algoid, NULL, NULL, NULL, p8info)
+            && OBJ_obj2txt(keytypebuf, sizeof(keytypebuf), algoid, 0))
             key_name = keytypebuf;
         structure = "PrivateKeyInfo";
         PKCS8_PRIV_KEY_INFO_free(p8info);
@@ -81,7 +81,7 @@ d2i_PrivateKey_decoder(int keytype, EVP_PKEY **a, const unsigned char **pp,
         return *ppkey;
     }
 
- err:
+err:
     if (ppkey != a)
         EVP_PKEY_free(*ppkey);
     return NULL;
@@ -116,7 +116,7 @@ ossl_d2i_PrivateKey_legacy(int keytype, EVP_PKEY **a, const unsigned char **pp,
     if (!ret->ameth->old_priv_decode ||
         !ret->ameth->old_priv_decode(ret, &p, length)) {
         if (ret->ameth->priv_decode != NULL
-                || ret->ameth->priv_decode_ex != NULL) {
+            || ret->ameth->priv_decode_ex != NULL) {
             EVP_PKEY *tmp;
             PKCS8_PRIV_KEY_INFO *p8 = NULL;
             p8 = d2i_PKCS8_PRIV_KEY_INFO(NULL, &p, length);
@@ -141,13 +141,13 @@ ossl_d2i_PrivateKey_legacy(int keytype, EVP_PKEY **a, const unsigned char **pp,
             goto err;
         }
     } else {
-      ERR_clear_last_mark();
+        ERR_clear_last_mark();
     }
     *pp = p;
     if (a != NULL)
         *a = ret;
     return ret;
- err:
+err:
     if (a == NULL || *a != ret)
         EVP_PKEY_free(ret);
     return NULL;
@@ -199,7 +199,7 @@ static EVP_PKEY *d2i_AutoPrivateKey_legacy(EVP_PKEY **a,
     } else if (sk_ASN1_TYPE_num(inkey) == 4) {
         keytype = EVP_PKEY_EC;
     } else if (sk_ASN1_TYPE_num(inkey) == 3) { /* This seems to be PKCS8, not
-                                              * traditional format */
+                                                * traditional format */
         PKCS8_PRIV_KEY_INFO *p8 = d2i_PKCS8_PRIV_KEY_INFO(NULL, &p, length);
         EVP_PKEY *ret;
 

@@ -17,7 +17,9 @@
  * Query an EGD
  */
 
-#if defined(OPENSSL_SYS_WIN32) || defined(OPENSSL_SYS_VMS) || defined(OPENSSL_SYS_MSDOS) || defined(OPENSSL_SYS_VXWORKS) || defined(OPENSSL_SYS_VOS) || defined(OPENSSL_SYS_UEFI)
+#if defined(OPENSSL_SYS_WIN32) || defined(OPENSSL_SYS_VMS) || \
+    defined(OPENSSL_SYS_MSDOS) || defined(OPENSSL_SYS_VXWORKS) || \
+    defined(OPENSSL_SYS_VOS) || defined(OPENSSL_SYS_UEFI)
 int RAND_query_egd_bytes(const char *path, unsigned char *buf, int bytes)
 {
     return -1;
@@ -72,7 +74,7 @@ int hpns_socket(int family,
                 int protocol,
                 char* transport)
 {
-    int  socket_rc;
+    int socket_rc;
     char current_transport[20];
 
 #  define AF_UNIX_PORTABILITY    "$ZAFN2"
@@ -142,34 +144,35 @@ int RAND_query_egd_bytes(const char *path, unsigned char *buf, int bytes)
 # endif
         switch (errno) {
 # ifdef EINTR
-        case EINTR:
+            case EINTR:
 # endif
 # ifdef EAGAIN
-        case EAGAIN:
+            case EAGAIN:
 # endif
 # ifdef EINPROGRESS
-        case EINPROGRESS:
+            case EINPROGRESS:
 # endif
 # ifdef EALREADY
-        case EALREADY:
+            case EALREADY:
 # endif
-            /* No error, try again */
-            break;
-        default:
+        /* No error, try again */
+        break;
+            default:
 # if defined(OPENSSL_SYS_TANDEM)
-            if (hpns_connect_attempt == 0) {
-                /* try the other kind of AF_UNIX socket */
-                close(fd);
-                fd = hpns_socket(AF_UNIX, SOCK_STREAM, 0, AF_UNIX_PORTABILITY);
-                if (fd == -1)
-                    return -1;
-                ++hpns_connect_attempt;
-                break;  /* try the connect again */
-            }
+                if (hpns_connect_attempt == 0) {
+                    /* try the other kind of AF_UNIX socket */
+                    close(fd);
+                    fd = hpns_socket(AF_UNIX, SOCK_STREAM, 0,
+                                     AF_UNIX_PORTABILITY);
+                    if (fd == -1)
+                        return -1;
+                    ++hpns_connect_attempt;
+                    break; /* try the connect again */
+                }
 # endif
 
-            ret = -1;
-            goto err;
+                ret = -1;
+                goto err;
         }
     }
 
@@ -195,7 +198,7 @@ int RAND_query_egd_bytes(const char *path, unsigned char *buf, int bytes)
     if (mybuffer)
         RAND_add(tempbuf, i, i);
 
- err:
+err:
     if (fp != NULL)
         fclose(fp);
     return ret;

@@ -128,48 +128,48 @@ static ossl_inline int is_greater(const BN_ULONG *a, const BN_ULONG *b)
 #define is_one(a) is_equal(a, ONE)
 #define is_even(a) !(a[0] & 1)
 #define is_point_equal(a, b)     \
-    is_equal(a->X, b->X) &&      \
-    is_equal(a->Y, b->Y) &&      \
-    is_equal(a->Z, b->Z)
+        is_equal(a->X, b->X) &&      \
+        is_equal(a->Y, b->Y) &&      \
+        is_equal(a->Z, b->Z)
 
 /* Bignum and field elements conversion */
 #define ecp_sm2p256_bignum_field_elem(out, in) \
-    bn_copy_words(out, in, P256_LIMBS)
+        bn_copy_words(out, in, P256_LIMBS)
 
 /* Binary algorithm for inversion in Fp */
 #define BN_MOD_INV(out, in, mod_div, mod_sub, mod) \
-    do {                                           \
-        BN_ULONG u[4] ALIGN32;                     \
-        BN_ULONG v[4] ALIGN32;                     \
-        BN_ULONG x1[4] ALIGN32 = {1, 0, 0, 0};     \
-        BN_ULONG x2[4] ALIGN32 = {0};              \
+        do {                                           \
+            BN_ULONG u[4] ALIGN32;                     \
+            BN_ULONG v[4] ALIGN32;                     \
+            BN_ULONG x1[4] ALIGN32 = {1, 0, 0, 0};     \
+            BN_ULONG x2[4] ALIGN32 = {0};              \
                                                    \
-        if (is_zeros(in))                          \
+            if (is_zeros(in))                          \
             return;                                \
-        memcpy(u, in, 32);                         \
-        memcpy(v, mod, 32);                        \
-        while (!is_one(u) && !is_one(v)) {         \
-            while (is_even(u)) {                   \
-                bn_rshift1(u);                     \
-                mod_div(x1, x1);                   \
-            }                                      \
-            while (is_even(v)) {                   \
-                bn_rshift1(v);                     \
-                mod_div(x2, x2);                   \
-            }                                      \
-            if (is_greater(u, v) == 1) {           \
-                bn_sub(u, u, v);                   \
-                mod_sub(x1, x1, x2);               \
-            } else {                               \
-                bn_sub(v, v, u);                   \
-                mod_sub(x2, x2, x1);               \
-            }                                      \
-        }                                          \
-        if (is_one(u))                             \
+            memcpy(u, in, 32);                         \
+            memcpy(v, mod, 32);                        \
+            while (!is_one(u) && !is_one(v)) {         \
+                while (is_even(u)) {                   \
+                    bn_rshift1(u);                     \
+                    mod_div(x1, x1);                   \
+                }                                      \
+                while (is_even(v)) {                   \
+                    bn_rshift1(v);                     \
+                    mod_div(x2, x2);                   \
+                }                                      \
+                if (is_greater(u, v) == 1) {           \
+                    bn_sub(u, u, v);                   \
+                    mod_sub(x1, x1, x2);               \
+                } else {                               \
+                    bn_sub(v, v, u);                   \
+                    mod_sub(x2, x2, x1);               \
+                }                                      \
+            }                                          \
+            if (is_one(u))                             \
             memcpy(out, x1, 32);                   \
-        else                                       \
+            else                                       \
             memcpy(out, x2, 32);                   \
-    } while (0)
+        } while (0)
 
 /* Modular inverse |out| = |in|^(-1) mod |p|. */
 static ossl_inline void ecp_sm2p256_mod_inverse(BN_ULONG* out,
@@ -447,10 +447,10 @@ static void ecp_sm2p256_point_get_affine(P256_POINT_AFFINE *R,
 static int ecp_sm2p256_is_affine_G(const EC_POINT *generator)
 {
     return (bn_get_top(generator->X) == P256_LIMBS)
-            && (bn_get_top(generator->Y) == P256_LIMBS)
-            && is_equal(bn_get_words(generator->X), def_xG)
-            && is_equal(bn_get_words(generator->Y), def_yG)
-            && (generator->Z_is_one == 1);
+           && (bn_get_top(generator->Y) == P256_LIMBS)
+           && is_equal(bn_get_words(generator->X), def_xG)
+           && is_equal(bn_get_words(generator->Y), def_yG)
+           && (generator->Z_is_one == 1);
 }
 #endif
 
@@ -690,7 +690,7 @@ static int ecp_sm2p256_field_sqr(const EC_GROUP *group, BIGNUM *r,
 }
 
 static int ecp_sm2p256_inv_mod_ord(const EC_GROUP *group, BIGNUM *r,
-                                             const BIGNUM *x, BN_CTX *ctx)
+                                   const BIGNUM *x, BN_CTX *ctx)
 {
     int ret = 0;
     BN_ULONG t[P256_LIMBS] ALIGN32 = {0};

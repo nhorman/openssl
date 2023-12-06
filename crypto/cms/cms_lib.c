@@ -30,9 +30,9 @@ CMS_ContentInfo *d2i_CMS_ContentInfo(CMS_ContentInfo **a,
     const CMS_CTX *ctx = ossl_cms_get0_cmsctx(a == NULL ? NULL : *a);
 
     ci = (CMS_ContentInfo *)ASN1_item_d2i_ex((ASN1_VALUE **)a, in, len,
-                                          (CMS_ContentInfo_it()),
-                                          ossl_cms_ctx_get0_libctx(ctx),
-                                          ossl_cms_ctx_get0_propq(ctx));
+                                             (CMS_ContentInfo_it()),
+                                             ossl_cms_ctx_get0_libctx(ctx),
+                                             ossl_cms_ctx_get0_propq(ctx));
     if (ci != NULL) {
         ERR_set_mark();
         ossl_cms_resolve_libctx(ci);
@@ -165,37 +165,37 @@ BIO *CMS_dataInit(CMS_ContentInfo *cms, BIO *icont)
     }
     switch (OBJ_obj2nid(cms->contentType)) {
 
-    case NID_pkcs7_data:
-        return cont;
+        case NID_pkcs7_data:
+            return cont;
 
-    case NID_pkcs7_signed:
-        cmsbio = ossl_cms_SignedData_init_bio(cms);
-        break;
+        case NID_pkcs7_signed:
+            cmsbio = ossl_cms_SignedData_init_bio(cms);
+            break;
 
-    case NID_pkcs7_digest:
-        cmsbio = ossl_cms_DigestedData_init_bio(cms);
-        break;
+        case NID_pkcs7_digest:
+            cmsbio = ossl_cms_DigestedData_init_bio(cms);
+            break;
 #ifndef OPENSSL_NO_ZLIB
-    case NID_id_smime_ct_compressedData:
-        cmsbio = ossl_cms_CompressedData_init_bio(cms);
-        break;
+        case NID_id_smime_ct_compressedData:
+            cmsbio = ossl_cms_CompressedData_init_bio(cms);
+            break;
 #endif
 
-    case NID_pkcs7_encrypted:
-        cmsbio = ossl_cms_EncryptedData_init_bio(cms);
-        break;
+        case NID_pkcs7_encrypted:
+            cmsbio = ossl_cms_EncryptedData_init_bio(cms);
+            break;
 
-    case NID_pkcs7_enveloped:
-        cmsbio = ossl_cms_EnvelopedData_init_bio(cms);
-        break;
+        case NID_pkcs7_enveloped:
+            cmsbio = ossl_cms_EnvelopedData_init_bio(cms);
+            break;
 
-    case NID_id_smime_ct_authEnvelopedData:
-        cmsbio = ossl_cms_AuthEnvelopedData_init_bio(cms);
-        break;
+        case NID_id_smime_ct_authEnvelopedData:
+            cmsbio = ossl_cms_AuthEnvelopedData_init_bio(cms);
+            break;
 
-    default:
-        ERR_raise(ERR_LIB_CMS, CMS_R_UNSUPPORTED_TYPE);
-        goto err;
+        default:
+            ERR_raise(ERR_LIB_CMS, CMS_R_UNSUPPORTED_TYPE);
+            goto err;
     }
 
     if (cmsbio)
@@ -241,27 +241,28 @@ int ossl_cms_DataFinal(CMS_ContentInfo *cms, BIO *cmsbio,
 
     switch (OBJ_obj2nid(cms->contentType)) {
 
-    case NID_pkcs7_data:
-    case NID_pkcs7_encrypted:
-    case NID_id_smime_ct_compressedData:
-        /* Nothing to do */
-        return 1;
+        case NID_pkcs7_data:
+        case NID_pkcs7_encrypted:
+        case NID_id_smime_ct_compressedData:
+            /* Nothing to do */
+            return 1;
 
-    case NID_pkcs7_enveloped:
-        return ossl_cms_EnvelopedData_final(cms, cmsbio);
+        case NID_pkcs7_enveloped:
+            return ossl_cms_EnvelopedData_final(cms, cmsbio);
 
-    case NID_id_smime_ct_authEnvelopedData:
-        return ossl_cms_AuthEnvelopedData_final(cms, cmsbio);
+        case NID_id_smime_ct_authEnvelopedData:
+            return ossl_cms_AuthEnvelopedData_final(cms, cmsbio);
 
-    case NID_pkcs7_signed:
-        return ossl_cms_SignedData_final(cms, cmsbio, precomp_md, precomp_mdlen);
+        case NID_pkcs7_signed:
+            return ossl_cms_SignedData_final(cms, cmsbio, precomp_md,
+                                             precomp_mdlen);
 
-    case NID_pkcs7_digest:
-        return ossl_cms_DigestedData_do_final(cms, cmsbio, 0);
+        case NID_pkcs7_digest:
+            return ossl_cms_DigestedData_do_final(cms, cmsbio, 0);
 
-    default:
-        ERR_raise(ERR_LIB_CMS, CMS_R_UNSUPPORTED_TYPE);
-        return 0;
+        default:
+            ERR_raise(ERR_LIB_CMS, CMS_R_UNSUPPORTED_TYPE);
+            return 0;
     }
 }
 
@@ -274,36 +275,36 @@ ASN1_OCTET_STRING **CMS_get0_content(CMS_ContentInfo *cms)
 {
     switch (OBJ_obj2nid(cms->contentType)) {
 
-    case NID_pkcs7_data:
-        return &cms->d.data;
+        case NID_pkcs7_data:
+            return &cms->d.data;
 
-    case NID_pkcs7_signed:
-        return &cms->d.signedData->encapContentInfo->eContent;
+        case NID_pkcs7_signed:
+            return &cms->d.signedData->encapContentInfo->eContent;
 
-    case NID_pkcs7_enveloped:
-        return &cms->d.envelopedData->encryptedContentInfo->encryptedContent;
+        case NID_pkcs7_enveloped:
+            return &cms->d.envelopedData->encryptedContentInfo->encryptedContent;
 
-    case NID_pkcs7_digest:
-        return &cms->d.digestedData->encapContentInfo->eContent;
+        case NID_pkcs7_digest:
+            return &cms->d.digestedData->encapContentInfo->eContent;
 
-    case NID_pkcs7_encrypted:
-        return &cms->d.encryptedData->encryptedContentInfo->encryptedContent;
+        case NID_pkcs7_encrypted:
+            return &cms->d.encryptedData->encryptedContentInfo->encryptedContent;
 
-    case NID_id_smime_ct_authEnvelopedData:
-        return &cms->d.authEnvelopedData->authEncryptedContentInfo
-                                        ->encryptedContent;
+        case NID_id_smime_ct_authEnvelopedData:
+            return &cms->d.authEnvelopedData->authEncryptedContentInfo
+                   ->encryptedContent;
 
-    case NID_id_smime_ct_authData:
-        return &cms->d.authenticatedData->encapContentInfo->eContent;
+        case NID_id_smime_ct_authData:
+            return &cms->d.authenticatedData->encapContentInfo->eContent;
 
-    case NID_id_smime_ct_compressedData:
-        return &cms->d.compressedData->encapContentInfo->eContent;
+        case NID_id_smime_ct_compressedData:
+            return &cms->d.compressedData->encapContentInfo->eContent;
 
-    default:
-        if (cms->d.other->type == V_ASN1_OCTET_STRING)
-            return &cms->d.other->value.octet_string;
-        ERR_raise(ERR_LIB_CMS, CMS_R_UNSUPPORTED_CONTENT_TYPE);
-        return NULL;
+        default:
+            if (cms->d.other->type == V_ASN1_OCTET_STRING)
+                return &cms->d.other->value.octet_string;
+            ERR_raise(ERR_LIB_CMS, CMS_R_UNSUPPORTED_CONTENT_TYPE);
+            return NULL;
 
     }
 }
@@ -317,30 +318,30 @@ static ASN1_OBJECT **cms_get0_econtent_type(CMS_ContentInfo *cms)
 {
     switch (OBJ_obj2nid(cms->contentType)) {
 
-    case NID_pkcs7_signed:
-        return &cms->d.signedData->encapContentInfo->eContentType;
+        case NID_pkcs7_signed:
+            return &cms->d.signedData->encapContentInfo->eContentType;
 
-    case NID_pkcs7_enveloped:
-        return &cms->d.envelopedData->encryptedContentInfo->contentType;
+        case NID_pkcs7_enveloped:
+            return &cms->d.envelopedData->encryptedContentInfo->contentType;
 
-    case NID_pkcs7_digest:
-        return &cms->d.digestedData->encapContentInfo->eContentType;
+        case NID_pkcs7_digest:
+            return &cms->d.digestedData->encapContentInfo->eContentType;
 
-    case NID_pkcs7_encrypted:
-        return &cms->d.encryptedData->encryptedContentInfo->contentType;
+        case NID_pkcs7_encrypted:
+            return &cms->d.encryptedData->encryptedContentInfo->contentType;
 
-    case NID_id_smime_ct_authEnvelopedData:
-        return &cms->d.authEnvelopedData->authEncryptedContentInfo
-                                        ->contentType;
-    case NID_id_smime_ct_authData:
-        return &cms->d.authenticatedData->encapContentInfo->eContentType;
+        case NID_id_smime_ct_authEnvelopedData:
+            return &cms->d.authEnvelopedData->authEncryptedContentInfo
+                   ->contentType;
+        case NID_id_smime_ct_authData:
+            return &cms->d.authenticatedData->encapContentInfo->eContentType;
 
-    case NID_id_smime_ct_compressedData:
-        return &cms->d.compressedData->encapContentInfo->eContentType;
+        case NID_id_smime_ct_compressedData:
+            return &cms->d.compressedData->encapContentInfo->eContentType;
 
-    default:
-        ERR_raise(ERR_LIB_CMS, CMS_R_UNSUPPORTED_CONTENT_TYPE);
-        return NULL;
+        default:
+            ERR_raise(ERR_LIB_CMS, CMS_R_UNSUPPORTED_CONTENT_TYPE);
+            return NULL;
 
     }
 }
@@ -444,7 +445,7 @@ BIO *ossl_cms_DigestAlgorithm_init_bio(X509_ALGOR *digestAlgorithm,
     }
     EVP_MD_free(fetched_digest);
     return mdbio;
- err:
+err:
     EVP_MD_free(fetched_digest);
     BIO_free(mdbio);
     return NULL;
@@ -484,22 +485,22 @@ static STACK_OF(CMS_CertificateChoices)
 {
     switch (OBJ_obj2nid(cms->contentType)) {
 
-    case NID_pkcs7_signed:
-        return &cms->d.signedData->certificates;
+        case NID_pkcs7_signed:
+            return &cms->d.signedData->certificates;
 
-    case NID_pkcs7_enveloped:
-        if (cms->d.envelopedData->originatorInfo == NULL)
+        case NID_pkcs7_enveloped:
+            if (cms->d.envelopedData->originatorInfo == NULL)
+                return NULL;
+            return &cms->d.envelopedData->originatorInfo->certificates;
+
+        case NID_id_smime_ct_authEnvelopedData:
+            if (cms->d.authEnvelopedData->originatorInfo == NULL)
+                return NULL;
+            return &cms->d.authEnvelopedData->originatorInfo->certificates;
+
+        default:
+            ERR_raise(ERR_LIB_CMS, CMS_R_UNSUPPORTED_CONTENT_TYPE);
             return NULL;
-        return &cms->d.envelopedData->originatorInfo->certificates;
-
-    case NID_id_smime_ct_authEnvelopedData:
-        if (cms->d.authEnvelopedData->originatorInfo == NULL)
-            return NULL;
-        return &cms->d.authEnvelopedData->originatorInfo->certificates;
-
-    default:
-        ERR_raise(ERR_LIB_CMS, CMS_R_UNSUPPORTED_CONTENT_TYPE);
-        return NULL;
 
     }
 }
@@ -567,22 +568,22 @@ static STACK_OF(CMS_RevocationInfoChoice)
 {
     switch (OBJ_obj2nid(cms->contentType)) {
 
-    case NID_pkcs7_signed:
-        return &cms->d.signedData->crls;
+        case NID_pkcs7_signed:
+            return &cms->d.signedData->crls;
 
-    case NID_pkcs7_enveloped:
-        if (cms->d.envelopedData->originatorInfo == NULL)
+        case NID_pkcs7_enveloped:
+            if (cms->d.envelopedData->originatorInfo == NULL)
+                return NULL;
+            return &cms->d.envelopedData->originatorInfo->crls;
+
+        case NID_id_smime_ct_authEnvelopedData:
+            if (cms->d.authEnvelopedData->originatorInfo == NULL)
+                return NULL;
+            return &cms->d.authEnvelopedData->originatorInfo->crls;
+
+        default:
+            ERR_raise(ERR_LIB_CMS, CMS_R_UNSUPPORTED_CONTENT_TYPE);
             return NULL;
-        return &cms->d.envelopedData->originatorInfo->crls;
-
-    case NID_id_smime_ct_authEnvelopedData:
-        if (cms->d.authEnvelopedData->originatorInfo == NULL)
-            return NULL;
-        return &cms->d.authEnvelopedData->originatorInfo->crls;
-
-    default:
-        ERR_raise(ERR_LIB_CMS, CMS_R_UNSUPPORTED_CONTENT_TYPE);
-        return NULL;
 
     }
 }
@@ -672,7 +673,7 @@ STACK_OF(X509_CRL) *CMS_get1_crls(CMS_ContentInfo *cms)
                     return NULL;
             }
             if (!sk_X509_CRL_push(crls, rch->d.crl)
-                    || !X509_CRL_up_ref(rch->d.crl)) {
+                || !X509_CRL_up_ref(rch->d.crl)) {
                 sk_X509_CRL_pop_free(crls, X509_CRL_free);
                 return NULL;
             }
@@ -718,7 +719,7 @@ int ossl_cms_set1_ias(CMS_IssuerAndSerialNumber **pias, X509 *cert)
     M_ASN1_free_of(*pias, CMS_IssuerAndSerialNumber);
     *pias = ias;
     return 1;
- err:
+err:
     M_ASN1_free_of(ias, CMS_IssuerAndSerialNumber);
     return 0;
 }

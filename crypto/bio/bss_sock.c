@@ -124,7 +124,7 @@ static int sock_read(BIO *b, char *out, int outl)
             ret = ktls_read_record(b->num, out, outl);
         else
 # endif
-            ret = readsocket(b->num, out, outl);
+        ret = readsocket(b->num, out, outl);
         BIO_clear_retry_flags(b);
         if (ret <= 0) {
             if (BIO_sock_should_retry(ret))
@@ -164,7 +164,7 @@ static int sock_write(BIO *b, const char *in, int inl)
         data->tfo_first = 0;
     } else
 # endif
-        ret = writesocket(b->num, in, inl);
+    ret = writesocket(b->num, in, inl);
     BIO_clear_retry_flags(b);
     if (ret <= 0) {
         if (BIO_sock_should_retry(ret))
@@ -183,40 +183,40 @@ static long sock_ctrl(BIO *b, int cmd, long num, void *ptr)
 # endif
 
     switch (cmd) {
-    case BIO_C_SET_FD:
-        /* minimal sock_free() */
-        if (b->shutdown) {
-            if (b->init)
-                BIO_closesocket(b->num);
-            b->flags = 0;
-        }
-        b->num = *((int *)ptr);
-        b->shutdown = (int)num;
-        b->init = 1;
-        data->tfo_first = 0;
-        memset(&data->tfo_peer, 0, sizeof(data->tfo_peer));
-        break;
-    case BIO_C_GET_FD:
-        if (b->init) {
-            ip = (int *)ptr;
-            if (ip != NULL)
-                *ip = b->num;
-            ret = b->num;
-        } else
-            ret = -1;
-        break;
-    case BIO_CTRL_GET_CLOSE:
-        ret = b->shutdown;
-        break;
-    case BIO_CTRL_SET_CLOSE:
-        b->shutdown = (int)num;
-        break;
-    case BIO_CTRL_DUP:
-    case BIO_CTRL_FLUSH:
-        ret = 1;
-        break;
-    case BIO_CTRL_GET_RPOLL_DESCRIPTOR:
-    case BIO_CTRL_GET_WPOLL_DESCRIPTOR:
+        case BIO_C_SET_FD:
+            /* minimal sock_free() */
+            if (b->shutdown) {
+                if (b->init)
+                    BIO_closesocket(b->num);
+                b->flags = 0;
+            }
+            b->num = *((int *)ptr);
+            b->shutdown = (int)num;
+            b->init = 1;
+            data->tfo_first = 0;
+            memset(&data->tfo_peer, 0, sizeof(data->tfo_peer));
+            break;
+        case BIO_C_GET_FD:
+            if (b->init) {
+                ip = (int *)ptr;
+                if (ip != NULL)
+                    *ip = b->num;
+                ret = b->num;
+            } else
+                ret = -1;
+            break;
+        case BIO_CTRL_GET_CLOSE:
+            ret = b->shutdown;
+            break;
+        case BIO_CTRL_SET_CLOSE:
+            b->shutdown = (int)num;
+            break;
+        case BIO_CTRL_DUP:
+        case BIO_CTRL_FLUSH:
+            ret = 1;
+            break;
+        case BIO_CTRL_GET_RPOLL_DESCRIPTOR:
+        case BIO_CTRL_GET_WPOLL_DESCRIPTOR:
         {
             BIO_POLL_DESCRIPTOR *pd = ptr;
 
@@ -230,56 +230,56 @@ static long sock_ctrl(BIO *b, int cmd, long num, void *ptr)
         }
         break;
 # ifndef OPENSSL_NO_KTLS
-    case BIO_CTRL_SET_KTLS:
-        crypto_info = (ktls_crypto_info_t *)ptr;
-        ret = ktls_start(b->num, crypto_info, num);
-        if (ret)
-            BIO_set_ktls_flag(b, num);
-        break;
-    case BIO_CTRL_GET_KTLS_SEND:
-        return BIO_should_ktls_flag(b, 1) != 0;
-    case BIO_CTRL_GET_KTLS_RECV:
-        return BIO_should_ktls_flag(b, 0) != 0;
-    case BIO_CTRL_SET_KTLS_TX_SEND_CTRL_MSG:
-        BIO_set_ktls_ctrl_msg_flag(b);
-        data->ktls_record_type = (unsigned char)num;
-        ret = 0;
-        break;
-    case BIO_CTRL_CLEAR_KTLS_TX_CTRL_MSG:
-        BIO_clear_ktls_ctrl_msg_flag(b);
-        ret = 0;
-        break;
-    case BIO_CTRL_SET_KTLS_TX_ZEROCOPY_SENDFILE:
-        ret = ktls_enable_tx_zerocopy_sendfile(b->num);
-        if (ret)
-            BIO_set_ktls_zerocopy_sendfile_flag(b);
-        break;
-# endif
-    case BIO_CTRL_EOF:
-        ret = (b->flags & BIO_FLAGS_IN_EOF) != 0;
-        break;
-    case BIO_C_GET_CONNECT:
-        if (ptr != NULL && num == 2) {
-            const char **pptr = (const char **)ptr;
-
-            *pptr = (const char *)&data->tfo_peer;
-        } else {
-            ret = 0;
-        }
-        break;
-    case BIO_C_SET_CONNECT:
-        if (ptr != NULL && num == 2) {
-            ret = BIO_ADDR_make(&data->tfo_peer,
-                                BIO_ADDR_sockaddr((const BIO_ADDR *)ptr));
+        case BIO_CTRL_SET_KTLS:
+            crypto_info = (ktls_crypto_info_t *)ptr;
+            ret = ktls_start(b->num, crypto_info, num);
             if (ret)
-                data->tfo_first = 1;
-        } else {
+                BIO_set_ktls_flag(b, num);
+            break;
+        case BIO_CTRL_GET_KTLS_SEND:
+            return BIO_should_ktls_flag(b, 1) != 0;
+        case BIO_CTRL_GET_KTLS_RECV:
+            return BIO_should_ktls_flag(b, 0) != 0;
+        case BIO_CTRL_SET_KTLS_TX_SEND_CTRL_MSG:
+            BIO_set_ktls_ctrl_msg_flag(b);
+            data->ktls_record_type = (unsigned char)num;
             ret = 0;
-        }
-        break;
-    default:
-        ret = 0;
-        break;
+            break;
+        case BIO_CTRL_CLEAR_KTLS_TX_CTRL_MSG:
+            BIO_clear_ktls_ctrl_msg_flag(b);
+            ret = 0;
+            break;
+        case BIO_CTRL_SET_KTLS_TX_ZEROCOPY_SENDFILE:
+            ret = ktls_enable_tx_zerocopy_sendfile(b->num);
+            if (ret)
+                BIO_set_ktls_zerocopy_sendfile_flag(b);
+            break;
+# endif
+        case BIO_CTRL_EOF:
+            ret = (b->flags & BIO_FLAGS_IN_EOF) != 0;
+            break;
+        case BIO_C_GET_CONNECT:
+            if (ptr != NULL && num == 2) {
+                const char **pptr = (const char **)ptr;
+
+                *pptr = (const char *)&data->tfo_peer;
+            } else {
+                ret = 0;
+            }
+            break;
+        case BIO_C_SET_CONNECT:
+            if (ptr != NULL && num == 2) {
+                ret = BIO_ADDR_make(&data->tfo_peer,
+                                    BIO_ADDR_sockaddr((const BIO_ADDR *)ptr));
+                if (ret)
+                    data->tfo_first = 1;
+            } else {
+                ret = 0;
+            }
+            break;
+        default:
+            ret = 0;
+            break;
     }
     return ret;
 }
@@ -310,48 +310,48 @@ int BIO_sock_non_fatal_error(int err)
     switch (err) {
 # if defined(OPENSSL_SYS_WINDOWS)
 #  if defined(WSAEWOULDBLOCK)
-    case WSAEWOULDBLOCK:
+        case WSAEWOULDBLOCK:
 #  endif
 # endif
 
 # ifdef EWOULDBLOCK
 #  ifdef WSAEWOULDBLOCK
 #   if WSAEWOULDBLOCK != EWOULDBLOCK
-    case EWOULDBLOCK:
+        case EWOULDBLOCK:
 #   endif
 #  else
-    case EWOULDBLOCK:
+        case EWOULDBLOCK:
 #  endif
 # endif
 
 # if defined(ENOTCONN)
-    case ENOTCONN:
+        case ENOTCONN:
 # endif
 
 # ifdef EINTR
-    case EINTR:
+        case EINTR:
 # endif
 
 # ifdef EAGAIN
 #  if EWOULDBLOCK != EAGAIN
-    case EAGAIN:
+        case EAGAIN:
 #  endif
 # endif
 
 # ifdef EPROTO
-    case EPROTO:
+        case EPROTO:
 # endif
 
 # ifdef EINPROGRESS
-    case EINPROGRESS:
+        case EINPROGRESS:
 # endif
 
 # ifdef EALREADY
-    case EALREADY:
+        case EALREADY:
 # endif
-        return 1;
-    default:
-        break;
+    return 1;
+        default:
+            break;
     }
     return 0;
 }

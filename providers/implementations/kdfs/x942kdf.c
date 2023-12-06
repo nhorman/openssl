@@ -112,17 +112,21 @@ static int DER_w_keyinfo(WPACKET *pkt,
            && ossl_DER_w_end_sequence(pkt, -1);
 }
 
-static int der_encode_sharedinfo(WPACKET *pkt, unsigned char *buf, size_t buflen,
-                                 const unsigned char *der_oid, size_t der_oidlen,
+static int der_encode_sharedinfo(WPACKET *pkt, unsigned char *buf,
+                                 size_t buflen,
+                                 const unsigned char *der_oid,
+                                 size_t der_oidlen,
                                  const unsigned char *acvp, size_t acvplen,
                                  const unsigned char *partyu, size_t partyulen,
                                  const unsigned char *partyv, size_t partyvlen,
-                                 const unsigned char *supp_pub, size_t supp_publen,
-                                 const unsigned char *supp_priv, size_t supp_privlen,
+                                 const unsigned char *supp_pub,
+                                 size_t supp_publen,
+                                 const unsigned char *supp_priv,
+                                 size_t supp_privlen,
                                  uint32_t keylen_bits, unsigned char **pcounter)
 {
     return (buf != NULL ? WPACKET_init_der(pkt, buf, buflen) :
-                          WPACKET_init_null_der(pkt))
+            WPACKET_init_null_der(pkt))
            && ossl_DER_w_begin_sequence(pkt, -1)
            && (supp_priv == NULL
                || ossl_DER_w_octet_string(pkt, 3, supp_priv, supp_privlen))
@@ -130,8 +134,10 @@ static int der_encode_sharedinfo(WPACKET *pkt, unsigned char *buf, size_t buflen
                || ossl_DER_w_octet_string(pkt, 2, supp_pub, supp_publen))
            && (keylen_bits == 0
                || ossl_DER_w_octet_string_uint32(pkt, 2, keylen_bits))
-           && (partyv == NULL || ossl_DER_w_octet_string(pkt, 1, partyv, partyvlen))
-           && (partyu == NULL || ossl_DER_w_octet_string(pkt, 0, partyu, partyulen))
+           && (partyv == NULL ||
+               ossl_DER_w_octet_string(pkt, 1, partyv, partyvlen))
+           && (partyu == NULL ||
+               ossl_DER_w_octet_string(pkt, 0, partyu, partyulen))
            && (acvp == NULL || ossl_DER_w_precompiled(pkt, -1, acvp, acvplen))
            && DER_w_keyinfo(pkt, der_oid, der_oidlen, pcounter)
            && ossl_DER_w_end_sequence(pkt, -1)
@@ -378,20 +384,20 @@ static void *x942kdf_dup(void *vctx)
     dest = x942kdf_new(src->provctx);
     if (dest != NULL) {
         if (!ossl_prov_memdup(src->secret, src->secret_len,
-                              &dest->secret , &dest->secret_len)
-                || !ossl_prov_memdup(src->acvpinfo, src->acvpinfo_len,
-                                     &dest->acvpinfo , &dest->acvpinfo_len)
-                || !ossl_prov_memdup(src->partyuinfo, src->partyuinfo_len,
-                                     &dest->partyuinfo , &dest->partyuinfo_len)
-                || !ossl_prov_memdup(src->partyvinfo, src->partyvinfo_len,
-                                     &dest->partyvinfo , &dest->partyvinfo_len)
-                || !ossl_prov_memdup(src->supp_pubinfo, src->supp_pubinfo_len,
-                                     &dest->supp_pubinfo,
-                                     &dest->supp_pubinfo_len)
-                || !ossl_prov_memdup(src->supp_privinfo, src->supp_privinfo_len,
-                                     &dest->supp_privinfo,
-                                     &dest->supp_privinfo_len)
-                || !ossl_prov_digest_copy(&dest->digest, &src->digest))
+                              &dest->secret, &dest->secret_len)
+            || !ossl_prov_memdup(src->acvpinfo, src->acvpinfo_len,
+                                 &dest->acvpinfo, &dest->acvpinfo_len)
+            || !ossl_prov_memdup(src->partyuinfo, src->partyuinfo_len,
+                                 &dest->partyuinfo, &dest->partyuinfo_len)
+            || !ossl_prov_memdup(src->partyvinfo, src->partyvinfo_len,
+                                 &dest->partyvinfo, &dest->partyvinfo_len)
+            || !ossl_prov_memdup(src->supp_pubinfo, src->supp_pubinfo_len,
+                                 &dest->supp_pubinfo,
+                                 &dest->supp_pubinfo_len)
+            || !ossl_prov_memdup(src->supp_privinfo, src->supp_privinfo_len,
+                                 &dest->supp_privinfo,
+                                 &dest->supp_privinfo_len)
+            || !ossl_prov_digest_copy(&dest->digest, &src->digest))
             goto err;
         dest->cek_oid = src->cek_oid;
         dest->cek_oid_len = src->cek_oid_len;
@@ -400,7 +406,7 @@ static void *x942kdf_dup(void *vctx)
     }
     return dest;
 
- err:
+err:
     x942kdf_free(dest);
     return NULL;
 }
@@ -615,16 +621,16 @@ static const OSSL_PARAM *x942kdf_gettable_ctx_params(ossl_unused void *ctx,
 }
 
 const OSSL_DISPATCH ossl_kdf_x942_kdf_functions[] = {
-    { OSSL_FUNC_KDF_NEWCTX, (void(*)(void))x942kdf_new },
-    { OSSL_FUNC_KDF_DUPCTX, (void(*)(void))x942kdf_dup },
-    { OSSL_FUNC_KDF_FREECTX, (void(*)(void))x942kdf_free },
-    { OSSL_FUNC_KDF_RESET, (void(*)(void))x942kdf_reset },
-    { OSSL_FUNC_KDF_DERIVE, (void(*)(void))x942kdf_derive },
+    { OSSL_FUNC_KDF_NEWCTX, (void (*)(void)) x942kdf_new },
+    { OSSL_FUNC_KDF_DUPCTX, (void (*)(void)) x942kdf_dup },
+    { OSSL_FUNC_KDF_FREECTX, (void (*)(void)) x942kdf_free },
+    { OSSL_FUNC_KDF_RESET, (void (*)(void)) x942kdf_reset },
+    { OSSL_FUNC_KDF_DERIVE, (void (*)(void)) x942kdf_derive },
     { OSSL_FUNC_KDF_SETTABLE_CTX_PARAMS,
-      (void(*)(void))x942kdf_settable_ctx_params },
-    { OSSL_FUNC_KDF_SET_CTX_PARAMS, (void(*)(void))x942kdf_set_ctx_params },
+      (void (*)(void)) x942kdf_settable_ctx_params },
+    { OSSL_FUNC_KDF_SET_CTX_PARAMS, (void (*)(void)) x942kdf_set_ctx_params },
     { OSSL_FUNC_KDF_GETTABLE_CTX_PARAMS,
-      (void(*)(void))x942kdf_gettable_ctx_params },
-    { OSSL_FUNC_KDF_GET_CTX_PARAMS, (void(*)(void))x942kdf_get_ctx_params },
+      (void (*)(void)) x942kdf_gettable_ctx_params },
+    { OSSL_FUNC_KDF_GET_CTX_PARAMS, (void (*)(void)) x942kdf_get_ctx_params },
     OSSL_DISPATCH_END
 };

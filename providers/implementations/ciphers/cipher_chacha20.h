@@ -16,9 +16,9 @@ typedef struct {
         OSSL_UNION_ALIGN;
         unsigned int d[CHACHA_KEY_SIZE / 4];
     } key;
-    unsigned int  counter[CHACHA_CTR_SIZE / 4];
+    unsigned int counter[CHACHA_CTR_SIZE / 4];
     unsigned char buf[CHACHA_BLK_SIZE];
-    unsigned int  partial_len;
+    unsigned int partial_len;
 } PROV_CHACHA20_CTX;
 
 typedef struct prov_cipher_hw_chacha20_st {

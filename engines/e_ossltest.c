@@ -57,7 +57,7 @@ void ENGINE_load_ossltest(void);
 
 /* Set up digests */
 static int ossltest_digests(ENGINE *e, const EVP_MD **digest,
-                          const int **nids, int nid);
+                            const int **nids, int nid);
 static const RAND_METHOD *ossltest_rand_method(void);
 
 /* MD5 */
@@ -130,11 +130,14 @@ static const EVP_MD *digest_sha256(void)
     if (_hidden_sha256_md == NULL) {
         EVP_MD *md;
 
-        if ((md = EVP_MD_meth_new(NID_sha256, NID_sha256WithRSAEncryption)) == NULL
+        if ((md =
+                 EVP_MD_meth_new(NID_sha256,
+                                 NID_sha256WithRSAEncryption)) == NULL
             || !EVP_MD_meth_set_result_size(md, SHA256_DIGEST_LENGTH)
             || !EVP_MD_meth_set_input_blocksize(md, SHA256_CBLOCK)
             || !EVP_MD_meth_set_app_datasize(md,
-                                             sizeof(EVP_MD *) + sizeof(SHA256_CTX))
+                                             sizeof(EVP_MD *) +
+                                             sizeof(SHA256_CTX))
             || !EVP_MD_meth_set_flags(md, EVP_MD_FLAG_DIGALGID_ABSENT)
             || !EVP_MD_meth_set_init(md, digest_sha256_init)
             || !EVP_MD_meth_set_update(md, digest_sha256_update)
@@ -164,11 +167,14 @@ static const EVP_MD *digest_sha384(void)
     if (_hidden_sha384_md == NULL) {
         EVP_MD *md;
 
-        if ((md = EVP_MD_meth_new(NID_sha384, NID_sha384WithRSAEncryption)) == NULL
+        if ((md =
+                 EVP_MD_meth_new(NID_sha384,
+                                 NID_sha384WithRSAEncryption)) == NULL
             || !EVP_MD_meth_set_result_size(md, SHA384_DIGEST_LENGTH)
             || !EVP_MD_meth_set_input_blocksize(md, SHA512_CBLOCK)
             || !EVP_MD_meth_set_app_datasize(md,
-                                             sizeof(EVP_MD *) + sizeof(SHA512_CTX))
+                                             sizeof(EVP_MD *) +
+                                             sizeof(SHA512_CTX))
             || !EVP_MD_meth_set_flags(md, EVP_MD_FLAG_DIGALGID_ABSENT)
             || !EVP_MD_meth_set_init(md, digest_sha384_init)
             || !EVP_MD_meth_set_update(md, digest_sha384_update)
@@ -186,11 +192,14 @@ static const EVP_MD *digest_sha512(void)
     if (_hidden_sha512_md == NULL) {
         EVP_MD *md;
 
-        if ((md = EVP_MD_meth_new(NID_sha512, NID_sha512WithRSAEncryption)) == NULL
+        if ((md =
+                 EVP_MD_meth_new(NID_sha512,
+                                 NID_sha512WithRSAEncryption)) == NULL
             || !EVP_MD_meth_set_result_size(md, SHA512_DIGEST_LENGTH)
             || !EVP_MD_meth_set_input_blocksize(md, SHA512_CBLOCK)
             || !EVP_MD_meth_set_app_datasize(md,
-                                             sizeof(EVP_MD *) + sizeof(SHA512_CTX))
+                                             sizeof(EVP_MD *) +
+                                             sizeof(SHA512_CTX))
             || !EVP_MD_meth_set_flags(md, EVP_MD_FLAG_DIGALGID_ABSENT)
             || !EVP_MD_meth_set_init(md, digest_sha512_init)
             || !EVP_MD_meth_set_update(md, digest_sha512_update)
@@ -285,7 +294,8 @@ static const EVP_CIPHER *ossltest_aes_128_cbc(void)
     if (_hidden_aes_128_cbc == NULL
         && ((_hidden_aes_128_cbc = EVP_CIPHER_meth_new(NID_aes_128_cbc,
                                                        16 /* block size */,
-                                                       16 /* key len */)) == NULL
+                                                       16 /* key len */)) ==
+            NULL
             || !EVP_CIPHER_meth_set_iv_length(_hidden_aes_128_cbc,16)
             || !EVP_CIPHER_meth_set_flags(_hidden_aes_128_cbc,
                                           EVP_CIPH_FLAG_DEFAULT_ASN1
@@ -295,7 +305,8 @@ static const EVP_CIPHER *ossltest_aes_128_cbc(void)
             || !EVP_CIPHER_meth_set_do_cipher(_hidden_aes_128_cbc,
                                               ossltest_aes128_cbc_cipher)
             || !EVP_CIPHER_meth_set_impl_ctx_size(_hidden_aes_128_cbc,
-                    EVP_CIPHER_impl_ctx_size(EVP_aes_128_cbc())))) {
+                                                  EVP_CIPHER_impl_ctx_size(
+                                                      EVP_aes_128_cbc())))) {
         EVP_CIPHER_meth_free(_hidden_aes_128_cbc);
         _hidden_aes_128_cbc = NULL;
     }
@@ -305,17 +316,18 @@ static const EVP_CIPHER *ossltest_aes_128_cbc(void)
 static EVP_CIPHER *_hidden_aes_128_gcm = NULL;
 
 #define AES_GCM_FLAGS   (EVP_CIPH_FLAG_DEFAULT_ASN1 \
-                | EVP_CIPH_CUSTOM_IV | EVP_CIPH_FLAG_CUSTOM_CIPHER \
-                | EVP_CIPH_ALWAYS_CALL_INIT | EVP_CIPH_CTRL_INIT \
-                | EVP_CIPH_CUSTOM_COPY |EVP_CIPH_FLAG_AEAD_CIPHER \
-                | EVP_CIPH_GCM_MODE)
+                         | EVP_CIPH_CUSTOM_IV | EVP_CIPH_FLAG_CUSTOM_CIPHER \
+                         | EVP_CIPH_ALWAYS_CALL_INIT | EVP_CIPH_CTRL_INIT \
+                         | EVP_CIPH_CUSTOM_COPY |EVP_CIPH_FLAG_AEAD_CIPHER \
+                         | EVP_CIPH_GCM_MODE)
 
 static const EVP_CIPHER *ossltest_aes_128_gcm(void)
 {
     if (_hidden_aes_128_gcm == NULL
         && ((_hidden_aes_128_gcm = EVP_CIPHER_meth_new(NID_aes_128_gcm,
                                                        1 /* block size */,
-                                                       16 /* key len */)) == NULL
+                                                       16 /* key len */)) ==
+            NULL
             || !EVP_CIPHER_meth_set_iv_length(_hidden_aes_128_gcm,12)
             || !EVP_CIPHER_meth_set_flags(_hidden_aes_128_gcm, AES_GCM_FLAGS)
             || !EVP_CIPHER_meth_set_init(_hidden_aes_128_gcm,
@@ -323,9 +335,10 @@ static const EVP_CIPHER *ossltest_aes_128_gcm(void)
             || !EVP_CIPHER_meth_set_do_cipher(_hidden_aes_128_gcm,
                                               ossltest_aes128_gcm_cipher)
             || !EVP_CIPHER_meth_set_ctrl(_hidden_aes_128_gcm,
-                                              ossltest_aes128_gcm_ctrl)
+                                         ossltest_aes128_gcm_ctrl)
             || !EVP_CIPHER_meth_set_impl_ctx_size(_hidden_aes_128_gcm,
-                    EVP_CIPHER_impl_ctx_size(EVP_aes_128_gcm())))) {
+                                                  EVP_CIPHER_impl_ctx_size(
+                                                      EVP_aes_128_gcm())))) {
         EVP_CIPHER_meth_free(_hidden_aes_128_gcm);
         _hidden_aes_128_gcm = NULL;
     }
@@ -338,25 +351,30 @@ static const EVP_CIPHER *ossltest_aes_128_cbc_hmac_sha1(void)
 {
     if (_hidden_aes_128_cbc_hmac_sha1 == NULL
         && ((_hidden_aes_128_cbc_hmac_sha1
-             = EVP_CIPHER_meth_new(NID_aes_128_cbc_hmac_sha1,
-                                   16 /* block size */,
-                                   16 /* key len */)) == NULL
+                 = EVP_CIPHER_meth_new(NID_aes_128_cbc_hmac_sha1,
+                                       16 /* block size */,
+                                       16 /* key len */)) == NULL
             || !EVP_CIPHER_meth_set_iv_length(_hidden_aes_128_cbc_hmac_sha1,16)
             || !EVP_CIPHER_meth_set_flags(_hidden_aes_128_cbc_hmac_sha1,
-                   EVP_CIPH_CBC_MODE | EVP_CIPH_FLAG_DEFAULT_ASN1 |
-                   EVP_CIPH_FLAG_AEAD_CIPHER)
+                                          EVP_CIPH_CBC_MODE |
+                                          EVP_CIPH_FLAG_DEFAULT_ASN1 |
+                                          EVP_CIPH_FLAG_AEAD_CIPHER)
             || !EVP_CIPHER_meth_set_init(_hidden_aes_128_cbc_hmac_sha1,
-                   ossltest_aes128_cbc_hmac_sha1_init_key)
+                                         ossltest_aes128_cbc_hmac_sha1_init_key)
             || !EVP_CIPHER_meth_set_do_cipher(_hidden_aes_128_cbc_hmac_sha1,
-                   ossltest_aes128_cbc_hmac_sha1_cipher)
+                                              ossltest_aes128_cbc_hmac_sha1_cipher)
             || !EVP_CIPHER_meth_set_ctrl(_hidden_aes_128_cbc_hmac_sha1,
                                          ossltest_aes128_cbc_hmac_sha1_ctrl)
-            || !EVP_CIPHER_meth_set_set_asn1_params(_hidden_aes_128_cbc_hmac_sha1,
-                   EVP_CIPH_FLAG_DEFAULT_ASN1 ? NULL : EVP_CIPHER_set_asn1_iv)
-            || !EVP_CIPHER_meth_set_get_asn1_params(_hidden_aes_128_cbc_hmac_sha1,
-                   EVP_CIPH_FLAG_DEFAULT_ASN1 ? NULL : EVP_CIPHER_get_asn1_iv)
+            || !EVP_CIPHER_meth_set_set_asn1_params(
+                _hidden_aes_128_cbc_hmac_sha1,
+                EVP_CIPH_FLAG_DEFAULT_ASN1 ?
+                NULL : EVP_CIPHER_set_asn1_iv)
+            || !EVP_CIPHER_meth_set_get_asn1_params(
+                _hidden_aes_128_cbc_hmac_sha1,
+                EVP_CIPH_FLAG_DEFAULT_ASN1 ?
+                NULL : EVP_CIPHER_get_asn1_iv)
             || !EVP_CIPHER_meth_set_impl_ctx_size(_hidden_aes_128_cbc_hmac_sha1,
-                   sizeof(EVP_AES_HMAC_SHA1)))) {
+                                                  sizeof(EVP_AES_HMAC_SHA1)))) {
         EVP_CIPHER_meth_free(_hidden_aes_128_cbc_hmac_sha1);
         _hidden_aes_128_cbc_hmac_sha1 = NULL;
     }
@@ -442,7 +460,7 @@ static int bind_helper(ENGINE *e, const char *id)
 }
 
 IMPLEMENT_DYNAMIC_CHECK_FN()
-    IMPLEMENT_DYNAMIC_BIND_FN(bind_helper)
+IMPLEMENT_DYNAMIC_BIND_FN(bind_helper)
 #endif
 
 static ENGINE *engine_ossltest(void)
@@ -490,7 +508,7 @@ static int ossltest_destroy(ENGINE *e)
 }
 
 static int ossltest_digests(ENGINE *e, const EVP_MD **digest,
-                          const int **nids, int nid)
+                            const int **nids, int nid)
 {
     int ok = 1;
     if (!digest) {
@@ -499,31 +517,31 @@ static int ossltest_digests(ENGINE *e, const EVP_MD **digest,
     }
     /* We are being asked for a specific digest */
     switch (nid) {
-    case NID_md5:
-        *digest = digest_md5();
-        break;
-    case NID_sha1:
-        *digest = digest_sha1();
-        break;
-    case NID_sha256:
-        *digest = digest_sha256();
-        break;
-    case NID_sha384:
-        *digest = digest_sha384();
-        break;
-    case NID_sha512:
-        *digest = digest_sha512();
-        break;
-    default:
-        ok = 0;
-        *digest = NULL;
-        break;
+        case NID_md5:
+            *digest = digest_md5();
+            break;
+        case NID_sha1:
+            *digest = digest_sha1();
+            break;
+        case NID_sha256:
+            *digest = digest_sha256();
+            break;
+        case NID_sha384:
+            *digest = digest_sha384();
+            break;
+        case NID_sha512:
+            *digest = digest_sha512();
+            break;
+        default:
+            ok = 0;
+            *digest = NULL;
+            break;
     }
     return ok;
 }
 
 static int ossltest_ciphers(ENGINE *e, const EVP_CIPHER **cipher,
-                          const int **nids, int nid)
+                            const int **nids, int nid)
 {
     int ok = 1;
     if (!cipher) {
@@ -534,19 +552,19 @@ static int ossltest_ciphers(ENGINE *e, const EVP_CIPHER **cipher,
     }
     /* We are being asked for a specific cipher */
     switch (nid) {
-    case NID_aes_128_cbc:
-        *cipher = ossltest_aes_128_cbc();
-        break;
-    case NID_aes_128_gcm:
-        *cipher = ossltest_aes_128_gcm();
-        break;
-    case NID_aes_128_cbc_hmac_sha1:
-        *cipher = ossltest_aes_128_cbc_hmac_sha1();
-        break;
-    default:
-        ok = 0;
-        *cipher = NULL;
-        break;
+        case NID_aes_128_cbc:
+            *cipher = ossltest_aes_128_cbc();
+            break;
+        case NID_aes_128_gcm:
+            *cipher = ossltest_aes_128_gcm();
+            break;
+        case NID_aes_128_cbc_hmac_sha1:
+            *cipher = ossltest_aes_128_cbc_hmac_sha1();
+            break;
+        default:
+            ok = 0;
+            *cipher = NULL;
+            break;
     }
     return ok;
 }
@@ -568,7 +586,7 @@ static void fill_known_data(unsigned char *md, unsigned int len)
  */
 static int digest_md5_init(EVP_MD_CTX *ctx)
 {
-   return EVP_MD_meth_get_init(EVP_md5())(ctx);
+    return EVP_MD_meth_get_init(EVP_md5())(ctx);
 }
 
 static int digest_md5_update(EVP_MD_CTX *ctx, const void *data,
@@ -762,13 +780,13 @@ static int ossltest_aes128_gcm_ctrl(EVP_CIPHER_CTX *ctx, int type, int arg,
         return ret;
 
     switch (type) {
-    case EVP_CTRL_AEAD_GET_TAG:
-        /* Always give the same tag */
-        memset(ptr, 0, EVP_GCM_TLS_TAG_LEN);
-        break;
+        case EVP_CTRL_AEAD_GET_TAG:
+            /* Always give the same tag */
+            memset(ptr, 0, EVP_GCM_TLS_TAG_LEN);
+            break;
 
-    default:
-        break;
+        default:
+            break;
     }
 
     return 1;
@@ -858,10 +876,10 @@ static int ossltest_aes128_cbc_hmac_sha1_ctrl(EVP_CIPHER_CTX *ctx, int type,
     EVP_AES_HMAC_SHA1 *key = data(ctx);
 
     switch (type) {
-    case EVP_CTRL_AEAD_SET_MAC_KEY:
-        return 1;
+        case EVP_CTRL_AEAD_SET_MAC_KEY:
+            return 1;
 
-    case EVP_CTRL_AEAD_TLS1_AAD:
+        case EVP_CTRL_AEAD_TLS1_AAD:
         {
             unsigned char *p = ptr;
             unsigned int len;
@@ -891,8 +909,8 @@ static int ossltest_aes128_cbc_hmac_sha1_ctrl(EVP_CIPHER_CTX *ctx, int type,
                 return SHA_DIGEST_LENGTH;
             }
         }
-    default:
-        return -1;
+        default:
+            return -1;
     }
 }
 

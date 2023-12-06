@@ -120,7 +120,7 @@ static int test_sec_mem(void)
 
     /* this can complete - it was not really secure */
     testresult = 1;
- end:
+end:
     OPENSSL_secure_free(p);
     OPENSSL_free(q);
     OPENSSL_secure_free(r);
@@ -141,7 +141,7 @@ static int test_sec_mem_clear(void)
     int i, res = 0;
 
     if (!TEST_true(CRYPTO_secure_malloc_init(4096, 32))
-            || !TEST_ptr(p = OPENSSL_secure_malloc(size)))
+        || !TEST_ptr(p = OPENSSL_secure_malloc(size)))
         goto err;
 
     for (i = 0; i < size; i++)

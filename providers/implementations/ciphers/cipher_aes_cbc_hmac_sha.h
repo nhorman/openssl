@@ -27,7 +27,8 @@ typedef struct prov_cipher_hw_aes_hmac_sha_ctx_st {
 } PROV_CIPHER_HW_AES_HMAC_SHA;
 
 const PROV_CIPHER_HW_AES_HMAC_SHA *ossl_prov_cipher_hw_aes_cbc_hmac_sha1(void);
-const PROV_CIPHER_HW_AES_HMAC_SHA *ossl_prov_cipher_hw_aes_cbc_hmac_sha256(void);
+const PROV_CIPHER_HW_AES_HMAC_SHA *ossl_prov_cipher_hw_aes_cbc_hmac_sha256(
+    void);
 
 #ifdef AES_CBC_HMAC_SHA_CAPABLE
 # include <openssl/aes.h>

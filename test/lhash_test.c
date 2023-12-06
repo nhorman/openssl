@@ -208,7 +208,7 @@ static int test_stress(void)
 
     /* num_items */
     if (!TEST_int_eq(lh_int_num_items(h), n))
-            goto end;
+        goto end;
 
     /* delete in a different order */
     for (i = 0; i < n; i++) {

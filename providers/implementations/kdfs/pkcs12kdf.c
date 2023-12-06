@@ -125,7 +125,7 @@ static int pkcs12kdf_derive(const unsigned char *pass, size_t passlen,
         }
     }
 
- end:
+end:
     OPENSSL_free(Ai);
     OPENSSL_free(B);
     OPENSSL_free(D);
@@ -184,22 +184,22 @@ static void *kdf_pkcs12_dup(void *vctx)
     if (dest != NULL) {
         if (!ossl_prov_memdup(src->salt, src->salt_len,
                               &dest->salt, &dest->salt_len)
-                || !ossl_prov_memdup(src->pass, src->pass_len,
-                                     &dest->pass , &dest->pass_len)
-                || !ossl_prov_digest_copy(&dest->digest, &src->digest))
+            || !ossl_prov_memdup(src->pass, src->pass_len,
+                                 &dest->pass, &dest->pass_len)
+            || !ossl_prov_digest_copy(&dest->digest, &src->digest))
             goto err;
         dest->iter = src->iter;
         dest->id = src->id;
     }
     return dest;
 
- err:
+err:
     kdf_pkcs12_free(dest);
     return NULL;
 }
 
 static int pkcs12kdf_set_membuf(unsigned char **buffer, size_t *buflen,
-                             const OSSL_PARAM *p)
+                                const OSSL_PARAM *p)
 {
     OPENSSL_clear_free(*buffer, *buflen);
     *buffer = NULL;
@@ -270,7 +270,7 @@ static int kdf_pkcs12_set_ctx_params(void *vctx, const OSSL_PARAM params[])
 }
 
 static const OSSL_PARAM *kdf_pkcs12_settable_ctx_params(
-        ossl_unused void *ctx, ossl_unused void *provctx)
+    ossl_unused void *ctx, ossl_unused void *provctx)
 {
     static const OSSL_PARAM known_settable_ctx_params[] = {
         OSSL_PARAM_utf8_string(OSSL_KDF_PARAM_PROPERTIES, NULL, 0),
@@ -294,7 +294,7 @@ static int kdf_pkcs12_get_ctx_params(void *vctx, OSSL_PARAM params[])
 }
 
 static const OSSL_PARAM *kdf_pkcs12_gettable_ctx_params(
-        ossl_unused void *ctx, ossl_unused void *provctx)
+    ossl_unused void *ctx, ossl_unused void *provctx)
 {
     static const OSSL_PARAM known_gettable_ctx_params[] = {
         OSSL_PARAM_size_t(OSSL_KDF_PARAM_SIZE, NULL),
@@ -304,16 +304,18 @@ static const OSSL_PARAM *kdf_pkcs12_gettable_ctx_params(
 }
 
 const OSSL_DISPATCH ossl_kdf_pkcs12_functions[] = {
-    { OSSL_FUNC_KDF_NEWCTX, (void(*)(void))kdf_pkcs12_new },
-    { OSSL_FUNC_KDF_DUPCTX, (void(*)(void))kdf_pkcs12_dup },
-    { OSSL_FUNC_KDF_FREECTX, (void(*)(void))kdf_pkcs12_free },
-    { OSSL_FUNC_KDF_RESET, (void(*)(void))kdf_pkcs12_reset },
-    { OSSL_FUNC_KDF_DERIVE, (void(*)(void))kdf_pkcs12_derive },
+    { OSSL_FUNC_KDF_NEWCTX, (void (*)(void)) kdf_pkcs12_new },
+    { OSSL_FUNC_KDF_DUPCTX, (void (*)(void)) kdf_pkcs12_dup },
+    { OSSL_FUNC_KDF_FREECTX, (void (*)(void)) kdf_pkcs12_free },
+    { OSSL_FUNC_KDF_RESET, (void (*)(void)) kdf_pkcs12_reset },
+    { OSSL_FUNC_KDF_DERIVE, (void (*)(void)) kdf_pkcs12_derive },
     { OSSL_FUNC_KDF_SETTABLE_CTX_PARAMS,
-      (void(*)(void))kdf_pkcs12_settable_ctx_params },
-    { OSSL_FUNC_KDF_SET_CTX_PARAMS, (void(*)(void))kdf_pkcs12_set_ctx_params },
+      (void (*)(void)) kdf_pkcs12_settable_ctx_params },
+    { OSSL_FUNC_KDF_SET_CTX_PARAMS,
+      (void (*)(void)) kdf_pkcs12_set_ctx_params },
     { OSSL_FUNC_KDF_GETTABLE_CTX_PARAMS,
-      (void(*)(void))kdf_pkcs12_gettable_ctx_params },
-    { OSSL_FUNC_KDF_GET_CTX_PARAMS, (void(*)(void))kdf_pkcs12_get_ctx_params },
+      (void (*)(void)) kdf_pkcs12_gettable_ctx_params },
+    { OSSL_FUNC_KDF_GET_CTX_PARAMS,
+      (void (*)(void)) kdf_pkcs12_get_ctx_params },
     OSSL_DISPATCH_END
 };

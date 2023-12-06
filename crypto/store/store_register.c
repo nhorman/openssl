@@ -70,7 +70,7 @@ int OSSL_STORE_LOADER_set_open(OSSL_STORE_LOADER *loader,
 
 int OSSL_STORE_LOADER_set_open_ex
     (OSSL_STORE_LOADER *loader,
-     OSSL_STORE_open_ex_fn open_ex_function)
+    OSSL_STORE_open_ex_fn open_ex_function)
 {
     loader->open_ex = open_ex_function;
     return 1;

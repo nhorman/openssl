@@ -55,7 +55,8 @@ static const char digest[] = "SHA384";
  * Create a new dsa param key that is the combination of an existing param key
  * plus extra parameters.
  */
-EVP_PKEY_CTX *create_merged_key(EVP_PKEY *dsaparams, const OSSL_PARAM *newparams,
+EVP_PKEY_CTX *create_merged_key(EVP_PKEY *dsaparams,
+                                const OSSL_PARAM *newparams,
                                 OSSL_LIB_CTX *libctx, const char *propq)
 {
     EVP_PKEY_CTX *out = NULL;
@@ -65,7 +66,8 @@ EVP_PKEY_CTX *create_merged_key(EVP_PKEY *dsaparams, const OSSL_PARAM *newparams
     OSSL_PARAM *loadedparams = NULL;
 
     /* Specify EVP_PKEY_KEY_PUBLIC here if you have a public key */
-    if (EVP_PKEY_todata(dsaparams, EVP_PKEY_KEY_PARAMETERS, &loadedparams) <= 0) {
+    if (EVP_PKEY_todata(dsaparams, EVP_PKEY_KEY_PARAMETERS,
+                        &loadedparams) <= 0) {
         fprintf(stderr, "EVP_PKEY_todata() failed\n");
         goto cleanup;
     }
@@ -81,8 +83,8 @@ EVP_PKEY_CTX *create_merged_key(EVP_PKEY *dsaparams, const OSSL_PARAM *newparams
         goto cleanup;
     }
     if (EVP_PKEY_fromdata_init(ctx) <= 0
-            || EVP_PKEY_fromdata(ctx, &pkey,
-                                 EVP_PKEY_KEY_PARAMETERS, mergedparams) <= 0) {
+        || EVP_PKEY_fromdata(ctx, &pkey,
+                             EVP_PKEY_KEY_PARAMETERS, mergedparams) <= 0) {
         fprintf(stderr, "EVP_PKEY_fromdata() failed\n");
         goto cleanup;
     }
@@ -154,12 +156,14 @@ int main(int argc, char **argv)
      * For illustration purposes it deliberately omits a required parameter.
      */
     params[0] = OSSL_PARAM_construct_utf8_string(OSSL_PKEY_PARAM_FFC_TYPE,
-                                                "fips186_4", 0);
+                                                 "fips186_4", 0);
     /* Force it to do a proper validation by setting the seed */
     params[1] = OSSL_PARAM_construct_octet_string(OSSL_PKEY_PARAM_FFC_SEED,
                                                   (void *)seed, seedlen);
-    params[2] = OSSL_PARAM_construct_int(OSSL_PKEY_PARAM_FFC_GINDEX, (int *)&gindex);
-    params[3] = OSSL_PARAM_construct_int(OSSL_PKEY_PARAM_FFC_PCOUNTER, (int *)&pcounter);
+    params[2] = OSSL_PARAM_construct_int(OSSL_PKEY_PARAM_FFC_GINDEX,
+                                         (int *)&gindex);
+    params[3] = OSSL_PARAM_construct_int(OSSL_PKEY_PARAM_FFC_PCOUNTER,
+                                         (int *)&pcounter);
     params[4] = OSSL_PARAM_construct_end();
 
     /* generate a new key that is the combination of the existing key and the new params */

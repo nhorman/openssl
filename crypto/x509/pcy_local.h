@@ -135,12 +135,13 @@ struct X509_POLICY_TREE_st {
 
 /* Useful macros */
 
-#define node_data_critical(data) (data->flags & POLICY_DATA_FLAG_CRITICAL)
+#define node_data_critical(data) (data->flags &POLICY_DATA_FLAG_CRITICAL)
 #define node_critical(node) node_data_critical(node->data)
 
 /* Internal functions */
 
-X509_POLICY_DATA *ossl_policy_data_new(POLICYINFO *policy, const ASN1_OBJECT *id,
+X509_POLICY_DATA *ossl_policy_data_new(POLICYINFO *policy,
+                                       const ASN1_OBJECT *id,
                                        int crit);
 void ossl_policy_data_free(X509_POLICY_DATA *data);
 
@@ -166,6 +167,7 @@ X509_POLICY_NODE *ossl_policy_level_add_node(X509_POLICY_LEVEL *level,
                                              int extra_data);
 void ossl_policy_node_free(X509_POLICY_NODE *node);
 int ossl_policy_node_match(const X509_POLICY_LEVEL *lvl,
-                           const X509_POLICY_NODE *node, const ASN1_OBJECT *oid);
+                           const X509_POLICY_NODE *node,
+                           const ASN1_OBJECT *oid);
 
 const X509_POLICY_CACHE *ossl_policy_cache_set(X509 *x);

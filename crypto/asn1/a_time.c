@@ -77,14 +77,17 @@ int ossl_asn1_time_to_tm(struct tm *tm, const ASN1_TIME *d)
 {
     static const int min[9] = { 0, 0, 1, 1, 0, 0, 0, 0, 0 };
     static const int max[9] = { 99, 99, 12, 31, 23, 59, 59, 12, 59 };
-    static const int mdays[12] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+    static const int mdays[12] =
+    { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
     char *a;
     int n, i, i2, l, o, min_l = 11, strict = 0, end = 6, btz = 5, md;
     struct tm tmp;
 #if defined(CHARSET_EBCDIC)
-    const char upper_z = 0x5A, num_zero = 0x30, period = 0x2E, minus = 0x2D, plus = 0x2B;
+    const char upper_z = 0x5A, num_zero = 0x30, period = 0x2E, minus = 0x2D,
+               plus = 0x2B;
 #else
-    const char upper_z = 'Z', num_zero = '0', period = '.', minus = '-', plus = '+';
+    const char upper_z = 'Z', num_zero = '0', period = '.', minus = '-',
+               plus = '+';
 #endif
     /*
      * ASN1_STRING_FLAG_X509_TIME is used to enforce RFC 5280
@@ -126,7 +129,8 @@ int ossl_asn1_time_to_tm(struct tm *tm, const ASN1_TIME *d)
     if (l < min_l)
         goto err;
     for (i = 0; i < end; i++) {
-        if (!strict && (i == btz) && ((a[o] == upper_z) || (a[o] == plus) || (a[o] == minus))) {
+        if (!strict && (i == btz) &&
+            ((a[o] == upper_z) || (a[o] == plus) || (a[o] == minus))) {
             i++;
             break;
         }
@@ -149,41 +153,41 @@ int ossl_asn1_time_to_tm(struct tm *tm, const ASN1_TIME *d)
         if ((n < min[i2]) || (n > max[i2]))
             goto err;
         switch (i2) {
-        case 0:
-            /* UTC will never be here */
-            tmp.tm_year = n * 100 - 1900;
-            break;
-        case 1:
-            if (d->type == V_ASN1_UTCTIME)
-                tmp.tm_year = n < 50 ? n + 100 : n;
-            else
-                tmp.tm_year += n;
-            break;
-        case 2:
-            tmp.tm_mon = n - 1;
-            break;
-        case 3:
-            /* check if tm_mday is valid in tm_mon */
-            if (tmp.tm_mon == 1) {
-                /* it's February */
-                md = mdays[1] + leap_year(tmp.tm_year + 1900);
-            } else {
-                md = mdays[tmp.tm_mon];
-            }
-            if (n > md)
-                goto err;
-            tmp.tm_mday = n;
-            determine_days(&tmp);
-            break;
-        case 4:
-            tmp.tm_hour = n;
-            break;
-        case 5:
-            tmp.tm_min = n;
-            break;
-        case 6:
-            tmp.tm_sec = n;
-            break;
+            case 0:
+                /* UTC will never be here */
+                tmp.tm_year = n * 100 - 1900;
+                break;
+            case 1:
+                if (d->type == V_ASN1_UTCTIME)
+                    tmp.tm_year = n < 50 ? n + 100 : n;
+                else
+                    tmp.tm_year += n;
+                break;
+            case 2:
+                tmp.tm_mon = n - 1;
+                break;
+            case 3:
+                /* check if tm_mday is valid in tm_mon */
+                if (tmp.tm_mon == 1) {
+                    /* it's February */
+                    md = mdays[1] + leap_year(tmp.tm_year + 1900);
+                } else {
+                    md = mdays[tmp.tm_mon];
+                }
+                if (n > md)
+                    goto err;
+                tmp.tm_mday = n;
+                determine_days(&tmp);
+                break;
+            case 4:
+                tmp.tm_hour = n;
+                break;
+            case 5:
+                tmp.tm_min = n;
+                break;
+            case 6:
+                tmp.tm_sec = n;
+                break;
         }
     }
 
@@ -260,7 +264,7 @@ int ossl_asn1_time_to_tm(struct tm *tm, const ASN1_TIME *d)
             *tm = tmp;
         return 1;
     }
- err:
+err:
     return 0;
 }
 
@@ -310,7 +314,7 @@ ASN1_TIME *ossl_asn1_time_from_tm(ASN1_TIME *s, struct tm *ts, int type)
     ebcdic2ascii(tmps->data, tmps->data, tmps->length);
 #endif
     return tmps;
- err:
+err:
     if (tmps != s)
         ASN1_STRING_free(tmps);
     return NULL;
@@ -516,30 +520,31 @@ int ossl_asn1_time_print_ex(BIO *bp, const ASN1_TIME *tm, unsigned long flags)
 
         if ((flags & ASN1_DTFLGS_TYPE_MASK) == ASN1_DTFLGS_ISO8601) {
             return BIO_printf(bp, "%4d-%02d-%02d %02d:%02d:%02d%.*s%s",
-                          stm.tm_year + 1900, stm.tm_mon + 1,
-                          stm.tm_mday, stm.tm_hour,
-                          stm.tm_min, stm.tm_sec, f_len, f,
-                          (gmt ? "Z" : "")) > 0;
+                              stm.tm_year + 1900, stm.tm_mon + 1,
+                              stm.tm_mday, stm.tm_hour,
+                              stm.tm_min, stm.tm_sec, f_len, f,
+                              (gmt ? "Z" : "")) > 0;
         }
         else {
             return BIO_printf(bp, "%s %2d %02d:%02d:%02d%.*s %d%s",
-                          _asn1_mon[stm.tm_mon], stm.tm_mday, stm.tm_hour,
-                          stm.tm_min, stm.tm_sec, f_len, f, stm.tm_year + 1900,
-                          (gmt ? " GMT" : "")) > 0;
+                              _asn1_mon[stm.tm_mon], stm.tm_mday, stm.tm_hour,
+                              stm.tm_min, stm.tm_sec, f_len, f,
+                              stm.tm_year + 1900,
+                              (gmt ? " GMT" : "")) > 0;
         }
     } else {
         if ((flags & ASN1_DTFLGS_TYPE_MASK) == ASN1_DTFLGS_ISO8601) {
             return BIO_printf(bp, "%4d-%02d-%02d %02d:%02d:%02d%s",
-                          stm.tm_year + 1900, stm.tm_mon + 1,
-                          stm.tm_mday, stm.tm_hour,
-                          stm.tm_min, stm.tm_sec,
-                          (gmt ? "Z" : "")) > 0;
+                              stm.tm_year + 1900, stm.tm_mon + 1,
+                              stm.tm_mday, stm.tm_hour,
+                              stm.tm_min, stm.tm_sec,
+                              (gmt ? "Z" : "")) > 0;
         }
         else {
             return BIO_printf(bp, "%s %2d %02d:%02d:%02d %d%s",
-                          _asn1_mon[stm.tm_mon], stm.tm_mday, stm.tm_hour,
-                          stm.tm_min, stm.tm_sec, stm.tm_year + 1900,
-                          (gmt ? " GMT" : "")) > 0;
+                              _asn1_mon[stm.tm_mon], stm.tm_mday, stm.tm_hour,
+                              stm.tm_min, stm.tm_sec, stm.tm_year + 1900,
+                              (gmt ? " GMT" : "")) > 0;
         }
     }
 }

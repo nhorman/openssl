@@ -119,7 +119,7 @@ typedef u64 smallfelem[NLIMBS];
 
 /* This is the value of the prime as four 64-bit words, little-endian. */
 static const u64 kPrime[4] =
-    { 0xfffffffffffffffful, 0xffffffff, 0, 0xffffffff00000001ul };
+{ 0xfffffffffffffffful, 0xffffffff, 0, 0xffffffff00000001ul };
 static const u64 bottom63bits = 0x7ffffffffffffffful;
 
 /*
@@ -248,7 +248,7 @@ static void longfelem_scalar(longfelem out, const u64 scalar)
 
 /* zero105 is 0 mod p */
 static const felem zero105 =
-    { two105m41m9, two105, two105m41p9, two105m41p9 };
+{ two105m41m9, two105, two105m41p9, two105m41p9 };
 
 /*-
  * smallfelem_neg sets |out| to |-small|
@@ -293,7 +293,7 @@ static void felem_diff(felem out, const felem in)
 
 /* zero107 is 0 mod p */
 static const felem zero107 =
-    { two107m43m11, two107, two107m43p11, two107m43p11 };
+{ two107m43m11, two107, two107m43p11, two107m43p11 };
 
 /*-
  * An alternative felem_diff for larger inputs |in|
@@ -716,7 +716,7 @@ static void felem_small_mul(longfelem out, const smallfelem small1,
 #define two100m36p4 (((limb)1) << 100) - (((limb)1) << 36) + (((limb)1) << 4)
 /* zero100 is 0 mod p */
 static const felem zero100 =
-    { two100m36m4, two100, two100m36p4, two100m36p4 };
+{ two100m36m4, two100, two100m36p4, two100m36p4 };
 
 /*-
  * Internal function for the different flavours of felem_reduce.
@@ -948,8 +948,8 @@ static limb smallfelem_is_zero(const smallfelem small)
     is_zero = 0 - (is_zero >> 63);
 
     is_p = (small[0] ^ kPrime[0]) |
-        (small[1] ^ kPrime[1]) |
-        (small[2] ^ kPrime[2]) | (small[3] ^ kPrime[3]);
+           (small[1] ^ kPrime[1]) |
+           (small[2] ^ kPrime[2]) | (small[3] ^ kPrime[3]);
     is_p--;
     is_p &= is_p << 32;
     is_p &= is_p << 16;
@@ -1796,9 +1796,9 @@ const EC_METHOD *EC_GFp_nistp256_method(void)
         ossl_ec_GFp_simple_point_set_to_infinity,
         ossl_ec_GFp_simple_point_set_affine_coordinates,
         ossl_ec_GFp_nistp256_point_get_affine_coordinates,
-        0 /* point_set_compressed_coordinates */ ,
-        0 /* point2oct */ ,
-        0 /* oct2point */ ,
+        0 /* point_set_compressed_coordinates */,
+        0 /* point2oct */,
+        0 /* oct2point */,
         ossl_ec_GFp_simple_add,
         ossl_ec_GFp_simple_dbl,
         ossl_ec_GFp_simple_invert,
@@ -1812,10 +1812,10 @@ const EC_METHOD *EC_GFp_nistp256_method(void)
         ossl_ec_GFp_nistp256_have_precompute_mult,
         ossl_ec_GFp_nist_field_mul,
         ossl_ec_GFp_nist_field_sqr,
-        0 /* field_div */ ,
+        0 /* field_div */,
         ossl_ec_GFp_simple_field_inv,
-        0 /* field_encode */ ,
-        0 /* field_decode */ ,
+        0 /* field_encode */,
+        0 /* field_decode */,
         0,                      /* field_set_to_one */
         ossl_ec_key_simple_priv2oct,
         ossl_ec_key_simple_oct2priv,
@@ -1926,7 +1926,7 @@ int ossl_ec_GFp_nistp256_group_set_curve(EC_GROUP *group, const BIGNUM *p,
     }
     group->field_mod_func = BN_nist_mod_256;
     ret = ossl_ec_GFp_simple_group_set_curve(group, p, a, b, ctx);
- err:
+err:
     BN_CTX_end(ctx);
 #ifndef FIPS_MODULE
     BN_CTX_free(new_ctx);
@@ -1992,20 +1992,25 @@ static void make_points_affine(size_t num, smallfelem points[][3],
                                                   points,
                                                   sizeof(smallfelem),
                                                   tmp_smallfelems,
-                                                  (void (*)(void *))smallfelem_one,
+                                                  (void (*)(
+                                                       void *)) smallfelem_one,
                                                   smallfelem_is_zero_int,
-                                                  (void (*)(void *, const void *))
+                                                  (void (*)(void *,
+                                                            const void *))
                                                   smallfelem_assign,
-                                                  (void (*)(void *, const void *))
+                                                  (void (*)(void *,
+                                                            const void *))
                                                   smallfelem_square_contract,
                                                   (void (*)
                                                    (void *, const void *,
                                                     const void *))
                                                   smallfelem_mul_contract,
-                                                  (void (*)(void *, const void *))
+                                                  (void (*)(void *,
+                                                            const void *))
                                                   smallfelem_inv_contract,
                                                   /* nothing to contract */
-                                                  (void (*)(void *, const void *))
+                                                  (void (*)(void *,
+                                                            const void *))
                                                   smallfelem_assign);
 }
 
@@ -2050,7 +2055,7 @@ int ossl_ec_GFp_nistp256_points_mul(const EC_GROUP *group, EC_POINT *r,
         pre = group->pre_comp.nistp256;
         if (pre)
             /* we have precomputation, try to use it */
-            g_pre_comp = (const smallfelem(*)[16][3])pre->g_pre_comp;
+            g_pre_comp = (const smallfelem(*)[16][3]) pre->g_pre_comp;
         else
             /* try to use the standard precomputation */
             g_pre_comp = &gmul[0];
@@ -2090,7 +2095,8 @@ int ossl_ec_GFp_nistp256_points_mul(const EC_GROUP *group, EC_POINT *r,
         pre_comp = OPENSSL_malloc(sizeof(*pre_comp) * num_points);
         if (mixed)
             tmp_smallfelems =
-              OPENSSL_malloc(sizeof(*tmp_smallfelems) * (num_points * 17 + 1));
+                OPENSSL_malloc(sizeof(*tmp_smallfelems) *
+                               (num_points * 17 + 1));
         if ((secrets == NULL) || (pre_comp == NULL)
             || (mixed && (tmp_smallfelems == NULL)))
             goto err;
@@ -2186,14 +2192,14 @@ int ossl_ec_GFp_nistp256_points_mul(const EC_GROUP *group, EC_POINT *r,
         }
         /* do the multiplication with generator precomputation */
         batch_mul(x_out, y_out, z_out,
-                  (const felem_bytearray(*))secrets, num_points,
+                  (const felem_bytearray(*)) secrets, num_points,
                   g_secret,
-                  mixed, (const smallfelem(*)[17][3])pre_comp, g_pre_comp);
+                  mixed, (const smallfelem(*)[17][3]) pre_comp, g_pre_comp);
     } else {
         /* do the multiplication without generator precomputation */
         batch_mul(x_out, y_out, z_out,
-                  (const felem_bytearray(*))secrets, num_points,
-                  NULL, mixed, (const smallfelem(*)[17][3])pre_comp, NULL);
+                  (const felem_bytearray(*)) secrets, num_points,
+                  NULL, mixed, (const smallfelem(*)[17][3]) pre_comp, NULL);
     }
     /* reduce the output to its unique minimal representation */
     felem_contract(x_in, x_out);
@@ -2207,7 +2213,7 @@ int ossl_ec_GFp_nistp256_points_mul(const EC_GROUP *group, EC_POINT *r,
     ret = ossl_ec_GFp_simple_set_Jprojective_coordinates_GFp(group, r, x, y, z,
                                                              ctx);
 
- err:
+err:
     BN_CTX_end(ctx);
     EC_POINT_free(generator);
     OPENSSL_free(secrets);
@@ -2348,12 +2354,12 @@ int ossl_ec_GFp_nistp256_precompute_mult(EC_GROUP *group, BN_CTX *ctx)
     }
     make_points_affine(31, &(pre->g_pre_comp[0][1]), tmp_smallfelems);
 
- done:
+done:
     SETPRECOMP(group, nistp256, pre);
     pre = NULL;
     ret = 1;
 
- err:
+err:
     BN_CTX_end(ctx);
     EC_POINT_free(generator);
 #ifndef FIPS_MODULE

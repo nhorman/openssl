@@ -221,7 +221,7 @@ static int x509_sig_info_init(X509_SIG_INFO *siginf, const X509_ALGOR *alg,
     siginf->secbits = -1;
     siginf->flags = 0;
     if (!OBJ_find_sigid_algs(OBJ_obj2nid(alg->algorithm), &mdnid, &pknid)
-            || pknid == NID_undef) {
+        || pknid == NID_undef) {
         ERR_raise(ERR_LIB_X509, X509_R_UNKNOWN_SIGID_ALGS);
         return 0;
     }
@@ -229,65 +229,65 @@ static int x509_sig_info_init(X509_SIG_INFO *siginf, const X509_ALGOR *alg,
     siginf->pknid = pknid;
 
     switch (mdnid) {
-    case NID_undef:
-        /* If we have one, use a custom handler for this algorithm */
-        ameth = EVP_PKEY_asn1_find(NULL, pknid);
-        if (ameth != NULL && ameth->siginf_set != NULL
+        case NID_undef:
+            /* If we have one, use a custom handler for this algorithm */
+            ameth = EVP_PKEY_asn1_find(NULL, pknid);
+            if (ameth != NULL && ameth->siginf_set != NULL
                 && ameth->siginf_set(siginf, alg, sig))
-           break;
-        if (pubkey != NULL) {
-            int secbits;
-
-            secbits = EVP_PKEY_get_security_bits(pubkey);
-            if (secbits != 0) {
-                siginf->secbits = secbits;
                 break;
+            if (pubkey != NULL) {
+                int secbits;
+
+                secbits = EVP_PKEY_get_security_bits(pubkey);
+                if (secbits != 0) {
+                    siginf->secbits = secbits;
+                    break;
+                }
             }
-        }
-        ERR_raise(ERR_LIB_X509, X509_R_ERROR_USING_SIGINF_SET);
-        return 0;
+            ERR_raise(ERR_LIB_X509, X509_R_ERROR_USING_SIGINF_SET);
+            return 0;
         /*
          * SHA1 and MD5 are known to be broken. Reduce security bits so that
          * they're no longer accepted at security level 1.
          * The real values don't really matter as long as they're lower than 80,
          * which is our security level 1.
          */
-    case NID_sha1:
-        /*
-         * https://eprint.iacr.org/2020/014 puts a chosen-prefix attack
-         * for SHA1 at2^63.4
-         */
-        siginf->secbits = 63;
-        break;
-    case NID_md5:
-        /*
-         * https://documents.epfl.ch/users/l/le/lenstra/public/papers/lat.pdf
-         * puts a chosen-prefix attack for MD5 at 2^39.
-         */
-        siginf->secbits = 39;
-        break;
-    case NID_id_GostR3411_94:
-        /*
-         * There is a collision attack on GOST R 34.11-94 at 2^105, see
-         * https://link.springer.com/chapter/10.1007%2F978-3-540-85174-5_10
-         */
-        siginf->secbits = 105;
-        break;
-    default:
-        /* Security bits: half number of bits in digest */
-        if ((md = EVP_get_digestbynid(mdnid)) == NULL) {
-            ERR_raise(ERR_LIB_X509, X509_R_ERROR_GETTING_MD_BY_NID);
-            return 0;
-        }
-        siginf->secbits = EVP_MD_get_size(md) * 4;
-        break;
+        case NID_sha1:
+            /*
+             * https://eprint.iacr.org/2020/014 puts a chosen-prefix attack
+             * for SHA1 at2^63.4
+             */
+            siginf->secbits = 63;
+            break;
+        case NID_md5:
+            /*
+             * https://documents.epfl.ch/users/l/le/lenstra/public/papers/lat.pdf
+             * puts a chosen-prefix attack for MD5 at 2^39.
+             */
+            siginf->secbits = 39;
+            break;
+        case NID_id_GostR3411_94:
+            /*
+             * There is a collision attack on GOST R 34.11-94 at 2^105, see
+             * https://link.springer.com/chapter/10.1007%2F978-3-540-85174-5_10
+             */
+            siginf->secbits = 105;
+            break;
+        default:
+            /* Security bits: half number of bits in digest */
+            if ((md = EVP_get_digestbynid(mdnid)) == NULL) {
+                ERR_raise(ERR_LIB_X509, X509_R_ERROR_GETTING_MD_BY_NID);
+                return 0;
+            }
+            siginf->secbits = EVP_MD_get_size(md) * 4;
+            break;
     }
     switch (mdnid) {
-    case NID_sha1:
-    case NID_sha256:
-    case NID_sha384:
-    case NID_sha512:
-        siginf->flags |= X509_SIG_INFO_TLS;
+        case NID_sha1:
+        case NID_sha256:
+        case NID_sha384:
+        case NID_sha512:
+            siginf->flags |= X509_SIG_INFO_TLS;
     }
     siginf->flags |= X509_SIG_INFO_VALID;
     return 1;

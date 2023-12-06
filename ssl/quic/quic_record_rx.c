@@ -42,30 +42,30 @@ static ossl_inline int pkt_is_marked(const uint64_t *bitf, size_t pkt_idx)
 typedef struct rxe_st RXE;
 
 struct rxe_st {
-    OSSL_QRX_PKT        pkt;
+    OSSL_QRX_PKT pkt;
     OSSL_LIST_MEMBER(rxe, RXE);
-    size_t              data_len, alloc_len, refcount;
+    size_t data_len, alloc_len, refcount;
 
     /* Extra fields for per-packet information. */
-    QUIC_PKT_HDR        hdr; /* data/len are decrypted payload */
+    QUIC_PKT_HDR hdr;        /* data/len are decrypted payload */
 
     /* Decoded packet number. */
-    QUIC_PN             pn;
+    QUIC_PN pn;
 
     /* Addresses copied from URXE. */
-    BIO_ADDR            peer, local;
+    BIO_ADDR peer, local;
 
     /* Time we received the packet (not when we processed it). */
-    OSSL_TIME           time;
+    OSSL_TIME time;
 
     /* Total length of the datagram which contained this packet. */
-    size_t              datagram_len;
+    size_t datagram_len;
 
     /*
      * The key epoch the packet was received with. Always 0 for non-1-RTT
      * packets.
      */
-    uint64_t            key_epoch;
+    uint64_t key_epoch;
 
     /*
      * alloc_len allocated bytes (of which data_len bytes are valid) follow this
@@ -93,59 +93,59 @@ struct ossl_qrx_st {
     QUIC_DEMUX                 *demux;
 
     /* Length of connection IDs used in short-header packets in bytes. */
-    size_t                      short_conn_id_len;
+    size_t short_conn_id_len;
 
     /* Maximum number of deferred datagrams buffered at any one time. */
-    size_t                      max_deferred;
+    size_t max_deferred;
 
     /* Current count of deferred datagrams. */
-    size_t                      num_deferred;
+    size_t num_deferred;
 
     /*
      * List of URXEs which are filled with received encrypted data.
      * These are returned to the DEMUX's free list as they are processed.
      */
-    QUIC_URXE_LIST              urx_pending;
+    QUIC_URXE_LIST urx_pending;
 
     /*
      * List of URXEs which we could not decrypt immediately and which are being
      * kept in case they can be decrypted later.
      */
-    QUIC_URXE_LIST              urx_deferred;
+    QUIC_URXE_LIST urx_deferred;
 
     /*
      * List of RXEs which are not currently in use. These are moved
      * to the pending list as they are filled.
      */
-    RXE_LIST                    rx_free;
+    RXE_LIST rx_free;
 
     /*
      * List of RXEs which are filled with decrypted packets ready to be passed
      * to the user. A RXE is removed from all lists inside the QRL when passed
      * to the user, then returned to the free list when the user returns it.
      */
-    RXE_LIST                    rx_pending;
+    RXE_LIST rx_pending;
 
     /* Largest PN we have received and processed in a given PN space. */
-    QUIC_PN                     largest_pn[QUIC_PN_SPACE_NUM];
+    QUIC_PN largest_pn[QUIC_PN_SPACE_NUM];
 
     /* Per encryption-level state. */
-    OSSL_QRL_ENC_LEVEL_SET      el_set;
+    OSSL_QRL_ENC_LEVEL_SET el_set;
 
     /* Bytes we have received since this counter was last cleared. */
-    uint64_t                    bytes_received;
+    uint64_t bytes_received;
 
     /*
      * Number of forged packets we have received since the QRX was instantiated.
      * Note that as per RFC 9001, this is connection-level state; it is not per
      * EL and is not reset by a key update.
      */
-    uint64_t                    forged_pkt_count;
+    uint64_t forged_pkt_count;
 
     /*
      * The PN the current key epoch started at, inclusive.
      */
-    uint64_t                    cur_epoch_start_pn;
+    uint64_t cur_epoch_start_pn;
 
     /* Validation callback. */
     ossl_qrx_late_validation_cb    *validation_cb;
@@ -156,10 +156,10 @@ struct ossl_qrx_st {
     void                           *key_update_cb_arg;
 
     /* Initial key phase. For debugging use only; always 0 in real use. */
-    unsigned char                   init_key_phase_bit;
+    unsigned char init_key_phase_bit;
 
     /* Are we allowed to process 1-RTT packets yet? */
-    unsigned char                   allow_1rtt;
+    unsigned char allow_1rtt;
 
     /* Message callback related arguments */
     ossl_msg_cb msg_callback;
@@ -247,7 +247,8 @@ void ossl_qrx_inject_urxe(OSSL_QRX *qrx, QUIC_URXE *urxe)
     ossl_list_urxe_insert_tail(&qrx->urx_pending, urxe);
 
     if (qrx->msg_callback != NULL)
-        qrx->msg_callback(0, OSSL_QUIC1_VERSION, SSL3_RT_QUIC_DATAGRAM, urxe + 1,
+        qrx->msg_callback(0, OSSL_QUIC1_VERSION, SSL3_RT_QUIC_DATAGRAM,
+                          urxe + 1,
                           urxe->data_len, qrx->msg_callback_ssl,
                           qrx->msg_callback_arg);
 }
@@ -300,7 +301,7 @@ int ossl_qrx_provide_secret(OSSL_QRX *qrx, uint32_t enc_level,
                                                secret,
                                                secret_len,
                                                qrx->init_key_phase_bit,
-                                               /*is_tx=*/0))
+                                               /*is_tx=*/ 0))
         return 0;
 
     /*
@@ -527,7 +528,8 @@ static int qrx_validate_hdr_early(OSSL_QRX *qrx, RXE *rxe,
         return 0;
 
     /* Version negotiation and retry packets must be the first packet. */
-    if (first_dcid != NULL && !ossl_quic_pkt_type_can_share_dgram(rxe->hdr.type))
+    if (first_dcid != NULL &&
+        !ossl_quic_pkt_type_can_share_dgram(rxe->hdr.type))
         return 0;
 
     /*
@@ -538,7 +540,7 @@ static int qrx_validate_hdr_early(OSSL_QRX *qrx, RXE *rxe,
         if (!ossl_assert(first_dcid->id_len < QUIC_MAX_CONN_ID_LEN)
             || !ossl_quic_conn_id_eq(first_dcid,
                                      &rxe->hdr.dst_conn_id))
-        return 0;
+            return 0;
     }
 
     return 1;
@@ -628,41 +630,42 @@ static size_t qrx_get_cipher_ctx_idx(OSSL_QRX *qrx, OSSL_QRL_ENC_LEVEL *el,
      * for a packet to be sent using a given key epoch's keys.
      */
     switch (el->state) {
-    case QRL_EL_STATE_PROV_NORMAL:
-        /*
-         * If we are in the NORMAL state, usually the KP bit will match the LSB
-         * of our key epoch, meaning no new key update is being signalled. If it
-         * does not match, this means the packet (purports to) belong to
-         * the next key epoch.
-         *
-         * IMPORTANT: The AEAD tag has not been verified yet when this function
-         * is called, so this code must be timing-channel safe, hence use of
-         * XOR. Moreover, the value output below is not yet authenticated.
-         */
-        *rx_key_epoch
-            = el->key_epoch + ((el->key_epoch & 1) ^ (uint64_t)key_phase_bit);
-        break;
+        case QRL_EL_STATE_PROV_NORMAL:
+            /*
+             * If we are in the NORMAL state, usually the KP bit will match the LSB
+             * of our key epoch, meaning no new key update is being signalled. If it
+             * does not match, this means the packet (purports to) belong to
+             * the next key epoch.
+             *
+             * IMPORTANT: The AEAD tag has not been verified yet when this function
+             * is called, so this code must be timing-channel safe, hence use of
+             * XOR. Moreover, the value output below is not yet authenticated.
+             */
+            *rx_key_epoch
+                = el->key_epoch +
+                  ((el->key_epoch & 1) ^ (uint64_t)key_phase_bit);
+            break;
 
-    case QRL_EL_STATE_PROV_UPDATING:
-        /*
-         * If we are in the UPDATING state, usually the KP bit will match the
-         * LSB of our key epoch. If it does not match, this means that the
-         * packet (purports to) belong to the previous key epoch.
-         *
-         * As above, must be timing-channel safe.
-         */
-        *is_old_key = (el->key_epoch & 1) ^ (uint64_t)key_phase_bit;
-        *rx_key_epoch = el->key_epoch - (uint64_t)*is_old_key;
-        break;
+        case QRL_EL_STATE_PROV_UPDATING:
+            /*
+             * If we are in the UPDATING state, usually the KP bit will match the
+             * LSB of our key epoch. If it does not match, this means that the
+             * packet (purports to) belong to the previous key epoch.
+             *
+             * As above, must be timing-channel safe.
+             */
+            *is_old_key = (el->key_epoch & 1) ^ (uint64_t)key_phase_bit;
+            *rx_key_epoch = el->key_epoch - (uint64_t)*is_old_key;
+            break;
 
-    case QRL_EL_STATE_PROV_COOLDOWN:
-        /*
-         * If we are in COOLDOWN, there is only one key epoch we can possibly
-         * decrypt with, so just try that. If AEAD decryption fails, the
-         * value we output here isn't used anyway.
-         */
-        *rx_key_epoch = el->key_epoch;
-        break;
+        case QRL_EL_STATE_PROV_COOLDOWN:
+            /*
+             * If we are in COOLDOWN, there is only one key epoch we can possibly
+             * decrypt with, so just try that. If AEAD decryption fails, the
+             * value we output here isn't used anyway.
+             */
+            *rx_key_epoch = el->key_epoch;
+            break;
     }
 
     return idx;
@@ -706,7 +709,8 @@ static int qrx_decrypt_pkt_body(OSSL_QRX *qrx, unsigned char *dst,
      * If we have failed to authenticate a certain number of ciphertexts, refuse
      * to decrypt any more ciphertexts.
      */
-    if (qrx->forged_pkt_count >= ossl_qrl_get_suite_max_forged_pkt(el->suite_id))
+    if (qrx->forged_pkt_count >=
+        ossl_qrl_get_suite_max_forged_pkt(el->suite_id))
         return 0;
 
     cctx_idx = qrx_get_cipher_ctx_idx(qrx, el, enc_level, key_phase_bit,
@@ -740,7 +744,7 @@ static int qrx_decrypt_pkt_body(OSSL_QRX *qrx, unsigned char *dst,
 
     /* type and key will already have been setup; feed the IV. */
     if (EVP_CipherInit_ex(cctx, NULL,
-                          NULL, NULL, nonce, /*enc=*/0) != 1)
+                          NULL, NULL, nonce, /*enc=*/ 0) != 1)
         return 0;
 
     /* Feed the AEAD tag we got so the cipher can validate it. */
@@ -1197,7 +1201,7 @@ static int qrx_process_one_urxe(OSSL_QRX *qrx, QUIC_URXE *e)
      */
     ossl_list_urxe_remove(&qrx->urx_pending, e);
     if (was_deferred > 0 &&
-            (e->deferred || qrx->num_deferred < qrx->max_deferred)) {
+        (e->deferred || qrx->num_deferred < qrx->max_deferred)) {
         ossl_list_urxe_insert_tail(&qrx->urx_deferred, e);
         if (!e->deferred) {
             e->deferred = 1;

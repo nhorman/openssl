@@ -17,7 +17,7 @@
 #  include "crypto/sparc_arch.h"
 
 #  ifndef OPENSSL_NO_CAMELLIA
-#   define SPARC_CMLL_CAPABLE      (OPENSSL_sparcv9cap_P[1] & CFR_CAMELLIA)
+#   define SPARC_CMLL_CAPABLE      (OPENSSL_sparcv9cap_P[1] &CFR_CAMELLIA)
 #   include <openssl/camellia.h>
 
 void cmll_t4_set_key(const unsigned char *key, int bits, CAMELLIA_KEY *ks);

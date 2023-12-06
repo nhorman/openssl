@@ -66,7 +66,7 @@ static int des_ede3_unwrap(PROV_CIPHER_CTX *ctx, unsigned char *out,
     ctx->hw->cipher(ctx, out, out, inl - 16);
     ctx->hw->cipher(ctx, icv, icv, 8);
     if (ossl_sha1(out, inl - 16, sha1tmp) /* Work out hash of first portion */
-            && CRYPTO_memcmp(sha1tmp, icv, 8) == 0)
+        && CRYPTO_memcmp(sha1tmp, icv, 8) == 0)
         rv = inl - 16;
     OPENSSL_cleanse(icv, 8);
     OPENSSL_cleanse(sha1tmp, SHA_DIGEST_LENGTH);
@@ -169,42 +169,44 @@ static int tdes_wrap_update(void *vctx, unsigned char *out, size_t *outl,
 
 
 # define IMPLEMENT_WRAP_CIPHER(flags, kbits, blkbits, ivbits)                  \
-static OSSL_FUNC_cipher_newctx_fn tdes_wrap_newctx;                            \
-static void *tdes_wrap_newctx(void *provctx)                                   \
-{                                                                              \
-    return ossl_tdes_newctx(provctx, EVP_CIPH_WRAP_MODE, kbits, blkbits,       \
-                            ivbits, flags,                                     \
-                            ossl_prov_cipher_hw_tdes_wrap_cbc());              \
-}                                                                              \
-static OSSL_FUNC_cipher_get_params_fn tdes_wrap_get_params;                    \
-static int tdes_wrap_get_params(OSSL_PARAM params[])                           \
-{                                                                              \
-    return ossl_cipher_generic_get_params(params, EVP_CIPH_WRAP_MODE, flags,   \
-                                          kbits, blkbits, ivbits);             \
-}                                                                              \
-const OSSL_DISPATCH ossl_tdes_wrap_cbc_functions[] =                           \
-{                                                                              \
-    { OSSL_FUNC_CIPHER_ENCRYPT_INIT, (void (*)(void)) ossl_tdes_einit },       \
-    { OSSL_FUNC_CIPHER_DECRYPT_INIT, (void (*)(void)) ossl_tdes_dinit },       \
-    { OSSL_FUNC_CIPHER_CIPHER, (void (*)(void))tdes_wrap_cipher },             \
-    { OSSL_FUNC_CIPHER_NEWCTX, (void (*)(void))tdes_wrap_newctx },             \
-    { OSSL_FUNC_CIPHER_FREECTX, (void (*)(void))ossl_tdes_freectx },           \
-    { OSSL_FUNC_CIPHER_UPDATE, (void (*)(void))tdes_wrap_update },             \
-    { OSSL_FUNC_CIPHER_FINAL,                                                  \
-      (void (*)(void))ossl_cipher_generic_stream_final },                      \
-    { OSSL_FUNC_CIPHER_GET_PARAMS, (void (*)(void))tdes_wrap_get_params },     \
-    { OSSL_FUNC_CIPHER_GETTABLE_PARAMS,                                        \
-      (void (*)(void))ossl_cipher_generic_gettable_params },                   \
-    { OSSL_FUNC_CIPHER_GET_CTX_PARAMS,                                         \
-      (void (*)(void))ossl_tdes_get_ctx_params },                              \
-    { OSSL_FUNC_CIPHER_GETTABLE_CTX_PARAMS,                                    \
-      (void (*)(void))ossl_tdes_gettable_ctx_params },                         \
-    { OSSL_FUNC_CIPHER_SET_CTX_PARAMS,                                         \
-      (void (*)(void))ossl_cipher_generic_set_ctx_params },                    \
-    { OSSL_FUNC_CIPHER_SETTABLE_CTX_PARAMS,                                    \
-      (void (*)(void))ossl_cipher_generic_settable_ctx_params },               \
-    OSSL_DISPATCH_END                                                          \
-}
+        static OSSL_FUNC_cipher_newctx_fn tdes_wrap_newctx;                            \
+        static void *tdes_wrap_newctx(void *provctx)                                   \
+        {                                                                              \
+            return ossl_tdes_newctx(provctx, EVP_CIPH_WRAP_MODE, kbits, blkbits,       \
+                                    ivbits, flags,                                     \
+                                    ossl_prov_cipher_hw_tdes_wrap_cbc());              \
+        }                                                                              \
+        static OSSL_FUNC_cipher_get_params_fn tdes_wrap_get_params;                    \
+        static int tdes_wrap_get_params(OSSL_PARAM params[])                           \
+        {                                                                              \
+            return ossl_cipher_generic_get_params(params, EVP_CIPH_WRAP_MODE, \
+                                                  flags,   \
+                                                  kbits, blkbits, ivbits);             \
+        }                                                                              \
+        const OSSL_DISPATCH ossl_tdes_wrap_cbc_functions[] =                           \
+        {                                                                              \
+            { OSSL_FUNC_CIPHER_ENCRYPT_INIT, (void (*)(void)) ossl_tdes_einit },       \
+            { OSSL_FUNC_CIPHER_DECRYPT_INIT, (void (*)(void)) ossl_tdes_dinit },       \
+            { OSSL_FUNC_CIPHER_CIPHER, (void (*)(void)) tdes_wrap_cipher },             \
+            { OSSL_FUNC_CIPHER_NEWCTX, (void (*)(void)) tdes_wrap_newctx },             \
+            { OSSL_FUNC_CIPHER_FREECTX, (void (*)(void)) ossl_tdes_freectx },           \
+            { OSSL_FUNC_CIPHER_UPDATE, (void (*)(void)) tdes_wrap_update },             \
+            { OSSL_FUNC_CIPHER_FINAL,                                                  \
+              (void (*)(void)) ossl_cipher_generic_stream_final },                      \
+            { OSSL_FUNC_CIPHER_GET_PARAMS, \
+              (void (*)(void)) tdes_wrap_get_params },     \
+            { OSSL_FUNC_CIPHER_GETTABLE_PARAMS,                                        \
+              (void (*)(void)) ossl_cipher_generic_gettable_params },                   \
+            { OSSL_FUNC_CIPHER_GET_CTX_PARAMS,                                         \
+              (void (*)(void)) ossl_tdes_get_ctx_params },                              \
+            { OSSL_FUNC_CIPHER_GETTABLE_CTX_PARAMS,                                    \
+              (void (*)(void)) ossl_tdes_gettable_ctx_params },                         \
+            { OSSL_FUNC_CIPHER_SET_CTX_PARAMS,                                         \
+              (void (*)(void)) ossl_cipher_generic_set_ctx_params },                    \
+            { OSSL_FUNC_CIPHER_SETTABLE_CTX_PARAMS,                                    \
+              (void (*)(void)) ossl_cipher_generic_settable_ctx_params },               \
+            OSSL_DISPATCH_END                                                          \
+        }
 
 /* ossl_tdes_wrap_cbc_functions */
 IMPLEMENT_WRAP_CIPHER(TDES_WRAP_FLAGS, 64*3, 64, 0);

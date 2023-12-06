@@ -125,16 +125,16 @@ static void *kdf_pbkdf2_dup(void *vctx)
     if (dest != NULL) {
         if (!ossl_prov_memdup(src->salt, src->salt_len,
                               &dest->salt, &dest->salt_len)
-                || !ossl_prov_memdup(src->pass, src->pass_len,
-                                     &dest->pass, &dest->pass_len)
-                || !ossl_prov_digest_copy(&dest->digest, &src->digest))
+            || !ossl_prov_memdup(src->pass, src->pass_len,
+                                 &dest->pass, &dest->pass_len)
+            || !ossl_prov_digest_copy(&dest->digest, &src->digest))
             goto err;
         dest->iter = src->iter;
         dest->lower_bound_checks = src->lower_bound_checks;
     }
     return dest;
 
- err:
+err:
     kdf_pbkdf2_free(dest);
     return NULL;
 }
@@ -277,17 +277,19 @@ static const OSSL_PARAM *kdf_pbkdf2_gettable_ctx_params(ossl_unused void *ctx,
 }
 
 const OSSL_DISPATCH ossl_kdf_pbkdf2_functions[] = {
-    { OSSL_FUNC_KDF_NEWCTX, (void(*)(void))kdf_pbkdf2_new },
-    { OSSL_FUNC_KDF_DUPCTX, (void(*)(void))kdf_pbkdf2_dup },
-    { OSSL_FUNC_KDF_FREECTX, (void(*)(void))kdf_pbkdf2_free },
-    { OSSL_FUNC_KDF_RESET, (void(*)(void))kdf_pbkdf2_reset },
-    { OSSL_FUNC_KDF_DERIVE, (void(*)(void))kdf_pbkdf2_derive },
+    { OSSL_FUNC_KDF_NEWCTX, (void (*)(void)) kdf_pbkdf2_new },
+    { OSSL_FUNC_KDF_DUPCTX, (void (*)(void)) kdf_pbkdf2_dup },
+    { OSSL_FUNC_KDF_FREECTX, (void (*)(void)) kdf_pbkdf2_free },
+    { OSSL_FUNC_KDF_RESET, (void (*)(void)) kdf_pbkdf2_reset },
+    { OSSL_FUNC_KDF_DERIVE, (void (*)(void)) kdf_pbkdf2_derive },
     { OSSL_FUNC_KDF_SETTABLE_CTX_PARAMS,
-      (void(*)(void))kdf_pbkdf2_settable_ctx_params },
-    { OSSL_FUNC_KDF_SET_CTX_PARAMS, (void(*)(void))kdf_pbkdf2_set_ctx_params },
+      (void (*)(void)) kdf_pbkdf2_settable_ctx_params },
+    { OSSL_FUNC_KDF_SET_CTX_PARAMS,
+      (void (*)(void)) kdf_pbkdf2_set_ctx_params },
     { OSSL_FUNC_KDF_GETTABLE_CTX_PARAMS,
-      (void(*)(void))kdf_pbkdf2_gettable_ctx_params },
-    { OSSL_FUNC_KDF_GET_CTX_PARAMS, (void(*)(void))kdf_pbkdf2_get_ctx_params },
+      (void (*)(void)) kdf_pbkdf2_gettable_ctx_params },
+    { OSSL_FUNC_KDF_GET_CTX_PARAMS,
+      (void (*)(void)) kdf_pbkdf2_get_ctx_params },
     OSSL_DISPATCH_END
 };
 
@@ -367,15 +369,15 @@ static int pbkdf2_derive(const char *pass, size_t passlen,
         if (!HMAC_CTX_copy(hctx, hctx_tpl))
             goto err;
         if (!HMAC_Update(hctx, salt, saltlen)
-                || !HMAC_Update(hctx, itmp, 4)
-                || !HMAC_Final(hctx, digtmp, NULL))
+            || !HMAC_Update(hctx, itmp, 4)
+            || !HMAC_Final(hctx, digtmp, NULL))
             goto err;
         memcpy(p, digtmp, cplen);
         for (j = 1; j < iter; j++) {
             if (!HMAC_CTX_copy(hctx, hctx_tpl))
                 goto err;
             if (!HMAC_Update(hctx, digtmp, mdlen)
-                    || !HMAC_Final(hctx, digtmp, NULL))
+                || !HMAC_Final(hctx, digtmp, NULL))
                 goto err;
             for (k = 0; k < cplen; k++)
                 p[k] ^= digtmp[k];

@@ -116,8 +116,9 @@ int EVP_PKEY_CTX_set_dsa_paramgen_md_props(EVP_PKEY_CTX *ctx,
     *p++ = OSSL_PARAM_construct_utf8_string(OSSL_PKEY_PARAM_FFC_DIGEST,
                                             (char *)md_name, 0);
     if (md_properties != NULL)
-        *p++ = OSSL_PARAM_construct_utf8_string(OSSL_PKEY_PARAM_FFC_DIGEST_PROPS,
-                                                (char *)md_properties, 0);
+        *p++ = OSSL_PARAM_construct_utf8_string(
+            OSSL_PKEY_PARAM_FFC_DIGEST_PROPS,
+            (char *)md_properties, 0);
     *p++ = OSSL_PARAM_construct_end();
 
     return EVP_PKEY_CTX_set_params(ctx, params);

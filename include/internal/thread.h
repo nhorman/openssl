@@ -25,7 +25,7 @@ uint64_t ossl_get_avail_threads(OSSL_LIB_CTX *ctx);
 # if defined(OPENSSL_THREADS)
 
 #  define OSSL_LIB_CTX_GET_THREADS(CTX)                                       \
-    ossl_lib_ctx_get_data(CTX, OSSL_LIB_CTX_THREAD_INDEX);
+        ossl_lib_ctx_get_data(CTX, OSSL_LIB_CTX_THREAD_INDEX);
 
 typedef struct openssl_threads_st {
     uint64_t max_threads;

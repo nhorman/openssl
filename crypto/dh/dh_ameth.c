@@ -102,7 +102,7 @@ static int dh_pub_decode(EVP_PKEY *pkey, const X509_PUBKEY *pubkey)
     EVP_PKEY_assign(pkey, pkey->ameth->pkey_id, dh);
     return 1;
 
- err:
+err:
     ASN1_INTEGER_free(public_key);
     DH_free(dh);
     return 0;
@@ -148,7 +148,7 @@ static int dh_pub_encode(X509_PUBKEY *pk, const EVP_PKEY *pkey)
                                ptype, str, penc, penclen))
         return 1;
 
- err:
+err:
     OPENSSL_free(penc);
     ASN1_STRING_free(str);
 
@@ -219,7 +219,7 @@ static int dh_priv_encode(PKCS8_PRIV_KEY_INFO *p8, const EVP_PKEY *pkey)
     }
     return 1;
 
- err:
+err:
     ASN1_STRING_free(params);
     return 0;
 }
@@ -258,7 +258,7 @@ static int do_dh_print(BIO *bp, const DH *x, int indent, int ptype)
         pub_key = NULL;
 
     if (x->params.p == NULL || (ptype == 2 && priv_key == NULL)
-            || (ptype > 0 && pub_key == NULL)) {
+        || (ptype > 0 && pub_key == NULL)) {
         reason = ERR_R_PASSED_NULL_PARAMETER;
         goto err;
     }
@@ -271,7 +271,7 @@ static int do_dh_print(BIO *bp, const DH *x, int indent, int ptype)
         ktype = "DH Parameters";
 
     if (!BIO_indent(bp, indent, 128)
-            || BIO_printf(bp, "%s: (%d bit)\n", ktype, DH_bits(x)) <= 0)
+        || BIO_printf(bp, "%s: (%d bit)\n", ktype, DH_bits(x)) <= 0)
         goto err;
     indent += 4;
 
@@ -285,14 +285,14 @@ static int do_dh_print(BIO *bp, const DH *x, int indent, int ptype)
 
     if (x->length != 0) {
         if (!BIO_indent(bp, indent, 128)
-                || BIO_printf(bp, "recommended-private-length: %d bits\n",
-                              (int)x->length) <= 0)
+            || BIO_printf(bp, "recommended-private-length: %d bits\n",
+                          (int)x->length) <= 0)
             goto err;
     }
 
     return 1;
 
- err:
+err:
     ERR_raise(ERR_LIB_DH, reason);
     return 0;
 }
@@ -357,8 +357,8 @@ static int dh_copy_parameters(EVP_PKEY *to, const EVP_PKEY *from)
 static int dh_missing_parameters(const EVP_PKEY *a)
 {
     return a->pkey.dh == NULL
-        || a->pkey.dh->params.p == NULL
-        || a->pkey.dh->params.g == NULL;
+           || a->pkey.dh->params.p == NULL
+           || a->pkey.dh->params.g == NULL;
 }
 
 static int dh_pub_cmp(const EVP_PKEY *a, const EVP_PKEY *b)
@@ -398,29 +398,29 @@ static int dh_pkey_ctrl(EVP_PKEY *pkey, int op, long arg1, void *arg2)
 {
     DH *dh;
     switch (op) {
-    case ASN1_PKEY_CTRL_SET1_TLS_ENCPT:
-        /* We should only be here if we have a legacy key */
-        if (!ossl_assert(evp_pkey_is_legacy(pkey)))
-            return 0;
-        dh = (DH *) evp_pkey_get0_DH_int(pkey);
-        if (dh == NULL)
-            return 0;
-        return ossl_dh_buf2key(dh, arg2, arg1);
-    case ASN1_PKEY_CTRL_GET1_TLS_ENCPT:
-        dh = (DH *) EVP_PKEY_get0_DH(pkey);
-        if (dh == NULL)
-            return 0;
-        return ossl_dh_key2buf(dh, arg2, 0, 1);
-    default:
-        return -2;
+        case ASN1_PKEY_CTRL_SET1_TLS_ENCPT:
+            /* We should only be here if we have a legacy key */
+            if (!ossl_assert(evp_pkey_is_legacy(pkey)))
+                return 0;
+            dh = (DH *) evp_pkey_get0_DH_int(pkey);
+            if (dh == NULL)
+                return 0;
+            return ossl_dh_buf2key(dh, arg2, arg1);
+        case ASN1_PKEY_CTRL_GET1_TLS_ENCPT:
+            dh = (DH *) EVP_PKEY_get0_DH(pkey);
+            if (dh == NULL)
+                return 0;
+            return ossl_dh_key2buf(dh, arg2, 0, 1);
+        default:
+            return -2;
     }
 }
 
 static int dhx_pkey_ctrl(EVP_PKEY *pkey, int op, long arg1, void *arg2)
 {
     switch (op) {
-    default:
-        return -2;
+        default:
+            return -2;
     }
 
 }

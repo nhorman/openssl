@@ -90,10 +90,10 @@ STACK_OF(X509_INFO) *PEM_X509_INFO_read_bio_ex(BIO *bp, STACK_OF(X509_INFO) *sk,
             goto err;
         }
         ERR_clear_last_mark();
- start:
+start:
         if (strcmp(name, PEM_STRING_X509) == 0
-                || strcmp(name, PEM_STRING_X509_OLD) == 0
-                || strcmp(name, PEM_STRING_X509_TRUSTED) == 0) {
+            || strcmp(name, PEM_STRING_X509_OLD) == 0
+            || strcmp(name, PEM_STRING_X509_TRUSTED) == 0) {
             if (xi->x509 != NULL) {
                 if (!sk_X509_INFO_push(ret, xi))
                     goto err;
@@ -143,7 +143,7 @@ STACK_OF(X509_INFO) *PEM_X509_INFO_read_bio_ex(BIO *bp, STACK_OF(X509_INFO) *sk,
                 goto err;
             pp = &xi->x_pkey->dec_pkey;
             if ((int)strlen(header) > 10 /* assume encrypted */
-                   || strcmp(name, PEM_STRING_PKCS8) == 0)
+                || strcmp(name, PEM_STRING_PKCS8) == 0)
                 raw = 1;
         } else { /* unknown */
             d2i = NULL;
@@ -196,7 +196,7 @@ STACK_OF(X509_INFO) *PEM_X509_INFO_read_bio_ex(BIO *bp, STACK_OF(X509_INFO) *sk,
         xi = NULL;
     }
     ok = 1;
- err:
+err:
     X509_INFO_free(xi);
     if (!ok) {
         for (i = 0; ((int)i) < sk_X509_INFO_num(ret); i++) {
@@ -234,12 +234,12 @@ int PEM_X509_INFO_write_bio(BIO *bp, const X509_INFO *xi, EVP_CIPHER *enc,
     if (enc != NULL) {
         objstr = EVP_CIPHER_get0_name(enc);
         if (objstr == NULL
-               /*
-                * Check "Proc-Type: 4,Encrypted\nDEK-Info: objstr,hex-iv\n"
-                * fits into buf
-                */
+            /*
+             * Check "Proc-Type: 4,Encrypted\nDEK-Info: objstr,hex-iv\n"
+             * fits into buf
+             */
             || strlen(objstr) + 23 + 2 * EVP_CIPHER_get_iv_length(enc) + 13
-               > sizeof(buf)) {
+            > sizeof(buf)) {
             ERR_raise(ERR_LIB_PEM, PEM_R_UNSUPPORTED_CIPHER);
             goto err;
         }
@@ -287,7 +287,8 @@ int PEM_X509_INFO_write_bio(BIO *bp, const X509_INFO *xi, EVP_CIPHER *enc,
             /* Add DSA/DH */
             /* normal optionally encrypted stuff */
             if (PEM_write_bio_RSAPrivateKey(bp,
-                                            EVP_PKEY_get0_RSA(xi->x_pkey->dec_pkey),
+                                            EVP_PKEY_get0_RSA(xi->x_pkey->
+                                                              dec_pkey),
                                             enc, kstr, klen, cb, u) <= 0)
                 goto err;
         }
@@ -305,7 +306,7 @@ int PEM_X509_INFO_write_bio(BIO *bp, const X509_INFO *xi, EVP_CIPHER *enc,
 
     ret = 1;
 
- err:
+err:
     OPENSSL_cleanse(buf, PEM_BUFSIZE);
     return ret;
 }

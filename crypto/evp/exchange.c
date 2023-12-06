@@ -55,71 +55,73 @@ static void *evp_keyexch_from_algorithm(int name_id,
 
     for (; fns->function_id != 0; fns++) {
         switch (fns->function_id) {
-        case OSSL_FUNC_KEYEXCH_NEWCTX:
-            if (exchange->newctx != NULL)
+            case OSSL_FUNC_KEYEXCH_NEWCTX:
+                if (exchange->newctx != NULL)
+                    break;
+                exchange->newctx = OSSL_FUNC_keyexch_newctx(fns);
+                fncnt++;
                 break;
-            exchange->newctx = OSSL_FUNC_keyexch_newctx(fns);
-            fncnt++;
-            break;
-        case OSSL_FUNC_KEYEXCH_INIT:
-            if (exchange->init != NULL)
+            case OSSL_FUNC_KEYEXCH_INIT:
+                if (exchange->init != NULL)
+                    break;
+                exchange->init = OSSL_FUNC_keyexch_init(fns);
+                fncnt++;
                 break;
-            exchange->init = OSSL_FUNC_keyexch_init(fns);
-            fncnt++;
-            break;
-        case OSSL_FUNC_KEYEXCH_SET_PEER:
-            if (exchange->set_peer != NULL)
+            case OSSL_FUNC_KEYEXCH_SET_PEER:
+                if (exchange->set_peer != NULL)
+                    break;
+                exchange->set_peer = OSSL_FUNC_keyexch_set_peer(fns);
                 break;
-            exchange->set_peer = OSSL_FUNC_keyexch_set_peer(fns);
-            break;
-        case OSSL_FUNC_KEYEXCH_DERIVE:
-            if (exchange->derive != NULL)
+            case OSSL_FUNC_KEYEXCH_DERIVE:
+                if (exchange->derive != NULL)
+                    break;
+                exchange->derive = OSSL_FUNC_keyexch_derive(fns);
+                fncnt++;
                 break;
-            exchange->derive = OSSL_FUNC_keyexch_derive(fns);
-            fncnt++;
-            break;
-        case OSSL_FUNC_KEYEXCH_FREECTX:
-            if (exchange->freectx != NULL)
+            case OSSL_FUNC_KEYEXCH_FREECTX:
+                if (exchange->freectx != NULL)
+                    break;
+                exchange->freectx = OSSL_FUNC_keyexch_freectx(fns);
+                fncnt++;
                 break;
-            exchange->freectx = OSSL_FUNC_keyexch_freectx(fns);
-            fncnt++;
-            break;
-        case OSSL_FUNC_KEYEXCH_DUPCTX:
-            if (exchange->dupctx != NULL)
+            case OSSL_FUNC_KEYEXCH_DUPCTX:
+                if (exchange->dupctx != NULL)
+                    break;
+                exchange->dupctx = OSSL_FUNC_keyexch_dupctx(fns);
                 break;
-            exchange->dupctx = OSSL_FUNC_keyexch_dupctx(fns);
-            break;
-        case OSSL_FUNC_KEYEXCH_GET_CTX_PARAMS:
-            if (exchange->get_ctx_params != NULL)
+            case OSSL_FUNC_KEYEXCH_GET_CTX_PARAMS:
+                if (exchange->get_ctx_params != NULL)
+                    break;
+                exchange->get_ctx_params =
+                    OSSL_FUNC_keyexch_get_ctx_params(fns);
+                gparamfncnt++;
                 break;
-            exchange->get_ctx_params = OSSL_FUNC_keyexch_get_ctx_params(fns);
-            gparamfncnt++;
-            break;
-        case OSSL_FUNC_KEYEXCH_GETTABLE_CTX_PARAMS:
-            if (exchange->gettable_ctx_params != NULL)
+            case OSSL_FUNC_KEYEXCH_GETTABLE_CTX_PARAMS:
+                if (exchange->gettable_ctx_params != NULL)
+                    break;
+                exchange->gettable_ctx_params
+                    = OSSL_FUNC_keyexch_gettable_ctx_params(fns);
+                gparamfncnt++;
                 break;
-            exchange->gettable_ctx_params
-                = OSSL_FUNC_keyexch_gettable_ctx_params(fns);
-            gparamfncnt++;
-            break;
-        case OSSL_FUNC_KEYEXCH_SET_CTX_PARAMS:
-            if (exchange->set_ctx_params != NULL)
+            case OSSL_FUNC_KEYEXCH_SET_CTX_PARAMS:
+                if (exchange->set_ctx_params != NULL)
+                    break;
+                exchange->set_ctx_params =
+                    OSSL_FUNC_keyexch_set_ctx_params(fns);
+                sparamfncnt++;
                 break;
-            exchange->set_ctx_params = OSSL_FUNC_keyexch_set_ctx_params(fns);
-            sparamfncnt++;
-            break;
-        case OSSL_FUNC_KEYEXCH_SETTABLE_CTX_PARAMS:
-            if (exchange->settable_ctx_params != NULL)
+            case OSSL_FUNC_KEYEXCH_SETTABLE_CTX_PARAMS:
+                if (exchange->settable_ctx_params != NULL)
+                    break;
+                exchange->settable_ctx_params
+                    = OSSL_FUNC_keyexch_settable_ctx_params(fns);
+                sparamfncnt++;
                 break;
-            exchange->settable_ctx_params
-                = OSSL_FUNC_keyexch_settable_ctx_params(fns);
-            sparamfncnt++;
-            break;
         }
     }
     if (fncnt != 4
-            || (gparamfncnt != 0 && gparamfncnt != 2)
-            || (sparamfncnt != 0 && sparamfncnt != 2)) {
+        || (gparamfncnt != 0 && gparamfncnt != 2)
+        || (sparamfncnt != 0 && sparamfncnt != 2)) {
         /*
          * In order to be a consistent set of functions we must have at least
          * a complete set of "exchange" functions: init, derive, newctx,
@@ -134,7 +136,7 @@ static void *evp_keyexch_from_algorithm(int name_id,
 
     return exchange;
 
- err:
+err:
     EVP_KEYEXCH_free(exchange);
     return NULL;
 }
@@ -172,8 +174,8 @@ EVP_KEYEXCH *EVP_KEYEXCH_fetch(OSSL_LIB_CTX *ctx, const char *algorithm,
 {
     return evp_generic_fetch(ctx, OSSL_OP_KEYEXCH, algorithm, properties,
                              evp_keyexch_from_algorithm,
-                             (int (*)(void *))EVP_KEYEXCH_up_ref,
-                             (void (*)(void *))EVP_KEYEXCH_free);
+                             (int (*)(void *)) EVP_KEYEXCH_up_ref,
+                             (void (*)(void *)) EVP_KEYEXCH_free);
 }
 
 EVP_KEYEXCH *evp_keyexch_fetch_from_prov(OSSL_PROVIDER *prov,
@@ -183,8 +185,8 @@ EVP_KEYEXCH *evp_keyexch_fetch_from_prov(OSSL_PROVIDER *prov,
     return evp_generic_fetch_from_prov(prov, OSSL_OP_KEYEXCH,
                                        algorithm, properties,
                                        evp_keyexch_from_algorithm,
-                                       (int (*)(void *))EVP_KEYEXCH_up_ref,
-                                       (void (*)(void *))EVP_KEYEXCH_free);
+                                       (int (*)(void *)) EVP_KEYEXCH_up_ref,
+                                       (void (*)(void *)) EVP_KEYEXCH_free);
 }
 
 int EVP_PKEY_derive_init(EVP_PKEY_CTX *ctx)
@@ -280,20 +282,21 @@ int EVP_PKEY_derive_init_ex(EVP_PKEY_CTX *ctx, const OSSL_PARAM params[])
         EVP_KEYMGMT_free(tmp_keymgmt);
 
         switch (iter) {
-        case 1:
-            exchange =
-                EVP_KEYEXCH_fetch(ctx->libctx, supported_exch, ctx->propquery);
-            if (exchange != NULL)
-                tmp_prov = EVP_KEYEXCH_get0_provider(exchange);
-            break;
-        case 2:
-            tmp_prov = EVP_KEYMGMT_get0_provider(ctx->keymgmt);
-            exchange =
-                evp_keyexch_fetch_from_prov((OSSL_PROVIDER *)tmp_prov,
-                                              supported_exch, ctx->propquery);
-            if (exchange == NULL)
-                goto legacy;
-            break;
+            case 1:
+                exchange =
+                    EVP_KEYEXCH_fetch(ctx->libctx, supported_exch,
+                                      ctx->propquery);
+                if (exchange != NULL)
+                    tmp_prov = EVP_KEYEXCH_get0_provider(exchange);
+                break;
+            case 2:
+                tmp_prov = EVP_KEYMGMT_get0_provider(ctx->keymgmt);
+                exchange =
+                    evp_keyexch_fetch_from_prov((OSSL_PROVIDER *)tmp_prov,
+                                                supported_exch, ctx->propquery);
+                if (exchange == NULL)
+                    goto legacy;
+                break;
         }
         if (exchange == NULL)
             continue;
@@ -342,13 +345,13 @@ int EVP_PKEY_derive_init_ex(EVP_PKEY_CTX *ctx, const OSSL_PARAM params[])
 
     EVP_KEYMGMT_free(tmp_keymgmt);
     return ret ? 1 : 0;
- err:
+err:
     evp_pkey_ctx_free_old_ops(ctx);
     ctx->operation = EVP_PKEY_OP_UNDEFINED;
     EVP_KEYMGMT_free(tmp_keymgmt);
     return 0;
 
- legacy:
+legacy:
     /*
      * If we don't have the full support we need with provided methods,
      * let's go see if legacy does.
@@ -395,7 +398,8 @@ int EVP_PKEY_derive_set_peer_ex(EVP_PKEY_CTX *ctx, EVP_PKEY *peer,
     }
 
     if (validate_peer) {
-        check_ctx = EVP_PKEY_CTX_new_from_pkey(ctx->libctx, peer, ctx->propquery);
+        check_ctx =
+            EVP_PKEY_CTX_new_from_pkey(ctx->libctx, peer, ctx->propquery);
         if (check_ctx == NULL)
             return -1;
         check = EVP_PKEY_public_check(check_ctx);
@@ -415,7 +419,8 @@ int EVP_PKEY_derive_set_peer_ex(EVP_PKEY_CTX *ctx, EVP_PKEY *peer,
      */
     tmp_keymgmt_tofree = tmp_keymgmt =
         evp_keymgmt_fetch_from_prov((OSSL_PROVIDER *)
-                                    EVP_KEYEXCH_get0_provider(ctx->op.kex.exchange),
+                                    EVP_KEYEXCH_get0_provider(ctx->op.kex.
+                                                              exchange),
                                     EVP_KEYMGMT_get0_name(ctx->keymgmt),
                                     ctx->propquery);
     if (tmp_keymgmt != NULL)
@@ -433,7 +438,7 @@ int EVP_PKEY_derive_set_peer_ex(EVP_PKEY_CTX *ctx, EVP_PKEY *peer,
         goto legacy;
     return ctx->op.kex.exchange->set_peer(ctx->op.kex.algctx, provkey);
 
- legacy:
+legacy:
 #ifdef FIPS_MODULE
     return ret;
 #else
@@ -524,14 +529,14 @@ int EVP_PKEY_derive(EVP_PKEY_CTX *ctx, unsigned char *key, size_t *pkeylen)
                                        key != NULL ? *pkeylen : 0);
 
     return ret;
- legacy:
+legacy:
     if (ctx->pmeth == NULL || ctx->pmeth->derive == NULL) {
         ERR_raise(ERR_LIB_EVP, EVP_R_OPERATION_NOT_SUPPORTED_FOR_THIS_KEYTYPE);
         return -2;
     }
 
     M_check_autoarg(ctx, key, pkeylen, EVP_F_EVP_PKEY_DERIVE)
-        return ctx->pmeth->derive(ctx, key, pkeylen);
+    return ctx->pmeth->derive(ctx, key, pkeylen);
 }
 
 int evp_keyexch_get_number(const EVP_KEYEXCH *keyexch)
@@ -560,10 +565,10 @@ void EVP_KEYEXCH_do_all_provided(OSSL_LIB_CTX *libctx,
                                  void *arg)
 {
     evp_generic_do_all(libctx, OSSL_OP_KEYEXCH,
-                       (void (*)(void *, void *))fn, arg,
+                       (void (*)(void *, void *)) fn, arg,
                        evp_keyexch_from_algorithm,
-                       (int (*)(void *))EVP_KEYEXCH_up_ref,
-                       (void (*)(void *))EVP_KEYEXCH_free);
+                       (int (*)(void *)) EVP_KEYEXCH_up_ref,
+                       (void (*)(void *)) EVP_KEYEXCH_free);
 }
 
 int EVP_KEYEXCH_names_do_all(const EVP_KEYEXCH *keyexch,

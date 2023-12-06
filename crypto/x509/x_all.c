@@ -64,7 +64,7 @@ int X509_sign(X509 *x, EVP_PKEY *pkey, const EVP_MD *md)
         return 0;
     }
     if (sk_X509_EXTENSION_num(X509_get0_extensions(x)) > 0
-            && !X509_set_version(x, X509_VERSION_3))
+        && !X509_set_version(x, X509_VERSION_3))
         return 0;
 
     /*
@@ -87,7 +87,7 @@ int X509_sign_ctx(X509 *x, EVP_MD_CTX *ctx)
         return 0;
     }
     if (sk_X509_EXTENSION_num(X509_get0_extensions(x)) > 0
-            && !X509_set_version(x, X509_VERSION_3))
+        && !X509_set_version(x, X509_VERSION_3))
         return 0;
     x->cert_info.enc.modified = 1;
     return ASN1_item_sign_ctx(ASN1_ITEM_rptr(X509_CINF),
@@ -331,7 +331,7 @@ int i2d_RSAPublicKey_fp(FILE *fp, const RSA *rsa)
 
 int i2d_RSA_PUBKEY_fp(FILE *fp, const RSA *rsa)
 {
-    return ASN1_i2d_fp((I2D_OF(void))i2d_RSA_PUBKEY, fp, rsa);
+    return ASN1_i2d_fp((I2D_OF(void)) i2d_RSA_PUBKEY, fp, rsa);
 }
 #endif
 
@@ -467,7 +467,7 @@ int X509_digest(const X509 *cert, const EVP_MD *md, unsigned char *data,
                 unsigned int *len)
 {
     if (EVP_MD_is_a(md, SN_sha1) && (cert->ex_flags & EXFLAG_SET) != 0
-            && (cert->ex_flags & EXFLAG_NO_FINGERPRINT) == 0) {
+        && (cert->ex_flags & EXFLAG_NO_FINGERPRINT) == 0) {
         /* Asking for SHA1 and we already computed it. */
         if (len != NULL)
             *len = sizeof(cert->sha1_hash);
@@ -528,15 +528,15 @@ ASN1_OCTET_STRING *X509_digest_sig(const X509 *cert,
         } else if (pknid != NID_undef) {
             /* A known algorithm, but without a digest */
             switch (pknid) {
-            case NID_ED25519: /* Follow CMS default given in RFC8419 */
-                md_name = "SHA512";
-                break;
-            case NID_ED448: /* Follow CMS default given in RFC8419 */
-                md_name = "SHAKE256";
-                break;
-            default: /* Fall back to SHA-256 */
-                md_name = "SHA256";
-                break;
+                case NID_ED25519: /* Follow CMS default given in RFC8419 */
+                    md_name = "SHA512";
+                    break;
+                case NID_ED448: /* Follow CMS default given in RFC8419 */
+                    md_name = "SHAKE256";
+                    break;
+                default: /* Fall back to SHA-256 */
+                    md_name = "SHA256";
+                    break;
             }
             if ((md = EVP_MD_fetch(cert->libctx, md_name,
                                    cert->propq)) == NULL)
@@ -555,7 +555,7 @@ ASN1_OCTET_STRING *X509_digest_sig(const X509 *cert,
         return NULL;
     }
     if (!X509_digest(cert, md, hash, &len)
-            || (new = ASN1_OCTET_STRING_new()) == NULL)
+        || (new = ASN1_OCTET_STRING_new()) == NULL)
         goto err;
     if (ASN1_OCTET_STRING_set(new, hash, len)) {
         if (md_used != NULL)
@@ -565,7 +565,7 @@ ASN1_OCTET_STRING *X509_digest_sig(const X509 *cert,
         return new;
     }
     ASN1_OCTET_STRING_free(new);
- err:
+err:
     EVP_MD_free(md);
     return NULL;
 }
@@ -578,8 +578,8 @@ int X509_CRL_digest(const X509_CRL *data, const EVP_MD *type,
         return 0;
     }
     if (EVP_MD_is_a(type, SN_sha1)
-            && (data->flags & EXFLAG_SET) != 0
-            && (data->flags & EXFLAG_NO_FINGERPRINT) == 0) {
+        && (data->flags & EXFLAG_SET) != 0
+        && (data->flags & EXFLAG_NO_FINGERPRINT) == 0) {
         /* Asking for SHA1; always computed in CRL d2i. */
         if (len != NULL)
             *len = sizeof(data->sha1_hash);
@@ -791,7 +791,7 @@ EVP_PKEY *d2i_PrivateKey_ex_bio(BIO *bp, EVP_PKEY **a, OSSL_LIB_CTX *libctx,
 
     p = (unsigned char *)b->data;
     ret = d2i_AutoPrivateKey_ex(a, &p, len, libctx, propq);
- err:
+err:
     BUF_MEM_free(b);
     return ret;
 }
@@ -815,7 +815,7 @@ EVP_PKEY *d2i_PUBKEY_ex_bio(BIO *bp, EVP_PKEY **a, OSSL_LIB_CTX *libctx,
 
     p = (unsigned char *)b->data;
     ret = d2i_PUBKEY_ex(a, &p, len, libctx, propq);
- err:
+err:
     BUF_MEM_free(b);
     return ret;
 }

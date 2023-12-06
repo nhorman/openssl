@@ -22,8 +22,10 @@ typedef enum OPTION_choice {
     OPT_COMMON,
     OPT_INFORM, OPT_IN, OPT_OUTFORM, OPT_OUT, OPT_KEYFORM, OPT_KEY,
     OPT_ISSUER, OPT_LASTUPDATE, OPT_NEXTUPDATE, OPT_FINGERPRINT,
-    OPT_CRLNUMBER, OPT_BADSIG, OPT_GENDELTA, OPT_CAPATH, OPT_CAFILE, OPT_CASTORE,
-    OPT_NOCAPATH, OPT_NOCAFILE, OPT_NOCASTORE, OPT_VERIFY, OPT_DATEOPT, OPT_TEXT, OPT_HASH,
+    OPT_CRLNUMBER, OPT_BADSIG, OPT_GENDELTA, OPT_CAPATH, OPT_CAFILE,
+    OPT_CASTORE,
+    OPT_NOCAPATH, OPT_NOCAFILE, OPT_NOCASTORE, OPT_VERIFY, OPT_DATEOPT,
+    OPT_TEXT, OPT_HASH,
     OPT_HASH_OLD, OPT_NOOUT, OPT_NAMEOPT, OPT_MD, OPT_PROV_ENUM
 } OPTION_CHOICE;
 
@@ -36,18 +38,21 @@ const OPTIONS crl_options[] = {
     {"in", OPT_IN, '<', "Input file - default stdin"},
     {"inform", OPT_INFORM, 'F', "CRL input format (DER or PEM); has no effect"},
     {"key", OPT_KEY, '<', "CRL signing Private key to use"},
-    {"keyform", OPT_KEYFORM, 'F', "Private key file format (DER/PEM/P12); has no effect"},
+    {"keyform", OPT_KEYFORM, 'F',
+     "Private key file format (DER/PEM/P12); has no effect"},
 
     OPT_SECTION("Output"),
     {"out", OPT_OUT, '>', "output file - default stdout"},
     {"outform", OPT_OUTFORM, 'F', "Output format - default PEM"},
-    {"dateopt", OPT_DATEOPT, 's', "Datetime format used for printing. (rfc_822/iso_8601). Default is rfc_822."},
+    {"dateopt", OPT_DATEOPT, 's',
+     "Datetime format used for printing. (rfc_822/iso_8601). Default is rfc_822."},
     {"text", OPT_TEXT, '-', "Print out a text format version"},
     {"hash", OPT_HASH, '-', "Print hash value"},
 #ifndef OPENSSL_NO_MD5
     {"hash_old", OPT_HASH_OLD, '-', "Print old-style (MD5) hash value"},
 #endif
-    {"nameopt", OPT_NAMEOPT, 's', "Certificate subject/issuer name printing options"},
+    {"nameopt", OPT_NAMEOPT, 's',
+     "Certificate subject/issuer name printing options"},
     {"", OPT_MD, '-', "Any supported digest"},
 
     OPT_SECTION("CRL"),
@@ -57,8 +62,10 @@ const OPTIONS crl_options[] = {
     {"noout", OPT_NOOUT, '-', "No CRL output"},
     {"fingerprint", OPT_FINGERPRINT, '-', "Print the crl fingerprint"},
     {"crlnumber", OPT_CRLNUMBER, '-', "Print CRL number"},
-    {"badsig", OPT_BADSIG, '-', "Corrupt last byte of loaded CRL signature (for test)" },
-    {"gendelta", OPT_GENDELTA, '<', "Other CRL to compare/diff to the Input one"},
+    {"badsig", OPT_BADSIG, '-',
+     "Corrupt last byte of loaded CRL signature (for test)" },
+    {"gendelta", OPT_GENDELTA, '<',
+     "Other CRL to compare/diff to the Input one"},
 
     OPT_SECTION("Certificate"),
     {"CApath", OPT_CAPATH, '/', "Verify CRL using certificates in dir"},
@@ -89,7 +96,8 @@ int crl_main(int argc, char **argv)
     const char *CAfile = NULL, *CApath = NULL, *CAstore = NULL, *prog;
     OPTION_CHOICE o;
     int hash = 0, issuer = 0, lastupdate = 0, nextupdate = 0, noout = 0;
-    int informat = FORMAT_UNDEF, outformat = FORMAT_PEM, keyformat = FORMAT_UNDEF;
+    int informat = FORMAT_UNDEF, outformat = FORMAT_PEM,
+        keyformat = FORMAT_UNDEF;
     int ret = 1, num = 0, badsig = 0, fingerprint = 0, crlnumber = 0;
     int text = 0, do_ver = 0, noCAfile = 0, noCApath = 0, noCAstore = 0;
     unsigned long dateopt = ASN1_DTFLGS_RFC822;
@@ -102,110 +110,110 @@ int crl_main(int argc, char **argv)
     prog = opt_init(argc, argv, crl_options);
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_EOF:
-        case OPT_ERR:
- opthelp:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto end;
-        case OPT_HELP:
-            opt_help(crl_options);
-            ret = 0;
-            goto end;
-        case OPT_INFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &informat))
-                goto opthelp;
-            break;
-        case OPT_IN:
-            infile = opt_arg();
-            break;
-        case OPT_OUTFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &outformat))
-                goto opthelp;
-            break;
-        case OPT_OUT:
-            outfile = opt_arg();
-            break;
-        case OPT_KEYFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_ANY, &keyformat))
-                goto opthelp;
-            break;
-        case OPT_KEY:
-            keyfile = opt_arg();
-            break;
-        case OPT_GENDELTA:
-            crldiff = opt_arg();
-            break;
-        case OPT_CAPATH:
-            CApath = opt_arg();
-            do_ver = 1;
-            break;
-        case OPT_CAFILE:
-            CAfile = opt_arg();
-            do_ver = 1;
-            break;
-        case OPT_CASTORE:
-            CAstore = opt_arg();
-            do_ver = 1;
-            break;
-        case OPT_NOCAPATH:
-            noCApath =  1;
-            break;
-        case OPT_NOCAFILE:
-            noCAfile =  1;
-            break;
-        case OPT_NOCASTORE:
-            noCAstore =  1;
-            break;
-        case OPT_HASH_OLD:
-#ifndef OPENSSL_NO_MD5
-            hash_old = ++num;
-#endif
-            break;
-        case OPT_VERIFY:
-            do_ver = 1;
-            break;
-        case OPT_DATEOPT:
-            if (!set_dateopt(&dateopt, opt_arg()))
-                goto opthelp;
-            break;
-        case OPT_TEXT:
-            text = 1;
-            break;
-        case OPT_HASH:
-            hash = ++num;
-            break;
-        case OPT_ISSUER:
-            issuer = ++num;
-            break;
-        case OPT_LASTUPDATE:
-            lastupdate = ++num;
-            break;
-        case OPT_NEXTUPDATE:
-            nextupdate = ++num;
-            break;
-        case OPT_NOOUT:
-            noout = 1;
-            break;
-        case OPT_FINGERPRINT:
-            fingerprint = ++num;
-            break;
-        case OPT_CRLNUMBER:
-            crlnumber = ++num;
-            break;
-        case OPT_BADSIG:
-            badsig = 1;
-            break;
-        case OPT_NAMEOPT:
-            if (!set_nameopt(opt_arg()))
-                goto opthelp;
-            break;
-        case OPT_MD:
-            digestname = opt_unknown();
-            break;
-        case OPT_PROV_CASES:
-            if (!opt_provider(o))
+            case OPT_EOF:
+            case OPT_ERR:
+opthelp:
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
                 goto end;
-            break;
+            case OPT_HELP:
+                opt_help(crl_options);
+                ret = 0;
+                goto end;
+            case OPT_INFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &informat))
+                    goto opthelp;
+                break;
+            case OPT_IN:
+                infile = opt_arg();
+                break;
+            case OPT_OUTFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &outformat))
+                    goto opthelp;
+                break;
+            case OPT_OUT:
+                outfile = opt_arg();
+                break;
+            case OPT_KEYFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_ANY, &keyformat))
+                    goto opthelp;
+                break;
+            case OPT_KEY:
+                keyfile = opt_arg();
+                break;
+            case OPT_GENDELTA:
+                crldiff = opt_arg();
+                break;
+            case OPT_CAPATH:
+                CApath = opt_arg();
+                do_ver = 1;
+                break;
+            case OPT_CAFILE:
+                CAfile = opt_arg();
+                do_ver = 1;
+                break;
+            case OPT_CASTORE:
+                CAstore = opt_arg();
+                do_ver = 1;
+                break;
+            case OPT_NOCAPATH:
+                noCApath =  1;
+                break;
+            case OPT_NOCAFILE:
+                noCAfile =  1;
+                break;
+            case OPT_NOCASTORE:
+                noCAstore =  1;
+                break;
+            case OPT_HASH_OLD:
+#ifndef OPENSSL_NO_MD5
+                hash_old = ++num;
+#endif
+                break;
+            case OPT_VERIFY:
+                do_ver = 1;
+                break;
+            case OPT_DATEOPT:
+                if (!set_dateopt(&dateopt, opt_arg()))
+                    goto opthelp;
+                break;
+            case OPT_TEXT:
+                text = 1;
+                break;
+            case OPT_HASH:
+                hash = ++num;
+                break;
+            case OPT_ISSUER:
+                issuer = ++num;
+                break;
+            case OPT_LASTUPDATE:
+                lastupdate = ++num;
+                break;
+            case OPT_NEXTUPDATE:
+                nextupdate = ++num;
+                break;
+            case OPT_NOOUT:
+                noout = 1;
+                break;
+            case OPT_FINGERPRINT:
+                fingerprint = ++num;
+                break;
+            case OPT_CRLNUMBER:
+                crlnumber = ++num;
+                break;
+            case OPT_BADSIG:
+                badsig = 1;
+                break;
+            case OPT_NAMEOPT:
+                if (!set_nameopt(opt_arg()))
+                    goto opthelp;
+                break;
+            case OPT_MD:
+                digestname = opt_unknown();
+                break;
+            case OPT_PROV_CASES:
+                if (!opt_provider(o))
+                    goto end;
+                break;
         }
     }
 
@@ -331,13 +339,15 @@ int crl_main(int argc, char **argv)
 #endif
             if (lastupdate == i) {
                 BIO_printf(bio_out, "lastUpdate=");
-                ASN1_TIME_print_ex(bio_out, X509_CRL_get0_lastUpdate(x), dateopt);
+                ASN1_TIME_print_ex(bio_out, X509_CRL_get0_lastUpdate(x),
+                                   dateopt);
                 BIO_printf(bio_out, "\n");
             }
             if (nextupdate == i) {
                 BIO_printf(bio_out, "nextUpdate=");
                 if (X509_CRL_get0_nextUpdate(x))
-                    ASN1_TIME_print_ex(bio_out, X509_CRL_get0_nextUpdate(x), dateopt);
+                    ASN1_TIME_print_ex(bio_out, X509_CRL_get0_nextUpdate(
+                                           x), dateopt);
                 else
                     BIO_printf(bio_out, "NONE");
                 BIO_printf(bio_out, "\n");
@@ -382,7 +392,7 @@ int crl_main(int argc, char **argv)
     }
     ret = 0;
 
- end:
+end:
     if (ret != 0)
         ERR_print_errors(bio_err);
     BIO_free_all(out);

@@ -118,43 +118,43 @@ static int conn_state(BIO *b, BIO_CONNECT *c)
 
     for (;;) {
         switch (c->state) {
-        case BIO_CONN_S_BEFORE:
-            if (c->param_hostname == NULL && c->param_service == NULL) {
-                ERR_raise_data(ERR_LIB_BIO,
-                               BIO_R_NO_HOSTNAME_OR_SERVICE_SPECIFIED,
-                               "hostname=%s service=%s",
-                               c->param_hostname, c->param_service);
-                goto exit_loop;
-            }
-            c->state = BIO_CONN_S_GET_ADDR;
-            break;
+            case BIO_CONN_S_BEFORE:
+                if (c->param_hostname == NULL && c->param_service == NULL) {
+                    ERR_raise_data(ERR_LIB_BIO,
+                                   BIO_R_NO_HOSTNAME_OR_SERVICE_SPECIFIED,
+                                   "hostname=%s service=%s",
+                                   c->param_hostname, c->param_service);
+                    goto exit_loop;
+                }
+                c->state = BIO_CONN_S_GET_ADDR;
+                break;
 
-        case BIO_CONN_S_GET_ADDR:
+            case BIO_CONN_S_GET_ADDR:
             {
                 int family = AF_UNSPEC;
                 switch (c->connect_family) {
-                case BIO_FAMILY_IPV6:
-                    if (1) { /* This is a trick we use to avoid bit rot.
-                              * at least the "else" part will always be
-                              * compiled.
-                              */
+                    case BIO_FAMILY_IPV6:
+                        if (1) { /* This is a trick we use to avoid bit rot.
+                                  * at least the "else" part will always be
+                                  * compiled.
+                                  */
 #if OPENSSL_USE_IPV6
-                        family = AF_INET6;
-                    } else {
+                            family = AF_INET6;
+                        } else {
 #endif
-                        ERR_raise(ERR_LIB_BIO, BIO_R_UNAVAILABLE_IP_FAMILY);
+                            ERR_raise(ERR_LIB_BIO, BIO_R_UNAVAILABLE_IP_FAMILY);
+                            goto exit_loop;
+                        }
+                        break;
+                    case BIO_FAMILY_IPV4:
+                        family = AF_INET;
+                        break;
+                    case BIO_FAMILY_IPANY:
+                        family = AF_UNSPEC;
+                        break;
+                    default:
+                        ERR_raise(ERR_LIB_BIO, BIO_R_UNSUPPORTED_IP_FAMILY);
                         goto exit_loop;
-                    }
-                    break;
-                case BIO_FAMILY_IPV4:
-                    family = AF_INET;
-                    break;
-                case BIO_FAMILY_IPANY:
-                    family = AF_UNSPEC;
-                    break;
-                default:
-                    ERR_raise(ERR_LIB_BIO, BIO_R_UNSUPPORTED_IP_FAMILY);
-                    goto exit_loop;
                 }
                 if (BIO_lookup(c->param_hostname, c->param_service,
                                BIO_LOOKUP_CLIENT,
@@ -162,115 +162,116 @@ static int conn_state(BIO *b, BIO_CONNECT *c)
                                &c->addr_first) == 0)
                     goto exit_loop;
             }
-            if (c->addr_first == NULL) {
-                ERR_raise(ERR_LIB_BIO, BIO_R_LOOKUP_RETURNED_NOTHING);
-                goto exit_loop;
-            }
-            c->addr_iter = c->addr_first;
-            c->state = BIO_CONN_S_CREATE_SOCKET;
-            break;
+                if (c->addr_first == NULL) {
+                    ERR_raise(ERR_LIB_BIO, BIO_R_LOOKUP_RETURNED_NOTHING);
+                    goto exit_loop;
+                }
+                c->addr_iter = c->addr_first;
+                c->state = BIO_CONN_S_CREATE_SOCKET;
+                break;
 
-        case BIO_CONN_S_CREATE_SOCKET:
-            ret = BIO_socket(BIO_ADDRINFO_family(c->addr_iter),
-                             BIO_ADDRINFO_socktype(c->addr_iter),
-                             BIO_ADDRINFO_protocol(c->addr_iter), 0);
-            if (ret == (int)INVALID_SOCKET) {
-                ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
-                               "calling socket(%s, %s)",
-                               c->param_hostname, c->param_service);
-                ERR_raise(ERR_LIB_BIO, BIO_R_UNABLE_TO_CREATE_SOCKET);
-                goto exit_loop;
-            }
-            b->num = ret;
-            c->state = BIO_CONN_S_CONNECT;
-            break;
+            case BIO_CONN_S_CREATE_SOCKET:
+                ret = BIO_socket(BIO_ADDRINFO_family(c->addr_iter),
+                                 BIO_ADDRINFO_socktype(c->addr_iter),
+                                 BIO_ADDRINFO_protocol(c->addr_iter), 0);
+                if (ret == (int)INVALID_SOCKET) {
+                    ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
+                                   "calling socket(%s, %s)",
+                                   c->param_hostname, c->param_service);
+                    ERR_raise(ERR_LIB_BIO, BIO_R_UNABLE_TO_CREATE_SOCKET);
+                    goto exit_loop;
+                }
+                b->num = ret;
+                c->state = BIO_CONN_S_CONNECT;
+                break;
 
-        case BIO_CONN_S_CONNECT:
-            BIO_clear_retry_flags(b);
-            ERR_set_mark();
-            ret = BIO_connect(b->num, BIO_ADDRINFO_address(c->addr_iter),
-                              BIO_SOCK_KEEPALIVE | c->connect_mode);
-            b->retry_reason = 0;
-            if (ret == 0) {
-                if (BIO_sock_should_retry(ret)) {
-                    BIO_set_retry_special(b);
-                    c->state = BIO_CONN_S_BLOCKED_CONNECT;
-                    b->retry_reason = BIO_RR_CONNECT;
-                    ERR_pop_to_mark();
-                } else if ((c->addr_iter = BIO_ADDRINFO_next(c->addr_iter))
-                           != NULL) {
-                    /*
-                     * if there are more addresses to try, do that first
-                     */
-                    BIO_closesocket(b->num);
-                    c->state = BIO_CONN_S_CREATE_SOCKET;
-                    ERR_pop_to_mark();
-                    break;
+            case BIO_CONN_S_CONNECT:
+                BIO_clear_retry_flags(b);
+                ERR_set_mark();
+                ret = BIO_connect(b->num, BIO_ADDRINFO_address(c->addr_iter),
+                                  BIO_SOCK_KEEPALIVE | c->connect_mode);
+                b->retry_reason = 0;
+                if (ret == 0) {
+                    if (BIO_sock_should_retry(ret)) {
+                        BIO_set_retry_special(b);
+                        c->state = BIO_CONN_S_BLOCKED_CONNECT;
+                        b->retry_reason = BIO_RR_CONNECT;
+                        ERR_pop_to_mark();
+                    } else if ((c->addr_iter = BIO_ADDRINFO_next(c->addr_iter))
+                               != NULL) {
+                        /*
+                         * if there are more addresses to try, do that first
+                         */
+                        BIO_closesocket(b->num);
+                        c->state = BIO_CONN_S_CREATE_SOCKET;
+                        ERR_pop_to_mark();
+                        break;
+                    } else {
+                        ERR_clear_last_mark();
+                        ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
+                                       "calling connect(%s, %s)",
+                                       c->param_hostname, c->param_service);
+                        c->state = BIO_CONN_S_CONNECT_ERROR;
+                        break;
+                    }
+                    goto exit_loop;
                 } else {
                     ERR_clear_last_mark();
-                    ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
-                                   "calling connect(%s, %s)",
-                                    c->param_hostname, c->param_service);
-                    c->state = BIO_CONN_S_CONNECT_ERROR;
-                    break;
+                    if (!conn_create_dgram_bio(b, c))
+                        break;
+                    c->state = BIO_CONN_S_OK;
                 }
-                goto exit_loop;
-            } else {
-                ERR_clear_last_mark();
-                if (!conn_create_dgram_bio(b, c))
-                    break;
-                c->state = BIO_CONN_S_OK;
-            }
-            break;
-
-        case BIO_CONN_S_BLOCKED_CONNECT:
-            /* wait for socket being writable, before querying BIO_sock_error */
-            if (BIO_socket_wait(b->num, 0, time(NULL)) == 0)
                 break;
-            i = BIO_sock_error(b->num);
-            if (i != 0) {
-                BIO_clear_retry_flags(b);
-                if ((c->addr_iter = BIO_ADDRINFO_next(c->addr_iter)) != NULL) {
-                    /*
-                     * if there are more addresses to try, do that first
-                     */
-                    BIO_closesocket(b->num);
-                    c->state = BIO_CONN_S_CREATE_SOCKET;
+
+            case BIO_CONN_S_BLOCKED_CONNECT:
+                /* wait for socket being writable, before querying BIO_sock_error */
+                if (BIO_socket_wait(b->num, 0, time(NULL)) == 0)
                     break;
+                i = BIO_sock_error(b->num);
+                if (i != 0) {
+                    BIO_clear_retry_flags(b);
+                    if ((c->addr_iter = BIO_ADDRINFO_next(c->addr_iter)) !=
+                        NULL) {
+                        /*
+                         * if there are more addresses to try, do that first
+                         */
+                        BIO_closesocket(b->num);
+                        c->state = BIO_CONN_S_CREATE_SOCKET;
+                        break;
+                    }
+                    ERR_raise_data(ERR_LIB_SYS, i,
+                                   "calling connect(%s, %s)",
+                                   c->param_hostname, c->param_service);
+                    ERR_raise(ERR_LIB_BIO, BIO_R_NBIO_CONNECT_ERROR);
+                    ret = 0;
+                    goto exit_loop;
+                } else {
+                    if (!conn_create_dgram_bio(b, c))
+                        break;
+                    c->state = BIO_CONN_S_OK;
+# ifndef OPENSSL_NO_KTLS
+                    /*
+                     * The new socket is created successfully regardless of ktls_enable.
+                     * ktls_enable doesn't change any functionality of the socket, except
+                     * changing the setsockopt to enable the processing of ktls_start.
+                     * Thus, it is not a problem to call it for non-TLS sockets.
+                     */
+                    ktls_enable(b->num);
+# endif
                 }
-                ERR_raise_data(ERR_LIB_SYS, i,
-                               "calling connect(%s, %s)",
-                                c->param_hostname, c->param_service);
-                ERR_raise(ERR_LIB_BIO, BIO_R_NBIO_CONNECT_ERROR);
+                break;
+
+            case BIO_CONN_S_CONNECT_ERROR:
+                ERR_raise(ERR_LIB_BIO, BIO_R_CONNECT_ERROR);
                 ret = 0;
                 goto exit_loop;
-            } else {
-                if (!conn_create_dgram_bio(b, c))
-                    break;
-                c->state = BIO_CONN_S_OK;
-# ifndef OPENSSL_NO_KTLS
-                /*
-                 * The new socket is created successfully regardless of ktls_enable.
-                 * ktls_enable doesn't change any functionality of the socket, except
-                 * changing the setsockopt to enable the processing of ktls_start.
-                 * Thus, it is not a problem to call it for non-TLS sockets.
-                 */
-                ktls_enable(b->num);
-# endif
-            }
-            break;
 
-        case BIO_CONN_S_CONNECT_ERROR:
-            ERR_raise(ERR_LIB_BIO, BIO_R_CONNECT_ERROR);
-            ret = 0;
-            goto exit_loop;
-
-        case BIO_CONN_S_OK:
-            ret = 1;
-            goto exit_loop;
-        default:
-            /* abort(); */
-            goto exit_loop;
+            case BIO_CONN_S_OK:
+                ret = 1;
+                goto exit_loop;
+            default:
+                /* abort(); */
+                goto exit_loop;
         }
 
         if (cb != NULL) {
@@ -280,10 +281,10 @@ static int conn_state(BIO *b, BIO_CONNECT *c)
     }
 
     /* Loop does not exit */
- exit_loop:
+exit_loop:
     if (cb != NULL)
         ret = cb((BIO *)b, c->state, ret);
- end:
+end:
     return ret;
 }
 
@@ -385,7 +386,7 @@ static int conn_read(BIO *b, char *out, int outl)
             ret = ktls_read_record(b->num, out, outl);
         else
 # endif
-            ret = readsocket(b->num, out, outl);
+        ret = readsocket(b->num, out, outl);
         BIO_clear_retry_flags(b);
         if (ret <= 0) {
             if (BIO_sock_should_retry(ret))
@@ -435,7 +436,7 @@ static int conn_write(BIO *b, const char *in, int inl)
         data->tfo_first = 0;
     } else
 # endif
-        ret = writesocket(b->num, in, inl);
+    ret = writesocket(b->num, in, inl);
     BIO_clear_retry_flags(b);
     if (ret <= 0) {
         if (BIO_sock_should_retry(ret))
@@ -459,146 +460,146 @@ static long conn_ctrl(BIO *b, int cmd, long num, void *ptr)
     data = (BIO_CONNECT *)b->ptr;
 
     switch (cmd) {
-    case BIO_CTRL_RESET:
-        ret = 0;
-        data->state = BIO_CONN_S_BEFORE;
-        conn_close_socket(b);
-        BIO_ADDRINFO_free(data->addr_first);
-        data->addr_first = NULL;
-        b->flags = 0;
-        break;
-    case BIO_C_DO_STATE_MACHINE:
-        /* use this one to start the connection */
-        if (data->state != BIO_CONN_S_OK)
-            ret = (long)conn_state(b, data);
-        else
-            ret = 1;
-        break;
-    case BIO_C_GET_CONNECT:
-        if (ptr != NULL) {
-            pptr = (const char **)ptr;
-            if (num == 0) {
-                *pptr = data->param_hostname;
-            } else if (num == 1) {
-                *pptr = data->param_service;
-            } else if (num == 2) {
-                *pptr = (const char *)BIO_ADDRINFO_address(data->addr_iter);
-            } else if (num == 3) {
-                switch (BIO_ADDRINFO_family(data->addr_iter)) {
-# if OPENSSL_USE_IPV6
-                case AF_INET6:
-                    ret = BIO_FAMILY_IPV6;
-                    break;
-# endif
-                case AF_INET:
-                    ret = BIO_FAMILY_IPV4;
-                    break;
-                case 0:
-                    ret = data->connect_family;
-                    break;
-                default:
-                    ret = -1;
-                    break;
-                }
-            } else if (num == 4) {
-                ret = data->connect_mode;
-            } else {
-                ret = 0;
-            }
-        } else {
+        case BIO_CTRL_RESET:
             ret = 0;
-        }
-        break;
-    case BIO_C_SET_CONNECT:
-        if (ptr != NULL) {
-            b->init = 1;
-            if (num == 0) { /* BIO_set_conn_hostname */
-                char *hold_service = data->param_service;
-                /* We affect the hostname regardless.  However, the input
-                 * string might contain a host:service spec, so we must
-                 * parse it, which might or might not affect the service
-                 */
-
-                OPENSSL_free(data->param_hostname);
-                data->param_hostname = NULL;
-                ret = BIO_parse_hostserv(ptr,
-                                         &data->param_hostname,
-                                         &data->param_service,
-                                         BIO_PARSE_PRIO_HOST);
-                if (hold_service != data->param_service)
-                    OPENSSL_free(hold_service);
-            } else if (num == 1) { /* BIO_set_conn_port */
-                OPENSSL_free(data->param_service);
-                if ((data->param_service = OPENSSL_strdup(ptr)) == NULL)
-                    ret = 0;
-            } else if (num == 2) { /* BIO_set_conn_address */
-                const BIO_ADDR *addr = (const BIO_ADDR *)ptr;
-                char *host = BIO_ADDR_hostname_string(addr, 1);
-                char *service = BIO_ADDR_service_string(addr, 1);
-
-                ret = host != NULL && service != NULL;
-                if (ret) {
-                    OPENSSL_free(data->param_hostname);
-                    data->param_hostname = host;
-                    OPENSSL_free(data->param_service);
-                    data->param_service = service;
-                    BIO_ADDRINFO_free(data->addr_first);
-                    data->addr_first = NULL;
-                    data->addr_iter = NULL;
-                } else {
-                    OPENSSL_free(host);
-                    OPENSSL_free(service);
-                }
-            } else if (num == 3) { /* BIO_set_conn_ip_family */
-                data->connect_family = *(int *)ptr;
-            } else {
-                ret = 0;
-            }
-        }
-        break;
-    case BIO_C_SET_SOCK_TYPE:
-        if ((num != SOCK_STREAM && num != SOCK_DGRAM)
-            || data->state >= BIO_CONN_S_GET_ADDR) {
-            ret = 0;
+            data->state = BIO_CONN_S_BEFORE;
+            conn_close_socket(b);
+            BIO_ADDRINFO_free(data->addr_first);
+            data->addr_first = NULL;
+            b->flags = 0;
             break;
-        }
+        case BIO_C_DO_STATE_MACHINE:
+            /* use this one to start the connection */
+            if (data->state != BIO_CONN_S_OK)
+                ret = (long)conn_state(b, data);
+            else
+                ret = 1;
+            break;
+        case BIO_C_GET_CONNECT:
+            if (ptr != NULL) {
+                pptr = (const char **)ptr;
+                if (num == 0) {
+                    *pptr = data->param_hostname;
+                } else if (num == 1) {
+                    *pptr = data->param_service;
+                } else if (num == 2) {
+                    *pptr = (const char *)BIO_ADDRINFO_address(data->addr_iter);
+                } else if (num == 3) {
+                    switch (BIO_ADDRINFO_family(data->addr_iter)) {
+# if OPENSSL_USE_IPV6
+                        case AF_INET6:
+                            ret = BIO_FAMILY_IPV6;
+                            break;
+# endif
+                        case AF_INET:
+                            ret = BIO_FAMILY_IPV4;
+                            break;
+                        case 0:
+                            ret = data->connect_family;
+                            break;
+                        default:
+                            ret = -1;
+                            break;
+                    }
+                } else if (num == 4) {
+                    ret = data->connect_mode;
+                } else {
+                    ret = 0;
+                }
+            } else {
+                ret = 0;
+            }
+            break;
+        case BIO_C_SET_CONNECT:
+            if (ptr != NULL) {
+                b->init = 1;
+                if (num == 0) { /* BIO_set_conn_hostname */
+                    char *hold_service = data->param_service;
+                    /* We affect the hostname regardless.  However, the input
+                     * string might contain a host:service spec, so we must
+                     * parse it, which might or might not affect the service
+                     */
 
-        data->connect_sock_type = (int)num;
-        ret = 1;
-        break;
-    case BIO_C_GET_SOCK_TYPE:
-        ret = data->connect_sock_type;
-        break;
-    case BIO_C_GET_DGRAM_BIO:
-        if (data->dgram_bio != NULL) {
-            *(BIO **)ptr = data->dgram_bio;
+                    OPENSSL_free(data->param_hostname);
+                    data->param_hostname = NULL;
+                    ret = BIO_parse_hostserv(ptr,
+                                             &data->param_hostname,
+                                             &data->param_service,
+                                             BIO_PARSE_PRIO_HOST);
+                    if (hold_service != data->param_service)
+                        OPENSSL_free(hold_service);
+                } else if (num == 1) { /* BIO_set_conn_port */
+                    OPENSSL_free(data->param_service);
+                    if ((data->param_service = OPENSSL_strdup(ptr)) == NULL)
+                        ret = 0;
+                } else if (num == 2) { /* BIO_set_conn_address */
+                    const BIO_ADDR *addr = (const BIO_ADDR *)ptr;
+                    char *host = BIO_ADDR_hostname_string(addr, 1);
+                    char *service = BIO_ADDR_service_string(addr, 1);
+
+                    ret = host != NULL && service != NULL;
+                    if (ret) {
+                        OPENSSL_free(data->param_hostname);
+                        data->param_hostname = host;
+                        OPENSSL_free(data->param_service);
+                        data->param_service = service;
+                        BIO_ADDRINFO_free(data->addr_first);
+                        data->addr_first = NULL;
+                        data->addr_iter = NULL;
+                    } else {
+                        OPENSSL_free(host);
+                        OPENSSL_free(service);
+                    }
+                } else if (num == 3) { /* BIO_set_conn_ip_family */
+                    data->connect_family = *(int *)ptr;
+                } else {
+                    ret = 0;
+                }
+            }
+            break;
+        case BIO_C_SET_SOCK_TYPE:
+            if ((num != SOCK_STREAM && num != SOCK_DGRAM)
+                || data->state >= BIO_CONN_S_GET_ADDR) {
+                ret = 0;
+                break;
+            }
+
+            data->connect_sock_type = (int)num;
             ret = 1;
-        } else {
-            ret = 0;
-        }
-        break;
-    case BIO_CTRL_DGRAM_GET_PEER:
-    case BIO_CTRL_DGRAM_DETECT_PEER_ADDR:
-        if (data->state != BIO_CONN_S_OK)
-            conn_state(b, data); /* best effort */
+            break;
+        case BIO_C_GET_SOCK_TYPE:
+            ret = data->connect_sock_type;
+            break;
+        case BIO_C_GET_DGRAM_BIO:
+            if (data->dgram_bio != NULL) {
+                *(BIO **)ptr = data->dgram_bio;
+                ret = 1;
+            } else {
+                ret = 0;
+            }
+            break;
+        case BIO_CTRL_DGRAM_GET_PEER:
+        case BIO_CTRL_DGRAM_DETECT_PEER_ADDR:
+            if (data->state != BIO_CONN_S_OK)
+                conn_state(b, data); /* best effort */
 
-        if (data->state >= BIO_CONN_S_CREATE_SOCKET
-            && data->addr_iter != NULL
-            && (dg_addr = BIO_ADDRINFO_address(data->addr_iter)) != NULL) {
+            if (data->state >= BIO_CONN_S_CREATE_SOCKET
+                && data->addr_iter != NULL
+                && (dg_addr = BIO_ADDRINFO_address(data->addr_iter)) != NULL) {
 
-            ret = BIO_ADDR_sockaddr_size(dg_addr);
-            if (num == 0 || num > ret)
-                num = ret;
+                ret = BIO_ADDR_sockaddr_size(dg_addr);
+                if (num == 0 || num > ret)
+                    num = ret;
 
-            memcpy(ptr, dg_addr, num);
-            ret = num;
-        } else {
-            ret = 0;
-        }
+                memcpy(ptr, dg_addr, num);
+                ret = num;
+            } else {
+                ret = 0;
+            }
 
-        break;
-    case BIO_CTRL_GET_RPOLL_DESCRIPTOR:
-    case BIO_CTRL_GET_WPOLL_DESCRIPTOR:
+            break;
+        case BIO_CTRL_GET_RPOLL_DESCRIPTOR:
+        case BIO_CTRL_GET_WPOLL_DESCRIPTOR:
         {
             BIO_POLL_DESCRIPTOR *pd = ptr;
 
@@ -613,56 +614,56 @@ static long conn_ctrl(BIO *b, int cmd, long num, void *ptr)
             }
         }
         break;
-    case BIO_C_SET_NBIO:
-        if (num != 0)
-            data->connect_mode |= BIO_SOCK_NONBLOCK;
-        else
-            data->connect_mode &= ~BIO_SOCK_NONBLOCK;
+        case BIO_C_SET_NBIO:
+            if (num != 0)
+                data->connect_mode |= BIO_SOCK_NONBLOCK;
+            else
+                data->connect_mode &= ~BIO_SOCK_NONBLOCK;
 
-        if (data->dgram_bio != NULL)
-            ret = BIO_set_nbio(data->dgram_bio, num);
+            if (data->dgram_bio != NULL)
+                ret = BIO_set_nbio(data->dgram_bio, num);
 
-        break;
+            break;
 #if defined(TCP_FASTOPEN) && !defined(OPENSSL_NO_TFO)
-    case BIO_C_SET_TFO:
-        if (num != 0) {
-            data->connect_mode |= BIO_SOCK_TFO;
-            data->tfo_first = 1;
-        } else {
-            data->connect_mode &= ~BIO_SOCK_TFO;
-            data->tfo_first = 0;
-        }
-        break;
+        case BIO_C_SET_TFO:
+            if (num != 0) {
+                data->connect_mode |= BIO_SOCK_TFO;
+                data->tfo_first = 1;
+            } else {
+                data->connect_mode &= ~BIO_SOCK_TFO;
+                data->tfo_first = 0;
+            }
+            break;
 #endif
-    case BIO_C_SET_CONNECT_MODE:
-        data->connect_mode = (int)num;
-        if (num & BIO_SOCK_TFO)
-            data->tfo_first = 1;
-        else
-            data->tfo_first = 0;
-        break;
-    case BIO_C_GET_FD:
-        if (b->init) {
-            ip = (int *)ptr;
-            if (ip != NULL)
-                *ip = b->num;
-            ret = b->num;
-        } else
-            ret = -1;
-        break;
-    case BIO_CTRL_GET_CLOSE:
-        ret = b->shutdown;
-        break;
-    case BIO_CTRL_SET_CLOSE:
-        b->shutdown = (int)num;
-        break;
-    case BIO_CTRL_PENDING:
-    case BIO_CTRL_WPENDING:
-        ret = 0;
-        break;
-    case BIO_CTRL_FLUSH:
-        break;
-    case BIO_CTRL_DUP:
+        case BIO_C_SET_CONNECT_MODE:
+            data->connect_mode = (int)num;
+            if (num & BIO_SOCK_TFO)
+                data->tfo_first = 1;
+            else
+                data->tfo_first = 0;
+            break;
+        case BIO_C_GET_FD:
+            if (b->init) {
+                ip = (int *)ptr;
+                if (ip != NULL)
+                    *ip = b->num;
+                ret = b->num;
+            } else
+                ret = -1;
+            break;
+        case BIO_CTRL_GET_CLOSE:
+            ret = b->shutdown;
+            break;
+        case BIO_CTRL_SET_CLOSE:
+            b->shutdown = (int)num;
+            break;
+        case BIO_CTRL_PENDING:
+        case BIO_CTRL_WPENDING:
+            ret = 0;
+            break;
+        case BIO_CTRL_FLUSH:
+            break;
+        case BIO_CTRL_DUP:
         {
             dbio = (BIO *)ptr;
             if (data->param_hostname)
@@ -678,10 +679,10 @@ static long conn_ctrl(BIO *b, int cmd, long num, void *ptr)
             (void)BIO_set_info_callback(dbio, data->info_callback);
         }
         break;
-    case BIO_CTRL_SET_CALLBACK:
-        ret = 0; /* use callback ctrl */
-        break;
-    case BIO_CTRL_GET_CALLBACK:
+        case BIO_CTRL_SET_CALLBACK:
+            ret = 0; /* use callback ctrl */
+            break;
+        case BIO_CTRL_GET_CALLBACK:
         {
             BIO_info_cb **fptr;
 
@@ -689,38 +690,38 @@ static long conn_ctrl(BIO *b, int cmd, long num, void *ptr)
             *fptr = data->info_callback;
         }
         break;
-    case BIO_CTRL_EOF:
-        ret = (b->flags & BIO_FLAGS_IN_EOF) != 0;
-        break;
+        case BIO_CTRL_EOF:
+            ret = (b->flags & BIO_FLAGS_IN_EOF) != 0;
+            break;
 # ifndef OPENSSL_NO_KTLS
-    case BIO_CTRL_SET_KTLS:
-        crypto_info = (ktls_crypto_info_t *)ptr;
-        ret = ktls_start(b->num, crypto_info, num);
-        if (ret)
-            BIO_set_ktls_flag(b, num);
-        break;
-    case BIO_CTRL_GET_KTLS_SEND:
-        return BIO_should_ktls_flag(b, 1) != 0;
-    case BIO_CTRL_GET_KTLS_RECV:
-        return BIO_should_ktls_flag(b, 0) != 0;
-    case BIO_CTRL_SET_KTLS_TX_SEND_CTRL_MSG:
-        BIO_set_ktls_ctrl_msg_flag(b);
-        data->record_type = num;
-        ret = 0;
-        break;
-    case BIO_CTRL_CLEAR_KTLS_TX_CTRL_MSG:
-        BIO_clear_ktls_ctrl_msg_flag(b);
-        ret = 0;
-        break;
-    case BIO_CTRL_SET_KTLS_TX_ZEROCOPY_SENDFILE:
-        ret = ktls_enable_tx_zerocopy_sendfile(b->num);
-        if (ret)
-            BIO_set_ktls_zerocopy_sendfile_flag(b);
-        break;
+        case BIO_CTRL_SET_KTLS:
+            crypto_info = (ktls_crypto_info_t *)ptr;
+            ret = ktls_start(b->num, crypto_info, num);
+            if (ret)
+                BIO_set_ktls_flag(b, num);
+            break;
+        case BIO_CTRL_GET_KTLS_SEND:
+            return BIO_should_ktls_flag(b, 1) != 0;
+        case BIO_CTRL_GET_KTLS_RECV:
+            return BIO_should_ktls_flag(b, 0) != 0;
+        case BIO_CTRL_SET_KTLS_TX_SEND_CTRL_MSG:
+            BIO_set_ktls_ctrl_msg_flag(b);
+            data->record_type = num;
+            ret = 0;
+            break;
+        case BIO_CTRL_CLEAR_KTLS_TX_CTRL_MSG:
+            BIO_clear_ktls_ctrl_msg_flag(b);
+            ret = 0;
+            break;
+        case BIO_CTRL_SET_KTLS_TX_ZEROCOPY_SENDFILE:
+            ret = ktls_enable_tx_zerocopy_sendfile(b->num);
+            if (ret)
+                BIO_set_ktls_zerocopy_sendfile_flag(b);
+            break;
 # endif
-    default:
-        ret = 0;
-        break;
+        default:
+            ret = 0;
+            break;
     }
     return ret;
 }
@@ -733,14 +734,14 @@ static long conn_callback_ctrl(BIO *b, int cmd, BIO_info_cb *fp)
     data = (BIO_CONNECT *)b->ptr;
 
     switch (cmd) {
-    case BIO_CTRL_SET_CALLBACK:
+        case BIO_CTRL_SET_CALLBACK:
         {
             data->info_callback = fp;
         }
         break;
-    default:
-        ret = 0;
-        break;
+        default:
+            ret = 0;
+            break;
     }
     return ret;
 }
@@ -793,7 +794,7 @@ int conn_gets(BIO *bio, char *buf, int size)
             ret = ktls_read_record(bio->num, ptr, 1);
         else
 # endif
-            ret = readsocket(bio->num, ptr, 1);
+        ret = readsocket(bio->num, ptr, 1);
         BIO_clear_retry_flags(bio);
         if (ret <= 0) {
             if (BIO_sock_should_retry(ret))

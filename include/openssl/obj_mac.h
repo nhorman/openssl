@@ -64,7 +64,8 @@
 #define OBJ_hmac_sha1           OBJ_identified_organization,6L,1L,5L,5L,8L,1L,2L
 
 #define SN_x509ExtAdmission             "x509ExtAdmission"
-#define LN_x509ExtAdmission             "Professional Information or basis for Admission"
+#define LN_x509ExtAdmission \
+        "Professional Information or basis for Admission"
 #define NID_x509ExtAdmission            1093
 #define OBJ_x509ExtAdmission            OBJ_identified_organization,36L,8L,3L,3L
 
@@ -152,13 +153,17 @@
 #define NID_X9_62_prime_field           406
 #define OBJ_X9_62_prime_field           OBJ_X9_62_id_fieldType,1L
 
-#define SN_X9_62_characteristic_two_field               "characteristic-two-field"
+#define SN_X9_62_characteristic_two_field \
+        "characteristic-two-field"
 #define NID_X9_62_characteristic_two_field              407
-#define OBJ_X9_62_characteristic_two_field              OBJ_X9_62_id_fieldType,2L
+#define OBJ_X9_62_characteristic_two_field              OBJ_X9_62_id_fieldType, \
+        2L
 
-#define SN_X9_62_id_characteristic_two_basis            "id-characteristic-two-basis"
+#define SN_X9_62_id_characteristic_two_basis \
+        "id-characteristic-two-basis"
 #define NID_X9_62_id_characteristic_two_basis           680
-#define OBJ_X9_62_id_characteristic_two_basis           OBJ_X9_62_characteristic_two_field,3L
+#define OBJ_X9_62_id_characteristic_two_basis \
+        OBJ_X9_62_characteristic_two_field,3L
 
 #define SN_X9_62_onBasis                "onBasis"
 #define NID_X9_62_onBasis               681
@@ -794,19 +799,23 @@
 #define NID_id_smime_mod_msg_v3         199
 #define OBJ_id_smime_mod_msg_v3         OBJ_id_smime_mod,4L
 
-#define SN_id_smime_mod_ets_eSignature_88               "id-smime-mod-ets-eSignature-88"
+#define SN_id_smime_mod_ets_eSignature_88 \
+        "id-smime-mod-ets-eSignature-88"
 #define NID_id_smime_mod_ets_eSignature_88              200
 #define OBJ_id_smime_mod_ets_eSignature_88              OBJ_id_smime_mod,5L
 
-#define SN_id_smime_mod_ets_eSignature_97               "id-smime-mod-ets-eSignature-97"
+#define SN_id_smime_mod_ets_eSignature_97 \
+        "id-smime-mod-ets-eSignature-97"
 #define NID_id_smime_mod_ets_eSignature_97              201
 #define OBJ_id_smime_mod_ets_eSignature_97              OBJ_id_smime_mod,6L
 
-#define SN_id_smime_mod_ets_eSigPolicy_88               "id-smime-mod-ets-eSigPolicy-88"
+#define SN_id_smime_mod_ets_eSigPolicy_88 \
+        "id-smime-mod-ets-eSigPolicy-88"
 #define NID_id_smime_mod_ets_eSigPolicy_88              202
 #define OBJ_id_smime_mod_ets_eSigPolicy_88              OBJ_id_smime_mod,7L
 
-#define SN_id_smime_mod_ets_eSigPolicy_97               "id-smime-mod-ets-eSigPolicy-97"
+#define SN_id_smime_mod_ets_eSigPolicy_97 \
+        "id-smime-mod-ets-eSigPolicy-97"
 #define NID_id_smime_mod_ets_eSigPolicy_97              203
 #define OBJ_id_smime_mod_ets_eSigPolicy_97              OBJ_id_smime_mod,8L
 
@@ -846,11 +855,13 @@
 #define NID_id_smime_ct_compressedData          786
 #define OBJ_id_smime_ct_compressedData          OBJ_id_smime_ct,9L
 
-#define SN_id_smime_ct_contentCollection                "id-smime-ct-contentCollection"
+#define SN_id_smime_ct_contentCollection \
+        "id-smime-ct-contentCollection"
 #define NID_id_smime_ct_contentCollection               1058
 #define OBJ_id_smime_ct_contentCollection               OBJ_id_smime_ct,19L
 
-#define SN_id_smime_ct_authEnvelopedData                "id-smime-ct-authEnvelopedData"
+#define SN_id_smime_ct_authEnvelopedData \
+        "id-smime-ct-authEnvelopedData"
 #define NID_id_smime_ct_authEnvelopedData               1059
 #define OBJ_id_smime_ct_authEnvelopedData               OBJ_id_smime_ct,23L
 
@@ -918,7 +929,8 @@
 #define NID_id_smime_aa_encapContentType                217
 #define OBJ_id_smime_aa_encapContentType                OBJ_id_smime_aa,6L
 
-#define SN_id_smime_aa_contentIdentifier                "id-smime-aa-contentIdentifier"
+#define SN_id_smime_aa_contentIdentifier \
+        "id-smime-aa-contentIdentifier"
 #define NID_id_smime_aa_contentIdentifier               218
 #define OBJ_id_smime_aa_contentIdentifier               OBJ_id_smime_aa,7L
 
@@ -938,11 +950,13 @@
 #define NID_id_smime_aa_encrypKeyPref           222
 #define OBJ_id_smime_aa_encrypKeyPref           OBJ_id_smime_aa,11L
 
-#define SN_id_smime_aa_signingCertificate               "id-smime-aa-signingCertificate"
+#define SN_id_smime_aa_signingCertificate \
+        "id-smime-aa-signingCertificate"
 #define NID_id_smime_aa_signingCertificate              223
 #define OBJ_id_smime_aa_signingCertificate              OBJ_id_smime_aa,12L
 
-#define SN_id_smime_aa_smimeEncryptCerts                "id-smime-aa-smimeEncryptCerts"
+#define SN_id_smime_aa_smimeEncryptCerts \
+        "id-smime-aa-smimeEncryptCerts"
 #define NID_id_smime_aa_smimeEncryptCerts               224
 #define OBJ_id_smime_aa_smimeEncryptCerts               OBJ_id_smime_aa,13L
 
@@ -954,11 +968,13 @@
 #define NID_id_smime_aa_ets_sigPolicyId         226
 #define OBJ_id_smime_aa_ets_sigPolicyId         OBJ_id_smime_aa,15L
 
-#define SN_id_smime_aa_ets_commitmentType               "id-smime-aa-ets-commitmentType"
+#define SN_id_smime_aa_ets_commitmentType \
+        "id-smime-aa-ets-commitmentType"
 #define NID_id_smime_aa_ets_commitmentType              227
 #define OBJ_id_smime_aa_ets_commitmentType              OBJ_id_smime_aa,16L
 
-#define SN_id_smime_aa_ets_signerLocation               "id-smime-aa-ets-signerLocation"
+#define SN_id_smime_aa_ets_signerLocation \
+        "id-smime-aa-ets-signerLocation"
 #define NID_id_smime_aa_ets_signerLocation              228
 #define OBJ_id_smime_aa_ets_signerLocation              OBJ_id_smime_aa,17L
 
@@ -970,15 +986,18 @@
 #define NID_id_smime_aa_ets_otherSigCert                230
 #define OBJ_id_smime_aa_ets_otherSigCert                OBJ_id_smime_aa,19L
 
-#define SN_id_smime_aa_ets_contentTimestamp             "id-smime-aa-ets-contentTimestamp"
+#define SN_id_smime_aa_ets_contentTimestamp \
+        "id-smime-aa-ets-contentTimestamp"
 #define NID_id_smime_aa_ets_contentTimestamp            231
 #define OBJ_id_smime_aa_ets_contentTimestamp            OBJ_id_smime_aa,20L
 
-#define SN_id_smime_aa_ets_CertificateRefs              "id-smime-aa-ets-CertificateRefs"
+#define SN_id_smime_aa_ets_CertificateRefs \
+        "id-smime-aa-ets-CertificateRefs"
 #define NID_id_smime_aa_ets_CertificateRefs             232
 #define OBJ_id_smime_aa_ets_CertificateRefs             OBJ_id_smime_aa,21L
 
-#define SN_id_smime_aa_ets_RevocationRefs               "id-smime-aa-ets-RevocationRefs"
+#define SN_id_smime_aa_ets_RevocationRefs \
+        "id-smime-aa-ets-RevocationRefs"
 #define NID_id_smime_aa_ets_RevocationRefs              233
 #define OBJ_id_smime_aa_ets_RevocationRefs              OBJ_id_smime_aa,22L
 
@@ -986,7 +1005,8 @@
 #define NID_id_smime_aa_ets_certValues          234
 #define OBJ_id_smime_aa_ets_certValues          OBJ_id_smime_aa,23L
 
-#define SN_id_smime_aa_ets_revocationValues             "id-smime-aa-ets-revocationValues"
+#define SN_id_smime_aa_ets_revocationValues \
+        "id-smime-aa-ets-revocationValues"
 #define NID_id_smime_aa_ets_revocationValues            235
 #define OBJ_id_smime_aa_ets_revocationValues            OBJ_id_smime_aa,24L
 
@@ -994,11 +1014,13 @@
 #define NID_id_smime_aa_ets_escTimeStamp                236
 #define OBJ_id_smime_aa_ets_escTimeStamp                OBJ_id_smime_aa,25L
 
-#define SN_id_smime_aa_ets_certCRLTimestamp             "id-smime-aa-ets-certCRLTimestamp"
+#define SN_id_smime_aa_ets_certCRLTimestamp \
+        "id-smime-aa-ets-certCRLTimestamp"
 #define NID_id_smime_aa_ets_certCRLTimestamp            237
 #define OBJ_id_smime_aa_ets_certCRLTimestamp            OBJ_id_smime_aa,26L
 
-#define SN_id_smime_aa_ets_archiveTimeStamp             "id-smime-aa-ets-archiveTimeStamp"
+#define SN_id_smime_aa_ets_archiveTimeStamp \
+        "id-smime-aa-ets-archiveTimeStamp"
 #define NID_id_smime_aa_ets_archiveTimeStamp            238
 #define OBJ_id_smime_aa_ets_archiveTimeStamp            OBJ_id_smime_aa,27L
 
@@ -1010,7 +1032,8 @@
 #define NID_id_smime_aa_dvcs_dvc                240
 #define OBJ_id_smime_aa_dvcs_dvc                OBJ_id_smime_aa,29L
 
-#define SN_id_aa_ets_attrCertificateRefs                "id-aa-ets-attrCertificateRefs"
+#define SN_id_aa_ets_attrCertificateRefs \
+        "id-aa-ets-attrCertificateRefs"
 #define NID_id_aa_ets_attrCertificateRefs               1261
 #define OBJ_id_aa_ets_attrCertificateRefs               OBJ_id_smime_aa,44L
 
@@ -1018,7 +1041,8 @@
 #define NID_id_aa_ets_attrRevocationRefs                1262
 #define OBJ_id_aa_ets_attrRevocationRefs                OBJ_id_smime_aa,45L
 
-#define SN_id_smime_aa_signingCertificateV2             "id-smime-aa-signingCertificateV2"
+#define SN_id_smime_aa_signingCertificateV2 \
+        "id-smime-aa-signingCertificateV2"
 #define NID_id_smime_aa_signingCertificateV2            1086
 #define OBJ_id_smime_aa_signingCertificateV2            OBJ_id_smime_aa,47L
 
@@ -1070,27 +1094,33 @@
 #define NID_id_smime_spq_ets_sqt_unotice                250
 #define OBJ_id_smime_spq_ets_sqt_unotice                OBJ_id_smime_spq,2L
 
-#define SN_id_smime_cti_ets_proofOfOrigin               "id-smime-cti-ets-proofOfOrigin"
+#define SN_id_smime_cti_ets_proofOfOrigin \
+        "id-smime-cti-ets-proofOfOrigin"
 #define NID_id_smime_cti_ets_proofOfOrigin              251
 #define OBJ_id_smime_cti_ets_proofOfOrigin              OBJ_id_smime_cti,1L
 
-#define SN_id_smime_cti_ets_proofOfReceipt              "id-smime-cti-ets-proofOfReceipt"
+#define SN_id_smime_cti_ets_proofOfReceipt \
+        "id-smime-cti-ets-proofOfReceipt"
 #define NID_id_smime_cti_ets_proofOfReceipt             252
 #define OBJ_id_smime_cti_ets_proofOfReceipt             OBJ_id_smime_cti,2L
 
-#define SN_id_smime_cti_ets_proofOfDelivery             "id-smime-cti-ets-proofOfDelivery"
+#define SN_id_smime_cti_ets_proofOfDelivery \
+        "id-smime-cti-ets-proofOfDelivery"
 #define NID_id_smime_cti_ets_proofOfDelivery            253
 #define OBJ_id_smime_cti_ets_proofOfDelivery            OBJ_id_smime_cti,3L
 
-#define SN_id_smime_cti_ets_proofOfSender               "id-smime-cti-ets-proofOfSender"
+#define SN_id_smime_cti_ets_proofOfSender \
+        "id-smime-cti-ets-proofOfSender"
 #define NID_id_smime_cti_ets_proofOfSender              254
 #define OBJ_id_smime_cti_ets_proofOfSender              OBJ_id_smime_cti,4L
 
-#define SN_id_smime_cti_ets_proofOfApproval             "id-smime-cti-ets-proofOfApproval"
+#define SN_id_smime_cti_ets_proofOfApproval \
+        "id-smime-cti-ets-proofOfApproval"
 #define NID_id_smime_cti_ets_proofOfApproval            255
 #define OBJ_id_smime_cti_ets_proofOfApproval            OBJ_id_smime_cti,5L
 
-#define SN_id_smime_cti_ets_proofOfCreation             "id-smime-cti-ets-proofOfCreation"
+#define SN_id_smime_cti_ets_proofOfCreation \
+        "id-smime-cti-ets-proofOfCreation"
 #define NID_id_smime_cti_ets_proofOfCreation            256
 #define OBJ_id_smime_cti_ets_proofOfCreation            OBJ_id_smime_cti,6L
 
@@ -1149,12 +1179,14 @@
 #define OBJ_pbe_WithSHA1And40BitRC4             OBJ_pkcs12_pbeids,2L
 
 #define SN_pbe_WithSHA1And3_Key_TripleDES_CBC           "PBE-SHA1-3DES"
-#define LN_pbe_WithSHA1And3_Key_TripleDES_CBC           "pbeWithSHA1And3-KeyTripleDES-CBC"
+#define LN_pbe_WithSHA1And3_Key_TripleDES_CBC \
+        "pbeWithSHA1And3-KeyTripleDES-CBC"
 #define NID_pbe_WithSHA1And3_Key_TripleDES_CBC          146
 #define OBJ_pbe_WithSHA1And3_Key_TripleDES_CBC          OBJ_pkcs12_pbeids,3L
 
 #define SN_pbe_WithSHA1And2_Key_TripleDES_CBC           "PBE-SHA1-2DES"
-#define LN_pbe_WithSHA1And2_Key_TripleDES_CBC           "pbeWithSHA1And2-KeyTripleDES-CBC"
+#define LN_pbe_WithSHA1And2_Key_TripleDES_CBC \
+        "pbeWithSHA1And2-KeyTripleDES-CBC"
 #define NID_pbe_WithSHA1And2_Key_TripleDES_CBC          147
 #define OBJ_pbe_WithSHA1And2_Key_TripleDES_CBC          OBJ_pkcs12_pbeids,4L
 
@@ -1383,7 +1415,8 @@
 #define OBJ_ms_cert_templ               OBJ_ms_corp,21L,7L
 
 #define SN_ms_app_policies              "ms-app-policies"
-#define LN_ms_app_policies              "Microsoft Application Policies Extension"
+#define LN_ms_app_policies \
+        "Microsoft Application Policies Extension"
 #define NID_ms_app_policies             1294
 #define OBJ_ms_app_policies             OBJ_ms_corp,21L,10L
 
@@ -1759,13 +1792,17 @@
 #define NID_id_kp_bgpsec_router         1220
 #define OBJ_id_kp_bgpsec_router         OBJ_id_kp,30L
 
-#define SN_id_kp_BrandIndicatorforMessageIdentification         "id-kp-BrandIndicatorforMessageIdentification"
-#define LN_id_kp_BrandIndicatorforMessageIdentification         "Brand Indicator for Message Identification"
+#define SN_id_kp_BrandIndicatorforMessageIdentification \
+        "id-kp-BrandIndicatorforMessageIdentification"
+#define LN_id_kp_BrandIndicatorforMessageIdentification \
+        "Brand Indicator for Message Identification"
 #define NID_id_kp_BrandIndicatorforMessageIdentification                1221
-#define OBJ_id_kp_BrandIndicatorforMessageIdentification                OBJ_id_kp,31L
+#define OBJ_id_kp_BrandIndicatorforMessageIdentification \
+        OBJ_id_kp,31L
 
 #define SN_cmKGA                "cmKGA"
-#define LN_cmKGA                "Certificate Management Key Generation Authority"
+#define LN_cmKGA \
+        "Certificate Management Key Generation Authority"
 #define NID_cmKGA               1222
 #define OBJ_cmKGA               OBJ_id_kp,32L
 
@@ -1877,7 +1914,8 @@
 #define NID_id_regCtrl_authenticator            316
 #define OBJ_id_regCtrl_authenticator            OBJ_id_regCtrl,2L
 
-#define SN_id_regCtrl_pkiPublicationInfo                "id-regCtrl-pkiPublicationInfo"
+#define SN_id_regCtrl_pkiPublicationInfo \
+        "id-regCtrl-pkiPublicationInfo"
 #define NID_id_regCtrl_pkiPublicationInfo               317
 #define OBJ_id_regCtrl_pkiPublicationInfo               OBJ_id_regCtrl,3L
 
@@ -2179,7 +2217,8 @@
 #define OBJ_id_pkix_OCSP_CrlID          OBJ_id_pkix_OCSP,3L
 
 #define SN_id_pkix_OCSP_acceptableResponses             "acceptableResponses"
-#define LN_id_pkix_OCSP_acceptableResponses             "Acceptable OCSP Responses"
+#define LN_id_pkix_OCSP_acceptableResponses \
+        "Acceptable OCSP Responses"
 #define NID_id_pkix_OCSP_acceptableResponses            368
 #define OBJ_id_pkix_OCSP_acceptableResponses            OBJ_id_pkix_OCSP,4L
 
@@ -2635,7 +2674,8 @@
 #define OBJ_id_ce               OBJ_X500,29L
 
 #define SN_subject_directory_attributes         "subjectDirectoryAttributes"
-#define LN_subject_directory_attributes         "X509v3 Subject Directory Attributes"
+#define LN_subject_directory_attributes \
+        "X509v3 Subject Directory Attributes"
 #define NID_subject_directory_attributes                769
 #define OBJ_subject_directory_attributes                OBJ_id_ce,9L
 
@@ -2650,7 +2690,8 @@
 #define OBJ_key_usage           OBJ_id_ce,15L
 
 #define SN_private_key_usage_period             "privateKeyUsagePeriod"
-#define LN_private_key_usage_period             "X509v3 Private Key Usage Period"
+#define LN_private_key_usage_period \
+        "X509v3 Private Key Usage Period"
 #define NID_private_key_usage_period            84
 #define OBJ_private_key_usage_period            OBJ_id_ce,16L
 
@@ -2690,7 +2731,8 @@
 #define OBJ_delta_crl           OBJ_id_ce,27L
 
 #define SN_issuing_distribution_point           "issuingDistributionPoint"
-#define LN_issuing_distribution_point           "X509v3 Issuing Distribution Point"
+#define LN_issuing_distribution_point \
+        "X509v3 Issuing Distribution Point"
 #define NID_issuing_distribution_point          770
 #define OBJ_issuing_distribution_point          OBJ_id_ce,28L
 
@@ -2725,7 +2767,8 @@
 #define OBJ_policy_mappings             OBJ_id_ce,33L
 
 #define SN_authority_key_identifier             "authorityKeyIdentifier"
-#define LN_authority_key_identifier             "X509v3 Authority Key Identifier"
+#define LN_authority_key_identifier \
+        "X509v3 Authority Key Identifier"
 #define NID_authority_key_identifier            90
 #define OBJ_authority_key_identifier            OBJ_id_ce,35L
 
@@ -2739,23 +2782,28 @@
 #define NID_ext_key_usage               126
 #define OBJ_ext_key_usage               OBJ_id_ce,37L
 
-#define SN_authority_attribute_identifier               "authorityAttributeIdentifier"
-#define LN_authority_attribute_identifier               "X509v3 Authority Attribute Identifier"
+#define SN_authority_attribute_identifier \
+        "authorityAttributeIdentifier"
+#define LN_authority_attribute_identifier \
+        "X509v3 Authority Attribute Identifier"
 #define NID_authority_attribute_identifier              1295
 #define OBJ_authority_attribute_identifier              OBJ_id_ce,38L
 
 #define SN_role_spec_cert_identifier            "roleSpecCertIdentifier"
-#define LN_role_spec_cert_identifier            "X509v3 Role Specification Certificate Identifier"
+#define LN_role_spec_cert_identifier \
+        "X509v3 Role Specification Certificate Identifier"
 #define NID_role_spec_cert_identifier           1296
 #define OBJ_role_spec_cert_identifier           OBJ_id_ce,39L
 
 #define SN_basic_att_constraints                "basicAttConstraints"
-#define LN_basic_att_constraints                "X509v3 Basic Attribute Certificate Constraints"
+#define LN_basic_att_constraints \
+        "X509v3 Basic Attribute Certificate Constraints"
 #define NID_basic_att_constraints               1297
 #define OBJ_basic_att_constraints               OBJ_id_ce,41L
 
 #define SN_delegated_name_constraints           "delegatedNameConstraints"
-#define LN_delegated_name_constraints           "X509v3 Delegated Name Constraints"
+#define LN_delegated_name_constraints \
+        "X509v3 Delegated Name Constraints"
 #define NID_delegated_name_constraints          1298
 #define OBJ_delegated_name_constraints          OBJ_id_ce,42L
 
@@ -2785,7 +2833,8 @@
 #define OBJ_soa_identifier              OBJ_id_ce,50L
 
 #define SN_acceptable_cert_policies             "acceptableCertPolicies"
-#define LN_acceptable_cert_policies             "X509v3 Acceptable Certification Policies"
+#define LN_acceptable_cert_policies \
+        "X509v3 Acceptable Certification Policies"
 #define NID_acceptable_cert_policies            1303
 #define OBJ_acceptable_cert_policies            OBJ_id_ce,52L
 
@@ -2805,7 +2854,8 @@
 #define OBJ_no_rev_avail                OBJ_id_ce,56L
 
 #define SN_acceptable_privilege_policies                "acceptablePrivPolicies"
-#define LN_acceptable_privilege_policies                "X509v3 Acceptable Privilege Policies"
+#define LN_acceptable_privilege_policies \
+        "X509v3 Acceptable Privilege Policies"
 #define NID_acceptable_privilege_policies               1304
 #define OBJ_acceptable_privilege_policies               OBJ_id_ce,57L
 
@@ -2819,8 +2869,10 @@
 #define NID_no_assertion                1306
 #define OBJ_no_assertion                OBJ_id_ce,62L
 
-#define SN_id_aa_issuing_distribution_point             "aAissuingDistributionPoint"
-#define LN_id_aa_issuing_distribution_point             "X509v3 Attribute Authority Issuing Distribution Point"
+#define SN_id_aa_issuing_distribution_point \
+        "aAissuingDistributionPoint"
+#define LN_id_aa_issuing_distribution_point \
+        "X509v3 Attribute Authority Issuing Distribution Point"
 #define NID_id_aa_issuing_distribution_point            1307
 #define OBJ_id_aa_issuing_distribution_point            OBJ_id_ce,63L
 
@@ -2839,8 +2891,10 @@
 #define NID_group_ac            1310
 #define OBJ_group_ac            OBJ_id_ce,66L
 
-#define SN_allowed_attribute_assignments                "allowedAttributeAssignments"
-#define LN_allowed_attribute_assignments                "X509v3 Allowed Attribute Assignments"
+#define SN_allowed_attribute_assignments \
+        "allowedAttributeAssignments"
+#define LN_allowed_attribute_assignments \
+        "X509v3 Allowed Attribute Assignments"
 #define NID_allowed_attribute_assignments               1311
 #define OBJ_allowed_attribute_assignments               OBJ_id_ce,67L
 
@@ -2855,7 +2909,8 @@
 #define OBJ_holder_name_constraints             OBJ_id_ce,69L
 
 #define SN_authorization_validation             "authorizationValidation"
-#define LN_authorization_validation             "X509v3 Authorization Validation"
+#define LN_authorization_validation \
+        "X509v3 Authorization Validation"
 #define NID_authorization_validation            1314
 #define OBJ_authorization_validation            OBJ_id_ce,70L
 
@@ -2865,12 +2920,14 @@
 #define OBJ_prot_restrict               OBJ_id_ce,71L
 
 #define SN_subject_alt_public_key_info          "subjectAltPublicKeyInfo"
-#define LN_subject_alt_public_key_info          "X509v3 Subject Alternative Public Key Info"
+#define LN_subject_alt_public_key_info \
+        "X509v3 Subject Alternative Public Key Info"
 #define NID_subject_alt_public_key_info         1316
 #define OBJ_subject_alt_public_key_info         OBJ_id_ce,72L
 
 #define SN_alt_signature_algorithm              "altSignatureAlgorithm"
-#define LN_alt_signature_algorithm              "X509v3 Alternative Signature Algorithm"
+#define LN_alt_signature_algorithm \
+        "X509v3 Alternative Signature Algorithm"
 #define NID_alt_signature_algorithm             1317
 #define OBJ_alt_signature_algorithm             OBJ_id_ce,73L
 
@@ -3435,7 +3492,8 @@
 #define NID_hold_instruction_reject             433
 #define OBJ_hold_instruction_reject             OBJ_holdInstruction,3L
 
-#define SN_itu_t_identified_organization                "itu-t-identified-organization"
+#define SN_itu_t_identified_organization \
+        "itu-t-identified-organization"
 #define NID_itu_t_identified_organization               1264
 #define OBJ_itu_t_identified_organization               OBJ_itu_t,4L
 
@@ -3443,7 +3501,8 @@
 #define NID_etsi                1265
 #define OBJ_etsi                OBJ_itu_t_identified_organization,0L
 
-#define SN_electronic_signature_standard                "electronic-signature-standard"
+#define SN_electronic_signature_standard \
+        "electronic-signature-standard"
 #define NID_electronic_signature_standard               1266
 #define OBJ_electronic_signature_standard               OBJ_etsi,1733L
 
@@ -3459,7 +3518,8 @@
 #define NID_id_aa_ets_longTermValidation                1269
 #define OBJ_id_aa_ets_longTermValidation                OBJ_ess_attributes,2L
 
-#define SN_id_aa_ets_SignaturePolicyDocument            "id-aa-ets-SignaturePolicyDocument"
+#define SN_id_aa_ets_SignaturePolicyDocument \
+        "id-aa-ets-SignaturePolicyDocument"
 #define NID_id_aa_ets_SignaturePolicyDocument           1270
 #define OBJ_id_aa_ets_SignaturePolicyDocument           OBJ_ess_attributes,3L
 
@@ -4363,13 +4423,17 @@
 #define NID_id_tc26             974
 #define OBJ_id_tc26             OBJ_member_body,643L,7L,1L
 
-#define SN_id_GostR3411_94_with_GostR3410_2001          "id-GostR3411-94-with-GostR3410-2001"
-#define LN_id_GostR3411_94_with_GostR3410_2001          "GOST R 34.11-94 with GOST R 34.10-2001"
+#define SN_id_GostR3411_94_with_GostR3410_2001 \
+        "id-GostR3411-94-with-GostR3410-2001"
+#define LN_id_GostR3411_94_with_GostR3410_2001 \
+        "GOST R 34.11-94 with GOST R 34.10-2001"
 #define NID_id_GostR3411_94_with_GostR3410_2001         807
 #define OBJ_id_GostR3411_94_with_GostR3410_2001         OBJ_cryptopro,3L
 
-#define SN_id_GostR3411_94_with_GostR3410_94            "id-GostR3411-94-with-GostR3410-94"
-#define LN_id_GostR3411_94_with_GostR3410_94            "GOST R 34.11-94 with GOST R 34.10-94"
+#define SN_id_GostR3411_94_with_GostR3410_94 \
+        "id-GostR3411-94-with-GostR3410-94"
+#define LN_id_GostR3411_94_with_GostR3410_94 \
+        "GOST R 34.11-94 with GOST R 34.10-94"
 #define NID_id_GostR3411_94_with_GostR3410_94           808
 #define OBJ_id_GostR3411_94_with_GostR3410_94           OBJ_cryptopro,4L
 
@@ -4436,11 +4500,14 @@
 #define NID_id_GostR3410_94DH           818
 #define OBJ_id_GostR3410_94DH           OBJ_cryptopro,99L
 
-#define SN_id_Gost28147_89_CryptoPro_KeyMeshing         "id-Gost28147-89-CryptoPro-KeyMeshing"
+#define SN_id_Gost28147_89_CryptoPro_KeyMeshing \
+        "id-Gost28147-89-CryptoPro-KeyMeshing"
 #define NID_id_Gost28147_89_CryptoPro_KeyMeshing                819
-#define OBJ_id_Gost28147_89_CryptoPro_KeyMeshing                OBJ_cryptopro,14L,1L
+#define OBJ_id_Gost28147_89_CryptoPro_KeyMeshing                OBJ_cryptopro, \
+        14L,1L
 
-#define SN_id_Gost28147_89_None_KeyMeshing              "id-Gost28147-89-None-KeyMeshing"
+#define SN_id_Gost28147_89_None_KeyMeshing \
+        "id-Gost28147-89-None-KeyMeshing"
 #define NID_id_Gost28147_89_None_KeyMeshing             820
 #define OBJ_id_Gost28147_89_None_KeyMeshing             OBJ_cryptopro,14L,0L
 
@@ -4448,7 +4515,8 @@
 #define NID_id_GostR3411_94_TestParamSet                821
 #define OBJ_id_GostR3411_94_TestParamSet                OBJ_cryptopro,30L,0L
 
-#define SN_id_GostR3411_94_CryptoProParamSet            "id-GostR3411-94-CryptoProParamSet"
+#define SN_id_GostR3411_94_CryptoProParamSet \
+        "id-GostR3411-94-CryptoProParamSet"
 #define NID_id_GostR3411_94_CryptoProParamSet           822
 #define OBJ_id_GostR3411_94_CryptoProParamSet           OBJ_cryptopro,30L,1L
 
@@ -4456,89 +4524,128 @@
 #define NID_id_Gost28147_89_TestParamSet                823
 #define OBJ_id_Gost28147_89_TestParamSet                OBJ_cryptopro,31L,0L
 
-#define SN_id_Gost28147_89_CryptoPro_A_ParamSet         "id-Gost28147-89-CryptoPro-A-ParamSet"
+#define SN_id_Gost28147_89_CryptoPro_A_ParamSet \
+        "id-Gost28147-89-CryptoPro-A-ParamSet"
 #define NID_id_Gost28147_89_CryptoPro_A_ParamSet                824
-#define OBJ_id_Gost28147_89_CryptoPro_A_ParamSet                OBJ_cryptopro,31L,1L
+#define OBJ_id_Gost28147_89_CryptoPro_A_ParamSet                OBJ_cryptopro, \
+        31L,1L
 
-#define SN_id_Gost28147_89_CryptoPro_B_ParamSet         "id-Gost28147-89-CryptoPro-B-ParamSet"
+#define SN_id_Gost28147_89_CryptoPro_B_ParamSet \
+        "id-Gost28147-89-CryptoPro-B-ParamSet"
 #define NID_id_Gost28147_89_CryptoPro_B_ParamSet                825
-#define OBJ_id_Gost28147_89_CryptoPro_B_ParamSet                OBJ_cryptopro,31L,2L
+#define OBJ_id_Gost28147_89_CryptoPro_B_ParamSet                OBJ_cryptopro, \
+        31L,2L
 
-#define SN_id_Gost28147_89_CryptoPro_C_ParamSet         "id-Gost28147-89-CryptoPro-C-ParamSet"
+#define SN_id_Gost28147_89_CryptoPro_C_ParamSet \
+        "id-Gost28147-89-CryptoPro-C-ParamSet"
 #define NID_id_Gost28147_89_CryptoPro_C_ParamSet                826
-#define OBJ_id_Gost28147_89_CryptoPro_C_ParamSet                OBJ_cryptopro,31L,3L
+#define OBJ_id_Gost28147_89_CryptoPro_C_ParamSet                OBJ_cryptopro, \
+        31L,3L
 
-#define SN_id_Gost28147_89_CryptoPro_D_ParamSet         "id-Gost28147-89-CryptoPro-D-ParamSet"
+#define SN_id_Gost28147_89_CryptoPro_D_ParamSet \
+        "id-Gost28147-89-CryptoPro-D-ParamSet"
 #define NID_id_Gost28147_89_CryptoPro_D_ParamSet                827
-#define OBJ_id_Gost28147_89_CryptoPro_D_ParamSet                OBJ_cryptopro,31L,4L
+#define OBJ_id_Gost28147_89_CryptoPro_D_ParamSet                OBJ_cryptopro, \
+        31L,4L
 
-#define SN_id_Gost28147_89_CryptoPro_Oscar_1_1_ParamSet         "id-Gost28147-89-CryptoPro-Oscar-1-1-ParamSet"
+#define SN_id_Gost28147_89_CryptoPro_Oscar_1_1_ParamSet \
+        "id-Gost28147-89-CryptoPro-Oscar-1-1-ParamSet"
 #define NID_id_Gost28147_89_CryptoPro_Oscar_1_1_ParamSet                828
-#define OBJ_id_Gost28147_89_CryptoPro_Oscar_1_1_ParamSet                OBJ_cryptopro,31L,5L
+#define OBJ_id_Gost28147_89_CryptoPro_Oscar_1_1_ParamSet \
+        OBJ_cryptopro,31L,5L
 
-#define SN_id_Gost28147_89_CryptoPro_Oscar_1_0_ParamSet         "id-Gost28147-89-CryptoPro-Oscar-1-0-ParamSet"
+#define SN_id_Gost28147_89_CryptoPro_Oscar_1_0_ParamSet \
+        "id-Gost28147-89-CryptoPro-Oscar-1-0-ParamSet"
 #define NID_id_Gost28147_89_CryptoPro_Oscar_1_0_ParamSet                829
-#define OBJ_id_Gost28147_89_CryptoPro_Oscar_1_0_ParamSet                OBJ_cryptopro,31L,6L
+#define OBJ_id_Gost28147_89_CryptoPro_Oscar_1_0_ParamSet \
+        OBJ_cryptopro,31L,6L
 
-#define SN_id_Gost28147_89_CryptoPro_RIC_1_ParamSet             "id-Gost28147-89-CryptoPro-RIC-1-ParamSet"
+#define SN_id_Gost28147_89_CryptoPro_RIC_1_ParamSet \
+        "id-Gost28147-89-CryptoPro-RIC-1-ParamSet"
 #define NID_id_Gost28147_89_CryptoPro_RIC_1_ParamSet            830
-#define OBJ_id_Gost28147_89_CryptoPro_RIC_1_ParamSet            OBJ_cryptopro,31L,7L
+#define OBJ_id_Gost28147_89_CryptoPro_RIC_1_ParamSet            OBJ_cryptopro, \
+        31L,7L
 
 #define SN_id_GostR3410_94_TestParamSet         "id-GostR3410-94-TestParamSet"
 #define NID_id_GostR3410_94_TestParamSet                831
 #define OBJ_id_GostR3410_94_TestParamSet                OBJ_cryptopro,32L,0L
 
-#define SN_id_GostR3410_94_CryptoPro_A_ParamSet         "id-GostR3410-94-CryptoPro-A-ParamSet"
+#define SN_id_GostR3410_94_CryptoPro_A_ParamSet \
+        "id-GostR3410-94-CryptoPro-A-ParamSet"
 #define NID_id_GostR3410_94_CryptoPro_A_ParamSet                832
-#define OBJ_id_GostR3410_94_CryptoPro_A_ParamSet                OBJ_cryptopro,32L,2L
+#define OBJ_id_GostR3410_94_CryptoPro_A_ParamSet                OBJ_cryptopro, \
+        32L,2L
 
-#define SN_id_GostR3410_94_CryptoPro_B_ParamSet         "id-GostR3410-94-CryptoPro-B-ParamSet"
+#define SN_id_GostR3410_94_CryptoPro_B_ParamSet \
+        "id-GostR3410-94-CryptoPro-B-ParamSet"
 #define NID_id_GostR3410_94_CryptoPro_B_ParamSet                833
-#define OBJ_id_GostR3410_94_CryptoPro_B_ParamSet                OBJ_cryptopro,32L,3L
+#define OBJ_id_GostR3410_94_CryptoPro_B_ParamSet                OBJ_cryptopro, \
+        32L,3L
 
-#define SN_id_GostR3410_94_CryptoPro_C_ParamSet         "id-GostR3410-94-CryptoPro-C-ParamSet"
+#define SN_id_GostR3410_94_CryptoPro_C_ParamSet \
+        "id-GostR3410-94-CryptoPro-C-ParamSet"
 #define NID_id_GostR3410_94_CryptoPro_C_ParamSet                834
-#define OBJ_id_GostR3410_94_CryptoPro_C_ParamSet                OBJ_cryptopro,32L,4L
+#define OBJ_id_GostR3410_94_CryptoPro_C_ParamSet                OBJ_cryptopro, \
+        32L,4L
 
-#define SN_id_GostR3410_94_CryptoPro_D_ParamSet         "id-GostR3410-94-CryptoPro-D-ParamSet"
+#define SN_id_GostR3410_94_CryptoPro_D_ParamSet \
+        "id-GostR3410-94-CryptoPro-D-ParamSet"
 #define NID_id_GostR3410_94_CryptoPro_D_ParamSet                835
-#define OBJ_id_GostR3410_94_CryptoPro_D_ParamSet                OBJ_cryptopro,32L,5L
+#define OBJ_id_GostR3410_94_CryptoPro_D_ParamSet                OBJ_cryptopro, \
+        32L,5L
 
-#define SN_id_GostR3410_94_CryptoPro_XchA_ParamSet              "id-GostR3410-94-CryptoPro-XchA-ParamSet"
+#define SN_id_GostR3410_94_CryptoPro_XchA_ParamSet \
+        "id-GostR3410-94-CryptoPro-XchA-ParamSet"
 #define NID_id_GostR3410_94_CryptoPro_XchA_ParamSet             836
-#define OBJ_id_GostR3410_94_CryptoPro_XchA_ParamSet             OBJ_cryptopro,33L,1L
+#define OBJ_id_GostR3410_94_CryptoPro_XchA_ParamSet             OBJ_cryptopro, \
+        33L,1L
 
-#define SN_id_GostR3410_94_CryptoPro_XchB_ParamSet              "id-GostR3410-94-CryptoPro-XchB-ParamSet"
+#define SN_id_GostR3410_94_CryptoPro_XchB_ParamSet \
+        "id-GostR3410-94-CryptoPro-XchB-ParamSet"
 #define NID_id_GostR3410_94_CryptoPro_XchB_ParamSet             837
-#define OBJ_id_GostR3410_94_CryptoPro_XchB_ParamSet             OBJ_cryptopro,33L,2L
+#define OBJ_id_GostR3410_94_CryptoPro_XchB_ParamSet             OBJ_cryptopro, \
+        33L,2L
 
-#define SN_id_GostR3410_94_CryptoPro_XchC_ParamSet              "id-GostR3410-94-CryptoPro-XchC-ParamSet"
+#define SN_id_GostR3410_94_CryptoPro_XchC_ParamSet \
+        "id-GostR3410-94-CryptoPro-XchC-ParamSet"
 #define NID_id_GostR3410_94_CryptoPro_XchC_ParamSet             838
-#define OBJ_id_GostR3410_94_CryptoPro_XchC_ParamSet             OBJ_cryptopro,33L,3L
+#define OBJ_id_GostR3410_94_CryptoPro_XchC_ParamSet             OBJ_cryptopro, \
+        33L,3L
 
-#define SN_id_GostR3410_2001_TestParamSet               "id-GostR3410-2001-TestParamSet"
+#define SN_id_GostR3410_2001_TestParamSet \
+        "id-GostR3410-2001-TestParamSet"
 #define NID_id_GostR3410_2001_TestParamSet              839
 #define OBJ_id_GostR3410_2001_TestParamSet              OBJ_cryptopro,35L,0L
 
-#define SN_id_GostR3410_2001_CryptoPro_A_ParamSet               "id-GostR3410-2001-CryptoPro-A-ParamSet"
+#define SN_id_GostR3410_2001_CryptoPro_A_ParamSet \
+        "id-GostR3410-2001-CryptoPro-A-ParamSet"
 #define NID_id_GostR3410_2001_CryptoPro_A_ParamSet              840
-#define OBJ_id_GostR3410_2001_CryptoPro_A_ParamSet              OBJ_cryptopro,35L,1L
+#define OBJ_id_GostR3410_2001_CryptoPro_A_ParamSet              OBJ_cryptopro, \
+        35L,1L
 
-#define SN_id_GostR3410_2001_CryptoPro_B_ParamSet               "id-GostR3410-2001-CryptoPro-B-ParamSet"
+#define SN_id_GostR3410_2001_CryptoPro_B_ParamSet \
+        "id-GostR3410-2001-CryptoPro-B-ParamSet"
 #define NID_id_GostR3410_2001_CryptoPro_B_ParamSet              841
-#define OBJ_id_GostR3410_2001_CryptoPro_B_ParamSet              OBJ_cryptopro,35L,2L
+#define OBJ_id_GostR3410_2001_CryptoPro_B_ParamSet              OBJ_cryptopro, \
+        35L,2L
 
-#define SN_id_GostR3410_2001_CryptoPro_C_ParamSet               "id-GostR3410-2001-CryptoPro-C-ParamSet"
+#define SN_id_GostR3410_2001_CryptoPro_C_ParamSet \
+        "id-GostR3410-2001-CryptoPro-C-ParamSet"
 #define NID_id_GostR3410_2001_CryptoPro_C_ParamSet              842
-#define OBJ_id_GostR3410_2001_CryptoPro_C_ParamSet              OBJ_cryptopro,35L,3L
+#define OBJ_id_GostR3410_2001_CryptoPro_C_ParamSet              OBJ_cryptopro, \
+        35L,3L
 
-#define SN_id_GostR3410_2001_CryptoPro_XchA_ParamSet            "id-GostR3410-2001-CryptoPro-XchA-ParamSet"
+#define SN_id_GostR3410_2001_CryptoPro_XchA_ParamSet \
+        "id-GostR3410-2001-CryptoPro-XchA-ParamSet"
 #define NID_id_GostR3410_2001_CryptoPro_XchA_ParamSet           843
-#define OBJ_id_GostR3410_2001_CryptoPro_XchA_ParamSet           OBJ_cryptopro,36L,0L
+#define OBJ_id_GostR3410_2001_CryptoPro_XchA_ParamSet           OBJ_cryptopro, \
+        36L,0L
 
-#define SN_id_GostR3410_2001_CryptoPro_XchB_ParamSet            "id-GostR3410-2001-CryptoPro-XchB-ParamSet"
+#define SN_id_GostR3410_2001_CryptoPro_XchB_ParamSet \
+        "id-GostR3410-2001-CryptoPro-XchB-ParamSet"
 #define NID_id_GostR3410_2001_CryptoPro_XchB_ParamSet           844
-#define OBJ_id_GostR3410_2001_CryptoPro_XchB_ParamSet           OBJ_cryptopro,36L,1L
+#define OBJ_id_GostR3410_2001_CryptoPro_XchB_ParamSet           OBJ_cryptopro, \
+        36L,1L
 
 #define SN_id_GostR3410_94_a            "id-GostR3410-94-a"
 #define NID_id_GostR3410_94_a           845
@@ -4571,18 +4678,26 @@
 #define NID_id_GostR3410_2001_cc                851
 #define OBJ_id_GostR3410_2001_cc                OBJ_cryptocom,1L,5L,4L
 
-#define SN_id_GostR3411_94_with_GostR3410_94_cc         "id-GostR3411-94-with-GostR3410-94-cc"
-#define LN_id_GostR3411_94_with_GostR3410_94_cc         "GOST R 34.11-94 with GOST R 34.10-94 Cryptocom"
+#define SN_id_GostR3411_94_with_GostR3410_94_cc \
+        "id-GostR3411-94-with-GostR3410-94-cc"
+#define LN_id_GostR3411_94_with_GostR3410_94_cc \
+        "GOST R 34.11-94 with GOST R 34.10-94 Cryptocom"
 #define NID_id_GostR3411_94_with_GostR3410_94_cc                852
-#define OBJ_id_GostR3411_94_with_GostR3410_94_cc                OBJ_cryptocom,1L,3L,3L
+#define OBJ_id_GostR3411_94_with_GostR3410_94_cc                OBJ_cryptocom, \
+        1L,3L,3L
 
-#define SN_id_GostR3411_94_with_GostR3410_2001_cc               "id-GostR3411-94-with-GostR3410-2001-cc"
-#define LN_id_GostR3411_94_with_GostR3410_2001_cc               "GOST R 34.11-94 with GOST R 34.10-2001 Cryptocom"
+#define SN_id_GostR3411_94_with_GostR3410_2001_cc \
+        "id-GostR3411-94-with-GostR3410-2001-cc"
+#define LN_id_GostR3411_94_with_GostR3410_2001_cc \
+        "GOST R 34.11-94 with GOST R 34.10-2001 Cryptocom"
 #define NID_id_GostR3411_94_with_GostR3410_2001_cc              853
-#define OBJ_id_GostR3411_94_with_GostR3410_2001_cc              OBJ_cryptocom,1L,3L,4L
+#define OBJ_id_GostR3411_94_with_GostR3410_2001_cc              OBJ_cryptocom, \
+        1L,3L,4L
 
-#define SN_id_GostR3410_2001_ParamSet_cc                "id-GostR3410-2001-ParamSet-cc"
-#define LN_id_GostR3410_2001_ParamSet_cc                "GOST R 3410-2001 Parameter Set Cryptocom"
+#define SN_id_GostR3410_2001_ParamSet_cc \
+        "id-GostR3410-2001-ParamSet-cc"
+#define LN_id_GostR3410_2001_ParamSet_cc \
+        "GOST R 3410-2001 Parameter Set Cryptocom"
 #define NID_id_GostR3410_2001_ParamSet_cc               854
 #define OBJ_id_GostR3410_2001_ParamSet_cc               OBJ_cryptocom,1L,8L,1L
 
@@ -4595,12 +4710,14 @@
 #define OBJ_id_tc26_sign                OBJ_id_tc26_algorithms,1L
 
 #define SN_id_GostR3410_2012_256                "gost2012_256"
-#define LN_id_GostR3410_2012_256                "GOST R 34.10-2012 with 256 bit modulus"
+#define LN_id_GostR3410_2012_256 \
+        "GOST R 34.10-2012 with 256 bit modulus"
 #define NID_id_GostR3410_2012_256               979
 #define OBJ_id_GostR3410_2012_256               OBJ_id_tc26_sign,1L
 
 #define SN_id_GostR3410_2012_512                "gost2012_512"
-#define LN_id_GostR3410_2012_512                "GOST R 34.10-2012 with 512 bit modulus"
+#define LN_id_GostR3410_2012_512 \
+        "GOST R 34.10-2012 with 512 bit modulus"
 #define NID_id_GostR3410_2012_512               980
 #define OBJ_id_GostR3410_2012_512               OBJ_id_tc26_sign,2L
 
@@ -4609,12 +4726,14 @@
 #define OBJ_id_tc26_digest              OBJ_id_tc26_algorithms,2L
 
 #define SN_id_GostR3411_2012_256                "md_gost12_256"
-#define LN_id_GostR3411_2012_256                "GOST R 34.11-2012 with 256 bit hash"
+#define LN_id_GostR3411_2012_256 \
+        "GOST R 34.11-2012 with 256 bit hash"
 #define NID_id_GostR3411_2012_256               982
 #define OBJ_id_GostR3411_2012_256               OBJ_id_tc26_digest,2L
 
 #define SN_id_GostR3411_2012_512                "md_gost12_512"
-#define LN_id_GostR3411_2012_512                "GOST R 34.11-2012 with 512 bit hash"
+#define LN_id_GostR3411_2012_512 \
+        "GOST R 34.11-2012 with 512 bit hash"
 #define NID_id_GostR3411_2012_512               983
 #define OBJ_id_GostR3411_2012_512               OBJ_id_tc26_digest,3L
 
@@ -4622,27 +4741,37 @@
 #define NID_id_tc26_signwithdigest              984
 #define OBJ_id_tc26_signwithdigest              OBJ_id_tc26_algorithms,3L
 
-#define SN_id_tc26_signwithdigest_gost3410_2012_256             "id-tc26-signwithdigest-gost3410-2012-256"
-#define LN_id_tc26_signwithdigest_gost3410_2012_256             "GOST R 34.10-2012 with GOST R 34.11-2012 (256 bit)"
+#define SN_id_tc26_signwithdigest_gost3410_2012_256 \
+        "id-tc26-signwithdigest-gost3410-2012-256"
+#define LN_id_tc26_signwithdigest_gost3410_2012_256 \
+        "GOST R 34.10-2012 with GOST R 34.11-2012 (256 bit)"
 #define NID_id_tc26_signwithdigest_gost3410_2012_256            985
-#define OBJ_id_tc26_signwithdigest_gost3410_2012_256            OBJ_id_tc26_signwithdigest,2L
+#define OBJ_id_tc26_signwithdigest_gost3410_2012_256 \
+        OBJ_id_tc26_signwithdigest,2L
 
-#define SN_id_tc26_signwithdigest_gost3410_2012_512             "id-tc26-signwithdigest-gost3410-2012-512"
-#define LN_id_tc26_signwithdigest_gost3410_2012_512             "GOST R 34.10-2012 with GOST R 34.11-2012 (512 bit)"
+#define SN_id_tc26_signwithdigest_gost3410_2012_512 \
+        "id-tc26-signwithdigest-gost3410-2012-512"
+#define LN_id_tc26_signwithdigest_gost3410_2012_512 \
+        "GOST R 34.10-2012 with GOST R 34.11-2012 (512 bit)"
 #define NID_id_tc26_signwithdigest_gost3410_2012_512            986
-#define OBJ_id_tc26_signwithdigest_gost3410_2012_512            OBJ_id_tc26_signwithdigest,3L
+#define OBJ_id_tc26_signwithdigest_gost3410_2012_512 \
+        OBJ_id_tc26_signwithdigest,3L
 
 #define SN_id_tc26_mac          "id-tc26-mac"
 #define NID_id_tc26_mac         987
 #define OBJ_id_tc26_mac         OBJ_id_tc26_algorithms,4L
 
-#define SN_id_tc26_hmac_gost_3411_2012_256              "id-tc26-hmac-gost-3411-2012-256"
-#define LN_id_tc26_hmac_gost_3411_2012_256              "HMAC GOST 34.11-2012 256 bit"
+#define SN_id_tc26_hmac_gost_3411_2012_256 \
+        "id-tc26-hmac-gost-3411-2012-256"
+#define LN_id_tc26_hmac_gost_3411_2012_256 \
+        "HMAC GOST 34.11-2012 256 bit"
 #define NID_id_tc26_hmac_gost_3411_2012_256             988
 #define OBJ_id_tc26_hmac_gost_3411_2012_256             OBJ_id_tc26_mac,1L
 
-#define SN_id_tc26_hmac_gost_3411_2012_512              "id-tc26-hmac-gost-3411-2012-512"
-#define LN_id_tc26_hmac_gost_3411_2012_512              "HMAC GOST 34.11-2012 512 bit"
+#define SN_id_tc26_hmac_gost_3411_2012_512 \
+        "id-tc26-hmac-gost-3411-2012-512"
+#define LN_id_tc26_hmac_gost_3411_2012_512 \
+        "HMAC GOST 34.11-2012 512 bit"
 #define NID_id_tc26_hmac_gost_3411_2012_512             989
 #define OBJ_id_tc26_hmac_gost_3411_2012_512             OBJ_id_tc26_mac,2L
 
@@ -4650,47 +4779,59 @@
 #define NID_id_tc26_cipher              990
 #define OBJ_id_tc26_cipher              OBJ_id_tc26_algorithms,5L
 
-#define SN_id_tc26_cipher_gostr3412_2015_magma          "id-tc26-cipher-gostr3412-2015-magma"
+#define SN_id_tc26_cipher_gostr3412_2015_magma \
+        "id-tc26-cipher-gostr3412-2015-magma"
 #define NID_id_tc26_cipher_gostr3412_2015_magma         1173
 #define OBJ_id_tc26_cipher_gostr3412_2015_magma         OBJ_id_tc26_cipher,1L
 
 #define SN_magma_ctr_acpkm              "magma-ctr-acpkm"
 #define NID_magma_ctr_acpkm             1174
-#define OBJ_magma_ctr_acpkm             OBJ_id_tc26_cipher_gostr3412_2015_magma,1L
+#define OBJ_magma_ctr_acpkm             OBJ_id_tc26_cipher_gostr3412_2015_magma, \
+        1L
 
 #define SN_magma_ctr_acpkm_omac         "magma-ctr-acpkm-omac"
 #define NID_magma_ctr_acpkm_omac                1175
-#define OBJ_magma_ctr_acpkm_omac                OBJ_id_tc26_cipher_gostr3412_2015_magma,2L
+#define OBJ_magma_ctr_acpkm_omac \
+        OBJ_id_tc26_cipher_gostr3412_2015_magma,2L
 
-#define SN_id_tc26_cipher_gostr3412_2015_kuznyechik             "id-tc26-cipher-gostr3412-2015-kuznyechik"
+#define SN_id_tc26_cipher_gostr3412_2015_kuznyechik \
+        "id-tc26-cipher-gostr3412-2015-kuznyechik"
 #define NID_id_tc26_cipher_gostr3412_2015_kuznyechik            1176
-#define OBJ_id_tc26_cipher_gostr3412_2015_kuznyechik            OBJ_id_tc26_cipher,2L
+#define OBJ_id_tc26_cipher_gostr3412_2015_kuznyechik \
+        OBJ_id_tc26_cipher,2L
 
 #define SN_kuznyechik_ctr_acpkm         "kuznyechik-ctr-acpkm"
 #define NID_kuznyechik_ctr_acpkm                1177
-#define OBJ_kuznyechik_ctr_acpkm                OBJ_id_tc26_cipher_gostr3412_2015_kuznyechik,1L
+#define OBJ_kuznyechik_ctr_acpkm \
+        OBJ_id_tc26_cipher_gostr3412_2015_kuznyechik,1L
 
 #define SN_kuznyechik_ctr_acpkm_omac            "kuznyechik-ctr-acpkm-omac"
 #define NID_kuznyechik_ctr_acpkm_omac           1178
-#define OBJ_kuznyechik_ctr_acpkm_omac           OBJ_id_tc26_cipher_gostr3412_2015_kuznyechik,2L
+#define OBJ_kuznyechik_ctr_acpkm_omac \
+        OBJ_id_tc26_cipher_gostr3412_2015_kuznyechik,2L
 
 #define SN_id_tc26_agreement            "id-tc26-agreement"
 #define NID_id_tc26_agreement           991
 #define OBJ_id_tc26_agreement           OBJ_id_tc26_algorithms,6L
 
-#define SN_id_tc26_agreement_gost_3410_2012_256         "id-tc26-agreement-gost-3410-2012-256"
+#define SN_id_tc26_agreement_gost_3410_2012_256 \
+        "id-tc26-agreement-gost-3410-2012-256"
 #define NID_id_tc26_agreement_gost_3410_2012_256                992
-#define OBJ_id_tc26_agreement_gost_3410_2012_256                OBJ_id_tc26_agreement,1L
+#define OBJ_id_tc26_agreement_gost_3410_2012_256 \
+        OBJ_id_tc26_agreement,1L
 
-#define SN_id_tc26_agreement_gost_3410_2012_512         "id-tc26-agreement-gost-3410-2012-512"
+#define SN_id_tc26_agreement_gost_3410_2012_512 \
+        "id-tc26-agreement-gost-3410-2012-512"
 #define NID_id_tc26_agreement_gost_3410_2012_512                993
-#define OBJ_id_tc26_agreement_gost_3410_2012_512                OBJ_id_tc26_agreement,2L
+#define OBJ_id_tc26_agreement_gost_3410_2012_512 \
+        OBJ_id_tc26_agreement,2L
 
 #define SN_id_tc26_wrap         "id-tc26-wrap"
 #define NID_id_tc26_wrap                1179
 #define OBJ_id_tc26_wrap                OBJ_id_tc26_algorithms,7L
 
-#define SN_id_tc26_wrap_gostr3412_2015_magma            "id-tc26-wrap-gostr3412-2015-magma"
+#define SN_id_tc26_wrap_gostr3412_2015_magma \
+        "id-tc26-wrap-gostr3412-2015-magma"
 #define NID_id_tc26_wrap_gostr3412_2015_magma           1180
 #define OBJ_id_tc26_wrap_gostr3412_2015_magma           OBJ_id_tc26_wrap,1L
 
@@ -4698,13 +4839,16 @@
 #define NID_magma_kexp15                1181
 #define OBJ_magma_kexp15                OBJ_id_tc26_wrap_gostr3412_2015_magma,1L
 
-#define SN_id_tc26_wrap_gostr3412_2015_kuznyechik               "id-tc26-wrap-gostr3412-2015-kuznyechik"
+#define SN_id_tc26_wrap_gostr3412_2015_kuznyechik \
+        "id-tc26-wrap-gostr3412-2015-kuznyechik"
 #define NID_id_tc26_wrap_gostr3412_2015_kuznyechik              1182
-#define OBJ_id_tc26_wrap_gostr3412_2015_kuznyechik              OBJ_id_tc26_wrap,2L
+#define OBJ_id_tc26_wrap_gostr3412_2015_kuznyechik              OBJ_id_tc26_wrap, \
+        2L
 
 #define SN_kuznyechik_kexp15            "kuznyechik-kexp15"
 #define NID_kuznyechik_kexp15           1183
-#define OBJ_kuznyechik_kexp15           OBJ_id_tc26_wrap_gostr3412_2015_kuznyechik,1L
+#define OBJ_kuznyechik_kexp15 \
+        OBJ_id_tc26_wrap_gostr3412_2015_kuznyechik,1L
 
 #define SN_id_tc26_constants            "id-tc26-constants"
 #define NID_id_tc26_constants           994
@@ -4714,53 +4858,81 @@
 #define NID_id_tc26_sign_constants              995
 #define OBJ_id_tc26_sign_constants              OBJ_id_tc26_constants,1L
 
-#define SN_id_tc26_gost_3410_2012_256_constants         "id-tc26-gost-3410-2012-256-constants"
+#define SN_id_tc26_gost_3410_2012_256_constants \
+        "id-tc26-gost-3410-2012-256-constants"
 #define NID_id_tc26_gost_3410_2012_256_constants                1147
-#define OBJ_id_tc26_gost_3410_2012_256_constants                OBJ_id_tc26_sign_constants,1L
+#define OBJ_id_tc26_gost_3410_2012_256_constants \
+        OBJ_id_tc26_sign_constants,1L
 
-#define SN_id_tc26_gost_3410_2012_256_paramSetA         "id-tc26-gost-3410-2012-256-paramSetA"
-#define LN_id_tc26_gost_3410_2012_256_paramSetA         "GOST R 34.10-2012 (256 bit) ParamSet A"
+#define SN_id_tc26_gost_3410_2012_256_paramSetA \
+        "id-tc26-gost-3410-2012-256-paramSetA"
+#define LN_id_tc26_gost_3410_2012_256_paramSetA \
+        "GOST R 34.10-2012 (256 bit) ParamSet A"
 #define NID_id_tc26_gost_3410_2012_256_paramSetA                1148
-#define OBJ_id_tc26_gost_3410_2012_256_paramSetA                OBJ_id_tc26_gost_3410_2012_256_constants,1L
+#define OBJ_id_tc26_gost_3410_2012_256_paramSetA \
+        OBJ_id_tc26_gost_3410_2012_256_constants,1L
 
-#define SN_id_tc26_gost_3410_2012_256_paramSetB         "id-tc26-gost-3410-2012-256-paramSetB"
-#define LN_id_tc26_gost_3410_2012_256_paramSetB         "GOST R 34.10-2012 (256 bit) ParamSet B"
+#define SN_id_tc26_gost_3410_2012_256_paramSetB \
+        "id-tc26-gost-3410-2012-256-paramSetB"
+#define LN_id_tc26_gost_3410_2012_256_paramSetB \
+        "GOST R 34.10-2012 (256 bit) ParamSet B"
 #define NID_id_tc26_gost_3410_2012_256_paramSetB                1184
-#define OBJ_id_tc26_gost_3410_2012_256_paramSetB                OBJ_id_tc26_gost_3410_2012_256_constants,2L
+#define OBJ_id_tc26_gost_3410_2012_256_paramSetB \
+        OBJ_id_tc26_gost_3410_2012_256_constants,2L
 
-#define SN_id_tc26_gost_3410_2012_256_paramSetC         "id-tc26-gost-3410-2012-256-paramSetC"
-#define LN_id_tc26_gost_3410_2012_256_paramSetC         "GOST R 34.10-2012 (256 bit) ParamSet C"
+#define SN_id_tc26_gost_3410_2012_256_paramSetC \
+        "id-tc26-gost-3410-2012-256-paramSetC"
+#define LN_id_tc26_gost_3410_2012_256_paramSetC \
+        "GOST R 34.10-2012 (256 bit) ParamSet C"
 #define NID_id_tc26_gost_3410_2012_256_paramSetC                1185
-#define OBJ_id_tc26_gost_3410_2012_256_paramSetC                OBJ_id_tc26_gost_3410_2012_256_constants,3L
+#define OBJ_id_tc26_gost_3410_2012_256_paramSetC \
+        OBJ_id_tc26_gost_3410_2012_256_constants,3L
 
-#define SN_id_tc26_gost_3410_2012_256_paramSetD         "id-tc26-gost-3410-2012-256-paramSetD"
-#define LN_id_tc26_gost_3410_2012_256_paramSetD         "GOST R 34.10-2012 (256 bit) ParamSet D"
+#define SN_id_tc26_gost_3410_2012_256_paramSetD \
+        "id-tc26-gost-3410-2012-256-paramSetD"
+#define LN_id_tc26_gost_3410_2012_256_paramSetD \
+        "GOST R 34.10-2012 (256 bit) ParamSet D"
 #define NID_id_tc26_gost_3410_2012_256_paramSetD                1186
-#define OBJ_id_tc26_gost_3410_2012_256_paramSetD                OBJ_id_tc26_gost_3410_2012_256_constants,4L
+#define OBJ_id_tc26_gost_3410_2012_256_paramSetD \
+        OBJ_id_tc26_gost_3410_2012_256_constants,4L
 
-#define SN_id_tc26_gost_3410_2012_512_constants         "id-tc26-gost-3410-2012-512-constants"
+#define SN_id_tc26_gost_3410_2012_512_constants \
+        "id-tc26-gost-3410-2012-512-constants"
 #define NID_id_tc26_gost_3410_2012_512_constants                996
-#define OBJ_id_tc26_gost_3410_2012_512_constants                OBJ_id_tc26_sign_constants,2L
+#define OBJ_id_tc26_gost_3410_2012_512_constants \
+        OBJ_id_tc26_sign_constants,2L
 
-#define SN_id_tc26_gost_3410_2012_512_paramSetTest              "id-tc26-gost-3410-2012-512-paramSetTest"
-#define LN_id_tc26_gost_3410_2012_512_paramSetTest              "GOST R 34.10-2012 (512 bit) testing parameter set"
+#define SN_id_tc26_gost_3410_2012_512_paramSetTest \
+        "id-tc26-gost-3410-2012-512-paramSetTest"
+#define LN_id_tc26_gost_3410_2012_512_paramSetTest \
+        "GOST R 34.10-2012 (512 bit) testing parameter set"
 #define NID_id_tc26_gost_3410_2012_512_paramSetTest             997
-#define OBJ_id_tc26_gost_3410_2012_512_paramSetTest             OBJ_id_tc26_gost_3410_2012_512_constants,0L
+#define OBJ_id_tc26_gost_3410_2012_512_paramSetTest \
+        OBJ_id_tc26_gost_3410_2012_512_constants,0L
 
-#define SN_id_tc26_gost_3410_2012_512_paramSetA         "id-tc26-gost-3410-2012-512-paramSetA"
-#define LN_id_tc26_gost_3410_2012_512_paramSetA         "GOST R 34.10-2012 (512 bit) ParamSet A"
+#define SN_id_tc26_gost_3410_2012_512_paramSetA \
+        "id-tc26-gost-3410-2012-512-paramSetA"
+#define LN_id_tc26_gost_3410_2012_512_paramSetA \
+        "GOST R 34.10-2012 (512 bit) ParamSet A"
 #define NID_id_tc26_gost_3410_2012_512_paramSetA                998
-#define OBJ_id_tc26_gost_3410_2012_512_paramSetA                OBJ_id_tc26_gost_3410_2012_512_constants,1L
+#define OBJ_id_tc26_gost_3410_2012_512_paramSetA \
+        OBJ_id_tc26_gost_3410_2012_512_constants,1L
 
-#define SN_id_tc26_gost_3410_2012_512_paramSetB         "id-tc26-gost-3410-2012-512-paramSetB"
-#define LN_id_tc26_gost_3410_2012_512_paramSetB         "GOST R 34.10-2012 (512 bit) ParamSet B"
+#define SN_id_tc26_gost_3410_2012_512_paramSetB \
+        "id-tc26-gost-3410-2012-512-paramSetB"
+#define LN_id_tc26_gost_3410_2012_512_paramSetB \
+        "GOST R 34.10-2012 (512 bit) ParamSet B"
 #define NID_id_tc26_gost_3410_2012_512_paramSetB                999
-#define OBJ_id_tc26_gost_3410_2012_512_paramSetB                OBJ_id_tc26_gost_3410_2012_512_constants,2L
+#define OBJ_id_tc26_gost_3410_2012_512_paramSetB \
+        OBJ_id_tc26_gost_3410_2012_512_constants,2L
 
-#define SN_id_tc26_gost_3410_2012_512_paramSetC         "id-tc26-gost-3410-2012-512-paramSetC"
-#define LN_id_tc26_gost_3410_2012_512_paramSetC         "GOST R 34.10-2012 (512 bit) ParamSet C"
+#define SN_id_tc26_gost_3410_2012_512_paramSetC \
+        "id-tc26-gost-3410-2012-512-paramSetC"
+#define LN_id_tc26_gost_3410_2012_512_paramSetC \
+        "GOST R 34.10-2012 (512 bit) ParamSet C"
 #define NID_id_tc26_gost_3410_2012_512_paramSetC                1149
-#define OBJ_id_tc26_gost_3410_2012_512_paramSetC                OBJ_id_tc26_gost_3410_2012_512_constants,3L
+#define OBJ_id_tc26_gost_3410_2012_512_paramSetC \
+        OBJ_id_tc26_gost_3410_2012_512_constants,3L
 
 #define SN_id_tc26_digest_constants             "id-tc26-digest-constants"
 #define NID_id_tc26_digest_constants            1000
@@ -4772,12 +4944,15 @@
 
 #define SN_id_tc26_gost_28147_constants         "id-tc26-gost-28147-constants"
 #define NID_id_tc26_gost_28147_constants                1002
-#define OBJ_id_tc26_gost_28147_constants                OBJ_id_tc26_cipher_constants,1L
+#define OBJ_id_tc26_gost_28147_constants \
+        OBJ_id_tc26_cipher_constants,1L
 
 #define SN_id_tc26_gost_28147_param_Z           "id-tc26-gost-28147-param-Z"
-#define LN_id_tc26_gost_28147_param_Z           "GOST 28147-89 TC26 parameter set"
+#define LN_id_tc26_gost_28147_param_Z \
+        "GOST 28147-89 TC26 parameter set"
 #define NID_id_tc26_gost_28147_param_Z          1003
-#define OBJ_id_tc26_gost_28147_param_Z          OBJ_id_tc26_gost_28147_constants,1L
+#define OBJ_id_tc26_gost_28147_param_Z          OBJ_id_tc26_gost_28147_constants, \
+        1L
 
 #define SN_INN          "INN"
 #define LN_INN          "INN"
@@ -5364,45 +5539,60 @@
 
 #define OBJ_secg_scheme         OBJ_certicom_arc,1L
 
-#define SN_dhSinglePass_stdDH_sha1kdf_scheme            "dhSinglePass-stdDH-sha1kdf-scheme"
+#define SN_dhSinglePass_stdDH_sha1kdf_scheme \
+        "dhSinglePass-stdDH-sha1kdf-scheme"
 #define NID_dhSinglePass_stdDH_sha1kdf_scheme           936
 #define OBJ_dhSinglePass_stdDH_sha1kdf_scheme           OBJ_x9_63_scheme,2L
 
-#define SN_dhSinglePass_stdDH_sha224kdf_scheme          "dhSinglePass-stdDH-sha224kdf-scheme"
+#define SN_dhSinglePass_stdDH_sha224kdf_scheme \
+        "dhSinglePass-stdDH-sha224kdf-scheme"
 #define NID_dhSinglePass_stdDH_sha224kdf_scheme         937
 #define OBJ_dhSinglePass_stdDH_sha224kdf_scheme         OBJ_secg_scheme,11L,0L
 
-#define SN_dhSinglePass_stdDH_sha256kdf_scheme          "dhSinglePass-stdDH-sha256kdf-scheme"
+#define SN_dhSinglePass_stdDH_sha256kdf_scheme \
+        "dhSinglePass-stdDH-sha256kdf-scheme"
 #define NID_dhSinglePass_stdDH_sha256kdf_scheme         938
 #define OBJ_dhSinglePass_stdDH_sha256kdf_scheme         OBJ_secg_scheme,11L,1L
 
-#define SN_dhSinglePass_stdDH_sha384kdf_scheme          "dhSinglePass-stdDH-sha384kdf-scheme"
+#define SN_dhSinglePass_stdDH_sha384kdf_scheme \
+        "dhSinglePass-stdDH-sha384kdf-scheme"
 #define NID_dhSinglePass_stdDH_sha384kdf_scheme         939
 #define OBJ_dhSinglePass_stdDH_sha384kdf_scheme         OBJ_secg_scheme,11L,2L
 
-#define SN_dhSinglePass_stdDH_sha512kdf_scheme          "dhSinglePass-stdDH-sha512kdf-scheme"
+#define SN_dhSinglePass_stdDH_sha512kdf_scheme \
+        "dhSinglePass-stdDH-sha512kdf-scheme"
 #define NID_dhSinglePass_stdDH_sha512kdf_scheme         940
 #define OBJ_dhSinglePass_stdDH_sha512kdf_scheme         OBJ_secg_scheme,11L,3L
 
-#define SN_dhSinglePass_cofactorDH_sha1kdf_scheme               "dhSinglePass-cofactorDH-sha1kdf-scheme"
+#define SN_dhSinglePass_cofactorDH_sha1kdf_scheme \
+        "dhSinglePass-cofactorDH-sha1kdf-scheme"
 #define NID_dhSinglePass_cofactorDH_sha1kdf_scheme              941
-#define OBJ_dhSinglePass_cofactorDH_sha1kdf_scheme              OBJ_x9_63_scheme,3L
+#define OBJ_dhSinglePass_cofactorDH_sha1kdf_scheme              OBJ_x9_63_scheme, \
+        3L
 
-#define SN_dhSinglePass_cofactorDH_sha224kdf_scheme             "dhSinglePass-cofactorDH-sha224kdf-scheme"
+#define SN_dhSinglePass_cofactorDH_sha224kdf_scheme \
+        "dhSinglePass-cofactorDH-sha224kdf-scheme"
 #define NID_dhSinglePass_cofactorDH_sha224kdf_scheme            942
-#define OBJ_dhSinglePass_cofactorDH_sha224kdf_scheme            OBJ_secg_scheme,14L,0L
+#define OBJ_dhSinglePass_cofactorDH_sha224kdf_scheme            OBJ_secg_scheme, \
+        14L,0L
 
-#define SN_dhSinglePass_cofactorDH_sha256kdf_scheme             "dhSinglePass-cofactorDH-sha256kdf-scheme"
+#define SN_dhSinglePass_cofactorDH_sha256kdf_scheme \
+        "dhSinglePass-cofactorDH-sha256kdf-scheme"
 #define NID_dhSinglePass_cofactorDH_sha256kdf_scheme            943
-#define OBJ_dhSinglePass_cofactorDH_sha256kdf_scheme            OBJ_secg_scheme,14L,1L
+#define OBJ_dhSinglePass_cofactorDH_sha256kdf_scheme            OBJ_secg_scheme, \
+        14L,1L
 
-#define SN_dhSinglePass_cofactorDH_sha384kdf_scheme             "dhSinglePass-cofactorDH-sha384kdf-scheme"
+#define SN_dhSinglePass_cofactorDH_sha384kdf_scheme \
+        "dhSinglePass-cofactorDH-sha384kdf-scheme"
 #define NID_dhSinglePass_cofactorDH_sha384kdf_scheme            944
-#define OBJ_dhSinglePass_cofactorDH_sha384kdf_scheme            OBJ_secg_scheme,14L,2L
+#define OBJ_dhSinglePass_cofactorDH_sha384kdf_scheme            OBJ_secg_scheme, \
+        14L,2L
 
-#define SN_dhSinglePass_cofactorDH_sha512kdf_scheme             "dhSinglePass-cofactorDH-sha512kdf-scheme"
+#define SN_dhSinglePass_cofactorDH_sha512kdf_scheme \
+        "dhSinglePass-cofactorDH-sha512kdf-scheme"
 #define NID_dhSinglePass_cofactorDH_sha512kdf_scheme            945
-#define OBJ_dhSinglePass_cofactorDH_sha512kdf_scheme            OBJ_secg_scheme,14L,3L
+#define OBJ_dhSinglePass_cofactorDH_sha512kdf_scheme            OBJ_secg_scheme, \
+        14L,3L
 
 #define SN_dh_std_kdf           "dh-std-kdf"
 #define NID_dh_std_kdf          946
@@ -5436,7 +5626,8 @@
 #define OBJ_jurisdictionLocalityName            OBJ_ms_corp,60L,2L,1L,1L
 
 #define SN_jurisdictionStateOrProvinceName              "jurisdictionST"
-#define LN_jurisdictionStateOrProvinceName              "jurisdictionStateOrProvinceName"
+#define LN_jurisdictionStateOrProvinceName \
+        "jurisdictionStateOrProvinceName"
 #define NID_jurisdictionStateOrProvinceName             956
 #define OBJ_jurisdictionStateOrProvinceName             OBJ_ms_corp,60L,2L,1L,2L
 
@@ -5757,29 +5948,44 @@
 
 #ifndef OPENSSL_NO_DEPRECATED_3_0
 
-#define SN_id_tc26_cipher_gostr3412_2015_magma_ctracpkm                 SN_magma_ctr_acpkm
-#define NID_id_tc26_cipher_gostr3412_2015_magma_ctracpkm                NID_magma_ctr_acpkm
-#define OBJ_id_tc26_cipher_gostr3412_2015_magma_ctracpkm                OBJ_magma_ctr_acpkm
+#define SN_id_tc26_cipher_gostr3412_2015_magma_ctracpkm \
+        SN_magma_ctr_acpkm
+#define NID_id_tc26_cipher_gostr3412_2015_magma_ctracpkm \
+        NID_magma_ctr_acpkm
+#define OBJ_id_tc26_cipher_gostr3412_2015_magma_ctracpkm \
+        OBJ_magma_ctr_acpkm
 
-#define SN_id_tc26_cipher_gostr3412_2015_magma_ctracpkm_omac            SN_magma_ctr_acpkm_omac
-#define NID_id_tc26_cipher_gostr3412_2015_magma_ctracpkm_omac           NID_magma_ctr_acpkm_omac
-#define OBJ_id_tc26_cipher_gostr3412_2015_magma_ctracpkm_omac           OBJ_magma_ctr_acpkm_omac
+#define SN_id_tc26_cipher_gostr3412_2015_magma_ctracpkm_omac \
+        SN_magma_ctr_acpkm_omac
+#define NID_id_tc26_cipher_gostr3412_2015_magma_ctracpkm_omac \
+        NID_magma_ctr_acpkm_omac
+#define OBJ_id_tc26_cipher_gostr3412_2015_magma_ctracpkm_omac \
+        OBJ_magma_ctr_acpkm_omac
 
-#define SN_id_tc26_cipher_gostr3412_2015_kuznyechik_ctracpkm            SN_kuznyechik_ctr_acpkm
-#define NID_id_tc26_cipher_gostr3412_2015_kuznyechik_ctracpkm           NID_kuznyechik_ctr_acpkm
-#define OBJ_id_tc26_cipher_gostr3412_2015_kuznyechik_ctracpkm           OBJ_kuznyechik_ctr_acpkm
+#define SN_id_tc26_cipher_gostr3412_2015_kuznyechik_ctracpkm \
+        SN_kuznyechik_ctr_acpkm
+#define NID_id_tc26_cipher_gostr3412_2015_kuznyechik_ctracpkm \
+        NID_kuznyechik_ctr_acpkm
+#define OBJ_id_tc26_cipher_gostr3412_2015_kuznyechik_ctracpkm \
+        OBJ_kuznyechik_ctr_acpkm
 
-#define SN_id_tc26_cipher_gostr3412_2015_kuznyechik_ctracpkm_omac               SN_kuznyechik_ctr_acpkm_omac
-#define NID_id_tc26_cipher_gostr3412_2015_kuznyechik_ctracpkm_omac              NID_kuznyechik_ctr_acpkm_omac
-#define OBJ_id_tc26_cipher_gostr3412_2015_kuznyechik_ctracpkm_omac              OBJ_kuznyechik_ctr_acpkm_omac
+#define SN_id_tc26_cipher_gostr3412_2015_kuznyechik_ctracpkm_omac \
+        SN_kuznyechik_ctr_acpkm_omac
+#define NID_id_tc26_cipher_gostr3412_2015_kuznyechik_ctracpkm_omac \
+        NID_kuznyechik_ctr_acpkm_omac
+#define OBJ_id_tc26_cipher_gostr3412_2015_kuznyechik_ctracpkm_omac \
+        OBJ_kuznyechik_ctr_acpkm_omac
 
 #define SN_id_tc26_wrap_gostr3412_2015_magma_kexp15             SN_magma_kexp15
 #define NID_id_tc26_wrap_gostr3412_2015_magma_kexp15            NID_magma_kexp15
 #define OBJ_id_tc26_wrap_gostr3412_2015_magma_kexp15            OBJ_magma_kexp15
 
-#define SN_id_tc26_wrap_gostr3412_2015_kuznyechik_kexp15                SN_kuznyechik_kexp15
-#define NID_id_tc26_wrap_gostr3412_2015_kuznyechik_kexp15               NID_kuznyechik_kexp15
-#define OBJ_id_tc26_wrap_gostr3412_2015_kuznyechik_kexp15               OBJ_kuznyechik_kexp15
+#define SN_id_tc26_wrap_gostr3412_2015_kuznyechik_kexp15 \
+        SN_kuznyechik_kexp15
+#define NID_id_tc26_wrap_gostr3412_2015_kuznyechik_kexp15 \
+        NID_kuznyechik_kexp15
+#define OBJ_id_tc26_wrap_gostr3412_2015_kuznyechik_kexp15 \
+        OBJ_kuznyechik_kexp15
 
 #define SN_grasshopper_ecb              SN_kuznyechik_ecb
 #define NID_grasshopper_ecb             NID_kuznyechik_ecb

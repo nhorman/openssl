@@ -266,7 +266,7 @@ static int ecdsa_keygen_knownanswer_test(EC_KEY *eckey, BN_CTX *ctx,
         return 0;
 
     OSSL_SELF_TEST_onbegin(st, OSSL_SELF_TEST_TYPE_PCT_KAT,
-                               OSSL_SELF_TEST_DESC_PCT_ECDSA);
+                           OSSL_SELF_TEST_DESC_PCT_ECDSA);
 
     /* pub_key = priv_key * G (where G is a point on the curve) */
     if (!EC_POINT_mul(eckey->group, pub_key2, eckey->priv_key, NULL, NULL, ctx))
@@ -276,7 +276,7 @@ static int ecdsa_keygen_knownanswer_test(EC_KEY *eckey, BN_CTX *ctx,
         goto err;
     len = BN_bn2bin(pub_key2->X, bytes);
     if (OSSL_SELF_TEST_oncorrupt_byte(st, bytes)
-            && BN_bin2bn(bytes, len, pub_key2->X) == NULL)
+        && BN_bin2bn(bytes, len, pub_key2->X) == NULL)
         goto err;
     ret = !EC_POINT_cmp(eckey->group, eckey->pub_key, pub_key2, ctx);
 
@@ -353,7 +353,7 @@ static int ec_generate_key(EC_KEY *eckey, int pairwise_test)
     do
         if (!BN_priv_rand_range_ex(priv_key, order, 0, ctx))
             goto err;
-    while (BN_is_zero(priv_key)) ;
+    while (BN_is_zero(priv_key));
 
     if (eckey->pub_key == NULL) {
         pub_key = EC_POINT_new(group);
@@ -621,9 +621,9 @@ int ossl_ec_key_pairwise_check(const EC_KEY *eckey, BN_CTX *ctx)
     EC_POINT *point = NULL;
 
     if (eckey == NULL
-       || eckey->group == NULL
-       || eckey->pub_key == NULL
-       || eckey->priv_key == NULL) {
+        || eckey->group == NULL
+        || eckey->pub_key == NULL
+        || eckey->priv_key == NULL) {
         ERR_raise(ERR_LIB_EC, ERR_R_PASSED_NULL_PARAMETER);
         return 0;
     }
@@ -734,7 +734,7 @@ int EC_KEY_set_public_key_affine_coordinates(EC_KEY *key, BIGNUM *x,
 
     ok = 1;
 
- err:
+err:
     BN_CTX_end(ctx);
     BN_CTX_free(ctx);
     EC_POINT_free(point);
@@ -954,7 +954,7 @@ int EC_KEY_decoded_from_explicit_params(const EC_KEY *key)
 }
 
 size_t EC_KEY_key2buf(const EC_KEY *key, point_conversion_form_t form,
-                        unsigned char **pbuf, BN_CTX *ctx)
+                      unsigned char **pbuf, BN_CTX *ctx)
 {
     if (key == NULL || key->pub_key == NULL || key->group == NULL)
         return 0;

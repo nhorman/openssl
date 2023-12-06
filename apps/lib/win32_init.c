@@ -180,29 +180,29 @@ void win32_utf8argv(int *argc, char **argv[])
         while (*p != L'\0'
                && (in_quote || (*p != L' ' && *p != L'\t'))) {
             switch (*p) {
-            case L'\\':
-                /*
-                 * Microsoft documentation on how backslashes are treated
-                 * is:
-                 *
-                 * + Backslashes are interpreted literally, unless they
-                 *   immediately precede a double quotation mark.
-                 * + If an even number of backslashes is followed by a double
-                 *   quotation mark, one backslash is placed in the argv array
-                 *   for every pair of backslashes, and the double quotation
-                 *   mark is interpreted as a string delimiter.
-                 * + If an odd number of backslashes is followed by a double
-                 *   quotation mark, one backslash is placed in the argv array
-                 *   for every pair of backslashes, and the double quotation
-                 *   mark is "escaped" by the remaining backslash, causing a
-                 *   literal double quotation mark (") to be placed in argv.
-                 *
-                 * Ref: https://msdn.microsoft.com/en-us/library/17w5ykft.aspx
-                 *
-                 * Though referred page doesn't mention it, multiple qouble
-                 * quotes are also special. Pair of double quotes in quoted
-                 * string is counted as single double quote.
-                 */
+                case L'\\':
+                    /*
+                     * Microsoft documentation on how backslashes are treated
+                     * is:
+                     *
+                     * + Backslashes are interpreted literally, unless they
+                     *   immediately precede a double quotation mark.
+                     * + If an even number of backslashes is followed by a double
+                     *   quotation mark, one backslash is placed in the argv array
+                     *   for every pair of backslashes, and the double quotation
+                     *   mark is interpreted as a string delimiter.
+                     * + If an odd number of backslashes is followed by a double
+                     *   quotation mark, one backslash is placed in the argv array
+                     *   for every pair of backslashes, and the double quotation
+                     *   mark is "escaped" by the remaining backslash, causing a
+                     *   literal double quotation mark (") to be placed in argv.
+                     *
+                     * Ref: https://msdn.microsoft.com/en-us/library/17w5ykft.aspx
+                     *
+                     * Though referred page doesn't mention it, multiple qouble
+                     * quotes are also special. Pair of double quotes in quoted
+                     * string is counted as single double quote.
+                     */
                 {
                     const WCHAR *q = p;
                     int i;
@@ -228,23 +228,23 @@ void win32_utf8argv(int *argc, char **argv[])
                     }
                 }
                 break;
-            case L'"':
-                /*
-                 * Without the preceding backslash (or when preceded with an
-                 * even number of backslashes), the double quote is a simple
-                 * string delimiter and just slightly change the parsing state
-                 */
-                if (in_quote && p[1] == L'"')
+                case L'"':
+                    /*
+                     * Without the preceding backslash (or when preceded with an
+                     * even number of backslashes), the double quote is a simple
+                     * string delimiter and just slightly change the parsing state
+                     */
+                    if (in_quote && p[1] == L'"')
+                        *wend++ = *p++;
+                    else
+                        in_quote = !in_quote;
+                    p++;
+                    break;
+                default:
+                    /*
+                     * Any other non-delimiter character is just taken verbatim
+                     */
                     *wend++ = *p++;
-                else
-                    in_quote = !in_quote;
-                p++;
-                break;
-            default:
-                /*
-                 * Any other non-delimiter character is just taken verbatim
-                 */
-                *wend++ = *p++;
             }
         }
 
@@ -303,5 +303,7 @@ void win32_utf8argv(int *argc, char **argv[])
 }
 #else
 void win32_utf8argv(int *argc, char **argv[])
-{   return;   }
+{
+    return;
+}
 #endif

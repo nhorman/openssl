@@ -48,7 +48,8 @@ const OPTIONS rsautl_options[] = {
     OPT_SECTION("Input"),
     {"in", OPT_IN, '<', "Input file"},
     {"inkey", OPT_INKEY, 's', "Input key, by default an RSA private key"},
-    {"keyform", OPT_KEYFORM, 'E', "Private key format (ENGINE, other values ignored)"},
+    {"keyform", OPT_KEYFORM, 'E',
+     "Private key format (ENGINE, other values ignored)"},
     {"pubin", OPT_PUBIN, '-', "Input key is an RSA public pkey"},
     {"certin", OPT_CERTIN, '-', "Input is a cert carrying an RSA public key"},
     {"rev", OPT_REV, '-', "Reverse the order of the input buffer"},
@@ -88,83 +89,83 @@ int rsautl_main(int argc, char **argv)
     prog = opt_init(argc, argv, rsautl_options);
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_EOF:
-        case OPT_ERR:
- opthelp:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto end;
-        case OPT_HELP:
-            opt_help(rsautl_options);
-            ret = 0;
-            goto end;
-        case OPT_KEYFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_ANY, &keyformat))
-                goto opthelp;
-            break;
-        case OPT_IN:
-            infile = opt_arg();
-            break;
-        case OPT_OUT:
-            outfile = opt_arg();
-            break;
-        case OPT_ENGINE:
-            e = setup_engine(opt_arg(), 0);
-            break;
-        case OPT_ASN1PARSE:
-            asn1parse = 1;
-            break;
-        case OPT_HEXDUMP:
-            hexdump = 1;
-            break;
-        case OPT_RSA_RAW:
-            pad = RSA_NO_PADDING;
-            break;
-        case OPT_OAEP:
-            pad = RSA_PKCS1_OAEP_PADDING;
-            break;
-        case OPT_PKCS:
-            pad = RSA_PKCS1_PADDING;
-            break;
-        case OPT_X931:
-            pad = RSA_X931_PADDING;
-            break;
-        case OPT_SIGN:
-            rsa_mode = RSA_SIGN;
-            need_priv = 1;
-            break;
-        case OPT_VERIFY:
-            rsa_mode = RSA_VERIFY;
-            break;
-        case OPT_REV:
-            rev = 1;
-            break;
-        case OPT_ENCRYPT:
-            rsa_mode = RSA_ENCRYPT;
-            break;
-        case OPT_DECRYPT:
-            rsa_mode = RSA_DECRYPT;
-            need_priv = 1;
-            break;
-        case OPT_PUBIN:
-            key_type = KEY_PUBKEY;
-            break;
-        case OPT_CERTIN:
-            key_type = KEY_CERT;
-            break;
-        case OPT_INKEY:
-            keyfile = opt_arg();
-            break;
-        case OPT_PASSIN:
-            passinarg = opt_arg();
-            break;
-        case OPT_R_CASES:
-            if (!opt_rand(o))
+            case OPT_EOF:
+            case OPT_ERR:
+opthelp:
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
                 goto end;
-            break;
-        case OPT_PROV_CASES:
-            if (!opt_provider(o))
+            case OPT_HELP:
+                opt_help(rsautl_options);
+                ret = 0;
                 goto end;
-            break;
+            case OPT_KEYFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_ANY, &keyformat))
+                    goto opthelp;
+                break;
+            case OPT_IN:
+                infile = opt_arg();
+                break;
+            case OPT_OUT:
+                outfile = opt_arg();
+                break;
+            case OPT_ENGINE:
+                e = setup_engine(opt_arg(), 0);
+                break;
+            case OPT_ASN1PARSE:
+                asn1parse = 1;
+                break;
+            case OPT_HEXDUMP:
+                hexdump = 1;
+                break;
+            case OPT_RSA_RAW:
+                pad = RSA_NO_PADDING;
+                break;
+            case OPT_OAEP:
+                pad = RSA_PKCS1_OAEP_PADDING;
+                break;
+            case OPT_PKCS:
+                pad = RSA_PKCS1_PADDING;
+                break;
+            case OPT_X931:
+                pad = RSA_X931_PADDING;
+                break;
+            case OPT_SIGN:
+                rsa_mode = RSA_SIGN;
+                need_priv = 1;
+                break;
+            case OPT_VERIFY:
+                rsa_mode = RSA_VERIFY;
+                break;
+            case OPT_REV:
+                rev = 1;
+                break;
+            case OPT_ENCRYPT:
+                rsa_mode = RSA_ENCRYPT;
+                break;
+            case OPT_DECRYPT:
+                rsa_mode = RSA_DECRYPT;
+                need_priv = 1;
+                break;
+            case OPT_PUBIN:
+                key_type = KEY_PUBKEY;
+                break;
+            case OPT_CERTIN:
+                key_type = KEY_CERT;
+                break;
+            case OPT_INKEY:
+                keyfile = opt_arg();
+                break;
+            case OPT_PASSIN:
+                passinarg = opt_arg();
+                break;
+            case OPT_R_CASES:
+                if (!opt_rand(o))
+                    goto end;
+                break;
+            case OPT_PROV_CASES:
+                if (!opt_provider(o))
+                    goto end;
+                break;
         }
     }
 
@@ -186,21 +187,21 @@ int rsautl_main(int argc, char **argv)
     }
 
     switch (key_type) {
-    case KEY_PRIVKEY:
-        pkey = load_key(keyfile, keyformat, 0, passin, e, "private key");
-        break;
+        case KEY_PRIVKEY:
+            pkey = load_key(keyfile, keyformat, 0, passin, e, "private key");
+            break;
 
-    case KEY_PUBKEY:
-        pkey = load_pubkey(keyfile, keyformat, 0, NULL, e, "public key");
-        break;
+        case KEY_PUBKEY:
+            pkey = load_pubkey(keyfile, keyformat, 0, NULL, e, "public key");
+            break;
 
-    case KEY_CERT:
-        x = load_cert(keyfile, FORMAT_UNDEF, "Certificate");
-        if (x) {
-            pkey = X509_get_pubkey(x);
-            X509_free(x);
-        }
-        break;
+        case KEY_CERT:
+            x = load_cert(keyfile, FORMAT_UNDEF, "Certificate");
+            if (x) {
+                pkey = X509_get_pubkey(x);
+                X509_free(x);
+            }
+            break;
     }
 
     if (pkey == NULL)
@@ -241,27 +242,30 @@ int rsautl_main(int argc, char **argv)
         goto end;
 
     switch (rsa_mode) {
-    case RSA_VERIFY:
-        rv = EVP_PKEY_verify_recover_init(ctx) > 0
-            && EVP_PKEY_CTX_set_rsa_padding(ctx, pad) > 0
-            && EVP_PKEY_verify_recover(ctx, rsa_out, &rsa_outlen,
-                                       rsa_in, rsa_inlen) > 0;
-        break;
-    case RSA_SIGN:
-        rv = EVP_PKEY_sign_init(ctx) > 0
-            && EVP_PKEY_CTX_set_rsa_padding(ctx, pad) > 0
-            && EVP_PKEY_sign(ctx, rsa_out, &rsa_outlen, rsa_in, rsa_inlen) > 0;
-        break;
-    case RSA_ENCRYPT:
-        rv = EVP_PKEY_encrypt_init(ctx) > 0
-            && EVP_PKEY_CTX_set_rsa_padding(ctx, pad) > 0
-            && EVP_PKEY_encrypt(ctx, rsa_out, &rsa_outlen, rsa_in, rsa_inlen) > 0;
-        break;
-    case RSA_DECRYPT:
-        rv = EVP_PKEY_decrypt_init(ctx) > 0
-            && EVP_PKEY_CTX_set_rsa_padding(ctx, pad) > 0
-            && EVP_PKEY_decrypt(ctx, rsa_out, &rsa_outlen, rsa_in, rsa_inlen) > 0;
-        break;
+        case RSA_VERIFY:
+            rv = EVP_PKEY_verify_recover_init(ctx) > 0
+                 && EVP_PKEY_CTX_set_rsa_padding(ctx, pad) > 0
+                 && EVP_PKEY_verify_recover(ctx, rsa_out, &rsa_outlen,
+                                            rsa_in, rsa_inlen) > 0;
+            break;
+        case RSA_SIGN:
+            rv = EVP_PKEY_sign_init(ctx) > 0
+                 && EVP_PKEY_CTX_set_rsa_padding(ctx, pad) > 0
+                 && EVP_PKEY_sign(ctx, rsa_out, &rsa_outlen, rsa_in,
+                                  rsa_inlen) > 0;
+            break;
+        case RSA_ENCRYPT:
+            rv = EVP_PKEY_encrypt_init(ctx) > 0
+                 && EVP_PKEY_CTX_set_rsa_padding(ctx, pad) > 0
+                 && EVP_PKEY_encrypt(ctx, rsa_out, &rsa_outlen, rsa_in,
+                                     rsa_inlen) > 0;
+            break;
+        case RSA_DECRYPT:
+            rv = EVP_PKEY_decrypt_init(ctx) > 0
+                 && EVP_PKEY_CTX_set_rsa_padding(ctx, pad) > 0
+                 && EVP_PKEY_decrypt(ctx, rsa_out, &rsa_outlen, rsa_in,
+                                     rsa_inlen) > 0;
+            break;
     }
 
     if (!rv) {
@@ -279,7 +283,7 @@ int rsautl_main(int argc, char **argv)
     } else {
         BIO_write(out, rsa_out, rsa_outlen);
     }
- end:
+end:
     EVP_PKEY_CTX_free(ctx);
     EVP_PKEY_free(pkey);
     release_engine(e);

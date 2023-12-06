@@ -56,15 +56,15 @@ unsigned long X509_issuer_and_serial_hash(X509 *a)
     if (!EVP_DigestUpdate(ctx, (unsigned char *)f, strlen(f)))
         goto err;
     if (!EVP_DigestUpdate
-        (ctx, (unsigned char *)a->cert_info.serialNumber.data,
-         (unsigned long)a->cert_info.serialNumber.length))
+            (ctx, (unsigned char *)a->cert_info.serialNumber.data,
+            (unsigned long)a->cert_info.serialNumber.length))
         goto err;
     if (!EVP_DigestFinal_ex(ctx, &(md[0]), NULL))
         goto err;
     ret = (((unsigned long)md[0]) | ((unsigned long)md[1] << 8L) |
            ((unsigned long)md[2] << 16L) | ((unsigned long)md[3] << 24L)
-        ) & 0xffffffffL;
- err:
+          ) & 0xffffffffL;
+err:
     OPENSSL_free(f);
     EVP_MD_free(digest);
     EVP_MD_CTX_free(ctx);
@@ -92,7 +92,7 @@ int X509_CRL_match(const X509_CRL *a, const X509_CRL *b)
     int rv;
 
     if ((a->flags & EXFLAG_NO_FINGERPRINT) == 0
-            && (b->flags & EXFLAG_NO_FINGERPRINT) == 0)
+        && (b->flags & EXFLAG_NO_FINGERPRINT) == 0)
         rv = memcmp(a->sha1_hash, b->sha1_hash, SHA_DIGEST_LENGTH);
     else
         return -2;
@@ -164,7 +164,7 @@ int X509_cmp(const X509 *a, const X509 *b)
     (void)X509_check_purpose((X509 *)b, -1, 0);
 
     if ((a->ex_flags & EXFLAG_NO_FINGERPRINT) == 0
-            && (b->ex_flags & EXFLAG_NO_FINGERPRINT) == 0)
+        && (b->ex_flags & EXFLAG_NO_FINGERPRINT) == 0)
         rv = memcmp(a->sha1_hash, b->sha1_hash, SHA_DIGEST_LENGTH);
     if (rv != 0)
         return rv < 0 ? -1 : 1;
@@ -302,7 +302,7 @@ unsigned long X509_NAME_hash_ex(const X509_NAME *x, OSSL_LIB_CTX *libctx,
         && EVP_Digest(x->canon_enc, x->canon_enclen, md, NULL, sha1, NULL)) {
         ret = (((unsigned long)md[0]) | ((unsigned long)md[1] << 8L) |
                ((unsigned long)md[2] << 16L) | ((unsigned long)md[3] << 24L)
-               ) & 0xffffffffL;
+              ) & 0xffffffffL;
         if (ok != NULL)
             *ok = 1;
     }
@@ -334,9 +334,9 @@ unsigned long X509_NAME_hash_old(const X509_NAME *x)
         && EVP_DigestFinal_ex(md_ctx, md, NULL))
         ret = (((unsigned long)md[0]) | ((unsigned long)md[1] << 8L) |
                ((unsigned long)md[2] << 16L) | ((unsigned long)md[3] << 24L)
-            ) & 0xffffffffL;
+              ) & 0xffffffffL;
 
- end:
+end:
     EVP_MD_CTX_free(md_ctx);
     EVP_MD_free(md5);
 
@@ -410,19 +410,19 @@ int ossl_x509_check_private_key(const EVP_PKEY *x, const EVP_PKEY *pkey)
         return 0;
     }
     switch (EVP_PKEY_eq(x, pkey)) {
-    case 1:
-        return 1;
-    case 0:
-        ERR_raise(ERR_LIB_X509, X509_R_KEY_VALUES_MISMATCH);
-        return 0;
-    case -1:
-        ERR_raise(ERR_LIB_X509, X509_R_KEY_TYPE_MISMATCH);
-        return 0;
-    case -2:
-        ERR_raise(ERR_LIB_X509, X509_R_UNKNOWN_KEY_TYPE);
+        case 1:
+            return 1;
+        case 0:
+            ERR_raise(ERR_LIB_X509, X509_R_KEY_VALUES_MISMATCH);
+            return 0;
+        case -1:
+            ERR_raise(ERR_LIB_X509, X509_R_KEY_TYPE_MISMATCH);
+            return 0;
+        case -2:
+            ERR_raise(ERR_LIB_X509, X509_R_UNKNOWN_KEY_TYPE);
         /* fall thru */
-    default:
-        return 0;
+        default:
+            return 0;
     }
 }
 
@@ -527,7 +527,7 @@ int X509_chain_check_suiteb(int *perror_depth, X509 *x, STACK_OF(X509) *chain,
 
     /* Final check: root CA signature */
     rv = check_suite_b(pk, X509_get_signature_nid(x), &tflags);
- end:
+end:
     if (rv != X509_V_OK) {
         /* Invalid signature or LOS errors are for previous cert */
         if ((rv == X509_V_ERR_SUITE_B_INVALID_SIGNATURE_ALGORITHM
@@ -588,7 +588,7 @@ STACK_OF(X509) *X509_chain_up_ref(STACK_OF(X509) *chain)
     }
     return ret;
 
- err:
+err:
     while (i-- > 0)
         X509_free(sk_X509_value(ret, i));
     sk_X509_free(ret);

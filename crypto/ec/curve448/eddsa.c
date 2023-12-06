@@ -36,12 +36,12 @@ static c448_error_t oneshot_hash(OSSL_LIB_CTX *ctx, uint8_t *out, size_t outlen,
         goto err;
 
     if (!EVP_DigestInit_ex(hashctx, shake256, NULL)
-            || !EVP_DigestUpdate(hashctx, in, inlen)
-            || !EVP_DigestFinalXOF(hashctx, out, outlen))
+        || !EVP_DigestUpdate(hashctx, in, inlen)
+        || !EVP_DigestFinalXOF(hashctx, out, outlen))
         goto err;
 
     ret = C448_SUCCESS;
- err:
+err:
     EVP_MD_CTX_free(hashctx);
     EVP_MD_free(shake256);
     return ret;
@@ -78,9 +78,9 @@ static c448_error_t hash_init_with_dom(OSSL_LIB_CTX *ctx, EVP_MD_CTX *hashctx,
         return C448_FAILURE;
 
     if (!EVP_DigestInit_ex(hashctx, shake256, NULL)
-            || !EVP_DigestUpdate(hashctx, dom_s, sizeof(dom_s)-1)
-            || !EVP_DigestUpdate(hashctx, dom, sizeof(dom))
-            || !EVP_DigestUpdate(hashctx, context, context_len)) {
+        || !EVP_DigestUpdate(hashctx, dom_s, sizeof(dom_s)-1)
+        || !EVP_DigestUpdate(hashctx, dom, sizeof(dom))
+        || !EVP_DigestUpdate(hashctx, context, context_len)) {
         EVP_MD_free(shake256);
         return C448_FAILURE;
     }
@@ -92,10 +92,10 @@ static c448_error_t hash_init_with_dom(OSSL_LIB_CTX *ctx, EVP_MD_CTX *hashctx,
 /* In this file because it uses the hash */
 c448_error_t
 ossl_c448_ed448_convert_private_key_to_x448(
-                            OSSL_LIB_CTX *ctx,
-                            uint8_t x[X448_PRIVATE_BYTES],
-                            const uint8_t ed [EDDSA_448_PRIVATE_BYTES],
-                            const char *propq)
+    OSSL_LIB_CTX *ctx,
+    uint8_t x[X448_PRIVATE_BYTES],
+    const uint8_t ed[EDDSA_448_PRIVATE_BYTES],
+    const char *propq)
 {
     /* pass the private key through oneshot_hash function */
     /* and keep the first X448_PRIVATE_BYTES bytes */
@@ -105,10 +105,10 @@ ossl_c448_ed448_convert_private_key_to_x448(
 
 c448_error_t
 ossl_c448_ed448_derive_public_key(
-                        OSSL_LIB_CTX *ctx,
-                        uint8_t pubkey[EDDSA_448_PUBLIC_BYTES],
-                        const uint8_t privkey[EDDSA_448_PRIVATE_BYTES],
-                        const char *propq)
+    OSSL_LIB_CTX *ctx,
+    uint8_t pubkey[EDDSA_448_PUBLIC_BYTES],
+    const uint8_t privkey[EDDSA_448_PRIVATE_BYTES],
+    const char *propq)
 {
     /* only this much used for keygen */
     uint8_t secret_scalar_ser[EDDSA_448_PRIVATE_BYTES];
@@ -188,10 +188,10 @@ ossl_c448_ed448_sign(OSSL_LIB_CTX *ctx,
         /* Hash to create the nonce */
         if (!hash_init_with_dom(ctx, hashctx, prehashed, 0, context,
                                 context_len, propq)
-                || !EVP_DigestUpdate(hashctx,
-                                     expanded + EDDSA_448_PRIVATE_BYTES,
-                                     EDDSA_448_PRIVATE_BYTES)
-                || !EVP_DigestUpdate(hashctx, message, message_len)) {
+            || !EVP_DigestUpdate(hashctx,
+                                 expanded + EDDSA_448_PRIVATE_BYTES,
+                                 EDDSA_448_PRIVATE_BYTES)
+            || !EVP_DigestUpdate(hashctx, message, message_len)) {
             OPENSSL_cleanse(expanded, sizeof(expanded));
             goto err;
         }
@@ -228,12 +228,13 @@ ossl_c448_ed448_sign(OSSL_LIB_CTX *ctx,
         uint8_t challenge[2 * EDDSA_448_PRIVATE_BYTES];
 
         /* Compute the challenge */
-        if (!hash_init_with_dom(ctx, hashctx, prehashed, 0, context, context_len,
+        if (!hash_init_with_dom(ctx, hashctx, prehashed, 0, context,
+                                context_len,
                                 propq)
-                || !EVP_DigestUpdate(hashctx, nonce_point, sizeof(nonce_point))
-                || !EVP_DigestUpdate(hashctx, pubkey, EDDSA_448_PUBLIC_BYTES)
-                || !EVP_DigestUpdate(hashctx, message, message_len)
-                || !EVP_DigestFinalXOF(hashctx, challenge, sizeof(challenge)))
+            || !EVP_DigestUpdate(hashctx, nonce_point, sizeof(nonce_point))
+            || !EVP_DigestUpdate(hashctx, pubkey, EDDSA_448_PUBLIC_BYTES)
+            || !EVP_DigestUpdate(hashctx, message, message_len)
+            || !EVP_DigestFinalXOF(hashctx, challenge, sizeof(challenge)))
             goto err;
 
         ossl_curve448_scalar_decode_long(challenge_scalar, challenge,
@@ -254,19 +255,19 @@ ossl_c448_ed448_sign(OSSL_LIB_CTX *ctx,
     ossl_curve448_scalar_destroy(challenge_scalar);
 
     ret = C448_SUCCESS;
- err:
+err:
     EVP_MD_CTX_free(hashctx);
     return ret;
 }
 
 c448_error_t
 ossl_c448_ed448_sign_prehash(
-                        OSSL_LIB_CTX *ctx,
-                        uint8_t signature[EDDSA_448_SIGNATURE_BYTES],
-                        const uint8_t privkey[EDDSA_448_PRIVATE_BYTES],
-                        const uint8_t pubkey[EDDSA_448_PUBLIC_BYTES],
-                        const uint8_t hash[64], const uint8_t *context,
-                        size_t context_len, const char *propq)
+    OSSL_LIB_CTX *ctx,
+    uint8_t signature[EDDSA_448_SIGNATURE_BYTES],
+    const uint8_t privkey[EDDSA_448_PRIVATE_BYTES],
+    const uint8_t pubkey[EDDSA_448_PUBLIC_BYTES],
+    const uint8_t hash[64], const uint8_t *context,
+    size_t context_len, const char *propq)
 {
     return ossl_c448_ed448_sign(ctx, signature, privkey, pubkey, hash, 64, 1,
                                 context, context_len, propq);
@@ -274,12 +275,12 @@ ossl_c448_ed448_sign_prehash(
 
 c448_error_t
 ossl_c448_ed448_verify(
-                    OSSL_LIB_CTX *ctx,
-                    const uint8_t signature[EDDSA_448_SIGNATURE_BYTES],
-                    const uint8_t pubkey[EDDSA_448_PUBLIC_BYTES],
-                    const uint8_t *message, size_t message_len,
-                    uint8_t prehashed, const uint8_t *context,
-                    uint8_t context_len, const char *propq)
+    OSSL_LIB_CTX *ctx,
+    const uint8_t signature[EDDSA_448_SIGNATURE_BYTES],
+    const uint8_t pubkey[EDDSA_448_PUBLIC_BYTES],
+    const uint8_t *message, size_t message_len,
+    uint8_t prehashed, const uint8_t *context,
+    uint8_t context_len, const char *propq)
 {
     curve448_point_t pk_point, r_point;
     c448_error_t error;
@@ -311,13 +312,15 @@ ossl_c448_ed448_verify(
         return C448_FAILURE;
 
     error =
-        ossl_curve448_point_decode_like_eddsa_and_mul_by_ratio(pk_point, pubkey);
+        ossl_curve448_point_decode_like_eddsa_and_mul_by_ratio(pk_point,
+                                                               pubkey);
 
     if (C448_SUCCESS != error)
         return error;
 
     error =
-        ossl_curve448_point_decode_like_eddsa_and_mul_by_ratio(r_point, signature);
+        ossl_curve448_point_decode_like_eddsa_and_mul_by_ratio(r_point,
+                                                               signature);
     if (C448_SUCCESS != error)
         return error;
 
@@ -327,12 +330,12 @@ ossl_c448_ed448_verify(
         uint8_t challenge[2 * EDDSA_448_PRIVATE_BYTES];
 
         if (hashctx == NULL
-                || !hash_init_with_dom(ctx, hashctx, prehashed, 0, context,
-                                       context_len, propq)
-                || !EVP_DigestUpdate(hashctx, signature, EDDSA_448_PUBLIC_BYTES)
-                || !EVP_DigestUpdate(hashctx, pubkey, EDDSA_448_PUBLIC_BYTES)
-                || !EVP_DigestUpdate(hashctx, message, message_len)
-                || !EVP_DigestFinalXOF(hashctx, challenge, sizeof(challenge))) {
+            || !hash_init_with_dom(ctx, hashctx, prehashed, 0, context,
+                                   context_len, propq)
+            || !EVP_DigestUpdate(hashctx, signature, EDDSA_448_PUBLIC_BYTES)
+            || !EVP_DigestUpdate(hashctx, pubkey, EDDSA_448_PUBLIC_BYTES)
+            || !EVP_DigestUpdate(hashctx, message, message_len)
+            || !EVP_DigestFinalXOF(hashctx, challenge, sizeof(challenge))) {
             EVP_MD_CTX_free(hashctx);
             return C448_FAILURE;
         }
@@ -358,11 +361,11 @@ ossl_c448_ed448_verify(
 
 c448_error_t
 ossl_c448_ed448_verify_prehash(
-                    OSSL_LIB_CTX *ctx,
-                    const uint8_t signature[EDDSA_448_SIGNATURE_BYTES],
-                    const uint8_t pubkey[EDDSA_448_PUBLIC_BYTES],
-                    const uint8_t hash[64], const uint8_t *context,
-                    uint8_t context_len, const char *propq)
+    OSSL_LIB_CTX *ctx,
+    const uint8_t signature[EDDSA_448_SIGNATURE_BYTES],
+    const uint8_t pubkey[EDDSA_448_PUBLIC_BYTES],
+    const uint8_t hash[64], const uint8_t *context,
+    uint8_t context_len, const char *propq)
 {
     return ossl_c448_ed448_verify(ctx, signature, pubkey, hash, 64, 1, context,
                                   context_len, propq);
@@ -388,7 +391,8 @@ ossl_ed448_verify(OSSL_LIB_CTX *ctx,
                   const uint8_t phflag, const char *propq)
 {
     return ossl_c448_ed448_verify(ctx, signature, public_key, message,
-                                  message_len, phflag, context, (uint8_t)context_len,
+                                  message_len, phflag, context,
+                                  (uint8_t)context_len,
                                   propq) == C448_SUCCESS;
 }
 

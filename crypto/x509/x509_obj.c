@@ -179,9 +179,9 @@ char *X509_NAME_oneline(const X509_NAME *a, char *buf, int len)
     if (i == 0)
         *p = '\0';
     return p;
- buferr:
+buferr:
     ERR_raise(ERR_LIB_X509, ERR_R_BUF_LIB);
- end:
+end:
     BUF_MEM_free(b);
     return NULL;
 }

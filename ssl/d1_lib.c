@@ -45,7 +45,7 @@ const SSL3_ENC_METHOD DTLSv1_2_enc_data = {
     tls1_alert_code,
     tls1_export_keying_material,
     SSL_ENC_FLAG_DTLS | SSL_ENC_FLAG_EXPLICIT_IV | SSL_ENC_FLAG_SIGALGS
-        | SSL_ENC_FLAG_SHA256_PRF | SSL_ENC_FLAG_TLS1_2_CIPHERS,
+    | SSL_ENC_FLAG_SHA256_PRF | SSL_ENC_FLAG_TLS1_2_CIPHERS,
     dtls1_set_handshake_header,
     dtls1_close_construct_packet,
     dtls1_handshake_write
@@ -132,13 +132,14 @@ void dtls1_clear_sent_buffer(SSL_CONNECTION *s)
         frag = (hm_fragment *)item->data;
 
         if (frag->msg_header.is_ccs
-                && frag->msg_header.saved_retransmit_state.wrlmethod != NULL
-                && s->rlayer.wrl != frag->msg_header.saved_retransmit_state.wrl) {
+            && frag->msg_header.saved_retransmit_state.wrlmethod != NULL
+            && s->rlayer.wrl != frag->msg_header.saved_retransmit_state.wrl) {
             /*
              * If we're freeing the CCS then we're done with the old wrl and it
              * can bee freed
              */
-            frag->msg_header.saved_retransmit_state.wrlmethod->free(frag->msg_header.saved_retransmit_state.wrl);
+            frag->msg_header.saved_retransmit_state.wrlmethod->free(
+                frag->msg_header.saved_retransmit_state.wrl);
         }
 
         dtls1_hm_fragment_free(frag);
@@ -235,34 +236,34 @@ long dtls1_ctrl(SSL *ssl, int cmd, long larg, void *parg)
         return 0;
 
     switch (cmd) {
-    case DTLS_CTRL_GET_TIMEOUT:
-        if (dtls1_get_timeout(s, &t)) {
-            *(struct timeval *)parg = ossl_time_to_timeval(t);
-            ret = 1;
-        }
-        break;
-    case DTLS_CTRL_HANDLE_TIMEOUT:
-        ret = dtls1_handle_timeout(s);
-        break;
-    case DTLS_CTRL_SET_LINK_MTU:
-        if (larg < (long)dtls1_link_min_mtu())
-            return 0;
-        s->d1->link_mtu = larg;
-        return 1;
-    case DTLS_CTRL_GET_LINK_MIN_MTU:
-        return (long)dtls1_link_min_mtu();
-    case SSL_CTRL_SET_MTU:
-        /*
-         *  We may not have a BIO set yet so can't call dtls1_min_mtu()
-         *  We'll have to make do with dtls1_link_min_mtu() and max overhead
-         */
-        if (larg < (long)dtls1_link_min_mtu() - DTLS1_MAX_MTU_OVERHEAD)
-            return 0;
-        s->d1->mtu = larg;
-        return larg;
-    default:
-        ret = ssl3_ctrl(ssl, cmd, larg, parg);
-        break;
+        case DTLS_CTRL_GET_TIMEOUT:
+            if (dtls1_get_timeout(s, &t)) {
+                *(struct timeval *)parg = ossl_time_to_timeval(t);
+                ret = 1;
+            }
+            break;
+        case DTLS_CTRL_HANDLE_TIMEOUT:
+            ret = dtls1_handle_timeout(s);
+            break;
+        case DTLS_CTRL_SET_LINK_MTU:
+            if (larg < (long)dtls1_link_min_mtu())
+                return 0;
+            s->d1->link_mtu = larg;
+            return 1;
+        case DTLS_CTRL_GET_LINK_MIN_MTU:
+            return (long)dtls1_link_min_mtu();
+        case SSL_CTRL_SET_MTU:
+            /*
+             *  We may not have a BIO set yet so can't call dtls1_min_mtu()
+             *  We'll have to make do with dtls1_link_min_mtu() and max overhead
+             */
+            if (larg < (long)dtls1_link_min_mtu() - DTLS1_MAX_MTU_OVERHEAD)
+                return 0;
+            s->d1->mtu = larg;
+            return larg;
+        default:
+            ret = ssl3_ctrl(ssl, cmd, larg, parg);
+            break;
     }
     return ret;
 }
@@ -373,7 +374,8 @@ int dtls1_check_timeout_num(SSL_CONNECTION *s)
     if (s->d1->timeout_num_alerts > 2
         && !(SSL_get_options(ssl) & SSL_OP_NO_QUERY_MTU)) {
         mtu =
-            BIO_ctrl(SSL_get_wbio(ssl), BIO_CTRL_DGRAM_GET_FALLBACK_MTU, 0, NULL);
+            BIO_ctrl(SSL_get_wbio(ssl), BIO_CTRL_DGRAM_GET_FALLBACK_MTU, 0,
+                     NULL);
         if (mtu < s->d1->mtu)
             s->d1->mtu = mtu;
     }
@@ -422,7 +424,8 @@ int DTLSv1_listen(SSL *ssl, BIO_ADDR *client)
     const unsigned char *data;
     unsigned char *buf = NULL, *wbuf;
     size_t fragoff, fraglen, msglen;
-    unsigned int rectype, versmajor, versminor, msgseq, msgtype, clientvers, cookielen;
+    unsigned int rectype, versmajor, versminor, msgseq, msgtype, clientvers,
+                 cookielen;
     BIO *rbio, *wbio;
     BIO_ADDR *tmpclient = NULL;
     PACKET pkt, msgpkt, msgpayload, session, cookiepkt;
@@ -476,7 +479,7 @@ int DTLSv1_listen(SSL *ssl, BIO_ADDR *client)
 
         clear_sys_error();
         n = BIO_read(rbio, buf, SSL3_RT_MAX_PLAIN_LENGTH
-                                + DTLS1_RT_HEADER_LENGTH);
+                     + DTLS1_RT_HEADER_LENGTH);
         if (n <= 0) {
             if (BIO_should_retry(rbio)) {
                 /* Non-blocking IO */
@@ -516,7 +519,8 @@ int DTLSv1_listen(SSL *ssl, BIO_ADDR *client)
         }
 
         if (s->msg_callback)
-            s->msg_callback(0, (versmajor << 8) | versminor, SSL3_RT_HEADER, buf,
+            s->msg_callback(0, (versmajor << 8) | versminor, SSL3_RT_HEADER,
+                            buf,
                             DTLS1_RT_HEADER_LENGTH, ssl, s->msg_callback_arg);
 
         if (rectype != SSL3_RT_HANDSHAKE) {
@@ -636,7 +640,9 @@ int DTLSv1_listen(SSL *ssl, BIO_ADDR *client)
                 goto end;
             }
             if (ssl->ctx->app_verify_cookie_cb(ssl, PACKET_data(&cookiepkt),
-                    (unsigned int)PACKET_remaining(&cookiepkt)) == 0) {
+                                               (unsigned int)PACKET_remaining(&
+                                                                              cookiepkt))
+                == 0) {
                 /*
                  * We treat invalid cookies in the same was as no cookie as
                  * per RFC6347
@@ -683,50 +689,50 @@ int DTLSv1_listen(SSL *ssl, BIO_ADDR *client)
                                          ssl_get_max_send_fragment(s)
                                          + DTLS1_RT_HEADER_LENGTH,
                                          0)
-                    || !WPACKET_put_bytes_u8(&wpkt, SSL3_RT_HANDSHAKE)
-                    || !WPACKET_put_bytes_u16(&wpkt, version)
-                       /*
-                        * Record sequence number is always the same as in the
-                        * received ClientHello
-                        */
-                    || !WPACKET_memcpy(&wpkt, seq, SEQ_NUM_SIZE)
-                       /* End of record, start sub packet for message */
-                    || !WPACKET_start_sub_packet_u16(&wpkt)
-                       /* Message type */
-                    || !WPACKET_put_bytes_u8(&wpkt,
-                                             DTLS1_MT_HELLO_VERIFY_REQUEST)
-                       /*
-                        * Message length - doesn't follow normal TLS convention:
-                        * the length isn't the last thing in the message header.
-                        * We'll need to fill this in later when we know the
-                        * length. Set it to zero for now
-                        */
-                    || !WPACKET_put_bytes_u24(&wpkt, 0)
-                       /*
-                        * Message sequence number is always 0 for a
-                        * HelloVerifyRequest
-                        */
-                    || !WPACKET_put_bytes_u16(&wpkt, 0)
-                       /*
-                        * We never fragment a HelloVerifyRequest, so fragment
-                        * offset is 0
-                        */
-                    || !WPACKET_put_bytes_u24(&wpkt, 0)
-                       /*
-                        * Fragment length is the same as message length, but
-                        * this *is* the last thing in the message header so we
-                        * can just start a sub-packet. No need to come back
-                        * later for this one.
-                        */
-                    || !WPACKET_start_sub_packet_u24(&wpkt)
-                       /* Create the actual HelloVerifyRequest body */
-                    || !dtls_raw_hello_verify_request(&wpkt, cookie, cookielen)
-                       /* Close message body */
-                    || !WPACKET_close(&wpkt)
-                       /* Close record body */
-                    || !WPACKET_close(&wpkt)
-                    || !WPACKET_get_total_written(&wpkt, &wreclen)
-                    || !WPACKET_finish(&wpkt)) {
+                || !WPACKET_put_bytes_u8(&wpkt, SSL3_RT_HANDSHAKE)
+                || !WPACKET_put_bytes_u16(&wpkt, version)
+                /*
+                 * Record sequence number is always the same as in the
+                 * received ClientHello
+                 */
+                || !WPACKET_memcpy(&wpkt, seq, SEQ_NUM_SIZE)
+                /* End of record, start sub packet for message */
+                || !WPACKET_start_sub_packet_u16(&wpkt)
+                /* Message type */
+                || !WPACKET_put_bytes_u8(&wpkt,
+                                         DTLS1_MT_HELLO_VERIFY_REQUEST)
+                /*
+                 * Message length - doesn't follow normal TLS convention:
+                 * the length isn't the last thing in the message header.
+                 * We'll need to fill this in later when we know the
+                 * length. Set it to zero for now
+                 */
+                || !WPACKET_put_bytes_u24(&wpkt, 0)
+                /*
+                 * Message sequence number is always 0 for a
+                 * HelloVerifyRequest
+                 */
+                || !WPACKET_put_bytes_u16(&wpkt, 0)
+                /*
+                 * We never fragment a HelloVerifyRequest, so fragment
+                 * offset is 0
+                 */
+                || !WPACKET_put_bytes_u24(&wpkt, 0)
+                /*
+                 * Fragment length is the same as message length, but
+                 * this *is* the last thing in the message header so we
+                 * can just start a sub-packet. No need to come back
+                 * later for this one.
+                 */
+                || !WPACKET_start_sub_packet_u24(&wpkt)
+                /* Create the actual HelloVerifyRequest body */
+                || !dtls_raw_hello_verify_request(&wpkt, cookie, cookielen)
+                /* Close message body */
+                || !WPACKET_close(&wpkt)
+                /* Close record body */
+                || !WPACKET_close(&wpkt)
+                || !WPACKET_get_total_written(&wpkt, &wreclen)
+                || !WPACKET_finish(&wpkt)) {
                 ERR_raise(ERR_LIB_SSL, ERR_R_INTERNAL_ERROR);
                 WPACKET_cleanup(&wpkt);
                 /* This is fatal */
@@ -841,7 +847,7 @@ int DTLSv1_listen(SSL *ssl, BIO_ADDR *client)
     }
 
     ret = 1;
- end:
+end:
     BIO_ADDR_free(tmpclient);
     OPENSSL_free(buf);
     OPENSSL_free(wbuf);

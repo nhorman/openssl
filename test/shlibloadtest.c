@@ -78,30 +78,30 @@ static int test_lib(void)
     int result = 0;
 
     switch (test_type) {
-    case JUST_CRYPTO:
-    case DSO_REFTEST:
-    case NO_ATEXIT:
-    case CRYPTO_FIRST:
-        if (!sd_load(path_crypto, &cryptolib, SD_SHLIB)) {
-            fprintf(stderr, "Failed to load libcrypto\n");
-            goto end;
-        }
-        if (test_type != CRYPTO_FIRST)
-            break;
+        case JUST_CRYPTO:
+        case DSO_REFTEST:
+        case NO_ATEXIT:
+        case CRYPTO_FIRST:
+            if (!sd_load(path_crypto, &cryptolib, SD_SHLIB)) {
+                fprintf(stderr, "Failed to load libcrypto\n");
+                goto end;
+            }
+            if (test_type != CRYPTO_FIRST)
+                break;
         /* Fall through */
 
-    case SSL_FIRST:
-        if (!sd_load(path_ssl, &ssllib, SD_SHLIB)) {
-            fprintf(stderr, "Failed to load libssl\n");
-            goto end;
-        }
-        if (test_type != SSL_FIRST)
+        case SSL_FIRST:
+            if (!sd_load(path_ssl, &ssllib, SD_SHLIB)) {
+                fprintf(stderr, "Failed to load libssl\n");
+                goto end;
+            }
+            if (test_type != SSL_FIRST)
+                break;
+            if (!sd_load(path_crypto, &cryptolib, SD_SHLIB)) {
+                fprintf(stderr, "Failed to load libcrypto\n");
+                goto end;
+            }
             break;
-        if (!sd_load(path_crypto, &cryptolib, SD_SHLIB)) {
-            fprintf(stderr, "Failed to load libcrypto\n");
-            goto end;
-        }
-        break;
     }
 
     if (test_type == NO_ATEXIT) {
@@ -119,11 +119,11 @@ static int test_lib(void)
     }
 
     if (test_type != JUST_CRYPTO
-            && test_type != DSO_REFTEST
-            && test_type != NO_ATEXIT) {
+        && test_type != DSO_REFTEST
+        && test_type != NO_ATEXIT) {
         if (!sd_sym(ssllib, "TLS_method", &symbols[0].sym)
-                || !sd_sym(ssllib, "SSL_CTX_new", &symbols[1].sym)
-                || !sd_sym(ssllib, "SSL_CTX_free", &symbols[2].sym)) {
+            || !sd_sym(ssllib, "SSL_CTX_new", &symbols[1].sym)
+            || !sd_sym(ssllib, "SSL_CTX_free", &symbols[2].sym)) {
             fprintf(stderr, "Failed to load libssl symbols\n");
             goto end;
         }
@@ -139,10 +139,10 @@ static int test_lib(void)
     }
 
     if (!sd_sym(cryptolib, "ERR_get_error", &symbols[0].sym)
-           || !sd_sym(cryptolib, "OPENSSL_version_major", &symbols[1].sym)
-           || !sd_sym(cryptolib, "OPENSSL_version_minor", &symbols[2].sym)
-           || !sd_sym(cryptolib, "OPENSSL_version_patch", &symbols[3].sym)
-           || !sd_sym(cryptolib, "OPENSSL_atexit", &symbols[4].sym)) {
+        || !sd_sym(cryptolib, "OPENSSL_version_major", &symbols[1].sym)
+        || !sd_sym(cryptolib, "OPENSSL_version_minor", &symbols[2].sym)
+        || !sd_sym(cryptolib, "OPENSSL_version_patch", &symbols[3].sym)
+        || !sd_sym(cryptolib, "OPENSSL_atexit", &symbols[4].sym)) {
         fprintf(stderr, "Failed to load libcrypto symbols\n");
         goto end;
     }
@@ -157,8 +157,8 @@ static int test_lib(void)
     myOPENSSL_version_minor = (OPENSSL_version_minor_t)symbols[2].func;
     myOPENSSL_version_patch = (OPENSSL_version_patch_t)symbols[3].func;
     if (myOPENSSL_version_major() != OPENSSL_VERSION_MAJOR
-            || myOPENSSL_version_minor() != OPENSSL_VERSION_MINOR
-            || myOPENSSL_version_patch() != OPENSSL_VERSION_PATCH) {
+        || myOPENSSL_version_minor() != OPENSSL_VERSION_MINOR
+        || myOPENSSL_version_patch() != OPENSSL_VERSION_PATCH) {
         fprintf(stderr, "Invalid library version number\n");
         goto end;
     }
@@ -183,7 +183,7 @@ static int test_lib(void)
          * implemented there.
          */
         if (!sd_sym(cryptolib, "DSO_dsobyaddr", &symbols[0].sym)
-                || !sd_sym(cryptolib, "DSO_free", &symbols[1].sym)) {
+            || !sd_sym(cryptolib, "DSO_free", &symbols[1].sym)) {
             fprintf(stderr, "Unable to load DSO symbols\n");
             goto end;
         }
@@ -194,7 +194,7 @@ static int test_lib(void)
         {
             DSO *hndl;
             /* use known symbol from crypto module */
-            hndl = myDSO_dsobyaddr((void (*)(void))myERR_get_error, 0);
+            hndl = myDSO_dsobyaddr((void (*)(void)) myERR_get_error, 0);
             if (hndl == NULL) {
                 fprintf(stderr, "DSO_dsobyaddr() failed\n");
                 goto end;

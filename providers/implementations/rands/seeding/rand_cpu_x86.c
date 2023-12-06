@@ -45,7 +45,8 @@ size_t ossl_prov_acquire_entropy_from_cpu(RAND_POOL *pool)
         buffer = ossl_rand_pool_add_begin(pool, bytes_needed);
 
         if (buffer != NULL) {
-            if (get_hardware_random_value(buffer, bytes_needed) == bytes_needed) {
+            if (get_hardware_random_value(buffer,
+                                          bytes_needed) == bytes_needed) {
                 ossl_rand_pool_add_end(pool, bytes_needed, 8 * bytes_needed);
             } else {
                 ossl_rand_pool_add_end(pool, 0, 0);
@@ -76,8 +77,8 @@ static size_t get_hardware_random_value(unsigned char *buf, size_t len)
                 buf += sizeof(random_value);
             } else {
                 memcpy(buf,
-                    random_buffer + (sizeof(random_value) - bytes_remaining),
-                    bytes_remaining);
+                       random_buffer + (sizeof(random_value) - bytes_remaining),
+                       bytes_remaining);
                 bytes_remaining = 0; /* This will terminate the loop */
             }
         } else
@@ -91,13 +92,13 @@ static size_t get_hardware_random_value(unsigned char *buf, size_t len)
 static size_t get_hardware_random_value(unsigned char *buf, size_t len) {
     /* Whichever comes first, use RDSEED, RDRAND or nothing */
     if ((OPENSSL_ia32cap_P[2] & (1 << 18)) != 0) {
-	if (OPENSSL_ia32_rdseed_bytes(buf, len) != len)
-	    return 0;
+        if (OPENSSL_ia32_rdseed_bytes(buf, len) != len)
+            return 0;
     } else if ((OPENSSL_ia32cap_P[1] & (1 << (62 - 32))) != 0) {
-	if (OPENSSL_ia32_rdrand_bytes(buf, len) != len)
-	    return 0;
+        if (OPENSSL_ia32_rdrand_bytes(buf, len) != len)
+            return 0;
     } else
-	return 0;
+        return 0;
     return len;
 }
 #endif

@@ -175,12 +175,12 @@ size_t ossl_crngt_get_entropy(PROV_DRBG *drbg,
     *pout = ent;
     ent = NULL;
 
- err:
+err:
     OSSL_SELF_TEST_onend(st, crng_test_pass);
     OSSL_SELF_TEST_free(st);
     OPENSSL_secure_clear_free(ent, bytes_needed);
 
- unlock_return:
+unlock_return:
     CRYPTO_THREAD_unlock(crngt_glob->lock);
     return r;
 }

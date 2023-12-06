@@ -59,7 +59,7 @@ int EVP_SignFinal_ex(EVP_MD_CTX *ctx, unsigned char *sigret,
         goto err;
     *siglen = sltmp;
     i = 1;
- err:
+err:
     EVP_PKEY_CTX_free(pkctx);
     return i;
 }

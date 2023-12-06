@@ -112,7 +112,7 @@ tx_pkt_history_add_actual(struct tx_pkt_history_st *h,
 
     /* Should not already be in a list. */
     if (!ossl_assert(ossl_list_tx_history_next(pkt) == NULL
-            && ossl_list_tx_history_prev(pkt) == NULL))
+                     && ossl_list_tx_history_prev(pkt) == NULL))
         return 0;
 
     lh_OSSL_ACKM_TX_PKT_insert(h->map, pkt);
@@ -499,102 +499,102 @@ struct ossl_ackm_st {
     struct rx_pkt_history_st rx_history[QUIC_PN_SPACE_NUM];
 
     /* Polymorphic dependencies that we consume. */
-    OSSL_TIME             (*now)(void *arg);
+    OSSL_TIME (*now)(void *arg);
     void                   *now_arg;
     OSSL_STATM             *statm;
     const OSSL_CC_METHOD   *cc_method;
     OSSL_CC_DATA           *cc_data;
 
     /* RFC 9002 variables. */
-    uint32_t        pto_count;
-    QUIC_PN         largest_acked_pkt[QUIC_PN_SPACE_NUM];
-    OSSL_TIME       time_of_last_ack_eliciting_pkt[QUIC_PN_SPACE_NUM];
-    OSSL_TIME       loss_time[QUIC_PN_SPACE_NUM];
-    OSSL_TIME       loss_detection_deadline;
+    uint32_t pto_count;
+    QUIC_PN largest_acked_pkt[QUIC_PN_SPACE_NUM];
+    OSSL_TIME time_of_last_ack_eliciting_pkt[QUIC_PN_SPACE_NUM];
+    OSSL_TIME loss_time[QUIC_PN_SPACE_NUM];
+    OSSL_TIME loss_detection_deadline;
 
     /* Lowest PN which is still not known to be ACKed. */
-    QUIC_PN         lowest_unacked_pkt[QUIC_PN_SPACE_NUM];
+    QUIC_PN lowest_unacked_pkt[QUIC_PN_SPACE_NUM];
 
     /* Time at which we got our first RTT sample, or 0. */
-    OSSL_TIME       first_rtt_sample;
+    OSSL_TIME first_rtt_sample;
 
     /*
      * A packet's num_bytes are added to this if it is inflight,
      * and removed again once ack'd/lost/discarded.
      */
-    uint64_t        bytes_in_flight;
+    uint64_t bytes_in_flight;
 
     /*
      * A packet's num_bytes are added to this if it is both inflight and
      * ack-eliciting, and removed again once ack'd/lost/discarded.
      */
-    uint64_t        ack_eliciting_bytes_in_flight[QUIC_PN_SPACE_NUM];
+    uint64_t ack_eliciting_bytes_in_flight[QUIC_PN_SPACE_NUM];
 
     /* Count of ECN-CE events. */
-    uint64_t        peer_ecnce[QUIC_PN_SPACE_NUM];
+    uint64_t peer_ecnce[QUIC_PN_SPACE_NUM];
 
     /* Set to 1 when the handshake is confirmed. */
-    char            handshake_confirmed;
+    char handshake_confirmed;
 
     /* Set to 1 when the peer has completed address validation. */
-    char            peer_completed_addr_validation;
+    char peer_completed_addr_validation;
 
     /* Set to 1 when a PN space has been discarded. */
-    char            discarded[QUIC_PN_SPACE_NUM];
+    char discarded[QUIC_PN_SPACE_NUM];
 
     /* Set to 1 when we think an ACK frame should be generated. */
-    char            rx_ack_desired[QUIC_PN_SPACE_NUM];
+    char rx_ack_desired[QUIC_PN_SPACE_NUM];
 
     /* Set to 1 if an ACK frame has ever been generated. */
-    char            rx_ack_generated[QUIC_PN_SPACE_NUM];
+    char rx_ack_generated[QUIC_PN_SPACE_NUM];
 
     /* Probe request counts for reporting to the user. */
-    OSSL_ACKM_PROBE_INFO    pending_probe;
+    OSSL_ACKM_PROBE_INFO pending_probe;
 
     /* Generated ACK frames for each PN space. */
-    OSSL_QUIC_FRAME_ACK     ack[QUIC_PN_SPACE_NUM];
-    OSSL_QUIC_ACK_RANGE     ack_ranges[QUIC_PN_SPACE_NUM][MAX_RX_ACK_RANGES];
+    OSSL_QUIC_FRAME_ACK ack[QUIC_PN_SPACE_NUM];
+    OSSL_QUIC_ACK_RANGE ack_ranges[QUIC_PN_SPACE_NUM][MAX_RX_ACK_RANGES];
 
     /* Other RX state. */
     /* Largest PN we have RX'd. */
-    QUIC_PN         rx_largest_pn[QUIC_PN_SPACE_NUM];
+    QUIC_PN rx_largest_pn[QUIC_PN_SPACE_NUM];
 
     /* Time at which the PN in rx_largest_pn was RX'd. */
-    OSSL_TIME       rx_largest_time[QUIC_PN_SPACE_NUM];
+    OSSL_TIME rx_largest_time[QUIC_PN_SPACE_NUM];
 
     /*
      * ECN event counters. Each time we receive a packet with a given ECN label,
      * the corresponding ECN counter here is incremented.
      */
-    uint64_t        rx_ect0[QUIC_PN_SPACE_NUM];
-    uint64_t        rx_ect1[QUIC_PN_SPACE_NUM];
-    uint64_t        rx_ecnce[QUIC_PN_SPACE_NUM];
+    uint64_t rx_ect0[QUIC_PN_SPACE_NUM];
+    uint64_t rx_ect1[QUIC_PN_SPACE_NUM];
+    uint64_t rx_ecnce[QUIC_PN_SPACE_NUM];
 
     /*
      * Number of ACK-eliciting packets since last ACK. We use this to defer
      * emitting ACK frames until a threshold number of ACK-eliciting packets
      * have been received.
      */
-    uint32_t        rx_ack_eliciting_pkts_since_last_ack[QUIC_PN_SPACE_NUM];
+    uint32_t rx_ack_eliciting_pkts_since_last_ack[QUIC_PN_SPACE_NUM];
 
     /*
      * The ACK frame coalescing deadline at which we should flush any unsent ACK
      * frames.
      */
-    OSSL_TIME       rx_ack_flush_deadline[QUIC_PN_SPACE_NUM];
+    OSSL_TIME rx_ack_flush_deadline[QUIC_PN_SPACE_NUM];
 
     /*
      * The RX maximum ACK delay (the maximum amount of time our peer might
      * wait to send us an ACK after receiving an ACK-eliciting packet).
      */
-    OSSL_TIME       rx_max_ack_delay;
+    OSSL_TIME rx_max_ack_delay;
 
     /*
      * The TX maximum ACK delay (the maximum amount of time we allow ourselves
      * to wait before generating an ACK after receiving an ACK-eliciting
      * packet).
      */
-    OSSL_TIME       tx_max_ack_delay;
+    OSSL_TIME tx_max_ack_delay;
 
     /* Callbacks for deadline updates. */
     void (*loss_detection_deadline_cb)(OSSL_TIME deadline, void *arg);
@@ -666,9 +666,10 @@ static int range_contains(const OSSL_QUIC_ACK_RANGE *range, QUIC_PN pn)
  * list returned are removed from the TX history list. Returns a pointer to the
  * list head (or NULL) if empty.
  */
-static OSSL_ACKM_TX_PKT *ackm_detect_and_remove_newly_acked_pkts(OSSL_ACKM *ackm,
-                                                                 const OSSL_QUIC_FRAME_ACK *ack,
-                                                                 int pkt_space)
+static OSSL_ACKM_TX_PKT *ackm_detect_and_remove_newly_acked_pkts(
+    OSSL_ACKM *ackm,
+    const OSSL_QUIC_FRAME_ACK *ack,
+    int pkt_space)
 {
     OSSL_ACKM_TX_PKT *acked_pkts = NULL, **fixup = &acked_pkts, *pkt, *pprev;
     struct tx_pkt_history_st *h;
@@ -788,8 +789,8 @@ static OSSL_ACKM_TX_PKT *ackm_detect_and_remove_lost_pkts(OSSL_ACKM *ackm,
          * Mark packet as lost, or set time when it should be marked.
          */
         if (ossl_time_compare(pkt->time, lost_send_time) <= 0
-                || ackm->largest_acked_pkt[pkt_space]
-                >= pkt->pkt_num + K_PKT_THRESHOLD) {
+            || ackm->largest_acked_pkt[pkt_space]
+            >= pkt->pkt_num + K_PKT_THRESHOLD) {
             tx_pkt_history_remove(h, pkt->pkt_num);
 
             *fixup = pkt;
@@ -909,7 +910,7 @@ static int ackm_set_loss_detection_timer(OSSL_ACKM *ackm)
     }
 
     if (ackm_ack_eliciting_bytes_in_flight(ackm) == 0
-            && ackm->peer_completed_addr_validation) {
+        && ackm->peer_completed_addr_validation) {
         /*
          * Nothing to detect lost, so no timer is set. However, the client
          * needs to arm the timer if the server might be blocked by the
@@ -1081,7 +1082,8 @@ int ossl_ackm_on_tx_packet(OSSL_ACKM *ackm, OSSL_ACKM_TX_PKT *pkt)
 
     /* Time must be set and not move backwards. */
     if (ossl_time_is_zero(pkt->time)
-        || ossl_time_compare(ackm->time_of_last_ack_eliciting_pkt[pkt->pkt_space],
+        || ossl_time_compare(ackm->time_of_last_ack_eliciting_pkt[pkt->pkt_space
+                             ],
                              pkt->time) > 0)
         return 0;
 
@@ -1160,7 +1162,7 @@ int ossl_ackm_on_rx_ack_frame(OSSL_ACKM *ackm, const OSSL_QUIC_FRAME_ACK *ack,
      * Make sure we update the timer, even if no packets were ACK'd.
      */
     if (!ackm->peer_completed_addr_validation
-            && pkt_space == QUIC_PN_SPACE_HANDSHAKE) {
+        && pkt_space == QUIC_PN_SPACE_HANDSHAKE) {
         ackm->peer_completed_addr_validation = 1;
         must_set_timer = 1;
     }
@@ -1210,7 +1212,7 @@ int ossl_ackm_on_rx_ack_frame(OSSL_ACKM *ackm, const OSSL_QUIC_FRAME_ACK *ack,
     /* Handle inferred loss. */
     lost_pkts = ackm_detect_and_remove_lost_pkts(ackm, pkt_space);
     if (lost_pkts != NULL)
-        ackm_on_pkts_lost(ackm, pkt_space, lost_pkts, /*pseudo=*/0);
+        ackm_on_pkts_lost(ackm, pkt_space, lost_pkts, /*pseudo=*/ 0);
 
     ackm_on_pkts_acked(ackm, na_pkts);
 
@@ -1236,8 +1238,10 @@ int ossl_ackm_on_pkt_space_discarded(OSSL_ACKM *ackm, int pkt_space)
     if (pkt_space == QUIC_PN_SPACE_HANDSHAKE)
         ackm->peer_completed_addr_validation = 1;
 
-    for (pkt = ossl_list_tx_history_head(&get_tx_history(ackm, pkt_space)->packets);
-            pkt != NULL; pkt = pnext) {
+    for (pkt =
+             ossl_list_tx_history_head(&get_tx_history(ackm,
+                                                       pkt_space)->packets);
+         pkt != NULL; pkt = pnext) {
         pnext = ossl_list_tx_history_next(pkt);
         if (pkt->is_inflight) {
             ackm->bytes_in_flight -= pkt->num_bytes;
@@ -1302,7 +1306,7 @@ int ossl_ackm_on_timeout(OSSL_ACKM *ackm)
         /* Time threshold loss detection. */
         lost_pkts = ackm_detect_and_remove_lost_pkts(ackm, pkt_space);
         if (lost_pkts != NULL)
-            ackm_on_pkts_lost(ackm, pkt_space, lost_pkts, /*pseudo=*/0);
+            ackm_on_pkts_lost(ackm, pkt_space, lost_pkts, /*pseudo=*/ 0);
         ackm_set_loss_detection_timer(ackm);
         return 1;
     }
@@ -1379,9 +1383,10 @@ int ossl_ackm_get_largest_unacked(OSSL_ACKM *ackm, int pkt_space, QUIC_PN *pn)
 int ossl_ackm_is_ack_desired(OSSL_ACKM *ackm, int pkt_space)
 {
     return ackm->rx_ack_desired[pkt_space]
-        || (!ossl_time_is_infinite(ackm->rx_ack_flush_deadline[pkt_space])
-            && ossl_time_compare(ackm->now(ackm->now_arg),
-                                 ackm->rx_ack_flush_deadline[pkt_space]) >= 0);
+           || (!ossl_time_is_infinite(ackm->rx_ack_flush_deadline[pkt_space])
+               && ossl_time_compare(ackm->now(ackm->now_arg),
+                                    ackm->rx_ack_flush_deadline[pkt_space]) >=
+               0);
 }
 
 /*
@@ -1409,8 +1414,8 @@ static int ackm_is_missing(OSSL_ACKM *ackm, int pkt_space, QUIC_PN pkt_num)
      * generated ACK frame, but is not matched by the frame.
      */
     return ackm->ack[pkt_space].num_ack_ranges > 0
-        && pkt_num <= ackm->ack[pkt_space].ack_ranges[0].end
-        && !ack_contains(&ackm->ack[pkt_space], pkt_num);
+           && pkt_num <= ackm->ack[pkt_space].ack_ranges[0].end
+           && !ack_contains(&ackm->ack[pkt_space], pkt_num);
 }
 
 /*
@@ -1439,10 +1444,10 @@ static int ackm_has_newly_missing(OSSL_ACKM *ackm, int pkt_space)
      * the PNs we have ACK'd previously and the PN we have just received.
      */
     return ackm->ack[pkt_space].num_ack_ranges > 0
-        && ossl_list_uint_set_tail(&h->set)->range.start
+           && ossl_list_uint_set_tail(&h->set)->range.start
            == ossl_list_uint_set_tail(&h->set)->range.end
-        && ossl_list_uint_set_tail(&h->set)->range.start
-            > ackm->ack[pkt_space].ack_ranges[0].end + 1;
+           && ossl_list_uint_set_tail(&h->set)->range.start
+           > ackm->ack[pkt_space].ack_ranges[0].end + 1;
 }
 
 static void ackm_set_flush_deadline(OSSL_ACKM *ackm, int pkt_space,
@@ -1477,10 +1482,10 @@ static void ackm_on_rx_ack_eliciting(OSSL_ACKM *ackm,
     ++ackm->rx_ack_eliciting_pkts_since_last_ack[pkt_space];
 
     if (!ackm->rx_ack_generated[pkt_space]
-            || was_missing
-            || ackm->rx_ack_eliciting_pkts_since_last_ack[pkt_space]
-                >= PKTS_BEFORE_ACK
-            || ackm_has_newly_missing(ackm, pkt_space)) {
+        || was_missing
+        || ackm->rx_ack_eliciting_pkts_since_last_ack[pkt_space]
+        >= PKTS_BEFORE_ACK
+        || ackm_has_newly_missing(ackm, pkt_space)) {
         /*
          * Either:
          *
@@ -1526,7 +1531,8 @@ static void ackm_on_rx_ack_eliciting(OSSL_ACKM *ackm,
                                 ossl_time_add(rx_time, tx_max_ack_delay));
     else
         ackm_set_flush_deadline(ackm, pkt_space,
-                                ossl_time_min(ackm->rx_ack_flush_deadline[pkt_space],
+                                ossl_time_min(ackm->rx_ack_flush_deadline[
+                                                  pkt_space],
                                               ossl_time_add(rx_time,
                                                             tx_max_ack_delay)));
 }
@@ -1574,17 +1580,17 @@ int ossl_ackm_on_rx_packet(OSSL_ACKM *ackm, const OSSL_ACKM_RX_PKT *pkt)
 
     /* Update the ECN counters according to which ECN signal we got, if any. */
     switch (pkt->ecn) {
-    case OSSL_ACKM_ECN_ECT0:
-        ++ackm->rx_ect0[pkt->pkt_space];
-        break;
-    case OSSL_ACKM_ECN_ECT1:
-        ++ackm->rx_ect1[pkt->pkt_space];
-        break;
-    case OSSL_ACKM_ECN_ECNCE:
-        ++ackm->rx_ecnce[pkt->pkt_space];
-        break;
-    default:
-        break;
+        case OSSL_ACKM_ECN_ECT0:
+            ++ackm->rx_ect0[pkt->pkt_space];
+            break;
+        case OSSL_ACKM_ECN_ECT1:
+            ++ackm->rx_ect1[pkt->pkt_space];
+            break;
+        case OSSL_ACKM_ECN_ECNCE:
+            ++ackm->rx_ecnce[pkt->pkt_space];
+            break;
+        default:
+            break;
     }
 
     return 1;
@@ -1621,8 +1627,8 @@ const OSSL_QUIC_FRAME_ACK *ossl_ackm_get_ack_frame(OSSL_ACKM *ackm,
     ackm_fill_rx_ack_ranges(ackm, pkt_space, ack);
 
     if (!ossl_time_is_zero(ackm->rx_largest_time[pkt_space])
-            && ossl_time_compare(now, ackm->rx_largest_time[pkt_space]) > 0
-            && pkt_space == QUIC_PN_SPACE_APP)
+        && ossl_time_compare(now, ackm->rx_largest_time[pkt_space]) > 0
+        && pkt_space == QUIC_PN_SPACE_APP)
         ack->delay_time =
             ossl_time_subtract(now, ackm->rx_largest_time[pkt_space]);
     else
@@ -1659,8 +1665,9 @@ int ossl_ackm_is_rx_pn_processable(OSSL_ACKM *ackm, QUIC_PN pn, int pkt_space)
 }
 
 void ossl_ackm_set_loss_detection_deadline_callback(OSSL_ACKM *ackm,
-                                                    void (*fn)(OSSL_TIME deadline,
-                                                               void *arg),
+                                                    void (*fn)(
+                                                        OSSL_TIME deadline,
+                                                        void *arg),
                                                     void *arg)
 {
     ackm->loss_detection_deadline_cb      = fn;
@@ -1689,7 +1696,7 @@ int ossl_ackm_mark_packet_pseudo_lost(OSSL_ACKM *ackm,
 
     tx_pkt_history_remove(h, pkt->pkt_num);
     pkt->lnext = NULL;
-    ackm_on_pkts_lost(ackm, pkt_space, pkt, /*pseudo=*/1);
+    ackm_on_pkts_lost(ackm, pkt_space, pkt, /*pseudo=*/ 1);
     return 1;
 }
 
@@ -1701,7 +1708,8 @@ OSSL_TIME ossl_ackm_get_pto_duration(OSSL_ACKM *ackm)
     ossl_statm_get_rtt_info(ackm->statm, &rtt);
 
     duration = ossl_time_add(rtt.smoothed_rtt,
-                             ossl_time_max(ossl_time_multiply(rtt.rtt_variance, 4),
+                             ossl_time_max(ossl_time_multiply(rtt.rtt_variance,
+                                                              4),
                                            ossl_ticks2time(K_GRANULARITY)));
     if (!ossl_time_is_infinite(ackm->rx_max_ack_delay))
         duration = ossl_time_add(duration, ackm->rx_max_ack_delay);

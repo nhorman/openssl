@@ -48,7 +48,7 @@ struct evp_rand_st {
     OSSL_FUNC_rand_verify_zeroization_fn *verify_zeroization;
     OSSL_FUNC_rand_get_seed_fn *get_seed;
     OSSL_FUNC_rand_clear_seed_fn *clear_seed;
-} /* EVP_RAND */ ;
+} /* EVP_RAND */;
 
 static int evp_rand_up_ref(void *vrand)
 {
@@ -138,116 +138,117 @@ static void *evp_rand_from_algorithm(int name_id,
     rand->dispatch = fns;
     for (; fns->function_id != 0; fns++) {
         switch (fns->function_id) {
-        case OSSL_FUNC_RAND_NEWCTX:
-            if (rand->newctx != NULL)
+            case OSSL_FUNC_RAND_NEWCTX:
+                if (rand->newctx != NULL)
+                    break;
+                rand->newctx = OSSL_FUNC_rand_newctx(fns);
+                fnctxcnt++;
                 break;
-            rand->newctx = OSSL_FUNC_rand_newctx(fns);
-            fnctxcnt++;
-            break;
-        case OSSL_FUNC_RAND_FREECTX:
-            if (rand->freectx != NULL)
+            case OSSL_FUNC_RAND_FREECTX:
+                if (rand->freectx != NULL)
+                    break;
+                rand->freectx = OSSL_FUNC_rand_freectx(fns);
+                fnctxcnt++;
                 break;
-            rand->freectx = OSSL_FUNC_rand_freectx(fns);
-            fnctxcnt++;
-            break;
-        case OSSL_FUNC_RAND_INSTANTIATE:
-            if (rand->instantiate != NULL)
+            case OSSL_FUNC_RAND_INSTANTIATE:
+                if (rand->instantiate != NULL)
+                    break;
+                rand->instantiate = OSSL_FUNC_rand_instantiate(fns);
+                fnrandcnt++;
                 break;
-            rand->instantiate = OSSL_FUNC_rand_instantiate(fns);
-            fnrandcnt++;
-            break;
-        case OSSL_FUNC_RAND_UNINSTANTIATE:
-             if (rand->uninstantiate != NULL)
+            case OSSL_FUNC_RAND_UNINSTANTIATE:
+                if (rand->uninstantiate != NULL)
+                    break;
+                rand->uninstantiate = OSSL_FUNC_rand_uninstantiate(fns);
+                fnrandcnt++;
                 break;
-            rand->uninstantiate = OSSL_FUNC_rand_uninstantiate(fns);
-            fnrandcnt++;
-            break;
-        case OSSL_FUNC_RAND_GENERATE:
-            if (rand->generate != NULL)
+            case OSSL_FUNC_RAND_GENERATE:
+                if (rand->generate != NULL)
+                    break;
+                rand->generate = OSSL_FUNC_rand_generate(fns);
+                fnrandcnt++;
                 break;
-            rand->generate = OSSL_FUNC_rand_generate(fns);
-            fnrandcnt++;
-            break;
-        case OSSL_FUNC_RAND_RESEED:
-            if (rand->reseed != NULL)
+            case OSSL_FUNC_RAND_RESEED:
+                if (rand->reseed != NULL)
+                    break;
+                rand->reseed = OSSL_FUNC_rand_reseed(fns);
                 break;
-            rand->reseed = OSSL_FUNC_rand_reseed(fns);
-            break;
-        case OSSL_FUNC_RAND_NONCE:
-            if (rand->nonce != NULL)
+            case OSSL_FUNC_RAND_NONCE:
+                if (rand->nonce != NULL)
+                    break;
+                rand->nonce = OSSL_FUNC_rand_nonce(fns);
                 break;
-            rand->nonce = OSSL_FUNC_rand_nonce(fns);
-            break;
-        case OSSL_FUNC_RAND_ENABLE_LOCKING:
-            if (rand->enable_locking != NULL)
+            case OSSL_FUNC_RAND_ENABLE_LOCKING:
+                if (rand->enable_locking != NULL)
+                    break;
+                rand->enable_locking = OSSL_FUNC_rand_enable_locking(fns);
+                fnenablelockcnt++;
                 break;
-            rand->enable_locking = OSSL_FUNC_rand_enable_locking(fns);
-            fnenablelockcnt++;
-            break;
-        case OSSL_FUNC_RAND_LOCK:
-            if (rand->lock != NULL)
+            case OSSL_FUNC_RAND_LOCK:
+                if (rand->lock != NULL)
+                    break;
+                rand->lock = OSSL_FUNC_rand_lock(fns);
+                fnlockcnt++;
                 break;
-            rand->lock = OSSL_FUNC_rand_lock(fns);
-            fnlockcnt++;
-            break;
-        case OSSL_FUNC_RAND_UNLOCK:
-            if (rand->unlock != NULL)
+            case OSSL_FUNC_RAND_UNLOCK:
+                if (rand->unlock != NULL)
+                    break;
+                rand->unlock = OSSL_FUNC_rand_unlock(fns);
+                fnlockcnt++;
                 break;
-            rand->unlock = OSSL_FUNC_rand_unlock(fns);
-            fnlockcnt++;
-            break;
-        case OSSL_FUNC_RAND_GETTABLE_PARAMS:
-            if (rand->gettable_params != NULL)
+            case OSSL_FUNC_RAND_GETTABLE_PARAMS:
+                if (rand->gettable_params != NULL)
+                    break;
+                rand->gettable_params =
+                    OSSL_FUNC_rand_gettable_params(fns);
                 break;
-            rand->gettable_params =
-                OSSL_FUNC_rand_gettable_params(fns);
-            break;
-        case OSSL_FUNC_RAND_GETTABLE_CTX_PARAMS:
-            if (rand->gettable_ctx_params != NULL)
+            case OSSL_FUNC_RAND_GETTABLE_CTX_PARAMS:
+                if (rand->gettable_ctx_params != NULL)
+                    break;
+                rand->gettable_ctx_params =
+                    OSSL_FUNC_rand_gettable_ctx_params(fns);
                 break;
-            rand->gettable_ctx_params =
-                OSSL_FUNC_rand_gettable_ctx_params(fns);
-            break;
-        case OSSL_FUNC_RAND_SETTABLE_CTX_PARAMS:
-            if (rand->settable_ctx_params != NULL)
+            case OSSL_FUNC_RAND_SETTABLE_CTX_PARAMS:
+                if (rand->settable_ctx_params != NULL)
+                    break;
+                rand->settable_ctx_params =
+                    OSSL_FUNC_rand_settable_ctx_params(fns);
                 break;
-            rand->settable_ctx_params =
-                OSSL_FUNC_rand_settable_ctx_params(fns);
-            break;
-        case OSSL_FUNC_RAND_GET_PARAMS:
-            if (rand->get_params != NULL)
+            case OSSL_FUNC_RAND_GET_PARAMS:
+                if (rand->get_params != NULL)
+                    break;
+                rand->get_params = OSSL_FUNC_rand_get_params(fns);
                 break;
-            rand->get_params = OSSL_FUNC_rand_get_params(fns);
-            break;
-        case OSSL_FUNC_RAND_GET_CTX_PARAMS:
-            if (rand->get_ctx_params != NULL)
+            case OSSL_FUNC_RAND_GET_CTX_PARAMS:
+                if (rand->get_ctx_params != NULL)
+                    break;
+                rand->get_ctx_params = OSSL_FUNC_rand_get_ctx_params(fns);
+                fnctxcnt++;
                 break;
-            rand->get_ctx_params = OSSL_FUNC_rand_get_ctx_params(fns);
-            fnctxcnt++;
-            break;
-        case OSSL_FUNC_RAND_SET_CTX_PARAMS:
-            if (rand->set_ctx_params != NULL)
+            case OSSL_FUNC_RAND_SET_CTX_PARAMS:
+                if (rand->set_ctx_params != NULL)
+                    break;
+                rand->set_ctx_params = OSSL_FUNC_rand_set_ctx_params(fns);
                 break;
-            rand->set_ctx_params = OSSL_FUNC_rand_set_ctx_params(fns);
-            break;
-        case OSSL_FUNC_RAND_VERIFY_ZEROIZATION:
-            if (rand->verify_zeroization != NULL)
-                break;
-            rand->verify_zeroization = OSSL_FUNC_rand_verify_zeroization(fns);
+            case OSSL_FUNC_RAND_VERIFY_ZEROIZATION:
+                if (rand->verify_zeroization != NULL)
+                    break;
+                rand->verify_zeroization =
+                    OSSL_FUNC_rand_verify_zeroization(fns);
 #ifdef FIPS_MODULE
-            fnzeroizecnt++;
+                fnzeroizecnt++;
 #endif
-            break;
-        case OSSL_FUNC_RAND_GET_SEED:
-            if (rand->get_seed != NULL)
                 break;
-            rand->get_seed = OSSL_FUNC_rand_get_seed(fns);
-            break;
-        case OSSL_FUNC_RAND_CLEAR_SEED:
-            if (rand->clear_seed != NULL)
+            case OSSL_FUNC_RAND_GET_SEED:
+                if (rand->get_seed != NULL)
+                    break;
+                rand->get_seed = OSSL_FUNC_rand_get_seed(fns);
                 break;
-            rand->clear_seed = OSSL_FUNC_rand_clear_seed(fns);
-            break;
+            case OSSL_FUNC_RAND_CLEAR_SEED:
+                if (rand->clear_seed != NULL)
+                    break;
+                rand->clear_seed = OSSL_FUNC_rand_clear_seed(fns);
+                break;
         }
     }
     /*
@@ -260,11 +261,11 @@ static void *evp_rand_from_algorithm(int name_id,
      * locking functions.
      */
     if (fnrandcnt != 3
-            || fnctxcnt != 3
-            || (fnenablelockcnt != 0 && fnenablelockcnt != 1)
-            || (fnlockcnt != 0 && fnlockcnt != 2)
+        || fnctxcnt != 3
+        || (fnenablelockcnt != 0 && fnenablelockcnt != 1)
+        || (fnlockcnt != 0 && fnlockcnt != 2)
 #ifdef FIPS_MODULE
-            || fnzeroizecnt != 1
+        || fnzeroizecnt != 1
 #endif
        ) {
         evp_rand_free(rand);
@@ -369,7 +370,7 @@ EVP_RAND_CTX *EVP_RAND_CTX_new(EVP_RAND *rand, EVP_RAND_CTX *parent)
     }
     if ((ctx->algctx = rand->newctx(ossl_provider_ctx(rand->prov), parent_ctx,
                                     parent_dispatch)) == NULL
-            || !EVP_RAND_up_ref(rand)) {
+        || !EVP_RAND_up_ref(rand)) {
         ERR_raise(ERR_LIB_EVP, ERR_R_EVP_LIB);
         rand->freectx(ctx->algctx);
         CRYPTO_FREE_REF(&ctx->refcnt);
@@ -495,7 +496,7 @@ void EVP_RAND_do_all_provided(OSSL_LIB_CTX *libctx,
                               void *arg)
 {
     evp_generic_do_all(libctx, OSSL_OP_RAND,
-                       (void (*)(void *, void *))fn, arg,
+                       (void (*)(void *, void *)) fn, arg,
                        evp_rand_from_algorithm, evp_rand_up_ref,
                        evp_rand_free);
 }
@@ -512,7 +513,7 @@ int EVP_RAND_names_do_all(const EVP_RAND *rand,
 
 static int evp_rand_instantiate_locked
     (EVP_RAND_CTX *ctx, unsigned int strength, int prediction_resistance,
-     const unsigned char *pstr, size_t pstr_len, const OSSL_PARAM params[])
+    const unsigned char *pstr, size_t pstr_len, const OSSL_PARAM params[])
 {
     return ctx->meth->instantiate(ctx->algctx, strength, prediction_resistance,
                                   pstr, pstr_len, params);
@@ -561,7 +562,7 @@ static int evp_rand_generate_locked(EVP_RAND_CTX *ctx, unsigned char *out,
     params[0] = OSSL_PARAM_construct_size_t(OSSL_RAND_PARAM_MAX_REQUEST,
                                             &max_request);
     if (!evp_rand_get_ctx_params_locked(ctx, params)
-            || max_request == 0) {
+        || max_request == 0) {
         ERR_raise(ERR_LIB_EVP, EVP_R_UNABLE_TO_GET_MAXIMUM_REQUEST_SIZE);
         return 0;
     }

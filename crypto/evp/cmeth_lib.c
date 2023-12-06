@@ -58,7 +58,7 @@ EVP_CIPHER *EVP_CIPHER_meth_dup(const EVP_CIPHER *cipher)
 void EVP_CIPHER_meth_free(EVP_CIPHER *cipher)
 {
     if (cipher == NULL || cipher->origin != EVP_ORIG_METH)
-       return;
+        return;
 
     evp_cipher_free_int(cipher);
 }
@@ -127,8 +127,9 @@ int EVP_CIPHER_meth_set_cleanup(EVP_CIPHER *cipher,
 }
 
 int EVP_CIPHER_meth_set_set_asn1_params(EVP_CIPHER *cipher,
-                                        int (*set_asn1_parameters) (EVP_CIPHER_CTX *,
-                                                                    ASN1_TYPE *))
+                                        int (*set_asn1_parameters) (
+                                            EVP_CIPHER_CTX *,
+                                            ASN1_TYPE *))
 {
     if (cipher->set_asn1_parameters != NULL)
         return 0;
@@ -138,8 +139,9 @@ int EVP_CIPHER_meth_set_set_asn1_params(EVP_CIPHER *cipher,
 }
 
 int EVP_CIPHER_meth_set_get_asn1_params(EVP_CIPHER *cipher,
-                                        int (*get_asn1_parameters) (EVP_CIPHER_CTX *,
-                                                                    ASN1_TYPE *))
+                                        int (*get_asn1_parameters) (
+                                            EVP_CIPHER_CTX *,
+                                            ASN1_TYPE *))
 {
     if (cipher->get_asn1_parameters != NULL)
         return 0;
@@ -161,16 +163,21 @@ int EVP_CIPHER_meth_set_ctrl(EVP_CIPHER *cipher,
 
 
 int (*EVP_CIPHER_meth_get_init(const EVP_CIPHER *cipher))(EVP_CIPHER_CTX *ctx,
-                                                          const unsigned char *key,
-                                                          const unsigned char *iv,
+                                                          const unsigned char *
+                                                          key,
+                                                          const unsigned char *
+                                                          iv,
                                                           int enc)
 {
     return cipher->init;
 }
-int (*EVP_CIPHER_meth_get_do_cipher(const EVP_CIPHER *cipher))(EVP_CIPHER_CTX *ctx,
-                                                               unsigned char *out,
-                                                               const unsigned char *in,
-                                                               size_t inl)
+int (*EVP_CIPHER_meth_get_do_cipher(const EVP_CIPHER *
+                                    cipher))(EVP_CIPHER_CTX *ctx,
+                                             unsigned char *
+                                             out,
+                                             const unsigned
+                                             char *in,
+                                             size_t inl)
 {
     return cipher->do_cipher;
 }
@@ -180,14 +187,16 @@ int (*EVP_CIPHER_meth_get_cleanup(const EVP_CIPHER *cipher))(EVP_CIPHER_CTX *)
     return cipher->cleanup;
 }
 
-int (*EVP_CIPHER_meth_get_set_asn1_params(const EVP_CIPHER *cipher))(EVP_CIPHER_CTX *,
-                                                                     ASN1_TYPE *)
+int (*EVP_CIPHER_meth_get_set_asn1_params(const EVP_CIPHER *
+                                          cipher))(EVP_CIPHER_CTX *,
+                                                   ASN1_TYPE *)
 {
     return cipher->set_asn1_parameters;
 }
 
-int (*EVP_CIPHER_meth_get_get_asn1_params(const EVP_CIPHER *cipher))(EVP_CIPHER_CTX *,
-                                                               ASN1_TYPE *)
+int (*EVP_CIPHER_meth_get_get_asn1_params(const EVP_CIPHER *
+                                          cipher))(EVP_CIPHER_CTX *,
+                                                   ASN1_TYPE *)
 {
     return cipher->get_asn1_parameters;
 }

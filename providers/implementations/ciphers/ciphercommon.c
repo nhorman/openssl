@@ -69,7 +69,9 @@ int ossl_cipher_generic_get_params(OSSL_PARAM params[], unsigned int md,
     }
     p = OSSL_PARAM_locate(params, OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK);
     if (p != NULL
-        && !OSSL_PARAM_set_int(p, (flags & PROV_CIPHER_FLAG_TLS1_MULTIBLOCK) != 0)) {
+        && !OSSL_PARAM_set_int(p,
+                               (flags & PROV_CIPHER_FLAG_TLS1_MULTIBLOCK) !=
+                               0)) {
         ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
         return 0;
     }
@@ -98,7 +100,10 @@ int ossl_cipher_generic_get_params(OSSL_PARAM params[], unsigned int md,
 }
 
 CIPHER_DEFAULT_GETTABLE_CTX_PARAMS_START(ossl_cipher_generic)
-{ OSSL_CIPHER_PARAM_TLS_MAC, OSSL_PARAM_OCTET_PTR, NULL, 0, OSSL_PARAM_UNMODIFIED },
+{
+    OSSL_CIPHER_PARAM_TLS_MAC, OSSL_PARAM_OCTET_PTR, NULL, 0,
+    OSSL_PARAM_UNMODIFIED
+},
 CIPHER_DEFAULT_GETTABLE_CTX_PARAMS_END(ossl_cipher_generic)
 
 CIPHER_DEFAULT_SETTABLE_CTX_PARAMS_START(ossl_cipher_generic)
@@ -155,8 +160,8 @@ static const OSSL_PARAM cipher_aead_known_gettable_ctx_params[] = {
     OSSL_PARAM_END
 };
 const OSSL_PARAM *ossl_cipher_aead_gettable_ctx_params(
-        ossl_unused void *cctx, ossl_unused void *provctx
-    )
+    ossl_unused void *cctx, ossl_unused void *provctx
+                                                      )
 {
     return cipher_aead_known_gettable_ctx_params;
 }
@@ -170,8 +175,8 @@ static const OSSL_PARAM cipher_aead_known_settable_ctx_params[] = {
     OSSL_PARAM_END
 };
 const OSSL_PARAM *ossl_cipher_aead_settable_ctx_params(
-        ossl_unused void *cctx, ossl_unused void *provctx
-    )
+    ossl_unused void *cctx, ossl_unused void *provctx
+                                                      )
 {
     return cipher_aead_known_settable_ctx_params;
 }
@@ -266,9 +271,9 @@ int ossl_cipher_generic_block_update(void *vctx, unsigned char *out,
 
         /* Sanity check inputs */
         if (in == NULL
-                || in != out
-                || outsize < inl
-                || !ctx->pad) {
+            || in != out
+            || outsize < inl
+            || !ctx->pad) {
             ERR_raise(ERR_LIB_PROV, PROV_R_CIPHER_OPERATION_FAILED);
             return 0;
         }
@@ -493,9 +498,9 @@ int ossl_cipher_generic_stream_update(void *vctx, unsigned char *out,
     *outl = inl;
     if (!ctx->enc && ctx->tlsversion > 0) {
         /*
-        * Remove any TLS padding. Only used by cipher_aes_cbc_hmac_sha1_hw.c and
-        * cipher_aes_cbc_hmac_sha256_hw.c
-        */
+         * Remove any TLS padding. Only used by cipher_aes_cbc_hmac_sha1_hw.c and
+         * cipher_aes_cbc_hmac_sha256_hw.c
+         */
         if (ctx->removetlspad) {
             /*
              * We should have already failed in the cipher() call above if this

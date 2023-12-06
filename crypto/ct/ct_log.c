@@ -163,7 +163,7 @@ int CTLOG_STORE_load_default_file(CTLOG_STORE *store)
     const char *fpath = ossl_safe_getenv(CTLOG_FILE_EVP);
 
     if (fpath == NULL)
-      fpath = CTLOG_FILE;
+        fpath = CTLOG_FILE;
 
     return CTLOG_STORE_load_file(store, fpath);
 }
@@ -191,7 +191,8 @@ static int ctlog_store_load_log(const char *log_name, int log_name_len,
     if (tmp == NULL)
         return -1;
 
-    ret = ctlog_new_from_conf(load_ctx->log_store, &ct_log, load_ctx->conf, tmp);
+    ret =
+        ctlog_new_from_conf(load_ctx->log_store, &ct_log, load_ctx->conf, tmp);
     OPENSSL_free(tmp);
 
     if (ret < 0) {
@@ -236,7 +237,8 @@ int CTLOG_STORE_load_file(CTLOG_STORE *store, const char *file)
         goto end;
     }
 
-    if (!CONF_parse_list(enabled_logs, ',', 1, ctlog_store_load_log, load_ctx) ||
+    if (!CONF_parse_list(enabled_logs, ',', 1, ctlog_store_load_log,
+                         load_ctx) ||
         load_ctx->invalid_log_entries > 0) {
         ERR_raise(ERR_LIB_CT, CT_R_LOG_CONF_INVALID);
         goto end;
@@ -254,7 +256,8 @@ end:
  * Takes ownership of the public key.
  * Copies the name.
  */
-CTLOG *CTLOG_new_ex(EVP_PKEY *public_key, const char *name, OSSL_LIB_CTX *libctx,
+CTLOG *CTLOG_new_ex(EVP_PKEY *public_key, const char *name,
+                    OSSL_LIB_CTX *libctx,
                     const char *propq)
 {
     CTLOG *ret = OPENSSL_zalloc(sizeof(*ret));

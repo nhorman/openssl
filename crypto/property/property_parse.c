@@ -319,7 +319,8 @@ OSSL_PROPERTY_LIST *ossl_parse_property(OSSL_LIB_CTX *ctx, const char *defn)
     const char *s = defn;
     int done;
 
-    if (s == NULL || (sk = sk_OSSL_PROPERTY_DEFINITION_new(&pd_compare)) == NULL)
+    if (s == NULL ||
+        (sk = sk_OSSL_PROPERTY_DEFINITION_new(&pd_compare)) == NULL)
         return NULL;
 
     s = skip_space(s);
@@ -378,7 +379,8 @@ OSSL_PROPERTY_LIST *ossl_parse_query(OSSL_LIB_CTX *ctx, const char *s,
     OSSL_PROPERTY_DEFINITION *prop = NULL;
     int done;
 
-    if (s == NULL || (sk = sk_OSSL_PROPERTY_DEFINITION_new(&pd_compare)) == NULL)
+    if (s == NULL ||
+        (sk = sk_OSSL_PROPERTY_DEFINITION_new(&pd_compare)) == NULL)
         return NULL;
 
     s = skip_space(s);
@@ -701,24 +703,24 @@ size_t ossl_property_list_to_string(OSSL_LIB_CTX *ctx,
         switch (prop->oper) {
             case OSSL_PROPERTY_OPER_NE:
                 put_char('!', &buf, &bufsize, &needed);
-                /* fall through */
+            /* fall through */
             case OSSL_PROPERTY_OPER_EQ:
                 put_char('=', &buf, &bufsize, &needed);
                 /* put value */
                 switch (prop->type) {
-                case OSSL_PROPERTY_TYPE_STRING:
-                    val = ossl_property_value_str(ctx, prop->v.str_val);
-                    if (val == NULL)
+                    case OSSL_PROPERTY_TYPE_STRING:
+                        val = ossl_property_value_str(ctx, prop->v.str_val);
+                        if (val == NULL)
+                            return 0;
+                        put_str(val, &buf, &bufsize, &needed);
+                        break;
+
+                    case OSSL_PROPERTY_TYPE_NUMBER:
+                        put_num(prop->v.int_val, &buf, &bufsize, &needed);
+                        break;
+
+                    default:
                         return 0;
-                    put_str(val, &buf, &bufsize, &needed);
-                    break;
-
-                case OSSL_PROPERTY_TYPE_NUMBER:
-                    put_num(prop->v.int_val, &buf, &bufsize, &needed);
-                    break;
-
-                default:
-                    return 0;
                 }
                 break;
             default:

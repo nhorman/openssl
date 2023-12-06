@@ -38,7 +38,8 @@ void ossl_chacha20_initctx(PROV_CHACHA20_CTX *ctx)
                                 CHACHA20_BLKLEN * 8,
                                 CHACHA20_IVLEN * 8,
                                 0, CHACHA20_FLAGS,
-                                ossl_prov_cipher_hw_chacha20(CHACHA20_KEYLEN * 8),
+                                ossl_prov_cipher_hw_chacha20(
+                                    CHACHA20_KEYLEN * 8),
                                 NULL);
 }
 
@@ -72,7 +73,8 @@ static void *chacha20_dupctx(void *vctx)
 
     if (ctx != NULL) {
         dupctx = OPENSSL_memdup(ctx, sizeof(*dupctx));
-        if (dupctx != NULL && dupctx->base.tlsmac != NULL && dupctx->base.alloced) {
+        if (dupctx != NULL && dupctx->base.tlsmac != NULL &&
+            dupctx->base.alloced) {
             dupctx->base.tlsmac = OPENSSL_memdup(dupctx->base.tlsmac,
                                                  dupctx->base.tlsmacsize);
             if (dupctx->base.tlsmac == NULL) {
@@ -205,22 +207,25 @@ int ossl_chacha20_dinit(void *vctx, const unsigned char *key, size_t keylen,
 
 /* ossl_chacha20_functions */
 const OSSL_DISPATCH ossl_chacha20_functions[] = {
-    { OSSL_FUNC_CIPHER_NEWCTX, (void (*)(void))chacha20_newctx },
-    { OSSL_FUNC_CIPHER_FREECTX, (void (*)(void))chacha20_freectx },
-    { OSSL_FUNC_CIPHER_DUPCTX, (void (*)(void))chacha20_dupctx },
-    { OSSL_FUNC_CIPHER_ENCRYPT_INIT, (void (*)(void))ossl_chacha20_einit },
-    { OSSL_FUNC_CIPHER_DECRYPT_INIT, (void (*)(void))ossl_chacha20_dinit },
-    { OSSL_FUNC_CIPHER_UPDATE, (void (*)(void))chacha20_update },
-    { OSSL_FUNC_CIPHER_FINAL, (void (*)(void))chacha20_final },
-    { OSSL_FUNC_CIPHER_CIPHER, (void (*)(void))chacha20_cipher},
-    { OSSL_FUNC_CIPHER_GET_PARAMS, (void (*)(void))chacha20_get_params },
-    { OSSL_FUNC_CIPHER_GETTABLE_PARAMS, (void (*)(void))chacha20_gettable_params },
-    { OSSL_FUNC_CIPHER_GET_CTX_PARAMS, (void (*)(void))chacha20_get_ctx_params },
+    { OSSL_FUNC_CIPHER_NEWCTX, (void (*)(void)) chacha20_newctx },
+    { OSSL_FUNC_CIPHER_FREECTX, (void (*)(void)) chacha20_freectx },
+    { OSSL_FUNC_CIPHER_DUPCTX, (void (*)(void)) chacha20_dupctx },
+    { OSSL_FUNC_CIPHER_ENCRYPT_INIT, (void (*)(void)) ossl_chacha20_einit },
+    { OSSL_FUNC_CIPHER_DECRYPT_INIT, (void (*)(void)) ossl_chacha20_dinit },
+    { OSSL_FUNC_CIPHER_UPDATE, (void (*)(void)) chacha20_update },
+    { OSSL_FUNC_CIPHER_FINAL, (void (*)(void)) chacha20_final },
+    { OSSL_FUNC_CIPHER_CIPHER, (void (*)(void)) chacha20_cipher},
+    { OSSL_FUNC_CIPHER_GET_PARAMS, (void (*)(void)) chacha20_get_params },
+    { OSSL_FUNC_CIPHER_GETTABLE_PARAMS,
+      (void (*)(void)) chacha20_gettable_params },
+    { OSSL_FUNC_CIPHER_GET_CTX_PARAMS,
+      (void (*)(void)) chacha20_get_ctx_params },
     { OSSL_FUNC_CIPHER_GETTABLE_CTX_PARAMS,
-        (void (*)(void))chacha20_gettable_ctx_params },
-    { OSSL_FUNC_CIPHER_SET_CTX_PARAMS, (void (*)(void))chacha20_set_ctx_params },
+      (void (*)(void)) chacha20_gettable_ctx_params },
+    { OSSL_FUNC_CIPHER_SET_CTX_PARAMS,
+      (void (*)(void)) chacha20_set_ctx_params },
     { OSSL_FUNC_CIPHER_SETTABLE_CTX_PARAMS,
-        (void (*)(void))chacha20_settable_ctx_params },
+      (void (*)(void)) chacha20_settable_ctx_params },
     OSSL_DISPATCH_END
 };
 

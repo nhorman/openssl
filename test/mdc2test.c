@@ -81,7 +81,7 @@ static int test_mdc2(void)
         goto end;
 
     testresult = 1;
- end:
+end:
     EVP_MD_CTX_free(c);
     OSSL_PROVIDER_unload(prov);
     return testresult;

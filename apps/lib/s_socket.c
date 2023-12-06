@@ -233,7 +233,7 @@ void get_sock_info_address(int asock, char **hostname, char **service)
         *service = NULL;
 
     if ((info.addr = BIO_ADDR_new()) != NULL
-            && BIO_sock_info(asock, BIO_SOCK_INFO_ADDRESS, &info)) {
+        && BIO_sock_info(asock, BIO_SOCK_INFO_ADDRESS, &info)) {
         if (hostname != NULL)
             *hostname = BIO_ADDR_hostname_string(info.addr, 1);
         if (service != NULL)
@@ -319,10 +319,11 @@ int do_server(int *accept_sock, const char *host, const char *port,
     }
 
     /* Admittedly, these checks are quite paranoid, we should not get
-     * anything in the BIO_ADDRINFO chain that we haven't asked for */
+    * anything in the BIO_ADDRINFO chain that we haven't asked for */
     OPENSSL_assert((family == AF_UNSPEC || family == BIO_ADDRINFO_family(res))
                    && (type == 0 || type == BIO_ADDRINFO_socktype(res))
-                   && (protocol == 0 || protocol == BIO_ADDRINFO_protocol(res)));
+                   && (protocol == 0 ||
+                       protocol == BIO_ADDRINFO_protocol(res)));
 
     sock_family = BIO_ADDRINFO_family(res);
     sock_type = BIO_ADDRINFO_socktype(res);
@@ -335,10 +336,10 @@ int do_server(int *accept_sock, const char *host, const char *port,
     if (sock_family == AF_INET6)
         sock_options |= BIO_SOCK_V6_ONLY;
     if (next != NULL
-            && BIO_ADDRINFO_socktype(next) == sock_type
-            && BIO_ADDRINFO_protocol(next) == sock_protocol) {
+        && BIO_ADDRINFO_socktype(next) == sock_type
+        && BIO_ADDRINFO_protocol(next) == sock_protocol) {
         if (sock_family == AF_INET
-                && BIO_ADDRINFO_family(next) == AF_INET6) {
+            && BIO_ADDRINFO_family(next) == AF_INET6) {
             /* In case AF_INET6 is returned but not supported by the
              * kernel, retry with the first detected address family */
             sock_family_fallback = sock_family;
@@ -460,7 +461,7 @@ int do_server(int *accept_sock, const char *host, const char *port,
             break;
         }
     }
- end:
+end:
 # ifdef AF_UNIX
     if (family == AF_UNIX)
         unlink(host);
@@ -479,12 +480,12 @@ void do_ssl_shutdown(SSL *ssl)
         ret = SSL_shutdown(ssl);
         if (ret < 0) {
             switch (SSL_get_error(ssl, ret)) {
-            case SSL_ERROR_WANT_READ:
-            case SSL_ERROR_WANT_WRITE:
-            case SSL_ERROR_WANT_ASYNC:
-            case SSL_ERROR_WANT_ASYNC_JOB:
-                /* We just do busy waiting. Nothing clever */
-                continue;
+                case SSL_ERROR_WANT_READ:
+                case SSL_ERROR_WANT_WRITE:
+                case SSL_ERROR_WANT_ASYNC:
+                case SSL_ERROR_WANT_ASYNC_JOB:
+                    /* We just do busy waiting. Nothing clever */
+                    continue;
             }
             ret = 0;
         }

@@ -50,7 +50,7 @@ struct quic_channel_st {
     /*
      * Callback used to get the current time.
      */
-    OSSL_TIME                       (*now_cb)(void *arg);
+    OSSL_TIME (*now_cb)(void *arg);
     void                            *now_cb_arg;
 
     /*
@@ -68,10 +68,10 @@ struct quic_channel_st {
     unsigned char                   *local_transport_params;
 
     /* Asynchronous I/O reactor. */
-    QUIC_REACTOR                    rtor;
+    QUIC_REACTOR rtor;
 
     /* Our current L4 peer address, if any. */
-    BIO_ADDR                        cur_peer_addr;
+    BIO_ADDR cur_peer_addr;
 
     /* Network-side read and write BIOs. */
     BIO                             *net_rbio, *net_wbio;
@@ -87,11 +87,11 @@ struct quic_channel_st {
      * Connection level FC. The stream_count RXFCs is used to manage
      * MAX_STREAMS signalling.
      */
-    QUIC_TXFC                       conn_txfc;
-    QUIC_RXFC                       conn_rxfc, crypto_rxfc[QUIC_PN_SPACE_NUM];
-    QUIC_RXFC                       max_streams_bidi_rxfc, max_streams_uni_rxfc;
-    QUIC_STREAM_MAP                 qsm;
-    OSSL_STATM                      statm;
+    QUIC_TXFC conn_txfc;
+    QUIC_RXFC conn_rxfc, crypto_rxfc[QUIC_PN_SPACE_NUM];
+    QUIC_RXFC max_streams_bidi_rxfc, max_streams_uni_rxfc;
+    QUIC_STREAM_MAP qsm;
+    OSSL_STATM statm;
     OSSL_CC_DATA                    *cc_data;
     const OSSL_CC_METHOD            *cc_method;
     OSSL_ACKM                       *ackm;
@@ -108,7 +108,7 @@ struct quic_channel_st {
     OSSL_QRX                        *qrx;
 
     /* Message callback related arguments */
-    ossl_msg_cb                     msg_callback;
+    ossl_msg_cb msg_callback;
     void                            *msg_callback_arg;
     SSL                             *msg_callback_ssl;
 
@@ -126,20 +126,20 @@ struct quic_channel_st {
      * Server: The DCID used in the first Initial packet the client transmitted.
      * Randomly generated and required by RFC to be at least 8 bytes.
      */
-    QUIC_CONN_ID                    init_dcid;
+    QUIC_CONN_ID init_dcid;
 
     /*
      * Client: The SCID found in the first Initial packet from the server.
      * Not valid for servers.
      * Valid if have_received_enc_pkt is set.
      */
-    QUIC_CONN_ID                    init_scid;
+    QUIC_CONN_ID init_scid;
 
     /*
      * Client only: The SCID found in an incoming Retry packet we handled.
      * Not valid for servers.
      */
-    QUIC_CONN_ID                    retry_scid;
+    QUIC_CONN_ID retry_scid;
 
     /*
      * The DCID we currently use to talk to the peer and its sequence num.
@@ -152,12 +152,12 @@ struct quic_channel_st {
      *
      * Leaving them here avoids null checking etc
      */
-    QUIC_CONN_ID                    cur_remote_dcid;
-    uint64_t                        cur_remote_seq_num;
-    uint64_t                        cur_retire_prior_to;
+    QUIC_CONN_ID cur_remote_dcid;
+    uint64_t cur_remote_seq_num;
+    uint64_t cur_retire_prior_to;
 
     /* Server only: The DCID we currently expect the peer to use to talk to us. */
-    QUIC_CONN_ID                    cur_local_cid;
+    QUIC_CONN_ID cur_local_cid;
 
     /* Hash of stateless reset tokens keyed on the token */
     LHASH_OF(QUIC_SRT_ELEM)        *srt_hash_tok;
@@ -166,17 +166,17 @@ struct quic_channel_st {
     OSSL_LIST(stateless_reset_tokens) srt_list_seq;
 
     /* Transport parameter values we send to our peer. */
-    uint64_t                        tx_init_max_stream_data_bidi_local;
-    uint64_t                        tx_init_max_stream_data_bidi_remote;
-    uint64_t                        tx_init_max_stream_data_uni;
-    uint64_t                        tx_max_ack_delay; /* ms */
+    uint64_t tx_init_max_stream_data_bidi_local;
+    uint64_t tx_init_max_stream_data_bidi_remote;
+    uint64_t tx_init_max_stream_data_uni;
+    uint64_t tx_max_ack_delay;                        /* ms */
 
     /* Transport parameter values received from server. */
-    uint64_t                        rx_init_max_stream_data_bidi_local;
-    uint64_t                        rx_init_max_stream_data_bidi_remote;
-    uint64_t                        rx_init_max_stream_data_uni;
-    uint64_t                        rx_max_ack_delay; /* ms */
-    unsigned char                   rx_ack_delay_exp;
+    uint64_t rx_init_max_stream_data_bidi_local;
+    uint64_t rx_init_max_stream_data_bidi_remote;
+    uint64_t rx_init_max_stream_data_uni;
+    uint64_t rx_max_ack_delay;                        /* ms */
+    unsigned char rx_ack_delay_exp;
 
     /*
      * Temporary staging area to store information about the incoming packet we
@@ -188,27 +188,27 @@ struct quic_channel_st {
      * Current limit on number of streams we may create. Set by transport
      * parameters initially and then by MAX_STREAMS frames.
      */
-    uint64_t                        max_local_streams_bidi;
-    uint64_t                        max_local_streams_uni;
+    uint64_t max_local_streams_bidi;
+    uint64_t max_local_streams_uni;
 
     /* The negotiated maximum idle timeout in milliseconds. */
-    uint64_t                        max_idle_timeout;
+    uint64_t max_idle_timeout;
 
     /*
      * Maximum payload size in bytes for datagrams sent to our peer, as
      * negotiated by transport parameters.
      */
-    uint64_t                        rx_max_udp_payload_size;
+    uint64_t rx_max_udp_payload_size;
     /* Maximum active CID limit, as negotiated by transport parameters. */
-    uint64_t                        rx_active_conn_id_limit;
+    uint64_t rx_active_conn_id_limit;
 
     /*
      * Used to allocate stream IDs. This is a stream ordinal, i.e., a stream ID
      * without the low two bits designating type and initiator. Shift and or in
      * the type bits to convert to a stream ID.
      */
-    uint64_t                        next_local_stream_ordinal_bidi;
-    uint64_t                        next_local_stream_ordinal_uni;
+    uint64_t next_local_stream_ordinal_bidi;
+    uint64_t next_local_stream_ordinal_uni;
 
     /*
      * Used to track which stream ordinals within a given stream type have been
@@ -216,14 +216,14 @@ struct quic_channel_st {
      * which streams should be implicitly created due to usage of a higher
      * stream ordinal.
      */
-    uint64_t                        next_remote_stream_ordinal_bidi;
-    uint64_t                        next_remote_stream_ordinal_uni;
+    uint64_t next_remote_stream_ordinal_bidi;
+    uint64_t next_remote_stream_ordinal_uni;
 
     /*
      * Application error code to be used for STOP_SENDING/RESET_STREAM frames
      * used to autoreject incoming streams.
      */
-    uint64_t                        incoming_stream_auto_reject_aec;
+    uint64_t incoming_stream_auto_reject_aec;
 
     /*
      * Override packet count threshold at which we do a spontaneous TXKU.
@@ -231,44 +231,44 @@ struct quic_channel_st {
      * limit advice from the QRL utility functions. This is intended for testing
      * use only. Usually set to UINT64_MAX.
      */
-    uint64_t                        txku_threshold_override;
+    uint64_t txku_threshold_override;
 
     /* Diagnostic counters for testing purposes only. May roll over. */
-    uint16_t                        diag_num_rx_ack; /* Number of ACK frames received */
+    uint16_t diag_num_rx_ack;                        /* Number of ACK frames received */
 
     /* Valid if we are in the TERMINATING or TERMINATED states. */
-    QUIC_TERMINATE_CAUSE            terminate_cause;
+    QUIC_TERMINATE_CAUSE terminate_cause;
 
     /*
      * Deadline at which we move to TERMINATING state. Valid if in the
      * TERMINATING state.
      */
-    OSSL_TIME                       terminate_deadline;
+    OSSL_TIME terminate_deadline;
 
     /*
      * Deadline at which connection dies due to idle timeout if no further
      * events occur.
      */
-    OSSL_TIME                       idle_deadline;
+    OSSL_TIME idle_deadline;
 
     /*
      * Deadline at which we should send an ACK-eliciting packet to ensure
      * idle timeout does not occur.
      */
-    OSSL_TIME                       ping_deadline;
+    OSSL_TIME ping_deadline;
 
     /*
      * The deadline at which the period in which it is RECOMMENDED that we not
      * initiate any spontaneous TXKU ends. This is zero if no such deadline
      * applies.
      */
-    OSSL_TIME                       txku_cooldown_deadline;
+    OSSL_TIME txku_cooldown_deadline;
 
     /*
      * The deadline at which we take the QRX out of UPDATING and back to NORMAL.
      * Valid if rxku_in_progress in 1.
      */
-    OSSL_TIME                       rxku_update_end_deadline;
+    OSSL_TIME rxku_update_end_deadline;
 
     /*
      * The first (application space) PN sent with a new key phase. Valid if the
@@ -277,13 +277,13 @@ struct quic_channel_st {
      * becomes 0. For sanity's sake, such a PN p should also be <= the highest
      * PN we have ever sent, of course.
      */
-    QUIC_PN                         txku_pn;
+    QUIC_PN txku_pn;
 
     /*
      * The (application space) PN which triggered RXKU detection. Valid if
      * rxku_pending_confirm.
      */
-    QUIC_PN                         rxku_trigger_pn;
+    QUIC_PN rxku_trigger_pn;
 
     /*
      * State tracking. QUIC connection-level state is best represented based on
@@ -295,35 +295,35 @@ struct quic_channel_st {
      * state if the state is QUIC_CHANNEL_STATE_ACTIVE and handshake_confirmed is
      * set.
      */
-    unsigned int                    state                   : 3;
+    unsigned int state                   : 3;
 
     /*
      * Have we received at least one encrypted packet from the peer?
      * (If so, Retry and Version Negotiation messages should no longer
      *  be received and should be ignored if they do occur.)
      */
-    unsigned int                    have_received_enc_pkt   : 1;
+    unsigned int have_received_enc_pkt   : 1;
 
     /*
      * Have we successfully processed any packet, including a Version
      * Negotiation packet? If so, further Version Negotiation packets should be
      * ignored.
      */
-    unsigned int                    have_processed_any_pkt  : 1;
+    unsigned int have_processed_any_pkt  : 1;
 
     /*
      * Have we sent literally any packet yet? If not, there is no point polling
      * RX.
      */
-    unsigned int                    have_sent_any_pkt       : 1;
+    unsigned int have_sent_any_pkt       : 1;
 
     /*
      * Are we currently doing proactive version negotiation?
      */
-    unsigned int                    doing_proactive_ver_neg : 1;
+    unsigned int doing_proactive_ver_neg : 1;
 
     /* We have received transport parameters from the peer. */
-    unsigned int                    got_remote_transport_params    : 1;
+    unsigned int got_remote_transport_params    : 1;
 
     /*
      * This monotonically transitions to 1 once the TLS state machine is
@@ -334,7 +334,7 @@ struct quic_channel_st {
      * Handshake completion is not the same as handshake confirmation (see
      * below).
      */
-    unsigned int                    handshake_complete      : 1;
+    unsigned int handshake_complete      : 1;
 
     /*
      * This monotonically transitions to 1 once the handshake is confirmed.
@@ -342,13 +342,13 @@ struct quic_channel_st {
      * At our option, we may also take acknowledgement of any 1-RTT packet
      * we sent as a handshake confirmation.
      */
-    unsigned int                    handshake_confirmed     : 1;
+    unsigned int handshake_confirmed     : 1;
 
     /*
      * We are sending Initial packets based on a Retry. This means we definitely
      * should not receive another Retry, and if we do it is an error.
      */
-    unsigned int                    doing_retry             : 1;
+    unsigned int doing_retry             : 1;
 
     /*
      * We don't store the current EL here; the TXP asks the QTX which ELs
@@ -356,8 +356,8 @@ struct quic_channel_st {
      */
 
     /* Have statm, qsm been initialised? Used to track cleanup. */
-    unsigned int                    have_statm              : 1;
-    unsigned int                    have_qsm                : 1;
+    unsigned int have_statm              : 1;
+    unsigned int have_qsm                : 1;
 
     /*
      * Preferred ELs for transmission and reception. This is not strictly needed
@@ -367,41 +367,41 @@ struct quic_channel_st {
      * easier for interoperation with the handshake layer, which likes to invoke
      * the yield secret callback at different times for TX and RX.
      */
-    unsigned int                    tx_enc_level            : 3;
-    unsigned int                    rx_enc_level            : 3;
+    unsigned int tx_enc_level            : 3;
+    unsigned int rx_enc_level            : 3;
 
     /* If bit n is set, EL n has been discarded. */
-    unsigned int                    el_discarded            : 4;
+    unsigned int el_discarded            : 4;
 
     /*
      * While in TERMINATING - CLOSING, set when we should generate a connection
      * close frame.
      */
-    unsigned int                    conn_close_queued       : 1;
+    unsigned int conn_close_queued       : 1;
 
     /* Are we in server mode? Never changes after instantiation. */
-    unsigned int                    is_server               : 1;
+    unsigned int is_server               : 1;
 
     /*
      * Set temporarily when the handshake layer has given us a new RX secret.
      * Used to determine if we need to check our RX queues again.
      */
-    unsigned int                    have_new_rx_secret      : 1;
+    unsigned int have_new_rx_secret      : 1;
 
     /* Have we ever called QUIC_TLS yet during RX processing? */
-    unsigned int                    did_tls_tick            : 1;
+    unsigned int did_tls_tick            : 1;
     /* Has any CRYPTO frame been processed during this tick? */
-    unsigned int                    did_crypto_frame        : 1;
+    unsigned int did_crypto_frame        : 1;
 
     /*
      * Have we sent an ack-eliciting packet since the last successful packet
      * reception? Used to determine when to bump idle timer (see RFC 9000 s.
      * 10.1).
      */
-    unsigned int                    have_sent_ack_eliciting_since_rx    : 1;
+    unsigned int have_sent_ack_eliciting_since_rx    : 1;
 
     /* Should incoming streams automatically be rejected? */
-    unsigned int                    incoming_stream_auto_reject         : 1;
+    unsigned int incoming_stream_auto_reject         : 1;
 
     /*
      * 1 if a key update sequence was locally initiated, meaning we sent the
@@ -409,7 +409,7 @@ struct quic_channel_st {
      * another TXKU. 0 if a key update sequence was initiated by the peer,
      * meaning we detect a RXKU first and have to generate a TXKU in response.
      */
-    unsigned int                    ku_locally_initiated                : 1;
+    unsigned int ku_locally_initiated                : 1;
 
     /*
      * 1 if we have triggered TXKU (whether spontaneous or solicited) but are
@@ -417,7 +417,7 @@ struct quic_channel_st {
      * are not allowed to trigger spontaneous TXKU (but solicited TXKU is
      * potentially still possible).
      */
-    unsigned int                    txku_in_progress                    : 1;
+    unsigned int txku_in_progress                    : 1;
 
     /*
      * We have received an RXKU event and currently are going through
@@ -428,7 +428,7 @@ struct quic_channel_st {
      * active so we know when to take the QRX out of UPDATING and back to
      * NORMAL.
      */
-    unsigned int                    rxku_in_progress                    : 1;
+    unsigned int rxku_in_progress                    : 1;
 
     /*
      * We have received an RXKU but have yet to send an ACK for it, which means
@@ -437,18 +437,18 @@ struct quic_channel_st {
      * this restriction comes into play if we take more than PTO time to send
      * an ACK for it (not likely).
      */
-    unsigned int                    rxku_pending_confirm                : 1;
+    unsigned int rxku_pending_confirm                : 1;
 
     /* Temporary variable indicating rxku_pending_confirm is to become 0. */
-    unsigned int                    rxku_pending_confirm_done           : 1;
+    unsigned int rxku_pending_confirm_done           : 1;
 
     /*
      * If set, RXKU is expected (because we initiated a spontaneous TXKU).
      */
-    unsigned int                    rxku_expected                       : 1;
+    unsigned int rxku_expected                       : 1;
 
     /* Permanent net error encountered */
-    unsigned int                    net_error                           : 1;
+    unsigned int net_error                           : 1;
 
     /*
      * Protocol error encountered. Note that you should refer to the state field
@@ -456,20 +456,20 @@ struct quic_channel_st {
      * after the first protocol error, but still record the first protocol error
      * if it happens during the TERMINATING state.
      */
-    unsigned int                    protocol_error                      : 1;
+    unsigned int protocol_error                      : 1;
 
     /* Inhibit tick for testing purposes? */
-    unsigned int                    inhibit_tick                        : 1;
+    unsigned int inhibit_tick                        : 1;
 
     /* Are we using addressed mode? */
-    unsigned int                    addressed_mode                      : 1;
+    unsigned int addressed_mode                      : 1;
 
     /* Saved error stack in case permanent error was encountered */
     ERR_STATE                       *err_state;
 
     /* Scratch area for use by RXDP to store decoded ACK ranges. */
     OSSL_QUIC_ACK_RANGE             *ack_range_scratch;
-    size_t                          num_ack_range_scratch;
+    size_t num_ack_range_scratch;
 };
 
 # endif

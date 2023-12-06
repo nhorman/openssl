@@ -26,21 +26,22 @@
  */
 
 #define make_dh(x) \
-DH *DH_get_##x(void) \
-{ \
-    DH *dh = DH_new(); \
+        DH *DH_get_ ## x(void) \
+        { \
+            DH *dh = DH_new(); \
 \
-    if (dh == NULL) \
-        return NULL; \
-    dh->params.p = BN_dup(&ossl_bignum_dh##x##_p); \
-    dh->params.g = BN_dup(&ossl_bignum_dh##x##_g); \
-    dh->params.q = BN_dup(&ossl_bignum_dh##x##_q); \
-    if (dh->params.p == NULL || dh->params.q == NULL || dh->params.g == NULL) {\
-        DH_free(dh); \
-        return NULL; \
-    } \
-    return dh; \
-}
+            if (dh == NULL) \
+            return NULL; \
+            dh->params.p = BN_dup(&ossl_bignum_dh ## x ## _p); \
+            dh->params.g = BN_dup(&ossl_bignum_dh ## x ## _g); \
+            dh->params.q = BN_dup(&ossl_bignum_dh ## x ## _q); \
+            if (dh->params.p == NULL || dh->params.q == NULL || \
+                dh->params.g == NULL) { \
+                DH_free(dh); \
+                return NULL; \
+            } \
+            return dh; \
+        }
 
 make_dh(1024_160)
 make_dh(2048_224)

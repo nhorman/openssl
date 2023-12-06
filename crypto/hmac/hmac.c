@@ -59,9 +59,9 @@ int HMAC_Init_ex(HMAC_CTX *ctx, const void *key, int len,
             return 0;
         if (j < len) {
             if (!EVP_DigestInit_ex(ctx->md_ctx, md, impl)
-                    || !EVP_DigestUpdate(ctx->md_ctx, key, len)
-                    || !EVP_DigestFinal_ex(ctx->md_ctx, keytmp,
-                                           &keytmp_length))
+                || !EVP_DigestUpdate(ctx->md_ctx, key, len)
+                || !EVP_DigestFinal_ex(ctx->md_ctx, keytmp,
+                                       &keytmp_length))
                 return 0;
         } else {
             if (len < 0 || len > (int)sizeof(keytmp))
@@ -76,21 +76,21 @@ int HMAC_Init_ex(HMAC_CTX *ctx, const void *key, int len,
         for (i = 0; i < HMAC_MAX_MD_CBLOCK_SIZE; i++)
             pad[i] = 0x36 ^ keytmp[i];
         if (!EVP_DigestInit_ex(ctx->i_ctx, md, impl)
-                || !EVP_DigestUpdate(ctx->i_ctx, pad,
-                                     EVP_MD_get_block_size(md)))
+            || !EVP_DigestUpdate(ctx->i_ctx, pad,
+                                 EVP_MD_get_block_size(md)))
             goto err;
 
         for (i = 0; i < HMAC_MAX_MD_CBLOCK_SIZE; i++)
             pad[i] = 0x5c ^ keytmp[i];
         if (!EVP_DigestInit_ex(ctx->o_ctx, md, impl)
-                || !EVP_DigestUpdate(ctx->o_ctx, pad,
-                                     EVP_MD_get_block_size(md)))
+            || !EVP_DigestUpdate(ctx->o_ctx, pad,
+                                 EVP_MD_get_block_size(md)))
             goto err;
     }
     if (!EVP_MD_CTX_copy_ex(ctx->md_ctx, ctx->i_ctx))
         goto err;
     rv = 1;
- err:
+err:
     if (reset) {
         OPENSSL_cleanse(keytmp, sizeof(keytmp));
         OPENSSL_cleanse(pad, sizeof(pad));
@@ -131,7 +131,7 @@ int HMAC_Final(HMAC_CTX *ctx, unsigned char *md, unsigned int *len)
     if (!EVP_DigestFinal_ex(ctx->md_ctx, md, len))
         goto err;
     return 1;
- err:
+err:
     return 0;
 }
 
@@ -213,7 +213,7 @@ int HMAC_CTX_copy(HMAC_CTX *dctx, HMAC_CTX *sctx)
         goto err;
     dctx->md = sctx->md;
     return 1;
- err:
+err:
     hmac_ctx_cleanup(dctx);
     return 0;
 }

@@ -45,9 +45,9 @@ DES_LONG DES_quad_cksum(const unsigned char *input, DES_cblock output[],
     lp = (DES_LONG *)&(output[0])[0];
 
     z0 = Q_B0((*seed)[0]) | Q_B1((*seed)[1]) | Q_B2((*seed)[2]) |
-        Q_B3((*seed)[3]);
+         Q_B3((*seed)[3]);
     z1 = Q_B0((*seed)[4]) | Q_B1((*seed)[5]) | Q_B2((*seed)[6]) |
-        Q_B3((*seed)[7]);
+         Q_B3((*seed)[7]);
 
     for (i = 0; ((i < 4) && (i < out_count)); i++) {
         cp = input;
@@ -68,7 +68,7 @@ DES_LONG DES_quad_cksum(const unsigned char *input, DES_cblock output[],
             z0 = ((((t0 * t0) & 0xffffffffL) + ((t1 * t1) & 0xffffffffL))
                   & 0xffffffffL) % 0x7fffffffL;
             z1 = ((t0 * ((t1 + NOISE) & 0xffffffffL)) & 0xffffffffL) %
-                0x7fffffffL;
+                 0x7fffffffL;
         }
         if (lp != NULL) {
             /*

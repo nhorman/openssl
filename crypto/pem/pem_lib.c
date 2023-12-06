@@ -219,7 +219,7 @@ static int check_pem(const char *nm, const char *name)
 }
 
 #define PEM_FREE(p, flags, num)                                 \
-    pem_free((p), (flags), (num), OPENSSL_FILE, OPENSSL_LINE)
+        pem_free((p), (flags), (num), OPENSSL_FILE, OPENSSL_LINE)
 static void pem_free(void *p, unsigned int flags, size_t num,
                      const char *file, int line)
 {
@@ -230,7 +230,7 @@ static void pem_free(void *p, unsigned int flags, size_t num,
 }
 
 #define PEM_MALLOC(num, flags)                                  \
-    pem_malloc((num), (flags), OPENSSL_FILE, OPENSSL_LINE)
+        pem_malloc((num), (flags), OPENSSL_FILE, OPENSSL_LINE)
 static void *pem_malloc(int num, unsigned int flags,
                         const char *file, int line)
 {
@@ -273,7 +273,7 @@ static int pem_bytes_read_bio_flags(unsigned char **pdata, long *plen,
 
     ret = 1;
 
- err:
+err:
     if (!ret || pnm == NULL)
         PEM_FREE(nm, flags, 0);
     PEM_FREE(header, flags, 0);
@@ -332,13 +332,13 @@ int PEM_ASN1_write_bio(i2d_of_void *i2d, const char *name, BIO *bp,
     if (enc != NULL) {
         objstr = EVP_CIPHER_get0_name(enc);
         if (objstr == NULL || EVP_CIPHER_get_iv_length(enc) == 0
-                || EVP_CIPHER_get_iv_length(enc) > (int)sizeof(iv)
-                   /*
-                    * Check "Proc-Type: 4,Encrypted\nDEK-Info: objstr,hex-iv\n"
-                    * fits into buf
-                    */
-                || strlen(objstr) + 23 + 2 * EVP_CIPHER_get_iv_length(enc) + 13
-                   > sizeof(buf)) {
+            || EVP_CIPHER_get_iv_length(enc) > (int)sizeof(iv)
+            /*
+             * Check "Proc-Type: 4,Encrypted\nDEK-Info: objstr,hex-iv\n"
+             * fits into buf
+             */
+            || strlen(objstr) + 23 + 2 * EVP_CIPHER_get_iv_length(enc) + 13
+            > sizeof(buf)) {
             ERR_raise(ERR_LIB_PEM, PEM_R_UNSUPPORTED_CIPHER);
             goto err;
         }
@@ -407,7 +407,7 @@ int PEM_ASN1_write_bio(i2d_of_void *i2d, const char *name, BIO *bp,
     i = PEM_write_bio(bp, name, buf, data, i);
     if (i <= 0)
         ret = 0;
- err:
+err:
     OPENSSL_cleanse(key, sizeof(key));
     OPENSSL_cleanse(iv, sizeof(iv));
     EVP_CIPHER_CTX_free(ctx);
@@ -671,7 +671,7 @@ int PEM_write_bio(BIO *bp, const char *name, const char *header,
     }
     retval = i + outl;
 
- err:
+err:
     if (retval == 0 && reason != 0)
         ERR_raise(ERR_LIB_PEM, reason);
     EVP_ENCODE_CTX_free(ctx);
@@ -698,7 +698,8 @@ int PEM_read(FILE *fp, char **name, char **header, unsigned char **data,
 #endif
 
 /* Some helpers for PEM_read_bio_ex(). */
-static int sanitize_line(char *linebuf, int len, unsigned int flags, int first_call)
+static int sanitize_line(char *linebuf, int len, unsigned int flags,
+                         int first_call)
 {
     int i;
     if (first_call) {
@@ -775,7 +776,8 @@ static int get_name(BIO *bp, char **name, unsigned int flags)
         }
 
         /* Strip trailing garbage and standardize ending. */
-        len = sanitize_line(linebuf, len, flags & ~PEM_FLAG_ONLY_B64, first_call);
+        len =
+            sanitize_line(linebuf, len, flags & ~PEM_FLAG_ONLY_B64, first_call);
         first_call = 0;
 
         /* Allow leading empty or non-matching lines. */
@@ -818,7 +820,8 @@ static int get_header_and_data(BIO *bp, BIO **header, BIO **data, char *name,
 {
     BIO *tmp = *header;
     char *linebuf, *p;
-    int len, ret = 0, end = 0, prev_partial_line_read = 0, partial_line_read = 0;
+    int len, ret = 0, end = 0, prev_partial_line_read = 0,
+        partial_line_read = 0;
     /* 0 if not seen (yet), 1 if reading header, 2 if finished header */
     enum header_status got_header = MAYBE_HEADER;
     unsigned int flags_mask;
@@ -969,8 +972,8 @@ int PEM_read_bio_ex(BIO *bp, char **name_out, char **header,
     EVP_DecodeInit(ctx);
     if (EVP_DecodeUpdate(ctx, (unsigned char*)buf_mem->data, &len,
                          (unsigned char*)buf_mem->data, len) < 0
-            || EVP_DecodeFinal(ctx, (unsigned char*)&(buf_mem->data[len]),
-                               &taillen) < 0) {
+        || EVP_DecodeFinal(ctx, (unsigned char*)&(buf_mem->data[len]),
+                           &taillen) < 0) {
         ERR_raise(ERR_LIB_PEM, PEM_R_BAD_BASE64_DECODE);
         goto end;
     }
@@ -1009,7 +1012,8 @@ end:
 int PEM_read_bio(BIO *bp, char **name, char **header, unsigned char **data,
                  long *len)
 {
-    return PEM_read_bio_ex(bp, name, header, data, len, PEM_FLAG_EAY_COMPATIBLE);
+    return PEM_read_bio_ex(bp, name, header, data, len,
+                           PEM_FLAG_EAY_COMPATIBLE);
 }
 
 /*

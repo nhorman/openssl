@@ -69,7 +69,8 @@ int tls_engine_load_ssl_client_cert(SSL_CONNECTION *s, X509 **px509,
 {
     SSL *ssl = SSL_CONNECTION_GET_SSL(s);
 
-    return ENGINE_load_ssl_client_cert(SSL_CONNECTION_GET_CTX(s)->client_cert_engine,
+    return ENGINE_load_ssl_client_cert(SSL_CONNECTION_GET_CTX(
+                                           s)->client_cert_engine,
                                        ssl,
                                        SSL_get_client_CA_list(ssl),
                                        px509, ppkey, NULL, NULL, NULL);
@@ -199,13 +200,13 @@ void SSL_CTX_set_tmp_dh_callback(SSL_CTX *ctx,
                                  DH *(*dh) (SSL *ssl, int is_export,
                                             int keylength))
 {
-    SSL_CTX_callback_ctrl(ctx, SSL_CTRL_SET_TMP_DH_CB, (void (*)(void))dh);
+    SSL_CTX_callback_ctrl(ctx, SSL_CTRL_SET_TMP_DH_CB, (void (*)(void)) dh);
 }
 
 void SSL_set_tmp_dh_callback(SSL *ssl, DH *(*dh) (SSL *ssl, int is_export,
                                                   int keylength))
 {
-    SSL_callback_ctrl(ssl, SSL_CTRL_SET_TMP_DH_CB, (void (*)(void))dh);
+    SSL_callback_ctrl(ssl, SSL_CTRL_SET_TMP_DH_CB, (void (*)(void)) dh);
 }
 # endif
 #endif /* OPENSSL_NO_DEPRECATED */

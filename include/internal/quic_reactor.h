@@ -68,9 +68,9 @@
  * the reactor interface.
  */
 typedef struct quic_tick_result_st {
-    char        net_read_desired;
-    char        net_write_desired;
-    OSSL_TIME   tick_deadline;
+    char net_read_desired;
+    char net_write_desired;
+    OSSL_TIME tick_deadline;
 } QUIC_TICK_RESULT;
 
 typedef struct quic_reactor_st {
@@ -115,8 +115,10 @@ void ossl_quic_reactor_set_poll_r(QUIC_REACTOR *rtor,
 void ossl_quic_reactor_set_poll_w(QUIC_REACTOR *rtor,
                                   const BIO_POLL_DESCRIPTOR *w);
 
-const BIO_POLL_DESCRIPTOR *ossl_quic_reactor_get_poll_r(const QUIC_REACTOR *rtor);
-const BIO_POLL_DESCRIPTOR *ossl_quic_reactor_get_poll_w(const QUIC_REACTOR *rtor);
+const BIO_POLL_DESCRIPTOR *ossl_quic_reactor_get_poll_r(
+    const QUIC_REACTOR *rtor);
+const BIO_POLL_DESCRIPTOR *ossl_quic_reactor_get_poll_w(
+    const QUIC_REACTOR *rtor);
 
 int ossl_quic_reactor_can_poll_r(const QUIC_REACTOR *rtor);
 int ossl_quic_reactor_can_poll_w(const QUIC_REACTOR *rtor);

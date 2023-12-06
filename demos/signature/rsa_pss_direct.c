@@ -121,7 +121,8 @@ end:
  * This function demonstrates verification of an RSA signature over a SHA-256
  * digest using the PSS signature scheme.
  */
-static int verify(OSSL_LIB_CTX *libctx, const unsigned char *sig, size_t sig_len)
+static int verify(OSSL_LIB_CTX *libctx, const unsigned char *sig,
+                  size_t sig_len)
 {
     int ret = 0;
     const unsigned char *ppub_key = NULL;

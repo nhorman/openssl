@@ -43,29 +43,29 @@ IMPLEMENT_BLOCK_CIPHER(rc5_32_12_16, ks, RC5_32, EVP_RC5_KEY, NID_rc5,
 static int rc5_ctrl(EVP_CIPHER_CTX *c, int type, int arg, void *ptr)
 {
     switch (type) {
-    case EVP_CTRL_INIT:
-        data(c)->rounds = RC5_12_ROUNDS;
-        return 1;
-
-    case EVP_CTRL_GET_RC5_ROUNDS:
-        *(int *)ptr = data(c)->rounds;
-        return 1;
-
-    case EVP_CTRL_SET_RC5_ROUNDS:
-        switch (arg) {
-        case RC5_8_ROUNDS:
-        case RC5_12_ROUNDS:
-        case RC5_16_ROUNDS:
-            data(c)->rounds = arg;
+        case EVP_CTRL_INIT:
+            data(c)->rounds = RC5_12_ROUNDS;
             return 1;
 
-        default:
-            ERR_raise(ERR_LIB_EVP, EVP_R_UNSUPPORTED_NUMBER_OF_ROUNDS);
-            return 0;
-        }
+        case EVP_CTRL_GET_RC5_ROUNDS:
+            *(int *)ptr = data(c)->rounds;
+            return 1;
 
-    default:
-        return -1;
+        case EVP_CTRL_SET_RC5_ROUNDS:
+            switch (arg) {
+                case RC5_8_ROUNDS:
+                case RC5_12_ROUNDS:
+                case RC5_16_ROUNDS:
+                    data(c)->rounds = arg;
+                    return 1;
+
+                default:
+                    ERR_raise(ERR_LIB_EVP, EVP_R_UNSUPPORTED_NUMBER_OF_ROUNDS);
+                    return 0;
+            }
+
+        default:
+            return -1;
     }
 }
 

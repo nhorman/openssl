@@ -105,7 +105,7 @@ static int chacha20_poly1305_initiv(PROV_CIPHER_CTX *bctx)
 #if !defined(OPENSSL_SMALL_FOOTPRINT)
 
 # if defined(POLY1305_ASM) && (defined(__x86_64) || defined(__x86_64__) \
-     || defined(_M_AMD64) || defined(_M_X64))
+    || defined(_M_AMD64) || defined(_M_X64))
 #  define XOR128_HELPERS
 void *xor128_encrypt_n_pad(void *out, const void *inp, void *otp, size_t len);
 void *xor128_decrypt_n_pad(void *out, const void *inp, void *otp, size_t len);
@@ -134,7 +134,8 @@ static int chacha20_poly1305_tls_cipher(PROV_CIPHER_CTX *bctx,
     if (plen <= 3 * CHACHA_BLK_SIZE) {
         ctx->chacha.counter[0] = 0;
         buf_len = (plen + 2 * CHACHA_BLK_SIZE - 1) & (0 - CHACHA_BLK_SIZE);
-        ChaCha20_ctr32(buf, zero, buf_len, ctx->chacha.key.d, ctx->chacha.counter);
+        ChaCha20_ctr32(buf, zero, buf_len, ctx->chacha.key.d,
+                       ctx->chacha.counter);
         Poly1305_Init(poly, buf);
         ctx->chacha.partial_len = 0;
         memcpy(tohash, ctx->tls_aad, POLY1305_BLOCK_SIZE);
@@ -202,11 +203,13 @@ static int chacha20_poly1305_tls_cipher(PROV_CIPHER_CTX *bctx,
         ctx->len.text = plen;
 
         if (bctx->enc) {
-            ChaCha20_ctr32(out, in, plen, ctx->chacha.key.d, ctx->chacha.counter);
+            ChaCha20_ctr32(out, in, plen, ctx->chacha.key.d,
+                           ctx->chacha.counter);
             Poly1305_Update(poly, out, plen);
         } else {
             Poly1305_Update(poly, in, plen);
-            ChaCha20_ctr32(out, in, plen, ctx->chacha.key.d, ctx->chacha.counter);
+            ChaCha20_ctr32(out, in, plen, ctx->chacha.key.d,
+                           ctx->chacha.counter);
         }
 
         in += plen;

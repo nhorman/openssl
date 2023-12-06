@@ -8,11 +8,11 @@
  */
 
 /*****************************************************************************
- *                                                                           *
- * The following definitions are PRIVATE to the state machine. They should   *
- * NOT be used outside of the state machine.                                 *
- *                                                                           *
- *****************************************************************************/
+*                                                                           *
+* The following definitions are PRIVATE to the state machine. They should   *
+* NOT be used outside of the state machine.                                 *
+*                                                                           *
+*****************************************************************************/
 
 /* Max message length definitions */
 
@@ -125,7 +125,8 @@ __owur CON_FUNC_RETURN dtls_construct_change_cipher_spec(SSL_CONNECTION *s,
                                                          WPACKET *pkt);
 
 __owur CON_FUNC_RETURN tls_construct_finished(SSL_CONNECTION *s, WPACKET *pkt);
-__owur CON_FUNC_RETURN tls_construct_key_update(SSL_CONNECTION *s, WPACKET *pkt);
+__owur CON_FUNC_RETURN tls_construct_key_update(SSL_CONNECTION *s,
+                                                WPACKET *pkt);
 __owur MSG_PROCESS_RETURN tls_process_key_update(SSL_CONNECTION *s,
                                                  PACKET *pkt);
 __owur WORK_STATE tls_finish_handshake(SSL_CONNECTION *s, WORK_STATE wst,
@@ -133,10 +134,11 @@ __owur WORK_STATE tls_finish_handshake(SSL_CONNECTION *s, WORK_STATE wst,
 __owur WORK_STATE dtls_wait_for_dry(SSL_CONNECTION *s);
 
 #ifndef OPENSSL_NO_COMP_ALG
-__owur MSG_PROCESS_RETURN tls13_process_compressed_certificate(SSL_CONNECTION *sc,
-                                                               PACKET *pkt,
-                                                               PACKET *tmppkt,
-                                                               BUF_MEM *buf);
+__owur MSG_PROCESS_RETURN tls13_process_compressed_certificate(
+    SSL_CONNECTION *sc,
+    PACKET *pkt,
+    PACKET *tmppkt,
+    BUF_MEM *buf);
 #endif
 
 /* some client-only functions */
@@ -160,8 +162,9 @@ __owur WORK_STATE tls_prepare_client_certificate(SSL_CONNECTION *s,
 __owur CON_FUNC_RETURN tls_construct_client_certificate(SSL_CONNECTION *s,
                                                         WPACKET *pkt);
 #ifndef OPENSSL_NO_COMP_ALG
-__owur CON_FUNC_RETURN tls_construct_client_compressed_certificate(SSL_CONNECTION *sc,
-                                                                   WPACKET *pkt);
+__owur CON_FUNC_RETURN tls_construct_client_compressed_certificate(
+    SSL_CONNECTION *sc,
+    WPACKET *pkt);
 #endif
 __owur int ssl_do_client_cert_cb(SSL_CONNECTION *s, X509 **px509,
                                  EVP_PKEY **ppkey);
@@ -185,15 +188,18 @@ __owur MSG_PROCESS_RETURN tls_process_server_certificate(SSL_CONNECTION *s,
 __owur WORK_STATE tls_post_process_server_certificate(SSL_CONNECTION *s,
                                                       WORK_STATE wst);
 #ifndef OPENSSL_NO_COMP_ALG
-__owur MSG_PROCESS_RETURN tls_process_server_compressed_certificate(SSL_CONNECTION *sc,
-                                                                    PACKET *pkt);
+__owur MSG_PROCESS_RETURN tls_process_server_compressed_certificate(
+    SSL_CONNECTION *sc,
+    PACKET *pkt);
 #endif
 __owur int ssl3_check_cert_and_algorithm(SSL_CONNECTION *s);
 #ifndef OPENSSL_NO_NEXTPROTONEG
-__owur CON_FUNC_RETURN tls_construct_next_proto(SSL_CONNECTION *s, WPACKET *pkt);
+__owur CON_FUNC_RETURN tls_construct_next_proto(SSL_CONNECTION *s,
+                                                WPACKET *pkt);
 #endif
 __owur MSG_PROCESS_RETURN tls_process_hello_req(SSL_CONNECTION *s, PACKET *pkt);
-__owur MSG_PROCESS_RETURN dtls_process_hello_verify(SSL_CONNECTION *s, PACKET *pkt);
+__owur MSG_PROCESS_RETURN dtls_process_hello_verify(SSL_CONNECTION *s,
+                                                    PACKET *pkt);
 __owur CON_FUNC_RETURN tls_construct_end_of_early_data(SSL_CONNECTION *s,
                                                        WPACKET *pkt);
 
@@ -209,8 +215,9 @@ __owur CON_FUNC_RETURN dtls_construct_hello_verify_request(SSL_CONNECTION *s,
 __owur CON_FUNC_RETURN tls_construct_server_certificate(SSL_CONNECTION *s,
                                                         WPACKET *pkt);
 #ifndef OPENSSL_NO_COMP_ALG
-__owur CON_FUNC_RETURN tls_construct_server_compressed_certificate(SSL_CONNECTION *sc,
-                                                                   WPACKET *pkt);
+__owur CON_FUNC_RETURN tls_construct_server_compressed_certificate(
+    SSL_CONNECTION *sc,
+    WPACKET *pkt);
 #endif
 __owur CON_FUNC_RETURN tls_construct_server_key_exchange(SSL_CONNECTION *s,
                                                          WPACKET *pkt);
@@ -221,8 +228,9 @@ __owur CON_FUNC_RETURN tls_construct_server_done(SSL_CONNECTION *s,
 __owur MSG_PROCESS_RETURN tls_process_client_certificate(SSL_CONNECTION *s,
                                                          PACKET *pkt);
 #ifndef OPENSSL_NO_COMP_ALG
-__owur MSG_PROCESS_RETURN tls_process_client_compressed_certificate(SSL_CONNECTION *sc,
-                                                                    PACKET *pkt);
+__owur MSG_PROCESS_RETURN tls_process_client_compressed_certificate(
+    SSL_CONNECTION *sc,
+    PACKET *pkt);
 #endif
 __owur MSG_PROCESS_RETURN tls_process_client_key_exchange(SSL_CONNECTION *s,
                                                           PACKET *pkt);
@@ -385,7 +393,8 @@ EXT_RETURN tls_construct_stoc_etm(SSL_CONNECTION *s, WPACKET *pkt,
 EXT_RETURN tls_construct_stoc_ems(SSL_CONNECTION *s, WPACKET *pkt,
                                   unsigned int context,
                                   X509 *x, size_t chainidx);
-EXT_RETURN tls_construct_stoc_supported_versions(SSL_CONNECTION *s, WPACKET *pkt,
+EXT_RETURN tls_construct_stoc_supported_versions(SSL_CONNECTION *s,
+                                                 WPACKET *pkt,
                                                  unsigned int context, X509 *x,
                                                  size_t chainidx);
 EXT_RETURN tls_construct_stoc_key_share(SSL_CONNECTION *s, WPACKET *pkt,
@@ -466,7 +475,8 @@ EXT_RETURN tls_construct_ctos_sct(SSL_CONNECTION *s, WPACKET *pkt,
 EXT_RETURN tls_construct_ctos_ems(SSL_CONNECTION *s, WPACKET *pkt,
                                   unsigned int context,
                                   X509 *x, size_t chainidx);
-EXT_RETURN tls_construct_ctos_supported_versions(SSL_CONNECTION *s, WPACKET *pkt,
+EXT_RETURN tls_construct_ctos_supported_versions(SSL_CONNECTION *s,
+                                                 WPACKET *pkt,
                                                  unsigned int context, X509 *x,
                                                  size_t chainidx);
 EXT_RETURN tls_construct_ctos_key_share(SSL_CONNECTION *s, WPACKET *pkt,
@@ -484,7 +494,8 @@ EXT_RETURN tls_construct_ctos_padding(SSL_CONNECTION *s, WPACKET *pkt,
 EXT_RETURN tls_construct_ctos_psk(SSL_CONNECTION *s, WPACKET *pkt,
                                   unsigned int context,
                                   X509 *x, size_t chainidx);
-EXT_RETURN tls_construct_ctos_post_handshake_auth(SSL_CONNECTION *s, WPACKET *pkt,
+EXT_RETURN tls_construct_ctos_post_handshake_auth(SSL_CONNECTION *s,
+                                                  WPACKET *pkt,
                                                   unsigned int context,
                                                   X509 *x, size_t chainidx);
 
@@ -557,7 +568,7 @@ int tls_parse_ctos_client_cert_type(SSL_CONNECTION *sc, PACKET *pkt,
                                     X509 *x, size_t chainidx);
 int tls_parse_stoc_client_cert_type(SSL_CONNECTION *sc, PACKET *pkt,
                                     unsigned int context,
-                               X509 *x, size_t chainidx);
+                                    X509 *x, size_t chainidx);
 EXT_RETURN tls_construct_ctos_server_cert_type(SSL_CONNECTION *sc, WPACKET *pkt,
                                                unsigned int context,
                                                X509 *x, size_t chainidx);

@@ -301,7 +301,8 @@ static int test_check_crt_components(void)
         goto end;
     }
 
-    ret = TEST_int_eq(ossl_rsa_sp800_56b_derive_params_from_pq(key, 8, e, ctx), 1)
+    ret = TEST_int_eq(ossl_rsa_sp800_56b_derive_params_from_pq(key, 8, e,
+                                                               ctx), 1)
           && TEST_BN_eq_word(key->n, N)
           && TEST_BN_eq_word(key->dmp1, DP)
           && TEST_BN_eq_word(key->dmq1, DQ)
@@ -375,7 +376,8 @@ static int test_derive_params_from_pq_fail(int tst)
         goto end;
     }
 
-    ret = TEST_int_le(ossl_rsa_sp800_56b_derive_params_from_pq(key, 8, e, ctx), 0);
+    ret = TEST_int_le(ossl_rsa_sp800_56b_derive_params_from_pq(key, 8, e,
+                                                               ctx), 0);
 end:
     BN_free(e);
     RSA_free(key);
@@ -438,7 +440,7 @@ static int test_invalid_keypair(void)
         BN_free(d);
         goto end;
     }
-          /* bad strength/key size */
+    /* bad strength/key size */
     ret = TEST_false(ossl_rsa_sp800_56b_check_keypair(key, NULL, 100, 2048))
           && TEST_false(ossl_rsa_sp800_56b_check_keypair(key, NULL, 112, 1024))
           && TEST_false(ossl_rsa_sp800_56b_check_keypair(key, NULL, 128, 2048))
@@ -581,7 +583,8 @@ int setup_tests(void)
     ADD_TEST(test_check_prime_factor);
     ADD_TEST(test_check_private_exponent);
     ADD_TEST(test_check_crt_components);
-    ADD_ALL_TESTS(test_derive_params_from_pq_fail, (int)OSSL_NELEM(derive_from_pq_tests));
+    ADD_ALL_TESTS(test_derive_params_from_pq_fail,
+                  (int)OSSL_NELEM(derive_from_pq_tests));
     ADD_TEST(test_check_private_key);
     ADD_TEST(test_check_public_key);
     ADD_TEST(test_invalid_keypair);

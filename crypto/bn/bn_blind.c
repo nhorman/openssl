@@ -71,7 +71,7 @@ BN_BLINDING *BN_BLINDING_new(const BIGNUM *A, const BIGNUM *Ai, BIGNUM *mod)
 
     return ret;
 
- err:
+err:
     BN_BLINDING_free(ret);
     return NULL;
 }
@@ -118,7 +118,7 @@ int BN_BLINDING_update(BN_BLINDING *b, BN_CTX *ctx)
     }
 
     ret = 1;
- err:
+err:
     if (b->counter == BN_BLINDING_COUNTER)
         b->counter = 0;
     return ret;
@@ -301,7 +301,7 @@ BN_BLINDING *BN_BLINDING_create_param(BN_BLINDING *b,
     }
 
     return ret;
- err:
+err:
     if (b == NULL) {
         BN_BLINDING_free(ret);
         ret = NULL;

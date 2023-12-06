@@ -87,7 +87,7 @@ static int bnrand(BNRAND_FLAG flag, BIGNUM *rnd, int bits, int top, int bottom,
     if (!BN_bin2bn(buf, bytes, rnd))
         goto err;
     ret = 1;
- err:
+err:
     OPENSSL_clear_free(buf, bytes);
     bn_check_top(rnd);
     return ret;
@@ -290,16 +290,17 @@ int BN_generate_dsa_nonce(BIGNUM *out, const BIGNUM *range,
         goto err;
     }
     for (done = 0; done < num_k_bytes;) {
-        if (RAND_priv_bytes_ex(libctx, random_bytes, sizeof(random_bytes), 0) <= 0)
+        if (RAND_priv_bytes_ex(libctx, random_bytes, sizeof(random_bytes),
+                               0) <= 0)
             goto err;
 
         if (!EVP_DigestInit_ex(mdctx, md, NULL)
-                || !EVP_DigestUpdate(mdctx, &done, sizeof(done))
-                || !EVP_DigestUpdate(mdctx, private_bytes,
-                                     sizeof(private_bytes))
-                || !EVP_DigestUpdate(mdctx, message, message_len)
-                || !EVP_DigestUpdate(mdctx, random_bytes, sizeof(random_bytes))
-                || !EVP_DigestFinal_ex(mdctx, digest, NULL))
+            || !EVP_DigestUpdate(mdctx, &done, sizeof(done))
+            || !EVP_DigestUpdate(mdctx, private_bytes,
+                                 sizeof(private_bytes))
+            || !EVP_DigestUpdate(mdctx, message, message_len)
+            || !EVP_DigestUpdate(mdctx, random_bytes, sizeof(random_bytes))
+            || !EVP_DigestFinal_ex(mdctx, digest, NULL))
             goto err;
 
         todo = num_k_bytes - done;
@@ -315,7 +316,7 @@ int BN_generate_dsa_nonce(BIGNUM *out, const BIGNUM *range,
         goto err;
     ret = 1;
 
- err:
+err:
     EVP_MD_CTX_free(mdctx);
     EVP_MD_free(md);
     OPENSSL_clear_free(k_bytes, num_k_bytes);

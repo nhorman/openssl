@@ -59,9 +59,9 @@ static void cmp_client_process_response(OSSL_CMP_CTX *ctx, OSSL_CMP_MSG *msg)
     ctx->oldCert = X509_new(); /* satisfy crm_new() and ossl_cmp_rr_new() */
     if (!OSSL_CMP_CTX_set1_secretValue(ctx, (unsigned char *)"",
                                        0) /* prevent too unspecific error */
-            || ctx->oldCert == NULL
-            || name == NULL || !X509_set_issuer_name(ctx->oldCert, name)
-            || serial == NULL || !X509_set_serialNumber(ctx->oldCert, serial))
+        || ctx->oldCert == NULL
+        || name == NULL || !X509_set_issuer_name(ctx->oldCert, name)
+        || serial == NULL || !X509_set_serialNumber(ctx->oldCert, serial))
         goto err;
 
     (void)OSSL_CMP_CTX_set_transfer_cb(ctx, transfer_cb);
@@ -69,32 +69,32 @@ static void cmp_client_process_response(OSSL_CMP_CTX *ctx, OSSL_CMP_MSG *msg)
     (void)OSSL_CMP_CTX_set_log_cb(ctx, print_noop);
     num_responses = 0;
     switch (msg->body != NULL ? msg->body->type : -1) {
-    case OSSL_CMP_PKIBODY_IP:
-        (void)OSSL_CMP_exec_IR_ses(ctx);
-        break;
-    case OSSL_CMP_PKIBODY_CP:
-        (void)OSSL_CMP_exec_CR_ses(ctx);
-        (void)OSSL_CMP_exec_P10CR_ses(ctx);
-        break;
-    case OSSL_CMP_PKIBODY_KUP:
-        (void)OSSL_CMP_exec_KUR_ses(ctx);
-        break;
-    case OSSL_CMP_PKIBODY_POLLREP:
-        ctx->status = OSSL_CMP_PKISTATUS_waiting;
-        (void)OSSL_CMP_try_certreq(ctx, OSSL_CMP_PKIBODY_CR, NULL, NULL);
-        break;
-    case OSSL_CMP_PKIBODY_RP:
-        (void)OSSL_CMP_exec_RR_ses(ctx);
-        break;
-    case OSSL_CMP_PKIBODY_GENP:
-        sk_OSSL_CMP_ITAV_pop_free(OSSL_CMP_exec_GENM_ses(ctx),
-                                  OSSL_CMP_ITAV_free);
-        break;
-    default:
-        (void)ossl_cmp_msg_check_update(ctx, msg, allow_unprotected, 0);
-        break;
+        case OSSL_CMP_PKIBODY_IP:
+            (void)OSSL_CMP_exec_IR_ses(ctx);
+            break;
+        case OSSL_CMP_PKIBODY_CP:
+            (void)OSSL_CMP_exec_CR_ses(ctx);
+            (void)OSSL_CMP_exec_P10CR_ses(ctx);
+            break;
+        case OSSL_CMP_PKIBODY_KUP:
+            (void)OSSL_CMP_exec_KUR_ses(ctx);
+            break;
+        case OSSL_CMP_PKIBODY_POLLREP:
+            ctx->status = OSSL_CMP_PKISTATUS_waiting;
+            (void)OSSL_CMP_try_certreq(ctx, OSSL_CMP_PKIBODY_CR, NULL, NULL);
+            break;
+        case OSSL_CMP_PKIBODY_RP:
+            (void)OSSL_CMP_exec_RR_ses(ctx);
+            break;
+        case OSSL_CMP_PKIBODY_GENP:
+            sk_OSSL_CMP_ITAV_pop_free(OSSL_CMP_exec_GENM_ses(ctx),
+                                      OSSL_CMP_ITAV_free);
+            break;
+        default:
+            (void)ossl_cmp_msg_check_update(ctx, msg, allow_unprotected, 0);
+            break;
     }
- err:
+err:
     X509_NAME_free(name);
     ASN1_INTEGER_free(serial);
 }

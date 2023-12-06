@@ -122,7 +122,8 @@ int RSA_padding_check_PKCS1_type_1(unsigned char *to, int tlen,
     return j;
 }
 
-int ossl_rsa_padding_add_PKCS1_type_2_ex(OSSL_LIB_CTX *libctx, unsigned char *to,
+int ossl_rsa_padding_add_PKCS1_type_2_ex(OSSL_LIB_CTX *libctx,
+                                         unsigned char *to,
                                          int tlen, const unsigned char *from,
                                          int flen)
 {
@@ -249,16 +250,22 @@ int RSA_padding_check_PKCS1_type_2(unsigned char *to, int tlen,
      * length. Clear bits do a non-copy with identical access pattern.
      * The loop below has overall complexity of O(N*log(N)).
      */
-    tlen = constant_time_select_int(constant_time_lt(num - RSA_PKCS1_PADDING_SIZE, tlen),
-                                    num - RSA_PKCS1_PADDING_SIZE, tlen);
-    for (msg_index = 1; msg_index < num - RSA_PKCS1_PADDING_SIZE; msg_index <<= 1) {
-        mask = ~constant_time_eq(msg_index & (num - RSA_PKCS1_PADDING_SIZE - mlen), 0);
+    tlen =
+        constant_time_select_int(constant_time_lt(num - RSA_PKCS1_PADDING_SIZE,
+                                                  tlen),
+                                 num - RSA_PKCS1_PADDING_SIZE, tlen);
+    for (msg_index = 1; msg_index < num - RSA_PKCS1_PADDING_SIZE;
+         msg_index <<= 1) {
+        mask =
+            ~constant_time_eq(msg_index & (num - RSA_PKCS1_PADDING_SIZE - mlen),
+                              0);
         for (i = RSA_PKCS1_PADDING_SIZE; i < num - msg_index; i++)
             em[i] = constant_time_select_8(mask, em[i + msg_index], em[i]);
     }
     for (i = 0; i < tlen; i++) {
         mask = good & constant_time_lt(i, mlen);
-        to[i] = constant_time_select_8(mask, em[i + RSA_PKCS1_PADDING_SIZE], to[i]);
+        to[i] =
+            constant_time_select_8(mask, em[i + RSA_PKCS1_PADDING_SIZE], to[i]);
     }
 
     OPENSSL_clear_free(em, num);
@@ -454,7 +461,7 @@ int ossl_rsa_padding_check_PKCS1_type_2(OSSL_LIB_CTX *ctx,
 
     synthetic_length = 0;
     for (i = 0; i < MAX_LEN_GEN_TRIES * (int)sizeof(len_candidate);
-            i += sizeof(len_candidate)) {
+         i += sizeof(len_candidate)) {
         len_candidate = (candidate_lengths[i] << 8) | candidate_lengths[i + 1];
         len_candidate &= len_mask;
 
@@ -558,7 +565,7 @@ int ossl_rsa_padding_check_PKCS1_type_2_TLS(OSSL_LIB_CTX *libctx,
      * we've been called incorrectly. We can fail immediately.
      */
     if (flen < RSA_PKCS1_PADDING_SIZE + SSL_MAX_MASTER_KEY_LENGTH
-            || tlen < SSL_MAX_MASTER_KEY_LENGTH) {
+        || tlen < SSL_MAX_MASTER_KEY_LENGTH) {
         ERR_raise(ERR_LIB_RSA, RSA_R_PKCS_DECODING_ERROR);
         return -1;
     }

@@ -66,11 +66,11 @@ typedef struct prov_gcm_ctx_st {
     uint64_t flags;
 
     unsigned int iv_state;      /* set to one of IV_STATE_XXX */
-    unsigned int enc:1;         /* Set to 1 if we are encrypting or 0 otherwise */
-    unsigned int pad:1;         /* Whether padding should be used or not */
-    unsigned int key_set:1;     /* Set if key initialised */
-    unsigned int iv_gen_rand:1; /* No IV was specified, so generate a rand IV */
-    unsigned int iv_gen:1;      /* It is OK to generate IVs */
+    unsigned int enc : 1;         /* Set to 1 if we are encrypting or 0 otherwise */
+    unsigned int pad : 1;         /* Whether padding should be used or not */
+    unsigned int key_set : 1;     /* Set if key initialised */
+    unsigned int iv_gen_rand : 1; /* No IV was specified, so generate a rand IV */
+    unsigned int iv_gen : 1;      /* It is OK to generate IVs */
 
     unsigned char iv[GCM_IV_MAX_SIZE]; /* Buffer to use for IV's */
     unsigned char buf[AES_BLOCK_SIZE]; /* Buffer of partial blocks processed via update calls */
@@ -96,12 +96,12 @@ PROV_CIPHER_FUNC(int, GCM_oneshot, (PROV_GCM_CTX *ctx, unsigned char *aad,
                                     size_t in_len, unsigned char *out,
                                     unsigned char *tag, size_t taglen));
 struct prov_gcm_hw_st {
-  OSSL_GCM_setkey_fn setkey;
-  OSSL_GCM_setiv_fn setiv;
-  OSSL_GCM_aadupdate_fn aadupdate;
-  OSSL_GCM_cipherupdate_fn cipherupdate;
-  OSSL_GCM_cipherfinal_fn cipherfinal;
-  OSSL_GCM_oneshot_fn oneshot;
+    OSSL_GCM_setkey_fn setkey;
+    OSSL_GCM_setiv_fn setiv;
+    OSSL_GCM_aadupdate_fn aadupdate;
+    OSSL_GCM_cipherupdate_fn cipherupdate;
+    OSSL_GCM_cipherfinal_fn cipherfinal;
+    OSSL_GCM_oneshot_fn oneshot;
 };
 
 OSSL_FUNC_cipher_encrypt_init_fn ossl_gcm_einit;
@@ -125,9 +125,9 @@ int ossl_gcm_cipher_update(PROV_GCM_CTX *ctx, const unsigned char *in,
                            size_t len, unsigned char *out);
 
 # define GCM_HW_SET_KEY_CTR_FN(ks, fn_set_enc_key, fn_block, fn_ctr)            \
-    fn_set_enc_key(key, keylen * 8, ks);                                       \
-    CRYPTO_gcm128_init(&ctx->gcm, ks, (block128_f)fn_block);                   \
-    ctx->ctr = (ctr128_f)fn_ctr;                                               \
-    ctx->key_set = 1;
+        fn_set_enc_key(key, keylen * 8, ks);                                       \
+        CRYPTO_gcm128_init(&ctx->gcm, ks, (block128_f)fn_block);                   \
+        ctx->ctr = (ctr128_f)fn_ctr;                                               \
+        ctx->key_set = 1;
 
 #endif

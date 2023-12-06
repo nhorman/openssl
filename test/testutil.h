@@ -55,12 +55,12 @@
  * Simple parameterized tests. Calls test_function(idx) for each 0 <= idx < num.
  */
 # define ADD_ALL_TESTS(test_function, num) \
-    add_all_tests(#test_function, test_function, num, 1)
+        add_all_tests(#test_function, test_function, num, 1)
 /*
  * A variant of the same without TAP output.
  */
 # define ADD_ALL_TESTS_NOSUBTEST(test_function, num) \
-    add_all_tests(#test_function, test_function, num, 0)
+        add_all_tests(#test_function, test_function, num, 0)
 
 /*-
  * Test cases that share common setup should use the helper
@@ -96,19 +96,19 @@
  *      EXECUTE_FOOBAR_TEST();
  *      }
  */
-# define SETUP_TEST_FIXTURE(TEST_FIXTURE_TYPE, set_up)\
-    TEST_FIXTURE_TYPE *fixture = set_up(TEST_CASE_NAME); \
-    int result = 0; \
+# define SETUP_TEST_FIXTURE(TEST_FIXTURE_TYPE, set_up) \
+        TEST_FIXTURE_TYPE *fixture = set_up(TEST_CASE_NAME); \
+        int result = 0; \
 \
-    if (fixture == NULL) \
+        if (fixture == NULL) \
         return 0
 
 
-# define EXECUTE_TEST(execute_func, tear_down)\
-    if (fixture != NULL) {\
-        result = execute_func(fixture);\
-        tear_down(fixture);\
-    }
+# define EXECUTE_TEST(execute_func, tear_down) \
+        if (fixture != NULL) { \
+            result = execute_func(fixture); \
+            tear_down(fixture); \
+        }
 
 /*
  * TEST_CASE_NAME is defined as the name of the test case function where
@@ -129,44 +129,44 @@
 
 /* The default test enum which should be common to all tests */
 # define OPT_TEST_ENUM \
-    OPT_TEST_HELP = 500, \
-    OPT_TEST_LIST, \
-    OPT_TEST_SINGLE, \
-    OPT_TEST_ITERATION, \
-    OPT_TEST_INDENT, \
-    OPT_TEST_SEED
+        OPT_TEST_HELP = 500, \
+        OPT_TEST_LIST, \
+        OPT_TEST_SINGLE, \
+        OPT_TEST_ITERATION, \
+        OPT_TEST_INDENT, \
+        OPT_TEST_SEED
 
 /* The Default test OPTIONS common to all tests (without a usage string) */
 # define OPT_TEST_OPTIONS \
-    { OPT_HELP_STR, 1,  '-', "Valid options are:\n" }, \
-    { "help", OPT_TEST_HELP, '-', "Display this summary" }, \
-    { "list", OPT_TEST_LIST, '-', "Display the list of tests available" }, \
-    { "test", OPT_TEST_SINGLE, 's', "Run a single test by id or name" }, \
-    { "iter", OPT_TEST_ITERATION, 'n', "Run a single iteration of a test" }, \
-    { "indent", OPT_TEST_INDENT,'p', "Number of tabs added to output" }, \
-    { "seed", OPT_TEST_SEED, 'n', "Seed value to randomize tests with" }
+        { OPT_HELP_STR, 1,  '-', "Valid options are:\n" }, \
+        { "help", OPT_TEST_HELP, '-', "Display this summary" }, \
+        { "list", OPT_TEST_LIST, '-', "Display the list of tests available" }, \
+        { "test", OPT_TEST_SINGLE, 's', "Run a single test by id or name" }, \
+        { "iter", OPT_TEST_ITERATION, 'n', "Run a single iteration of a test" }, \
+        { "indent", OPT_TEST_INDENT,'p', "Number of tabs added to output" }, \
+        { "seed", OPT_TEST_SEED, 'n', "Seed value to randomize tests with" }
 
 /* The Default test OPTIONS common to all tests starting with an additional usage string */
 # define OPT_TEST_OPTIONS_WITH_EXTRA_USAGE(usage) \
-    { OPT_HELP_STR, 1, '-', "Usage: %s [options] " usage }, \
-    OPT_TEST_OPTIONS
+        { OPT_HELP_STR, 1, '-', "Usage: %s [options] " usage }, \
+        OPT_TEST_OPTIONS
 
 /* The Default test OPTIONS common to all tests with an default usage string */
 # define OPT_TEST_OPTIONS_DEFAULT_USAGE \
-    { OPT_HELP_STR, 1, '-', "Usage: %s [options]\n" }, \
-    OPT_TEST_OPTIONS
+        { OPT_HELP_STR, 1, '-', "Usage: %s [options]\n" }, \
+        OPT_TEST_OPTIONS
 
 /*
  * Optional Cases that need to be ignored by the test app when using opt_next(),
  * (that are handled internally).
  */
 # define OPT_TEST_CASES \
-         OPT_TEST_HELP: \
-    case OPT_TEST_LIST: \
-    case OPT_TEST_SINGLE: \
-    case OPT_TEST_ITERATION: \
-    case OPT_TEST_INDENT: \
-    case OPT_TEST_SEED
+OPT_TEST_HELP: \
+            case OPT_TEST_LIST: \
+            case OPT_TEST_SINGLE: \
+            case OPT_TEST_ITERATION: \
+            case OPT_TEST_INDENT: \
+            case OPT_TEST_SEED
 
 /*
  * Tests that use test_get_argument() that dont have any additional options
@@ -183,15 +183,15 @@
  *  (3) case OPT_TEST_CASES: break; inside the opt_next() handling code.
  */
 # define OPT_TEST_DECLARE_USAGE(usage_str) \
-const OPTIONS *test_get_options(void) \
-{ \
-    enum { OPT_TEST_ENUM }; \
-    static const OPTIONS options[] = { \
-        OPT_TEST_OPTIONS_WITH_EXTRA_USAGE(usage_str), \
-        { NULL } \
-    }; \
-    return options; \
-}
+        const OPTIONS *test_get_options(void) \
+        { \
+            enum { OPT_TEST_ENUM }; \
+            static const OPTIONS options[] = { \
+                OPT_TEST_OPTIONS_WITH_EXTRA_USAGE(usage_str), \
+                { NULL } \
+            }; \
+            return options; \
+        }
 
 /*
  * Used to read non optional command line values that follow after the options.
@@ -254,12 +254,18 @@ void cleanup_tests(void);
  *      1. the FIPS provider version matches the criteria specified or
  *      2. the FIPS provider isn't being used.
  */
-int fips_provider_version_eq(OSSL_LIB_CTX *libctx, int major, int minor, int patch);
-int fips_provider_version_ne(OSSL_LIB_CTX *libctx, int major, int minor, int patch);
-int fips_provider_version_le(OSSL_LIB_CTX *libctx, int major, int minor, int patch);
-int fips_provider_version_lt(OSSL_LIB_CTX *libctx, int major, int minor, int patch);
-int fips_provider_version_gt(OSSL_LIB_CTX *libctx, int major, int minor, int patch);
-int fips_provider_version_ge(OSSL_LIB_CTX *libctx, int major, int minor, int patch);
+int fips_provider_version_eq(OSSL_LIB_CTX *libctx, int major, int minor,
+                             int patch);
+int fips_provider_version_ne(OSSL_LIB_CTX *libctx, int major, int minor,
+                             int patch);
+int fips_provider_version_le(OSSL_LIB_CTX *libctx, int major, int minor,
+                             int patch);
+int fips_provider_version_lt(OSSL_LIB_CTX *libctx, int major, int minor,
+                             int patch);
+int fips_provider_version_gt(OSSL_LIB_CTX *libctx, int major, int minor,
+                             int patch);
+int fips_provider_version_ge(OSSL_LIB_CTX *libctx, int major, int minor,
+                             int patch);
 
 /*
  * This function matches fips provider version with (potentially multiple)
@@ -291,10 +297,10 @@ const OPTIONS *test_get_options(void);
 # if defined(__GNUC__) && defined(__STDC_VERSION__) \
     && !defined(__MINGW32__) && !defined(__MINGW64__) \
     && !defined(__APPLE__)
-  /*
-   * Because we support the 'z' modifier, which made its appearance in C99,
-   * we can't use __attribute__ with pre C99 dialects.
-   */
+/*
+ * Because we support the 'z' modifier, which made its appearance in C99,
+ * we can't use __attribute__ with pre C99 dialects.
+ */
 #  if __STDC_VERSION__ >= 199901L
 #   undef PRINTF_FORMAT
 #   define PRINTF_FORMAT(a, b)   __attribute__ ((format(printf, a, b)))
@@ -302,17 +308,17 @@ const OPTIONS *test_get_options(void);
 # endif
 
 # define DECLARE_COMPARISON(type, name, opname)                         \
-    int test_ ## name ## _ ## opname(const char *, int,                 \
-                                     const char *, const char *,        \
-                                     const type, const type);
+        int test_ ## name ## _ ## opname(const char *, int,                 \
+                                         const char *, const char *,        \
+                                         const type, const type);
 
 # define DECLARE_COMPARISONS(type, name)                                \
-    DECLARE_COMPARISON(type, name, eq)                                  \
-    DECLARE_COMPARISON(type, name, ne)                                  \
-    DECLARE_COMPARISON(type, name, lt)                                  \
-    DECLARE_COMPARISON(type, name, le)                                  \
-    DECLARE_COMPARISON(type, name, gt)                                  \
-    DECLARE_COMPARISON(type, name, ge)
+        DECLARE_COMPARISON(type, name, eq)                                  \
+        DECLARE_COMPARISON(type, name, ne)                                  \
+        DECLARE_COMPARISON(type, name, lt)                                  \
+        DECLARE_COMPARISON(type, name, le)                                  \
+        DECLARE_COMPARISON(type, name, gt)                                  \
+        DECLARE_COMPARISON(type, name, ge)
 
 DECLARE_COMPARISONS(int, int)
 DECLARE_COMPARISONS(unsigned int, uint)
@@ -407,14 +413,14 @@ int test_BN_abs_eq_word(const char *file, int line, const char *bns,
  * These should not be called directly, use the TEST_xxx macros below instead.
  */
 void test_error(const char *file, int line, const char *desc, ...)
-    PRINTF_FORMAT(3, 4);
+PRINTF_FORMAT(3, 4);
 void test_error_c90(const char *desc, ...) PRINTF_FORMAT(1, 2);
 void test_info(const char *file, int line, const char *desc, ...)
-    PRINTF_FORMAT(3, 4);
+PRINTF_FORMAT(3, 4);
 void test_info_c90(const char *desc, ...) PRINTF_FORMAT(1, 2);
 void test_note(const char *desc, ...) PRINTF_FORMAT(1, 2);
 int test_skip(const char *file, int line, const char *desc, ...)
-    PRINTF_FORMAT(3, 4);
+PRINTF_FORMAT(3, 4);
 int test_skip_c90(const char *desc, ...) PRINTF_FORMAT(1, 2);
 void test_openssl_errors(void);
 void test_perror(const char *s);
@@ -471,19 +477,31 @@ void test_perror(const char *s);
 # define TEST_ulong_gt(a, b)  test_ulong_gt(__FILE__, __LINE__, #a, #b, a, b)
 # define TEST_ulong_ge(a, b)  test_ulong_ge(__FILE__, __LINE__, #a, #b, a, b)
 
-# define TEST_int64_t_eq(a, b)  test_int64_t_eq(__FILE__, __LINE__, #a, #b, a, b)
-# define TEST_int64_t_ne(a, b)  test_int64_t_ne(__FILE__, __LINE__, #a, #b, a, b)
-# define TEST_int64_t_lt(a, b)  test_int64_t_lt(__FILE__, __LINE__, #a, #b, a, b)
-# define TEST_int64_t_le(a, b)  test_int64_t_le(__FILE__, __LINE__, #a, #b, a, b)
-# define TEST_int64_t_gt(a, b)  test_int64_t_gt(__FILE__, __LINE__, #a, #b, a, b)
-# define TEST_int64_t_ge(a, b)  test_int64_t_ge(__FILE__, __LINE__, #a, #b, a, b)
+# define TEST_int64_t_eq(a, b)  test_int64_t_eq(__FILE__, __LINE__, #a, #b, a, \
+                                                b)
+# define TEST_int64_t_ne(a, b)  test_int64_t_ne(__FILE__, __LINE__, #a, #b, a, \
+                                                b)
+# define TEST_int64_t_lt(a, b)  test_int64_t_lt(__FILE__, __LINE__, #a, #b, a, \
+                                                b)
+# define TEST_int64_t_le(a, b)  test_int64_t_le(__FILE__, __LINE__, #a, #b, a, \
+                                                b)
+# define TEST_int64_t_gt(a, b)  test_int64_t_gt(__FILE__, __LINE__, #a, #b, a, \
+                                                b)
+# define TEST_int64_t_ge(a, b)  test_int64_t_ge(__FILE__, __LINE__, #a, #b, a, \
+                                                b)
 
-# define TEST_uint64_t_eq(a, b)  test_uint64_t_eq(__FILE__, __LINE__, #a, #b, a, b)
-# define TEST_uint64_t_ne(a, b)  test_uint64_t_ne(__FILE__, __LINE__, #a, #b, a, b)
-# define TEST_uint64_t_lt(a, b)  test_uint64_t_lt(__FILE__, __LINE__, #a, #b, a, b)
-# define TEST_uint64_t_le(a, b)  test_uint64_t_le(__FILE__, __LINE__, #a, #b, a, b)
-# define TEST_uint64_t_gt(a, b)  test_uint64_t_gt(__FILE__, __LINE__, #a, #b, a, b)
-# define TEST_uint64_t_ge(a, b)  test_uint64_t_ge(__FILE__, __LINE__, #a, #b, a, b)
+# define TEST_uint64_t_eq(a, b)  test_uint64_t_eq(__FILE__, __LINE__, #a, #b, a, \
+                                                  b)
+# define TEST_uint64_t_ne(a, b)  test_uint64_t_ne(__FILE__, __LINE__, #a, #b, a, \
+                                                  b)
+# define TEST_uint64_t_lt(a, b)  test_uint64_t_lt(__FILE__, __LINE__, #a, #b, a, \
+                                                  b)
+# define TEST_uint64_t_le(a, b)  test_uint64_t_le(__FILE__, __LINE__, #a, #b, a, \
+                                                  b)
+# define TEST_uint64_t_gt(a, b)  test_uint64_t_gt(__FILE__, __LINE__, #a, #b, a, \
+                                                  b)
+# define TEST_uint64_t_ge(a, b)  test_uint64_t_ge(__FILE__, __LINE__, #a, #b, a, \
+                                                  b)
 
 # define TEST_size_t_eq(a, b) test_size_t_eq(__FILE__, __LINE__, #a, #b, a, b)
 # define TEST_size_t_ne(a, b) test_size_t_ne(__FILE__, __LINE__, #a, #b, a, b)
@@ -513,13 +531,19 @@ void test_perror(const char *s);
 
 # define TEST_str_eq(a, b)    test_str_eq(__FILE__, __LINE__, #a, #b, a, b)
 # define TEST_str_ne(a, b)    test_str_ne(__FILE__, __LINE__, #a, #b, a, b)
-# define TEST_strn_eq(a, b, n) test_strn_eq(__FILE__, __LINE__, #a, #b, a, n, b, n)
-# define TEST_strn_ne(a, b, n) test_strn_ne(__FILE__, __LINE__, #a, #b, a, n, b, n)
-# define TEST_strn2_eq(a, m, b, n) test_strn_eq(__FILE__, __LINE__, #a, #b, a, m, b, n)
-# define TEST_strn2_ne(a, m, b, n) test_strn_ne(__FILE__, __LINE__, #a, #b, a, m, b, n)
+# define TEST_strn_eq(a, b, n) test_strn_eq(__FILE__, __LINE__, #a, #b, a, n, b, \
+                                            n)
+# define TEST_strn_ne(a, b, n) test_strn_ne(__FILE__, __LINE__, #a, #b, a, n, b, \
+                                            n)
+# define TEST_strn2_eq(a, m, b, n) test_strn_eq(__FILE__, __LINE__, #a, #b, a, \
+                                                m, b, n)
+# define TEST_strn2_ne(a, m, b, n) test_strn_ne(__FILE__, __LINE__, #a, #b, a, \
+                                                m, b, n)
 
-# define TEST_mem_eq(a, m, b, n) test_mem_eq(__FILE__, __LINE__, #a, #b, a, m, b, n)
-# define TEST_mem_ne(a, m, b, n) test_mem_ne(__FILE__, __LINE__, #a, #b, a, m, b, n)
+# define TEST_mem_eq(a, m, b, n) test_mem_eq(__FILE__, __LINE__, #a, #b, a, m, \
+                                             b, n)
+# define TEST_mem_ne(a, m, b, n) test_mem_ne(__FILE__, __LINE__, #a, #b, a, m, \
+                                             b, n)
 
 # define TEST_true(a)         test_true(__FILE__, __LINE__, #a, (a) != 0)
 # define TEST_false(a)        test_false(__FILE__, __LINE__, #a, (a) != 0)
@@ -538,7 +562,8 @@ void test_perror(const char *s);
 # define TEST_BN_ge_zero(a)   test_BN_ge_zero(__FILE__, __LINE__, #a, a)
 # define TEST_BN_eq_one(a)    test_BN_eq_one(__FILE__, __LINE__, #a, a)
 # define TEST_BN_eq_word(a, w) test_BN_eq_word(__FILE__, __LINE__, #a, #w, a, w)
-# define TEST_BN_abs_eq_word(a, w) test_BN_abs_eq_word(__FILE__, __LINE__, #a, #w, a, w)
+# define TEST_BN_abs_eq_word(a, w) test_BN_abs_eq_word(__FILE__, __LINE__, #a, \
+                                                       #w, a, w)
 # define TEST_BN_odd(a)       test_BN_odd(__FILE__, __LINE__, #a, a)
 # define TEST_BN_even(a)      test_BN_even(__FILE__, __LINE__, #a, a)
 

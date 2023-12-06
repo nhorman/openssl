@@ -69,13 +69,15 @@ static int test_func(int test)
     const char testdata[] = "Test data";
     char buf[sizeof(testdata)];
 
-    if (!TEST_true(create_ssl_objects(serverctx, clientctx, &serverssl, &clientssl,
+    if (!TEST_true(create_ssl_objects(serverctx, clientctx, &serverssl,
+                                      &clientssl,
                                       NULL, NULL))) {
         TEST_error("Test %d failed: Create SSL objects failed\n", test);
         goto end;
     }
 
-    if (!TEST_true(create_ssl_connection(serverssl, clientssl, SSL_ERROR_NONE))) {
+    if (!TEST_true(create_ssl_connection(serverssl, clientssl,
+                                         SSL_ERROR_NONE))) {
         TEST_error("Test %d failed: Create SSL connection failed\n", test);
         goto end;
     }
@@ -118,7 +120,8 @@ static int test_func(int test)
 
                 if (ssl_error == SSL_ERROR_SYSCALL ||
                     ssl_error == SSL_ERROR_SSL) {
-                    TEST_error("Test %d failed: Failed to write app data\n", test);
+                    TEST_error("Test %d failed: Failed to write app data\n",
+                               test);
                     goto end;
                 }
             }
@@ -131,7 +134,7 @@ static int test_func(int test)
          * bytes from the record header/padding etc.
          */
         for (ret = -1, i = 0, len = 0; len != sizeof(testdata) &&
-                 i < MAX_ATTEMPTS; i++)
+             i < MAX_ATTEMPTS; i++)
         {
             if (test >= 5 && (!TEST_true(SSL_free_buffers(serverssl))
                               || !TEST_true(checkbuffers(serverssl, 0))))
@@ -155,7 +158,8 @@ static int test_func(int test)
 
                 if (ssl_error == SSL_ERROR_SYSCALL ||
                     ssl_error == SSL_ERROR_SSL) {
-                    TEST_error("Test %d failed: Failed to read app data\n", test);
+                    TEST_error("Test %d failed: Failed to read app data\n",
+                               test);
                     goto end;
                 }
             }
@@ -165,7 +169,7 @@ static int test_func(int test)
     }
 
     result = 1;
- end:
+end:
     if (!result)
         ERR_print_errors_fp(stderr);
 
@@ -187,7 +191,7 @@ int setup_tests(void)
     }
 
     if (!TEST_ptr(cert = test_get_argument(0))
-            || !TEST_ptr(pkey = test_get_argument(1)))
+        || !TEST_ptr(pkey = test_get_argument(1)))
         return 0;
 
     if (!create_ssl_ctx_pair(NULL, TLS_server_method(), TLS_client_method(),

@@ -116,7 +116,7 @@ static int setup_bio_chain(const char *progname)
         }
     }
     return chain != NULL;
- err:
+err:
     /* Free the chain we built up */
     BIO_free_all(next);
     OPENSSL_free(chain);
@@ -159,98 +159,100 @@ static int setup(void)
 
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_AMOUNT:
-            arg = opt_arg();
-            amount = strtoul(arg, &endptr, 10);
-            if (endptr[0] != '\0') {
-                BIO_printf(bio_err,
-                           "%s: -n argument isn't a decimal number: %s",
-                           progname, arg);
-                return 0;
-            }
-            if (amount < 1) {
-                BIO_printf(bio_err, "%s: must set up at least one filter",
-                           progname);
-                return 0;
-            }
-            if (!setup_bio_chain(progname)) {
-                BIO_printf(bio_err, "%s: failed setting up filter chain",
-                           progname);
-                return 0;
-            }
-            break;
-        case OPT_INDENT:
-            if (chain == NULL) {
-                BIO_printf(bio_err, "%s: -i given before -n", progname);
-                return 0;
-            }
-            arg = opt_arg();
-            colon = strchr(arg, ':');
-            idx = 0;
-            if (colon != NULL) {
-                idx = strtoul(arg, &endptr, 10);
-                if (endptr[0] != ':') {
+            case OPT_AMOUNT:
+                arg = opt_arg();
+                amount = strtoul(arg, &endptr, 10);
+                if (endptr[0] != '\0') {
                     BIO_printf(bio_err,
-                               "%s: -i index isn't a decimal number: %s",
+                               "%s: -n argument isn't a decimal number: %s",
                                progname, arg);
                     return 0;
                 }
-                colon++;
-            } else {
-                colon = arg;
-            }
-            indent = strtoul(colon, &endptr, 10);
-            if (endptr[0] != '\0') {
-                BIO_printf(bio_err,
-                           "%s: -i value isn't a decimal number: %s",
-                           progname, arg);
-                return 0;
-            }
-            if (idx >= amount) {
-                BIO_printf(bio_err, "%s: index (%zu) not within range 0..%zu",
-                           progname, idx, amount - 1);
-                return 0;
-            }
-            if (BIO_set_indent(chain[idx], (long)indent) <= 0) {
-                BIO_printf(bio_err, "%s: failed setting indentation: %s",
-                           progname, arg);
-                return 0;
-            }
-            break;
-        case OPT_PREFIX:
-            if (chain == NULL) {
-                BIO_printf(bio_err, "%s: -p given before -n", progname);
-                return 0;
-            }
-            arg = opt_arg();
-            colon = strchr(arg, ':');
-            idx = 0;
-            if (colon != NULL) {
-                idx = strtoul(arg, &endptr, 10);
-                if (endptr[0] != ':') {
+                if (amount < 1) {
+                    BIO_printf(bio_err, "%s: must set up at least one filter",
+                               progname);
+                    return 0;
+                }
+                if (!setup_bio_chain(progname)) {
+                    BIO_printf(bio_err, "%s: failed setting up filter chain",
+                               progname);
+                    return 0;
+                }
+                break;
+            case OPT_INDENT:
+                if (chain == NULL) {
+                    BIO_printf(bio_err, "%s: -i given before -n", progname);
+                    return 0;
+                }
+                arg = opt_arg();
+                colon = strchr(arg, ':');
+                idx = 0;
+                if (colon != NULL) {
+                    idx = strtoul(arg, &endptr, 10);
+                    if (endptr[0] != ':') {
+                        BIO_printf(bio_err,
+                                   "%s: -i index isn't a decimal number: %s",
+                                   progname, arg);
+                        return 0;
+                    }
+                    colon++;
+                } else {
+                    colon = arg;
+                }
+                indent = strtoul(colon, &endptr, 10);
+                if (endptr[0] != '\0') {
                     BIO_printf(bio_err,
-                               "%s: -p index isn't a decimal number: %s",
+                               "%s: -i value isn't a decimal number: %s",
                                progname, arg);
                     return 0;
                 }
-                colon++;
-            } else {
-                colon = arg;
-            }
-            if (idx >= amount) {
-                BIO_printf(bio_err, "%s: index (%zu) not within range 0..%zu",
-                           progname, idx, amount - 1);
+                if (idx >= amount) {
+                    BIO_printf(bio_err,
+                               "%s: index (%zu) not within range 0..%zu",
+                               progname, idx, amount - 1);
+                    return 0;
+                }
+                if (BIO_set_indent(chain[idx], (long)indent) <= 0) {
+                    BIO_printf(bio_err, "%s: failed setting indentation: %s",
+                               progname, arg);
+                    return 0;
+                }
+                break;
+            case OPT_PREFIX:
+                if (chain == NULL) {
+                    BIO_printf(bio_err, "%s: -p given before -n", progname);
+                    return 0;
+                }
+                arg = opt_arg();
+                colon = strchr(arg, ':');
+                idx = 0;
+                if (colon != NULL) {
+                    idx = strtoul(arg, &endptr, 10);
+                    if (endptr[0] != ':') {
+                        BIO_printf(bio_err,
+                                   "%s: -p index isn't a decimal number: %s",
+                                   progname, arg);
+                        return 0;
+                    }
+                    colon++;
+                } else {
+                    colon = arg;
+                }
+                if (idx >= amount) {
+                    BIO_printf(bio_err,
+                               "%s: index (%zu) not within range 0..%zu",
+                               progname, idx, amount - 1);
+                    return 0;
+                }
+                if (BIO_set_prefix(chain[idx], colon) <= 0) {
+                    BIO_printf(bio_err, "%s: failed setting prefix: %s",
+                               progname, arg);
+                    return 0;
+                }
+                break;
+            default:
+            case OPT_ERR:
                 return 0;
-            }
-            if (BIO_set_prefix(chain[idx], colon) <= 0) {
-                BIO_printf(bio_err, "%s: failed setting prefix: %s",
-                           progname, arg);
-                return 0;
-            }
-            break;
-        default:
-        case OPT_ERR:
-            return 0;
         }
     }
     return 1;

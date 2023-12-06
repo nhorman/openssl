@@ -40,13 +40,15 @@ const OPTIONS spkac_options[] = {
     OPT_SECTION("Input"),
     {"in", OPT_IN, '<', "Input file"},
     {"key", OPT_KEY, '<', "Create SPKAC using private key"},
-    {"keyform", OPT_KEYFORM, 'f', "Private key file format (ENGINE, other values ignored)"},
+    {"keyform", OPT_KEYFORM, 'f',
+     "Private key file format (ENGINE, other values ignored)"},
     {"passin", OPT_PASSIN, 's', "Input file pass phrase source"},
     {"challenge", OPT_CHALLENGE, 's', "Challenge string"},
     {"spkac", OPT_SPKAC, 's', "Alternative SPKAC name"},
 
     OPT_SECTION("Output"),
-    {"digest", OPT_DIGEST, 's', "Sign new SPKAC with the specified digest (default: MD5)" },
+    {"digest", OPT_DIGEST, 's',
+     "Sign new SPKAC with the specified digest (default: MD5)" },
     {"out", OPT_OUT, '>', "Output file"},
     {"noout", OPT_NOOUT, '-', "Don't print SPKAC"},
     {"pubkey", OPT_PUBKEY, '-', "Output public key"},
@@ -76,59 +78,59 @@ int spkac_main(int argc, char **argv)
     prog = opt_init(argc, argv, spkac_options);
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_EOF:
-        case OPT_ERR:
- opthelp:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto end;
-        case OPT_HELP:
-            opt_help(spkac_options);
-            ret = 0;
-            goto end;
-        case OPT_IN:
-            infile = opt_arg();
-            break;
-        case OPT_OUT:
-            outfile = opt_arg();
-            break;
-        case OPT_NOOUT:
-            noout = 1;
-            break;
-        case OPT_PUBKEY:
-            pubkey = 1;
-            break;
-        case OPT_VERIFY:
-            verify = 1;
-            break;
-        case OPT_PASSIN:
-            passinarg = opt_arg();
-            break;
-        case OPT_KEY:
-            keyfile = opt_arg();
-            break;
-        case OPT_KEYFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_ANY, &keyformat))
-                goto opthelp;
-            break;
-        case OPT_CHALLENGE:
-            challenge = opt_arg();
-            break;
-        case OPT_SPKAC:
-            spkac = opt_arg();
-            break;
-        case OPT_SPKSECT:
-            spksect = opt_arg();
-            break;
-        case OPT_DIGEST:
-            digest = opt_arg();
-            break;
-        case OPT_ENGINE:
-            e = setup_engine(opt_arg(), 0);
-            break;
-        case OPT_PROV_CASES:
-            if (!opt_provider(o))
+            case OPT_EOF:
+            case OPT_ERR:
+opthelp:
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
                 goto end;
-            break;
+            case OPT_HELP:
+                opt_help(spkac_options);
+                ret = 0;
+                goto end;
+            case OPT_IN:
+                infile = opt_arg();
+                break;
+            case OPT_OUT:
+                outfile = opt_arg();
+                break;
+            case OPT_NOOUT:
+                noout = 1;
+                break;
+            case OPT_PUBKEY:
+                pubkey = 1;
+                break;
+            case OPT_VERIFY:
+                verify = 1;
+                break;
+            case OPT_PASSIN:
+                passinarg = opt_arg();
+                break;
+            case OPT_KEY:
+                keyfile = opt_arg();
+                break;
+            case OPT_KEYFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_ANY, &keyformat))
+                    goto opthelp;
+                break;
+            case OPT_CHALLENGE:
+                challenge = opt_arg();
+                break;
+            case OPT_SPKAC:
+                spkac = opt_arg();
+                break;
+            case OPT_SPKSECT:
+                spksect = opt_arg();
+                break;
+            case OPT_DIGEST:
+                digest = opt_arg();
+                break;
+            case OPT_ENGINE:
+                e = setup_engine(opt_arg(), 0);
+                break;
+            case OPT_PROV_CASES:
+                if (!opt_provider(o))
+                    goto end;
+                break;
         }
     }
 
@@ -221,7 +223,7 @@ int spkac_main(int argc, char **argv)
 
     ret = 0;
 
- end:
+end:
     EVP_MD_free(md);
     NCONF_free(conf);
     NETSCAPE_SPKI_free(spki);

@@ -117,8 +117,8 @@ static int pvk2key_does_selection(void *provctx, int selection)
 }
 
 static int pvk2key_decode(void *vctx, OSSL_CORE_BIO *cin, int selection,
-                         OSSL_CALLBACK *data_cb, void *data_cbarg,
-                         OSSL_PASSPHRASE_CALLBACK *pw_cb, void *pw_cbarg)
+                          OSSL_CALLBACK *data_cb, void *data_cbarg,
+                          OSSL_PASSPHRASE_CALLBACK *pw_cb, void *pw_cbarg)
 {
     struct pvk2key_ctx_st *ctx = vctx;
     BIO *in = ossl_bio_new_from_core_bio(ctx->provctx, cin);
@@ -167,7 +167,7 @@ static int pvk2key_decode(void *vctx, OSSL_CORE_BIO *cin, int selection,
     if (key != NULL && ctx->desc->adjust_key != NULL)
         ctx->desc->adjust_key(key, ctx);
 
- next:
+next:
     /*
      * Indicated that we successfully decoded something, or not at all.
      * Ending up "empty handed" is not an error.
@@ -200,7 +200,7 @@ static int pvk2key_decode(void *vctx, OSSL_CORE_BIO *cin, int selection,
         ok = data_cb(params, data_cbarg);
     }
 
- end:
+end:
     BIO_free(in);
     ctx->desc->free_key(key);
 
@@ -208,8 +208,8 @@ static int pvk2key_decode(void *vctx, OSSL_CORE_BIO *cin, int selection,
 }
 
 static int pvk2key_export_object(void *vctx,
-                                const void *reference, size_t reference_sz,
-                                OSSL_CALLBACK *export_cb, void *export_cbarg)
+                                 const void *reference, size_t reference_sz,
+                                 OSSL_CALLBACK *export_cb, void *export_cbarg)
 {
     struct pvk2key_ctx_st *ctx = vctx;
     OSSL_FUNC_keymgmt_export_fn *export =
@@ -233,7 +233,7 @@ static int pvk2key_export_object(void *vctx,
 
 #define dsa_private_key_bio     (b2i_PVK_of_bio_pw_fn *)b2i_DSA_PVK_bio_ex
 #define dsa_adjust              NULL
-#define dsa_free                (void (*)(void *))DSA_free
+#define dsa_free                (void (*)(void *)) DSA_free
 
 /* ---------------------------------------------------------------------- */
 
@@ -244,42 +244,42 @@ static void rsa_adjust(void *key, struct pvk2key_ctx_st *ctx)
     ossl_rsa_set0_libctx(key, PROV_LIBCTX_OF(ctx->provctx));
 }
 
-#define rsa_free                (void (*)(void *))RSA_free
+#define rsa_free                (void (*)(void *)) RSA_free
 
 /* ---------------------------------------------------------------------- */
 
 #define IMPLEMENT_MS(KEYTYPE, keytype)                                  \
-    static const struct keytype_desc_st                                 \
-    pvk2##keytype##_desc = {                                            \
-        EVP_PKEY_##KEYTYPE, #KEYTYPE,                                   \
-        ossl_##keytype##_keymgmt_functions,                             \
-        keytype##_private_key_bio,                                      \
-        keytype##_adjust,                                               \
-        keytype##_free                                                  \
-    };                                                                  \
-    static OSSL_FUNC_decoder_newctx_fn pvk2##keytype##_newctx;          \
-    static void *pvk2##keytype##_newctx(void *provctx)                  \
-    {                                                                   \
-        return pvk2key_newctx(provctx, &pvk2##keytype##_desc);          \
-    }                                                                   \
-    const OSSL_DISPATCH                                                 \
-    ossl_##pvk_to_##keytype##_decoder_functions[] = {                   \
-        { OSSL_FUNC_DECODER_NEWCTX,                                     \
-          (void (*)(void))pvk2##keytype##_newctx },                     \
-        { OSSL_FUNC_DECODER_FREECTX,                                    \
-          (void (*)(void))pvk2key_freectx },                            \
-        { OSSL_FUNC_DECODER_DOES_SELECTION,                             \
-          (void (*)(void))pvk2key_does_selection },                     \
-        { OSSL_FUNC_DECODER_DECODE,                                     \
-          (void (*)(void))pvk2key_decode },                             \
-        { OSSL_FUNC_DECODER_EXPORT_OBJECT,                              \
-          (void (*)(void))pvk2key_export_object },                      \
-        { OSSL_FUNC_DECODER_SETTABLE_CTX_PARAMS,                        \
-          (void (*)(void))pvk2key_settable_ctx_params },                \
-        { OSSL_FUNC_DECODER_SET_CTX_PARAMS,                             \
-          (void (*)(void))pvk2key_set_ctx_params },                     \
-        OSSL_DISPATCH_END                                               \
-    }
+        static const struct keytype_desc_st                                 \
+        pvk2 ## keytype ## _desc = {                                            \
+            EVP_PKEY_ ## KEYTYPE, #KEYTYPE,                                   \
+            ossl_ ## keytype ## _keymgmt_functions,                             \
+            keytype ## _private_key_bio,                                      \
+            keytype ## _adjust,                                               \
+            keytype ## _free                                                  \
+        };                                                                  \
+        static OSSL_FUNC_decoder_newctx_fn pvk2 ## keytype ## _newctx;          \
+        static void *pvk2 ## keytype ## _newctx(void *provctx)                  \
+        {                                                                   \
+            return pvk2key_newctx(provctx, &pvk2 ## keytype ## _desc);          \
+        }                                                                   \
+        const OSSL_DISPATCH                                                 \
+        ossl_ ## pvk_to_ ## keytype ## _decoder_functions[] = {                   \
+            { OSSL_FUNC_DECODER_NEWCTX,                                     \
+              (void (*)(void)) pvk2 ## keytype ## _newctx },                     \
+            { OSSL_FUNC_DECODER_FREECTX,                                    \
+              (void (*)(void)) pvk2key_freectx },                            \
+            { OSSL_FUNC_DECODER_DOES_SELECTION,                             \
+              (void (*)(void)) pvk2key_does_selection },                     \
+            { OSSL_FUNC_DECODER_DECODE,                                     \
+              (void (*)(void)) pvk2key_decode },                             \
+            { OSSL_FUNC_DECODER_EXPORT_OBJECT,                              \
+              (void (*)(void)) pvk2key_export_object },                      \
+            { OSSL_FUNC_DECODER_SETTABLE_CTX_PARAMS,                        \
+              (void (*)(void)) pvk2key_settable_ctx_params },                \
+            { OSSL_FUNC_DECODER_SET_CTX_PARAMS,                             \
+              (void (*)(void)) pvk2key_set_ctx_params },                     \
+            OSSL_DISPATCH_END                                               \
+        }
 
 #ifndef OPENSSL_NO_DSA
 IMPLEMENT_MS(DSA, dsa);

@@ -91,7 +91,7 @@ static EVP_PKEY *pem_read_bio_key_decoder(BIO *bp, EVP_PKEY **x,
         *x = pkey;
     }
 
- err:
+err:
     OSSL_DECODER_CTX_free(dctx);
     return pkey;
 }
@@ -116,7 +116,7 @@ static EVP_PKEY *pem_read_bio_key_legacy(BIO *bp, EVP_PKEY **x,
                                        bp, cb, u)) {
             ERR_pop_to_mark();
             return NULL;
-         }
+        }
     } else {
         const char *pem_string = PEM_STRING_PARAMETERS;
 
@@ -201,11 +201,11 @@ static EVP_PKEY *pem_read_bio_key_legacy(BIO *bp, EVP_PKEY **x,
         }
     }
 
- p8err:
+p8err:
     if (ret == NULL && ERR_peek_last_error() == 0)
         /* ensure some error is reported but do not hide the real one */
         ERR_raise(ERR_LIB_PEM, ERR_R_ASN1_LIB);
- err:
+err:
     OPENSSL_secure_free(nm);
     OPENSSL_secure_clear_free(data, len);
     return ret;
@@ -250,7 +250,7 @@ static EVP_PKEY *pem_read_bio_key(BIO *bp, EVP_PKEY **x,
     else
         ERR_pop_to_mark();
 
- err:
+err:
     ossl_pw_clear_passphrase_data(&pwdata);
     if (new_bio != NULL) {
         BIO_pop(new_bio);
@@ -319,7 +319,7 @@ PEM_write_cb_ex_fnsig(PrivateKey, EVP_PKEY, BIO, write_bio)
     IMPLEMENT_PEM_provided_write_body_pass();
     IMPLEMENT_PEM_provided_write_body_main(pkey, bio);
 
- legacy:
+legacy:
     if (x != NULL && (x->ameth == NULL || x->ameth->priv_encode != NULL))
         return PEM_write_bio_PKCS8PrivateKey(out, x, enc,
                                              (const char *)kstr, klen, cb, u);
@@ -334,7 +334,7 @@ PEM_write_cb_fnsig(PrivateKey, EVP_PKEY, BIO, write_bio)
 
 /*
  * Note: there is no way to tell a provided pkey encoder to use "traditional"
- * encoding.  Therefore, if the pkey is provided, we try to take a copy 
+ * encoding.  Therefore, if the pkey is provided, we try to take a copy
  */
 int PEM_write_bio_PrivateKey_traditional(BIO *bp, const EVP_PKEY *x,
                                          const EVP_CIPHER *enc,
@@ -394,7 +394,7 @@ PEM_write_fnsig(Parameters, EVP_PKEY, BIO, write_bio)
 
     IMPLEMENT_PEM_provided_write_body_main(pkey, bio);
 
- legacy:
+legacy:
     if (!x->ameth || !x->ameth->param_encode)
         return 0;
 

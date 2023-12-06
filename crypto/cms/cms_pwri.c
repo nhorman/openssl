@@ -183,7 +183,7 @@ CMS_RecipientInfo *CMS_add0_recipient_password(CMS_ContentInfo *cms,
 
     return ri;
 
- err:
+err:
     EVP_CIPHER_CTX_free(ctx);
     if (ri)
         M_ASN1_free_of(ri, CMS_RecipientInfo);
@@ -244,7 +244,7 @@ static int kek_unwrap_key(unsigned char *out, size_t *outlen,
     *outlen = (size_t)tmp[0];
     memcpy(out, tmp + 4, *outlen);
     rv = 1;
- err:
+err:
     OPENSSL_clear_free(tmp, inlen);
     return rv;
 
@@ -402,7 +402,7 @@ int ossl_cms_RecipientInfo_pwri_crypt(const CMS_ContentInfo *cms,
 
     r = 1;
 
- err:
+err:
     EVP_CIPHER_free(kekcipher);
     EVP_CIPHER_CTX_free(kekctx);
 

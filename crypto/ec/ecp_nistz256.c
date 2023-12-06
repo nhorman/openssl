@@ -624,9 +624,10 @@ __owur static int ecp_nistz256_windowed_mul(const EC_GROUP *group,
 
     if ((num * 16 + 6) > OPENSSL_MALLOC_MAX_NELEMS(P256_POINT)
         || (table_storage =
-            OPENSSL_malloc((num * 16 + 5) * sizeof(P256_POINT) + 64)) == NULL
+                OPENSSL_malloc((num * 16 + 5) * sizeof(P256_POINT) + 64)) ==
+        NULL
         || (p_str =
-            OPENSSL_malloc(num * 33 * sizeof(unsigned char))) == NULL
+                OPENSSL_malloc(num * 33 * sizeof(unsigned char))) == NULL
         || (scalars = OPENSSL_malloc(num * sizeof(BIGNUM *))) == NULL)
         goto err;
 
@@ -768,7 +769,7 @@ __owur static int ecp_nistz256_windowed_mul(const EC_GROUP *group,
     }
 
     ret = 1;
- err:
+err:
     OPENSSL_free(table_storage);
     OPENSSL_free(p_str);
     OPENSSL_free(scalars);
@@ -793,10 +794,10 @@ static const BN_ULONG def_yG[P256_LIMBS] = {
 static int ecp_nistz256_is_affine_G(const EC_POINT *generator)
 {
     return (bn_get_top(generator->X) == P256_LIMBS) &&
-        (bn_get_top(generator->Y) == P256_LIMBS) &&
-        is_equal(bn_get_words(generator->X), def_xG) &&
-        is_equal(bn_get_words(generator->Y), def_yG) &&
-        is_one(generator->Z);
+           (bn_get_top(generator->Y) == P256_LIMBS) &&
+           is_equal(bn_get_words(generator->X), def_xG) &&
+           is_equal(bn_get_words(generator->Y), def_yG) &&
+           is_one(generator->Z);
 }
 
 __owur static int ecp_nistz256_mult_precompute(EC_GROUP *group, BN_CTX *ctx)
@@ -857,7 +858,7 @@ __owur static int ecp_nistz256_mult_precompute(EC_GROUP *group, BN_CTX *ctx)
     w = 7;
 
     if ((precomp_storage =
-         OPENSSL_malloc(37 * 64 * sizeof(P256_POINT_AFFINE) + 64)) == NULL)
+             OPENSSL_malloc(37 * 64 * sizeof(P256_POINT_AFFINE) + 64)) == NULL)
         goto err;
 
     preComputedTable = (void *)ALIGNPTR(precomp_storage, 64);
@@ -910,7 +911,7 @@ __owur static int ecp_nistz256_mult_precompute(EC_GROUP *group, BN_CTX *ctx)
     pre_comp = NULL;
     ret = 1;
 
- err:
+err:
     BN_CTX_end(ctx);
     BN_CTX_free(new_ctx);
 
@@ -921,7 +922,8 @@ __owur static int ecp_nistz256_mult_precompute(EC_GROUP *group, BN_CTX *ctx)
     return ret;
 }
 
-__owur static int ecp_nistz256_set_from_affine(EC_POINT *out, const EC_GROUP *group,
+__owur static int ecp_nistz256_set_from_affine(EC_POINT *out,
+                                               const EC_GROUP *group,
                                                const P256_POINT_AFFINE *in,
                                                BN_CTX *ctx)
 {

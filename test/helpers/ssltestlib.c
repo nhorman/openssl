@@ -14,7 +14,8 @@
 #include "ssltestlib.h"
 #include "../testutil.h"
 
-#if (!defined(OPENSSL_NO_KTLS) || !defined(OPENSSL_NO_QUIC)) && !defined(OPENSSL_NO_POSIX_IO) && !defined(OPENSSL_NO_SOCK)
+#if (!defined(OPENSSL_NO_KTLS) || !defined(OPENSSL_NO_QUIC)) && \
+    !defined(OPENSSL_NO_POSIX_IO) && !defined(OPENSSL_NO_SOCK)
 # define OSSL_USE_SOCKETS 1
 # include "internal/sockets.h"
 # include <openssl/bio.h>
@@ -45,7 +46,7 @@ const BIO_METHOD *bio_f_tls_dump_filter(void)
 {
     if (method_tls_dump == NULL) {
         method_tls_dump = BIO_meth_new(BIO_TYPE_TLS_DUMP_FILTER,
-                                        "TLS dump filter");
+                                       "TLS dump filter");
         if (method_tls_dump == NULL
             || !BIO_meth_set_write(method_tls_dump, tls_dump_write)
             || !BIO_meth_set_read(method_tls_dump, tls_dump_read)
@@ -149,7 +150,7 @@ static void dump_data(const char *data, int len)
             if (epoch > 0) {
                 printf("**---- HANDSHAKE MESSAGE FRAGMENT ENCRYPTED ----\n");
             } else if (rem < DTLS1_HM_HEADER_LENGTH
-                    || reclen < DTLS1_HM_HEADER_LENGTH) {
+                       || reclen < DTLS1_HM_HEADER_LENGTH) {
                 printf("**---- HANDSHAKE MESSAGE FRAGMENT TRUNCATED ----\n");
             } else {
                 printf("*** Message Type: %d\n", rec[MSG_TYPE]);
@@ -222,12 +223,12 @@ static long tls_dump_ctrl(BIO *bio, int cmd, long num, void *ptr)
         return 0;
 
     switch (cmd) {
-    case BIO_CTRL_DUP:
-        ret = 0L;
-        break;
-    default:
-        ret = BIO_ctrl(next, cmd, num, ptr);
-        break;
+        case BIO_CTRL_DUP:
+            ret = 0L;
+            break;
+        default:
+            ret = BIO_ctrl(next, cmd, num, ptr);
+            break;
     }
     return ret;
 }
@@ -360,7 +361,7 @@ static int mempacket_test_read(BIO *bio, char *out, int outl)
         outl = thispkt->len;
 
     if (thispkt->type != INJECT_PACKET_IGNORE_REC_SEQ
-            && (ctx->injected || ctx->droprec >= 0)) {
+        && (ctx->injected || ctx->droprec >= 0)) {
         /*
          * Overwrite the record sequence number. We strictly number them in
          * the order received. Since we are actually a reliable transport
@@ -431,12 +432,13 @@ int mempacket_swap_epoch(BIO *bio)
     if (thispkt == NULL)
         return 0;
 
-    for (rem = thispkt->len, rec = thispkt->data; rem > 0; rem -= len, rec += len) {
+    for (rem = thispkt->len, rec = thispkt->data; rem > 0;
+         rem -= len, rec += len) {
         if (rem < DTLS1_RT_HEADER_LENGTH)
             return 0;
         epoch = (rec[EPOCH_HI] << 8) | rec[EPOCH_LO];
         len = ((rec[RECORD_LEN_HI] << 8) | rec[RECORD_LEN_LO])
-                + DTLS1_RT_HEADER_LENGTH;
+              + DTLS1_RT_HEADER_LENGTH;
         if (rem < len)
             return 0;
 
@@ -633,7 +635,7 @@ int mempacket_test_inject(BIO *bio, const char *in, int inl, int pktnum,
 
     return inl;
 
- err:
+err:
     for (i = 0; i < (ctx->duprec > 0 ? 3 : 1); i++)
         mempacket_free(allpkts[i]);
     return -1;
@@ -651,47 +653,47 @@ static long mempacket_test_ctrl(BIO *bio, int cmd, long num, void *ptr)
     MEMPACKET *thispkt;
 
     switch (cmd) {
-    case BIO_CTRL_EOF:
-        ret = (long)(sk_MEMPACKET_num(ctx->pkts) == 0);
-        break;
-    case BIO_CTRL_GET_CLOSE:
-        ret = BIO_get_shutdown(bio);
-        break;
-    case BIO_CTRL_SET_CLOSE:
-        BIO_set_shutdown(bio, (int)num);
-        break;
-    case BIO_CTRL_WPENDING:
-        ret = 0L;
-        break;
-    case BIO_CTRL_PENDING:
-        thispkt = sk_MEMPACKET_value(ctx->pkts, 0);
-        if (thispkt == NULL)
+        case BIO_CTRL_EOF:
+            ret = (long)(sk_MEMPACKET_num(ctx->pkts) == 0);
+            break;
+        case BIO_CTRL_GET_CLOSE:
+            ret = BIO_get_shutdown(bio);
+            break;
+        case BIO_CTRL_SET_CLOSE:
+            BIO_set_shutdown(bio, (int)num);
+            break;
+        case BIO_CTRL_WPENDING:
+            ret = 0L;
+            break;
+        case BIO_CTRL_PENDING:
+            thispkt = sk_MEMPACKET_value(ctx->pkts, 0);
+            if (thispkt == NULL)
+                ret = 0;
+            else
+                ret = thispkt->len;
+            break;
+        case BIO_CTRL_FLUSH:
+            ret = 1;
+            break;
+        case MEMPACKET_CTRL_SET_DROP_EPOCH:
+            ctx->dropepoch = (unsigned int)num;
+            break;
+        case MEMPACKET_CTRL_SET_DROP_REC:
+            ctx->droprec = (int)num;
+            break;
+        case MEMPACKET_CTRL_GET_DROP_REC:
+            ret = ctx->droprec;
+            break;
+        case MEMPACKET_CTRL_SET_DUPLICATE_REC:
+            ctx->duprec = (int)num;
+            break;
+        case BIO_CTRL_RESET:
+        case BIO_CTRL_DUP:
+        case BIO_CTRL_PUSH:
+        case BIO_CTRL_POP:
+        default:
             ret = 0;
-        else
-            ret = thispkt->len;
-        break;
-    case BIO_CTRL_FLUSH:
-        ret = 1;
-        break;
-    case MEMPACKET_CTRL_SET_DROP_EPOCH:
-        ctx->dropepoch = (unsigned int)num;
-        break;
-    case MEMPACKET_CTRL_SET_DROP_REC:
-        ctx->droprec = (int)num;
-        break;
-    case MEMPACKET_CTRL_GET_DROP_REC:
-        ret = ctx->droprec;
-        break;
-    case MEMPACKET_CTRL_SET_DUPLICATE_REC:
-        ctx->duprec = (int)num;
-        break;
-    case BIO_CTRL_RESET:
-    case BIO_CTRL_DUP:
-    case BIO_CTRL_PUSH:
-    case BIO_CTRL_POP:
-    default:
-        ret = 0;
-        break;
+            break;
     }
     return ret;
 }
@@ -779,17 +781,17 @@ static long always_retry_ctrl(BIO *bio, int cmd, long num, void *ptr)
     long ret = 1;
 
     switch (cmd) {
-    case BIO_CTRL_FLUSH:
-        BIO_set_retry_write(bio);
+        case BIO_CTRL_FLUSH:
+            BIO_set_retry_write(bio);
         /* fall through */
-    case BIO_CTRL_EOF:
-    case BIO_CTRL_RESET:
-    case BIO_CTRL_DUP:
-    case BIO_CTRL_PUSH:
-    case BIO_CTRL_POP:
-    default:
-        ret = 0;
-        break;
+        case BIO_CTRL_EOF:
+        case BIO_CTRL_RESET:
+        case BIO_CTRL_DUP:
+        case BIO_CTRL_PUSH:
+        case BIO_CTRL_POP:
+        default:
+            ret = 0;
+            break;
     }
     return ret;
 }
@@ -884,19 +886,19 @@ static long maybe_retry_ctrl(BIO *bio, int cmd, long num, void *ptr)
         return 0;
 
     switch (cmd) {
-    case MAYBE_RETRY_CTRL_SET_RETRY_AFTER_CNT:
-        data->retrycnt = num;
-        return 1;
+        case MAYBE_RETRY_CTRL_SET_RETRY_AFTER_CNT:
+            data->retrycnt = num;
+            return 1;
 
-    case BIO_CTRL_FLUSH:
-        if (data->retrycnt == 0) {
-            BIO_set_retry_write(bio);
-            return -1;
-        }
-        data->retrycnt--;
+        case BIO_CTRL_FLUSH:
+            if (data->retrycnt == 0) {
+                BIO_set_retry_write(bio);
+                return -1;
+            }
+            data->retrycnt--;
         /* fall through */
-    default:
-        return BIO_ctrl(BIO_next(bio), cmd, num, ptr);
+        default:
+            return BIO_ctrl(BIO_next(bio), cmd, num, ptr);
     }
 }
 
@@ -912,8 +914,8 @@ int create_ssl_ctx_pair(OSSL_LIB_CTX *libctx, const SSL_METHOD *sm,
         if (*sctx != NULL)
             serverctx = *sctx;
         else if (!TEST_ptr(serverctx = SSL_CTX_new_ex(libctx, NULL, sm))
-            || !TEST_true(SSL_CTX_set_options(serverctx,
-                                              SSL_OP_ALLOW_CLIENT_RENEGOTIATION)))
+                 || !TEST_true(SSL_CTX_set_options(serverctx,
+                                                   SSL_OP_ALLOW_CLIENT_RENEGOTIATION)))
             goto err;
     }
 
@@ -932,17 +934,17 @@ int create_ssl_ctx_pair(OSSL_LIB_CTX *libctx, const SSL_METHOD *sm,
      * disabled
      */
     if (max_proto_version == 0
-            && (sm == TLS_server_method() || cm == TLS_client_method()))
+        && (sm == TLS_server_method() || cm == TLS_client_method()))
         max_proto_version = TLS1_2_VERSION;
 #endif
 
     if (serverctx != NULL
-            && ((min_proto_version > 0
-                 && !TEST_true(SSL_CTX_set_min_proto_version(serverctx,
-                                                            min_proto_version)))
-                || (max_proto_version > 0
-                    && !TEST_true(SSL_CTX_set_max_proto_version(serverctx,
-                                                                max_proto_version)))))
+        && ((min_proto_version > 0
+             && !TEST_true(SSL_CTX_set_min_proto_version(serverctx,
+                                                         min_proto_version)))
+            || (max_proto_version > 0
+                && !TEST_true(SSL_CTX_set_max_proto_version(serverctx,
+                                                            max_proto_version)))))
         goto err;
     if (clientctx != NULL
         && ((min_proto_version > 0
@@ -956,10 +958,10 @@ int create_ssl_ctx_pair(OSSL_LIB_CTX *libctx, const SSL_METHOD *sm,
     if (serverctx != NULL && certfile != NULL && privkeyfile != NULL) {
         if (!TEST_int_eq(SSL_CTX_use_certificate_file(serverctx, certfile,
                                                       SSL_FILETYPE_PEM), 1)
-                || !TEST_int_eq(SSL_CTX_use_PrivateKey_file(serverctx,
-                                                            privkeyfile,
-                                                            SSL_FILETYPE_PEM), 1)
-                || !TEST_int_eq(SSL_CTX_check_private_key(serverctx), 1))
+            || !TEST_int_eq(SSL_CTX_use_PrivateKey_file(serverctx,
+                                                        privkeyfile,
+                                                        SSL_FILETYPE_PEM), 1)
+            || !TEST_int_eq(SSL_CTX_check_private_key(serverctx), 1))
             goto err;
     }
 
@@ -969,7 +971,7 @@ int create_ssl_ctx_pair(OSSL_LIB_CTX *libctx, const SSL_METHOD *sm,
         *cctx = clientctx;
     return 1;
 
- err:
+err:
     if (sctx != NULL && *sctx == NULL)
         SSL_CTX_free(serverctx);
     if (cctx != NULL && *cctx == NULL)
@@ -1022,8 +1024,8 @@ int create_test_sockets(int *cfdp, int *sfdp, int socktype, BIO_ADDR *saddr)
         goto out;
 
     if (saddr != NULL
-            && !BIO_ADDR_rawmake(saddr, sin.sin_family, &sin.sin_addr,
-                                 sizeof(sin.sin_addr), sin.sin_port))
+        && !BIO_ADDR_rawmake(saddr, sin.sin_family, &sin.sin_addr,
+                             sizeof(sin.sin_addr), sin.sin_port))
         goto out;
 
     if (socktype == SOCK_STREAM && listen(afd, 1) < 0)
@@ -1052,7 +1054,8 @@ int create_test_sockets(int *cfdp, int *sfdp, int socktype, BIO_ADDR *saddr)
         if (sfd == -1 && errno != EAGAIN)
             goto out;
 
-        if (!cfd_connected && connect(cfd, (struct sockaddr*)&sin, sizeof(sin)) < 0)
+        if (!cfd_connected &&
+            connect(cfd, (struct sockaddr*)&sin, sizeof(sin)) < 0)
             goto out;
         else
             cfd_connected = 1;
@@ -1077,7 +1080,7 @@ success:
 }
 
 int create_ssl_objects2(SSL_CTX *serverctx, SSL_CTX *clientctx, SSL **sssl,
-                          SSL **cssl, int sfd, int cfd)
+                        SSL **cssl, int sfd, int cfd)
 {
     SSL *serverssl = NULL, *clientssl = NULL;
     BIO *s_to_c_bio = NULL, *c_to_s_bio = NULL;
@@ -1093,11 +1096,12 @@ int create_ssl_objects2(SSL_CTX *serverctx, SSL_CTX *clientctx, SSL **sssl,
         goto error;
 
     if (!TEST_ptr(s_to_c_bio = BIO_new_socket(sfd, BIO_NOCLOSE))
-            || !TEST_ptr(c_to_s_bio = BIO_new_socket(cfd, BIO_NOCLOSE)))
+        || !TEST_ptr(c_to_s_bio = BIO_new_socket(cfd, BIO_NOCLOSE)))
         goto error;
 
     if (!TEST_false(SSL_get_rpoll_descriptor(clientssl, &rdesc)
-        || !TEST_false(SSL_get_wpoll_descriptor(clientssl, &wdesc))))
+                    || !TEST_false(SSL_get_wpoll_descriptor(clientssl,
+                                                            &wdesc))))
         goto error;
 
     SSL_set_bio(clientssl, c_to_s_bio, c_to_s_bio);
@@ -1123,7 +1127,7 @@ int create_ssl_objects2(SSL_CTX *serverctx, SSL_CTX *clientctx, SSL **sssl,
     *cssl = clientssl;
     return 1;
 
- error:
+error:
     SSL_free(serverssl);
     SSL_free(clientssl);
     BIO_free(s_to_c_bio);
@@ -1144,7 +1148,7 @@ int wait_until_sock_readable(int sock)
  * NOTE: Transfers control of the BIOs - this function will free them on error
  */
 int create_ssl_objects(SSL_CTX *serverctx, SSL_CTX *clientctx, SSL **sssl,
-                          SSL **cssl, BIO *s_to_c_fbio, BIO *c_to_s_fbio)
+                       SSL **cssl, BIO *s_to_c_fbio, BIO *c_to_s_fbio)
 {
     SSL *serverssl = NULL, *clientssl = NULL;
     BIO *s_to_c_bio = NULL, *c_to_s_bio = NULL;
@@ -1160,19 +1164,19 @@ int create_ssl_objects(SSL_CTX *serverctx, SSL_CTX *clientctx, SSL **sssl,
 
     if (SSL_is_dtls(clientssl)) {
         if (!TEST_ptr(s_to_c_bio = BIO_new(bio_s_mempacket_test()))
-                || !TEST_ptr(c_to_s_bio = BIO_new(bio_s_mempacket_test())))
+            || !TEST_ptr(c_to_s_bio = BIO_new(bio_s_mempacket_test())))
             goto error;
     } else {
         if (!TEST_ptr(s_to_c_bio = BIO_new(BIO_s_mem()))
-                || !TEST_ptr(c_to_s_bio = BIO_new(BIO_s_mem())))
+            || !TEST_ptr(c_to_s_bio = BIO_new(BIO_s_mem())))
             goto error;
     }
 
     if (s_to_c_fbio != NULL
-            && !TEST_ptr(s_to_c_bio = BIO_push(s_to_c_fbio, s_to_c_bio)))
+        && !TEST_ptr(s_to_c_bio = BIO_push(s_to_c_fbio, s_to_c_bio)))
         goto error;
     if (c_to_s_fbio != NULL
-            && !TEST_ptr(c_to_s_bio = BIO_push(c_to_s_fbio, c_to_s_bio)))
+        && !TEST_ptr(c_to_s_bio = BIO_push(c_to_s_fbio, c_to_s_bio)))
         goto error;
 
     /* Set Non-blocking IO behaviour */
@@ -1188,7 +1192,7 @@ int create_ssl_objects(SSL_CTX *serverctx, SSL_CTX *clientctx, SSL **sssl,
     *cssl = clientssl;
     return 1;
 
- error:
+error:
     SSL_free(serverssl);
     SSL_free(clientssl);
     BIO_free(s_to_c_bio);
@@ -1275,8 +1279,8 @@ int create_bare_ssl_connection(SSL *serverssl, SSL *clientssl, int want,
         }
 
         if (!servererr && rets <= 0
-                && err != SSL_ERROR_WANT_READ
-                && err != SSL_ERROR_WANT_X509_LOOKUP) {
+            && err != SSL_ERROR_WANT_READ
+            && err != SSL_ERROR_WANT_X509_LOOKUP) {
             TEST_info("SSL_accept() failed %d, %d", rets, err);
             if (want != SSL_ERROR_SSL)
                 TEST_openssl_errors();
@@ -1320,7 +1324,7 @@ int create_bare_ssl_connection(SSL *serverssl, SSL *clientssl, int want,
     } while (retc <=0 || rets <= 0);
 
     ret = 1;
- err:
+err:
 #ifndef OPENSSL_NO_SOCK
     BIO_ADDR_free(peer);
 #endif
@@ -1392,12 +1396,12 @@ SSL_SESSION *create_a_psk(SSL *ssl, size_t mdsize)
     }
     sess = SSL_SESSION_new();
     if (!TEST_ptr(sess)
-            || !TEST_ptr(cipher)
-            || !TEST_true(SSL_SESSION_set1_master_key(sess, key, mdsize))
-            || !TEST_true(SSL_SESSION_set_cipher(sess, cipher))
-            || !TEST_true(
-                    SSL_SESSION_set_protocol_version(sess,
-                                                     TLS1_3_VERSION))) {
+        || !TEST_ptr(cipher)
+        || !TEST_true(SSL_SESSION_set1_master_key(sess, key, mdsize))
+        || !TEST_true(SSL_SESSION_set_cipher(sess, cipher))
+        || !TEST_true(
+            SSL_SESSION_set_protocol_version(sess,
+                                             TLS1_3_VERSION))) {
         SSL_SESSION_free(sess);
         return NULL;
     }
@@ -1446,7 +1450,7 @@ int ssl_ctx_add_large_cert_chain(OSSL_LIB_CTX *libctx, SSL_CTX *sctx,
     }
 
     ret = 1;
- end:
+end:
     BIO_free(certbio);
     X509_free(chaincert);
     return ret;

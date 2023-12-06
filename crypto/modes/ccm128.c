@@ -263,9 +263,9 @@ int CRYPTO_ccm128_decrypt(CCM128_CONTEXT *ctx,
         memcpy(out, scratch.c, 16);
 #else
         ctx->cmac.u[0] ^= (((u64_a1 *)out)[0]
-                            = scratch.u[0] ^ ((u64_a1 *)inp)[0]);
+                               = scratch.u[0] ^ ((u64_a1 *)inp)[0]);
         ctx->cmac.u[1] ^= (((u64_a1 *)out)[1]
-                            = scratch.u[1] ^ ((u64_a1 *)inp)[1]);
+                               = scratch.u[1] ^ ((u64_a1 *)inp)[1]);
 #endif
         (*block) (ctx->cmac.c, ctx->cmac.c, key);
 

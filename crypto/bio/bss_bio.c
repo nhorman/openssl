@@ -43,7 +43,7 @@ static const BIO_METHOD methods_biop = {
     bread_conv,
     bio_read,
     bio_puts,
-    NULL /* no bio_gets */ ,
+    NULL /* no bio_gets */,
     bio_ctrl,
     bio_new,
     bio_free,
@@ -423,30 +423,30 @@ static long bio_ctrl(BIO *bio, int cmd, long num, void *ptr)
     switch (cmd) {
         /* specific CTRL codes */
 
-    case BIO_C_SET_WRITE_BUF_SIZE:
-        if (b->peer) {
-            ERR_raise(ERR_LIB_BIO, BIO_R_IN_USE);
-            ret = 0;
-        } else if (num == 0) {
-            ERR_raise(ERR_LIB_BIO, BIO_R_INVALID_ARGUMENT);
-            ret = 0;
-        } else {
-            size_t new_size = num;
+        case BIO_C_SET_WRITE_BUF_SIZE:
+            if (b->peer) {
+                ERR_raise(ERR_LIB_BIO, BIO_R_IN_USE);
+                ret = 0;
+            } else if (num == 0) {
+                ERR_raise(ERR_LIB_BIO, BIO_R_INVALID_ARGUMENT);
+                ret = 0;
+            } else {
+                size_t new_size = num;
 
-            if (b->size != new_size) {
-                OPENSSL_free(b->buf);
-                b->buf = NULL;
-                b->size = new_size;
+                if (b->size != new_size) {
+                    OPENSSL_free(b->buf);
+                    b->buf = NULL;
+                    b->size = new_size;
+                }
+                ret = 1;
             }
-            ret = 1;
-        }
-        break;
+            break;
 
-    case BIO_C_GET_WRITE_BUF_SIZE:
-        ret = (long)b->size;
-        break;
+        case BIO_C_GET_WRITE_BUF_SIZE:
+            ret = (long)b->size;
+            break;
 
-    case BIO_C_MAKE_BIO_PAIR:
+        case BIO_C_MAKE_BIO_PAIR:
         {
             BIO *other_bio = ptr;
 
@@ -457,108 +457,108 @@ static long bio_ctrl(BIO *bio, int cmd, long num, void *ptr)
         }
         break;
 
-    case BIO_C_DESTROY_BIO_PAIR:
-        /*
-         * Affects both BIOs in the pair -- call just once! Or let
-         * BIO_free(bio1); BIO_free(bio2); do the job.
-         */
-        bio_destroy_pair(bio);
-        ret = 1;
-        break;
+        case BIO_C_DESTROY_BIO_PAIR:
+            /*
+             * Affects both BIOs in the pair -- call just once! Or let
+             * BIO_free(bio1); BIO_free(bio2); do the job.
+             */
+            bio_destroy_pair(bio);
+            ret = 1;
+            break;
 
-    case BIO_C_GET_WRITE_GUARANTEE:
-        /*
-         * How many bytes can the caller feed to the next write without
-         * having to keep any?
-         */
-        if (b->peer == NULL || b->closed)
-            ret = 0;
-        else
-            ret = (long)b->size - b->len;
-        break;
+        case BIO_C_GET_WRITE_GUARANTEE:
+            /*
+             * How many bytes can the caller feed to the next write without
+             * having to keep any?
+             */
+            if (b->peer == NULL || b->closed)
+                ret = 0;
+            else
+                ret = (long)b->size - b->len;
+            break;
 
-    case BIO_C_GET_READ_REQUEST:
-        /*
-         * If the peer unsuccessfully tried to read, how many bytes were
-         * requested? (As with BIO_CTRL_PENDING, that number can usually be
-         * treated as boolean.)
-         */
-        ret = (long)b->request;
-        break;
+        case BIO_C_GET_READ_REQUEST:
+            /*
+             * If the peer unsuccessfully tried to read, how many bytes were
+             * requested? (As with BIO_CTRL_PENDING, that number can usually be
+             * treated as boolean.)
+             */
+            ret = (long)b->request;
+            break;
 
-    case BIO_C_RESET_READ_REQUEST:
-        /*
-         * Reset request.  (Can be useful after read attempts at the other
-         * side that are meant to be non-blocking, e.g. when probing SSL_read
-         * to see if any data is available.)
-         */
-        b->request = 0;
-        ret = 1;
-        break;
+        case BIO_C_RESET_READ_REQUEST:
+            /*
+             * Reset request.  (Can be useful after read attempts at the other
+             * side that are meant to be non-blocking, e.g. when probing SSL_read
+             * to see if any data is available.)
+             */
+            b->request = 0;
+            ret = 1;
+            break;
 
-    case BIO_C_SHUTDOWN_WR:
-        /* similar to shutdown(..., SHUT_WR) */
-        b->closed = 1;
-        ret = 1;
-        break;
+        case BIO_C_SHUTDOWN_WR:
+            /* similar to shutdown(..., SHUT_WR) */
+            b->closed = 1;
+            ret = 1;
+            break;
 
-    case BIO_C_NREAD0:
-        /* prepare for non-copying read */
-        ret = (long)bio_nread0(bio, ptr);
-        break;
+        case BIO_C_NREAD0:
+            /* prepare for non-copying read */
+            ret = (long)bio_nread0(bio, ptr);
+            break;
 
-    case BIO_C_NREAD:
-        /* non-copying read */
-        ret = (long)bio_nread(bio, ptr, (size_t)num);
-        break;
+        case BIO_C_NREAD:
+            /* non-copying read */
+            ret = (long)bio_nread(bio, ptr, (size_t)num);
+            break;
 
-    case BIO_C_NWRITE0:
-        /* prepare for non-copying write */
-        ret = (long)bio_nwrite0(bio, ptr);
-        break;
+        case BIO_C_NWRITE0:
+            /* prepare for non-copying write */
+            ret = (long)bio_nwrite0(bio, ptr);
+            break;
 
-    case BIO_C_NWRITE:
-        /* non-copying write */
-        ret = (long)bio_nwrite(bio, ptr, (size_t)num);
-        break;
+        case BIO_C_NWRITE:
+            /* non-copying write */
+            ret = (long)bio_nwrite(bio, ptr, (size_t)num);
+            break;
 
         /* standard CTRL codes follow */
 
-    case BIO_CTRL_RESET:
-        if (b->buf != NULL) {
-            b->len = 0;
-            b->offset = 0;
-        }
-        ret = 0;
-        break;
-
-    case BIO_CTRL_GET_CLOSE:
-        ret = bio->shutdown;
-        break;
-
-    case BIO_CTRL_SET_CLOSE:
-        bio->shutdown = (int)num;
-        ret = 1;
-        break;
-
-    case BIO_CTRL_PENDING:
-        if (b->peer != NULL) {
-            struct bio_bio_st *peer_b = b->peer->ptr;
-
-            ret = (long)peer_b->len;
-        } else
+        case BIO_CTRL_RESET:
+            if (b->buf != NULL) {
+                b->len = 0;
+                b->offset = 0;
+            }
             ret = 0;
-        break;
+            break;
 
-    case BIO_CTRL_WPENDING:
-        if (b->buf != NULL)
-            ret = (long)b->len;
-        else
-            ret = 0;
-        break;
+        case BIO_CTRL_GET_CLOSE:
+            ret = bio->shutdown;
+            break;
 
-    case BIO_CTRL_DUP:
-        /* See BIO_dup_chain for circumstances we have to expect. */
+        case BIO_CTRL_SET_CLOSE:
+            bio->shutdown = (int)num;
+            ret = 1;
+            break;
+
+        case BIO_CTRL_PENDING:
+            if (b->peer != NULL) {
+                struct bio_bio_st *peer_b = b->peer->ptr;
+
+                ret = (long)peer_b->len;
+            } else
+                ret = 0;
+            break;
+
+        case BIO_CTRL_WPENDING:
+            if (b->buf != NULL)
+                ret = (long)b->len;
+            else
+                ret = 0;
+            break;
+
+        case BIO_CTRL_DUP:
+            /* See BIO_dup_chain for circumstances we have to expect. */
         {
             BIO *other_bio = ptr;
             struct bio_bio_st *other_b;
@@ -572,28 +572,28 @@ static long bio_ctrl(BIO *bio, int cmd, long num, void *ptr)
             other_b->size = b->size;
         }
 
-        ret = 1;
-        break;
-
-    case BIO_CTRL_FLUSH:
-        ret = 1;
-        break;
-
-    case BIO_CTRL_EOF:
-        if (b->peer != NULL) {
-            struct bio_bio_st *peer_b = b->peer->ptr;
-
-            if (peer_b->len == 0 && peer_b->closed)
-                ret = 1;
-            else
-                ret = 0;
-        } else {
             ret = 1;
-        }
-        break;
+            break;
 
-    default:
-        ret = 0;
+        case BIO_CTRL_FLUSH:
+            ret = 1;
+            break;
+
+        case BIO_CTRL_EOF:
+            if (b->peer != NULL) {
+                struct bio_bio_st *peer_b = b->peer->ptr;
+
+                if (peer_b->len == 0 && peer_b->closed)
+                    ret = 1;
+                else
+                    ret = 0;
+            } else {
+                ret = 1;
+            }
+            break;
+
+        default:
+            ret = 0;
     }
     return ret;
 }
@@ -706,7 +706,7 @@ int BIO_new_bio_pair(BIO **bio1_p, size_t writebuf1,
         goto err;
     ret = 1;
 
- err:
+err:
     if (ret == 0) {
         BIO_free(bio1);
         bio1 = NULL;

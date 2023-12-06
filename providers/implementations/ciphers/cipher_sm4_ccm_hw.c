@@ -15,11 +15,11 @@
 #include "crypto/sm4_platform.h"
 
 #define SM4_HW_CCM_SET_KEY_FN(fn_set_enc_key, fn_blk, fn_ccm_enc, fn_ccm_dec)  \
-    fn_set_enc_key(key, &actx->ks.ks);                                         \
-    CRYPTO_ccm128_init(&ctx->ccm_ctx, ctx->m, ctx->l, &actx->ks.ks,            \
-                       (block128_f)fn_blk);                                    \
-    ctx->str = ctx->enc ? (ccm128_f)fn_ccm_enc : (ccm128_f)fn_ccm_dec;         \
-    ctx->key_set = 1;
+        fn_set_enc_key(key, &actx->ks.ks);                                         \
+        CRYPTO_ccm128_init(&ctx->ccm_ctx, ctx->m, ctx->l, &actx->ks.ks,            \
+                           (block128_f)fn_blk);                                    \
+        ctx->str = ctx->enc ? (ccm128_f)fn_ccm_enc : (ccm128_f)fn_ccm_dec;         \
+        ctx->key_set = 1;
 
 static int ccm_sm4_initkey(PROV_CCM_CTX *ctx,
                            const unsigned char *key, size_t keylen)
@@ -47,7 +47,7 @@ static int ccm_sm4_initkey(PROV_CCM_CTX *ctx,
     {
         SM4_HW_CCM_SET_KEY_FN(ossl_sm4_set_key, ossl_sm4_encrypt, NULL, NULL);
     }
-  return 1;
+    return 1;
 }
 
 static const PROV_CCM_HW ccm_sm4 = {

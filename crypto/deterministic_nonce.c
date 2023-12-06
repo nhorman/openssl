@@ -67,22 +67,22 @@ static int int2octets(unsigned char *out, const BIGNUM *num, int rlen)
 static int bits2octets(unsigned char *out, const BIGNUM *q, int qlen_bits,
                        int rlen, const unsigned char *in, size_t inlen)
 {
-   int ret = 0;
-   BIGNUM *z = BN_new();
+    int ret = 0;
+    BIGNUM *z = BN_new();
 
-   if (z == NULL
-           || !bits2int(z, qlen_bits, in, inlen))
-       goto err;
+    if (z == NULL
+        || !bits2int(z, qlen_bits, in, inlen))
+        goto err;
 
-   /* z2 = z1 mod q (Do a simple subtract, since z1 < 2^qlen_bits) */
-   if (BN_cmp(z, q) >= 0
-           && !BN_usub(z, z, q))
-       goto err;
+    /* z2 = z1 mod q (Do a simple subtract, since z1 < 2^qlen_bits) */
+    if (BN_cmp(z, q) >= 0
+        && !BN_usub(z, z, q))
+        goto err;
 
-   ret = int2octets(out, z, rlen);
+    ret = int2octets(out, z, rlen);
 err:
-   BN_free(z);
-   return ret;
+    BN_free(z);
+    return ret;
 }
 
 /*
@@ -177,7 +177,7 @@ int ossl_gen_deterministic_nonce_rfc6979(BIGNUM *out, const BIGNUM *q,
     entropyx = nonceh + rlen;
 
     if (!int2octets(entropyx, priv, rlen)
-            || !bits2octets(nonceh, q, qlen_bits, rlen, hm, hmlen))
+        || !bits2octets(nonceh, q, qlen_bits, rlen, hm, hmlen))
         goto end;
 
     kdfctx = kdf_setup(digestname, entropyx, rlen, nonceh, rlen, libctx, propq);
@@ -186,7 +186,7 @@ int ossl_gen_deterministic_nonce_rfc6979(BIGNUM *out, const BIGNUM *q,
 
     do {
         if (!EVP_KDF_derive(kdfctx, T, rlen, NULL)
-                || !bits2int(out, qlen_bits, T, rlen))
+            || !bits2int(out, qlen_bits, T, rlen))
             goto end;
     } while (BN_is_zero(out) || BN_is_one(out) || BN_cmp(out, q) >= 0);
     ret = 1;

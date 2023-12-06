@@ -144,7 +144,7 @@ static char *dummy_srp(SSL *ssl, void *arg)
 
 void set_up_dummy_srp(SSL_CTX *ctx)
 {
-        SSL_CTX_set_srp_client_pwd_callback(ctx, dummy_srp);
+    SSL_CTX_set_srp_client_pwd_callback(ctx, dummy_srp);
 }
 
 /*
@@ -172,8 +172,8 @@ static int ssl_srp_server_param_cb(SSL *s, int *ad, void *arg)
     }
 
     if (SSL_set_srp_server_param
-        (s, p->user->N, p->user->g, p->user->s, p->user->v,
-         p->user->info) < 0) {
+            (s, p->user->N, p->user->g, p->user->s, p->user->v,
+            p->user->info) < 0) {
         *ad = SSL_AD_INTERNAL_ERROR;
         goto err;
     }
@@ -182,7 +182,7 @@ static int ssl_srp_server_param_cb(SSL *s, int *ad, void *arg)
                p->login, p->user->info);
     ret = SSL_ERROR_NONE;
 
- err:
+err:
     SRP_user_pwd_free(p->user);
     p->user = NULL;
     p->login = NULL;
@@ -203,11 +203,11 @@ int set_up_srp_verifier_file(SSL_CTX *ctx, srpsrvparm *srp_callback_parm,
         return 0;
     }
     if ((ret =
-            SRP_VBASE_init(srp_callback_parm->vb,
-                           srp_verifier_file)) != SRP_NO_ERROR) {
+             SRP_VBASE_init(srp_callback_parm->vb,
+                            srp_verifier_file)) != SRP_NO_ERROR) {
         BIO_printf(bio_err,
-                    "Cannot initialize SRP verifier file \"%s\":ret=%d\n",
-                    srp_verifier_file, ret);
+                   "Cannot initialize SRP verifier file \"%s\":ret=%d\n",
+                   srp_verifier_file, ret);
         return 0;
     }
     SSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, verify_callback);
@@ -225,7 +225,7 @@ void lookup_srp_user(srpsrvparm *srp_callback_parm, BIO *bio_s_out)
 
     if (srp_callback_parm->user != NULL)
         BIO_printf(bio_s_out, "LOOKUP done %s\n",
-                    srp_callback_parm->user->info);
+                   srp_callback_parm->user->info);
     else
         BIO_printf(bio_s_out, "LOOKUP not successful\n");
 }

@@ -53,38 +53,39 @@ static int get_sni_from_client_hello(BIO *bio, char **sni)
     memset(&pkt5, 0, sizeof(pkt5));
 
     if (!TEST_long_ge(len = BIO_get_mem_data(bio, (char **)&data), 0)
-            || !TEST_true(PACKET_buf_init(&pkt, data, len))
-               /* Skip the record header */
-            || !PACKET_forward(&pkt, SSL3_RT_HEADER_LENGTH)
-               /* Skip the handshake message header */
-            || !TEST_true(PACKET_forward(&pkt, SSL3_HM_HEADER_LENGTH))
-               /* Skip client version and random */
-            || !TEST_true(PACKET_forward(&pkt, CLIENT_VERSION_LEN
-                                               + SSL3_RANDOM_SIZE))
-               /* Skip session id */
-            || !TEST_true(PACKET_get_length_prefixed_1(&pkt, &pkt2))
-               /* Skip ciphers */
-            || !TEST_true(PACKET_get_length_prefixed_2(&pkt, &pkt2))
-               /* Skip compression */
-            || !TEST_true(PACKET_get_length_prefixed_1(&pkt, &pkt2))
-               /* Extensions len */
-            || !TEST_true(PACKET_as_length_prefixed_2(&pkt, &pkt2)))
+        || !TEST_true(PACKET_buf_init(&pkt, data, len))
+        /* Skip the record header */
+        || !PACKET_forward(&pkt, SSL3_RT_HEADER_LENGTH)
+        /* Skip the handshake message header */
+        || !TEST_true(PACKET_forward(&pkt, SSL3_HM_HEADER_LENGTH))
+        /* Skip client version and random */
+        || !TEST_true(PACKET_forward(&pkt, CLIENT_VERSION_LEN
+                                     + SSL3_RANDOM_SIZE))
+        /* Skip session id */
+        || !TEST_true(PACKET_get_length_prefixed_1(&pkt, &pkt2))
+        /* Skip ciphers */
+        || !TEST_true(PACKET_get_length_prefixed_2(&pkt, &pkt2))
+        /* Skip compression */
+        || !TEST_true(PACKET_get_length_prefixed_1(&pkt, &pkt2))
+        /* Extensions len */
+        || !TEST_true(PACKET_as_length_prefixed_2(&pkt, &pkt2)))
         goto end;
 
     /* Loop through all extensions for SNI */
     while (PACKET_remaining(&pkt2)) {
         if (!TEST_true(PACKET_get_net_2(&pkt2, &type))
-                || !TEST_true(PACKET_get_length_prefixed_2(&pkt2, &pkt3)))
+            || !TEST_true(PACKET_get_length_prefixed_2(&pkt2, &pkt3)))
             goto end;
         if (type == TLSEXT_TYPE_server_name) {
             if (!TEST_true(PACKET_get_length_prefixed_2(&pkt3, &pkt4))
-                    || !TEST_uint_ne(PACKET_remaining(&pkt4), 0)
-                    || !TEST_true(PACKET_get_1(&pkt4, &servname_type))
-                    || !TEST_uint_eq(servname_type, TLSEXT_NAMETYPE_host_name)
-                    || !TEST_true(PACKET_get_length_prefixed_2(&pkt4, &pkt5))
-                    || !TEST_uint_le(PACKET_remaining(&pkt5), TLSEXT_MAXLEN_host_name)
-                    || !TEST_false(PACKET_contains_zero_byte(&pkt5))
-                    || !TEST_true(PACKET_strndup(&pkt5, sni)))
+                || !TEST_uint_ne(PACKET_remaining(&pkt4), 0)
+                || !TEST_true(PACKET_get_1(&pkt4, &servname_type))
+                || !TEST_uint_eq(servname_type, TLSEXT_NAMETYPE_host_name)
+                || !TEST_true(PACKET_get_length_prefixed_2(&pkt4, &pkt5))
+                || !TEST_uint_le(PACKET_remaining(&pkt5),
+                                 TLSEXT_MAXLEN_host_name)
+                || !TEST_false(PACKET_contains_zero_byte(&pkt5))
+                || !TEST_true(PACKET_strndup(&pkt5, sni)))
                 goto end;
             ret = 1;
             goto end;
@@ -109,7 +110,7 @@ static int client_setup_sni_before_state(void)
         goto end;
 
     if (maxversion > 0
-            && !TEST_true(SSL_CTX_set_max_proto_version(ctx, maxversion)))
+        && !TEST_true(SSL_CTX_set_max_proto_version(ctx, maxversion)))
         goto end;
 
     con = SSL_new(ctx);
@@ -161,7 +162,7 @@ static int client_setup_sni_after_state(void)
         goto end;
 
     if (maxversion > 0
-            && !TEST_true(SSL_CTX_set_max_proto_version(ctx, maxversion)))
+        && !TEST_true(SSL_CTX_set_max_proto_version(ctx, maxversion)))
         goto end;
 
     con = SSL_new(ctx);
@@ -209,8 +210,8 @@ static int server_setup_sni(void)
                                        TLS_client_method(),
                                        TLS1_VERSION, 0,
                                        &sctx, &cctx, cert, privkey))
-            || !TEST_true(create_ssl_objects(sctx, cctx, &serverssl, &clientssl,
-                                             NULL, NULL)))
+        || !TEST_true(create_ssl_objects(sctx, cctx, &serverssl, &clientssl,
+                                         NULL, NULL)))
         goto end;
 
     /* set SNI at server side */
@@ -260,7 +261,7 @@ int setup_tests(void)
     }
 
     if (!TEST_ptr(cert = test_get_argument(0))
-            || !TEST_ptr(privkey = test_get_argument(1)))
+        || !TEST_ptr(privkey = test_get_argument(1)))
         return 0;
 
     ADD_ALL_TESTS(test_servername, OSSL_NELEM(sni_test_fns));

@@ -75,7 +75,7 @@ DH *DSA_dup_DH(const DSA *r)
 
     return ret;
 
- err:
+err:
     BN_free(pub_key);
     BN_free(priv_key);
     DH_free(ret);
@@ -188,7 +188,7 @@ static DSA *dsa_new_intern(ENGINE *engine, OSSL_LIB_CTX *libctx)
 
     return ret;
 
- err:
+err:
     DSA_free(ret);
     return NULL;
 }

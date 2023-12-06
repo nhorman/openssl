@@ -78,8 +78,8 @@ static int engine_list_add(ENGINE *e)
      * Having the engine in the list assumes a structural reference.
      */
     if (!CRYPTO_UP_REF(&e->struct_ref, &ref)) {
-            ERR_raise(ERR_LIB_ENGINE, ENGINE_R_INTERNAL_LIST_ERROR);
-            return 0;
+        ERR_raise(ERR_LIB_ENGINE, ENGINE_R_INTERNAL_LIST_ERROR);
+        return 0;
     }
     ENGINE_REF_PRINT(e, 0, 1);
     if (engine_list_head == NULL) {
@@ -193,7 +193,7 @@ int engine_add_dynamic_id(ENGINE *e, ENGINE_DYNAMIC_ID dynamic_id,
     e->next_dyn = NULL;
     result = 1;
 
- err:
+err:
     if (not_locked)
         CRYPTO_THREAD_unlock(global_engine_lock);
     return result;
@@ -466,7 +466,7 @@ ENGINE *ENGINE_by_id(const char *id)
             goto notfound;
         return iterator;
     }
- notfound:
+notfound:
     ENGINE_free(iterator);
     ERR_raise_data(ERR_LIB_ENGINE, ENGINE_R_NO_SUCH_ENGINE, "id=%s", id);
     return NULL;

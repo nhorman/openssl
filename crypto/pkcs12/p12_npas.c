@@ -22,8 +22,8 @@ static int newpass_bags(STACK_OF(PKCS12_SAFEBAG) *bags, const char *oldpass,
                         const char *newpass,
                         OSSL_LIB_CTX *libctx, const char *propq);
 static int newpass_bag(PKCS12_SAFEBAG *bag, const char *oldpass,
-                        const char *newpass,
-                        OSSL_LIB_CTX *libctx, const char *propq);
+                       const char *newpass,
+                       OSSL_LIB_CTX *libctx, const char *propq);
 static int alg_get(const X509_ALGOR *alg, int *pnid, int *piter,
                    int *psaltlen, int *cipherid);
 
@@ -61,7 +61,8 @@ static int newpass_p12(PKCS12 *p12, const char *oldpass, const char *newpass)
 {
     STACK_OF(PKCS7) *asafes = NULL, *newsafes = NULL;
     STACK_OF(PKCS12_SAFEBAG) *bags = NULL;
-    int i, bagnid, pbe_nid = 0, pbe_iter = 0, pbe_saltlen = 0, cipherid = NID_undef;
+    int i, bagnid, pbe_nid = 0, pbe_iter = 0, pbe_saltlen = 0,
+        cipherid = NID_undef;
     PKCS7 *p7, *p7new;
     ASN1_OCTET_STRING *p12_data_tmp = NULL, *macoct = NULL;
     unsigned char mac[EVP_MAX_MD_SIZE];
@@ -205,47 +206,48 @@ static int alg_get(const X509_ALGOR *alg, int *pnid, int *piter,
     pbenid = OBJ_obj2nid(aoid);
 
     switch (pbenid) {
-    case NID_pbes2:
-        if (aparamtype == V_ASN1_SEQUENCE)
-            pbe2 = ASN1_item_unpack(aparam, ASN1_ITEM_rptr(PBE2PARAM));
-        if (pbe2 == NULL)
-            goto done;
+        case NID_pbes2:
+            if (aparamtype == V_ASN1_SEQUENCE)
+                pbe2 = ASN1_item_unpack(aparam, ASN1_ITEM_rptr(PBE2PARAM));
+            if (pbe2 == NULL)
+                goto done;
 
-        X509_ALGOR_get0(&aoid, &aparamtype, &aparam, pbe2->keyfunc);
-        pbenid = OBJ_obj2nid(aoid);
-        X509_ALGOR_get0(&aoid, NULL, NULL, pbe2->encryption);
-        encnid = OBJ_obj2nid(aoid);
+            X509_ALGOR_get0(&aoid, &aparamtype, &aparam, pbe2->keyfunc);
+            pbenid = OBJ_obj2nid(aoid);
+            X509_ALGOR_get0(&aoid, NULL, NULL, pbe2->encryption);
+            encnid = OBJ_obj2nid(aoid);
 
-        if (aparamtype == V_ASN1_SEQUENCE)
-            kdf = ASN1_item_unpack(aparam, ASN1_ITEM_rptr(PBKDF2PARAM));
-        if (kdf == NULL)
-            goto done;
+            if (aparamtype == V_ASN1_SEQUENCE)
+                kdf = ASN1_item_unpack(aparam, ASN1_ITEM_rptr(PBKDF2PARAM));
+            if (kdf == NULL)
+                goto done;
 
-        /* Only OCTET_STRING is supported */
-        if (kdf->salt->type != V_ASN1_OCTET_STRING)
-            goto done;
+            /* Only OCTET_STRING is supported */
+            if (kdf->salt->type != V_ASN1_OCTET_STRING)
+                goto done;
 
-        if (kdf->prf == NULL) {
-            prfnid = NID_hmacWithSHA1;
-        } else {
-            X509_ALGOR_get0(&aoid, NULL, NULL, kdf->prf);
-            prfnid = OBJ_obj2nid(aoid);
-        }
-        *psaltlen = kdf->salt->value.octet_string->length;
-        *piter = ASN1_INTEGER_get(kdf->iter);
-        *pnid = prfnid;
-        *cipherid = encnid;
-        break;
-    default:
-        pbe = ASN1_TYPE_unpack_sequence(ASN1_ITEM_rptr(PBEPARAM), alg->parameter);
-        if (pbe == NULL)
-            goto done;
-        *pnid = OBJ_obj2nid(alg->algorithm);
-        *piter = ASN1_INTEGER_get(pbe->iter);
-        *psaltlen = pbe->salt->length;
-        *cipherid = NID_undef;
-        ret = 1;
-        break;
+            if (kdf->prf == NULL) {
+                prfnid = NID_hmacWithSHA1;
+            } else {
+                X509_ALGOR_get0(&aoid, NULL, NULL, kdf->prf);
+                prfnid = OBJ_obj2nid(aoid);
+            }
+            *psaltlen = kdf->salt->value.octet_string->length;
+            *piter = ASN1_INTEGER_get(kdf->iter);
+            *pnid = prfnid;
+            *cipherid = encnid;
+            break;
+        default:
+            pbe = ASN1_TYPE_unpack_sequence(ASN1_ITEM_rptr(
+                                                PBEPARAM), alg->parameter);
+            if (pbe == NULL)
+                goto done;
+            *pnid = OBJ_obj2nid(alg->algorithm);
+            *piter = ASN1_INTEGER_get(pbe->iter);
+            *psaltlen = pbe->salt->length;
+            *cipherid = NID_undef;
+            ret = 1;
+            break;
     }
     ret = 1;
 done:

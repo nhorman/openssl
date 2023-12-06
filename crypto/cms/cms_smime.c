@@ -68,7 +68,7 @@ static int cms_copy_content(BIO *out, BIO *in, unsigned int flags)
     }
 
     r = 1;
- err:
+err:
     if (tmpout != out)
         BIO_free(tmpout);
     return r;
@@ -295,7 +295,7 @@ static int cms_signerinfo_verify_cert(CMS_SignerInfo *si,
     /* also send back the trust chain when required */
     if (chain != NULL)
         *chain = X509_STORE_CTX_get1_chain(ctx);
- err:
+err:
     X509_STORE_CTX_free(ctx);
     return r;
 
@@ -460,7 +460,7 @@ int CMS_verify(CMS_ContentInfo *cms, STACK_OF(X509) *certs,
     }
 
     ret = 1;
- err:
+err:
     if (!(flags & SMIME_BINARY) && dcont) {
         do_free_upto(cmsbio, tmpout);
         if (tmpin != dcont)
@@ -475,7 +475,7 @@ int CMS_verify(CMS_ContentInfo *cms, STACK_OF(X509) *certs,
     if (out != tmpout)
         BIO_free_all(tmpout);
 
- err2:
+err2:
     if (si_chains != NULL) {
         for (i = 0; i < scount; ++i)
             OSSL_STACK_OF_X509_free(si_chains[i]);
@@ -543,7 +543,7 @@ CMS_ContentInfo *CMS_sign_ex(X509 *signcert, EVP_PKEY *pkey,
     else
         goto err;
 
- err:
+err:
     CMS_ContentInfo_free(cms);
     return NULL;
 }
@@ -617,7 +617,7 @@ CMS_ContentInfo *CMS_sign_receipt(CMS_SignerInfo *si,
 
     r = 1;
 
- err:
+err:
     BIO_free(rct_cont);
     if (r)
         return cms;
@@ -660,7 +660,7 @@ CMS_ContentInfo *CMS_encrypt_ex(STACK_OF(X509) *certs, BIO *data,
     else
         ERR_raise(ERR_LIB_CMS, ERR_R_CMS_LIB);
 
- err:
+err:
     CMS_ContentInfo_free(cms);
     return NULL;
 }
@@ -698,7 +698,7 @@ static int cms_kari_set1_pkey_and_peer(CMS_ContentInfo *cms,
 
 int CMS_decrypt_set1_pkey(CMS_ContentInfo *cms, EVP_PKEY *pk, X509 *cert)
 {
-     return CMS_decrypt_set1_pkey_and_peer(cms, pk, cert, NULL);
+    return CMS_decrypt_set1_pkey_and_peer(cms, pk, cert, NULL);
 }
 
 int CMS_decrypt_set1_pkey_and_peer(CMS_ContentInfo *cms, EVP_PKEY *pk,
@@ -722,8 +722,8 @@ int CMS_decrypt_set1_pkey_and_peer(CMS_ContentInfo *cms, EVP_PKEY *pk,
 
     cms_pkey_ri_type = ossl_cms_pkey_get_ri_type(pk);
     if (cms_pkey_ri_type == CMS_RECIPINFO_NONE) {
-         ERR_raise(ERR_LIB_CMS, CMS_R_NOT_SUPPORTED_FOR_THIS_KEY_TYPE);
-         return 0;
+        ERR_raise(ERR_LIB_CMS, CMS_R_NOT_SUPPORTED_FOR_THIS_KEY_TYPE);
+        return 0;
     }
 
     for (i = 0; i < sk_CMS_RecipientInfo_num(ris); i++) {
@@ -766,7 +766,8 @@ int CMS_decrypt_set1_pkey_and_peer(CMS_ContentInfo *cms, EVP_PKEY *pk,
              * successful decrypt. Always attempt to decrypt all recipients
              * to avoid leaking timing of a successful decrypt.
              */
-            else if (r > 0 && (debug || cms_pkey_ri_type != CMS_RECIPINFO_TRANS))
+            else if (r > 0 &&
+                     (debug || cms_pkey_ri_type != CMS_RECIPINFO_TRANS))
                 return 1;
         }
     }
@@ -801,7 +802,7 @@ int CMS_decrypt_set1_key(CMS_ContentInfo *cms,
 
         /* If we have an id, try matching RecipientInfo, else try them all */
         if (id == NULL
-                || (CMS_RecipientInfo_kekri_id_cmp(ri, id, idlen) == 0)) {
+            || (CMS_RecipientInfo_kekri_id_cmp(ri, id, idlen) == 0)) {
             match_ri = 1;
             CMS_RecipientInfo_set0_key(ri, key, keylen);
             r = CMS_RecipientInfo_decrypt(cms, ri);
@@ -866,7 +867,7 @@ int CMS_decrypt(CMS_ContentInfo *cms, EVP_PKEY *pk, X509 *cert,
     int nid = OBJ_obj2nid(CMS_get0_type(cms));
 
     if (nid != NID_pkcs7_enveloped
-            && nid != NID_id_smime_ct_authEnvelopedData) {
+        && nid != NID_id_smime_ct_authEnvelopedData) {
         ERR_raise(ERR_LIB_CMS, CMS_R_TYPE_NOT_ENVELOPED_DATA);
         return 0;
     }

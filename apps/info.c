@@ -44,46 +44,46 @@ int info_main(int argc, char **argv)
     prog = opt_init(argc, argv, info_options);
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        default:
+            default:
 opthelp:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto end;
-        case OPT_HELP:
-            opt_help(info_options);
-            ret = 0;
-            goto end;
-        case OPT_CONFIGDIR:
-            type = OPENSSL_INFO_CONFIG_DIR;
-            dirty++;
-            break;
-        case OPT_ENGINESDIR:
-            type = OPENSSL_INFO_ENGINES_DIR;
-            dirty++;
-            break;
-        case OPT_MODULESDIR:
-            type = OPENSSL_INFO_MODULES_DIR;
-            dirty++;
-            break;
-        case OPT_DSOEXT:
-            type = OPENSSL_INFO_DSO_EXTENSION;
-            dirty++;
-            break;
-        case OPT_DIRNAMESEP:
-            type = OPENSSL_INFO_DIR_FILENAME_SEPARATOR;
-            dirty++;
-            break;
-        case OPT_LISTSEP:
-            type = OPENSSL_INFO_LIST_SEPARATOR;
-            dirty++;
-            break;
-        case OPT_SEEDS:
-            type = OPENSSL_INFO_SEED_SOURCE;
-            dirty++;
-            break;
-        case OPT_CPUSETTINGS:
-            type = OPENSSL_INFO_CPU_SETTINGS;
-            dirty++;
-            break;
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
+                goto end;
+            case OPT_HELP:
+                opt_help(info_options);
+                ret = 0;
+                goto end;
+            case OPT_CONFIGDIR:
+                type = OPENSSL_INFO_CONFIG_DIR;
+                dirty++;
+                break;
+            case OPT_ENGINESDIR:
+                type = OPENSSL_INFO_ENGINES_DIR;
+                dirty++;
+                break;
+            case OPT_MODULESDIR:
+                type = OPENSSL_INFO_MODULES_DIR;
+                dirty++;
+                break;
+            case OPT_DSOEXT:
+                type = OPENSSL_INFO_DSO_EXTENSION;
+                dirty++;
+                break;
+            case OPT_DIRNAMESEP:
+                type = OPENSSL_INFO_DIR_FILENAME_SEPARATOR;
+                dirty++;
+                break;
+            case OPT_LISTSEP:
+                type = OPENSSL_INFO_LIST_SEPARATOR;
+                dirty++;
+                break;
+            case OPT_SEEDS:
+                type = OPENSSL_INFO_SEED_SOURCE;
+                dirty++;
+                break;
+            case OPT_CPUSETTINGS:
+                type = OPENSSL_INFO_CPU_SETTINGS;
+                dirty++;
+                break;
         }
     }
     if (!opt_check_rest_arg(NULL))
@@ -99,6 +99,6 @@ opthelp:
 
     BIO_printf(bio_out, "%s\n", OPENSSL_info(type));
     ret = 0;
- end:
+end:
     return ret;
 }

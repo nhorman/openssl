@@ -51,7 +51,7 @@ int EVP_CIPHER_CTX_reset(EVP_CIPHER_CTX *ctx)
     return 1;
 
     /* Remove legacy code below when legacy support is removed. */
- legacy:
+legacy:
 
     if (ctx->cipher != NULL) {
         if (ctx->cipher->cleanup && !ctx->cipher->cleanup(ctx))
@@ -132,7 +132,7 @@ static int evp_cipher_init_internal(EVP_CIPHER_CTX *ctx,
         goto skip_to_init;
 
     if (cipher != NULL && impl == NULL) {
-         /* Ask if an ENGINE is reserved for this job */
+        /* Ask if an ENGINE is reserved for this job */
         tmpimpl = ENGINE_get_cipher_engine(cipher->nid);
     }
 #endif
@@ -142,12 +142,12 @@ static int evp_cipher_init_internal(EVP_CIPHER_CTX *ctx,
      */
     if (ctx->engine != NULL
 #if !defined(OPENSSL_NO_ENGINE) && !defined(FIPS_MODULE)
-            || tmpimpl != NULL
+        || tmpimpl != NULL
 #endif
-            || impl != NULL
-            || (cipher != NULL && cipher->origin == EVP_ORIG_METH)
-            || (cipher == NULL && ctx->cipher != NULL
-                               && ctx->cipher->origin == EVP_ORIG_METH)) {
+        || impl != NULL
+        || (cipher != NULL && cipher->origin == EVP_ORIG_METH)
+        || (cipher == NULL && ctx->cipher != NULL
+            && ctx->cipher->origin == EVP_ORIG_METH)) {
         if (ctx->cipher == ctx->fetched_cipher)
             ctx->cipher = NULL;
         EVP_CIPHER_free(ctx->fetched_cipher);
@@ -248,7 +248,7 @@ static int evp_cipher_init_internal(EVP_CIPHER_CTX *ctx,
         OSSL_PARAM *q = param_lens;
         const OSSL_PARAM *p;
 
-        p = OSSL_PARAM_locate_const(params, OSSL_CIPHER_PARAM_KEYLEN); 
+        p = OSSL_PARAM_locate_const(params, OSSL_CIPHER_PARAM_KEYLEN);
         if (p != NULL)
             memcpy(q++, p, sizeof(*q));
 
@@ -278,10 +278,12 @@ static int evp_cipher_init_internal(EVP_CIPHER_CTX *ctx,
         return ctx->cipher->einit(ctx->algctx,
                                   key,
                                   key == NULL ? 0
-                                              : EVP_CIPHER_CTX_get_key_length(ctx),
+                                              : EVP_CIPHER_CTX_get_key_length(
+                                      ctx),
                                   iv,
                                   iv == NULL ? 0
-                                             : EVP_CIPHER_CTX_get_iv_length(ctx),
+                                             : EVP_CIPHER_CTX_get_iv_length(
+                                      ctx),
                                   params);
     }
 
@@ -297,10 +299,10 @@ static int evp_cipher_init_internal(EVP_CIPHER_CTX *ctx,
                               iv,
                               iv == NULL ? 0
                                          : EVP_CIPHER_CTX_get_iv_length(ctx),
-                                  params);
+                              params);
 
     /* Code below to be removed when legacy support is dropped. */
- legacy:
+legacy:
 
     if (cipher != NULL) {
         /*
@@ -371,7 +373,7 @@ static int evp_cipher_init_internal(EVP_CIPHER_CTX *ctx,
         }
     }
 #if !defined(OPENSSL_NO_ENGINE) && !defined(FIPS_MODULE)
- skip_to_init:
+skip_to_init:
 #endif
     if (ctx->cipher == NULL)
         return 0;
@@ -388,45 +390,45 @@ static int evp_cipher_init_internal(EVP_CIPHER_CTX *ctx,
     }
 
     if ((EVP_CIPHER_get_flags(EVP_CIPHER_CTX_get0_cipher(ctx))
-                & EVP_CIPH_CUSTOM_IV) == 0) {
+         & EVP_CIPH_CUSTOM_IV) == 0) {
         switch (EVP_CIPHER_CTX_get_mode(ctx)) {
 
-        case EVP_CIPH_STREAM_CIPHER:
-        case EVP_CIPH_ECB_MODE:
-            break;
+            case EVP_CIPH_STREAM_CIPHER:
+            case EVP_CIPH_ECB_MODE:
+                break;
 
-        case EVP_CIPH_CFB_MODE:
-        case EVP_CIPH_OFB_MODE:
+            case EVP_CIPH_CFB_MODE:
+            case EVP_CIPH_OFB_MODE:
 
-            ctx->num = 0;
+                ctx->num = 0;
             /* fall-through */
 
-        case EVP_CIPH_CBC_MODE:
-            n = EVP_CIPHER_CTX_get_iv_length(ctx);
-            if (n < 0 || n > (int)sizeof(ctx->iv)) {
-                ERR_raise(ERR_LIB_EVP, EVP_R_INVALID_IV_LENGTH);
-                return 0;
-            }
-            if (iv != NULL)
-                memcpy(ctx->oiv, iv, n);
-            memcpy(ctx->iv, ctx->oiv, n);
-            break;
-
-        case EVP_CIPH_CTR_MODE:
-            ctx->num = 0;
-            /* Don't reuse IV for CTR mode */
-            if (iv != NULL) {
+            case EVP_CIPH_CBC_MODE:
                 n = EVP_CIPHER_CTX_get_iv_length(ctx);
-                if (n <= 0 || n > (int)sizeof(ctx->iv)) {
+                if (n < 0 || n > (int)sizeof(ctx->iv)) {
                     ERR_raise(ERR_LIB_EVP, EVP_R_INVALID_IV_LENGTH);
                     return 0;
                 }
-                memcpy(ctx->iv, iv, n);
-            }
-            break;
+                if (iv != NULL)
+                    memcpy(ctx->oiv, iv, n);
+                memcpy(ctx->iv, ctx->oiv, n);
+                break;
 
-        default:
-            return 0;
+            case EVP_CIPH_CTR_MODE:
+                ctx->num = 0;
+                /* Don't reuse IV for CTR mode */
+                if (iv != NULL) {
+                    n = EVP_CIPHER_CTX_get_iv_length(ctx);
+                    if (n <= 0 || n > (int)sizeof(ctx->iv)) {
+                        ERR_raise(ERR_LIB_EVP, EVP_R_INVALID_IV_LENGTH);
+                        return 0;
+                    }
+                    memcpy(ctx->iv, iv, n);
+                }
+                break;
+
+            default:
+                return 0;
         }
     }
 
@@ -705,7 +707,7 @@ int EVP_EncryptUpdate(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl,
     return ret;
 
     /* Code below to be removed when legacy support is dropped. */
- legacy:
+legacy:
 
     return evp_EncryptDecryptUpdate(ctx, out, outl, in, inl);
 }
@@ -765,7 +767,7 @@ int EVP_EncryptFinal_ex(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl)
     return ret;
 
     /* Code below to be removed when legacy support is dropped. */
- legacy:
+legacy:
 
     if (ctx->cipher->flags & EVP_CIPH_FLAG_CUSTOM_CIPHER) {
         ret = ctx->cipher->do_cipher(ctx, out, NULL, 0);
@@ -852,7 +854,7 @@ int EVP_DecryptUpdate(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl,
     return ret;
 
     /* Code below to be removed when legacy support is dropped. */
- legacy:
+legacy:
 
     b = ctx->cipher->block_size;
 
@@ -987,7 +989,7 @@ int EVP_DecryptFinal_ex(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl)
     return ret;
 
     /* Code below to be removed when legacy support is dropped. */
- legacy:
+legacy:
 
     *outl = 0;
     if (ctx->cipher->flags & EVP_CIPH_FLAG_CUSTOM_CIPHER) {
@@ -1122,178 +1124,185 @@ int EVP_CIPHER_CTX_ctrl(EVP_CIPHER_CTX *ctx, int type, int arg, void *ptr)
         goto legacy;
 
     switch (type) {
-    case EVP_CTRL_SET_KEY_LENGTH:
-        if (arg < 0)
-            return 0;
-        if (ctx->key_len == arg)
-            /* Skip calling into provider if unchanged. */
-            return 1;
-        params[0] = OSSL_PARAM_construct_size_t(OSSL_CIPHER_PARAM_KEYLEN, &sz);
-        ctx->key_len = -1;
-        break;
-    case EVP_CTRL_RAND_KEY:      /* Used by DES */
-        set_params = 0;
-        params[0] =
-            OSSL_PARAM_construct_octet_string(OSSL_CIPHER_PARAM_RANDOM_KEY,
-                                              ptr, sz);
-        break;
+        case EVP_CTRL_SET_KEY_LENGTH:
+            if (arg < 0)
+                return 0;
+            if (ctx->key_len == arg)
+                /* Skip calling into provider if unchanged. */
+                return 1;
+            params[0] = OSSL_PARAM_construct_size_t(OSSL_CIPHER_PARAM_KEYLEN,
+                                                    &sz);
+            ctx->key_len = -1;
+            break;
+        case EVP_CTRL_RAND_KEY:  /* Used by DES */
+            set_params = 0;
+            params[0] =
+                OSSL_PARAM_construct_octet_string(OSSL_CIPHER_PARAM_RANDOM_KEY,
+                                                  ptr, sz);
+            break;
 
-    case EVP_CTRL_INIT:
-        /*
-         * EVP_CTRL_INIT is purely legacy, no provider counterpart.
-         * As a matter of fact, this should be dead code, but some caller
-         * might still do a direct control call with this command, so...
-         * Legacy methods return 1 except for exceptional circumstances, so
-         * we do the same here to not be disruptive.
-         */
-        return 1;
-    case EVP_CTRL_SET_PIPELINE_OUTPUT_BUFS: /* Used by DASYNC */
-    default:
-        goto end;
-    case EVP_CTRL_AEAD_SET_IVLEN:
-        if (arg < 0)
-            return 0;
-        if (ctx->iv_len == arg)
-            /* Skip calling into provider if unchanged. */
+        case EVP_CTRL_INIT:
+            /*
+             * EVP_CTRL_INIT is purely legacy, no provider counterpart.
+             * As a matter of fact, this should be dead code, but some caller
+             * might still do a direct control call with this command, so...
+             * Legacy methods return 1 except for exceptional circumstances, so
+             * we do the same here to not be disruptive.
+             */
             return 1;
-        params[0] = OSSL_PARAM_construct_size_t(OSSL_CIPHER_PARAM_IVLEN, &sz);
-        ctx->iv_len = -1;
-        break;
-    case EVP_CTRL_CCM_SET_L:
-        if (arg < 2 || arg > 8)
-            return 0;
-        sz = 15 - arg;
-        params[0] = OSSL_PARAM_construct_size_t(OSSL_CIPHER_PARAM_IVLEN, &sz);
-        ctx->iv_len = -1;
-        break;
-    case EVP_CTRL_AEAD_SET_IV_FIXED:
-        params[0] = OSSL_PARAM_construct_octet_string(
-                        OSSL_CIPHER_PARAM_AEAD_TLS1_IV_FIXED, ptr, sz);
-        break;
-    case EVP_CTRL_GCM_IV_GEN:
-        set_params = 0;
-        if (arg < 0)
-            sz = 0; /* special case that uses the iv length */
-        params[0] = OSSL_PARAM_construct_octet_string(
-                        OSSL_CIPHER_PARAM_AEAD_TLS1_GET_IV_GEN, ptr, sz);
-        break;
-    case EVP_CTRL_GCM_SET_IV_INV:
-        if (arg < 0)
-            return 0;
-        params[0] = OSSL_PARAM_construct_octet_string(
-                        OSSL_CIPHER_PARAM_AEAD_TLS1_SET_IV_INV, ptr, sz);
-        break;
-    case EVP_CTRL_GET_RC5_ROUNDS:
-        set_params = 0; /* Fall thru */
-    case EVP_CTRL_SET_RC5_ROUNDS:
-        if (arg < 0)
-            return 0;
-        i = (unsigned int)arg;
-        params[0] = OSSL_PARAM_construct_uint(OSSL_CIPHER_PARAM_ROUNDS, &i);
-        break;
-    case EVP_CTRL_SET_SPEED:
-        if (arg < 0)
-            return 0;
-        i = (unsigned int)arg;
-        params[0] = OSSL_PARAM_construct_uint(OSSL_CIPHER_PARAM_SPEED, &i);
-        break;
-    case EVP_CTRL_AEAD_GET_TAG:
-        set_params = 0; /* Fall thru */
-    case EVP_CTRL_AEAD_SET_TAG:
-        params[0] = OSSL_PARAM_construct_octet_string(OSSL_CIPHER_PARAM_AEAD_TAG,
-                                                      ptr, sz);
-        break;
-    case EVP_CTRL_AEAD_TLS1_AAD:
-        /* This one does a set and a get - since it returns a size */
-        params[0] =
-            OSSL_PARAM_construct_octet_string(OSSL_CIPHER_PARAM_AEAD_TLS1_AAD,
-                                              ptr, sz);
-        ret = evp_do_ciph_ctx_setparams(ctx->cipher, ctx->algctx, params);
-        if (ret <= 0)
+        case EVP_CTRL_SET_PIPELINE_OUTPUT_BUFS: /* Used by DASYNC */
+        default:
             goto end;
-        params[0] =
-            OSSL_PARAM_construct_size_t(OSSL_CIPHER_PARAM_AEAD_TLS1_AAD_PAD, &sz);
-        ret = evp_do_ciph_ctx_getparams(ctx->cipher, ctx->algctx, params);
-        if (ret <= 0)
-            goto end;
-        return sz;
+        case EVP_CTRL_AEAD_SET_IVLEN:
+            if (arg < 0)
+                return 0;
+            if (ctx->iv_len == arg)
+                /* Skip calling into provider if unchanged. */
+                return 1;
+            params[0] =
+                OSSL_PARAM_construct_size_t(OSSL_CIPHER_PARAM_IVLEN, &sz);
+            ctx->iv_len = -1;
+            break;
+        case EVP_CTRL_CCM_SET_L:
+            if (arg < 2 || arg > 8)
+                return 0;
+            sz = 15 - arg;
+            params[0] =
+                OSSL_PARAM_construct_size_t(OSSL_CIPHER_PARAM_IVLEN, &sz);
+            ctx->iv_len = -1;
+            break;
+        case EVP_CTRL_AEAD_SET_IV_FIXED:
+            params[0] = OSSL_PARAM_construct_octet_string(
+                OSSL_CIPHER_PARAM_AEAD_TLS1_IV_FIXED, ptr, sz);
+            break;
+        case EVP_CTRL_GCM_IV_GEN:
+            set_params = 0;
+            if (arg < 0)
+                sz = 0; /* special case that uses the iv length */
+            params[0] = OSSL_PARAM_construct_octet_string(
+                OSSL_CIPHER_PARAM_AEAD_TLS1_GET_IV_GEN, ptr, sz);
+            break;
+        case EVP_CTRL_GCM_SET_IV_INV:
+            if (arg < 0)
+                return 0;
+            params[0] = OSSL_PARAM_construct_octet_string(
+                OSSL_CIPHER_PARAM_AEAD_TLS1_SET_IV_INV, ptr, sz);
+            break;
+        case EVP_CTRL_GET_RC5_ROUNDS:
+            set_params = 0; /* Fall thru */
+        case EVP_CTRL_SET_RC5_ROUNDS:
+            if (arg < 0)
+                return 0;
+            i = (unsigned int)arg;
+            params[0] = OSSL_PARAM_construct_uint(OSSL_CIPHER_PARAM_ROUNDS, &i);
+            break;
+        case EVP_CTRL_SET_SPEED:
+            if (arg < 0)
+                return 0;
+            i = (unsigned int)arg;
+            params[0] = OSSL_PARAM_construct_uint(OSSL_CIPHER_PARAM_SPEED, &i);
+            break;
+        case EVP_CTRL_AEAD_GET_TAG:
+            set_params = 0; /* Fall thru */
+        case EVP_CTRL_AEAD_SET_TAG:
+            params[0] = OSSL_PARAM_construct_octet_string(
+                OSSL_CIPHER_PARAM_AEAD_TAG,
+                ptr, sz);
+            break;
+        case EVP_CTRL_AEAD_TLS1_AAD:
+            /* This one does a set and a get - since it returns a size */
+            params[0] =
+                OSSL_PARAM_construct_octet_string(
+                    OSSL_CIPHER_PARAM_AEAD_TLS1_AAD,
+                    ptr, sz);
+            ret = evp_do_ciph_ctx_setparams(ctx->cipher, ctx->algctx, params);
+            if (ret <= 0)
+                goto end;
+            params[0] =
+                OSSL_PARAM_construct_size_t(OSSL_CIPHER_PARAM_AEAD_TLS1_AAD_PAD,
+                                            &sz);
+            ret = evp_do_ciph_ctx_getparams(ctx->cipher, ctx->algctx, params);
+            if (ret <= 0)
+                goto end;
+            return sz;
 #ifndef OPENSSL_NO_RC2
-    case EVP_CTRL_GET_RC2_KEY_BITS:
-        set_params = 0; /* Fall thru */
-    case EVP_CTRL_SET_RC2_KEY_BITS:
-        params[0] = OSSL_PARAM_construct_size_t(OSSL_CIPHER_PARAM_RC2_KEYBITS, &sz);
-        break;
+        case EVP_CTRL_GET_RC2_KEY_BITS:
+            set_params = 0; /* Fall thru */
+        case EVP_CTRL_SET_RC2_KEY_BITS:
+            params[0] = OSSL_PARAM_construct_size_t(
+                OSSL_CIPHER_PARAM_RC2_KEYBITS, &sz);
+            break;
 #endif /* OPENSSL_NO_RC2 */
 #if !defined(OPENSSL_NO_MULTIBLOCK)
-    case EVP_CTRL_TLS1_1_MULTIBLOCK_MAX_BUFSIZE:
-        params[0] = OSSL_PARAM_construct_size_t(
+        case EVP_CTRL_TLS1_1_MULTIBLOCK_MAX_BUFSIZE:
+            params[0] = OSSL_PARAM_construct_size_t(
                 OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_MAX_SEND_FRAGMENT, &sz);
-        ret = evp_do_ciph_ctx_setparams(ctx->cipher, ctx->algctx, params);
-        if (ret <= 0)
-            return 0;
+            ret = evp_do_ciph_ctx_setparams(ctx->cipher, ctx->algctx, params);
+            if (ret <= 0)
+                return 0;
 
-        params[0] = OSSL_PARAM_construct_size_t(
+            params[0] = OSSL_PARAM_construct_size_t(
                 OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_MAX_BUFSIZE, &sz);
-        params[1] = OSSL_PARAM_construct_end();
-        ret = evp_do_ciph_ctx_getparams(ctx->cipher, ctx->algctx, params);
-        if (ret <= 0)
-            return 0;
-        return sz;
-    case EVP_CTRL_TLS1_1_MULTIBLOCK_AAD: {
-        EVP_CTRL_TLS1_1_MULTIBLOCK_PARAM *p =
-            (EVP_CTRL_TLS1_1_MULTIBLOCK_PARAM *)ptr;
+            params[1] = OSSL_PARAM_construct_end();
+            ret = evp_do_ciph_ctx_getparams(ctx->cipher, ctx->algctx, params);
+            if (ret <= 0)
+                return 0;
+            return sz;
+        case EVP_CTRL_TLS1_1_MULTIBLOCK_AAD: {
+            EVP_CTRL_TLS1_1_MULTIBLOCK_PARAM *p =
+                (EVP_CTRL_TLS1_1_MULTIBLOCK_PARAM *)ptr;
 
-        if (arg < (int)sizeof(EVP_CTRL_TLS1_1_MULTIBLOCK_PARAM))
-            return 0;
+            if (arg < (int)sizeof(EVP_CTRL_TLS1_1_MULTIBLOCK_PARAM))
+                return 0;
 
-        params[0] = OSSL_PARAM_construct_octet_string(
+            params[0] = OSSL_PARAM_construct_octet_string(
                 OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_AAD, (void*)p->inp, p->len);
-        params[1] = OSSL_PARAM_construct_uint(
+            params[1] = OSSL_PARAM_construct_uint(
                 OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_INTERLEAVE, &p->interleave);
-        ret = evp_do_ciph_ctx_setparams(ctx->cipher, ctx->algctx, params);
-        if (ret <= 0)
-            return ret;
-        /* Retrieve the return values changed by the set */
-        params[0] = OSSL_PARAM_construct_size_t(
+            ret = evp_do_ciph_ctx_setparams(ctx->cipher, ctx->algctx, params);
+            if (ret <= 0)
+                return ret;
+            /* Retrieve the return values changed by the set */
+            params[0] = OSSL_PARAM_construct_size_t(
                 OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_AAD_PACKLEN, &sz);
-        params[1] = OSSL_PARAM_construct_uint(
+            params[1] = OSSL_PARAM_construct_uint(
                 OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_INTERLEAVE, &p->interleave);
-        params[2] = OSSL_PARAM_construct_end();
-        ret = evp_do_ciph_ctx_getparams(ctx->cipher, ctx->algctx, params);
-        if (ret <= 0)
-            return 0;
-        return sz;
-    }
-    case EVP_CTRL_TLS1_1_MULTIBLOCK_ENCRYPT: {
-        EVP_CTRL_TLS1_1_MULTIBLOCK_PARAM *p =
-            (EVP_CTRL_TLS1_1_MULTIBLOCK_PARAM *)ptr;
+            params[2] = OSSL_PARAM_construct_end();
+            ret = evp_do_ciph_ctx_getparams(ctx->cipher, ctx->algctx, params);
+            if (ret <= 0)
+                return 0;
+            return sz;
+        }
+        case EVP_CTRL_TLS1_1_MULTIBLOCK_ENCRYPT: {
+            EVP_CTRL_TLS1_1_MULTIBLOCK_PARAM *p =
+                (EVP_CTRL_TLS1_1_MULTIBLOCK_PARAM *)ptr;
 
-        params[0] = OSSL_PARAM_construct_octet_string(
-                        OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_ENC, p->out, p->len);
+            params[0] = OSSL_PARAM_construct_octet_string(
+                OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_ENC, p->out, p->len);
 
-        params[1] = OSSL_PARAM_construct_octet_string(
+            params[1] = OSSL_PARAM_construct_octet_string(
                 OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_ENC_IN, (void*)p->inp,
                 p->len);
-        params[2] = OSSL_PARAM_construct_uint(
+            params[2] = OSSL_PARAM_construct_uint(
                 OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_INTERLEAVE, &p->interleave);
-        ret = evp_do_ciph_ctx_setparams(ctx->cipher, ctx->algctx, params);
-        if (ret <= 0)
-            return ret;
-        params[0] = OSSL_PARAM_construct_size_t(
-                        OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_ENC_LEN, &sz);
-        params[1] = OSSL_PARAM_construct_end();
-        ret = evp_do_ciph_ctx_getparams(ctx->cipher, ctx->algctx, params);
-        if (ret <= 0)
-            return 0;
-        return sz;
-    }
+            ret = evp_do_ciph_ctx_setparams(ctx->cipher, ctx->algctx, params);
+            if (ret <= 0)
+                return ret;
+            params[0] = OSSL_PARAM_construct_size_t(
+                OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_ENC_LEN, &sz);
+            params[1] = OSSL_PARAM_construct_end();
+            ret = evp_do_ciph_ctx_getparams(ctx->cipher, ctx->algctx, params);
+            if (ret <= 0)
+                return 0;
+            return sz;
+        }
 #endif /* OPENSSL_NO_MULTIBLOCK */
-    case EVP_CTRL_AEAD_SET_MAC_KEY:
-        if (arg < 0)
-            return -1;
-        params[0] = OSSL_PARAM_construct_octet_string(
+        case EVP_CTRL_AEAD_SET_MAC_KEY:
+            if (arg < 0)
+                return -1;
+            params[0] = OSSL_PARAM_construct_octet_string(
                 OSSL_CIPHER_PARAM_AEAD_MAC_KEY, ptr, sz);
-        break;
+            break;
     }
 
     if (set_params)
@@ -1311,7 +1320,7 @@ legacy:
 
     ret = ctx->cipher->ctrl(ctx, type, arg, ptr);
 
- end:
+end:
     if (ret == EVP_CTRL_RET_UNSUPPORTED) {
         ERR_raise(ERR_LIB_EVP, EVP_R_CTRL_OPERATION_NOT_IMPLEMENTED);
         return 0;
@@ -1362,7 +1371,7 @@ const OSSL_PARAM *EVP_CIPHER_gettable_params(const EVP_CIPHER *cipher)
 {
     if (cipher != NULL && cipher->gettable_params != NULL)
         return cipher->gettable_params(
-                   ossl_provider_ctx(EVP_CIPHER_get0_provider(cipher)));
+            ossl_provider_ctx(EVP_CIPHER_get0_provider(cipher)));
     return NULL;
 }
 
@@ -1489,7 +1498,7 @@ int EVP_CIPHER_CTX_copy(EVP_CIPHER_CTX *out, const EVP_CIPHER_CTX *in)
     return 1;
 
     /* Code below to be removed when legacy support is dropped. */
- legacy:
+legacy:
 
 #if !defined(OPENSSL_NO_ENGINE) && !defined(FIPS_MODULE)
     /* Make sure it's safe to copy a cipher context using an ENGINE */
@@ -1578,7 +1587,7 @@ static void *evp_cipher_from_algorithm(const int name_id,
 #ifndef FIPS_MODULE
     cipher->nid = NID_undef;
     if (!evp_names_do_all(prov, name_id, set_legacy_nid, &cipher->nid)
-            || cipher->nid == -1) {
+        || cipher->nid == -1) {
         ERR_raise(ERR_LIB_EVP, ERR_R_INTERNAL_ERROR);
         EVP_CIPHER_free(cipher);
         return NULL;
@@ -1594,89 +1603,89 @@ static void *evp_cipher_from_algorithm(const int name_id,
 
     for (; fns->function_id != 0; fns++) {
         switch (fns->function_id) {
-        case OSSL_FUNC_CIPHER_NEWCTX:
-            if (cipher->newctx != NULL)
+            case OSSL_FUNC_CIPHER_NEWCTX:
+                if (cipher->newctx != NULL)
+                    break;
+                cipher->newctx = OSSL_FUNC_cipher_newctx(fns);
+                fnctxcnt++;
                 break;
-            cipher->newctx = OSSL_FUNC_cipher_newctx(fns);
-            fnctxcnt++;
-            break;
-        case OSSL_FUNC_CIPHER_ENCRYPT_INIT:
-            if (cipher->einit != NULL)
+            case OSSL_FUNC_CIPHER_ENCRYPT_INIT:
+                if (cipher->einit != NULL)
+                    break;
+                cipher->einit = OSSL_FUNC_cipher_encrypt_init(fns);
+                fnciphcnt++;
                 break;
-            cipher->einit = OSSL_FUNC_cipher_encrypt_init(fns);
-            fnciphcnt++;
-            break;
-        case OSSL_FUNC_CIPHER_DECRYPT_INIT:
-            if (cipher->dinit != NULL)
+            case OSSL_FUNC_CIPHER_DECRYPT_INIT:
+                if (cipher->dinit != NULL)
+                    break;
+                cipher->dinit = OSSL_FUNC_cipher_decrypt_init(fns);
+                fnciphcnt++;
                 break;
-            cipher->dinit = OSSL_FUNC_cipher_decrypt_init(fns);
-            fnciphcnt++;
-            break;
-        case OSSL_FUNC_CIPHER_UPDATE:
-            if (cipher->cupdate != NULL)
+            case OSSL_FUNC_CIPHER_UPDATE:
+                if (cipher->cupdate != NULL)
+                    break;
+                cipher->cupdate = OSSL_FUNC_cipher_update(fns);
+                fnciphcnt++;
                 break;
-            cipher->cupdate = OSSL_FUNC_cipher_update(fns);
-            fnciphcnt++;
-            break;
-        case OSSL_FUNC_CIPHER_FINAL:
-            if (cipher->cfinal != NULL)
+            case OSSL_FUNC_CIPHER_FINAL:
+                if (cipher->cfinal != NULL)
+                    break;
+                cipher->cfinal = OSSL_FUNC_cipher_final(fns);
+                fnciphcnt++;
                 break;
-            cipher->cfinal = OSSL_FUNC_cipher_final(fns);
-            fnciphcnt++;
-            break;
-        case OSSL_FUNC_CIPHER_CIPHER:
-            if (cipher->ccipher != NULL)
+            case OSSL_FUNC_CIPHER_CIPHER:
+                if (cipher->ccipher != NULL)
+                    break;
+                cipher->ccipher = OSSL_FUNC_cipher_cipher(fns);
                 break;
-            cipher->ccipher = OSSL_FUNC_cipher_cipher(fns);
-            break;
-        case OSSL_FUNC_CIPHER_FREECTX:
-            if (cipher->freectx != NULL)
+            case OSSL_FUNC_CIPHER_FREECTX:
+                if (cipher->freectx != NULL)
+                    break;
+                cipher->freectx = OSSL_FUNC_cipher_freectx(fns);
+                fnctxcnt++;
                 break;
-            cipher->freectx = OSSL_FUNC_cipher_freectx(fns);
-            fnctxcnt++;
-            break;
-        case OSSL_FUNC_CIPHER_DUPCTX:
-            if (cipher->dupctx != NULL)
+            case OSSL_FUNC_CIPHER_DUPCTX:
+                if (cipher->dupctx != NULL)
+                    break;
+                cipher->dupctx = OSSL_FUNC_cipher_dupctx(fns);
                 break;
-            cipher->dupctx = OSSL_FUNC_cipher_dupctx(fns);
-            break;
-        case OSSL_FUNC_CIPHER_GET_PARAMS:
-            if (cipher->get_params != NULL)
+            case OSSL_FUNC_CIPHER_GET_PARAMS:
+                if (cipher->get_params != NULL)
+                    break;
+                cipher->get_params = OSSL_FUNC_cipher_get_params(fns);
                 break;
-            cipher->get_params = OSSL_FUNC_cipher_get_params(fns);
-            break;
-        case OSSL_FUNC_CIPHER_GET_CTX_PARAMS:
-            if (cipher->get_ctx_params != NULL)
+            case OSSL_FUNC_CIPHER_GET_CTX_PARAMS:
+                if (cipher->get_ctx_params != NULL)
+                    break;
+                cipher->get_ctx_params = OSSL_FUNC_cipher_get_ctx_params(fns);
                 break;
-            cipher->get_ctx_params = OSSL_FUNC_cipher_get_ctx_params(fns);
-            break;
-        case OSSL_FUNC_CIPHER_SET_CTX_PARAMS:
-            if (cipher->set_ctx_params != NULL)
+            case OSSL_FUNC_CIPHER_SET_CTX_PARAMS:
+                if (cipher->set_ctx_params != NULL)
+                    break;
+                cipher->set_ctx_params = OSSL_FUNC_cipher_set_ctx_params(fns);
                 break;
-            cipher->set_ctx_params = OSSL_FUNC_cipher_set_ctx_params(fns);
-            break;
-        case OSSL_FUNC_CIPHER_GETTABLE_PARAMS:
-            if (cipher->gettable_params != NULL)
+            case OSSL_FUNC_CIPHER_GETTABLE_PARAMS:
+                if (cipher->gettable_params != NULL)
+                    break;
+                cipher->gettable_params = OSSL_FUNC_cipher_gettable_params(fns);
                 break;
-            cipher->gettable_params = OSSL_FUNC_cipher_gettable_params(fns);
-            break;
-        case OSSL_FUNC_CIPHER_GETTABLE_CTX_PARAMS:
-            if (cipher->gettable_ctx_params != NULL)
+            case OSSL_FUNC_CIPHER_GETTABLE_CTX_PARAMS:
+                if (cipher->gettable_ctx_params != NULL)
+                    break;
+                cipher->gettable_ctx_params =
+                    OSSL_FUNC_cipher_gettable_ctx_params(fns);
                 break;
-            cipher->gettable_ctx_params =
-                OSSL_FUNC_cipher_gettable_ctx_params(fns);
-            break;
-        case OSSL_FUNC_CIPHER_SETTABLE_CTX_PARAMS:
-            if (cipher->settable_ctx_params != NULL)
+            case OSSL_FUNC_CIPHER_SETTABLE_CTX_PARAMS:
+                if (cipher->settable_ctx_params != NULL)
+                    break;
+                cipher->settable_ctx_params =
+                    OSSL_FUNC_cipher_settable_ctx_params(fns);
                 break;
-            cipher->settable_ctx_params =
-                OSSL_FUNC_cipher_settable_ctx_params(fns);
-            break;
         }
     }
     if ((fnciphcnt != 0 && fnciphcnt != 3 && fnciphcnt != 4)
-            || (fnciphcnt == 0 && cipher->ccipher == NULL)
-            || fnctxcnt != 2) {
+        || (fnciphcnt == 0 && cipher->ccipher == NULL)
+        || fnctxcnt != 2) {
         /*
          * In order to be a consistent set of functions we must have at least
          * a complete set of "encrypt" functions, or a complete set of "decrypt"
@@ -1756,7 +1765,7 @@ void EVP_CIPHER_do_all_provided(OSSL_LIB_CTX *libctx,
                                 void *arg)
 {
     evp_generic_do_all(libctx, OSSL_OP_CIPHER,
-                       (void (*)(void *, void *))fn, arg,
+                       (void (*)(void *, void *)) fn, arg,
                        evp_cipher_from_algorithm, evp_cipher_up_ref,
                        evp_cipher_free);
 }

@@ -35,7 +35,8 @@ static int test_txpim(void)
             chunks[j].start     = 1000 * i + j * 10;
             chunks[j].end       = chunks[j].start + 5;
 
-            if (!TEST_true(ossl_quic_txpim_pkt_append_chunk(pkts[i], chunks + j)))
+            if (!TEST_true(ossl_quic_txpim_pkt_append_chunk(pkts[i],
+                                                            chunks + j)))
                 goto err;
         }
 

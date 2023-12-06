@@ -25,8 +25,8 @@ extern "C" {
 
 # define OSSL_HTTP_NAME "http"
 # define OSSL_HTTPS_NAME "https"
-# define OSSL_HTTP_PREFIX OSSL_HTTP_NAME"://"
-# define OSSL_HTTPS_PREFIX OSSL_HTTPS_NAME"://"
+# define OSSL_HTTP_PREFIX OSSL_HTTP_NAME "://"
+# define OSSL_HTTPS_PREFIX OSSL_HTTPS_NAME "://"
 # define OSSL_HTTP_PORT "80"
 # define OSSL_HTTPS_PORT "443"
 # define OPENSSL_NO_PROXY "NO_PROXY"
@@ -49,7 +49,8 @@ int OSSL_HTTP_REQ_CTX_add1_header(OSSL_HTTP_REQ_CTX *rctx,
 int OSSL_HTTP_REQ_CTX_set_expected(OSSL_HTTP_REQ_CTX *rctx,
                                    const char *content_type, int asn1,
                                    int timeout, int keep_alive);
-int OSSL_HTTP_REQ_CTX_set1_req(OSSL_HTTP_REQ_CTX *rctx, const char *content_type,
+int OSSL_HTTP_REQ_CTX_set1_req(OSSL_HTTP_REQ_CTX *rctx,
+                               const char *content_type,
                                const ASN1_ITEM *it, const ASN1_VALUE *req);
 int OSSL_HTTP_REQ_CTX_nbio(OSSL_HTTP_REQ_CTX *rctx);
 int OSSL_HTTP_REQ_CTX_nbio_d2i(OSSL_HTTP_REQ_CTX *rctx,
@@ -62,7 +63,8 @@ void OSSL_HTTP_REQ_CTX_set_max_response_length(OSSL_HTTP_REQ_CTX *rctx,
 int OSSL_HTTP_is_alive(const OSSL_HTTP_REQ_CTX *rctx);
 
 /* High-level HTTP API */
-typedef BIO *(*OSSL_HTTP_bio_cb_t)(BIO *bio, void *arg, int connect, int detail);
+typedef BIO *(*OSSL_HTTP_bio_cb_t)(BIO *bio, void *arg, int connect,
+                                   int detail);
 OSSL_HTTP_REQ_CTX *OSSL_HTTP_open(const char *server, const char *port,
                                   const char *proxy, const char *no_proxy,
                                   int use_ssl, BIO *bio, BIO *rbio,

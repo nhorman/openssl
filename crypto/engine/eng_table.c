@@ -143,7 +143,7 @@ int engine_table_register(ENGINE_TABLE **table, ENGINE_CLEANUP_CB *cleanup,
         nids++;
     }
     ret = 1;
- end:
+end:
     CRYPTO_THREAD_unlock(global_engine_lock);
     return ret;
 }
@@ -211,8 +211,8 @@ ENGINE *ossl_engine_table_select(ENGINE_TABLE **table, int nid,
 
     if (!(*table)) {
         OSSL_TRACE3(ENGINE_TABLE,
-                   "%s:%d, nid=%d, nothing registered!\n",
-                   f, l, nid);
+                    "%s:%d, nid=%d, nothing registered!\n",
+                    f, l, nid);
         return NULL;
     }
     ERR_set_mark();
@@ -230,8 +230,8 @@ ENGINE *ossl_engine_table_select(ENGINE_TABLE **table, int nid,
         goto end;
     if (fnd->funct && engine_unlocked_init(fnd->funct)) {
         OSSL_TRACE4(ENGINE_TABLE,
-                   "%s:%d, nid=%d, using ENGINE '%s' cached\n",
-                   f, l, nid, fnd->funct->id);
+                    "%s:%d, nid=%d, using ENGINE '%s' cached\n",
+                    f, l, nid, fnd->funct->id);
         ret = fnd->funct;
         goto end;
     }
@@ -239,7 +239,7 @@ ENGINE *ossl_engine_table_select(ENGINE_TABLE **table, int nid,
         ret = fnd->funct;
         goto end;
     }
- trynext:
+trynext:
     ret = sk_ENGINE_value(fnd->sk, loop++);
     if (!ret) {
         OSSL_TRACE3(ENGINE_TABLE,
@@ -270,7 +270,7 @@ ENGINE *ossl_engine_table_select(ENGINE_TABLE **table, int nid,
         goto end;
     }
     goto trynext;
- end:
+end:
     /*
      * If it failed, it is unlikely to succeed again until some future
      * registrations have taken place. In all cases, we cache.
@@ -279,8 +279,8 @@ ENGINE *ossl_engine_table_select(ENGINE_TABLE **table, int nid,
         fnd->uptodate = 1;
     if (ret)
         OSSL_TRACE4(ENGINE_TABLE,
-                   "%s:%d, nid=%d, caching ENGINE '%s'\n",
-                   f, l, nid, ret->id);
+                    "%s:%d, nid=%d, caching ENGINE '%s'\n",
+                    f, l, nid, ret->id);
     else
         OSSL_TRACE3(ENGINE_TABLE,
                     "%s:%d, nid=%d, caching 'no matching ENGINE'\n",

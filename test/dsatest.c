@@ -85,7 +85,7 @@ static int dsa_test(void)
     BN_GENCB_set(cb, dsa_cb, NULL);
     if (!TEST_ptr(dsa = DSA_new())
         || !TEST_true(DSA_generate_parameters_ex(dsa, 512, seed, 20,
-                                                &counter, &h, cb)))
+                                                 &counter, &h, cb)))
         goto end;
 
     if (!TEST_int_eq(counter, 105))
@@ -115,7 +115,7 @@ static int dsa_test(void)
         goto end;
     if (TEST_int_gt(DSA_verify(0, str1, 20, sig, siglen, dsa), 0))
         ret = 1;
- end:
+end:
     DSA_free(dsa);
     BN_GENCB_free(cb);
     return ret;
@@ -316,7 +316,8 @@ static int test_dsa_default_paramgen_validate(int i)
           && (i == 0
               || TEST_true(EVP_PKEY_CTX_set_dsa_paramgen_bits(gen_ctx, 512)))
           && TEST_int_gt(EVP_PKEY_generate(gen_ctx, &params), 0)
-          && TEST_ptr(check_ctx = EVP_PKEY_CTX_new_from_pkey(NULL, params, NULL))
+          && TEST_ptr(check_ctx =
+                          EVP_PKEY_CTX_new_from_pkey(NULL, params, NULL))
           && TEST_int_gt(EVP_PKEY_param_check(check_ctx), 0);
 
     EVP_PKEY_free(params);
@@ -329,7 +330,8 @@ static int test_dsa_sig_infinite_loop(void)
 {
     int ret = 0;
     DSA *dsa = NULL;
-    BIGNUM *p = NULL, *q = NULL, *g = NULL, *priv = NULL, *pub = NULL, *priv2 = NULL;
+    BIGNUM *p = NULL, *q = NULL, *g = NULL, *priv = NULL, *pub = NULL,
+           *priv2 = NULL;
     BIGNUM *badq = NULL, *badpriv = NULL;
     const unsigned char msg[] = { 0x00 };
     unsigned int signature_len;
@@ -378,14 +380,16 @@ static int test_dsa_sig_infinite_loop(void)
     if (!TEST_true(DSA_sign(0, msg, sizeof(msg), NULL, &signature_len, dsa)))
         goto err;
 
-    if (!TEST_true(DSA_sign(0, msg, sizeof(msg), signature, &signature_len, dsa)))
+    if (!TEST_true(DSA_sign(0, msg, sizeof(msg), signature, &signature_len,
+                            dsa)))
         goto err;
 
     /* Test using a private key of zero fails - this causes an infinite loop without the retry test */
     if (!TEST_true(DSA_set0_key(dsa, NULL, badpriv)))
         goto err;
     badpriv = NULL;
-    if (!TEST_false(DSA_sign(0, msg, sizeof(msg), signature, &signature_len, dsa)))
+    if (!TEST_false(DSA_sign(0, msg, sizeof(msg), signature, &signature_len,
+                             dsa)))
         goto err;
 
     /* Restore private and set a bad q - this caused an infinite loop in the setup */
@@ -395,7 +399,8 @@ static int test_dsa_sig_infinite_loop(void)
     if (!TEST_true(DSA_set0_pqg(dsa, NULL, badq, NULL)))
         goto err;
     badq = NULL;
-    if (!TEST_false(DSA_sign(0, msg, sizeof(msg), signature, &signature_len, dsa)))
+    if (!TEST_false(DSA_sign(0, msg, sizeof(msg), signature, &signature_len,
+                             dsa)))
         goto err;
 
     ret = 1;
@@ -453,23 +458,27 @@ static int test_dsa_sig_neg_param(void)
     pub = priv = NULL;
 
     BN_set_negative(p, 1);
-    if (!TEST_false(DSA_sign(0, msg, sizeof(msg), signature, &signature_len, dsa)))
+    if (!TEST_false(DSA_sign(0, msg, sizeof(msg), signature, &signature_len,
+                             dsa)))
         goto err;
 
     BN_set_negative(p, 0);
     BN_set_negative(q, 1);
-    if (!TEST_false(DSA_sign(0, msg, sizeof(msg), signature, &signature_len, dsa)))
+    if (!TEST_false(DSA_sign(0, msg, sizeof(msg), signature, &signature_len,
+                             dsa)))
         goto err;
 
     BN_set_negative(q, 0);
     BN_set_negative(g, 1);
-    if (!TEST_false(DSA_sign(0, msg, sizeof(msg), signature, &signature_len, dsa)))
+    if (!TEST_false(DSA_sign(0, msg, sizeof(msg), signature, &signature_len,
+                             dsa)))
         goto err;
 
     BN_set_negative(p, 1);
     BN_set_negative(q, 1);
     BN_set_negative(g, 1);
-    if (!TEST_false(DSA_sign(0, msg, sizeof(msg), signature, &signature_len, dsa)))
+    if (!TEST_false(DSA_sign(0, msg, sizeof(msg), signature, &signature_len,
+                             dsa)))
         goto err;
 
     ret = 1;

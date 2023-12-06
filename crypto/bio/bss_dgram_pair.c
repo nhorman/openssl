@@ -59,7 +59,8 @@ static void ring_buf_destroy(struct ring_buf *r)
  * ring_buf_push/pop() with the number of bytes actually read/written, which
  * must not exceed the returned length.
  */
-static void ring_buf_head_tail(struct ring_buf *r, int idx, uint8_t **buf, size_t *len)
+static void ring_buf_head_tail(struct ring_buf *r, int idx, uint8_t **buf,
+                               size_t *len)
 {
     size_t max_len = r->len - r->idx[idx];
 
@@ -344,7 +345,8 @@ static int dgram_pair_ctrl_make_bio_pair(BIO *bio1, BIO *bio2)
     }
 
     /* Ensure the BIO we have been passed is actually a dgram pair BIO. */
-    if (bio1->method != &dgram_pair_method || bio2->method != &dgram_pair_method) {
+    if (bio1->method != &dgram_pair_method ||
+        bio2->method != &dgram_pair_method) {
         ERR_raise_data(ERR_LIB_BIO, BIO_R_INVALID_ARGUMENT,
                        "both BIOs must be BIO_dgram_pair");
         return 0;
@@ -369,7 +371,7 @@ static int dgram_pair_ctrl_make_bio_pair(BIO *bio1, BIO *bio2)
     }
 
     if (!ossl_assert(b1->req_buf_len >= MIN_BUF_LEN
-                        && b2->req_buf_len >= MIN_BUF_LEN)) {
+                     && b2->req_buf_len >= MIN_BUF_LEN)) {
         ERR_raise(ERR_LIB_BIO, BIO_R_UNINITIALIZED);
         return 0;
     }
@@ -644,104 +646,104 @@ static long dgram_mem_ctrl(BIO *bio, int cmd, long num, void *ptr)
         return 0;
 
     switch (cmd) {
-    /*
-     * BIO_set_write_buf_size: Set the size of the ring buffer used for storing
-     * datagrams. No more writes can be performed once the buffer is filled up,
-     * until reads are performed. This cannot be used after a peer is connected.
-     */
-    case BIO_C_SET_WRITE_BUF_SIZE: /* Non-threadsafe */
-        ret = (long)dgram_pair_ctrl_set_write_buf_size(bio, (size_t)num);
-        break;
+        /*
+         * BIO_set_write_buf_size: Set the size of the ring buffer used for storing
+         * datagrams. No more writes can be performed once the buffer is filled up,
+         * until reads are performed. This cannot be used after a peer is connected.
+         */
+        case BIO_C_SET_WRITE_BUF_SIZE: /* Non-threadsafe */
+            ret = (long)dgram_pair_ctrl_set_write_buf_size(bio, (size_t)num);
+            break;
 
-    /*
-     * BIO_get_write_buf_size: Get ring buffer size.
-     */
-    case BIO_C_GET_WRITE_BUF_SIZE: /* Non-threadsafe */
-        ret = (long)b->req_buf_len;
-        break;
+        /*
+         * BIO_get_write_buf_size: Get ring buffer size.
+         */
+        case BIO_C_GET_WRITE_BUF_SIZE: /* Non-threadsafe */
+            ret = (long)b->req_buf_len;
+            break;
 
-    /*
-     * BIO_reset: Clear all data which was written to this side of the pair.
-     */
-    case BIO_CTRL_RESET: /* Non-threadsafe */
-        dgram_pair_ctrl_reset(bio);
-        break;
+        /*
+         * BIO_reset: Clear all data which was written to this side of the pair.
+         */
+        case BIO_CTRL_RESET: /* Non-threadsafe */
+            dgram_pair_ctrl_reset(bio);
+            break;
 
-    /*
-     * BIO_get_write_guarantee: Any BIO_write providing a buffer less than or
-     * equal to this value is guaranteed to succeed.
-     */
-    case BIO_C_GET_WRITE_GUARANTEE: /* Threadsafe */
-        ret = (long)dgram_pair_ctrl_get_write_guarantee(bio);
-        break;
+        /*
+         * BIO_get_write_guarantee: Any BIO_write providing a buffer less than or
+         * equal to this value is guaranteed to succeed.
+         */
+        case BIO_C_GET_WRITE_GUARANTEE: /* Threadsafe */
+            ret = (long)dgram_pair_ctrl_get_write_guarantee(bio);
+            break;
 
-    /* BIO_pending: Bytes available to read. */
-    case BIO_CTRL_PENDING: /* Threadsafe */
-        ret = (long)dgram_pair_ctrl_pending(bio);
-        break;
+        /* BIO_pending: Bytes available to read. */
+        case BIO_CTRL_PENDING: /* Threadsafe */
+            ret = (long)dgram_pair_ctrl_pending(bio);
+            break;
 
-    /* BIO_flush: No-op. */
-    case BIO_CTRL_FLUSH: /* Threadsafe */
-        break;
+        /* BIO_flush: No-op. */
+        case BIO_CTRL_FLUSH: /* Threadsafe */
+            break;
 
-    /* BIO_dgram_get_no_trunc */
-    case BIO_CTRL_DGRAM_GET_NO_TRUNC: /* Non-threadsafe */
-        ret = (long)b->no_trunc;
-        break;
+        /* BIO_dgram_get_no_trunc */
+        case BIO_CTRL_DGRAM_GET_NO_TRUNC: /* Non-threadsafe */
+            ret = (long)b->no_trunc;
+            break;
 
-    /* BIO_dgram_set_no_trunc */
-    case BIO_CTRL_DGRAM_SET_NO_TRUNC: /* Non-threadsafe */
-        b->no_trunc = (num > 0);
-        break;
+        /* BIO_dgram_set_no_trunc */
+        case BIO_CTRL_DGRAM_SET_NO_TRUNC: /* Non-threadsafe */
+            b->no_trunc = (num > 0);
+            break;
 
-    /* BIO_dgram_get_local_addr_enable */
-    case BIO_CTRL_DGRAM_GET_LOCAL_ADDR_ENABLE: /* Non-threadsafe */
-        *(int *)ptr = (int)dgram_pair_ctrl_get_local_addr_enable(bio);
-        break;
+        /* BIO_dgram_get_local_addr_enable */
+        case BIO_CTRL_DGRAM_GET_LOCAL_ADDR_ENABLE: /* Non-threadsafe */
+            *(int *)ptr = (int)dgram_pair_ctrl_get_local_addr_enable(bio);
+            break;
 
-    /* BIO_dgram_set_local_addr_enable */
-    case BIO_CTRL_DGRAM_SET_LOCAL_ADDR_ENABLE: /* Non-threadsafe */
-        ret = (long)dgram_pair_ctrl_set_local_addr_enable(bio, num);
-        break;
+        /* BIO_dgram_set_local_addr_enable */
+        case BIO_CTRL_DGRAM_SET_LOCAL_ADDR_ENABLE: /* Non-threadsafe */
+            ret = (long)dgram_pair_ctrl_set_local_addr_enable(bio, num);
+            break;
 
-    /* BIO_dgram_get_local_addr_cap: Can local addresses be supported? */
-    case BIO_CTRL_DGRAM_GET_LOCAL_ADDR_CAP: /* Non-threadsafe */
-        ret = (long)dgram_pair_ctrl_get_local_addr_cap(bio);
-        break;
+        /* BIO_dgram_get_local_addr_cap: Can local addresses be supported? */
+        case BIO_CTRL_DGRAM_GET_LOCAL_ADDR_CAP: /* Non-threadsafe */
+            ret = (long)dgram_pair_ctrl_get_local_addr_cap(bio);
+            break;
 
-    /* BIO_dgram_get_effective_caps */
-    case BIO_CTRL_DGRAM_GET_EFFECTIVE_CAPS: /* Non-threadsafe */
-    /* BIO_dgram_get_caps */
-    case BIO_CTRL_DGRAM_GET_CAPS: /* Non-threadsafe */
-        ret = (long)dgram_pair_ctrl_get_caps(bio);
-        break;
+        /* BIO_dgram_get_effective_caps */
+        case BIO_CTRL_DGRAM_GET_EFFECTIVE_CAPS: /* Non-threadsafe */
+        /* BIO_dgram_get_caps */
+        case BIO_CTRL_DGRAM_GET_CAPS: /* Non-threadsafe */
+            ret = (long)dgram_pair_ctrl_get_caps(bio);
+            break;
 
-    /* BIO_dgram_set_caps */
-    case BIO_CTRL_DGRAM_SET_CAPS: /* Non-threadsafe */
-        ret = (long)dgram_pair_ctrl_set_caps(bio, (uint32_t)num);
-        break;
+        /* BIO_dgram_set_caps */
+        case BIO_CTRL_DGRAM_SET_CAPS: /* Non-threadsafe */
+            ret = (long)dgram_pair_ctrl_set_caps(bio, (uint32_t)num);
+            break;
 
-    /* BIO_dgram_get_mtu */
-    case BIO_CTRL_DGRAM_GET_MTU: /* Non-threadsafe */
-        ret = (long)dgram_pair_ctrl_get_mtu(bio);
-        break;
+        /* BIO_dgram_get_mtu */
+        case BIO_CTRL_DGRAM_GET_MTU: /* Non-threadsafe */
+            ret = (long)dgram_pair_ctrl_get_mtu(bio);
+            break;
 
-    /* BIO_dgram_set_mtu */
-    case BIO_CTRL_DGRAM_SET_MTU: /* Non-threadsafe */
-        ret = (long)dgram_pair_ctrl_set_mtu(bio, (uint32_t)num);
-        break;
+        /* BIO_dgram_set_mtu */
+        case BIO_CTRL_DGRAM_SET_MTU: /* Non-threadsafe */
+            ret = (long)dgram_pair_ctrl_set_mtu(bio, (uint32_t)num);
+            break;
 
-    /*
-     * BIO_eof: Returns whether this half of the BIO pair is empty of data to
-     * read.
-     */
-    case BIO_CTRL_EOF: /* Non-threadsafe */
-        ret = (long)dgram_pair_ctrl_eof(bio);
-        break;
+        /*
+         * BIO_eof: Returns whether this half of the BIO pair is empty of data to
+         * read.
+         */
+        case BIO_CTRL_EOF: /* Non-threadsafe */
+            ret = (long)dgram_pair_ctrl_eof(bio);
+            break;
 
-    default:
-        ret = 0;
-        break;
+        default:
+            ret = 0;
+            break;
     }
 
     return ret;
@@ -752,31 +754,31 @@ static long dgram_pair_ctrl(BIO *bio, int cmd, long num, void *ptr)
     long ret = 1;
 
     switch (cmd) {
-    /*
-     * BIO_make_bio_pair: this is usually used by BIO_new_dgram_pair, though it
-     * may be used manually after manually creating each half of a BIO pair
-     * using BIO_new. This only needs to be called on one of the BIOs.
-     */
-    case BIO_C_MAKE_BIO_PAIR: /* Non-threadsafe */
-        ret = (long)dgram_pair_ctrl_make_bio_pair(bio, (BIO *)ptr);
-        break;
+        /*
+         * BIO_make_bio_pair: this is usually used by BIO_new_dgram_pair, though it
+         * may be used manually after manually creating each half of a BIO pair
+         * using BIO_new. This only needs to be called on one of the BIOs.
+         */
+        case BIO_C_MAKE_BIO_PAIR: /* Non-threadsafe */
+            ret = (long)dgram_pair_ctrl_make_bio_pair(bio, (BIO *)ptr);
+            break;
 
-    /*
-     * BIO_destroy_bio_pair: Manually disconnect two halves of a BIO pair so
-     * that they are no longer peers.
-     */
-    case BIO_C_DESTROY_BIO_PAIR: /* Non-threadsafe */
-        dgram_pair_ctrl_destroy_bio_pair(bio);
-        break;
+        /*
+         * BIO_destroy_bio_pair: Manually disconnect two halves of a BIO pair so
+         * that they are no longer peers.
+         */
+        case BIO_C_DESTROY_BIO_PAIR: /* Non-threadsafe */
+            dgram_pair_ctrl_destroy_bio_pair(bio);
+            break;
 
-    /* BIO_dgram_get_effective_caps */
-    case BIO_CTRL_DGRAM_GET_EFFECTIVE_CAPS: /* Non-threadsafe */
-        ret = (long)dgram_pair_ctrl_get_effective_caps(bio);
-        break;
+        /* BIO_dgram_get_effective_caps */
+        case BIO_CTRL_DGRAM_GET_EFFECTIVE_CAPS: /* Non-threadsafe */
+            ret = (long)dgram_pair_ctrl_get_effective_caps(bio);
+            break;
 
-    default:
-        ret = dgram_mem_ctrl(bio, cmd, num, ptr);
-        break;
+        default:
+            ret = dgram_mem_ctrl(bio, cmd, num, ptr);
+            break;
     }
 
     return ret;
@@ -828,7 +830,8 @@ err:
 }
 
 /* Must hold peer write lock */
-static size_t dgram_pair_read_inner(struct bio_dgram_pair_st *b, uint8_t *buf, size_t sz)
+static size_t dgram_pair_read_inner(struct bio_dgram_pair_st *b, uint8_t *buf,
+                                    size_t sz)
 {
     size_t total_read = 0;
 
@@ -942,7 +945,8 @@ static ossl_ssize_t dgram_pair_read_actual(BIO *bio, char *buf, size_t sz,
      * If the datagram was truncated due to an inadequate buffer, discard the
      * remainder.
      */
-    if (trunc > 0 && !ossl_assert(dgram_pair_read_inner(readb, NULL, trunc) == trunc))
+    if (trunc > 0 &&
+        !ossl_assert(dgram_pair_read_inner(readb, NULL, trunc) == trunc))
         /* We were somehow not able to read/skip the entire datagram. */
         return -BIO_R_TRANSFER_ERROR;
 
@@ -1197,8 +1201,10 @@ static size_t dgram_pair_write_inner(struct bio_dgram_pair_st *b,
  * Must hold local write lock. Returns number of bytes processed or negated BIO
  * response code.
  */
-static ossl_ssize_t dgram_pair_write_actual(BIO *bio, const char *buf, size_t sz,
-                                            const BIO_ADDR *local, const BIO_ADDR *peer,
+static ossl_ssize_t dgram_pair_write_actual(BIO *bio, const char *buf,
+                                            size_t sz,
+                                            const BIO_ADDR *local,
+                                            const BIO_ADDR *peer,
                                             int is_multi)
 {
     static const BIO_ADDR zero_addr;
@@ -1234,8 +1240,9 @@ static ossl_ssize_t dgram_pair_write_actual(BIO *bio, const char *buf, size_t sz
 
     saved_idx   = b->rbuf.idx[0];
     saved_count = b->rbuf.count;
-    if (dgram_pair_write_inner(b, (const uint8_t *)&hdr, sizeof(hdr)) != sizeof(hdr)
-            || dgram_pair_write_inner(b, (const uint8_t *)buf, sz) != sz) {
+    if (dgram_pair_write_inner(b, (const uint8_t *)&hdr,
+                               sizeof(hdr)) != sizeof(hdr)
+        || dgram_pair_write_inner(b, (const uint8_t *)buf, sz) != sz) {
         /*
          * We were not able to push the header and the entirety of the payload
          * onto the ring buffer, so abort and roll back the ring buffer state.

@@ -71,7 +71,7 @@
 # define ARGON2_ADDRESSES_IN_BLOCK 128
 # define ARGON2_PREHASH_DIGEST_LENGTH 64
 # define ARGON2_PREHASH_SEED_LENGTH \
-    (ARGON2_PREHASH_DIGEST_LENGTH + (2 * sizeof(uint32_t)))
+        (ARGON2_PREHASH_DIGEST_LENGTH + (2 * sizeof(uint32_t)))
 
 # define ARGON2_DEFAULT_OUTLEN 64u
 # define ARGON2_DEFAULT_T_COST 3u
@@ -82,54 +82,54 @@
 
 # undef G
 # define G(a, b, c, d)                                                        \
-    do {                                                                      \
-        a = a + b + 2 * mul_lower(a, b);                                      \
-        d = rotr64(d ^ a, 32);                                                \
-        c = c + d + 2 * mul_lower(c, d);                                      \
-        b = rotr64(b ^ c, 24);                                                \
-        a = a + b + 2 * mul_lower(a, b);                                      \
-        d = rotr64(d ^ a, 16);                                                \
-        c = c + d + 2 * mul_lower(c, d);                                      \
-        b = rotr64(b ^ c, 63);                                                \
-    } while ((void)0, 0)
+        do {                                                                      \
+            a = a + b + 2 * mul_lower(a, b);                                      \
+            d = rotr64(d ^ a, 32);                                                \
+            c = c + d + 2 * mul_lower(c, d);                                      \
+            b = rotr64(b ^ c, 24);                                                \
+            a = a + b + 2 * mul_lower(a, b);                                      \
+            d = rotr64(d ^ a, 16);                                                \
+            c = c + d + 2 * mul_lower(c, d);                                      \
+            b = rotr64(b ^ c, 63);                                                \
+        } while ((void)0, 0)
 
 # undef PERMUTATION_P
 # define PERMUTATION_P(v0, v1, v2, v3, v4, v5, v6, v7, v8, v9, v10, v11,      \
                        v12, v13, v14, v15)                                    \
-    do {                                                                      \
-        G(v0, v4, v8, v12);                                                   \
-        G(v1, v5, v9, v13);                                                   \
-        G(v2, v6, v10, v14);                                                  \
-        G(v3, v7, v11, v15);                                                  \
-        G(v0, v5, v10, v15);                                                  \
-        G(v1, v6, v11, v12);                                                  \
-        G(v2, v7, v8, v13);                                                   \
-        G(v3, v4, v9, v14);                                                   \
-    } while ((void)0, 0)
+        do {                                                                      \
+            G(v0, v4, v8, v12);                                                   \
+            G(v1, v5, v9, v13);                                                   \
+            G(v2, v6, v10, v14);                                                  \
+            G(v3, v7, v11, v15);                                                  \
+            G(v0, v5, v10, v15);                                                  \
+            G(v1, v6, v11, v12);                                                  \
+            G(v2, v7, v8, v13);                                                   \
+            G(v3, v4, v9, v14);                                                   \
+        } while ((void)0, 0)
 
 # undef PERMUTATION_P_COLUMN
 # define PERMUTATION_P_COLUMN(x, i)                                           \
-    do {                                                                      \
-        uint64_t *base = &x[16 * i];                                          \
-        PERMUTATION_P(                                                        \
-            *base,        *(base + 1),  *(base + 2),  *(base + 3),            \
-            *(base + 4),  *(base + 5),  *(base + 6),  *(base + 7),            \
-            *(base + 8),  *(base + 9),  *(base + 10), *(base + 11),           \
-            *(base + 12), *(base + 13), *(base + 14), *(base + 15)            \
-        );                                                                    \
-    } while ((void)0, 0)
+        do {                                                                      \
+            uint64_t *base = &x[16 * i];                                          \
+            PERMUTATION_P(                                                        \
+                *base,        *(base + 1),  *(base + 2),  *(base + 3),            \
+                *(base + 4),  *(base + 5),  *(base + 6),  *(base + 7),            \
+                *(base + 8),  *(base + 9),  *(base + 10), *(base + 11),           \
+                *(base + 12), *(base + 13), *(base + 14), *(base + 15)            \
+                         );                                                                    \
+        } while ((void)0, 0)
 
 # undef PERMUTATION_P_ROW
 # define PERMUTATION_P_ROW(x, i)                                              \
-    do {                                                                      \
-        uint64_t *base = &x[2 * i];                                           \
-        PERMUTATION_P(                                                        \
-            *base,        *(base + 1),  *(base + 16),  *(base + 17),          \
-            *(base + 32), *(base + 33), *(base + 48),  *(base + 49),          \
-            *(base + 64), *(base + 65), *(base + 80),  *(base + 81),          \
-            *(base + 96), *(base + 97), *(base + 112), *(base + 113)          \
-        );                                                                    \
-    } while ((void)0, 0)
+        do {                                                                      \
+            uint64_t *base = &x[2 * i];                                           \
+            PERMUTATION_P(                                                        \
+                *base,        *(base + 1),  *(base + 16),  *(base + 17),          \
+                *(base + 32), *(base + 33), *(base + 48),  *(base + 49),          \
+                *(base + 64), *(base + 65), *(base + 80),  *(base + 81),          \
+                *(base + 96), *(base + 97), *(base + 112), *(base + 113)          \
+                         );                                                                    \
+        } while ((void)0, 0)
 
 typedef struct {
     uint64_t v[ARGON2_QWORDS_IN_BLOCK];
@@ -269,14 +269,14 @@ static int blake2b_long(EVP_MD *md, EVP_MAC *mac, unsigned char *out,
 static ossl_inline uint64_t load64(const uint8_t *src)
 {
     return
-      (((uint64_t)src[0]) << 0)
-    | (((uint64_t)src[1]) << 8)
-    | (((uint64_t)src[2]) << 16)
-    | (((uint64_t)src[3]) << 24)
-    | (((uint64_t)src[4]) << 32)
-    | (((uint64_t)src[5]) << 40)
-    | (((uint64_t)src[6]) << 48)
-    | (((uint64_t)src[7]) << 56);
+        (((uint64_t)src[0]) << 0)
+        | (((uint64_t)src[1]) << 8)
+        | (((uint64_t)src[2]) << 16)
+        | (((uint64_t)src[3]) << 24)
+        | (((uint64_t)src[4]) << 32)
+        | (((uint64_t)src[5]) << 40)
+        | (((uint64_t)src[6]) << 48)
+        | (((uint64_t)src[7]) << 56);
 }
 
 static ossl_inline void store32(uint8_t *dst, uint32_t w)
@@ -404,13 +404,13 @@ static int data_indep_addressing(const KDF_ARGON2 *ctx, uint32_t pass,
                                  uint8_t slice)
 {
     switch (ctx->type) {
-    case ARGON2_I:
-        return 1;
-    case ARGON2_ID:
-        return (pass == 0) && (slice < ARGON2_SYNC_POINTS / 2);
-    case ARGON2_D:
-    default:
-        return 0;
+        case ARGON2_I:
+            return 1;
+        case ARGON2_ID:
+            return (pass == 0) && (slice < ARGON2_SYNC_POINTS / 2);
+        case ARGON2_D:
+        default:
+            return 0;
     }
 }
 
@@ -435,24 +435,25 @@ static uint32_t index_alpha(const KDF_ARGON2 *ctx, uint32_t pass,
 
     start_pos = 0;
     switch (pass) {
-    case 0:
-        if (slice == 0)
-            ref_area_sz = index - 1;
-        else if (same_lane)
-            ref_area_sz = slice * ctx->segment_length + index - 1;
-        else
-            ref_area_sz = slice * ctx->segment_length +
-                ((index == 0) ? (-1) : 0);
-        break;
-    default:
-        if (same_lane)
-            ref_area_sz = ctx->lane_length - ctx->segment_length + index - 1;
-        else
-            ref_area_sz = ctx->lane_length - ctx->segment_length +
-                ((index == 0) ? (-1) : 0);
-        if (slice != ARGON2_SYNC_POINTS - 1)
-            start_pos = (slice + 1) * ctx->segment_length;
-        break;
+        case 0:
+            if (slice == 0)
+                ref_area_sz = index - 1;
+            else if (same_lane)
+                ref_area_sz = slice * ctx->segment_length + index - 1;
+            else
+                ref_area_sz = slice * ctx->segment_length +
+                              ((index == 0) ? (-1) : 0);
+            break;
+        default:
+            if (same_lane)
+                ref_area_sz = ctx->lane_length - ctx->segment_length + index -
+                              1;
+            else
+                ref_area_sz = ctx->lane_length - ctx->segment_length +
+                              ((index == 0) ? (-1) : 0);
+            if (slice != ARGON2_SYNC_POINTS - 1)
+                start_pos = (slice + 1) * ctx->segment_length;
+            break;
     }
 
     rel_pos = pseudo_rand;
@@ -501,14 +502,15 @@ static void fill_segment(const KDF_ARGON2 *ctx, uint32_t pass, uint32_t lane,
     }
 
     curr_offset = lane * ctx->lane_length + slice * ctx->segment_length
-        + start_idx;
+                  + start_idx;
 
     if ((curr_offset % ctx->lane_length) == 0)
         prev_offset = curr_offset + ctx->lane_length - 1;
     else
         prev_offset = curr_offset - 1;
 
-    for (j = start_idx; j < ctx->segment_length; ++j, ++curr_offset, ++prev_offset) {
+    for (j = start_idx; j < ctx->segment_length;
+         ++j, ++curr_offset, ++prev_offset) {
         if (curr_offset % ctx->lane_length == 1)
             prev_offset = curr_offset - 1;
 
@@ -641,7 +643,8 @@ static int fill_mem_blocks_st(KDF_ARGON2 *ctx)
 static ossl_inline int fill_memory_blocks(KDF_ARGON2 *ctx)
 {
 # if !defined(ARGON2_NO_THREADS)
-    return ctx->threads == 1 ? fill_mem_blocks_st(ctx) : fill_mem_blocks_mt(ctx);
+    return ctx->threads ==
+           1 ? fill_mem_blocks_st(ctx) : fill_mem_blocks_mt(ctx);
 # else
     return ctx->threads == 1 ? fill_mem_blocks_st(ctx) : 0;
 # endif
@@ -729,7 +732,8 @@ static int initialize(KDF_ARGON2 *ctx)
     if (ctx == NULL)
         return 0;
 
-    if (ctx->memory_blocks * sizeof(BLOCK) / sizeof(BLOCK) != ctx->memory_blocks)
+    if (ctx->memory_blocks * sizeof(BLOCK) / sizeof(BLOCK) !=
+        ctx->memory_blocks)
         return 0;
 
     if (ctx->type != ARGON2_D)
@@ -804,9 +808,9 @@ static int blake2b_mac(EVP_MAC *mac, void *out, size_t outlen, const void *in,
     par[par_n++] = OSSL_PARAM_construct_end();
 
     ret = EVP_MAC_CTX_set_params(ctx, par) == 1
-        && EVP_MAC_init(ctx, NULL, 0, NULL) == 1
-        && EVP_MAC_update(ctx, in, inlen) == 1
-        && EVP_MAC_final(ctx, out, (size_t *) &out_written, outlen) == 1;
+          && EVP_MAC_init(ctx, NULL, 0, NULL) == 1
+          && EVP_MAC_update(ctx, in, inlen) == 1
+          && EVP_MAC_final(ctx, out, (size_t *) &out_written, outlen) == 1;
 
 fail:
     EVP_MAC_CTX_free(ctx);
@@ -827,8 +831,8 @@ static int blake2b_md(EVP_MD *md, void *out, size_t outlen, const void *in,
     par[1] = OSSL_PARAM_construct_end();
 
     ret = EVP_DigestInit_ex2(ctx, md, par) == 1
-        && EVP_DigestUpdate(ctx, in, inlen) == 1
-        && EVP_DigestFinal_ex(ctx, out, NULL) == 1;
+          && EVP_DigestUpdate(ctx, in, inlen) == 1
+          && EVP_DigestFinal_ex(ctx, out, NULL) == 1;
 
     EVP_MD_CTX_free(ctx);
     return ret;
@@ -872,10 +876,10 @@ static int blake2b_long(EVP_MD *md, EVP_MAC *mac, unsigned char *out,
     par[1] = OSSL_PARAM_construct_end();
 
     ret = EVP_DigestInit_ex2(ctx, md, par) == 1
-        && EVP_DigestUpdate(ctx, outlen_bytes, sizeof(outlen_bytes)) == 1
-        && EVP_DigestUpdate(ctx, in, inlen) == 1
-        && EVP_DigestFinal_ex(ctx, (outlen > BLAKE2B_OUTBYTES) ? outbuf : out,
-                              NULL) == 1;
+          && EVP_DigestUpdate(ctx, outlen_bytes, sizeof(outlen_bytes)) == 1
+          && EVP_DigestUpdate(ctx, in, inlen) == 1
+          && EVP_DigestFinal_ex(ctx, (outlen > BLAKE2B_OUTBYTES) ? outbuf : out,
+                                NULL) == 1;
 
     if (ret == 0)
         goto fail;
@@ -1053,13 +1057,14 @@ static int kdf_argon2_derive(void *vctx, unsigned char *out, size_t outlen,
     }
 
     switch (ctx->type) {
-    case ARGON2_D:
-    case ARGON2_I:
-    case ARGON2_ID:
-        break;
-    default:
-        ERR_raise_data(ERR_LIB_PROV, PROV_R_INVALID_MODE, "invalid Argon2 type");
-        return 0;
+        case ARGON2_D:
+        case ARGON2_I:
+        case ARGON2_ID:
+            break;
+        default:
+            ERR_raise_data(ERR_LIB_PROV, PROV_R_INVALID_MODE,
+                           "invalid Argon2 type");
+            return 0;
     }
 
     if (ctx->threads > 1) {
@@ -1361,14 +1366,14 @@ static void kdf_argon2_ctx_set_flag_early_clean(KDF_ARGON2 *ctx, uint32_t f)
 static int kdf_argon2_ctx_set_version(KDF_ARGON2 *ctx, uint32_t version)
 {
     switch (version) {
-    case ARGON2_VERSION_10:
-    case ARGON2_VERSION_13:
-        ctx->version = version;
-        return 1;
-    default:
-        ERR_raise_data(ERR_LIB_PROV, PROV_R_INVALID_MODE,
-                       "invalid Argon2 version");
-        return 0;
+        case ARGON2_VERSION_10:
+        case ARGON2_VERSION_13:
+            ctx->version = version;
+            return 1;
+        default:
+            ERR_raise_data(ERR_LIB_PROV, PROV_R_INVALID_MODE,
+                           "invalid Argon2 version");
+            return 0;
     }
 }
 
@@ -1435,34 +1440,44 @@ static int kdf_argon2_set_ctx_params(void *vctx, const OSSL_PARAM params[])
             return 0;
     }
 
-    if ((p = OSSL_PARAM_locate_const(params, OSSL_KDF_PARAM_ARGON2_LANES)) != NULL) {
+    if ((p =
+             OSSL_PARAM_locate_const(params,
+                                     OSSL_KDF_PARAM_ARGON2_LANES)) != NULL) {
         if (!OSSL_PARAM_get_uint32(p, &u32_value))
             return 0;
         if (!kdf_argon2_ctx_set_lanes(ctx, u32_value))
             return 0;
     }
 
-    if ((p = OSSL_PARAM_locate_const(params, OSSL_KDF_PARAM_ARGON2_MEMCOST)) != NULL) {
+    if ((p =
+             OSSL_PARAM_locate_const(params,
+                                     OSSL_KDF_PARAM_ARGON2_MEMCOST)) != NULL) {
         if (!OSSL_PARAM_get_uint32(p, &u32_value))
             return 0;
         if (!kdf_argon2_ctx_set_m_cost(ctx, u32_value))
             return 0;
     }
 
-    if ((p = OSSL_PARAM_locate_const(params, OSSL_KDF_PARAM_EARLY_CLEAN)) != NULL) {
+    if ((p =
+             OSSL_PARAM_locate_const(params,
+                                     OSSL_KDF_PARAM_EARLY_CLEAN)) != NULL) {
         if (!OSSL_PARAM_get_uint32(p, &u32_value))
             return 0;
         kdf_argon2_ctx_set_flag_early_clean(ctx, u32_value);
     }
 
-    if ((p = OSSL_PARAM_locate_const(params, OSSL_KDF_PARAM_ARGON2_VERSION)) != NULL) {
+    if ((p =
+             OSSL_PARAM_locate_const(params,
+                                     OSSL_KDF_PARAM_ARGON2_VERSION)) != NULL) {
         if (!OSSL_PARAM_get_uint32(p, &u32_value))
             return 0;
         if (!kdf_argon2_ctx_set_version(ctx, u32_value))
             return 0;
     }
 
-    if ((p = OSSL_PARAM_locate_const(params, OSSL_KDF_PARAM_PROPERTIES)) != NULL) {
+    if ((p =
+             OSSL_PARAM_locate_const(params,
+                                     OSSL_KDF_PARAM_PROPERTIES)) != NULL) {
         if (p->data_type != OSSL_PARAM_UTF8_STRING
             || !set_property_query(ctx, p->data))
             return 0;
@@ -1516,44 +1531,50 @@ static const OSSL_PARAM *kdf_argon2_gettable_ctx_params(ossl_unused void *ctx,
 }
 
 const OSSL_DISPATCH ossl_kdf_argon2i_functions[] = {
-    { OSSL_FUNC_KDF_NEWCTX, (void(*)(void))kdf_argon2i_new },
-    { OSSL_FUNC_KDF_FREECTX, (void(*)(void))kdf_argon2_free },
-    { OSSL_FUNC_KDF_RESET, (void(*)(void))kdf_argon2_reset },
-    { OSSL_FUNC_KDF_DERIVE, (void(*)(void))kdf_argon2_derive },
+    { OSSL_FUNC_KDF_NEWCTX, (void (*)(void)) kdf_argon2i_new },
+    { OSSL_FUNC_KDF_FREECTX, (void (*)(void)) kdf_argon2_free },
+    { OSSL_FUNC_KDF_RESET, (void (*)(void)) kdf_argon2_reset },
+    { OSSL_FUNC_KDF_DERIVE, (void (*)(void)) kdf_argon2_derive },
     { OSSL_FUNC_KDF_SETTABLE_CTX_PARAMS,
-      (void(*)(void))kdf_argon2_settable_ctx_params },
-    { OSSL_FUNC_KDF_SET_CTX_PARAMS, (void(*)(void))kdf_argon2_set_ctx_params },
+      (void (*)(void)) kdf_argon2_settable_ctx_params },
+    { OSSL_FUNC_KDF_SET_CTX_PARAMS,
+      (void (*)(void)) kdf_argon2_set_ctx_params },
     { OSSL_FUNC_KDF_GETTABLE_CTX_PARAMS,
-      (void(*)(void))kdf_argon2_gettable_ctx_params },
-    { OSSL_FUNC_KDF_GET_CTX_PARAMS, (void(*)(void))kdf_argon2_get_ctx_params },
+      (void (*)(void)) kdf_argon2_gettable_ctx_params },
+    { OSSL_FUNC_KDF_GET_CTX_PARAMS,
+      (void (*)(void)) kdf_argon2_get_ctx_params },
     OSSL_DISPATCH_END
 };
 
 const OSSL_DISPATCH ossl_kdf_argon2d_functions[] = {
-    { OSSL_FUNC_KDF_NEWCTX, (void(*)(void))kdf_argon2d_new },
-    { OSSL_FUNC_KDF_FREECTX, (void(*)(void))kdf_argon2_free },
-    { OSSL_FUNC_KDF_RESET, (void(*)(void))kdf_argon2_reset },
-    { OSSL_FUNC_KDF_DERIVE, (void(*)(void))kdf_argon2_derive },
+    { OSSL_FUNC_KDF_NEWCTX, (void (*)(void)) kdf_argon2d_new },
+    { OSSL_FUNC_KDF_FREECTX, (void (*)(void)) kdf_argon2_free },
+    { OSSL_FUNC_KDF_RESET, (void (*)(void)) kdf_argon2_reset },
+    { OSSL_FUNC_KDF_DERIVE, (void (*)(void)) kdf_argon2_derive },
     { OSSL_FUNC_KDF_SETTABLE_CTX_PARAMS,
-      (void(*)(void))kdf_argon2_settable_ctx_params },
-    { OSSL_FUNC_KDF_SET_CTX_PARAMS, (void(*)(void))kdf_argon2_set_ctx_params },
+      (void (*)(void)) kdf_argon2_settable_ctx_params },
+    { OSSL_FUNC_KDF_SET_CTX_PARAMS,
+      (void (*)(void)) kdf_argon2_set_ctx_params },
     { OSSL_FUNC_KDF_GETTABLE_CTX_PARAMS,
-      (void(*)(void))kdf_argon2_gettable_ctx_params },
-    { OSSL_FUNC_KDF_GET_CTX_PARAMS, (void(*)(void))kdf_argon2_get_ctx_params },
+      (void (*)(void)) kdf_argon2_gettable_ctx_params },
+    { OSSL_FUNC_KDF_GET_CTX_PARAMS,
+      (void (*)(void)) kdf_argon2_get_ctx_params },
     OSSL_DISPATCH_END
 };
 
 const OSSL_DISPATCH ossl_kdf_argon2id_functions[] = {
-    { OSSL_FUNC_KDF_NEWCTX, (void(*)(void))kdf_argon2id_new },
-    { OSSL_FUNC_KDF_FREECTX, (void(*)(void))kdf_argon2_free },
-    { OSSL_FUNC_KDF_RESET, (void(*)(void))kdf_argon2_reset },
-    { OSSL_FUNC_KDF_DERIVE, (void(*)(void))kdf_argon2_derive },
+    { OSSL_FUNC_KDF_NEWCTX, (void (*)(void)) kdf_argon2id_new },
+    { OSSL_FUNC_KDF_FREECTX, (void (*)(void)) kdf_argon2_free },
+    { OSSL_FUNC_KDF_RESET, (void (*)(void)) kdf_argon2_reset },
+    { OSSL_FUNC_KDF_DERIVE, (void (*)(void)) kdf_argon2_derive },
     { OSSL_FUNC_KDF_SETTABLE_CTX_PARAMS,
-      (void(*)(void))kdf_argon2_settable_ctx_params },
-    { OSSL_FUNC_KDF_SET_CTX_PARAMS, (void(*)(void))kdf_argon2_set_ctx_params },
+      (void (*)(void)) kdf_argon2_settable_ctx_params },
+    { OSSL_FUNC_KDF_SET_CTX_PARAMS,
+      (void (*)(void)) kdf_argon2_set_ctx_params },
     { OSSL_FUNC_KDF_GETTABLE_CTX_PARAMS,
-      (void(*)(void))kdf_argon2_gettable_ctx_params },
-    { OSSL_FUNC_KDF_GET_CTX_PARAMS, (void(*)(void))kdf_argon2_get_ctx_params },
+      (void (*)(void)) kdf_argon2_gettable_ctx_params },
+    { OSSL_FUNC_KDF_GET_CTX_PARAMS,
+      (void (*)(void)) kdf_argon2_get_ctx_params },
     OSSL_DISPATCH_END
 };
 

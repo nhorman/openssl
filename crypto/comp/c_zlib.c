@@ -28,10 +28,12 @@ COMP_METHOD *COMP_zlib(void);
 
 static int zlib_stateful_init(COMP_CTX *ctx);
 static void zlib_stateful_finish(COMP_CTX *ctx);
-static ossl_ssize_t zlib_stateful_compress_block(COMP_CTX *ctx, unsigned char *out,
+static ossl_ssize_t zlib_stateful_compress_block(COMP_CTX *ctx,
+                                                 unsigned char *out,
                                                  size_t olen, unsigned char *in,
                                                  size_t ilen);
-static ossl_ssize_t zlib_stateful_expand_block(COMP_CTX *ctx, unsigned char *out,
+static ossl_ssize_t zlib_stateful_expand_block(COMP_CTX *ctx,
+                                               unsigned char *out,
                                                size_t olen, unsigned char *in,
                                                size_t ilen);
 
@@ -144,7 +146,7 @@ static int zlib_stateful_init(COMP_CTX *ctx)
 
     ctx->data = state;
     return 1;
- err:
+err:
     OPENSSL_free(state);
     return 0;
 }
@@ -157,7 +159,8 @@ static void zlib_stateful_finish(COMP_CTX *ctx)
     OPENSSL_free(state);
 }
 
-static ossl_ssize_t zlib_stateful_compress_block(COMP_CTX *ctx, unsigned char *out,
+static ossl_ssize_t zlib_stateful_compress_block(COMP_CTX *ctx,
+                                                 unsigned char *out,
                                                  size_t olen, unsigned char *in,
                                                  size_t ilen)
 {
@@ -180,7 +183,8 @@ static ossl_ssize_t zlib_stateful_compress_block(COMP_CTX *ctx, unsigned char *o
     return (ossl_ssize_t)(olen - state->ostream.avail_out);
 }
 
-static ossl_ssize_t zlib_stateful_expand_block(COMP_CTX *ctx, unsigned char *out,
+static ossl_ssize_t zlib_stateful_expand_block(COMP_CTX *ctx,
+                                               unsigned char *out,
                                                size_t olen, unsigned char *in,
                                                size_t ilen)
 {
@@ -214,7 +218,8 @@ static void zlib_oneshot_finish(COMP_CTX *ctx)
 {
 }
 
-static ossl_ssize_t zlib_oneshot_compress_block(COMP_CTX *ctx, unsigned char *out,
+static ossl_ssize_t zlib_oneshot_compress_block(COMP_CTX *ctx,
+                                                unsigned char *out,
                                                 size_t olen, unsigned char *in,
                                                 size_t ilen)
 {
@@ -288,16 +293,18 @@ DEFINE_RUN_ONCE_STATIC(ossl_comp_zlib_init)
         p_uncompress = (compress_ft) DSO_bind_func(zlib_dso, "uncompress");
         p_inflateEnd = (inflateEnd_ft) DSO_bind_func(zlib_dso, "inflateEnd");
         p_inflate = (inflate_ft) DSO_bind_func(zlib_dso, "inflate");
-        p_inflateInit_ = (inflateInit__ft) DSO_bind_func(zlib_dso, "inflateInit_");
+        p_inflateInit_ = (inflateInit__ft) DSO_bind_func(zlib_dso,
+                                                         "inflateInit_");
         p_deflateEnd = (deflateEnd_ft) DSO_bind_func(zlib_dso, "deflateEnd");
         p_deflate = (deflate_ft) DSO_bind_func(zlib_dso, "deflate");
-        p_deflateInit_ = (deflateInit__ft) DSO_bind_func(zlib_dso, "deflateInit_");
+        p_deflateInit_ = (deflateInit__ft) DSO_bind_func(zlib_dso,
+                                                         "deflateInit_");
         p_zError = (zError__ft) DSO_bind_func(zlib_dso, "zError");
 
         if (p_compress == NULL || p_uncompress == NULL || p_inflateEnd == NULL
-                || p_inflate == NULL || p_inflateInit_ == NULL
-                || p_deflateEnd == NULL || p_deflate == NULL
-                || p_deflateInit_ == NULL || p_zError == NULL) {
+            || p_inflate == NULL || p_inflateInit_ == NULL
+            || p_deflateEnd == NULL || p_deflate == NULL
+            || p_deflateInit_ == NULL || p_zError == NULL) {
             ossl_comp_zlib_cleanup();
             return 0;
         }
@@ -632,79 +639,79 @@ static long bio_zlib_ctrl(BIO *b, int cmd, long num, void *ptr)
     ctx = BIO_get_data(b);
     switch (cmd) {
 
-    case BIO_CTRL_RESET:
-        ctx->ocount = 0;
-        ctx->odone = 0;
-        ret = 1;
-        break;
+        case BIO_CTRL_RESET:
+            ctx->ocount = 0;
+            ctx->odone = 0;
+            ret = 1;
+            break;
 
-    case BIO_CTRL_FLUSH:
-        ret = bio_zlib_flush(b);
-        if (ret > 0) {
-            ret = BIO_flush(next);
-            BIO_copy_next_retry(b);
-        }
-        break;
+        case BIO_CTRL_FLUSH:
+            ret = bio_zlib_flush(b);
+            if (ret > 0) {
+                ret = BIO_flush(next);
+                BIO_copy_next_retry(b);
+            }
+            break;
 
-    case BIO_C_SET_BUFF_SIZE:
-        ibs = -1;
-        obs = -1;
-        if (ptr != NULL) {
-            ip = ptr;
-            if (*ip == 0)
+        case BIO_C_SET_BUFF_SIZE:
+            ibs = -1;
+            obs = -1;
+            if (ptr != NULL) {
+                ip = ptr;
+                if (*ip == 0)
+                    ibs = (int)num;
+                else
+                    obs = (int)num;
+            } else {
                 ibs = (int)num;
-            else
-                obs = (int)num;
-        } else {
-            ibs = (int)num;
-            obs = ibs;
-        }
+                obs = ibs;
+            }
 
-        if (ibs != -1) {
-            OPENSSL_free(ctx->ibuf);
-            ctx->ibuf = NULL;
-            ctx->ibufsize = ibs;
-        }
+            if (ibs != -1) {
+                OPENSSL_free(ctx->ibuf);
+                ctx->ibuf = NULL;
+                ctx->ibufsize = ibs;
+            }
 
-        if (obs != -1) {
-            OPENSSL_free(ctx->obuf);
-            ctx->obuf = NULL;
-            ctx->obufsize = obs;
-        }
-        ret = 1;
-        break;
+            if (obs != -1) {
+                OPENSSL_free(ctx->obuf);
+                ctx->obuf = NULL;
+                ctx->obufsize = obs;
+            }
+            ret = 1;
+            break;
 
-    case BIO_C_DO_STATE_MACHINE:
-        BIO_clear_retry_flags(b);
-        ret = BIO_ctrl(next, cmd, num, ptr);
-        BIO_copy_next_retry(b);
-        break;
+        case BIO_C_DO_STATE_MACHINE:
+            BIO_clear_retry_flags(b);
+            ret = BIO_ctrl(next, cmd, num, ptr);
+            BIO_copy_next_retry(b);
+            break;
 
-    case BIO_CTRL_WPENDING:
-        if (ctx->obuf == NULL)
-            return 0;
+        case BIO_CTRL_WPENDING:
+            if (ctx->obuf == NULL)
+                return 0;
 
-        if (ctx->odone) {
-            ret = ctx->ocount;
-        } else {
-            ret = ctx->ocount;
+            if (ctx->odone) {
+                ret = ctx->ocount;
+            } else {
+                ret = ctx->ocount;
+                if (ret == 0)
+                    /* Unknown amount pending but we are not finished */
+                    ret = 1;
+            }
             if (ret == 0)
-                /* Unknown amount pending but we are not finished */
-                ret = 1;
-        }
-        if (ret == 0)
-            ret = BIO_ctrl(next, cmd, num, ptr);
-        break;
+                ret = BIO_ctrl(next, cmd, num, ptr);
+            break;
 
-    case BIO_CTRL_PENDING:
-        ret = ctx->zin.avail_in;
-        if (ret == 0)
-            ret = BIO_ctrl(next, cmd, num, ptr);
-        break;
+        case BIO_CTRL_PENDING:
+            ret = ctx->zin.avail_in;
+            if (ret == 0)
+                ret = BIO_ctrl(next, cmd, num, ptr);
+            break;
 
-    default:
-        ret = BIO_ctrl(next, cmd, num, ptr);
-        break;
+        default:
+            ret = BIO_ctrl(next, cmd, num, ptr);
+            break;
 
     }
 

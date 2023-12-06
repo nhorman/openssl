@@ -95,8 +95,8 @@ static int kdf_has(const void *keydata, int selection)
 }
 
 const OSSL_DISPATCH ossl_kdf_keymgmt_functions[] = {
-    { OSSL_FUNC_KEYMGMT_NEW, (void (*)(void))kdf_newdata },
-    { OSSL_FUNC_KEYMGMT_FREE, (void (*)(void))kdf_freedata },
-    { OSSL_FUNC_KEYMGMT_HAS, (void (*)(void))kdf_has },
+    { OSSL_FUNC_KEYMGMT_NEW, (void (*)(void)) kdf_newdata },
+    { OSSL_FUNC_KEYMGMT_FREE, (void (*)(void)) kdf_freedata },
+    { OSSL_FUNC_KEYMGMT_HAS, (void (*)(void)) kdf_has },
     OSSL_DISPATCH_END
 };

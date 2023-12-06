@@ -134,7 +134,8 @@ static BIO *create_dgram_bio(int family, const char *hostname, const char *port)
 
 static void usage(void)
 {
-    BIO_printf(bio_err, "quicserver [-6][-trace] hostname port certfile keyfile\n");
+    BIO_printf(bio_err,
+               "quicserver [-6][-trace] hostname port certfile keyfile\n");
 }
 
 int main(int argc, char *argv[])
@@ -269,21 +270,21 @@ int main(int argc, char *argv[])
             }
 
             if (ossl_quic_tserver_read(qtserv, streamid, reqbuf + reqbytes,
-                                    sizeof(reqbuf) - reqbytes,
-                                    &numbytes)) {
+                                       sizeof(reqbuf) - reqbytes,
+                                       &numbytes)) {
                 if (numbytes > 0)
                     fwrite(reqbuf + reqbytes, 1, numbytes, stdout);
                 reqbytes += numbytes;
             }
         } while (reqbytes < sizeof(reqterm)
-                || memcmp(reqbuf + reqbytes - sizeof(reqterm), reqterm,
-                        sizeof(reqterm)) != 0);
+                 || memcmp(reqbuf + reqbytes - sizeof(reqterm), reqterm,
+                           sizeof(reqterm)) != 0);
 
         if ((streamid & QUIC_STREAM_DIR_UNI) != 0) {
             /*
-            * Incoming stream was uni-directional. Create a server initiated
-            * uni-directional stream for the response.
-            */
+             * Incoming stream was uni-directional. Create a server initiated
+             * uni-directional stream for the response.
+             */
             if (!ossl_quic_tserver_stream_new(qtserv, 1, &streamid)) {
                 BIO_printf(bio_err, "Failed creating response stream\n");
                 goto end;
@@ -294,18 +295,18 @@ int main(int argc, char *argv[])
 
         ossl_quic_tserver_tick(qtserv);
         if (!ossl_quic_tserver_write(qtserv, streamid,
-                                    (unsigned char *)response[respnum],
-                                    strlen(response[respnum]), &numbytes))
+                                     (unsigned char *)response[respnum],
+                                     strlen(response[respnum]), &numbytes))
             goto end;
 
         if (!ossl_quic_tserver_conclude(qtserv, streamid))
             goto end;
     }
 
- end:
+end:
     /* Free twice because we did an up-ref */
     BIO_free(bio);
- end2:
+end2:
     BIO_free(bio);
     ossl_quic_tserver_free(qtserv);
     BIO_free(bio_err);

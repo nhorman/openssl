@@ -104,21 +104,21 @@ static int int_ctrl_helper(ENGINE *e, int cmd, long i, void *p,
     /* Now the logic splits depending on command type */
     cdp = &e->cmd_defns[idx];
     switch (cmd) {
-    case ENGINE_CTRL_GET_NEXT_CMD_TYPE:
-        cdp++;
-        return int_ctrl_cmd_is_null(cdp) ? 0 : cdp->cmd_num;
-    case ENGINE_CTRL_GET_NAME_LEN_FROM_CMD:
-        return strlen(cdp->cmd_name);
-    case ENGINE_CTRL_GET_NAME_FROM_CMD:
-        return strlen(strcpy(s, cdp->cmd_name));
-    case ENGINE_CTRL_GET_DESC_LEN_FROM_CMD:
-        return strlen(cdp->cmd_desc == NULL ? int_no_description
+        case ENGINE_CTRL_GET_NEXT_CMD_TYPE:
+            cdp++;
+            return int_ctrl_cmd_is_null(cdp) ? 0 : cdp->cmd_num;
+        case ENGINE_CTRL_GET_NAME_LEN_FROM_CMD:
+            return strlen(cdp->cmd_name);
+        case ENGINE_CTRL_GET_NAME_FROM_CMD:
+            return strlen(strcpy(s, cdp->cmd_name));
+        case ENGINE_CTRL_GET_DESC_LEN_FROM_CMD:
+            return strlen(cdp->cmd_desc == NULL ? int_no_description
                                             : cdp->cmd_desc);
-    case ENGINE_CTRL_GET_DESC_FROM_CMD:
-        return strlen(strcpy(s, cdp->cmd_desc == NULL ? int_no_description
+        case ENGINE_CTRL_GET_DESC_FROM_CMD:
+            return strlen(strcpy(s, cdp->cmd_desc == NULL ? int_no_description
                                                       : cdp->cmd_desc));
-    case ENGINE_CTRL_GET_CMD_FLAGS:
-        return cdp->cmd_flags;
+        case ENGINE_CTRL_GET_CMD_FLAGS:
+            return cdp->cmd_flags;
     }
     /* Shouldn't really be here ... */
     ERR_raise(ERR_LIB_ENGINE, ENGINE_R_INTERNAL_LIST_ERROR);
@@ -141,29 +141,29 @@ int ENGINE_ctrl(ENGINE *e, int cmd, long i, void *p, void (*f) (void))
      * ctrl() handlers.
      */
     switch (cmd) {
-    case ENGINE_CTRL_HAS_CTRL_FUNCTION:
-        return ctrl_exists;
-    case ENGINE_CTRL_GET_FIRST_CMD_TYPE:
-    case ENGINE_CTRL_GET_NEXT_CMD_TYPE:
-    case ENGINE_CTRL_GET_CMD_FROM_NAME:
-    case ENGINE_CTRL_GET_NAME_LEN_FROM_CMD:
-    case ENGINE_CTRL_GET_NAME_FROM_CMD:
-    case ENGINE_CTRL_GET_DESC_LEN_FROM_CMD:
-    case ENGINE_CTRL_GET_DESC_FROM_CMD:
-    case ENGINE_CTRL_GET_CMD_FLAGS:
-        if (ctrl_exists && !(e->flags & ENGINE_FLAGS_MANUAL_CMD_CTRL))
-            return int_ctrl_helper(e, cmd, i, p, f);
-        if (!ctrl_exists) {
-            ERR_raise(ERR_LIB_ENGINE, ENGINE_R_NO_CONTROL_FUNCTION);
-            /*
-             * For these cmd-related functions, failure is indicated by a -1
-             * return value (because 0 is used as a valid return in some
-             * places).
-             */
-            return -1;
-        }
-    default:
-        break;
+        case ENGINE_CTRL_HAS_CTRL_FUNCTION:
+            return ctrl_exists;
+        case ENGINE_CTRL_GET_FIRST_CMD_TYPE:
+        case ENGINE_CTRL_GET_NEXT_CMD_TYPE:
+        case ENGINE_CTRL_GET_CMD_FROM_NAME:
+        case ENGINE_CTRL_GET_NAME_LEN_FROM_CMD:
+        case ENGINE_CTRL_GET_NAME_FROM_CMD:
+        case ENGINE_CTRL_GET_DESC_LEN_FROM_CMD:
+        case ENGINE_CTRL_GET_DESC_FROM_CMD:
+        case ENGINE_CTRL_GET_CMD_FLAGS:
+            if (ctrl_exists && !(e->flags & ENGINE_FLAGS_MANUAL_CMD_CTRL))
+                return int_ctrl_helper(e, cmd, i, p, f);
+            if (!ctrl_exists) {
+                ERR_raise(ERR_LIB_ENGINE, ENGINE_R_NO_CONTROL_FUNCTION);
+                /*
+                 * For these cmd-related functions, failure is indicated by a -1
+                 * return value (because 0 is used as a valid return in some
+                 * places).
+                 */
+                return -1;
+            }
+        default:
+            break;
     }
     /* Anything else requires a ctrl() handler to exist. */
     if (!ctrl_exists) {
@@ -177,7 +177,7 @@ int ENGINE_cmd_is_executable(ENGINE *e, int cmd)
 {
     int flags;
     if ((flags =
-         ENGINE_ctrl(e, ENGINE_CTRL_GET_CMD_FLAGS, cmd, NULL, NULL)) < 0) {
+             ENGINE_ctrl(e, ENGINE_CTRL_GET_CMD_FLAGS, cmd, NULL, NULL)) < 0) {
         ERR_raise(ERR_LIB_ENGINE, ENGINE_R_INVALID_CMD_NUMBER);
         return 0;
     }

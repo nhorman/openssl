@@ -123,7 +123,7 @@ static int bind_helper(ENGINE *e)
         || !ossl_register_hmac_meth()
         || !ENGINE_set_pkey_meths(e, ossl_pkey_meths)
 #endif
-        )
+       )
         return 0;
     /*
      * If we add errors to this ENGINE, ensure the error handling is setup
@@ -181,7 +181,7 @@ static int bind_fn(ENGINE *e, const char *id)
 }
 
 IMPLEMENT_DYNAMIC_CHECK_FN()
-    IMPLEMENT_DYNAMIC_BIND_FN(bind_fn)
+IMPLEMENT_DYNAMIC_BIND_FN(bind_fn)
 #endif                          /* ENGINE_DYNAMIC_SUPPORT */
 #ifdef TEST_ENG_OPENSSL_RC4
 /*-
@@ -233,12 +233,14 @@ static const EVP_CIPHER *test_r4_cipher(void)
     if (r4_cipher == NULL) {
         EVP_CIPHER *cipher;
 
-        if ((cipher = EVP_CIPHER_meth_new(NID_rc4, 1, TEST_RC4_KEY_SIZE)) == NULL
+        if ((cipher =
+                 EVP_CIPHER_meth_new(NID_rc4, 1, TEST_RC4_KEY_SIZE)) == NULL
             || !EVP_CIPHER_meth_set_iv_length(cipher, 0)
             || !EVP_CIPHER_meth_set_flags(cipher, EVP_CIPH_VARIABLE_LENGTH)
             || !EVP_CIPHER_meth_set_init(cipher, test_rc4_init_key)
             || !EVP_CIPHER_meth_set_do_cipher(cipher, test_rc4_cipher)
-            || !EVP_CIPHER_meth_set_impl_ctx_size(cipher, sizeof(TEST_RC4_KEY))) {
+            || !EVP_CIPHER_meth_set_impl_ctx_size(cipher,
+                                                  sizeof(TEST_RC4_KEY))) {
             EVP_CIPHER_meth_free(cipher);
             cipher = NULL;
         }
@@ -263,7 +265,8 @@ static const EVP_CIPHER *test_r4_40_cipher(void)
             || !EVP_CIPHER_meth_set_flags(cipher, EVP_CIPH_VARIABLE_LENGTH)
             || !EVP_CIPHER_meth_set_init(cipher, test_rc4_init_key)
             || !EVP_CIPHER_meth_set_do_cipher(cipher, test_rc4_cipher)
-            || !EVP_CIPHER_meth_set_impl_ctx_size(cipher, sizeof(TEST_RC4_KEY))) {
+            || !EVP_CIPHER_meth_set_impl_ctx_size(cipher,
+                                                  sizeof(TEST_RC4_KEY))) {
             EVP_CIPHER_meth_free(cipher);
             cipher = NULL;
         }
@@ -520,7 +523,8 @@ static int ossl_hmac_keygen(EVP_PKEY_CTX *ctx, EVP_PKEY *pkey)
 
 static int ossl_int_update(EVP_MD_CTX *ctx, const void *data, size_t count)
 {
-    OSSL_HMAC_PKEY_CTX *hctx = EVP_PKEY_CTX_get_data(EVP_MD_CTX_get_pkey_ctx(ctx));
+    OSSL_HMAC_PKEY_CTX *hctx = EVP_PKEY_CTX_get_data(EVP_MD_CTX_get_pkey_ctx(
+                                                         ctx));
     if (!HMAC_Update(hctx->ctx, data, count))
         return 0;
     return 1;
@@ -559,26 +563,27 @@ static int ossl_hmac_ctrl(EVP_PKEY_CTX *ctx, int type, int p1, void *p2)
     ASN1_OCTET_STRING *key;
     switch (type) {
 
-    case EVP_PKEY_CTRL_SET_MAC_KEY:
-        if ((!p2 && p1 > 0) || (p1 < -1))
-            return 0;
-        if (!ASN1_OCTET_STRING_set(&hctx->ktmp, p2, p1))
-            return 0;
-        break;
+        case EVP_PKEY_CTRL_SET_MAC_KEY:
+            if ((!p2 && p1 > 0) || (p1 < -1))
+                return 0;
+            if (!ASN1_OCTET_STRING_set(&hctx->ktmp, p2, p1))
+                return 0;
+            break;
 
-    case EVP_PKEY_CTRL_MD:
-        hctx->md = p2;
-        break;
+        case EVP_PKEY_CTRL_MD:
+            hctx->md = p2;
+            break;
 
-    case EVP_PKEY_CTRL_DIGESTINIT:
-        pk = EVP_PKEY_CTX_get0_pkey(ctx);
-        key = EVP_PKEY_get0(pk);
-        if (!HMAC_Init_ex(hctx->ctx, key->data, key->length, hctx->md, NULL))
-            return 0;
-        break;
+        case EVP_PKEY_CTRL_DIGESTINIT:
+            pk = EVP_PKEY_CTX_get0_pkey(ctx);
+            key = EVP_PKEY_get0(pk);
+            if (!HMAC_Init_ex(hctx->ctx, key->data, key->length, hctx->md,
+                              NULL))
+                return 0;
+            break;
 
-    default:
-        return -2;
+        default:
+            return -2;
 
     }
     return 1;

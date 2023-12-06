@@ -291,14 +291,14 @@ int X509V3_add1_i2d(STACK_OF(X509_EXTENSION) **x, int nid, void *value,
     *x = ret;
     return 1;
 
- m_fail:
+m_fail:
     /* ERR_raise(ERR_LIB_X509V3, ERR_R_CRYPTO_LIB); */
     if (ret != *x)
         sk_X509_EXTENSION_free(ret);
     X509_EXTENSION_free(ext);
     return -1;
 
- err:
+err:
     if (!(flags & X509V3_ADD_SILENT))
         ERR_raise(ERR_LIB_X509V3, errcode);
     return 0;

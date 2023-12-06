@@ -42,7 +42,7 @@ static int idea_ecb_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
                            const unsigned char *in, size_t inl)
 {
     BLOCK_CIPHER_ecb_loop()
-        IDEA_ecb_encrypt(in + i, out + i, &EVP_C_DATA(EVP_IDEA_KEY, ctx)->ks);
+    IDEA_ecb_encrypt(in + i, out + i, &EVP_C_DATA(EVP_IDEA_KEY, ctx)->ks);
     return 1;
 }
 

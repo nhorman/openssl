@@ -167,11 +167,11 @@ static int cmac_get_ctx_params(void *vmacctx, OSSL_PARAM params[])
     OSSL_PARAM *p;
 
     if ((p = OSSL_PARAM_locate(params, OSSL_MAC_PARAM_SIZE)) != NULL
-            && !OSSL_PARAM_set_size_t(p, cmac_size(vmacctx)))
+        && !OSSL_PARAM_set_size_t(p, cmac_size(vmacctx)))
         return 0;
 
     if ((p = OSSL_PARAM_locate(params, OSSL_MAC_PARAM_BLOCK_SIZE)) != NULL
-            && !OSSL_PARAM_set_size_t(p, cmac_size(vmacctx)))
+        && !OSSL_PARAM_set_size_t(p, cmac_size(vmacctx)))
         return 0;
 
     return 1;
@@ -221,17 +221,17 @@ static int cmac_set_ctx_params(void *vmacctx, const OSSL_PARAM params[])
 }
 
 const OSSL_DISPATCH ossl_cmac_functions[] = {
-    { OSSL_FUNC_MAC_NEWCTX, (void (*)(void))cmac_new },
-    { OSSL_FUNC_MAC_DUPCTX, (void (*)(void))cmac_dup },
-    { OSSL_FUNC_MAC_FREECTX, (void (*)(void))cmac_free },
-    { OSSL_FUNC_MAC_INIT, (void (*)(void))cmac_init },
-    { OSSL_FUNC_MAC_UPDATE, (void (*)(void))cmac_update },
-    { OSSL_FUNC_MAC_FINAL, (void (*)(void))cmac_final },
+    { OSSL_FUNC_MAC_NEWCTX, (void (*)(void)) cmac_new },
+    { OSSL_FUNC_MAC_DUPCTX, (void (*)(void)) cmac_dup },
+    { OSSL_FUNC_MAC_FREECTX, (void (*)(void)) cmac_free },
+    { OSSL_FUNC_MAC_INIT, (void (*)(void)) cmac_init },
+    { OSSL_FUNC_MAC_UPDATE, (void (*)(void)) cmac_update },
+    { OSSL_FUNC_MAC_FINAL, (void (*)(void)) cmac_final },
     { OSSL_FUNC_MAC_GETTABLE_CTX_PARAMS,
-      (void (*)(void))cmac_gettable_ctx_params },
-    { OSSL_FUNC_MAC_GET_CTX_PARAMS, (void (*)(void))cmac_get_ctx_params },
+      (void (*)(void)) cmac_gettable_ctx_params },
+    { OSSL_FUNC_MAC_GET_CTX_PARAMS, (void (*)(void)) cmac_get_ctx_params },
     { OSSL_FUNC_MAC_SETTABLE_CTX_PARAMS,
-      (void (*)(void))cmac_settable_ctx_params },
-    { OSSL_FUNC_MAC_SET_CTX_PARAMS, (void (*)(void))cmac_set_ctx_params },
+      (void (*)(void)) cmac_settable_ctx_params },
+    { OSSL_FUNC_MAC_SET_CTX_PARAMS, (void (*)(void)) cmac_set_ctx_params },
     OSSL_DISPATCH_END
 };

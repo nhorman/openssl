@@ -16,7 +16,8 @@
 #include "provider_local.h"
 
 OSSL_PROVIDER *OSSL_PROVIDER_try_load_ex(OSSL_LIB_CTX *libctx, const char *name,
-                                         OSSL_PARAM *params, int retain_fallbacks)
+                                         OSSL_PARAM *params,
+                                         int retain_fallbacks)
 {
     OSSL_PROVIDER *prov = NULL, *actual;
     int isnew = 0;
@@ -55,7 +56,8 @@ OSSL_PROVIDER *OSSL_PROVIDER_try_load(OSSL_LIB_CTX *libctx, const char *name,
     return OSSL_PROVIDER_try_load_ex(libctx, name, NULL, retain_fallbacks);
 }
 
-OSSL_PROVIDER *OSSL_PROVIDER_load_ex(OSSL_LIB_CTX *libctx, const char *name, OSSL_PARAM *params)
+OSSL_PROVIDER *OSSL_PROVIDER_load_ex(OSSL_LIB_CTX *libctx, const char *name,
+                                     OSSL_PARAM *params)
 {
     /* Any attempt to load a provider disables auto-loading of defaults */
     if (ossl_provider_disable_fallback_loading(libctx))

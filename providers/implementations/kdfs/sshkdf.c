@@ -95,17 +95,17 @@ static void *kdf_sshkdf_dup(void *vctx)
     if (dest != NULL) {
         if (!ossl_prov_memdup(src->key, src->key_len,
                               &dest->key, &dest->key_len)
-                || !ossl_prov_memdup(src->xcghash, src->xcghash_len,
-                                     &dest->xcghash , &dest->xcghash_len)
-                || !ossl_prov_memdup(src->session_id, src->session_id_len,
-                                     &dest->session_id , &dest->session_id_len)
-                || !ossl_prov_digest_copy(&dest->digest, &src->digest))
+            || !ossl_prov_memdup(src->xcghash, src->xcghash_len,
+                                 &dest->xcghash, &dest->xcghash_len)
+            || !ossl_prov_memdup(src->session_id, src->session_id_len,
+                                 &dest->session_id, &dest->session_id_len)
+            || !ossl_prov_digest_copy(&dest->digest, &src->digest))
             goto err;
         dest->type = src->type;
     }
     return dest;
 
- err:
+err:
     kdf_sshkdf_free(dest);
     return NULL;
 }
@@ -234,17 +234,19 @@ static const OSSL_PARAM *kdf_sshkdf_gettable_ctx_params(ossl_unused void *ctx,
 }
 
 const OSSL_DISPATCH ossl_kdf_sshkdf_functions[] = {
-    { OSSL_FUNC_KDF_NEWCTX, (void(*)(void))kdf_sshkdf_new },
-    { OSSL_FUNC_KDF_DUPCTX, (void(*)(void))kdf_sshkdf_dup },
-    { OSSL_FUNC_KDF_FREECTX, (void(*)(void))kdf_sshkdf_free },
-    { OSSL_FUNC_KDF_RESET, (void(*)(void))kdf_sshkdf_reset },
-    { OSSL_FUNC_KDF_DERIVE, (void(*)(void))kdf_sshkdf_derive },
+    { OSSL_FUNC_KDF_NEWCTX, (void (*)(void)) kdf_sshkdf_new },
+    { OSSL_FUNC_KDF_DUPCTX, (void (*)(void)) kdf_sshkdf_dup },
+    { OSSL_FUNC_KDF_FREECTX, (void (*)(void)) kdf_sshkdf_free },
+    { OSSL_FUNC_KDF_RESET, (void (*)(void)) kdf_sshkdf_reset },
+    { OSSL_FUNC_KDF_DERIVE, (void (*)(void)) kdf_sshkdf_derive },
     { OSSL_FUNC_KDF_SETTABLE_CTX_PARAMS,
-      (void(*)(void))kdf_sshkdf_settable_ctx_params },
-    { OSSL_FUNC_KDF_SET_CTX_PARAMS, (void(*)(void))kdf_sshkdf_set_ctx_params },
+      (void (*)(void)) kdf_sshkdf_settable_ctx_params },
+    { OSSL_FUNC_KDF_SET_CTX_PARAMS,
+      (void (*)(void)) kdf_sshkdf_set_ctx_params },
     { OSSL_FUNC_KDF_GETTABLE_CTX_PARAMS,
-      (void(*)(void))kdf_sshkdf_gettable_ctx_params },
-    { OSSL_FUNC_KDF_GET_CTX_PARAMS, (void(*)(void))kdf_sshkdf_get_ctx_params },
+      (void (*)(void)) kdf_sshkdf_gettable_ctx_params },
+    { OSSL_FUNC_KDF_GET_CTX_PARAMS,
+      (void (*)(void)) kdf_sshkdf_get_ctx_params },
     OSSL_DISPATCH_END
 };
 

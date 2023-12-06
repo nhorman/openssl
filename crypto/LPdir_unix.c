@@ -123,7 +123,7 @@ const char *LP_find_file(LP_DIR_CTX **ctx, const char *directory)
     strncpy((*ctx)->previous_entry_name, (*ctx)->entry_name,
             sizeof((*ctx)->previous_entry_name));
 
- again:
+again:
 #endif
 
     direntry = readdir((*ctx)->dir);
@@ -156,12 +156,12 @@ int LP_find_file_end(LP_DIR_CTX **ctx)
 
         free(*ctx);
         switch (ret) {
-        case 0:
-            return 1;
-        case -1:
-            return 0;
-        default:
-            break;
+            case 0:
+                return 1;
+            case -1:
+                return 0;
+            default:
+                break;
         }
     }
     errno = EINVAL;

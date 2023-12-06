@@ -48,9 +48,9 @@ int ossl_dh_generate_ffc_parameters(DH *dh, int type, int pbits, int qbits,
                                                  pbits, qbits, &res, cb);
     else
 #endif
-        ret = ossl_ffc_params_FIPS186_4_generate(dh->libctx, &dh->params,
-                                                 FFC_PARAM_TYPE_DH,
-                                                 pbits, qbits, &res, cb);
+    ret = ossl_ffc_params_FIPS186_4_generate(dh->libctx, &dh->params,
+                                             FFC_PARAM_TYPE_DH,
+                                             pbits, qbits, &res, cb);
     if (ret > 0)
         dh->dirty_cnt++;
     return ret;
@@ -68,24 +68,24 @@ int ossl_dh_get_named_group_uid_from_size(int pbits)
     int nid;
 
     switch (pbits) {
-    case 2048:
-        nid = NID_ffdhe2048;
-        break;
-    case 3072:
-        nid = NID_ffdhe3072;
-        break;
-    case 4096:
-        nid = NID_ffdhe4096;
-        break;
-    case 6144:
-        nid = NID_ffdhe6144;
-        break;
-    case 8192:
-        nid = NID_ffdhe8192;
-        break;
-    /* unsupported prime_len */
-    default:
-        return NID_undef;
+        case 2048:
+            nid = NID_ffdhe2048;
+            break;
+        case 3072:
+            nid = NID_ffdhe3072;
+            break;
+        case 4096:
+            nid = NID_ffdhe4096;
+            break;
+        case 6144:
+            nid = NID_ffdhe6144;
+            break;
+        case 8192:
+            nid = NID_ffdhe8192;
+            break;
+        /* unsupported prime_len */
+        default:
+            return NID_undef;
     }
     return nid;
 }
@@ -225,7 +225,7 @@ static int dh_builtin_genparams(DH *ret, int prime_len, int generator,
                    + 24) / 25 * 25;
     ret->dirty_cnt++;
     ok = 1;
- err:
+err:
     if (ok == -1) {
         ERR_raise(ERR_LIB_DH, ERR_R_BN_LIB);
         ok = 0;

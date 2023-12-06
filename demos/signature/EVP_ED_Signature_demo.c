@@ -51,7 +51,8 @@ static int demo_sign(EVP_PKEY *priv,
      * For more information, refer to doc/man7/EVP_SIGNATURE-ED25519.pod
      * "ED25519 and ED448 Signature Parameters"
      */
-    if (!EVP_DigestSignInit_ex(sign_context, NULL, NULL, libctx, NULL, priv, NULL)) {
+    if (!EVP_DigestSignInit_ex(sign_context, NULL, NULL, libctx, NULL, priv,
+                               NULL)) {
         fprintf(stderr, "EVP_DigestSignInit_ex failed.\n");
         goto cleanup;
     }
@@ -151,7 +152,8 @@ static int create_key(OSSL_LIB_CTX *libctx,
         fprintf(stderr, "EVP_PKEY_get_octet_string_param() failed\n");
         goto end;
     }
-    pub = EVP_PKEY_new_raw_public_key_ex(libctx, "ED25519", NULL, pubdata, pubdata_len);
+    pub = EVP_PKEY_new_raw_public_key_ex(libctx, "ED25519", NULL, pubdata,
+                                         pubdata_len);
     if (pub == NULL) {
         fprintf(stderr, "EVP_PKEY_new_raw_public_key_ex() failed\n");
         goto end;

@@ -22,7 +22,7 @@ static int i2r_NO_REV_AVAIL(X509V3_EXT_METHOD *method,
 }
 
 static void *r2i_NO_REV_AVAIL(X509V3_EXT_METHOD *method,
-                            X509V3_CTX *ctx, const char *value)
+                              X509V3_CTX *ctx, const char *value)
 {
     return ASN1_NULL_new();
 }
@@ -32,7 +32,8 @@ static char *i2s_NO_REV_AVAIL(const X509V3_EXT_METHOD *method, void *val)
     return OPENSSL_strdup("NULL");
 }
 
-static void *s2i_NO_REV_AVAIL(const X509V3_EXT_METHOD *method, X509V3_CTX *ctx, const char *str)
+static void *s2i_NO_REV_AVAIL(const X509V3_EXT_METHOD *method, X509V3_CTX *ctx,
+                              const char *str)
 {
     return ASN1_NULL_new();
 }

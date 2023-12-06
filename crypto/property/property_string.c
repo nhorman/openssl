@@ -110,11 +110,11 @@ void *ossl_property_string_data_new(OSSL_LIB_CTX *ctx) {
 #endif
     if (propdata->lock == NULL
 #ifndef OPENSSL_SMALL_FOOTPRINT
-            || propdata->prop_namelist == NULL
-            || propdata->prop_valuelist == NULL
+        || propdata->prop_namelist == NULL
+        || propdata->prop_valuelist == NULL
 #endif
-            || propdata->prop_names == NULL
-            || propdata->prop_values == NULL) {
+        || propdata->prop_names == NULL
+        || propdata->prop_values == NULL) {
         ossl_property_string_data_free(propdata);
         return NULL;
     }

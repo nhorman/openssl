@@ -61,8 +61,8 @@ static int x509_pubkey_set0_libctx(X509_PUBKEY *x, OSSL_LIB_CTX *libctx,
 }
 
 ASN1_SEQUENCE(X509_PUBKEY_INTERNAL) = {
-        ASN1_SIMPLE(X509_PUBKEY, algor, X509_ALGOR),
-        ASN1_SIMPLE(X509_PUBKEY, public_key, ASN1_BIT_STRING)
+    ASN1_SIMPLE(X509_PUBKEY, algor, X509_ALGOR),
+    ASN1_SIMPLE(X509_PUBKEY, public_key, ASN1_BIT_STRING)
 } static_ASN1_SEQUENCE_END_name(X509_PUBKEY, X509_PUBKEY_INTERNAL)
 
 X509_PUBKEY *ossl_d2i_X509_PUBKEY_INTERNAL(const unsigned char **pp,
@@ -103,8 +103,8 @@ static int x509_pubkey_ex_populate(ASN1_VALUE **pval, const ASN1_ITEM *it)
 
     return (pubkey->algor != NULL
             || (pubkey->algor = X509_ALGOR_new()) != NULL)
-        && (pubkey->public_key != NULL
-            || (pubkey->public_key = ASN1_BIT_STRING_new()) != NULL);
+           && (pubkey->public_key != NULL
+               || (pubkey->public_key = ASN1_BIT_STRING_new()) != NULL);
 }
 
 
@@ -187,9 +187,9 @@ static int x509_pubkey_ex_d2i_ex(ASN1_VALUE **pval,
         size_t slen = publen;
 
         /*
-        * The decoders don't know how to handle anything other than Universal
-        * class so we modify the data accordingly.
-        */
+         * The decoders don't know how to handle anything other than Universal
+         * class so we modify the data accordingly.
+         */
         if (aclass != V_ASN1_UNIVERSAL) {
             tmpbuf = OPENSSL_memdup(in_saved, publen);
             if (tmpbuf == NULL)
@@ -205,11 +205,11 @@ static int x509_pubkey_ex_d2i_ex(ASN1_VALUE **pval,
             goto end;
         }
         if ((dctx =
-             OSSL_DECODER_CTX_new_for_pkey(&pubkey->pkey,
-                                           "DER", "SubjectPublicKeyInfo",
-                                           txtoidname, EVP_PKEY_PUBLIC_KEY,
-                                           pubkey->libctx,
-                                           pubkey->propq)) != NULL)
+                 OSSL_DECODER_CTX_new_for_pkey(&pubkey->pkey,
+                                               "DER", "SubjectPublicKeyInfo",
+                                               txtoidname, EVP_PKEY_PUBLIC_KEY,
+                                               pubkey->libctx,
+                                               pubkey->propq)) != NULL)
             /*
              * As said higher up, we're being opportunistic.  In other words,
              * we don't care if we fail.
@@ -229,7 +229,7 @@ static int x509_pubkey_ex_d2i_ex(ASN1_VALUE **pval,
 
     ERR_pop_to_mark();
     ret = 1;
- end:
+end:
     OSSL_DECODER_CTX_free(dctx);
     OPENSSL_free(tmpbuf);
     return ret;
@@ -389,7 +389,7 @@ int X509_PUBKEY_set(X509_PUBKEY **x, EVP_PKEY *pkey)
     pk->pkey = pkey;
     return 1;
 
- error:
+error:
     X509_PUBKEY_free(pk);
     return 0;
 }
@@ -447,7 +447,7 @@ static int x509_pubkey_decode(EVP_PKEY **ppkey, const X509_PUBKEY *key)
     *ppkey = pkey;
     return 1;
 
- error:
+error:
     EVP_PKEY_free(pkey);
     return 0;
 }
@@ -525,7 +525,7 @@ static EVP_PKEY *d2i_PUBKEY_int(EVP_PKEY **a,
         EVP_PKEY_free(*a);
         *a = pktmp;
     }
- end:
+end:
     X509_PUBKEY_free(xpk2);
     return pktmp;
 }
@@ -1004,7 +1004,7 @@ int ossl_i2d_X448_PUBKEY(const ECX_KEY *a, unsigned char **pp)
     return ret;
 }
 
-# endif /* OPENSSL_NO_ECX */ 
+# endif /* OPENSSL_NO_ECX */
 #endif
 
 void X509_PUBKEY_set0_public_key(X509_PUBKEY *pub,

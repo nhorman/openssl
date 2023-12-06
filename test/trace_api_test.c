@@ -23,9 +23,9 @@ static int test_trace_categories(void)
 
         switch (cat_num) {
 #define CASE(name) \
-        case OSSL_TRACE_CATEGORY_##name: \
-            is_cat_name_eq = TEST_str_eq(cat_name, #name); \
-            break
+            case OSSL_TRACE_CATEGORY_ ## name: \
+                is_cat_name_eq = TEST_str_eq(cat_name, #name); \
+                break
 
         CASE(ALL);
         CASE(TRACE);
@@ -47,9 +47,9 @@ static int test_trace_categories(void)
         CASE(REF_COUNT);
         CASE(HTTP);
 #undef CASE
-        default:
-            is_cat_name_eq = TEST_ptr_null(cat_name);
-            break;
+            default:
+                is_cat_name_eq = TEST_ptr_null(cat_name);
+                break;
         }
 
         if (!TEST_true(is_cat_name_eq))
@@ -69,15 +69,17 @@ static int test_trace_categories(void)
 # define OSSL_START "xyz-"
 # define OSSL_HELLO "Hello World\n"
 /* OSSL_STR80 must have length OSSL_TRACE_STRING_MAX */
-# define OSSL_STR80 "1234567890123456789012345678901234567890123456789012345678901234567890123456789\n"
-# define OSSL_STR81 (OSSL_STR80"x")
+# define OSSL_STR80 \
+        "1234567890123456789012345678901234567890123456789012345678901234567890123456789\n"
+# define OSSL_STR81 (OSSL_STR80 "x")
 # define OSSL_CTRL "A\xfe\nB"
 # define OSSL_MASKED "A \nB"
 # define OSSL_BYE "Good Bye Universe\n"
 # define OSSL_END "-abc"
 
 # define trace_string(text, full, str) \
-    OSSL_trace_string(trc_out, text, full, (unsigned char *)(str), strlen(str))
+        OSSL_trace_string(trc_out, text, full, (unsigned char *)(str), \
+                          strlen(str))
 
 static int put_trace_output(void)
 {
@@ -100,9 +102,9 @@ static int put_trace_output(void)
 static int test_trace_channel(void)
 {
     static const char expected[] =
-        OSSL_START"\n" OSSL_HELLO
+        OSSL_START "\n" OSSL_HELLO
         OSSL_STR80 "[len 81 limited to 80]: "OSSL_STR80
-        OSSL_CTRL OSSL_MASKED"\n" OSSL_BYE OSSL_END"\n";
+        OSSL_CTRL OSSL_MASKED "\n" OSSL_BYE OSSL_END "\n";
     static const size_t expected_len = sizeof(expected) - 1;
     BIO *bio = NULL;
     char *p_buf = NULL;
@@ -113,7 +115,8 @@ static int test_trace_channel(void)
     if (!TEST_ptr(bio))
         goto end;
 
-    if (!TEST_int_eq(OSSL_trace_set_channel(OSSL_TRACE_CATEGORY_HTTP, bio), 1)) {
+    if (!TEST_int_eq(OSSL_trace_set_channel(OSSL_TRACE_CATEGORY_HTTP, bio),
+                     1)) {
         BIO_free(bio);
         goto end;
     }
@@ -133,9 +136,9 @@ static int test_trace_channel(void)
     if (!TEST_strn2_eq(p_buf, len, expected, expected_len))
         ret = 0;
     ret = TEST_int_eq(OSSL_trace_set_channel(OSSL_TRACE_CATEGORY_HTTP, NULL), 1)
-        && ret;
+          && ret;
 
- end:
+end:
     return ret;
 }
 
@@ -165,7 +168,7 @@ static int test_trace_callback(void)
         goto end;
 
     ret = 1;
- end:
+end:
     return ret;
 }
 #endif

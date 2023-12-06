@@ -15,14 +15,14 @@
 #include "ext_dat.h"
 
 static int i2r_SINGLE_USE(X509V3_EXT_METHOD *method,
-                        void *su, BIO *out,
-                        int indent)
+                          void *su, BIO *out,
+                          int indent)
 {
     return 1;
 }
 
 static void *r2i_SINGLE_USE(X509V3_EXT_METHOD *method,
-                          X509V3_CTX *ctx, const char *value)
+                            X509V3_CTX *ctx, const char *value)
 {
     return ASN1_NULL_new();
 }
@@ -32,7 +32,8 @@ static char *i2s_SINGLE_USE(const X509V3_EXT_METHOD *method, void *val)
     return OPENSSL_strdup("NULL");
 }
 
-static void *s2i_SINGLE_USE(const X509V3_EXT_METHOD *method, X509V3_CTX *ctx, const char *str)
+static void *s2i_SINGLE_USE(const X509V3_EXT_METHOD *method, X509V3_CTX *ctx,
+                            const char *str)
 {
     return ASN1_NULL_new();
 }

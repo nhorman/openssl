@@ -85,7 +85,7 @@ extern "C" {
 struct X509_algor_st {
     ASN1_OBJECT *algorithm;
     ASN1_TYPE *parameter;
-} /* X509_ALGOR */ ;
+} /* X509_ALGOR */;
 
 typedef STACK_OF(X509_ALGOR) X509_ALGORS;
 
@@ -179,27 +179,27 @@ typedef struct x509_cinf_st X509_CINF;
 /* Complete set of RFC2253 flags */
 
 # define XN_FLAG_RFC2253 (ASN1_STRFLGS_RFC2253 | \
-                        XN_FLAG_SEP_COMMA_PLUS | \
-                        XN_FLAG_DN_REV | \
-                        XN_FLAG_FN_SN | \
-                        XN_FLAG_DUMP_UNKNOWN_FIELDS)
+                          XN_FLAG_SEP_COMMA_PLUS | \
+                          XN_FLAG_DN_REV | \
+                          XN_FLAG_FN_SN | \
+                          XN_FLAG_DUMP_UNKNOWN_FIELDS)
 
 /* readable oneline form */
 
 # define XN_FLAG_ONELINE (ASN1_STRFLGS_RFC2253 | \
-                        ASN1_STRFLGS_ESC_QUOTE | \
-                        XN_FLAG_SEP_CPLUS_SPC | \
-                        XN_FLAG_SPC_EQ | \
-                        XN_FLAG_FN_SN)
+                          ASN1_STRFLGS_ESC_QUOTE | \
+                          XN_FLAG_SEP_CPLUS_SPC | \
+                          XN_FLAG_SPC_EQ | \
+                          XN_FLAG_FN_SN)
 
 /* readable multiline form */
 
 # define XN_FLAG_MULTILINE (ASN1_STRFLGS_ESC_CTRL | \
-                        ASN1_STRFLGS_ESC_MSB | \
-                        XN_FLAG_SEP_MULTILINE | \
-                        XN_FLAG_SPC_EQ | \
-                        XN_FLAG_FN_LN | \
-                        XN_FLAG_FN_ALIGN)
+                            ASN1_STRFLGS_ESC_MSB | \
+                            XN_FLAG_SEP_MULTILINE | \
+                            XN_FLAG_SPC_EQ | \
+                            XN_FLAG_FN_LN | \
+                            XN_FLAG_FN_ALIGN)
 
 typedef struct X509_crl_info_st X509_CRL_INFO;
 
@@ -254,11 +254,11 @@ typedef struct Netscape_certificate_sequence {
 } NETSCAPE_CERT_SEQUENCE;
 
 /*- Unused (and iv length is wrong)
-typedef struct CBCParameter_st
+   typedef struct CBCParameter_st
         {
         unsigned char iv[8];
         } CBC_PARAM;
-*/
+ */
 
 /* Password based encryption structure */
 
@@ -374,9 +374,9 @@ X509_CRL *X509_CRL_load_http(const char *url, BIO *bio, BIO *rbio, int timeout);
 # ifndef OPENSSL_NO_DEPRECATED_3_0
 #  include <openssl/http.h> /* OSSL_HTTP_REQ_CTX_nbio_d2i */
 #  define X509_http_nbio(rctx, pcert) \
-      OSSL_HTTP_REQ_CTX_nbio_d2i(rctx, pcert, ASN1_ITEM_rptr(X509))
+        OSSL_HTTP_REQ_CTX_nbio_d2i(rctx, pcert, ASN1_ITEM_rptr(X509))
 #  define X509_CRL_http_nbio(rctx, pcrl) \
-      OSSL_HTTP_REQ_CTX_nbio_d2i(rctx, pcrl, ASN1_ITEM_rptr(X509_CRL))
+        OSSL_HTTP_REQ_CTX_nbio_d2i(rctx, pcrl, ASN1_ITEM_rptr(X509_CRL))
 # endif
 
 # ifndef OPENSSL_NO_STDIO
@@ -540,7 +540,8 @@ DECLARE_ASN1_ENCODE_FUNCTIONS_only_attr(OSSL_DEPRECATEDIN_3_0,DSA, DSA_PUBKEY)
 # endif
 # ifndef OPENSSL_NO_DEPRECATED_3_0
 #  ifndef OPENSSL_NO_EC
-DECLARE_ASN1_ENCODE_FUNCTIONS_only_attr(OSSL_DEPRECATEDIN_3_0, EC_KEY, EC_PUBKEY)
+DECLARE_ASN1_ENCODE_FUNCTIONS_only_attr(OSSL_DEPRECATEDIN_3_0, EC_KEY,
+                                        EC_PUBKEY)
 #  endif
 # endif
 
@@ -572,7 +573,7 @@ X509 *X509_new_ex(OSSL_LIB_CTX *libctx, const char *propq);
 DECLARE_ASN1_FUNCTIONS(X509_CERT_AUX)
 
 #define X509_get_ex_new_index(l, p, newf, dupf, freef) \
-    CRYPTO_get_ex_new_index(CRYPTO_EX_INDEX_X509, l, p, newf, dupf, freef)
+        CRYPTO_get_ex_new_index(CRYPTO_EX_INDEX_X509, l, p, newf, dupf, freef)
 int X509_set_ex_data(X509 *r, int idx, void *arg);
 void *X509_get_ex_data(const X509 *r, int idx);
 DECLARE_ASN1_ENCODE_FUNCTIONS_only(X509,X509_AUX)
@@ -860,7 +861,8 @@ X509_NAME_ENTRY *X509_NAME_get_entry(const X509_NAME *name, int loc);
 X509_NAME_ENTRY *X509_NAME_delete_entry(X509_NAME *name, int loc);
 int X509_NAME_add_entry(X509_NAME *name, const X509_NAME_ENTRY *ne,
                         int loc, int set);
-int X509_NAME_add_entry_by_OBJ(X509_NAME *name, const ASN1_OBJECT *obj, int type,
+int X509_NAME_add_entry_by_OBJ(X509_NAME *name, const ASN1_OBJECT *obj,
+                               int type,
                                const unsigned char *bytes, int len, int loc,
                                int set);
 int X509_NAME_add_entry_by_NID(X509_NAME *name, int nid, int type,

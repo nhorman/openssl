@@ -28,11 +28,14 @@
 /* "HPKE" - "suite_id" label for section 5.1 */
 static const char OSSL_HPKE_SEC51LABEL[] = "\x48\x50\x4b\x45";
 /* "psk_id_hash" - in key_schedule_context */
-static const char OSSL_HPKE_PSKIDHASH_LABEL[] = "\x70\x73\x6b\x5f\x69\x64\x5f\x68\x61\x73\x68";
+static const char OSSL_HPKE_PSKIDHASH_LABEL[] =
+    "\x70\x73\x6b\x5f\x69\x64\x5f\x68\x61\x73\x68";
 /*  "info_hash" - in key_schedule_context */
-static const char OSSL_HPKE_INFOHASH_LABEL[] = "\x69\x6e\x66\x6f\x5f\x68\x61\x73\x68";
+static const char OSSL_HPKE_INFOHASH_LABEL[] =
+    "\x69\x6e\x66\x6f\x5f\x68\x61\x73\x68";
 /*  "base_nonce" - base nonce calc label */
-static const char OSSL_HPKE_NONCE_LABEL[] = "\x62\x61\x73\x65\x5f\x6e\x6f\x6e\x63\x65";
+static const char OSSL_HPKE_NONCE_LABEL[] =
+    "\x62\x61\x73\x65\x5f\x6e\x6f\x6e\x63\x65";
 /*  "exp" - internal exporter secret generation label */
 static const char OSSL_HPKE_EXP_LABEL[] = "\x65\x78\x70";
 /*  "sec" - external label for exporting secret */
@@ -295,13 +298,13 @@ err:
 static int hpke_mode_check(unsigned int mode)
 {
     switch (mode) {
-    case OSSL_HPKE_MODE_BASE:
-    case OSSL_HPKE_MODE_PSK:
-    case OSSL_HPKE_MODE_AUTH:
-    case OSSL_HPKE_MODE_PSKAUTH:
-        break;
-    default:
-        return 0;
+        case OSSL_HPKE_MODE_BASE:
+        case OSSL_HPKE_MODE_PSK:
+        case OSSL_HPKE_MODE_AUTH:
+        case OSSL_HPKE_MODE_PSKAUTH:
+            break;
+        default:
+            return 0;
     }
     return 1;
 }
@@ -840,7 +843,7 @@ OSSL_HPKE_CTX *OSSL_HPKE_CTX_new(int mode, OSSL_HPKE_SUITE suite, int role,
     ctx->aead_info = aead_info;
     return ctx;
 
- err:
+err:
     EVP_CIPHER_free(ctx->aead_ciph);
     OPENSSL_free(ctx);
     return NULL;

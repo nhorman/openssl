@@ -111,7 +111,8 @@ end:
  * arbitrary-length message using the PSS signature scheme. Hashing is performed
  * automatically.
  */
-static int verify(OSSL_LIB_CTX *libctx, const unsigned char *sig, size_t sig_len)
+static int verify(OSSL_LIB_CTX *libctx, const unsigned char *sig,
+                  size_t sig_len)
 {
     int ret = 0;
     EVP_PKEY *pkey = NULL;

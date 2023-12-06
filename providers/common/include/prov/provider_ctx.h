@@ -26,7 +26,7 @@ typedef struct prov_ctx_st {
  * fetching functions.
  */
 # define PROV_LIBCTX_OF(provctx)        \
-    ossl_prov_ctx_get0_libctx((provctx))
+        ossl_prov_ctx_get0_libctx((provctx))
 
 PROV_CTX *ossl_prov_ctx_new(void);
 void ossl_prov_ctx_free(PROV_CTX *ctx);

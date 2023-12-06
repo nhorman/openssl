@@ -81,7 +81,7 @@ int RSA_blinding_on(RSA *rsa, BN_CTX *ctx)
     rsa->flags |= RSA_FLAG_BLINDING;
     rsa->flags &= ~RSA_FLAG_NO_BLINDING;
     ret = 1;
- err:
+err:
     return ret;
 }
 
@@ -108,7 +108,7 @@ static BIGNUM *rsa_get_public_exp(const BIGNUM *d, const BIGNUM *p,
         goto err;
 
     ret = BN_mod_inverse(NULL, d, r0, ctx);
- err:
+err:
     BN_CTX_end(ctx);
     return ret;
 }
@@ -164,7 +164,7 @@ BN_BLINDING *RSA_setup_blinding(RSA *rsa, BN_CTX *in_ctx)
 
     BN_BLINDING_set_current_thread(ret);
 
- err:
+err:
     BN_CTX_end(ctx);
     if (ctx != in_ctx)
         BN_CTX_free(ctx);

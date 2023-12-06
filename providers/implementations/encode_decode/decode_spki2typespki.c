@@ -23,7 +23,8 @@
 static OSSL_FUNC_decoder_newctx_fn spki2typespki_newctx;
 static OSSL_FUNC_decoder_freectx_fn spki2typespki_freectx;
 static OSSL_FUNC_decoder_decode_fn spki2typespki_decode;
-static OSSL_FUNC_decoder_settable_ctx_params_fn spki2typespki_settable_ctx_params;
+static OSSL_FUNC_decoder_settable_ctx_params_fn
+    spki2typespki_settable_ctx_params;
 static OSSL_FUNC_decoder_set_ctx_params_fn spki2typespki_set_ctx_params;
 
 /*
@@ -51,7 +52,8 @@ static void spki2typespki_freectx(void *vctx)
     OPENSSL_free(ctx);
 }
 
-static const OSSL_PARAM *spki2typespki_settable_ctx_params(ossl_unused void *provctx)
+static const OSSL_PARAM *spki2typespki_settable_ctx_params(
+    ossl_unused void *provctx)
 {
     static const OSSL_PARAM settables[] = {
         OSSL_PARAM_utf8_string(OSSL_DECODER_PARAM_PROPERTIES, NULL, 0),
@@ -108,7 +110,7 @@ static int spki2typespki_decode(void *vctx, OSSL_CORE_BIO *cin, int selection,
 #ifndef OPENSSL_NO_EC
     /* SM2 abuses the EC oid, so this could actually be SM2 */
     if (OBJ_obj2nid(oid) == NID_X9_62_id_ecPublicKey
-            && ossl_x509_algor_is_sm2(algor))
+        && ossl_x509_algor_is_sm2(algor))
         strcpy(dataname, "SM2");
     else
 #endif
@@ -120,12 +122,12 @@ static int spki2typespki_decode(void *vctx, OSSL_CORE_BIO *cin, int selection,
 
     *p++ =
         OSSL_PARAM_construct_utf8_string(OSSL_OBJECT_PARAM_DATA_TYPE,
-                                            dataname, 0);
+                                         dataname, 0);
 
     *p++ =
         OSSL_PARAM_construct_utf8_string(OSSL_OBJECT_PARAM_DATA_STRUCTURE,
-                                            "SubjectPublicKeyInfo",
-                                            0);
+                                         "SubjectPublicKeyInfo",
+                                         0);
     *p++ =
         OSSL_PARAM_construct_octet_string(OSSL_OBJECT_PARAM_DATA, der, len);
     *p++ =
@@ -135,19 +137,19 @@ static int spki2typespki_decode(void *vctx, OSSL_CORE_BIO *cin, int selection,
 
     ok = data_cb(params, data_cbarg);
 
- end:
+end:
     ossl_X509_PUBKEY_INTERNAL_free(xpub);
     OPENSSL_free(der);
     return ok;
 }
 
 const OSSL_DISPATCH ossl_SubjectPublicKeyInfo_der_to_der_decoder_functions[] = {
-    { OSSL_FUNC_DECODER_NEWCTX, (void (*)(void))spki2typespki_newctx },
-    { OSSL_FUNC_DECODER_FREECTX, (void (*)(void))spki2typespki_freectx },
-    { OSSL_FUNC_DECODER_DECODE, (void (*)(void))spki2typespki_decode },
+    { OSSL_FUNC_DECODER_NEWCTX, (void (*)(void)) spki2typespki_newctx },
+    { OSSL_FUNC_DECODER_FREECTX, (void (*)(void)) spki2typespki_freectx },
+    { OSSL_FUNC_DECODER_DECODE, (void (*)(void)) spki2typespki_decode },
     { OSSL_FUNC_DECODER_SETTABLE_CTX_PARAMS,
-      (void (*)(void))spki2typespki_settable_ctx_params },
+      (void (*)(void)) spki2typespki_settable_ctx_params },
     { OSSL_FUNC_DECODER_SET_CTX_PARAMS,
-      (void (*)(void))spki2typespki_set_ctx_params },
+      (void (*)(void)) spki2typespki_set_ctx_params },
     OSSL_DISPATCH_END
 };

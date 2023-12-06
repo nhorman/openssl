@@ -108,7 +108,7 @@
 typedef struct quic_channel_args_st {
     OSSL_LIB_CTX    *libctx;
     const char      *propq;
-    int             is_server;
+    int is_server;
     SSL             *tls;
 
     /*
@@ -128,7 +128,7 @@ typedef struct quic_channel_args_st {
      * Optional function pointer to use to retrieve the current time. If NULL,
      * ossl_time_now() is used.
      */
-    OSSL_TIME       (*now_cb)(void *arg);
+    OSSL_TIME (*now_cb)(void *arg);
     void            *now_cb_arg;
 } QUIC_CHANNEL_ARGS;
 
@@ -141,13 +141,13 @@ typedef struct quic_terminate_cause_st {
      * associated with the error. This field is valid iff we are in the
      * TERMINATING or TERMINATED states.
      */
-    uint64_t                        error_code;
+    uint64_t error_code;
 
     /*
      * If terminate_app is set and this is nonzero, this is the frame type which
      * caused the connection to be terminated.
      */
-    uint64_t                        frame_type;
+    uint64_t frame_type;
 
     /*
      * Optional reason string. When calling ossl_quic_channel_local_close, if a
@@ -162,10 +162,10 @@ typedef struct quic_terminate_cause_st {
      * Length of reason in bytes. The reason is supposed to contain a UTF-8
      * string but may be arbitrary data if the reason came from the network.
      */
-    size_t                          reason_len;
+    size_t reason_len;
 
     /* Is this error code in the transport (0) or application (1) space? */
-    unsigned int                    app : 1;
+    unsigned int app : 1;
 
     /*
      * If set, the cause of the termination is a received CONNECTION_CLOSE
@@ -173,7 +173,7 @@ typedef struct quic_terminate_cause_st {
      * CONNECTION_CLOSE frame (regardless of whether the peer later also sends
      * one).
      */
-    unsigned int                    remote : 1;
+    unsigned int remote : 1;
 } QUIC_TERMINATE_CAUSE;
 
 
@@ -242,23 +242,25 @@ void ossl_quic_channel_raise_protocol_error_loc(QUIC_CHANNEL *ch,
                                                 int src_line,
                                                 const char *src_func);
 
-#define ossl_quic_channel_raise_protocol_error(ch, error_code, frame_type, reason) \
-    ossl_quic_channel_raise_protocol_error_loc((ch), (error_code),  \
-                                               (frame_type),        \
-                                               (reason),            \
-                                               NULL,                \
-                                               OPENSSL_FILE,        \
-                                               OPENSSL_LINE,        \
-                                               OPENSSL_FUNC)
+#define ossl_quic_channel_raise_protocol_error(ch, error_code, frame_type, \
+                                               reason) \
+        ossl_quic_channel_raise_protocol_error_loc((ch), (error_code),  \
+                                                   (frame_type),        \
+                                                   (reason),            \
+                                                   NULL,                \
+                                                   OPENSSL_FILE,        \
+                                                   OPENSSL_LINE,        \
+                                                   OPENSSL_FUNC)
 
-#define ossl_quic_channel_raise_protocol_error_state(ch, error_code, frame_type, reason, state) \
-    ossl_quic_channel_raise_protocol_error_loc((ch), (error_code),  \
-                                               (frame_type),        \
-                                               (reason),            \
-                                               (state),             \
-                                               OPENSSL_FILE,        \
-                                               OPENSSL_LINE,        \
-                                               OPENSSL_FUNC)
+#define ossl_quic_channel_raise_protocol_error_state(ch, error_code, frame_type, \
+                                                     reason, state) \
+        ossl_quic_channel_raise_protocol_error_loc((ch), (error_code),  \
+                                                   (frame_type),        \
+                                                   (reason),            \
+                                                   (state),             \
+                                                   OPENSSL_FILE,        \
+                                                   OPENSSL_LINE,        \
+                                                   OPENSSL_FUNC)
 
 
 /*
@@ -295,7 +297,8 @@ OSSL_STATM *ossl_quic_channel_get_statm(QUIC_CHANNEL *ch);
  * starting a channel in client mode.
  */
 int ossl_quic_channel_get_peer_addr(QUIC_CHANNEL *ch, BIO_ADDR *peer_addr);
-int ossl_quic_channel_set_peer_addr(QUIC_CHANNEL *ch, const BIO_ADDR *peer_addr);
+int ossl_quic_channel_set_peer_addr(QUIC_CHANNEL *ch,
+                                    const BIO_ADDR *peer_addr);
 
 /* Gets/sets the underlying network read and write BIOs. */
 BIO *ossl_quic_channel_get_net_rbio(QUIC_CHANNEL *ch);
@@ -422,7 +425,8 @@ void ossl_quic_channel_get_diag_local_cid(QUIC_CHANNEL *ch, QUIC_CONN_ID *cid);
  * Returns 1 if stream count flow control allows us to create a new
  * locally-initiated stream.
  */
-int ossl_quic_channel_is_new_local_stream_admissible(QUIC_CHANNEL *ch, int is_uni);
+int ossl_quic_channel_is_new_local_stream_admissible(QUIC_CHANNEL *ch,
+                                                     int is_uni);
 
 # endif
 

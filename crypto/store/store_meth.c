@@ -95,7 +95,7 @@ static void *get_tmp_loader_store(void *data)
     return methdata->tmp_store;
 }
 
- static void dealloc_tmp_loader_store(void *store)
+static void dealloc_tmp_loader_store(void *store)
 {
     if (store != NULL)
         ossl_method_store_free(store);
@@ -186,47 +186,49 @@ static void *loader_from_algorithm(int scheme_id, const OSSL_ALGORITHM *algodef,
 
     for (; fns->function_id != 0; fns++) {
         switch (fns->function_id) {
-        case OSSL_FUNC_STORE_OPEN:
-            if (loader->p_open == NULL)
-                loader->p_open = OSSL_FUNC_store_open(fns);
-            break;
-        case OSSL_FUNC_STORE_ATTACH:
-            if (loader->p_attach == NULL)
-                loader->p_attach = OSSL_FUNC_store_attach(fns);
-            break;
-        case OSSL_FUNC_STORE_SETTABLE_CTX_PARAMS:
-            if (loader->p_settable_ctx_params == NULL)
-                loader->p_settable_ctx_params =
-                    OSSL_FUNC_store_settable_ctx_params(fns);
-            break;
-        case OSSL_FUNC_STORE_SET_CTX_PARAMS:
-            if (loader->p_set_ctx_params == NULL)
-                loader->p_set_ctx_params = OSSL_FUNC_store_set_ctx_params(fns);
-            break;
-        case OSSL_FUNC_STORE_LOAD:
-            if (loader->p_load == NULL)
-                loader->p_load = OSSL_FUNC_store_load(fns);
-            break;
-        case OSSL_FUNC_STORE_EOF:
-            if (loader->p_eof == NULL)
-                loader->p_eof = OSSL_FUNC_store_eof(fns);
-            break;
-        case OSSL_FUNC_STORE_CLOSE:
-            if (loader->p_close == NULL)
-                loader->p_close = OSSL_FUNC_store_close(fns);
-            break;
-        case OSSL_FUNC_STORE_EXPORT_OBJECT:
-            if (loader->p_export_object == NULL)
-                loader->p_export_object = OSSL_FUNC_store_export_object(fns);
-            break;
-        case OSSL_FUNC_STORE_DELETE:
-            if (loader->p_delete == NULL)
-                loader->p_delete = OSSL_FUNC_store_delete(fns);
-            break;
-        case OSSL_FUNC_STORE_OPEN_EX:
-            if (loader->p_open_ex == NULL)
-                loader->p_open_ex = OSSL_FUNC_store_open_ex(fns);
-            break;
+            case OSSL_FUNC_STORE_OPEN:
+                if (loader->p_open == NULL)
+                    loader->p_open = OSSL_FUNC_store_open(fns);
+                break;
+            case OSSL_FUNC_STORE_ATTACH:
+                if (loader->p_attach == NULL)
+                    loader->p_attach = OSSL_FUNC_store_attach(fns);
+                break;
+            case OSSL_FUNC_STORE_SETTABLE_CTX_PARAMS:
+                if (loader->p_settable_ctx_params == NULL)
+                    loader->p_settable_ctx_params =
+                        OSSL_FUNC_store_settable_ctx_params(fns);
+                break;
+            case OSSL_FUNC_STORE_SET_CTX_PARAMS:
+                if (loader->p_set_ctx_params == NULL)
+                    loader->p_set_ctx_params = OSSL_FUNC_store_set_ctx_params(
+                        fns);
+                break;
+            case OSSL_FUNC_STORE_LOAD:
+                if (loader->p_load == NULL)
+                    loader->p_load = OSSL_FUNC_store_load(fns);
+                break;
+            case OSSL_FUNC_STORE_EOF:
+                if (loader->p_eof == NULL)
+                    loader->p_eof = OSSL_FUNC_store_eof(fns);
+                break;
+            case OSSL_FUNC_STORE_CLOSE:
+                if (loader->p_close == NULL)
+                    loader->p_close = OSSL_FUNC_store_close(fns);
+                break;
+            case OSSL_FUNC_STORE_EXPORT_OBJECT:
+                if (loader->p_export_object == NULL)
+                    loader->p_export_object =
+                        OSSL_FUNC_store_export_object(fns);
+                break;
+            case OSSL_FUNC_STORE_DELETE:
+                if (loader->p_delete == NULL)
+                    loader->p_delete = OSSL_FUNC_store_delete(fns);
+                break;
+            case OSSL_FUNC_STORE_OPEN_EX:
+                if (loader->p_open_ex == NULL)
+                    loader->p_open_ex = OSSL_FUNC_store_open_ex(fns);
+                break;
         }
     }
 
@@ -405,7 +407,8 @@ int ossl_store_loader_store_remove_all_provided(const OSSL_PROVIDER *prov)
  * Library of basic method functions
  */
 
-const OSSL_PROVIDER *OSSL_STORE_LOADER_get0_provider(const OSSL_STORE_LOADER *loader)
+const OSSL_PROVIDER *OSSL_STORE_LOADER_get0_provider(
+    const OSSL_STORE_LOADER *loader)
 {
     if (!ossl_assert(loader != NULL)) {
         ERR_raise(ERR_LIB_OSSL_STORE, ERR_R_PASSED_NULL_PARAMETER);
@@ -464,8 +467,9 @@ static void do_one(ossl_unused int id, void *method, void *arg)
 }
 
 void OSSL_STORE_LOADER_do_all_provided(OSSL_LIB_CTX *libctx,
-                                       void (*user_fn)(OSSL_STORE_LOADER *loader,
-                                                       void *arg),
+                                       void (*user_fn)(
+                                           OSSL_STORE_LOADER *loader,
+                                           void *arg),
                                        void *user_arg)
 {
     struct loader_data_st methdata;

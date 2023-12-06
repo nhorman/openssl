@@ -148,11 +148,11 @@ static int generate_canonical_g(BN_CTX *ctx, BN_MONT_CTX *mont,
     if (mctx == NULL)
         return 0;
 
-   /*
-    * A.2.3 Step (4) & (5)
-    * A.2.4 Step (6) & (7)
-    * counter = 0; counter += 1
-    */
+    /*
+     * A.2.3 Step (4) & (5)
+     * A.2.4 Step (6) & (7)
+     * counter = 0; counter += 1
+     */
     for (counter = 1; counter <= 0xFFFF; ++counter) {
         /*
          * A.2.3 Step (7) & (8) & (9)
@@ -166,13 +166,13 @@ static int generate_canonical_g(BN_CTX *ctx, BN_MONT_CTX *mont,
         md[1] = (unsigned char)((counter >> 8) & 0xff);
         md[2] = (unsigned char)(counter & 0xff);
         if (!EVP_DigestInit_ex(mctx, evpmd, NULL)
-                || !EVP_DigestUpdate(mctx, seed, seedlen)
-                || !EVP_DigestUpdate(mctx, ggen, sizeof(ggen))
-                || !EVP_DigestUpdate(mctx, md, 3)
-                || !EVP_DigestFinal_ex(mctx, md, NULL)
-                || (BN_bin2bn(md, mdsize, tmp) == NULL)
-                || !BN_mod_exp_mont(g, tmp, e, p, ctx, mont))
-                    break; /* exit on failure */
+            || !EVP_DigestUpdate(mctx, seed, seedlen)
+            || !EVP_DigestUpdate(mctx, ggen, sizeof(ggen))
+            || !EVP_DigestUpdate(mctx, md, 3)
+            || !EVP_DigestFinal_ex(mctx, md, NULL)
+            || (BN_bin2bn(md, mdsize, tmp) == NULL)
+            || !BN_mod_exp_mont(g, tmp, e, p, ctx, mont))
+            break;         /* exit on failure */
         /*
          * A.2.3 Step (10)
          * A.2.4 Step (12)
@@ -242,14 +242,14 @@ static int generate_p(BN_CTX *ctx, const EVP_MD *evpmd, int max_counter, int n,
              * tmp = V(j) = Hash((seed + offset + j) % 2^seedlen)
              */
             if (!EVP_Digest(buf, buf_len, md, NULL, evpmd, NULL)
-                    || (BN_bin2bn(md, mdsize, tmp) == NULL)
-                    /*
-                     * A.1.1.2 Step (11.2)
-                     * A.1.1.3 Step (13.2)
-                     * W += V(j) * 2^(outlen * j)
-                     */
-                    || !BN_lshift(tmp, tmp, (mdsize << 3) * j)
-                    || !BN_add(W, W, tmp))
+                || (BN_bin2bn(md, mdsize, tmp) == NULL)
+                /*
+                 * A.1.1.2 Step (11.2)
+                 * A.1.1.3 Step (13.2)
+                 * W += V(j) * 2^(outlen * j)
+                 */
+                || !BN_lshift(tmp, tmp, (mdsize << 3) * j)
+                || !BN_add(W, W, tmp))
                 goto err;
         }
 
@@ -259,22 +259,22 @@ static int generate_p(BN_CTX *ctx, const EVP_MD *evpmd, int max_counter, int n,
          * X = W + 2^(L-1) where W < 2^(L-1)
          */
         if (!BN_mask_bits(W, L - 1)
-                || !BN_copy(X, W)
-                || !BN_add(X, X, test)
-                /*
-                 * A.1.1.2 Step (11.4) AND
-                 * A.1.1.3 Step (13.4)
-                 * c = X mod 2q
-                 */
-                || !BN_lshift1(tmp, q)
-                || !BN_mod(c, X, tmp, ctx)
-                /*
-                 * A.1.1.2 Step (11.5) AND
-                 * A.1.1.3 Step (13.5)
-                 * p = X - (c - 1)
-                 */
-                || !BN_sub(tmp, c, BN_value_one())
-                || !BN_sub(p, X, tmp))
+            || !BN_copy(X, W)
+            || !BN_add(X, X, test)
+            /*
+             * A.1.1.2 Step (11.4) AND
+             * A.1.1.3 Step (13.4)
+             * c = X mod 2q
+             */
+            || !BN_lshift1(tmp, q)
+            || !BN_mod(c, X, tmp, ctx)
+            /*
+             * A.1.1.2 Step (11.5) AND
+             * A.1.1.3 Step (13.5)
+             * p = X - (c - 1)
+             */
+            || !BN_sub(tmp, c, BN_value_one())
+            || !BN_sub(p, X, tmp))
             goto err;
 
         /*
@@ -329,7 +329,7 @@ static int generate_q_fips186_4(BN_CTX *ctx, BIGNUM *q, const EVP_MD *evpmd,
 
         /* A.1.1.2 Step (5) : generate seed with size seed_len */
         if (generate_seed
-                && RAND_bytes_ex(libctx, seed, seedlen, 0) <= 0)
+            && RAND_bytes_ex(libctx, seed, seedlen, 0) <= 0)
             goto err;
         /*
          * A.1.1.2 Step (6) AND

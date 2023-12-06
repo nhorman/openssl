@@ -142,18 +142,18 @@ static const QUIC_PN high_linear_20[] = {
  */
 struct tx_ack_test_case {
     const QUIC_PN              *pn_table;
-    size_t                      pn_table_len;
+    size_t pn_table_len;
     const OSSL_QUIC_ACK_RANGE  *ack_ranges;
-    size_t                      num_ack_ranges;
+    size_t num_ack_ranges;
     const char                 *expect_ack; /* 1=ack, 2=lost, 4=discarded */
 };
 
 #define DEFINE_TX_ACK_CASE(n, pntable)                          \
-    static const struct tx_ack_test_case tx_ack_case_##n = {    \
-        (pntable), OSSL_NELEM(pntable),                         \
-        tx_ack_range_##n, OSSL_NELEM(tx_ack_range_##n),         \
-        tx_ack_expect_##n                                       \
-    }
+        static const struct tx_ack_test_case tx_ack_case_ ## n = {    \
+            (pntable), OSSL_NELEM(pntable),                         \
+            tx_ack_range_ ## n, OSSL_NELEM(tx_ack_range_ ## n),         \
+            tx_ack_expect_ ## n                                       \
+        }
 
 /* One range, partial coverage of space */
 static const OSSL_QUIC_ACK_RANGE tx_ack_range_1[] = {
@@ -398,7 +398,8 @@ static int test_tx_ack_case_actual(int tidx, int space, int mode)
         /* Try acknowledging. */
         ack.ack_ranges      = (OSSL_QUIC_ACK_RANGE *)c->ack_ranges;
         ack.num_ack_ranges  = c->num_ack_ranges;
-        if (!TEST_int_eq(ossl_ackm_on_rx_ack_frame(h.ackm, &ack, space, fake_time), 1))
+        if (!TEST_int_eq(ossl_ackm_on_rx_ack_frame(h.ackm, &ack, space,
+                                                   fake_time), 1))
             goto err;
 
         /* Check correct ranges were acknowledged. */
@@ -417,7 +418,8 @@ static int test_tx_ack_case_actual(int tidx, int space, int mode)
         OSSL_TIME deadline = ossl_ackm_get_loss_detection_deadline(h.ackm);
         OSSL_ACKM_PROBE_INFO probe;
 
-        if (!TEST_int_eq(ossl_time_compare(deadline, loss_detection_deadline), 0))
+        if (!TEST_int_eq(ossl_time_compare(deadline,
+                                           loss_detection_deadline), 0))
             goto err;
 
         /* We should have a PTO deadline. */
@@ -454,9 +456,12 @@ static int test_tx_ack_case_actual(int tidx, int space, int mode)
                     goto err;
             } else {
                 if (!TEST_int_eq(test_probe_counts(&probe, 0, 0,
-                                                   space == QUIC_PN_SPACE_INITIAL,
-                                                   space == QUIC_PN_SPACE_HANDSHAKE,
-                                                   space == QUIC_PN_SPACE_APP), 1))
+                                                   space ==
+                                                   QUIC_PN_SPACE_INITIAL,
+                                                   space ==
+                                                   QUIC_PN_SPACE_HANDSHAKE,
+                                                   space == QUIC_PN_SPACE_APP),
+                                 1))
                     goto err;
             }
         }
@@ -482,19 +487,19 @@ enum {
 };
 
 struct tx_ack_time_op {
-    int       kind;
-    uint64_t  time_advance; /* all ops */
-    QUIC_PN   pn;           /* PKT, ACK */
-    size_t    num_pn;       /* PKT, ACK */
+    int kind;
+    uint64_t time_advance;  /* all ops */
+    QUIC_PN pn;             /* PKT, ACK */
+    size_t num_pn;          /* PKT, ACK */
     const char *expect;     /* 1=ack, 2=lost, 4=discarded */
 };
 
 #define TX_OP_PKT(advance, pn, num_pn) \
-    { TX_ACK_TIME_OP_PKT, (advance) * OSSL_TIME_MS, (pn), (num_pn), NULL },
+        { TX_ACK_TIME_OP_PKT, (advance) * OSSL_TIME_MS, (pn), (num_pn), NULL },
 #define TX_OP_ACK(advance, pn, num_pn) \
-    { TX_ACK_TIME_OP_ACK, (advance) * OSSL_TIME_MS, (pn), (num_pn), NULL },
+        { TX_ACK_TIME_OP_ACK, (advance) * OSSL_TIME_MS, (pn), (num_pn), NULL },
 #define TX_OP_EXPECT(expect) \
-    { TX_ACK_TIME_OP_EXPECT, 0, 0, 0, (expect) },
+        { TX_ACK_TIME_OP_EXPECT, 0, 0, 0, (expect) },
 #define TX_OP_END { TX_ACK_TIME_OP_END }
 
 static const char tx_ack_time_script_1_expect[] = {
@@ -623,77 +628,77 @@ enum {
 };
 
 struct rx_test_op {
-    int                         kind;
-    uint64_t                    time_advance;
+    int kind;
+    uint64_t time_advance;
 
-    QUIC_PN                     pn;     /* PKT, CHECK_(UN)PROC, TX, RX_ACK */
-    size_t                      num_pn; /* PKT, CHECK_(UN)PROC, TX, RX_ACK */
+    QUIC_PN pn;                         /* PKT, CHECK_(UN)PROC, TX, RX_ACK */
+    size_t num_pn;                      /* PKT, CHECK_(UN)PROC, TX, RX_ACK */
 
-    char                        expect_desired;     /* CHECK_STATE */
-    char                        expect_deadline;    /* CHECK_STATE */
+    char expect_desired;                            /* CHECK_STATE */
+    char expect_deadline;                           /* CHECK_STATE */
 
     const OSSL_QUIC_ACK_RANGE  *ack_ranges;         /* CHECK_ACKS */
-    size_t                      num_ack_ranges;     /* CHECK_ACKS */
+    size_t num_ack_ranges;                          /* CHECK_ACKS */
 
-    QUIC_PN                     largest_acked;      /* TX */
+    QUIC_PN largest_acked;                          /* TX */
 };
 
 #define RX_OP_PKT(advance, pn, num_pn)                              \
-    {                                                               \
-      RX_OPK_PKT, (advance) * OSSL_TIME_MS, (pn), (num_pn),         \
-      0, 0, NULL, 0, 0                                              \
-    },
+        {                                                               \
+            RX_OPK_PKT, (advance) * OSSL_TIME_MS, (pn), (num_pn),         \
+            0, 0, NULL, 0, 0                                              \
+        },
 
 #define RX_OP_CHECK_UNPROC(advance, pn, num_pn)                     \
-    {                                                               \
-      RX_OPK_CHECK_UNPROC, (advance) * OSSL_TIME_MS, (pn), (num_pn),\
-      0, 0, NULL, 0, 0                                              \
-    },
+        {                                                               \
+            RX_OPK_CHECK_UNPROC, (advance) * OSSL_TIME_MS, (pn), (num_pn), \
+            0, 0, NULL, 0, 0                                              \
+        },
 
 #define RX_OP_CHECK_PROC(advance, pn, num_pn)                       \
-    {                                                               \
-      RX_OPK_CHECK_PROC, (advance) * OSSL_TIME_MS, (pn), (num_pn),  \
-      0, 0, NULL, 0, 0                                              \
-    },
+        {                                                               \
+            RX_OPK_CHECK_PROC, (advance) * OSSL_TIME_MS, (pn), (num_pn),  \
+            0, 0, NULL, 0, 0                                              \
+        },
 
 #define RX_OP_CHECK_STATE(advance, expect_desired, expect_deadline) \
-    {                                                               \
-      RX_OPK_CHECK_STATE, (advance) * OSSL_TIME_MS, 0, 0,           \
-      (expect_desired), (expect_deadline), NULL, 0, 0               \
-    },
+        {                                                               \
+            RX_OPK_CHECK_STATE, (advance) * OSSL_TIME_MS, 0, 0,           \
+            (expect_desired), (expect_deadline), NULL, 0, 0               \
+        },
 
 #define RX_OP_CHECK_ACKS(advance, ack_ranges)                       \
-    {                                                               \
-      RX_OPK_CHECK_ACKS, (advance) * OSSL_TIME_MS, 0, 0,            \
-      0, 0, (ack_ranges), OSSL_NELEM(ack_ranges), 0                 \
-    },
+        {                                                               \
+            RX_OPK_CHECK_ACKS, (advance) * OSSL_TIME_MS, 0, 0,            \
+            0, 0, (ack_ranges), OSSL_NELEM(ack_ranges), 0                 \
+        },
 
 #define RX_OP_CHECK_NO_ACKS(advance)                                \
-    {                                                               \
-      RX_OPK_CHECK_ACKS, (advance) * OSSL_TIME_MS, 0, 0,            \
-      0, 0, NULL, 0, 0                                              \
-    },
+        {                                                               \
+            RX_OPK_CHECK_ACKS, (advance) * OSSL_TIME_MS, 0, 0,            \
+            0, 0, NULL, 0, 0                                              \
+        },
 
 #define RX_OP_TX(advance, pn, largest_acked)                        \
-    {                                                               \
-      RX_OPK_TX, (advance) * OSSL_TIME_MS, (pn), 1,                 \
-      0, 0, NULL, 0, (largest_acked)                                \
-    },
+        {                                                               \
+            RX_OPK_TX, (advance) * OSSL_TIME_MS, (pn), 1,                 \
+            0, 0, NULL, 0, (largest_acked)                                \
+        },
 
 #define RX_OP_RX_ACK(advance, pn, num_pn)                           \
-    {                                                               \
-      RX_OPK_RX_ACK, (advance) * OSSL_TIME_MS, (pn), (num_pn),      \
-      0, 0, NULL, 0, 0                                              \
-    },
+        {                                                               \
+            RX_OPK_RX_ACK, (advance) * OSSL_TIME_MS, (pn), (num_pn),      \
+            0, 0, NULL, 0, 0                                              \
+        },
 
 #define RX_OP_SKIP_IF_PN_SPACE(pn_space)                            \
-    {                                                               \
-      RX_OPK_SKIP_IF_PN_SPACE, 0, (pn_space), 0,                    \
-      0, 0, NULL, 0, 0                                              \
-    },
+        {                                                               \
+            RX_OPK_SKIP_IF_PN_SPACE, 0, (pn_space), 0,                    \
+            0, 0, NULL, 0, 0                                              \
+        },
 
 #define RX_OP_END                                                   \
-    { RX_OPK_END }
+        { RX_OPK_END }
 
 /* RX 1. Simple Test with ACK Desired (Packet Threshold, Exactly) */
 static const OSSL_QUIC_ACK_RANGE rx_ack_ranges_1a[] = {
@@ -947,124 +952,133 @@ static int test_rx_ack_actual(int tidx, int space)
         fake_time = ossl_time_add(fake_time,
                                   ossl_ticks2time(s->time_advance));
         switch (s->kind) {
-        case RX_OPK_PKT:
-            for (i = 0; i < s->num_pn; ++i) {
-                OSSL_ACKM_RX_PKT pkt = {0};
+            case RX_OPK_PKT:
+                for (i = 0; i < s->num_pn; ++i) {
+                    OSSL_ACKM_RX_PKT pkt = {0};
 
-                pkt.pkt_num             = s->pn + i;
-                pkt.time                = fake_time;
-                pkt.pkt_space           = space;
-                pkt.is_ack_eliciting    = 1;
+                    pkt.pkt_num             = s->pn + i;
+                    pkt.time                = fake_time;
+                    pkt.pkt_space           = space;
+                    pkt.is_ack_eliciting    = 1;
 
-                /* The packet should be processable before we feed it. */
-                if (!TEST_int_eq(ossl_ackm_is_rx_pn_processable(h.ackm,
-                                                                pkt.pkt_num,
-                                                                pkt.pkt_space), 1))
+                    /* The packet should be processable before we feed it. */
+                    if (!TEST_int_eq(ossl_ackm_is_rx_pn_processable(h.ackm,
+                                                                    pkt.pkt_num,
+                                                                    pkt.
+                                                                    pkt_space),
+                                     1))
+                        goto err;
+
+                    if (!TEST_int_eq(ossl_ackm_on_rx_packet(h.ackm, &pkt), 1))
+                        goto err;
+                }
+
+                break;
+
+            case RX_OPK_CHECK_UNPROC:
+            case RX_OPK_CHECK_PROC:
+                for (i = 0; i < s->num_pn; ++i)
+                    if (!TEST_int_eq(ossl_ackm_is_rx_pn_processable(h.ackm,
+                                                                    s->pn + i,
+                                                                    space),
+                                     (s->kind == RX_OPK_CHECK_PROC)))
+                        goto err;
+
+                break;
+
+            case RX_OPK_CHECK_STATE:
+                if (!TEST_int_eq(ossl_ackm_is_ack_desired(h.ackm, space),
+                                 s->expect_desired))
                     goto err;
 
-                if (!TEST_int_eq(ossl_ackm_on_rx_packet(h.ackm, &pkt), 1))
-                    goto err;
-            }
-
-            break;
-
-        case RX_OPK_CHECK_UNPROC:
-        case RX_OPK_CHECK_PROC:
-            for (i = 0; i < s->num_pn; ++i)
-                if (!TEST_int_eq(ossl_ackm_is_rx_pn_processable(h.ackm,
-                                                                s->pn + i, space),
-                                 (s->kind == RX_OPK_CHECK_PROC)))
+                if (!TEST_int_eq(!ossl_time_is_infinite(
+                                     ossl_ackm_get_ack_deadline(h.ackm, space))
+                                 && !ossl_time_is_zero(
+                                     ossl_ackm_get_ack_deadline(h.ackm, space)),
+                                 s->expect_deadline))
                     goto err;
 
-            break;
+                for (i = 0; i < QUIC_PN_SPACE_NUM; ++i) {
+                    if (i != (size_t)space
+                        && !TEST_true(ossl_time_is_infinite(
+                                          ossl_ackm_get_ack_deadline(h.ackm,
+                                                                     i))))
+                        goto err;
 
-        case RX_OPK_CHECK_STATE:
-            if (!TEST_int_eq(ossl_ackm_is_ack_desired(h.ackm, space),
-                             s->expect_desired))
-                goto err;
+                    if (!TEST_int_eq(ossl_time_compare(
+                                         ossl_ackm_get_ack_deadline(h.ackm, i),
+                                         ack_deadline[i]), 0))
+                        goto err;
+                }
 
-            if (!TEST_int_eq(!ossl_time_is_infinite(ossl_ackm_get_ack_deadline(h.ackm, space))
-                             && !ossl_time_is_zero(ossl_ackm_get_ack_deadline(h.ackm, space)),
-                             s->expect_deadline))
-                goto err;
+                break;
 
-            for (i = 0; i < QUIC_PN_SPACE_NUM; ++i) {
-                if (i != (size_t)space
-                        && !TEST_true(ossl_time_is_infinite(ossl_ackm_get_ack_deadline(h.ackm, i))))
+            case RX_OPK_CHECK_ACKS:
+                ack = ossl_ackm_get_ack_frame(h.ackm, space);
+
+                /* Should always be able to get an ACK frame. */
+                if (!TEST_ptr(ack))
                     goto err;
 
-                if (!TEST_int_eq(ossl_time_compare(ossl_ackm_get_ack_deadline(h.ackm, i),
-                                                   ack_deadline[i]), 0))
+                if (!TEST_size_t_eq(ack->num_ack_ranges, s->num_ack_ranges))
                     goto err;
-            }
 
-            break;
+                for (i = 0; i < ack->num_ack_ranges; ++i) {
+                    if (!TEST_uint64_t_eq(ack->ack_ranges[i].start,
+                                          s->ack_ranges[i].start))
+                        goto err;
+                    if (!TEST_uint64_t_eq(ack->ack_ranges[i].end,
+                                          s->ack_ranges[i].end))
+                        goto err;
+                }
 
-        case RX_OPK_CHECK_ACKS:
-            ack = ossl_ackm_get_ack_frame(h.ackm, space);
+                break;
 
-            /* Should always be able to get an ACK frame. */
-            if (!TEST_ptr(ack))
-                goto err;
+            case RX_OPK_TX:
+                pkts[txi].pkt = tx = &txs[txi];
 
-            if (!TEST_size_t_eq(ack->num_ack_ranges, s->num_ack_ranges))
-                goto err;
+                tx->pkt_num             = s->pn;
+                tx->pkt_space           = space;
+                tx->num_bytes           = 123;
+                tx->largest_acked       = s->largest_acked;
+                tx->is_inflight         = 1;
+                tx->is_ack_eliciting    = 1;
+                tx->on_lost             = on_lost;
+                tx->on_acked            = on_acked;
+                tx->on_discarded        = on_discarded;
+                tx->cb_arg              = &pkts[txi];
+                tx->time                = fake_time;
 
-            for (i = 0; i < ack->num_ack_ranges; ++i) {
-                if (!TEST_uint64_t_eq(ack->ack_ranges[i].start,
-                                      s->ack_ranges[i].start))
+                if (!TEST_int_eq(ossl_ackm_on_tx_packet(h.ackm, tx), 1))
                     goto err;
-                if (!TEST_uint64_t_eq(ack->ack_ranges[i].end,
-                                      s->ack_ranges[i].end))
+
+                ++txi;
+                break;
+
+            case RX_OPK_RX_ACK:
+                rx_ack.ack_ranges       = &rx_ack_range;
+                rx_ack.num_ack_ranges   = 1;
+
+                rx_ack_range.start      = s->pn;
+                rx_ack_range.end        = s->pn + s->num_pn - 1;
+
+                if (!TEST_int_eq(ossl_ackm_on_rx_ack_frame(h.ackm, &rx_ack,
+                                                           space, fake_time),
+                                 1))
                     goto err;
-            }
 
-            break;
+                break;
 
-        case RX_OPK_TX:
-            pkts[txi].pkt = tx = &txs[txi];
+            case RX_OPK_SKIP_IF_PN_SPACE:
+                if (space == (int)s->pn) {
+                    testresult = 1;
+                    goto err;
+                }
 
-            tx->pkt_num             = s->pn;
-            tx->pkt_space           = space;
-            tx->num_bytes           = 123;
-            tx->largest_acked       = s->largest_acked;
-            tx->is_inflight         = 1;
-            tx->is_ack_eliciting    = 1;
-            tx->on_lost             = on_lost;
-            tx->on_acked            = on_acked;
-            tx->on_discarded        = on_discarded;
-            tx->cb_arg              = &pkts[txi];
-            tx->time                = fake_time;
+                break;
 
-            if (!TEST_int_eq(ossl_ackm_on_tx_packet(h.ackm, tx), 1))
+            default:
                 goto err;
-
-            ++txi;
-            break;
-
-        case RX_OPK_RX_ACK:
-            rx_ack.ack_ranges       = &rx_ack_range;
-            rx_ack.num_ack_ranges   = 1;
-
-            rx_ack_range.start      = s->pn;
-            rx_ack_range.end        = s->pn + s->num_pn - 1;
-
-            if (!TEST_int_eq(ossl_ackm_on_rx_ack_frame(h.ackm, &rx_ack,
-                                                       space, fake_time), 1))
-                goto err;
-
-            break;
-
-        case RX_OPK_SKIP_IF_PN_SPACE:
-            if (space == (int)s->pn) {
-                testresult = 1;
-                goto err;
-            }
-
-            break;
-
-        default:
-            goto err;
         }
     }
 

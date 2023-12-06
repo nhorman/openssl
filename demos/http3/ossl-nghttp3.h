@@ -98,9 +98,9 @@ int OSSL_DEMO_H3_CONN_handle_events(OSSL_DEMO_H3_CONN *conn);
  * OSSL_DEMO_H3_STREAM_get_user_data.
  */
 int OSSL_DEMO_H3_CONN_submit_request(OSSL_DEMO_H3_CONN *conn,
-                           const nghttp3_nv *hdr, size_t hdrlen,
-                           const nghttp3_data_reader *dr,
-                           void *stream_user_data);
+                                     const nghttp3_nv *hdr, size_t hdrlen,
+                                     const nghttp3_data_reader *dr,
+                                     void *stream_user_data);
 
 /*
  * Returns the user data value which was specified in

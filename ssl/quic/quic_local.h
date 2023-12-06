@@ -33,7 +33,7 @@
  */
 struct quic_xso_st {
     /* SSL object common header. */
-    struct ssl_st                   ssl;
+    struct ssl_st ssl;
 
     /* The connection this stream is associated with. Always non-NULL. */
     QUIC_CONNECTION                 *conn;
@@ -46,13 +46,13 @@ struct quic_xso_st {
      * meaningful if desires_blocking_set is 1. Ignored if blocking is not
      * currently possible given QUIC_CONNECTION configuration.
      */
-    unsigned int                    desires_blocking        : 1;
+    unsigned int desires_blocking        : 1;
 
     /*
      * Has SSL_set_blocking_mode been called on this stream? If not set, we
      * inherit from the QUIC_CONNECTION blocking state.
      */
-    unsigned int                    desires_blocking_set    : 1;
+    unsigned int desires_blocking_set    : 1;
 
     /*
      * This state tracks SSL_write all-or-nothing (AON) write semantics
@@ -73,7 +73,7 @@ struct quic_xso_st {
      *
      */
     /* Is an AON write in progress? */
-    unsigned int                    aon_write_in_progress   : 1;
+    unsigned int aon_write_in_progress   : 1;
     /*
      * The base buffer pointer the caller passed us for the initial AON write
      * call. We use this for validation purposes unless
@@ -85,25 +85,25 @@ struct quic_xso_st {
      */
     const unsigned char             *aon_buf_base;
     /* The total length of the AON buffer being sent, in bytes. */
-    size_t                          aon_buf_len;
+    size_t aon_buf_len;
     /*
      * The position in the AON buffer up to which we have successfully sent data
      * so far.
      */
-    size_t                          aon_buf_pos;
+    size_t aon_buf_pos;
 
     /* SSL_set_mode */
-    uint32_t                        ssl_mode;
+    uint32_t ssl_mode;
 
     /* SSL_set_options */
-    uint64_t                        ssl_options;
+    uint64_t ssl_options;
 
     /*
      * Last 'normal' error during an app-level I/O operation, used by
      * SSL_get_error(); used to track data-path errors like SSL_ERROR_WANT_READ
      * and SSL_ERROR_WANT_WRITE.
      */
-    int                             last_error;
+    int last_error;
 };
 
 struct quic_conn_st {
@@ -114,7 +114,7 @@ struct quic_conn_st {
      *
      * Note: This must come first in the QUIC_CONNECTION structure.
      */
-    struct ssl_st                   ssl;
+    struct ssl_st ssl;
 
     SSL                             *tls;
 
@@ -147,80 +147,80 @@ struct quic_conn_st {
     BIO                             *net_rbio, *net_wbio;
 
     /* Initial peer L4 address. */
-    BIO_ADDR                        init_peer_addr;
+    BIO_ADDR init_peer_addr;
 
 #  ifndef OPENSSL_NO_QUIC_THREAD_ASSIST
     /* Manages thread for QUIC thread assisted mode. */
-    QUIC_THREAD_ASSIST              thread_assist;
+    QUIC_THREAD_ASSIST thread_assist;
 #  endif
 
     /* If non-NULL, used instead of ossl_time_now(). Used for testing. */
-    OSSL_TIME                       (*override_now_cb)(void *arg);
+    OSSL_TIME (*override_now_cb)(void *arg);
     void                            *override_now_cb_arg;
 
     /* Number of XSOs allocated. Includes the default XSO, if any. */
-    size_t                          num_xso;
+    size_t num_xso;
 
     /* Have we started? */
-    unsigned int                    started                 : 1;
+    unsigned int started                 : 1;
 
     /*
      * This is 1 if we were instantiated using a QUIC server method
      * (for future use).
      */
-    unsigned int                    as_server               : 1;
+    unsigned int as_server               : 1;
 
     /*
      * Has the application called SSL_set_accept_state? We require this to be
      * congruent with the value of as_server.
      */
-    unsigned int                    as_server_state         : 1;
+    unsigned int as_server_state         : 1;
 
     /* Are we using thread assisted mode? Never changes after init. */
-    unsigned int                    is_thread_assisted      : 1;
+    unsigned int is_thread_assisted      : 1;
 
     /* Do connection-level operations (e.g. handshakes) run in blocking mode? */
-    unsigned int                    blocking                : 1;
+    unsigned int blocking                : 1;
 
     /* Does the application want blocking mode? */
-    unsigned int                    desires_blocking        : 1;
+    unsigned int desires_blocking        : 1;
 
     /* Have we created a default XSO yet? */
-    unsigned int                    default_xso_created     : 1;
+    unsigned int default_xso_created     : 1;
 
     /*
      * Pre-TERMINATING shutdown phase in which we are flushing streams.
      * Monotonically transitions to 1.
      * New streams cannot be created in this state.
      */
-    unsigned int                    shutting_down           : 1;
+    unsigned int shutting_down           : 1;
 
     /* Have we probed the BIOs for addressing support? */
-    unsigned int                    addressing_probe_done   : 1;
+    unsigned int addressing_probe_done   : 1;
 
     /* Are we using addressed mode (BIO_sendmmsg with non-NULL peer)? */
-    unsigned int                    addressed_mode_w        : 1;
-    unsigned int                    addressed_mode_r        : 1;
+    unsigned int addressed_mode_w        : 1;
+    unsigned int addressed_mode_r        : 1;
 
     /* Default stream type. Defaults to SSL_DEFAULT_STREAM_MODE_AUTO_BIDI. */
-    uint32_t                        default_stream_mode;
+    uint32_t default_stream_mode;
 
     /* SSL_set_mode. This is not used directly but inherited by new XSOs. */
-    uint32_t                        default_ssl_mode;
+    uint32_t default_ssl_mode;
 
     /* SSL_set_options. This is not used directly but inherited by new XSOs. */
-    uint64_t                        default_ssl_options;
+    uint64_t default_ssl_options;
 
     /* SSL_set_incoming_stream_policy. */
-    int                             incoming_stream_policy;
-    uint64_t                        incoming_stream_aec;
+    int incoming_stream_policy;
+    uint64_t incoming_stream_aec;
 
     /*
      * Last 'normal' error during an app-level I/O operation, used by
      * SSL_get_error(); used to track data-path errors like SSL_ERROR_WANT_READ
      * and SSL_ERROR_WANT_WRITE.
      */
-    int                             last_error;
+    int last_error;
 };
 
 /* Internal calls to the QUIC CSM which come from various places. */
@@ -244,18 +244,18 @@ int ossl_quic_trace(int write_p, int version, int content_type,
 
 #  define OSSL_QUIC_ANY_VERSION 0xFFFFF
 #  define IS_QUIC_METHOD(m) \
-    ((m) == OSSL_QUIC_client_method() || \
-     (m) == OSSL_QUIC_client_thread_method())
+        ((m) == OSSL_QUIC_client_method() || \
+         (m) == OSSL_QUIC_client_thread_method())
 #  define IS_QUIC_CTX(ctx)          IS_QUIC_METHOD((ctx)->method)
 
 #  define QUIC_CONNECTION_FROM_SSL_int(ssl, c)   \
-     ((ssl) == NULL ? NULL                       \
+        ((ssl) == NULL ? NULL                       \
       : ((ssl)->type == SSL_TYPE_QUIC_CONNECTION \
          ? (c QUIC_CONNECTION *)(ssl)            \
          : NULL))
 
 #  define QUIC_XSO_FROM_SSL_int(ssl, c)                             \
-    ((ssl) == NULL                                                  \
+        ((ssl) == NULL                                                  \
      ? NULL                                                         \
      : (((ssl)->type == SSL_TYPE_QUIC_XSO                           \
         ? (c QUIC_XSO *)(ssl)                                       \
@@ -264,7 +264,7 @@ int ossl_quic_trace(int write_p, int version, int content_type,
            : NULL))))
 
 #  define SSL_CONNECTION_FROM_QUIC_SSL_int(ssl, c)               \
-     ((ssl) == NULL ? NULL                                       \
+        ((ssl) == NULL ? NULL                                       \
       : ((ssl)->type == SSL_TYPE_QUIC_CONNECTION                 \
          ? (c SSL_CONNECTION *)((c QUIC_CONNECTION *)(ssl))->tls \
          : NULL))
@@ -282,23 +282,23 @@ int ossl_quic_trace(int write_p, int version, int content_type,
 # endif
 
 # define QUIC_CONNECTION_FROM_SSL(ssl) \
-    QUIC_CONNECTION_FROM_SSL_int(ssl, SSL_CONNECTION_NO_CONST)
+        QUIC_CONNECTION_FROM_SSL_int(ssl, SSL_CONNECTION_NO_CONST)
 # define QUIC_CONNECTION_FROM_CONST_SSL(ssl) \
-    QUIC_CONNECTION_FROM_SSL_int(ssl, const)
+        QUIC_CONNECTION_FROM_SSL_int(ssl, const)
 # define QUIC_XSO_FROM_SSL(ssl) \
-    QUIC_XSO_FROM_SSL_int(ssl, SSL_CONNECTION_NO_CONST)
+        QUIC_XSO_FROM_SSL_int(ssl, SSL_CONNECTION_NO_CONST)
 # define QUIC_XSO_FROM_CONST_SSL(ssl) \
-    QUIC_XSO_FROM_SSL_int(ssl, const)
+        QUIC_XSO_FROM_SSL_int(ssl, const)
 # define SSL_CONNECTION_FROM_QUIC_SSL(ssl) \
-    SSL_CONNECTION_FROM_QUIC_SSL_int(ssl, SSL_CONNECTION_NO_CONST)
+        SSL_CONNECTION_FROM_QUIC_SSL_int(ssl, SSL_CONNECTION_NO_CONST)
 # define SSL_CONNECTION_FROM_CONST_QUIC_SSL(ssl) \
-    SSL_CONNECTION_FROM_CONST_QUIC_SSL_int(ssl, const)
+        SSL_CONNECTION_FROM_CONST_QUIC_SSL_int(ssl, const)
 
 # define IMPLEMENT_quic_meth_func(version, func_name, q_accept, \
-                                 q_connect, enc_data) \
-const SSL_METHOD *func_name(void)  \
+                                  q_connect, enc_data) \
+        const SSL_METHOD *func_name(void)  \
         { \
-        static const SSL_METHOD func_name##_data= { \
+            static const SSL_METHOD func_name ## _data= { \
                 version, \
                 0, \
                 0, \
@@ -331,8 +331,8 @@ const SSL_METHOD *func_name(void)  \
                 ssl_undefined_void_function, \
                 ossl_quic_callback_ctrl, \
                 ossl_quic_ctx_callback_ctrl, \
-        }; \
-        return &func_name##_data; \
+            }; \
+            return &func_name ## _data; \
         }
 
 #endif

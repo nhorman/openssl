@@ -121,8 +121,8 @@ extern const BIGNUM ossl_bn_inv_sqrt_2;
 #endif
 
 int s390x_mod_exp(BIGNUM *r, const BIGNUM *a, const BIGNUM *p,
-                const BIGNUM *m, BN_CTX *ctx, BN_MONT_CTX *m_ctx);
+                  const BIGNUM *m, BN_CTX *ctx, BN_MONT_CTX *m_ctx);
 int s390x_crt(BIGNUM *r, const BIGNUM *i, const BIGNUM *p, const BIGNUM *q,
-            const BIGNUM *dmp, const BIGNUM *dmq, const BIGNUM *iqmp);
+              const BIGNUM *dmp, const BIGNUM *dmq, const BIGNUM *iqmp);
 
 #endif

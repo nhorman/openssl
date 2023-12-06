@@ -87,87 +87,87 @@ int pkey_main(int argc, char **argv)
     prog = opt_init(argc, argv, pkey_options);
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_EOF:
-        case OPT_ERR:
- opthelp:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto end;
-        case OPT_HELP:
-            opt_help(pkey_options);
-            ret = 0;
-            goto end;
-        case OPT_INFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_ANY, &informat))
-                goto opthelp;
-            break;
-        case OPT_OUTFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &outformat))
-                goto opthelp;
-            break;
-        case OPT_PASSIN:
-            passinarg = opt_arg();
-            break;
-        case OPT_PASSOUT:
-            passoutarg = opt_arg();
-            break;
-        case OPT_ENGINE:
-            e = setup_engine(opt_arg(), 0);
-            break;
-        case OPT_IN:
-            infile = opt_arg();
-            break;
-        case OPT_OUT:
-            outfile = opt_arg();
-            break;
-        case OPT_PUBIN:
-            pubin = pubout = 1;
-            break;
-        case OPT_PUBOUT:
-            pubout = 1;
-            break;
-        case OPT_TEXT_PUB:
-            text_pub = 1;
-            break;
-        case OPT_TEXT:
-            text = 1;
-            break;
-        case OPT_NOOUT:
-            noout = 1;
-            break;
-        case OPT_TRADITIONAL:
-            traditional = 1;
-            break;
-        case OPT_CHECK:
-            check = 1;
-            break;
-        case OPT_PUB_CHECK:
-            pub_check = 1;
-            break;
-        case OPT_CIPHER:
-            ciphername = opt_unknown();
-            break;
-        case OPT_EC_CONV_FORM:
-#ifdef OPENSSL_NO_EC
-            goto opthelp;
-#else
-            point_format = opt_arg();
-            if (!opt_string(point_format, point_format_options))
-                goto opthelp;
-            break;
-#endif
-        case OPT_EC_PARAM_ENC:
-#ifdef OPENSSL_NO_EC
-            goto opthelp;
-#else
-            asn1_encoding = opt_arg();
-            if (!opt_string(asn1_encoding, asn1_encoding_options))
-                goto opthelp;
-            break;
-#endif
-        case OPT_PROV_CASES:
-            if (!opt_provider(o))
+            case OPT_EOF:
+            case OPT_ERR:
+opthelp:
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
                 goto end;
-            break;
+            case OPT_HELP:
+                opt_help(pkey_options);
+                ret = 0;
+                goto end;
+            case OPT_INFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_ANY, &informat))
+                    goto opthelp;
+                break;
+            case OPT_OUTFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &outformat))
+                    goto opthelp;
+                break;
+            case OPT_PASSIN:
+                passinarg = opt_arg();
+                break;
+            case OPT_PASSOUT:
+                passoutarg = opt_arg();
+                break;
+            case OPT_ENGINE:
+                e = setup_engine(opt_arg(), 0);
+                break;
+            case OPT_IN:
+                infile = opt_arg();
+                break;
+            case OPT_OUT:
+                outfile = opt_arg();
+                break;
+            case OPT_PUBIN:
+                pubin = pubout = 1;
+                break;
+            case OPT_PUBOUT:
+                pubout = 1;
+                break;
+            case OPT_TEXT_PUB:
+                text_pub = 1;
+                break;
+            case OPT_TEXT:
+                text = 1;
+                break;
+            case OPT_NOOUT:
+                noout = 1;
+                break;
+            case OPT_TRADITIONAL:
+                traditional = 1;
+                break;
+            case OPT_CHECK:
+                check = 1;
+                break;
+            case OPT_PUB_CHECK:
+                pub_check = 1;
+                break;
+            case OPT_CIPHER:
+                ciphername = opt_unknown();
+                break;
+            case OPT_EC_CONV_FORM:
+#ifdef OPENSSL_NO_EC
+                goto opthelp;
+#else
+                point_format = opt_arg();
+                if (!opt_string(point_format, point_format_options))
+                    goto opthelp;
+                break;
+#endif
+            case OPT_EC_PARAM_ENC:
+#ifdef OPENSSL_NO_EC
+                goto opthelp;
+#else
+                asn1_encoding = opt_arg();
+                if (!opt_string(asn1_encoding, asn1_encoding_options))
+                    goto opthelp;
+                break;
+#endif
+            case OPT_PROV_CASES:
+                if (!opt_provider(o))
+                    goto end;
+                break;
         }
     }
 
@@ -231,8 +231,8 @@ int pkey_main(int argc, char **argv)
                                                     asn1_encoding, 0);
         if (point_format != NULL)
             *p++ = OSSL_PARAM_construct_utf8_string(
-                       OSSL_PKEY_PARAM_EC_POINT_CONVERSION_FORMAT,
-                       point_format, 0);
+                OSSL_PKEY_PARAM_EC_POINT_CONVERSION_FORMAT,
+                point_format, 0);
         *p = OSSL_PARAM_construct_end();
         if (EVP_PKEY_set_params(pkey, params) <= 0)
             goto end;
@@ -315,7 +315,7 @@ int pkey_main(int argc, char **argv)
 
     ret = 0;
 
- end:
+end:
     if (ret != 0)
         ERR_print_errors(bio_err);
     EVP_PKEY_CTX_free(ctx);

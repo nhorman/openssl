@@ -24,8 +24,10 @@
 
 # if defined(__APPLE__) && !defined(OPENSSL_NO_APPLE_CRYPTO_RANDOM)
 #  include <Availability.h>
-#  if (defined(__MAC_OS_X_VERSION_MIN_REQUIRED) && __MAC_OS_X_VERSION_MIN_REQUIRED >= 101200) || \
-     (defined(__IPHONE_OS_VERSION_MIN_REQUIRED) && __IPHONE_OS_VERSION_MIN_REQUIRED >= 80000)
+#  if (defined(__MAC_OS_X_VERSION_MIN_REQUIRED) && \
+    __MAC_OS_X_VERSION_MIN_REQUIRED >= 101200) || \
+    (defined(__IPHONE_OS_VERSION_MIN_REQUIRED) && \
+    __IPHONE_OS_VERSION_MIN_REQUIRED >= 80000)
 #   define OPENSSL_APPLE_CRYPTO_RANDOM 1
 #   include <CommonCrypto/CommonCryptoError.h>
 #   include <CommonCrypto/CommonRandom.h>
@@ -78,7 +80,8 @@
  * sockets will be tried in the order listed in case accessing the device
  * files listed in DEVRANDOM did not return enough randomness.
  */
-# define DEVRANDOM_EGD "/var/run/egd-pool", "/dev/egd-pool", "/etc/egd-pool", "/etc/entropy"
+# define DEVRANDOM_EGD "/var/run/egd-pool", "/dev/egd-pool", "/etc/egd-pool", \
+        "/etc/entropy"
 #endif
 
 void ossl_rand_cleanup_int(void);
@@ -148,7 +151,8 @@ uint32_t ossl_rand_uniform_uint32(OSSL_LIB_CTX *ctx, uint32_t upper, int *err);
  * Generate a uniformly distributed random integer in the interval
  * [lower, upper).
  */
-uint32_t ossl_rand_range_uint32(OSSL_LIB_CTX *ctx, uint32_t lower, uint32_t upper,
+uint32_t ossl_rand_range_uint32(OSSL_LIB_CTX *ctx, uint32_t lower,
+                                uint32_t upper,
                                 int *err);
 
 #endif

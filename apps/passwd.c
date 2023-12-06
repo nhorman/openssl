@@ -110,78 +110,78 @@ int passwd_main(int argc, char **argv)
     prog = opt_init(argc, argv, passwd_options);
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_EOF:
-        case OPT_ERR:
- opthelp:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto end;
-        case OPT_HELP:
-            opt_help(passwd_options);
-            ret = 0;
-            goto end;
-        case OPT_IN:
-            if (pw_source_defined)
-                goto opthelp;
-            infile = opt_arg();
-            pw_source_defined = 1;
-            break;
-        case OPT_NOVERIFY:
+            case OPT_EOF:
+            case OPT_ERR:
+opthelp:
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
+                goto end;
+            case OPT_HELP:
+                opt_help(passwd_options);
+                ret = 0;
+                goto end;
+            case OPT_IN:
+                if (pw_source_defined)
+                    goto opthelp;
+                infile = opt_arg();
+                pw_source_defined = 1;
+                break;
+            case OPT_NOVERIFY:
 #ifndef OPENSSL_NO_UI_CONSOLE
-            in_noverify = 1;
+                in_noverify = 1;
 #endif
-            break;
-        case OPT_QUIET:
-            quiet = 1;
-            break;
-        case OPT_TABLE:
-            table = 1;
-            break;
-        case OPT_REVERSE:
-            reverse = 1;
-            break;
-        case OPT_1:
-            if (mode != passwd_unset)
-                goto opthelp;
-            mode = passwd_md5;
-            break;
-        case OPT_5:
-            if (mode != passwd_unset)
-                goto opthelp;
-            mode = passwd_sha256;
-            break;
-        case OPT_6:
-            if (mode != passwd_unset)
-                goto opthelp;
-            mode = passwd_sha512;
-            break;
-        case OPT_APR1:
-            if (mode != passwd_unset)
-                goto opthelp;
-            mode = passwd_apr1;
-            break;
-        case OPT_AIXMD5:
-            if (mode != passwd_unset)
-                goto opthelp;
-            mode = passwd_aixmd5;
-            break;
-        case OPT_SALT:
-            passed_salt = 1;
-            salt = opt_arg();
-            break;
-        case OPT_STDIN:
-            if (pw_source_defined)
-                goto opthelp;
-            in_stdin = 1;
-            pw_source_defined = 1;
-            break;
-        case OPT_R_CASES:
-            if (!opt_rand(o))
-                goto end;
-            break;
-        case OPT_PROV_CASES:
-            if (!opt_provider(o))
-                goto end;
-            break;
+                break;
+            case OPT_QUIET:
+                quiet = 1;
+                break;
+            case OPT_TABLE:
+                table = 1;
+                break;
+            case OPT_REVERSE:
+                reverse = 1;
+                break;
+            case OPT_1:
+                if (mode != passwd_unset)
+                    goto opthelp;
+                mode = passwd_md5;
+                break;
+            case OPT_5:
+                if (mode != passwd_unset)
+                    goto opthelp;
+                mode = passwd_sha256;
+                break;
+            case OPT_6:
+                if (mode != passwd_unset)
+                    goto opthelp;
+                mode = passwd_sha512;
+                break;
+            case OPT_APR1:
+                if (mode != passwd_unset)
+                    goto opthelp;
+                mode = passwd_apr1;
+                break;
+            case OPT_AIXMD5:
+                if (mode != passwd_unset)
+                    goto opthelp;
+                mode = passwd_aixmd5;
+                break;
+            case OPT_SALT:
+                passed_salt = 1;
+                salt = opt_arg();
+                break;
+            case OPT_STDIN:
+                if (pw_source_defined)
+                    goto opthelp;
+                in_stdin = 1;
+                pw_source_defined = 1;
+                break;
+            case OPT_R_CASES:
+                if (!opt_rand(o))
+                    goto end;
+                break;
+            case OPT_PROV_CASES:
+                if (!opt_provider(o))
+                    goto end;
+                break;
         }
     }
 
@@ -241,8 +241,8 @@ int passwd_main(int argc, char **argv)
             passwds = passwds_static;
             if (in == NULL) {
                 if (EVP_read_pw_string
-                    (passwd_malloc, passwd_malloc_size, "Password: ",
-                     !(passed_salt || in_noverify)) != 0)
+                        (passwd_malloc, passwd_malloc_size, "Password: ",
+                        !(passed_salt || in_noverify)) != 0)
                     goto end;
             }
             passwds[0] = passwd_malloc;
@@ -283,8 +283,9 @@ int passwd_main(int argc, char **argv)
                 }
 
                 if (!do_passwd
-                    (passed_salt, &salt, &salt_malloc, passwd, bio_out, quiet,
-                     table, reverse, pw_maxlen, mode))
+                        (passed_salt, &salt, &salt_malloc, passwd, bio_out,
+                        quiet,
+                        table, reverse, pw_maxlen, mode))
                     goto end;
             }
             done = (r <= 0);
@@ -292,7 +293,7 @@ int passwd_main(int argc, char **argv)
     }
     ret = 0;
 
- end:
+end:
 #if 0
     ERR_print_errors(bio_err);
 #endif
@@ -382,7 +383,7 @@ static char *md5crypt(const char *passwd, const char *magic, const char *salt)
         if (!EVP_DigestUpdate(md, ascii_dollar, 1)
             || !EVP_DigestUpdate(md, ascii_magic, magic_len)
             || !EVP_DigestUpdate(md, ascii_dollar, 1))
-          goto err;
+            goto err;
 
     if (!EVP_DigestUpdate(md, ascii_salt, salt_len))
         goto err;
@@ -430,9 +431,9 @@ static char *md5crypt(const char *passwd, const char *magic, const char *salt)
         if (!EVP_DigestUpdate(md2,
                               (i & 1) ? buf : (const unsigned char *)passwd,
                               (i & 1) ? sizeof(buf) : passwd_len))
-                goto err;
+            goto err;
         if (!EVP_DigestFinal_ex(md2, buf, NULL))
-                goto err;
+            goto err;
     }
     EVP_MD_CTX_free(md2);
     EVP_MD_CTX_free(md);
@@ -452,7 +453,7 @@ static char *md5crypt(const char *passwd, const char *magic, const char *salt)
         buf_perm[14] = buf[5];
         buf_perm[15] = buf[11];
 # ifndef PEDANTIC              /* Unfortunately, this generates a "no
-                                 * effect" warning */
+                                * effect" warning */
         assert(16 == sizeof(buf_perm));
 # endif
 
@@ -481,7 +482,7 @@ static char *md5crypt(const char *passwd, const char *magic, const char *salt)
 
     return out_buf;
 
- err:
+err:
     OPENSSL_free(ascii_passwd);
     EVP_MD_CTX_free(md2);
     EVP_MD_CTX_free(md);
@@ -532,16 +533,16 @@ static char *shacrypt(const char *passwd, const char *magic, const char *salt)
         return NULL;
 
     switch (magic[0]) {
-    case '5':
-        sha = EVP_sha256();
-        buf_size = 32;
-        break;
-    case '6':
-        sha = EVP_sha512();
-        buf_size = 64;
-        break;
-    default:
-        return NULL;
+        case '5':
+            sha = EVP_sha256();
+            buf_size = 32;
+            break;
+        case '6':
+            sha = EVP_sha512();
+            buf_size = 64;
+            break;
+        default:
+            return NULL;
     }
 
     if (strncmp(salt, rounds_prefix, sizeof(rounds_prefix) - 1) == 0) {
@@ -651,7 +652,8 @@ static char *shacrypt(const char *passwd, const char *magic, const char *salt)
 
     if ((p_bytes = OPENSSL_zalloc(passwd_len)) == NULL)
         goto err;
-    for (cp = p_bytes, n = passwd_len; n > buf_size; n -= buf_size, cp += buf_size)
+    for (cp = p_bytes, n = passwd_len; n > buf_size;
+         n -= buf_size, cp += buf_size)
         memcpy(cp, temp_buf, buf_size);
     memcpy(cp, temp_buf, n);
 
@@ -668,7 +670,8 @@ static char *shacrypt(const char *passwd, const char *magic, const char *salt)
 
     if ((s_bytes = OPENSSL_zalloc(salt_len)) == NULL)
         goto err;
-    for (cp = s_bytes, n = salt_len; n > buf_size; n -= buf_size, cp += buf_size)
+    for (cp = s_bytes, n = salt_len; n > buf_size;
+         n -= buf_size, cp += buf_size)
         memcpy(cp, temp_buf, buf_size);
     memcpy(cp, temp_buf, n);
 
@@ -690,9 +693,9 @@ static char *shacrypt(const char *passwd, const char *magic, const char *salt)
         if (!EVP_DigestUpdate(md2,
                               (n & 1) ? buf : (const unsigned char *)p_bytes,
                               (n & 1) ? buf_size : passwd_len))
-                goto err;
+            goto err;
         if (!EVP_DigestFinal_ex(md2, buf, NULL))
-                goto err;
+            goto err;
     }
     EVP_MD_CTX_free(md2);
     EVP_MD_CTX_free(md);
@@ -707,56 +710,56 @@ static char *shacrypt(const char *passwd, const char *magic, const char *salt)
     *cp++ = ascii_dollar[0];
 
 # define b64_from_24bit(B2, B1, B0, N)                                   \
-    do {                                                                \
-        unsigned int w = ((B2) << 16) | ((B1) << 8) | (B0);             \
-        int i = (N);                                                    \
-        while (i-- > 0)                                                 \
+        do {                                                                \
+            unsigned int w = ((B2) << 16) | ((B1) << 8) | (B0);             \
+            int i = (N);                                                    \
+            while (i-- > 0)                                                 \
             {                                                           \
                 *cp++ = cov_2char[w & 0x3f];                            \
                 w >>= 6;                                                \
             }                                                           \
-    } while (0)
+        } while (0)
 
     switch (magic[0]) {
-    case '5':
-        b64_from_24bit (buf[0], buf[10], buf[20], 4);
-        b64_from_24bit (buf[21], buf[1], buf[11], 4);
-        b64_from_24bit (buf[12], buf[22], buf[2], 4);
-        b64_from_24bit (buf[3], buf[13], buf[23], 4);
-        b64_from_24bit (buf[24], buf[4], buf[14], 4);
-        b64_from_24bit (buf[15], buf[25], buf[5], 4);
-        b64_from_24bit (buf[6], buf[16], buf[26], 4);
-        b64_from_24bit (buf[27], buf[7], buf[17], 4);
-        b64_from_24bit (buf[18], buf[28], buf[8], 4);
-        b64_from_24bit (buf[9], buf[19], buf[29], 4);
-        b64_from_24bit (0, buf[31], buf[30], 3);
-        break;
-    case '6':
-        b64_from_24bit (buf[0], buf[21], buf[42], 4);
-        b64_from_24bit (buf[22], buf[43], buf[1], 4);
-        b64_from_24bit (buf[44], buf[2], buf[23], 4);
-        b64_from_24bit (buf[3], buf[24], buf[45], 4);
-        b64_from_24bit (buf[25], buf[46], buf[4], 4);
-        b64_from_24bit (buf[47], buf[5], buf[26], 4);
-        b64_from_24bit (buf[6], buf[27], buf[48], 4);
-        b64_from_24bit (buf[28], buf[49], buf[7], 4);
-        b64_from_24bit (buf[50], buf[8], buf[29], 4);
-        b64_from_24bit (buf[9], buf[30], buf[51], 4);
-        b64_from_24bit (buf[31], buf[52], buf[10], 4);
-        b64_from_24bit (buf[53], buf[11], buf[32], 4);
-        b64_from_24bit (buf[12], buf[33], buf[54], 4);
-        b64_from_24bit (buf[34], buf[55], buf[13], 4);
-        b64_from_24bit (buf[56], buf[14], buf[35], 4);
-        b64_from_24bit (buf[15], buf[36], buf[57], 4);
-        b64_from_24bit (buf[37], buf[58], buf[16], 4);
-        b64_from_24bit (buf[59], buf[17], buf[38], 4);
-        b64_from_24bit (buf[18], buf[39], buf[60], 4);
-        b64_from_24bit (buf[40], buf[61], buf[19], 4);
-        b64_from_24bit (buf[62], buf[20], buf[41], 4);
-        b64_from_24bit (0, 0, buf[63], 2);
-        break;
-    default:
-        goto err;
+        case '5':
+            b64_from_24bit (buf[0], buf[10], buf[20], 4);
+            b64_from_24bit (buf[21], buf[1], buf[11], 4);
+            b64_from_24bit (buf[12], buf[22], buf[2], 4);
+            b64_from_24bit (buf[3], buf[13], buf[23], 4);
+            b64_from_24bit (buf[24], buf[4], buf[14], 4);
+            b64_from_24bit (buf[15], buf[25], buf[5], 4);
+            b64_from_24bit (buf[6], buf[16], buf[26], 4);
+            b64_from_24bit (buf[27], buf[7], buf[17], 4);
+            b64_from_24bit (buf[18], buf[28], buf[8], 4);
+            b64_from_24bit (buf[9], buf[19], buf[29], 4);
+            b64_from_24bit (0, buf[31], buf[30], 3);
+            break;
+        case '6':
+            b64_from_24bit (buf[0], buf[21], buf[42], 4);
+            b64_from_24bit (buf[22], buf[43], buf[1], 4);
+            b64_from_24bit (buf[44], buf[2], buf[23], 4);
+            b64_from_24bit (buf[3], buf[24], buf[45], 4);
+            b64_from_24bit (buf[25], buf[46], buf[4], 4);
+            b64_from_24bit (buf[47], buf[5], buf[26], 4);
+            b64_from_24bit (buf[6], buf[27], buf[48], 4);
+            b64_from_24bit (buf[28], buf[49], buf[7], 4);
+            b64_from_24bit (buf[50], buf[8], buf[29], 4);
+            b64_from_24bit (buf[9], buf[30], buf[51], 4);
+            b64_from_24bit (buf[31], buf[52], buf[10], 4);
+            b64_from_24bit (buf[53], buf[11], buf[32], 4);
+            b64_from_24bit (buf[12], buf[33], buf[54], 4);
+            b64_from_24bit (buf[34], buf[55], buf[13], 4);
+            b64_from_24bit (buf[56], buf[14], buf[35], 4);
+            b64_from_24bit (buf[15], buf[36], buf[57], 4);
+            b64_from_24bit (buf[37], buf[58], buf[16], 4);
+            b64_from_24bit (buf[59], buf[17], buf[38], 4);
+            b64_from_24bit (buf[18], buf[39], buf[60], 4);
+            b64_from_24bit (buf[40], buf[61], buf[19], 4);
+            b64_from_24bit (buf[62], buf[20], buf[41], 4);
+            b64_from_24bit (0, 0, buf[63], 2);
+            break;
+        default:
+            goto err;
     }
     *cp = '\0';
 #ifdef CHARSET_EBCDIC
@@ -765,7 +768,7 @@ static char *shacrypt(const char *passwd, const char *magic, const char *salt)
 
     return out_buf;
 
- err:
+err:
     EVP_MD_CTX_free(md2);
     EVP_MD_CTX_free(md);
     OPENSSL_free(p_bytes);
@@ -842,6 +845,6 @@ static int do_passwd(int passed_salt, char **salt_p, char **salt_malloc_p,
         BIO_printf(out, "%s\n", hash);
     return 1;
 
- end:
+end:
     return 0;
 }

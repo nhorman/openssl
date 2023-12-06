@@ -133,7 +133,7 @@ STACK_OF(X509_EXTENSION) *X509v3_add_ext(STACK_OF(X509_EXTENSION) **x,
     if (*x == NULL)
         *x = sk;
     return sk;
- err:
+err:
     X509_EXTENSION_free(new_ex);
     if (x != NULL && *x == NULL)
         sk_X509_EXTENSION_free(sk);
@@ -182,7 +182,7 @@ X509_EXTENSION *X509_EXTENSION_create_by_OBJ(X509_EXTENSION **ex,
     if ((ex != NULL) && (*ex == NULL))
         *ex = ret;
     return ret;
- err:
+err:
     if ((ex == NULL) || (ret != *ex))
         X509_EXTENSION_free(ret);
     return NULL;

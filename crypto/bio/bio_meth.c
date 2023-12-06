@@ -37,7 +37,7 @@ BIO_METHOD *BIO_meth_new(int type, const char *name)
     BIO_METHOD *biom = OPENSSL_zalloc(sizeof(BIO_METHOD));
 
     if (biom == NULL
-            || (biom->name = OPENSSL_strdup(name)) == NULL) {
+        || (biom->name = OPENSSL_strdup(name)) == NULL) {
         OPENSSL_free(biom);
         return NULL;
     }
@@ -58,8 +58,9 @@ int (*BIO_meth_get_write(const BIO_METHOD *biom)) (BIO *, const char *, int)
     return biom->bwrite_old;
 }
 
-int (*BIO_meth_get_write_ex(const BIO_METHOD *biom)) (BIO *, const char *, size_t,
-                                                size_t *)
+int (*BIO_meth_get_write_ex(const BIO_METHOD *biom)) (BIO *, const char *,
+                                                      size_t,
+                                                      size_t *)
 {
     return biom->bwrite;
 }
@@ -93,7 +94,7 @@ int BIO_meth_set_write(BIO_METHOD *biom,
 }
 
 int BIO_meth_set_write_ex(BIO_METHOD *biom,
-                       int (*bwrite) (BIO *, const char *, size_t, size_t *))
+                          int (*bwrite) (BIO *, const char *, size_t, size_t *))
 {
     biom->bwrite_old = NULL;
     biom->bwrite = bwrite;
@@ -105,7 +106,8 @@ int (*BIO_meth_get_read(const BIO_METHOD *biom)) (BIO *, char *, int)
     return biom->bread_old;
 }
 
-int (*BIO_meth_get_read_ex(const BIO_METHOD *biom)) (BIO *, char *, size_t, size_t *)
+int (*BIO_meth_get_read_ex(const BIO_METHOD *biom)) (BIO *, char *, size_t,
+                                                     size_t *)
 {
     return biom->bread;
 }
@@ -204,7 +206,8 @@ int BIO_meth_set_destroy(BIO_METHOD *biom, int (*destroy) (BIO *))
     return 1;
 }
 
-long (*BIO_meth_get_callback_ctrl(const BIO_METHOD *biom)) (BIO *, int, BIO_info_cb *)
+long (*BIO_meth_get_callback_ctrl(const BIO_METHOD *biom)) (BIO *, int,
+                                                            BIO_info_cb *)
 {
     return biom->callback_ctrl;
 }
@@ -218,23 +221,29 @@ int BIO_meth_set_callback_ctrl(BIO_METHOD *biom,
 }
 
 int BIO_meth_set_sendmmsg(BIO_METHOD *biom,
-                          int (*bsendmmsg) (BIO *, BIO_MSG *, size_t, size_t, uint64_t, size_t *))
+                          int (*bsendmmsg) (BIO *, BIO_MSG *, size_t, size_t,
+                                            uint64_t, size_t *))
 {
     biom->bsendmmsg = bsendmmsg;
     return 1;
 }
 
-int (*BIO_meth_get_sendmmsg(const BIO_METHOD *biom))(BIO *, BIO_MSG *, size_t, size_t, uint64_t, size_t *) {
+int (*BIO_meth_get_sendmmsg(const BIO_METHOD *biom))(BIO *, BIO_MSG *, size_t,
+                                                     size_t, uint64_t,
+                                                     size_t *) {
     return biom->bsendmmsg;
 }
 
 int BIO_meth_set_recvmmsg(BIO_METHOD *biom,
-                          int (*brecvmmsg) (BIO *, BIO_MSG *, size_t, size_t, uint64_t, size_t *))
+                          int (*brecvmmsg) (BIO *, BIO_MSG *, size_t, size_t,
+                                            uint64_t, size_t *))
 {
     biom->brecvmmsg = brecvmmsg;
     return 1;
 }
 
-int (*BIO_meth_get_recvmmsg(const BIO_METHOD *biom))(BIO *, BIO_MSG *, size_t, size_t, uint64_t, size_t *) {
+int (*BIO_meth_get_recvmmsg(const BIO_METHOD *biom))(BIO *, BIO_MSG *, size_t,
+                                                     size_t, uint64_t,
+                                                     size_t *) {
     return biom->brecvmmsg;
 }

@@ -42,7 +42,7 @@
 #endif
 
 #if (defined(OPENSSL_SYS_UNIX) && !defined(OPENSSL_SYS_VXWORKS)) \
-     || defined(__DJGPP__)
+    || defined(__DJGPP__)
 # include <sys/types.h>
 # include <sys/stat.h>
 # include <fcntl.h>
@@ -89,7 +89,7 @@ static uint64_t get_time_stamp(void);
 #  endif
 # endif
 #endif /* (defined(OPENSSL_SYS_UNIX) && !defined(OPENSSL_SYS_VXWORKS))
-          || defined(__DJGPP__) */
+       || defined(__DJGPP__) */
 
 #if defined(OPENSSL_RAND_SEED_NONE)
 /* none means none. this simplifies the following logic */
@@ -191,7 +191,7 @@ void ossl_rand_pool_keep_random_devices_open(int keep)
 # else
 
 #  if defined(OPENSSL_RAND_SEED_EGD) && \
-        (defined(OPENSSL_NO_EGD) || !defined(DEVRANDOM_EGD))
+    (defined(OPENSSL_NO_EGD) || !defined(DEVRANDOM_EGD))
 #   error "Seeding uses EGD but EGD is turned off or no device given"
 #  endif
 
@@ -366,7 +366,7 @@ static ssize_t syscall_random(void *buf, size_t buflen)
 #    elif defined(OPENSSL_APPLE_CRYPTO_RANDOM)
 
     if (CCRandomGenerateBytes(buf, buflen) == kCCSuccess)
-	    return (ssize_t)buflen;
+        return (ssize_t)buflen;
 
     return -1;
 #    else
@@ -393,11 +393,11 @@ static ssize_t syscall_random(void *buf, size_t buflen)
 #  elif (defined(__FreeBSD__) || defined(__NetBSD__)) && defined(KERN_ARND)
     return sysctl_random(buf, buflen);
 #  elif (defined(__DragonFly__)  && __DragonFly_version >= 500700) \
-     || (defined(__NetBSD__) && __NetBSD_Version >= 1000000000)
+    || (defined(__NetBSD__) && __NetBSD_Version >= 1000000000)
     return getrandom(buf, buflen, 0);
 #  elif defined(__wasi__)
     if (getentropy(buf, buflen) == 0)
-      return (ssize_t)buflen;
+        return (ssize_t)buflen;
     return -1;
 #  else
     errno = ENOSYS;
@@ -418,7 +418,7 @@ static struct random_device {
 static int keep_random_devices_open = 1;
 
 #   if defined(__linux) && defined(DEVRANDOM_WAIT) \
-       && defined(OPENSSL_RAND_SEED_GETRANDOM)
+    && defined(OPENSSL_RAND_SEED_GETRANDOM)
 static void *shm_addr;
 
 static void cleanup_shm(void)
@@ -751,7 +751,7 @@ size_t ossl_pool_acquire_entropy(RAND_POOL *pool)
 #endif
 
 #if (defined(OPENSSL_SYS_UNIX) && !defined(OPENSSL_SYS_VXWORKS)) \
-     || defined(__DJGPP__)
+    || defined(__DJGPP__)
 int ossl_pool_add_nonce_data(RAND_POOL *pool)
 {
     struct {
@@ -793,7 +793,7 @@ static uint64_t get_time_stamp(void)
     }
 # endif
 # if defined(__unix__) \
-     || (defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 200112L)
+    || (defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 200112L)
     {
         struct timeval tv;
 
@@ -805,4 +805,4 @@ static uint64_t get_time_stamp(void)
 }
 
 #endif /* (defined(OPENSSL_SYS_UNIX) && !defined(OPENSSL_SYS_VXWORKS))
-          || defined(__DJGPP__) */
+       || defined(__DJGPP__) */

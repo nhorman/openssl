@@ -43,7 +43,7 @@
 DEFINE_STACK_OF(OSSL_STORE_INFO)
 
 #ifndef S_ISDIR
-# define S_ISDIR(a) (((a) & S_IFMT) == S_IFDIR)
+# define S_ISDIR(a) (((a)&S_IFMT) == S_IFDIR)
 #endif
 
 /*-
@@ -71,21 +71,21 @@ static char *file_get_pass(const UI_METHOD *ui_method, char *pass,
         ATTICerr(0, ERR_R_UI_LIB);
         pass = NULL;
     } else if (UI_add_input_string(ui, prompt, UI_INPUT_FLAG_DEFAULT_PWD,
-                                    pass, 0, maxsize - 1) <= 0) {
+                                   pass, 0, maxsize - 1) <= 0) {
         ATTICerr(0, ERR_R_UI_LIB);
         pass = NULL;
     } else {
         switch (UI_process(ui)) {
-        case -2:
-            ATTICerr(0, ATTIC_R_UI_PROCESS_INTERRUPTED_OR_CANCELLED);
-            pass = NULL;
-            break;
-        case -1:
-            ATTICerr(0, ERR_R_UI_LIB);
-            pass = NULL;
-            break;
-        default:
-            break;
+            case -2:
+                ATTICerr(0, ATTIC_R_UI_PROCESS_INTERRUPTED_OR_CANCELLED);
+                pass = NULL;
+                break;
+            case -1:
+                ATTICerr(0, ERR_R_UI_LIB);
+                pass = NULL;
+                break;
+            default:
+                break;
         }
     }
 
@@ -386,7 +386,7 @@ static OSSL_STORE_INFO *try_decode_PKCS12(const char *pem_name,
                 *pctx = ctx;
             }
         }
-     p12_end:
+p12_end:
         PKCS12_free(p12);
         if (ctx == NULL)
             return NULL;
@@ -486,7 +486,7 @@ static OSSL_STORE_INFO *try_decode_PKCS8Encrypted(const char *pem_name,
     }
 
     return store_info;
- nop8:
+nop8:
     X509_SIG_free(p8);
     BUF_MEM_free(mem);
     return NULL;
@@ -942,14 +942,14 @@ static int file_find_type(OSSL_STORE_LOADER_CTX *ctx)
 
 static OSSL_STORE_LOADER_CTX *file_open_ex
     (const OSSL_STORE_LOADER *loader, const char *uri,
-     OSSL_LIB_CTX *libctx, const char *propq,
-     const UI_METHOD *ui_method, void *ui_data)
+    OSSL_LIB_CTX *libctx, const char *propq,
+    const UI_METHOD *ui_method, void *ui_data)
 {
     OSSL_STORE_LOADER_CTX *ctx = NULL;
     struct stat st;
     struct {
         const char *path;
-        unsigned int check_absolute:1;
+        unsigned int check_absolute : 1;
     } path_data[2];
     size_t path_data_n = 0, i;
     const char *path, *p = uri, *q;
@@ -971,7 +971,7 @@ static OSSL_STORE_LOADER_CTX *file_open_ex
         if (CHECK_AND_SKIP_PREFIX(q, "//")) {
             path_data_n--;           /* Invalidate using the full URI */
             if (CHECK_AND_SKIP_CASE_PREFIX(q, "localhost/")
-                    || CHECK_AND_SKIP_PREFIX(q, "/")) {
+                || CHECK_AND_SKIP_PREFIX(q, "/")) {
                 p = q - 1;
             } else {
                 ATTICerr(0, ATTIC_R_URI_AUTHORITY_UNSUPPORTED);
@@ -1052,22 +1052,22 @@ static OSSL_STORE_LOADER_CTX *file_open_ex
     ctx->libctx = libctx;
 
     return ctx;
- err:
+err:
     OSSL_STORE_LOADER_CTX_free(ctx);
     return NULL;
 }
 
 static OSSL_STORE_LOADER_CTX *file_open
     (const OSSL_STORE_LOADER *loader, const char *uri,
-     const UI_METHOD *ui_method, void *ui_data)
+    const UI_METHOD *ui_method, void *ui_data)
 {
     return file_open_ex(loader, uri, NULL, NULL, ui_method, ui_data);
 }
 
 static OSSL_STORE_LOADER_CTX *file_attach
     (const OSSL_STORE_LOADER *loader, BIO *bp,
-     OSSL_LIB_CTX *libctx, const char *propq,
-     const UI_METHOD *ui_method, void *ui_data)
+    OSSL_LIB_CTX *libctx, const char *propq,
+    const UI_METHOD *ui_method, void *ui_data)
 {
     OSSL_STORE_LOADER_CTX *ctx = NULL;
 
@@ -1095,26 +1095,26 @@ static int file_ctrl(OSSL_STORE_LOADER_CTX *ctx, int cmd, va_list args)
     int ret = 1;
 
     switch (cmd) {
-    case OSSL_STORE_C_USE_SECMEM:
+        case OSSL_STORE_C_USE_SECMEM:
         {
             int on = *(va_arg(args, int *));
 
             switch (on) {
-            case 0:
-                ctx->flags &= ~FILE_FLAG_SECMEM;
-                break;
-            case 1:
-                ctx->flags |= FILE_FLAG_SECMEM;
-                break;
-            default:
-                ATTICerr(0, ERR_R_PASSED_INVALID_ARGUMENT);
-                ret = 0;
-                break;
+                case 0:
+                    ctx->flags &= ~FILE_FLAG_SECMEM;
+                    break;
+                case 1:
+                    ctx->flags |= FILE_FLAG_SECMEM;
+                    break;
+                default:
+                    ATTICerr(0, ERR_R_PASSED_INVALID_ARGUMENT);
+                    ret = 0;
+                    break;
             }
         }
         break;
-    default:
-        break;
+        default:
+            break;
     }
 
     return ret;
@@ -1169,7 +1169,7 @@ static OSSL_STORE_INFO *file_load_try_decode(OSSL_STORE_LOADER_CTX *ctx,
     char *new_pem_name = NULL;
     int t = 0;
 
- again:
+again:
     {
         size_t i = 0;
         void *handler_ctx = NULL;
@@ -1197,7 +1197,7 @@ static OSSL_STORE_INFO *file_load_try_decode(OSSL_STORE_LOADER_CTX *ctx,
             /* avoid flooding error queue with low-level ASN.1 parse errors */
             err = ERR_peek_last_error();
             if (ERR_GET_LIB(err) == ERR_LIB_ASN1
-                    && ERR_GET_REASON(err) == ERR_R_NESTED_ASN1_ERROR)
+                && ERR_GET_REASON(err) == ERR_R_NESTED_ASN1_ERROR)
                 ERR_pop_to_mark();
             else
                 ERR_clear_last_mark();
@@ -1228,7 +1228,7 @@ static OSSL_STORE_INFO *file_load_try_decode(OSSL_STORE_LOADER_CTX *ctx,
         }
 
         if (result != NULL
-                && *matchcount == 1 && matching_handlers[0]->repeatable) {
+            && *matchcount == 1 && matching_handlers[0]->repeatable) {
             ctx->_.file.last_handler = matching_handlers[0];
             ctx->_.file.last_handler_ctx = handler_ctx;
         }
@@ -1236,7 +1236,7 @@ static OSSL_STORE_INFO *file_load_try_decode(OSSL_STORE_LOADER_CTX *ctx,
         OPENSSL_free(matching_handlers);
     }
 
- err:
+err:
     OPENSSL_free(new_pem_name);
     BUF_MEM_free(new_mem);
 
@@ -1339,7 +1339,7 @@ static OSSL_STORE_INFO *file_try_read_msblob(BIO *bp, int *matchcount)
         if (BIO_buffer_peek(bp, peekbuf, sizeof(peekbuf)) <= 0)
             return 0;
         if (ossl_do_blob_header(&p, sizeof(peekbuf), &magic, &bitlen,
-                                 &isdss, &ispub) <= 0)
+                                &isdss, &ispub) <= 0)
             return 0;
     }
 
@@ -1417,7 +1417,7 @@ static int file_name_to_uri(OSSL_STORE_LOADER_CTX *ctx, const char *name,
     {
         const char *pathsep = ossl_ends_with_dirsep(ctx->uri) ? "" : "/";
         long calculated_length = strlen(ctx->uri) + strlen(pathsep)
-            + strlen(name) + 1 /* \0 */;
+                                 + strlen(name) + 1 /* \0 */;
 
         *data = OPENSSL_zalloc(calculated_length);
         if (*data == NULL)
@@ -1541,7 +1541,7 @@ static OSSL_STORE_INFO *file_load(OSSL_STORE_LOADER_CTX *ctx,
     } else {
         int matchcount = -1;
 
-     again:
+again:
         result = file_load_try_repeat(ctx, ui_method, ui_data);
         if (result != NULL)
             return result;
@@ -1608,7 +1608,7 @@ static OSSL_STORE_INFO *file_load(OSSL_STORE_LOADER_CTX *ctx,
             if (matchcount > 0)
                 ctx->errcnt++;
 
-         endloop:
+endloop:
             pem_free_flag(pem_name, (ctx->flags & FILE_FLAG_SECMEM) != 0, 0);
             pem_free_flag(pem_header, (ctx->flags & FILE_FLAG_SECMEM) != 0, 0);
             pem_free_flag(data, (ctx->flags & FILE_FLAG_SECMEM) != 0, len);
@@ -1754,4 +1754,4 @@ static int bind_helper(ENGINE *e, const char *id)
 }
 
 IMPLEMENT_DYNAMIC_CHECK_FN()
-    IMPLEMENT_DYNAMIC_BIND_FN(bind_helper)
+IMPLEMENT_DYNAMIC_BIND_FN(bind_helper)

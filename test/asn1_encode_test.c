@@ -94,8 +94,8 @@ typedef struct {
     size_t nbytes2;
 } TEST_CUSTOM_DATA;
 #define CUSTOM_DATA(v)                          \
-    { v, sizeof(v), t_one, sizeof(t_one) },     \
-    { t_one, sizeof(t_one), v, sizeof(v) }
+        { v, sizeof(v), t_one, sizeof(t_one) },     \
+        { t_one, sizeof(t_one), v, sizeof(v) }
 
 static TEST_CUSTOM_DATA test_custom_data[] = {
     CUSTOM_DATA(t_zero),
@@ -130,11 +130,11 @@ static TEST_CUSTOM_DATA test_custom_data[] = {
  * the uses of CUSTOM_DATA above.
  */
 #define CUSTOM_EXPECTED_SUCCESS(num, znum)      \
-    { 0xff, num, 1 },                           \
-    { 0xff, 1, znum }
+        { 0xff, num, 1 },                           \
+        { 0xff, 1, znum }
 #define CUSTOM_EXPECTED_FAILURE                 \
-    { 0, 0, 0 },                                \
-    { 0, 0, 0 }
+        { 0, 0, 0 },                                \
+        { 0, 0, 0 }
 
 /*
  * A structure to collect all test information in.  There MUST be one instance
@@ -171,13 +171,13 @@ typedef struct {
 
 /* To facilitate the creation of an encdec_data array */
 #define ENCDEC_DATA(num, znum)                  \
-    { 0xff, num, 1 }, { 0xff, 1, znum }
+        { 0xff, num, 1 }, { 0xff, 1, znum }
 #define ENCDEC_ARRAY(max, zmax, min, zmin)      \
-    ENCDEC_DATA(max,zmax),                      \
-    ENCDEC_DATA(min,zmin),                      \
-    ENCDEC_DATA(1, 1),                          \
-    ENCDEC_DATA(-1, -1),                        \
-    ENCDEC_DATA(0, ASN1_LONG_UNDEF)
+        ENCDEC_DATA(max,zmax),                      \
+        ENCDEC_DATA(min,zmin),                      \
+        ENCDEC_DATA(1, 1),                          \
+        ENCDEC_DATA(-1, -1),                        \
+        ENCDEC_DATA(0, ASN1_LONG_UNDEF)
 
 #ifndef OPENSSL_NO_DEPRECATED_3_0
 /***** LONG ******************************************************************/
@@ -362,7 +362,8 @@ static ASN1_UINT32_DATA uint32_encdec_data[] = {
 static TEST_PACKAGE uint32_test_package = {
     ASN1_ITEM_ref(ASN1_UINT32_DATA), "UINT32", 0,
     uint32_expected, sizeof(uint32_expected), sizeof(uint32_expected[0]),
-    uint32_encdec_data, sizeof(uint32_encdec_data), sizeof(uint32_encdec_data[0]),
+    uint32_encdec_data, sizeof(uint32_encdec_data),
+    sizeof(uint32_encdec_data[0]),
     (i2d_fn *)i2d_ASN1_UINT32_DATA, (d2i_fn *)d2i_ASN1_UINT32_DATA,
     (ifree_fn *)ASN1_UINT32_DATA_free
 };
@@ -441,7 +442,7 @@ static ASN1_UINT64_DATA uint64_expected[] = {
     CUSTOM_EXPECTED_FAILURE,     /* t_minus_256 (illegal negative value) */
     CUSTOM_EXPECTED_FAILURE,     /* t_9bytes_1 */
     CUSTOM_EXPECTED_SUCCESS((uint64_t)INT64_MAX+1, (uint64_t)INT64_MAX+1),
-                                 /* t_8bytes_1 */
+    /* t_8bytes_1 */
     CUSTOM_EXPECTED_SUCCESS(INT64_MAX, INT64_MAX), /* t_8bytes_2 */
     CUSTOM_EXPECTED_FAILURE,     /* t_8bytes_3_pad */
     CUSTOM_EXPECTED_FAILURE,     /* t_8bytes_4_neg */
@@ -460,7 +461,8 @@ static ASN1_UINT64_DATA uint64_encdec_data[] = {
 static TEST_PACKAGE uint64_test_package = {
     ASN1_ITEM_ref(ASN1_UINT64_DATA), "UINT64", 0,
     uint64_expected, sizeof(uint64_expected), sizeof(uint64_expected[0]),
-    uint64_encdec_data, sizeof(uint64_encdec_data), sizeof(uint64_encdec_data[0]),
+    uint64_encdec_data, sizeof(uint64_encdec_data),
+    sizeof(uint64_encdec_data[0]),
     (i2d_fn *)i2d_ASN1_UINT64_DATA, (d2i_fn *)d2i_ASN1_UINT64_DATA,
     (ifree_fn *)ASN1_UINT64_DATA_free
 };
@@ -737,7 +739,7 @@ static int test_intern(const TEST_PACKAGE *package)
 
     /* Do decode_custom checks */
     nelems = package->encode_expectations_size
-        / package->encode_expectations_elem_size;
+             / package->encode_expectations_elem_size;
     OPENSSL_assert(nelems ==
                    sizeof(test_custom_data) / sizeof(test_custom_data[0]));
     for (i = 0; i < nelems; i++) {
@@ -746,48 +748,48 @@ static int test_intern(const TEST_PACKAGE *package)
             = (EXPECTED *)&((unsigned char *)package->encode_expectations)[pos];
 
         switch (do_encode_custom(expected, &test_custom_data[i], package)) {
-        case -1:
-            if (expected->success) {
-                TEST_error("Failed custom encode round trip %u of %s",
+            case -1:
+                if (expected->success) {
+                    TEST_error("Failed custom encode round trip %u of %s",
+                               i, package->name);
+                    TEST_openssl_errors();
+                    fail++;
+                }
+                break;
+            case 0:
+                TEST_error("Custom encode round trip %u of %s mismatch",
                            i, package->name);
                 TEST_openssl_errors();
                 fail++;
-            }
-            break;
-        case 0:
-            TEST_error("Custom encode round trip %u of %s mismatch",
-                       i, package->name);
-            TEST_openssl_errors();
-            fail++;
-            break;
-        case 1:
-            break;
-        default:
-            OPENSSL_die("do_encode_custom() return unknown value",
-                        __FILE__, __LINE__);
+                break;
+            case 1:
+                break;
+            default:
+                OPENSSL_die("do_encode_custom() return unknown value",
+                            __FILE__, __LINE__);
         }
         switch (do_decode_custom(&test_custom_data[i], expected,
                                  package->encode_expectations_elem_size,
                                  package)) {
-        case -1:
-            if (expected->success) {
-                TEST_error("Failed custom decode round trip %u of %s",
+            case -1:
+                if (expected->success) {
+                    TEST_error("Failed custom decode round trip %u of %s",
+                               i, package->name);
+                    TEST_openssl_errors();
+                    fail++;
+                }
+                break;
+            case 0:
+                TEST_error("Custom decode round trip %u of %s mismatch",
                            i, package->name);
                 TEST_openssl_errors();
                 fail++;
-            }
-            break;
-        case 0:
-            TEST_error("Custom decode round trip %u of %s mismatch",
-                       i, package->name);
-            TEST_openssl_errors();
-            fail++;
-            break;
-        case 1:
-            break;
-        default:
-            OPENSSL_die("do_decode_custom() return unknown value",
-                        __FILE__, __LINE__);
+                break;
+            case 1:
+                break;
+            default:
+                OPENSSL_die("do_decode_custom() return unknown value",
+                            __FILE__, __LINE__);
         }
     }
 
@@ -799,24 +801,24 @@ static int test_intern(const TEST_PACKAGE *package)
             = (EXPECTED *)&((unsigned char *)package->encdec_data)[pos];
 
         switch (do_enc_dec(expected, package->encdec_data_elem_size, package)) {
-        case -1:
-            if (expected->success) {
-                TEST_error("Failed encode/decode round trip %u of %s",
+            case -1:
+                if (expected->success) {
+                    TEST_error("Failed encode/decode round trip %u of %s",
+                               i, package->name);
+                    TEST_openssl_errors();
+                    fail++;
+                }
+                break;
+            case 0:
+                TEST_error("Encode/decode round trip %u of %s mismatch",
                            i, package->name);
-                TEST_openssl_errors();
                 fail++;
-            }
-            break;
-        case 0:
-            TEST_error("Encode/decode round trip %u of %s mismatch",
-                       i, package->name);
-            fail++;
-            break;
-        case 1:
-            break;
-        default:
-            OPENSSL_die("do_enc_dec() return unknown value",
-                        __FILE__, __LINE__);
+                break;
+            case 1:
+                break;
+            default:
+                OPENSSL_die("do_enc_dec() return unknown value",
+                            __FILE__, __LINE__);
         }
     }
 

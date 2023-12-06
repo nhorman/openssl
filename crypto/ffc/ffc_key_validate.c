@@ -48,7 +48,7 @@ int ossl_ffc_validate_public_key_partial(const FFC_PARAMS *params,
     if (BN_cmp(pub_key, tmp) >= 0)
         *ret |= FFC_ERROR_PUBKEY_TOO_LARGE;
     ok = 1;
- err:
+err:
     if (ctx != NULL) {
         BN_CTX_end(ctx);
         BN_CTX_free(ctx);
@@ -85,7 +85,7 @@ int ossl_ffc_validate_public_key(const FFC_PARAMS *params,
     }
 
     ok = 1;
- err:
+err:
     if (ctx != NULL) {
         BN_CTX_end(ctx);
         BN_CTX_free(ctx);

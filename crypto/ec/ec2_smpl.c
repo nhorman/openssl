@@ -130,7 +130,7 @@ int ossl_ec_GF2m_simple_group_set_curve(EC_GROUP *group,
     bn_set_all_zero(group->b);
 
     ret = 1;
- err:
+err:
     return ret;
 }
 
@@ -160,7 +160,7 @@ int ossl_ec_GF2m_simple_group_get_curve(const EC_GROUP *group, BIGNUM *p,
 
     ret = 1;
 
- err:
+err:
     return ret;
 }
 
@@ -210,7 +210,7 @@ int ossl_ec_GF2m_simple_group_check_discriminant(const EC_GROUP *group,
 
     ret = 1;
 
- err:
+err:
     BN_CTX_end(ctx);
 #ifndef FIPS_MODULE
     BN_CTX_free(new_ctx);
@@ -309,7 +309,7 @@ int ossl_ec_GF2m_simple_point_set_affine_coordinates(const EC_GROUP *group,
     point->Z_is_one = 1;
     ret = 1;
 
- err:
+err:
     return ret;
 }
 
@@ -345,7 +345,7 @@ int ossl_ec_GF2m_simple_point_get_affine_coordinates(const EC_GROUP *group,
     }
     ret = 1;
 
- err:
+err:
     return ret;
 }
 
@@ -462,7 +462,7 @@ int ossl_ec_GF2m_simple_add(const EC_GROUP *group, EC_POINT *r,
 
     ret = 1;
 
- err:
+err:
     BN_CTX_end(ctx);
 #ifndef FIPS_MODULE
     BN_CTX_free(new_ctx);
@@ -505,7 +505,8 @@ int ossl_ec_GF2m_simple_is_at_infinity(const EC_GROUP *group,
  * in the EC_GROUP.  A point is valid if it satisfies the Weierstrass equation:
  *      y^2 + x*y = x^3 + a*x^2 + b.
  */
-int ossl_ec_GF2m_simple_is_on_curve(const EC_GROUP *group, const EC_POINT *point,
+int ossl_ec_GF2m_simple_is_on_curve(const EC_GROUP *group,
+                                    const EC_POINT *point,
                                     BN_CTX *ctx)
 {
     int ret = -1;
@@ -563,7 +564,7 @@ int ossl_ec_GF2m_simple_is_on_curve(const EC_GROUP *group, const EC_POINT *point
         goto err;
     ret = BN_is_zero(lh);
 
- err:
+err:
     BN_CTX_end(ctx);
 #ifndef FIPS_MODULE
     BN_CTX_free(new_ctx);
@@ -620,7 +621,7 @@ int ossl_ec_GF2m_simple_cmp(const EC_GROUP *group, const EC_POINT *a,
         goto err;
     ret = ((BN_cmp(aX, bX) == 0) && BN_cmp(aY, bY) == 0) ? 0 : 1;
 
- err:
+err:
     BN_CTX_end(ctx);
 #ifndef FIPS_MODULE
     BN_CTX_free(new_ctx);
@@ -667,7 +668,7 @@ int ossl_ec_GF2m_simple_make_affine(const EC_GROUP *group, EC_POINT *point,
 
     ret = 1;
 
- err:
+err:
     BN_CTX_end(ctx);
 #ifndef FIPS_MODULE
     BN_CTX_free(new_ctx);
@@ -859,7 +860,7 @@ int ec_GF2m_simple_ladder_post(const EC_GROUP *group,
 
     ret = 1;
 
- err:
+err:
     BN_CTX_end(ctx);
     return ret;
 }
@@ -916,7 +917,7 @@ int ec_GF2m_simple_points_mul(const EC_GROUP *group, EC_POINT *r,
 
     ret = 1;
 
- err:
+err:
     EC_POINT_free(t);
     return ret;
 }

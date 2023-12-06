@@ -96,55 +96,55 @@ int genrsa_main(int argc, char **argv)
     prog = opt_init(argc, argv, genrsa_options);
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_EOF:
-        case OPT_ERR:
+            case OPT_EOF:
+            case OPT_ERR:
 opthelp:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto end;
-        case OPT_HELP:
-            ret = 0;
-            opt_help(genrsa_options);
-            goto end;
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
+                goto end;
+            case OPT_HELP:
+                ret = 0;
+                opt_help(genrsa_options);
+                goto end;
 #ifndef OPENSSL_NO_DEPRECATED_3_0
-        case OPT_3:
-            f4 = RSA_3;
-            break;
+            case OPT_3:
+                f4 = RSA_3;
+                break;
 #endif
-        case OPT_F4:
-            f4 = RSA_F4;
-            break;
-        case OPT_OUT:
-            outfile = opt_arg();
-            break;
-        case OPT_ENGINE:
-            eng = setup_engine(opt_arg(), 0);
-            break;
-        case OPT_R_CASES:
-            if (!opt_rand(o))
-                goto end;
-            break;
-        case OPT_PROV_CASES:
-            if (!opt_provider(o))
-                goto end;
-            break;
-        case OPT_PASSOUT:
-            passoutarg = opt_arg();
-            break;
-        case OPT_CIPHER:
-            ciphername = opt_unknown();
-            break;
-        case OPT_PRIMES:
-            primes = opt_int_arg();
-            break;
-        case OPT_VERBOSE:
-            verbose = 1;
-            break;
-        case OPT_QUIET:
-            verbose = 0;
-            break;
-        case OPT_TRADITIONAL:
-            traditional = 1;
-            break;
+            case OPT_F4:
+                f4 = RSA_F4;
+                break;
+            case OPT_OUT:
+                outfile = opt_arg();
+                break;
+            case OPT_ENGINE:
+                eng = setup_engine(opt_arg(), 0);
+                break;
+            case OPT_R_CASES:
+                if (!opt_rand(o))
+                    goto end;
+                break;
+            case OPT_PROV_CASES:
+                if (!opt_provider(o))
+                    goto end;
+                break;
+            case OPT_PASSOUT:
+                passoutarg = opt_arg();
+                break;
+            case OPT_CIPHER:
+                ciphername = opt_unknown();
+                break;
+            case OPT_PRIMES:
+                primes = opt_int_arg();
+                break;
+            case OPT_VERBOSE:
+                verbose = 1;
+                break;
+            case OPT_QUIET:
+                verbose = 0;
+                break;
+            case OPT_TRADITIONAL:
+                traditional = 1;
+                break;
         }
     }
 
@@ -235,7 +235,7 @@ opthelp:
     }
 
     ret = 0;
- end:
+end:
     BN_free(bn);
     BN_GENCB_free(cb);
     EVP_PKEY_CTX_free(ctx);

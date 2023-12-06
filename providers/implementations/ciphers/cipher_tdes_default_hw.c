@@ -34,7 +34,7 @@ static int ossl_cipher_hw_tdes_ede2_initkey(PROV_CIPHER_CTX *ctx,
             des_t4_key_expand(&deskey[1], &tctx->ks2);
             memcpy(&tctx->ks3, &tctx->ks1, sizeof(tctx->ks1));
             tctx->tstream.cbc = ctx->enc ? des_t4_ede3_cbc_encrypt :
-                                           des_t4_ede3_cbc_decrypt;
+                                des_t4_ede3_cbc_decrypt;
             return 1;
         }
     }
@@ -110,7 +110,7 @@ static int ossl_cipher_hw_tdes_cfb1(PROV_CIPHER_CTX *ctx, unsigned char *out,
                              &tctx->ks1, &tctx->ks2, &tctx->ks3,
                              (DES_cblock *)ctx->iv, ctx->enc);
         out[n / 8] = (out[n / 8] & ~(0x80 >> (unsigned int)(n % 8)))
-            | ((d[0] & 0x80) >> (unsigned int)(n % 8));
+                     | ((d[0] & 0x80) >> (unsigned int)(n % 8));
     }
 
     return 1;

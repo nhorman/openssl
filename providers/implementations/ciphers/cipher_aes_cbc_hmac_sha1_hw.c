@@ -256,7 +256,7 @@ static size_t tls1_multi_block_encrypt(void *vctx,
     memset(blocks, 0, sizeof(blocks));
     for (i = 0; i < x4; i++) {
         unsigned int len = (i == (x4 - 1) ? last : frag),
-            off = hash_d[i].blocks * 64;
+                     off = hash_d[i].blocks * 64;
         const unsigned char *ptr = hash_d[i].ptr + off;
 
         off = (len - processed) - (64 - 13) - off; /* remainder actually */
@@ -397,7 +397,7 @@ static int aesni_cbc_hmac_sha1_cipher(PROV_CIPHER_CTX *vctx,
             iv = AES_BLOCK_SIZE;
 
         if (plen > (sha_off + iv)
-                && (blocks = (plen - (sha_off + iv)) / SHA_CBLOCK)) {
+            && (blocks = (plen - (sha_off + iv)) / SHA_CBLOCK)) {
             sha1_update(&sctx->md, in + iv, sha_off);
 
             aesni_cbc_sha1_enc(in, out, blocks, &ctx->ks, ctx->base.iv,
@@ -603,7 +603,8 @@ static int aesni_cbc_hmac_sha1_cipher(PROV_CIPHER_CTX *vctx,
                 size_t off = out - p;
                 unsigned int c, cmask;
 
-                for (res = 0, i = 0, j = 0; j < maxpad + SHA_DIGEST_LENGTH; j++) {
+                for (res = 0, i = 0, j = 0; j < maxpad + SHA_DIGEST_LENGTH;
+                     j++) {
                     c = p[j];
                     cmask =
                         ((int)(j - off - SHA_DIGEST_LENGTH)) >> (sizeof(int) *
@@ -630,7 +631,8 @@ static int aesni_cbc_hmac_sha1_cipher(PROV_CIPHER_CTX *vctx,
 
 /* EVP_CTRL_AEAD_SET_MAC_KEY */
 static void aesni_cbc_hmac_sha1_set_mac_key(void *vctx,
-                                            const unsigned char *mac, size_t len)
+                                            const unsigned char *mac,
+                                            size_t len)
 {
     PROV_AES_HMAC_SHA1_CTX *ctx = (PROV_AES_HMAC_SHA1_CTX *)vctx;
     unsigned int i;
@@ -676,7 +678,7 @@ static int aesni_cbc_hmac_sha1_set_tls1_aad(void *vctx,
     if (ctx->base.enc) {
         ctx->payload_length = len;
         if ((ctx->aux.tls_ver =
-             p[aad_len - 4] << 8 | p[aad_len - 3]) >= TLS1_1_VERSION) {
+                 p[aad_len - 4] << 8 | p[aad_len - 3]) >= TLS1_1_VERSION) {
             if (len < AES_BLOCK_SIZE)
                 return 0;
             len -= AES_BLOCK_SIZE;
@@ -686,8 +688,8 @@ static int aesni_cbc_hmac_sha1_set_tls1_aad(void *vctx,
         sctx->md = sctx->head;
         sha1_update(&sctx->md, p, aad_len);
         ctx->tls_aad_pad = (int)(((len + SHA_DIGEST_LENGTH +
-                       AES_BLOCK_SIZE) & -AES_BLOCK_SIZE)
-                     - len);
+                                   AES_BLOCK_SIZE) & -AES_BLOCK_SIZE)
+                                 - len);
         return 1;
     } else {
         memcpy(ctx->aux.tls_aad, aad_rec, aad_len);
@@ -775,8 +777,8 @@ static int aesni_cbc_hmac_sha1_tls1_multiblock_encrypt(
 
 static const PROV_CIPHER_HW_AES_HMAC_SHA cipher_hw_aes_hmac_sha1 = {
     {
-      aesni_cbc_hmac_sha1_init_key,
-      aesni_cbc_hmac_sha1_cipher
+        aesni_cbc_hmac_sha1_init_key,
+        aesni_cbc_hmac_sha1_cipher
     },
     aesni_cbc_hmac_sha1_set_mac_key,
     aesni_cbc_hmac_sha1_set_tls1_aad,

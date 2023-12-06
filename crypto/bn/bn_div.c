@@ -80,7 +80,7 @@ int BN_div(BIGNUM *dv, BIGNUM *rem, const BIGNUM *m, const BIGNUM *d,
     rem->neg = BN_is_zero(rem) ? 0 : m->neg;
     dv->neg = m->neg ^ d->neg;
     ret = 1;
- end:
+end:
     BN_CTX_end(ctx);
     return ret;
 }
@@ -162,37 +162,37 @@ static int bn_left_align(BIGNUM *num)
     && !defined(PEDANTIC) && !defined(BN_DIV3W)
 #  if defined(__GNUC__) && __GNUC__>=2
 #   if defined(__i386) || defined (__i386__)
-   /*-
-    * There were two reasons for implementing this template:
-    * - GNU C generates a call to a function (__udivdi3 to be exact)
-    *   in reply to ((((BN_ULLONG)n0)<<BN_BITS2)|n1)/d0 (I fail to
-    *   understand why...);
-    * - divl doesn't only calculate quotient, but also leaves
-    *   remainder in %edx which we can definitely use here:-)
-    */
+/*-
+ * There were two reasons for implementing this template:
+ * - GNU C generates a call to a function (__udivdi3 to be exact)
+ *   in reply to ((((BN_ULLONG)n0)<<BN_BITS2)|n1)/d0 (I fail to
+ *   understand why...);
+ * - divl doesn't only calculate quotient, but also leaves
+ *   remainder in %edx which we can definitely use here:-)
+ */
 #    undef bn_div_words
 #    define bn_div_words(n0,n1,d0)                \
         ({  asm volatile (                      \
                 "divl   %4"                     \
-                : "=a"(q), "=d"(rem)            \
-                : "a"(n1), "d"(n0), "r"(d0)     \
+                : "=a" (q), "=d" (rem)            \
+                : "a" (n1), "d" (n0), "r" (d0)     \
                 : "cc");                        \
             q;                                  \
-        })
+         })
 #    define REMAINDER_IS_ALREADY_CALCULATED
 #   elif defined(__x86_64) && defined(SIXTY_FOUR_BIT_LONG)
-   /*
-    * Same story here, but it's 128-bit by 64-bit division. Wow!
-    */
+/*
+ * Same story here, but it's 128-bit by 64-bit division. Wow!
+ */
 #    undef bn_div_words
 #    define bn_div_words(n0,n1,d0)                \
         ({  asm volatile (                      \
                 "divq   %4"                     \
-                : "=a"(q), "=d"(rem)            \
-                : "a"(n1), "d"(n0), "r"(d0)     \
+                : "=a" (q), "=d" (rem)            \
+                : "a" (n1), "d" (n0), "r" (d0)     \
                 : "cc");                        \
             q;                                  \
-        })
+         })
 #    define REMAINDER_IS_ALREADY_CALCULATED
 #   endif                       /* __<cpu> */
 #  endif                        /* __GNUC__ */
@@ -452,7 +452,7 @@ int bn_div_fixed_top(BIGNUM *dv, BIGNUM *rm, const BIGNUM *num,
 
     BN_CTX_end(ctx);
     return 1;
- err:
+err:
     bn_check_top(rm);
     BN_CTX_end(ctx);
     return 0;

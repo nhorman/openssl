@@ -42,7 +42,8 @@
 
 static int expand(OPENSSL_LHASH *lh);
 static void contract(OPENSSL_LHASH *lh);
-static OPENSSL_LH_NODE **getrn(OPENSSL_LHASH *lh, const void *data, unsigned long *rhash);
+static OPENSSL_LH_NODE **getrn(OPENSSL_LHASH *lh, const void *data,
+                               unsigned long *rhash);
 
 OPENSSL_LHASH *OPENSSL_LH_new(OPENSSL_LH_HASHFUNC h, OPENSSL_LH_COMPFUNC c)
 {
@@ -105,7 +106,8 @@ void *OPENSSL_LH_insert(OPENSSL_LHASH *lh, void *data)
     void *ret;
 
     lh->error = 0;
-    if ((lh->up_load <= (lh->num_items * LH_LOAD_MULT / lh->num_nodes)) && !expand(lh))
+    if ((lh->up_load <= (lh->num_items * LH_LOAD_MULT / lh->num_nodes)) &&
+        !expand(lh))
         return NULL;        /* 'lh->error++' already done in 'expand' */
 
     rn = getrn(lh, data, &hash);
@@ -199,7 +201,8 @@ void OPENSSL_LH_doall(OPENSSL_LHASH *lh, OPENSSL_LH_DOALL_FUNC func)
     doall_util_fn(lh, 0, func, (OPENSSL_LH_DOALL_FUNCARG)0, NULL);
 }
 
-void OPENSSL_LH_doall_arg(OPENSSL_LHASH *lh, OPENSSL_LH_DOALL_FUNCARG func, void *arg)
+void OPENSSL_LH_doall_arg(OPENSSL_LHASH *lh, OPENSSL_LH_DOALL_FUNCARG func,
+                          void *arg)
 {
     doall_util_fn(lh, 1, (OPENSSL_LH_DOALL_FUNC)0, func, arg);
 }
@@ -256,7 +259,8 @@ static void contract(OPENSSL_LHASH *lh)
     lh->b[lh->p + lh->pmax - 1] = NULL; /* 24/07-92 - eay - weird but :-( */
     if (lh->p == 0) {
         n = OPENSSL_realloc(lh->b,
-                            (unsigned int)(sizeof(OPENSSL_LH_NODE *) * lh->pmax));
+                            (unsigned int)(sizeof(OPENSSL_LH_NODE *) *
+                                           lh->pmax));
         if (n == NULL) {
             /* fputs("realloc error in lhash", stderr); */
             lh->error++;

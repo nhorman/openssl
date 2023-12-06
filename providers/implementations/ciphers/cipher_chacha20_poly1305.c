@@ -31,8 +31,10 @@ static OSSL_FUNC_cipher_get_ctx_params_fn chacha20_poly1305_get_ctx_params;
 static OSSL_FUNC_cipher_set_ctx_params_fn chacha20_poly1305_set_ctx_params;
 static OSSL_FUNC_cipher_cipher_fn chacha20_poly1305_cipher;
 static OSSL_FUNC_cipher_final_fn chacha20_poly1305_final;
-static OSSL_FUNC_cipher_gettable_ctx_params_fn chacha20_poly1305_gettable_ctx_params;
-#define chacha20_poly1305_settable_ctx_params ossl_cipher_aead_settable_ctx_params
+static OSSL_FUNC_cipher_gettable_ctx_params_fn
+    chacha20_poly1305_gettable_ctx_params;
+#define chacha20_poly1305_settable_ctx_params \
+        ossl_cipher_aead_settable_ctx_params
 #define chacha20_poly1305_gettable_params ossl_cipher_generic_gettable_params
 #define chacha20_poly1305_update chacha20_poly1305_cipher
 
@@ -243,8 +245,8 @@ static int chacha20_poly1305_set_ctx_params(void *vctx,
 }
 
 static int chacha20_poly1305_einit(void *vctx, const unsigned char *key,
-                                  size_t keylen, const unsigned char *iv,
-                                  size_t ivlen, const OSSL_PARAM params[])
+                                   size_t keylen, const unsigned char *iv,
+                                   size_t ivlen, const OSSL_PARAM params[])
 {
     int ret;
 
@@ -263,8 +265,8 @@ static int chacha20_poly1305_einit(void *vctx, const unsigned char *key,
 }
 
 static int chacha20_poly1305_dinit(void *vctx, const unsigned char *key,
-                                  size_t keylen, const unsigned char *iv,
-                                  size_t ivlen, const OSSL_PARAM params[])
+                                   size_t keylen, const unsigned char *iv,
+                                   size_t ivlen, const OSSL_PARAM params[])
 {
     int ret;
 
@@ -328,26 +330,26 @@ static int chacha20_poly1305_final(void *vctx, unsigned char *out, size_t *outl,
 
 /* ossl_chacha20_ossl_poly1305_functions */
 const OSSL_DISPATCH ossl_chacha20_ossl_poly1305_functions[] = {
-    { OSSL_FUNC_CIPHER_NEWCTX, (void (*)(void))chacha20_poly1305_newctx },
-    { OSSL_FUNC_CIPHER_FREECTX, (void (*)(void))chacha20_poly1305_freectx },
-    { OSSL_FUNC_CIPHER_DUPCTX, (void (*)(void))chacha20_poly1305_dupctx },
-    { OSSL_FUNC_CIPHER_ENCRYPT_INIT, (void (*)(void))chacha20_poly1305_einit },
-    { OSSL_FUNC_CIPHER_DECRYPT_INIT, (void (*)(void))chacha20_poly1305_dinit },
-    { OSSL_FUNC_CIPHER_UPDATE, (void (*)(void))chacha20_poly1305_update },
-    { OSSL_FUNC_CIPHER_FINAL, (void (*)(void))chacha20_poly1305_final },
-    { OSSL_FUNC_CIPHER_CIPHER, (void (*)(void))chacha20_poly1305_cipher },
+    { OSSL_FUNC_CIPHER_NEWCTX, (void (*)(void)) chacha20_poly1305_newctx },
+    { OSSL_FUNC_CIPHER_FREECTX, (void (*)(void)) chacha20_poly1305_freectx },
+    { OSSL_FUNC_CIPHER_DUPCTX, (void (*)(void)) chacha20_poly1305_dupctx },
+    { OSSL_FUNC_CIPHER_ENCRYPT_INIT, (void (*)(void)) chacha20_poly1305_einit },
+    { OSSL_FUNC_CIPHER_DECRYPT_INIT, (void (*)(void)) chacha20_poly1305_dinit },
+    { OSSL_FUNC_CIPHER_UPDATE, (void (*)(void)) chacha20_poly1305_update },
+    { OSSL_FUNC_CIPHER_FINAL, (void (*)(void)) chacha20_poly1305_final },
+    { OSSL_FUNC_CIPHER_CIPHER, (void (*)(void)) chacha20_poly1305_cipher },
     { OSSL_FUNC_CIPHER_GET_PARAMS,
-        (void (*)(void))chacha20_poly1305_get_params },
+      (void (*)(void)) chacha20_poly1305_get_params },
     { OSSL_FUNC_CIPHER_GETTABLE_PARAMS,
-        (void (*)(void))chacha20_poly1305_gettable_params },
+      (void (*)(void)) chacha20_poly1305_gettable_params },
     { OSSL_FUNC_CIPHER_GET_CTX_PARAMS,
-         (void (*)(void))chacha20_poly1305_get_ctx_params },
+      (void (*)(void)) chacha20_poly1305_get_ctx_params },
     { OSSL_FUNC_CIPHER_GETTABLE_CTX_PARAMS,
-        (void (*)(void))chacha20_poly1305_gettable_ctx_params },
+      (void (*)(void)) chacha20_poly1305_gettable_ctx_params },
     { OSSL_FUNC_CIPHER_SET_CTX_PARAMS,
-        (void (*)(void))chacha20_poly1305_set_ctx_params },
+      (void (*)(void)) chacha20_poly1305_set_ctx_params },
     { OSSL_FUNC_CIPHER_SETTABLE_CTX_PARAMS,
-        (void (*)(void))chacha20_poly1305_settable_ctx_params },
+      (void (*)(void)) chacha20_poly1305_settable_ctx_params },
     OSSL_DISPATCH_END
 };
 

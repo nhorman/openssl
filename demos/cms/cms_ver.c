@@ -37,17 +37,17 @@ static void print_signingTime(CMS_ContentInfo *cms)
         if (t == NULL)
             continue;
         switch (t->type) {
-        case V_ASN1_UTCTIME:
-            utctime = t->value.utctime;
-            ASN1_UTCTIME_print(b, utctime);
-            break;
-        case V_ASN1_GENERALIZEDTIME:
-            gtime = t->value.generalizedtime;
-            ASN1_GENERALIZEDTIME_print(b, gtime);
-            break;
-        default:
-            fprintf(stderr, "unrecognized signingTime type\n");
-            break;
+            case V_ASN1_UTCTIME:
+                utctime = t->value.utctime;
+                ASN1_UTCTIME_print(b, utctime);
+                break;
+            case V_ASN1_GENERALIZEDTIME:
+                gtime = t->value.generalizedtime;
+                ASN1_GENERALIZEDTIME_print(b, gtime);
+                break;
+            default:
+                fprintf(stderr, "unrecognized signingTime type\n");
+                break;
         }
         BIO_printf(b, ": signingTime from SignerInfo %i\n", i);
     }
@@ -115,7 +115,7 @@ int main(int argc, char **argv)
 
     ret = EXIT_SUCCESS;
 
- err:
+err:
     if (ret != EXIT_SUCCESS) {
         fprintf(stderr, "Error Verifying Data\n");
         ERR_print_errors_fp(stderr);

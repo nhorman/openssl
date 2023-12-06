@@ -92,7 +92,8 @@ static int test_offset(int idx)
         ret = 0;
 
     if (!TEST_int_eq(testdata->time_result, ret)) {
-        TEST_info("ASN1_TIME_diff() test failed for %s day=%d sec=%d\n", at.data, day, sec);
+        TEST_info("ASN1_TIME_diff() test failed for %s day=%d sec=%d\n",
+                  at.data, day, sec);
         return 0;
     }
 

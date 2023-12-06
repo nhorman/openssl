@@ -114,74 +114,74 @@ int ecparam_main(int argc, char **argv)
     prog = opt_init(argc, argv, ecparam_options);
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_EOF:
-        case OPT_ERR:
- opthelp:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto end;
-        case OPT_HELP:
-            opt_help(ecparam_options);
-            ret = 0;
-            goto end;
-        case OPT_INFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &informat))
-                goto opthelp;
-            break;
-        case OPT_IN:
-            infile = opt_arg();
-            break;
-        case OPT_OUTFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &outformat))
-                goto opthelp;
-            break;
-        case OPT_OUT:
-            outfile = opt_arg();
-            break;
-        case OPT_TEXT:
-            text = 1;
-            break;
-        case OPT_CHECK:
-            check = 1;
-            break;
-        case OPT_CHECK_NAMED:
-            check_named = 1;
-            break;
-        case OPT_LIST_CURVES:
-            list_curves = 1;
-            break;
-        case OPT_NO_SEED:
-            no_seed = 1;
-            break;
-        case OPT_NOOUT:
-            noout = 1;
-            break;
-        case OPT_NAME:
-            curve_name = opt_arg();
-            break;
-        case OPT_CONV_FORM:
-            point_format = opt_arg();
-            if (!opt_string(point_format, point_format_options))
-                goto opthelp;
-            break;
-        case OPT_PARAM_ENC:
-            asn1_encoding = opt_arg();
-            if (!opt_string(asn1_encoding, asn1_encoding_options))
-                goto opthelp;
-            break;
-        case OPT_GENKEY:
-            genkey = 1;
-            break;
-        case OPT_R_CASES:
-            if (!opt_rand(o))
+            case OPT_EOF:
+            case OPT_ERR:
+opthelp:
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
                 goto end;
-            break;
-        case OPT_PROV_CASES:
-            if (!opt_provider(o))
+            case OPT_HELP:
+                opt_help(ecparam_options);
+                ret = 0;
                 goto end;
-            break;
-        case OPT_ENGINE:
-            e = setup_engine(opt_arg(), 0);
-            break;
+            case OPT_INFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &informat))
+                    goto opthelp;
+                break;
+            case OPT_IN:
+                infile = opt_arg();
+                break;
+            case OPT_OUTFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &outformat))
+                    goto opthelp;
+                break;
+            case OPT_OUT:
+                outfile = opt_arg();
+                break;
+            case OPT_TEXT:
+                text = 1;
+                break;
+            case OPT_CHECK:
+                check = 1;
+                break;
+            case OPT_CHECK_NAMED:
+                check_named = 1;
+                break;
+            case OPT_LIST_CURVES:
+                list_curves = 1;
+                break;
+            case OPT_NO_SEED:
+                no_seed = 1;
+                break;
+            case OPT_NOOUT:
+                noout = 1;
+                break;
+            case OPT_NAME:
+                curve_name = opt_arg();
+                break;
+            case OPT_CONV_FORM:
+                point_format = opt_arg();
+                if (!opt_string(point_format, point_format_options))
+                    goto opthelp;
+                break;
+            case OPT_PARAM_ENC:
+                asn1_encoding = opt_arg();
+                if (!opt_string(asn1_encoding, asn1_encoding_options))
+                    goto opthelp;
+                break;
+            case OPT_GENKEY:
+                genkey = 1;
+                break;
+            case OPT_R_CASES:
+                if (!opt_rand(o))
+                    goto end;
+                break;
+            case OPT_PROV_CASES:
+                if (!opt_provider(o))
+                    goto end;
+                break;
+            case OPT_ENGINE:
+                e = setup_engine(opt_arg(), 0);
+                break;
         }
     }
 
@@ -224,8 +224,8 @@ int ecparam_main(int argc, char **argv)
                                                     asn1_encoding, 0);
         if (point_format != NULL)
             *p++ = OSSL_PARAM_construct_utf8_string(
-                       OSSL_PKEY_PARAM_EC_POINT_CONVERSION_FORMAT,
-                       point_format, 0);
+                OSSL_PKEY_PARAM_EC_POINT_CONVERSION_FORMAT,
+                point_format, 0);
         *p = OSSL_PARAM_construct_end();
 
         if (OPENSSL_strcasecmp(curve_name, "SM2") == 0)
@@ -255,15 +255,15 @@ int ecparam_main(int argc, char **argv)
 
         if (point_format
             && !EVP_PKEY_set_utf8_string_param(
-                    params_key, OSSL_PKEY_PARAM_EC_POINT_CONVERSION_FORMAT,
-                    point_format)) {
+                params_key, OSSL_PKEY_PARAM_EC_POINT_CONVERSION_FORMAT,
+                point_format)) {
             BIO_printf(bio_err, "unable to set point conversion format\n");
             goto end;
         }
 
         if (asn1_encoding != NULL
             && !EVP_PKEY_set_utf8_string_param(
-                    params_key, OSSL_PKEY_PARAM_EC_ENCODING, asn1_encoding)) {
+                params_key, OSSL_PKEY_PARAM_EC_ENCODING, asn1_encoding)) {
             BIO_printf(bio_err, "unable to set asn1 encoding format\n");
             goto end;
         }
@@ -287,10 +287,11 @@ int ecparam_main(int argc, char **argv)
 
         if (check_named
             && !EVP_PKEY_set_utf8_string_param(params_key,
-                                           OSSL_PKEY_PARAM_EC_GROUP_CHECK_TYPE,
-                                           OSSL_PKEY_EC_GROUP_CHECK_NAMED)) {
-                BIO_printf(bio_err, "unable to set check_type\n");
-                goto end;
+                                               OSSL_PKEY_PARAM_EC_GROUP_CHECK_TYPE,
+                                               OSSL_PKEY_EC_GROUP_CHECK_NAMED))
+        {
+            BIO_printf(bio_err, "unable to set check_type\n");
+            goto end;
         }
         pctx = EVP_PKEY_CTX_new_from_pkey(app_get0_libctx(), params_key,
                                           app_get0_propq());
@@ -306,8 +307,8 @@ int ecparam_main(int argc, char **argv)
 
     if (!noout) {
         ectx_params = OSSL_ENCODER_CTX_new_for_pkey(
-                          params_key, OSSL_KEYMGMT_SELECT_DOMAIN_PARAMETERS,
-                          outformat == FORMAT_ASN1 ? "DER" : "PEM", NULL, NULL);
+            params_key, OSSL_KEYMGMT_SELECT_DOMAIN_PARAMETERS,
+            outformat == FORMAT_ASN1 ? "DER" : "PEM", NULL, NULL);
         if (!OSSL_ENCODER_to_bio(ectx_params, out)) {
             BIO_printf(bio_err, "unable to write elliptic curve parameters\n");
             goto end;
@@ -332,8 +333,8 @@ int ecparam_main(int argc, char **argv)
         }
         assert(private);
         ectx_key = OSSL_ENCODER_CTX_new_for_pkey(
-                       key, OSSL_KEYMGMT_SELECT_ALL,
-                       outformat == FORMAT_ASN1 ? "DER" : "PEM", NULL, NULL);
+            key, OSSL_KEYMGMT_SELECT_ALL,
+            outformat == FORMAT_ASN1 ? "DER" : "PEM", NULL, NULL);
         if (!OSSL_ENCODER_to_bio(ectx_key, out)) {
             BIO_printf(bio_err, "unable to write elliptic "
                        "curve parameters\n");

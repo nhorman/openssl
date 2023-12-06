@@ -22,9 +22,9 @@
 #if defined(RC4_ASM)                                                           \
     && defined(MD5_ASM)                                                        \
     && (defined(__x86_64)                                                      \
-        || defined(__x86_64__)                                                 \
-        || defined(_M_AMD64)                                                   \
-        || defined(_M_X64))
+    || defined(__x86_64__)                                                 \
+    || defined(_M_AMD64)                                                   \
+    || defined(_M_X64))
 # define STITCHED_CALL
 # define MOD 32 /* 32 is $MOD from rc4_md5-x86_64.pl */
 #else
@@ -72,8 +72,8 @@ static int cipher_hw_rc4_hmac_md5_cipher(PROV_CIPHER_CTX *bctx,
             md5_off += MD5_CBLOCK;
 
         if (plen > md5_off
-                && (blocks = (plen - md5_off) / MD5_CBLOCK)
-                && (OPENSSL_ia32cap_P[0] & (1 << 20)) == 0) {
+            && (blocks = (plen - md5_off) / MD5_CBLOCK)
+            && (OPENSSL_ia32cap_P[0] & (1 << 20)) == 0) {
             MD5_Update(&ctx->md, in, md5_off);
             RC4(ks, rc4_off, in, out);
 
@@ -118,8 +118,8 @@ static int cipher_hw_rc4_hmac_md5_cipher(PROV_CIPHER_CTX *bctx,
             rc4_off += MD5_CBLOCK;
 
         if (len > rc4_off
-                && (blocks = (len - rc4_off) / MD5_CBLOCK)
-                && (OPENSSL_ia32cap_P[0] & (1 << 20)) == 0) {
+            && (blocks = (len - rc4_off) / MD5_CBLOCK)
+            && (OPENSSL_ia32cap_P[0] & (1 << 20)) == 0) {
             RC4(ks, rc4_off, in, out);
             MD5_Update(&ctx->md, out, md5_off);
 
@@ -220,8 +220,8 @@ static void cipher_hw_rc4_hmac_md5_init_mackey(PROV_CIPHER_CTX *bctx,
 
 static const PROV_CIPHER_HW_RC4_HMAC_MD5 rc4_hmac_md5_hw = {
     {
-      cipher_hw_rc4_hmac_md5_initkey,
-      cipher_hw_rc4_hmac_md5_cipher
+        cipher_hw_rc4_hmac_md5_initkey,
+        cipher_hw_rc4_hmac_md5_cipher
     },
     cipher_hw_rc4_hmac_md5_tls_init,
     cipher_hw_rc4_hmac_md5_init_mackey

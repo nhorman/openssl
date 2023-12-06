@@ -150,7 +150,9 @@ PKCS12_SAFEBAG *PKCS12_SAFEBAG_create_crl(X509_CRL *crl)
                                     NID_x509Crl, NID_crlBag);
 }
 
-PKCS12_SAFEBAG *PKCS12_SAFEBAG_create_secret(int type, int vtype, const unsigned char *value, int len)
+PKCS12_SAFEBAG *PKCS12_SAFEBAG_create_secret(int type, int vtype,
+                                             const unsigned char *value,
+                                             int len)
 {
     PKCS12_BAGS *bag;
     PKCS12_SAFEBAG *safebag;
@@ -162,7 +164,7 @@ PKCS12_SAFEBAG *PKCS12_SAFEBAG_create_secret(int type, int vtype, const unsigned
     bag->type = OBJ_nid2obj(type);
 
     switch (vtype) {
-    case V_ASN1_OCTET_STRING:
+        case V_ASN1_OCTET_STRING:
         {
             ASN1_OCTET_STRING *strtmp = ASN1_OCTET_STRING_new();
 
@@ -186,9 +188,9 @@ PKCS12_SAFEBAG *PKCS12_SAFEBAG_create_secret(int type, int vtype, const unsigned
         }
         break;
 
-    default:
-        ERR_raise(ERR_LIB_PKCS12, PKCS12_R_INVALID_TYPE);
-        goto err;
+        default:
+            ERR_raise(ERR_LIB_PKCS12, PKCS12_R_INVALID_TYPE);
+            goto err;
     }
 
     if ((safebag = PKCS12_SAFEBAG_new()) == NULL) {
@@ -199,7 +201,7 @@ PKCS12_SAFEBAG *PKCS12_SAFEBAG_create_secret(int type, int vtype, const unsigned
     safebag->type = OBJ_nid2obj(NID_secretBag);
     return safebag;
 
- err:
+err:
     PKCS12_BAGS_free(bag);
     return NULL;
 }
@@ -250,7 +252,8 @@ PKCS12_SAFEBAG *PKCS12_SAFEBAG_create_pkcs8_encrypt_ex(int pbe_nid,
     X509_SIG *p8;
 
     ERR_set_mark();
-    pbe_ciph = pbe_ciph_fetch = EVP_CIPHER_fetch(ctx, OBJ_nid2sn(pbe_nid), propq);
+    pbe_ciph = pbe_ciph_fetch =
+        EVP_CIPHER_fetch(ctx, OBJ_nid2sn(pbe_nid), propq);
     if (pbe_ciph == NULL)
         pbe_ciph = EVP_get_cipherbynid(pbe_nid);
     ERR_pop_to_mark();

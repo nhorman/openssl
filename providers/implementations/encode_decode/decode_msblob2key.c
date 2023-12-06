@@ -155,7 +155,7 @@ static int msblob2key_decode(void *vctx, OSSL_CORE_BIO *cin, int selection,
             goto next;
     }
     if (key == NULL && (selection == 0
-         || (selection & OSSL_KEYMGMT_SELECT_PUBLIC_KEY) != 0)
+                        || (selection & OSSL_KEYMGMT_SELECT_PUBLIC_KEY) != 0)
         && ispub
         && ctx->desc->read_public_key != NULL) {
         p = buf;
@@ -167,7 +167,7 @@ static int msblob2key_decode(void *vctx, OSSL_CORE_BIO *cin, int selection,
     if (key != NULL && ctx->desc->adjust_key != NULL)
         ctx->desc->adjust_key(key, ctx);
 
- next:
+next:
     /*
      * Indicated that we successfully decoded something, or not at all.
      * Ending up "empty handed" is not an error.
@@ -202,7 +202,7 @@ static int msblob2key_decode(void *vctx, OSSL_CORE_BIO *cin, int selection,
         ok = data_cb(params, data_cbarg);
     }
 
- end:
+end:
     BIO_free(in);
     OPENSSL_free(buf);
     ctx->desc->free_key(key);
@@ -238,7 +238,7 @@ msblob2key_export_object(void *vctx,
 #define dsa_decode_private_key  (b2i_of_void_fn *)ossl_b2i_DSA_after_header
 #define dsa_decode_public_key   (b2i_of_void_fn *)ossl_b2i_DSA_after_header
 #define dsa_adjust              NULL
-#define dsa_free                (void (*)(void *))DSA_free
+#define dsa_free                (void (*)(void *)) DSA_free
 
 /* ---------------------------------------------------------------------- */
 
@@ -250,38 +250,38 @@ static void rsa_adjust(void *key, struct msblob2key_ctx_st *ctx)
     ossl_rsa_set0_libctx(key, PROV_LIBCTX_OF(ctx->provctx));
 }
 
-#define rsa_free                        (void (*)(void *))RSA_free
+#define rsa_free                        (void (*)(void *)) RSA_free
 
 /* ---------------------------------------------------------------------- */
 
 #define IMPLEMENT_MSBLOB(KEYTYPE, keytype)                              \
-    static const struct keytype_desc_st mstype##2##keytype##_desc = {   \
-        EVP_PKEY_##KEYTYPE, #KEYTYPE,                                   \
-        ossl_##keytype##_keymgmt_functions,                             \
-        keytype##_decode_private_key,                                   \
-        keytype##_decode_public_key,                                    \
-        keytype##_adjust,                                               \
-        keytype##_free                                                  \
-    };                                                                  \
-    static OSSL_FUNC_decoder_newctx_fn msblob2##keytype##_newctx;       \
-    static void *msblob2##keytype##_newctx(void *provctx)               \
-    {                                                                   \
-        return msblob2key_newctx(provctx, &mstype##2##keytype##_desc);  \
-    }                                                                   \
-    const OSSL_DISPATCH                                                 \
-    ossl_msblob_to_##keytype##_decoder_functions[] = {                  \
-        { OSSL_FUNC_DECODER_NEWCTX,                                     \
-          (void (*)(void))msblob2##keytype##_newctx },                  \
-        { OSSL_FUNC_DECODER_FREECTX,                                    \
-          (void (*)(void))msblob2key_freectx },                         \
-        { OSSL_FUNC_DECODER_DOES_SELECTION,                             \
-          (void (*)(void))msblob2key_does_selection },                  \
-        { OSSL_FUNC_DECODER_DECODE,                                     \
-          (void (*)(void))msblob2key_decode },                          \
-        { OSSL_FUNC_DECODER_EXPORT_OBJECT,                              \
-          (void (*)(void))msblob2key_export_object },                   \
-        OSSL_DISPATCH_END                                               \
-    }
+        static const struct keytype_desc_st mstype ## 2 ## keytype ## _desc = {   \
+            EVP_PKEY_ ## KEYTYPE, #KEYTYPE,                                   \
+            ossl_ ## keytype ## _keymgmt_functions,                             \
+            keytype ## _decode_private_key,                                   \
+            keytype ## _decode_public_key,                                    \
+            keytype ## _adjust,                                               \
+            keytype ## _free                                                  \
+        };                                                                  \
+        static OSSL_FUNC_decoder_newctx_fn msblob2 ## keytype ## _newctx;       \
+        static void *msblob2 ## keytype ## _newctx(void *provctx)               \
+        {                                                                   \
+            return msblob2key_newctx(provctx, &mstype ## 2 ## keytype ## _desc);  \
+        }                                                                   \
+        const OSSL_DISPATCH                                                 \
+        ossl_msblob_to_ ## keytype ## _decoder_functions[] = {                  \
+            { OSSL_FUNC_DECODER_NEWCTX,                                     \
+              (void (*)(void)) msblob2 ## keytype ## _newctx },                  \
+            { OSSL_FUNC_DECODER_FREECTX,                                    \
+              (void (*)(void)) msblob2key_freectx },                         \
+            { OSSL_FUNC_DECODER_DOES_SELECTION,                             \
+              (void (*)(void)) msblob2key_does_selection },                  \
+            { OSSL_FUNC_DECODER_DECODE,                                     \
+              (void (*)(void)) msblob2key_decode },                          \
+            { OSSL_FUNC_DECODER_EXPORT_OBJECT,                              \
+              (void (*)(void)) msblob2key_export_object },                   \
+            OSSL_DISPATCH_END                                               \
+        }
 
 #ifndef OPENSSL_NO_DSA
 IMPLEMENT_MSBLOB(DSA, dsa);

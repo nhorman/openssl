@@ -19,7 +19,8 @@
 unsigned char *PKCS12_pbe_crypt_ex(const X509_ALGOR *algor,
                                    const char *pass, int passlen,
                                    const unsigned char *in, int inlen,
-                                   unsigned char **data, int *datalen, int en_de,
+                                   unsigned char **data, int *datalen,
+                                   int en_de,
                                    OSSL_LIB_CTX *libctx, const char *propq)
 {
     unsigned char *out = NULL;
@@ -45,7 +46,7 @@ unsigned char *PKCS12_pbe_crypt_ex(const X509_ALGOR *algor,
      */
     max_out_len = inlen + EVP_CIPHER_CTX_get_block_size(ctx);
     if ((EVP_CIPHER_get_flags(EVP_CIPHER_CTX_get0_cipher(ctx))
-                & EVP_CIPH_FLAG_CIPHER_WITH_MAC) != 0) {
+         & EVP_CIPH_FLAG_CIPHER_WITH_MAC) != 0) {
         if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_TLS1_AAD, 0, &mac_len) < 0) {
             ERR_raise(ERR_LIB_PKCS12, ERR_R_INTERNAL_ERROR);
             goto err;
@@ -60,7 +61,8 @@ unsigned char *PKCS12_pbe_crypt_ex(const X509_ALGOR *algor,
             }
             inlen -= mac_len;
             if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_TAG,
-                                    (int)mac_len, (unsigned char *)in+inlen) < 0) {
+                                    (int)mac_len,
+                                    (unsigned char *)in+inlen) < 0) {
                 ERR_raise(ERR_LIB_PKCS12, ERR_R_INTERNAL_ERROR);
                 goto err;
             }
@@ -88,10 +90,10 @@ unsigned char *PKCS12_pbe_crypt_ex(const X509_ALGOR *algor,
     }
     outlen += i;
     if ((EVP_CIPHER_get_flags(EVP_CIPHER_CTX_get0_cipher(ctx))
-                & EVP_CIPH_FLAG_CIPHER_WITH_MAC) != 0) {
+         & EVP_CIPH_FLAG_CIPHER_WITH_MAC) != 0) {
         if (EVP_CIPHER_CTX_is_encrypting(ctx)) {
             if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_GET_TAG,
-                (int)mac_len, out+outlen) < 0) {
+                                    (int)mac_len, out+outlen) < 0) {
                 OPENSSL_free(out);
                 out = NULL;
                 ERR_raise(ERR_LIB_PKCS12, ERR_R_INTERNAL_ERROR);
@@ -104,7 +106,7 @@ unsigned char *PKCS12_pbe_crypt_ex(const X509_ALGOR *algor,
         *datalen = outlen;
     if (data)
         *data = out;
- err:
+err:
     EVP_CIPHER_CTX_free(ctx);
     return out;
 
@@ -196,7 +198,7 @@ ASN1_OCTET_STRING *PKCS12_item_i2d_encrypt_ex(X509_ALGOR *algor,
         OPENSSL_cleanse(in, inlen);
     OPENSSL_free(in);
     return oct;
- err:
+err:
     ASN1_OCTET_STRING_free(oct);
     return NULL;
 }
@@ -206,5 +208,6 @@ ASN1_OCTET_STRING *PKCS12_item_i2d_encrypt(X509_ALGOR *algor,
                                            const char *pass, int passlen,
                                            void *obj, int zbuf)
 {
-    return PKCS12_item_i2d_encrypt_ex(algor, it, pass, passlen, obj, zbuf, NULL, NULL);
+    return PKCS12_item_i2d_encrypt_ex(algor, it, pass, passlen, obj, zbuf, NULL,
+                                      NULL);
 }

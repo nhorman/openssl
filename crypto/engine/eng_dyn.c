@@ -308,64 +308,64 @@ static int dynamic_ctrl(ENGINE *e, int cmd, long i, void *p, void (*f) (void))
         return 0;
     }
     switch (cmd) {
-    case DYNAMIC_CMD_SO_PATH:
-        /* a NULL 'p' or a string of zero-length is the same thing */
-        if (p && (strlen((const char *)p) < 1))
-            p = NULL;
-        OPENSSL_free(ctx->DYNAMIC_LIBNAME);
-        if (p)
-            ctx->DYNAMIC_LIBNAME = OPENSSL_strdup(p);
-        else
-            ctx->DYNAMIC_LIBNAME = NULL;
-        return (ctx->DYNAMIC_LIBNAME ? 1 : 0);
-    case DYNAMIC_CMD_NO_VCHECK:
-        ctx->no_vcheck = ((i == 0) ? 0 : 1);
-        return 1;
-    case DYNAMIC_CMD_ID:
-        /* a NULL 'p' or a string of zero-length is the same thing */
-        if (p && (strlen((const char *)p) < 1))
-            p = NULL;
-        OPENSSL_free(ctx->engine_id);
-        if (p)
-            ctx->engine_id = OPENSSL_strdup(p);
-        else
-            ctx->engine_id = NULL;
-        return (ctx->engine_id ? 1 : 0);
-    case DYNAMIC_CMD_LIST_ADD:
-        if ((i < 0) || (i > 2)) {
-            ERR_raise(ERR_LIB_ENGINE, ENGINE_R_INVALID_ARGUMENT);
-            return 0;
-        }
-        ctx->list_add_value = (int)i;
-        return 1;
-    case DYNAMIC_CMD_LOAD:
-        return dynamic_load(e, ctx);
-    case DYNAMIC_CMD_DIR_LOAD:
-        if ((i < 0) || (i > 2)) {
-            ERR_raise(ERR_LIB_ENGINE, ENGINE_R_INVALID_ARGUMENT);
-            return 0;
-        }
-        ctx->dir_load = (int)i;
-        return 1;
-    case DYNAMIC_CMD_DIR_ADD:
-        /* a NULL 'p' or a string of zero-length is the same thing */
-        if (p == NULL || (strlen((const char *)p) < 1)) {
-            ERR_raise(ERR_LIB_ENGINE, ENGINE_R_INVALID_ARGUMENT);
-            return 0;
-        }
-        {
-            char *tmp_str = OPENSSL_strdup(p);
-            if (tmp_str == NULL)
-                return 0;
-            if (!sk_OPENSSL_STRING_push(ctx->dirs, tmp_str)) {
-                OPENSSL_free(tmp_str);
-                ERR_raise(ERR_LIB_ENGINE, ERR_R_CRYPTO_LIB);
+        case DYNAMIC_CMD_SO_PATH:
+            /* a NULL 'p' or a string of zero-length is the same thing */
+            if (p && (strlen((const char *)p) < 1))
+                p = NULL;
+            OPENSSL_free(ctx->DYNAMIC_LIBNAME);
+            if (p)
+                ctx->DYNAMIC_LIBNAME = OPENSSL_strdup(p);
+            else
+                ctx->DYNAMIC_LIBNAME = NULL;
+            return (ctx->DYNAMIC_LIBNAME ? 1 : 0);
+        case DYNAMIC_CMD_NO_VCHECK:
+            ctx->no_vcheck = ((i == 0) ? 0 : 1);
+            return 1;
+        case DYNAMIC_CMD_ID:
+            /* a NULL 'p' or a string of zero-length is the same thing */
+            if (p && (strlen((const char *)p) < 1))
+                p = NULL;
+            OPENSSL_free(ctx->engine_id);
+            if (p)
+                ctx->engine_id = OPENSSL_strdup(p);
+            else
+                ctx->engine_id = NULL;
+            return (ctx->engine_id ? 1 : 0);
+        case DYNAMIC_CMD_LIST_ADD:
+            if ((i < 0) || (i > 2)) {
+                ERR_raise(ERR_LIB_ENGINE, ENGINE_R_INVALID_ARGUMENT);
                 return 0;
             }
-        }
-        return 1;
-    default:
-        break;
+            ctx->list_add_value = (int)i;
+            return 1;
+        case DYNAMIC_CMD_LOAD:
+            return dynamic_load(e, ctx);
+        case DYNAMIC_CMD_DIR_LOAD:
+            if ((i < 0) || (i > 2)) {
+                ERR_raise(ERR_LIB_ENGINE, ENGINE_R_INVALID_ARGUMENT);
+                return 0;
+            }
+            ctx->dir_load = (int)i;
+            return 1;
+        case DYNAMIC_CMD_DIR_ADD:
+            /* a NULL 'p' or a string of zero-length is the same thing */
+            if (p == NULL || (strlen((const char *)p) < 1)) {
+                ERR_raise(ERR_LIB_ENGINE, ENGINE_R_INVALID_ARGUMENT);
+                return 0;
+            }
+            {
+                char *tmp_str = OPENSSL_strdup(p);
+                if (tmp_str == NULL)
+                    return 0;
+                if (!sk_OPENSSL_STRING_push(ctx->dirs, tmp_str)) {
+                    OPENSSL_free(tmp_str);
+                    ERR_raise(ERR_LIB_ENGINE, ERR_R_CRYPTO_LIB);
+                    return 0;
+                }
+            }
+            return 1;
+        default:
+            break;
     }
     ERR_raise(ERR_LIB_ENGINE, ENGINE_R_CTRL_COMMAND_NOT_IMPLEMENTED);
     return 0;
@@ -443,8 +443,8 @@ static int dynamic_load(ENGINE *e, dynamic_data_ctx *ctx)
     /* We have to find a bind function otherwise it'll always end badly */
     if (!
         (ctx->bind_engine =
-         (dynamic_bind_engine) DSO_bind_func(ctx->dynamic_dso,
-                                             ctx->DYNAMIC_F2))) {
+             (dynamic_bind_engine) DSO_bind_func(ctx->dynamic_dso,
+                                                 ctx->DYNAMIC_F2))) {
         ctx->bind_engine = NULL;
         DSO_free(ctx->dynamic_dso);
         ctx->dynamic_dso = NULL;
@@ -501,7 +501,7 @@ static int dynamic_load(ENGINE *e, dynamic_data_ctx *ctx)
 
     /* Try to bind the ENGINE onto our own ENGINE structure */
     if (!engine_add_dynamic_id(e, (ENGINE_DYNAMIC_ID)ctx->bind_engine, 1)
-            || !ctx->bind_engine(e, ctx->engine_id, &fns)) {
+        || !ctx->bind_engine(e, ctx->engine_id, &fns)) {
         engine_remove_dynamic_id(e, 1);
         ctx->bind_engine = NULL;
         ctx->v_check = NULL;

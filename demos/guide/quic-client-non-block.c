@@ -165,54 +165,54 @@ static void wait_for_activity(SSL *ssl)
 static int handle_io_failure(SSL *ssl, int res)
 {
     switch (SSL_get_error(ssl, res)) {
-    case SSL_ERROR_WANT_READ:
-    case SSL_ERROR_WANT_WRITE:
-        /* Temporary failure. Wait until we can read/write and try again */
-        wait_for_activity(ssl);
-        return 1;
+        case SSL_ERROR_WANT_READ:
+        case SSL_ERROR_WANT_WRITE:
+            /* Temporary failure. Wait until we can read/write and try again */
+            wait_for_activity(ssl);
+            return 1;
 
-    case SSL_ERROR_ZERO_RETURN:
-        /* EOF */
-        return 0;
+        case SSL_ERROR_ZERO_RETURN:
+            /* EOF */
+            return 0;
 
-    case SSL_ERROR_SYSCALL:
-        return -1;
+        case SSL_ERROR_SYSCALL:
+            return -1;
 
-    case SSL_ERROR_SSL:
-        /*
-         * Some stream fatal error occurred. This could be because of a
-         * stream reset - or some failure occurred on the underlying
-         * connection.
-         */
-        switch (SSL_get_stream_read_state(ssl)) {
-        case SSL_STREAM_STATE_RESET_REMOTE:
-            printf("Stream reset occurred\n");
+        case SSL_ERROR_SSL:
             /*
-             * The stream has been reset but the connection is still
-             * healthy.
+             * Some stream fatal error occurred. This could be because of a
+             * stream reset - or some failure occurred on the underlying
+             * connection.
              */
-            break;
+            switch (SSL_get_stream_read_state(ssl)) {
+                case SSL_STREAM_STATE_RESET_REMOTE:
+                    printf("Stream reset occurred\n");
+                    /*
+                     * The stream has been reset but the connection is still
+                     * healthy.
+                     */
+                    break;
 
-        case SSL_STREAM_STATE_CONN_CLOSED:
-            printf("Connection closed\n");
-            /* Connection is already closed. */
-            break;
+                case SSL_STREAM_STATE_CONN_CLOSED:
+                    printf("Connection closed\n");
+                    /* Connection is already closed. */
+                    break;
+
+                default:
+                    printf("Unknown stream failure\n");
+                    break;
+            }
+            /*
+             * If the failure is due to a verification error we can get more
+             * information about it from SSL_get_verify_result().
+             */
+            if (SSL_get_verify_result(ssl) != X509_V_OK)
+                printf("Verify error: %s\n",
+                       X509_verify_cert_error_string(SSL_get_verify_result(ssl)));
+            return -1;
 
         default:
-            printf("Unknown stream failure\n");
-            break;
-        }
-        /*
-         * If the failure is due to a verification error we can get more
-         * information about it from SSL_get_verify_result().
-         */
-        if (SSL_get_verify_result(ssl) != X509_V_OK)
-            printf("Verify error: %s\n",
-                X509_verify_cert_error_string(SSL_get_verify_result(ssl)));
-        return -1;
-
-    default:
-        return -1;
+            return -1;
     }
 }
 /*
@@ -375,15 +375,15 @@ int main(int argc, char *argv[])
          */
         while (!eof && !SSL_read_ex(ssl, buf, sizeof(buf), &readbytes)) {
             switch (handle_io_failure(ssl, 0)) {
-            case 1:
-                continue; /* Retry */
-            case 0:
-                eof = 1;
-                continue;
-            case -1:
-            default:
-                printf("Failed reading remaining data\n");
-                goto end; /* Cannot retry: error */
+                case 1:
+                    continue; /* Retry */
+                case 0:
+                    eof = 1;
+                    continue;
+                case -1:
+                default:
+                    printf("Failed reading remaining data\n");
+                    goto end; /* Cannot retry: error */
             }
         }
         /*
@@ -410,7 +410,7 @@ int main(int argc, char *argv[])
 
     /* Success! */
     res = EXIT_SUCCESS;
- end:
+end:
     /*
      * If something bad happened then we will dump the contents of the
      * OpenSSL error stack to stderr. There might be some useful diagnostic

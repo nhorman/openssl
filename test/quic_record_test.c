@@ -49,50 +49,58 @@ struct rx_test_op {
 };
 
 #define RX_OP_END \
-    { RX_TEST_OP_END }
+        { RX_TEST_OP_END }
 #define RX_OP_SET_SCID_LEN(scid_len) \
-    { RX_TEST_OP_SET_SCID_LEN, 0, NULL, 0, NULL, (scid_len), 0, 0, NULL, NULL },
+        { RX_TEST_OP_SET_SCID_LEN, 0, NULL, 0, NULL, (scid_len), 0, 0, NULL, \
+          NULL },
 #define RX_OP_SET_INIT_LARGEST_PN(largest_pn) \
-    { RX_TEST_OP_SET_INIT_LARGEST_PN, 0, NULL, 0, NULL, 0, 0, (largest_pn), NULL, NULL },
+        { RX_TEST_OP_SET_INIT_LARGEST_PN, 0, NULL, 0, NULL, 0, 0, (largest_pn), \
+          NULL, NULL },
 #define RX_OP_ADD_RX_DCID(dcid) \
-    { RX_TEST_OP_ADD_RX_DCID, 0, NULL, 0, NULL, 0, 0, 0, &(dcid), NULL },
+        { RX_TEST_OP_ADD_RX_DCID, 0, NULL, 0, NULL, 0, 0, 0, &(dcid), NULL },
 #define RX_OP_INJECT(dgram) \
-    { RX_TEST_OP_INJECT, 0, (dgram), sizeof(dgram), NULL, 0, 0, 0, NULL },
+        { RX_TEST_OP_INJECT, 0, (dgram), sizeof(dgram), NULL, 0, 0, 0, NULL },
 #define RX_OP_PROVIDE_SECRET(el, suite, key)                           \
-    {                                                               \
-        RX_TEST_OP_PROVIDE_SECRET, 0, (key), sizeof(key),             \
-        NULL, (el), (suite), 0, NULL, NULL                          \
-    },
+        {                                                               \
+            RX_TEST_OP_PROVIDE_SECRET, 0, (key), sizeof(key),             \
+            NULL, (el), (suite), 0, NULL, NULL                          \
+        },
 #define RX_OP_PROVIDE_SECRET_INITIAL(dcid) \
-    { RX_TEST_OP_PROVIDE_SECRET_INITIAL, 0, NULL, 0, NULL, 0, 0, 0, &(dcid), NULL },
+        { RX_TEST_OP_PROVIDE_SECRET_INITIAL, 0, NULL, 0, NULL, 0, 0, 0, &(dcid), \
+          NULL },
 #define RX_OP_DISCARD_EL(el) \
-    { RX_TEST_OP_DISCARD_EL, 0, NULL, 0, NULL, (el), 0, 0, NULL, NULL },
+        { RX_TEST_OP_DISCARD_EL, 0, NULL, 0, NULL, (el), 0, 0, NULL, NULL },
 #define RX_OP_CHECK_PKT(expect_hdr, expect_body)                       \
-    {                                                               \
-        RX_TEST_OP_CHECK_PKT, 0, (expect_body), sizeof(expect_body),  \
-        &(expect_hdr), 0, 0, 0, NULL, NULL                          \
-    },
+        {                                                               \
+            RX_TEST_OP_CHECK_PKT, 0, (expect_body), sizeof(expect_body),  \
+            &(expect_hdr), 0, 0, 0, NULL, NULL                          \
+        },
 #define RX_OP_CHECK_NO_PKT() \
-    { RX_TEST_OP_CHECK_NO_PKT, 0, NULL, 0, NULL, 0, 0, 0, NULL, NULL },
+        { RX_TEST_OP_CHECK_NO_PKT, 0, NULL, 0, NULL, 0, 0, 0, NULL, NULL },
 #define RX_OP_CHECK_KEY_EPOCH(expected) \
-    { RX_TEST_OP_CHECK_KEY_EPOCH, 0, NULL, 0, NULL, 0, 0, (expected), NULL },
+        { RX_TEST_OP_CHECK_KEY_EPOCH, 0, NULL, 0, NULL, 0, 0, (expected), \
+          NULL },
 #define RX_OP_KEY_UPDATE_TIMEOUT(normal) \
-    { RX_TEST_OP_KEY_UPDATE_TIMEOUT, 0, NULL, 0, NULL, (normal), 0, 0, NULL },
+        { RX_TEST_OP_KEY_UPDATE_TIMEOUT, 0, NULL, 0, NULL, (normal), 0, 0, \
+          NULL },
 #define RX_OP_SET_INIT_KEY_PHASE(kp_bit) \
-    { RX_TEST_OP_SET_INIT_KEY_PHASE, 0, NULL, 0, NULL, (kp_bit), 0, 0, NULL },
+        { RX_TEST_OP_SET_INIT_KEY_PHASE, 0, NULL, 0, NULL, (kp_bit), 0, 0, \
+          NULL },
 #define RX_OP_CHECK_PKT_EPOCH(expected) \
-    { RX_TEST_OP_CHECK_PKT_EPOCH, 0, NULL, 0, NULL, 0, 0, (expected), NULL },
+        { RX_TEST_OP_CHECK_PKT_EPOCH, 0, NULL, 0, NULL, 0, 0, (expected), \
+          NULL },
 #define RX_OP_ALLOW_1RTT() \
-    { RX_TEST_OP_ALLOW_1RTT, 0, NULL, 0, NULL, 0, 0, 0, NULL },
+        { RX_TEST_OP_ALLOW_1RTT, 0, NULL, 0, NULL, 0, 0, 0, NULL },
 
 #define RX_OP_INJECT_N(n)                                          \
-    RX_OP_INJECT(rx_script_##n##_in)
+        RX_OP_INJECT(rx_script_ ## n ## _in)
 #define RX_OP_CHECK_PKT_N(n)                                       \
-    RX_OP_CHECK_PKT(rx_script_##n##_expect_hdr, rx_script_##n##_body)
+        RX_OP_CHECK_PKT(rx_script_ ## n ## _expect_hdr, \
+                        rx_script_ ## n ## _body)
 
 #define RX_OP_INJECT_CHECK(n)                                  \
-    RX_OP_INJECT_N(n)                                              \
-    RX_OP_CHECK_PKT_N(n)
+        RX_OP_INJECT_N(n)                                              \
+        RX_OP_CHECK_PKT_N(n)
 
 /* 1. RFC 9001 - A.3 Server Initial */
 static const unsigned char rx_script_1_in[] = {
@@ -598,11 +606,11 @@ static const struct rx_test_op rx_script_5[] = {
     RX_OP_CHECK_PKT_N(5a)
     RX_OP_CHECK_NO_PKT() /* not got secret for next packet yet */
     RX_OP_PROVIDE_SECRET(QUIC_ENC_LEVEL_HANDSHAKE,
-                      QRL_SUITE_AES128GCM, rx_script_5_handshake_secret)
+                         QRL_SUITE_AES128GCM, rx_script_5_handshake_secret)
     RX_OP_CHECK_PKT_N(5b)
     RX_OP_CHECK_NO_PKT() /* not got secret for next packet yet */
     RX_OP_PROVIDE_SECRET(QUIC_ENC_LEVEL_1RTT,
-                      QRL_SUITE_AES128GCM, rx_script_5_1rtt_secret)
+                         QRL_SUITE_AES128GCM, rx_script_5_1rtt_secret)
     RX_OP_CHECK_PKT_N(5c)
     RX_OP_CHECK_NO_PKT()
 
@@ -636,11 +644,11 @@ static const struct rx_test_op rx_script_5[] = {
     RX_OP_CHECK_PKT_N(5a)
     RX_OP_CHECK_NO_PKT()
     RX_OP_PROVIDE_SECRET(QUIC_ENC_LEVEL_HANDSHAKE,
-                      QRL_SUITE_AES128GCM, rx_script_5_handshake_secret)
+                         QRL_SUITE_AES128GCM, rx_script_5_handshake_secret)
     RX_OP_CHECK_PKT_N(5b)
     RX_OP_CHECK_NO_PKT()
     RX_OP_PROVIDE_SECRET(QUIC_ENC_LEVEL_1RTT,
-                      QRL_SUITE_AES128GCM, rx_script_5_1rtt_secret)
+                         QRL_SUITE_AES128GCM, rx_script_5_1rtt_secret)
     RX_OP_CHECK_PKT_N(5c)
     RX_OP_CHECK_NO_PKT()
 
@@ -967,11 +975,11 @@ static const struct rx_test_op rx_script_6[] = {
     RX_OP_CHECK_PKT_N(6a)
     RX_OP_CHECK_NO_PKT() /* not got secret for next packet yet */
     RX_OP_PROVIDE_SECRET(QUIC_ENC_LEVEL_HANDSHAKE,
-                      QRL_SUITE_AES256GCM, rx_script_6_handshake_secret)
+                         QRL_SUITE_AES256GCM, rx_script_6_handshake_secret)
     RX_OP_CHECK_PKT_N(6b)
     RX_OP_CHECK_NO_PKT() /* not got secret for next packet yet */
     RX_OP_PROVIDE_SECRET(QUIC_ENC_LEVEL_1RTT,
-                      QRL_SUITE_AES256GCM, rx_script_6_1rtt_secret)
+                         QRL_SUITE_AES256GCM, rx_script_6_1rtt_secret)
     RX_OP_CHECK_PKT_N(6c)
     RX_OP_CHECK_NO_PKT()
 
@@ -1005,11 +1013,11 @@ static const struct rx_test_op rx_script_6[] = {
     RX_OP_CHECK_PKT_N(6a)
     RX_OP_CHECK_NO_PKT()
     RX_OP_PROVIDE_SECRET(QUIC_ENC_LEVEL_HANDSHAKE,
-                      QRL_SUITE_AES256GCM, rx_script_6_handshake_secret)
+                         QRL_SUITE_AES256GCM, rx_script_6_handshake_secret)
     RX_OP_CHECK_PKT_N(6b)
     RX_OP_CHECK_NO_PKT()
     RX_OP_PROVIDE_SECRET(QUIC_ENC_LEVEL_1RTT,
-                      QRL_SUITE_AES256GCM, rx_script_6_1rtt_secret)
+                         QRL_SUITE_AES256GCM, rx_script_6_1rtt_secret)
     RX_OP_CHECK_PKT_N(6c)
     RX_OP_CHECK_NO_PKT()
 
@@ -1330,11 +1338,12 @@ static const struct rx_test_op rx_script_7[] = {
     RX_OP_CHECK_PKT_N(7a)
     RX_OP_CHECK_NO_PKT() /* not got secret for next packet yet */
     RX_OP_PROVIDE_SECRET(QUIC_ENC_LEVEL_HANDSHAKE,
-                      QRL_SUITE_CHACHA20POLY1305, rx_script_7_handshake_secret)
+                         QRL_SUITE_CHACHA20POLY1305,
+                         rx_script_7_handshake_secret)
     RX_OP_CHECK_PKT_N(7b)
     RX_OP_CHECK_NO_PKT() /* not got secret for next packet yet */
     RX_OP_PROVIDE_SECRET(QUIC_ENC_LEVEL_1RTT,
-                      QRL_SUITE_CHACHA20POLY1305, rx_script_7_1rtt_secret)
+                         QRL_SUITE_CHACHA20POLY1305, rx_script_7_1rtt_secret)
     RX_OP_CHECK_PKT_N(7c)
     RX_OP_CHECK_NO_PKT()
 
@@ -1368,11 +1377,12 @@ static const struct rx_test_op rx_script_7[] = {
     RX_OP_CHECK_PKT_N(7a)
     RX_OP_CHECK_NO_PKT()
     RX_OP_PROVIDE_SECRET(QUIC_ENC_LEVEL_HANDSHAKE,
-                      QRL_SUITE_CHACHA20POLY1305, rx_script_7_handshake_secret)
+                         QRL_SUITE_CHACHA20POLY1305,
+                         rx_script_7_handshake_secret)
     RX_OP_CHECK_PKT_N(7b)
     RX_OP_CHECK_NO_PKT()
     RX_OP_PROVIDE_SECRET(QUIC_ENC_LEVEL_1RTT,
-                      QRL_SUITE_CHACHA20POLY1305, rx_script_7_1rtt_secret)
+                         QRL_SUITE_CHACHA20POLY1305, rx_script_7_1rtt_secret)
     RX_OP_CHECK_PKT_N(7c)
     RX_OP_CHECK_NO_PKT()
 
@@ -1683,11 +1693,11 @@ static const struct rx_test_op rx_script_9[] = {
     RX_OP_CHECK_PKT_N(5a)
     RX_OP_CHECK_NO_PKT() /* not got secret for next packet yet */
     RX_OP_PROVIDE_SECRET(QUIC_ENC_LEVEL_HANDSHAKE,
-                      QRL_SUITE_AES128GCM, rx_script_5_handshake_secret)
+                         QRL_SUITE_AES128GCM, rx_script_5_handshake_secret)
     RX_OP_CHECK_PKT_N(5b)
     RX_OP_CHECK_NO_PKT() /* not got secret for next packet yet */
     RX_OP_PROVIDE_SECRET(QUIC_ENC_LEVEL_1RTT,
-                      QRL_SUITE_AES128GCM, rx_script_5_1rtt_secret)
+                         QRL_SUITE_AES128GCM, rx_script_5_1rtt_secret)
     RX_OP_CHECK_NO_PKT() /* still nothing - 1-RTT not enabled */
     RX_OP_ALLOW_1RTT()
     RX_OP_CHECK_PKT_N(5c) /* now we get the 1-RTT packet */
@@ -1717,13 +1727,13 @@ struct rx_state {
 
     /* OSSL_QRX with necessary data */
     OSSL_QRX           *qrx;
-    OSSL_QRX_ARGS       args;
+    OSSL_QRX_ARGS args;
 
     /* Used for the RX depacketizer */
     SSL_CTX            *quic_ssl_ctx;
     QUIC_CONNECTION    *quic_conn;
 
-    int                 allow_1rtt;
+    int allow_1rtt;
 };
 
 static void rx_state_teardown(struct rx_state *s)
@@ -1829,7 +1839,8 @@ static int rx_run_script(const struct rx_test_op *script)
             case RX_TEST_OP_DISCARD_EL:
                 if (!TEST_true(rx_state_ensure(&s)))
                     goto err;
-                if (!TEST_true(ossl_qrx_discard_enc_level(s.qrx, op->enc_level)))
+                if (!TEST_true(ossl_qrx_discard_enc_level(s.qrx,
+                                                          op->enc_level)))
                     goto err;
                 break;
             case RX_TEST_OP_INJECT:
@@ -2799,7 +2810,8 @@ static int test_wire_pkt_hdr_actual(int tidx, int repeat, int cipher,
         goto err;
 
     if (!expect_fail && !is_trunc) {
-        if (!TEST_true(cmp_pkt_hdr(&hdr, &t->hdr, t->payload, t->payload_len, 1)))
+        if (!TEST_true(cmp_pkt_hdr(&hdr, &t->hdr, t->payload, t->payload_len,
+                                   1)))
             goto err;
 
         if (!TEST_ptr_eq(ptrs.raw_start, t->expected))
@@ -2821,7 +2833,9 @@ static int test_wire_pkt_hdr_actual(int tidx, int repeat, int cipher,
                 goto err;
         }
 
-        if (!TEST_true(ossl_quic_wire_encode_pkt_hdr(&wpkt, t->short_conn_id_len, &hdr, &wptrs)))
+        if (!TEST_true(ossl_quic_wire_encode_pkt_hdr(&wpkt,
+                                                     t->short_conn_id_len, &hdr,
+                                                     &wptrs)))
             goto err;
 
         if (!TEST_true(WPACKET_memcpy(&wpkt, t->payload, t->payload_len)))
@@ -2866,8 +2880,10 @@ static int test_wire_pkt_hdr_actual(int tidx, int repeat, int cipher,
                 size_t jrel = 0;
                 if (i == 0) {
                     /* Bits in first byte which must not change */
-                    rej_mask = (t->hdr.type == QUIC_PKT_TYPE_1RTT) ? ~0x1f : ~0xf;
-                } else if (i >= t->pn_offset && i < t->pn_offset + t->hdr.pn_len) {
+                    rej_mask =
+                        (t->hdr.type == QUIC_PKT_TYPE_1RTT) ? ~0x1f : ~0xf;
+                } else if (i >= t->pn_offset &&
+                           i < t->pn_offset + t->hdr.pn_len) {
                     /* PN bytes change */
                     rej_mask = 0;
                     jrel = 5 + (i - t->pn_offset) * 8;
@@ -2898,7 +2914,8 @@ static int test_wire_pkt_hdr_actual(int tidx, int repeat, int cipher,
             if (!TEST_true(ossl_quic_hdr_protector_decrypt(&hpr, &ptrs)))
                 goto err;
 
-            if (!TEST_mem_eq(hbuf, t->expected_len, t->expected, t->expected_len))
+            if (!TEST_mem_eq(hbuf, t->expected_len, t->expected,
+                             t->expected_len))
                 goto err;
         }
     }
@@ -2959,7 +2976,7 @@ err:
 }
 
 #define NUM_WIRE_PKT_HDR_TESTS \
-    (OSSL_NELEM(pkt_hdr_tests) * HPR_REPEAT_COUNT * HPR_CIPHER_COUNT)
+        (OSSL_NELEM(pkt_hdr_tests) * HPR_REPEAT_COUNT * HPR_CIPHER_COUNT)
 
 static int test_wire_pkt_hdr(int idx)
 {
@@ -2999,38 +3016,38 @@ struct tx_test_op {
 };
 
 #define TX_OP_END                                                       \
-    { TX_TEST_OP_END }
+        { TX_TEST_OP_END }
 #define TX_OP_WRITE(pkt)                                                \
-    { TX_TEST_OP_WRITE, NULL, 0, &(pkt), 0, 0, NULL },
+        { TX_TEST_OP_WRITE, NULL, 0, &(pkt), 0, 0, NULL },
 #define TX_OP_PROVIDE_SECRET(el, suite, key)                            \
-    {                                                                   \
-        TX_TEST_OP_PROVIDE_SECRET, (key), sizeof(key),                  \
-        NULL, (el), (suite), NULL                                       \
-    },
+        {                                                                   \
+            TX_TEST_OP_PROVIDE_SECRET, (key), sizeof(key),                  \
+            NULL, (el), (suite), NULL                                       \
+        },
 #define TX_OP_PROVIDE_SECRET_INITIAL(dcid, is_server)                   \
-    { TX_TEST_OP_PROVIDE_SECRET_INITIAL,                                \
-      NULL, 0, NULL, 0, (is_server), &(dcid) },
+        { TX_TEST_OP_PROVIDE_SECRET_INITIAL,                                \
+          NULL, 0, NULL, 0, (is_server), &(dcid) },
 #define TX_OP_DISCARD_EL(el)                                            \
-    { TX_TEST_OP_DISCARD_EL, NULL, 0, NULL, (el), 0, NULL },
+        { TX_TEST_OP_DISCARD_EL, NULL, 0, NULL, (el), 0, NULL },
 #define TX_OP_CHECK_DGRAM(expect_dgram)                                 \
-    {                                                                   \
-        TX_TEST_OP_CHECK_DGRAM, (expect_dgram), sizeof(expect_dgram),   \
-        NULL, 0, 0, NULL                                                \
-    },
+        {                                                                   \
+            TX_TEST_OP_CHECK_DGRAM, (expect_dgram), sizeof(expect_dgram),   \
+            NULL, 0, 0, NULL                                                \
+        },
 #define TX_OP_CHECK_NO_DGRAM() \
-    { TX_TEST_OP_CHECK_NO_PKT, NULL, 0, NULL, 0, 0, NULL },
+        { TX_TEST_OP_CHECK_NO_PKT, NULL, 0, NULL, 0, 0, NULL },
 
 #define TX_OP_WRITE_N(n)                                                \
-    TX_OP_WRITE(tx_script_##n##_pkt)
+        TX_OP_WRITE(tx_script_ ## n ## _pkt)
 #define TX_OP_CHECK_DGRAM_N(n)                                          \
-    TX_OP_CHECK_DGRAM(tx_script_##n##_dgram)
+        TX_OP_CHECK_DGRAM(tx_script_ ## n ## _dgram)
 
 #define TX_OP_WRITE_CHECK(n)                                            \
-    TX_OP_WRITE_N(n)                                                    \
-    TX_OP_CHECK_DGRAM_N(n)
+        TX_OP_WRITE_N(n)                                                    \
+        TX_OP_CHECK_DGRAM_N(n)
 
 #define TX_OP_KEY_UPDATE()                                              \
-    { TX_TEST_OP_KEY_UPDATE, NULL, 0, NULL, 0, 0, NULL },
+        { TX_TEST_OP_KEY_UPDATE, NULL, 0, NULL, 0, 0, NULL },
 
 /* 1. RFC 9001 - A.2 Client Initial */
 static const unsigned char tx_script_1_body[1162] = {
@@ -3308,7 +3325,8 @@ static const OSSL_QTX_PKT tx_script_3_pkt = {
 };
 
 static const struct tx_test_op tx_script_3[] = {
-    TX_OP_PROVIDE_SECRET(QUIC_ENC_LEVEL_1RTT, QRL_SUITE_CHACHA20POLY1305, tx_script_3_secret)
+    TX_OP_PROVIDE_SECRET(QUIC_ENC_LEVEL_1RTT, QRL_SUITE_CHACHA20POLY1305,
+                         tx_script_3_secret)
     TX_OP_WRITE_CHECK(3)
     TX_OP_END
 };
@@ -3454,7 +3472,8 @@ static const OSSL_QTX_PKT tx_script_4c_pkt = {
 };
 
 static const struct tx_test_op tx_script_4[] = {
-    TX_OP_PROVIDE_SECRET(QUIC_ENC_LEVEL_1RTT, QRL_SUITE_AES128GCM, tx_script_4_secret)
+    TX_OP_PROVIDE_SECRET(QUIC_ENC_LEVEL_1RTT, QRL_SUITE_AES128GCM,
+                         tx_script_4_secret)
     TX_OP_WRITE_CHECK(4a)
     TX_OP_KEY_UPDATE()
     TX_OP_WRITE_CHECK(4b)
@@ -3477,7 +3496,7 @@ static const unsigned char tx_script_5_body[] = {
     0x84, 0x41, 0x4d, 0x31,
     /* Retry Integrity Tag */
     0x43, 0x8e, 0xab, 0xcd, 0xce, 0x24, 0x44, 0xc2, 0x20, 0xe1, 0xe2, 0xc8,
-    0xae, 0xa3, 0x8d, 0x4e, 
+    0xae, 0xa3, 0x8d, 0x4e,
 };
 
 static const unsigned char tx_script_5_dgram[] = {
@@ -3491,7 +3510,7 @@ static const unsigned char tx_script_5_dgram[] = {
     0x9c, 0x49, 0x8f, 0x0c, 0xc8, 0xb2, 0x75, 0x4b, 0x4d, 0x2f, 0xfe, 0x05,
     0x5a, 0xdd, 0x4b, 0xe6, 0x14, 0xb4, 0xd2, 0xc0, 0x93, 0x6e, 0x0e, 0x84,
     0x41, 0x4d, 0x31, 0x43, 0x8e, 0xab, 0xcd, 0xce, 0x24, 0x44, 0xc2, 0x20,
-    0xe1, 0xe2, 0xc8, 0xae, 0xa3, 0x8d, 0x4e, 
+    0xe1, 0xe2, 0xc8, 0xae, 0xa3, 0x8d, 0x4e,
 };
 
 static QUIC_PKT_HDR tx_script_5_hdr = {
@@ -3617,7 +3636,8 @@ static int tx_run_script(const struct tx_test_op *script)
             case TX_TEST_OP_PROVIDE_SECRET_INITIAL:
                 if (!TEST_true(ossl_quic_provide_initial_secret(NULL, NULL,
                                                                 op->dcid,
-                                                                (int)op->suite_id,
+                                                                (int)op->
+                                                                suite_id,
                                                                 NULL, qtx)))
                     goto err;
                 break;
@@ -3626,32 +3646,35 @@ static int tx_run_script(const struct tx_test_op *script)
                     goto err;
                 break;
             case TX_TEST_OP_WRITE:
-                {
-                    uint32_t enc_level
-                        = ossl_quic_pkt_type_to_enc_level(op->pkt->hdr->type);
-                    uint64_t old_value = 0, new_value, max_value;
+            {
+                uint32_t enc_level
+                    = ossl_quic_pkt_type_to_enc_level(op->pkt->hdr->type);
+                uint64_t old_value = 0, new_value, max_value;
 
-                    if (enc_level < QUIC_ENC_LEVEL_NUM) { /* encrypted packet */
-                        max_value = ossl_qtx_get_max_epoch_pkt_count(qtx, enc_level);
+                if (enc_level < QUIC_ENC_LEVEL_NUM) {     /* encrypted packet */
+                    max_value =
+                        ossl_qtx_get_max_epoch_pkt_count(qtx, enc_level);
 
-                        if (!TEST_uint64_t_lt(max_value, UINT64_MAX))
-                            goto err;
-
-                        old_value = ossl_qtx_get_cur_epoch_pkt_count(qtx, enc_level);
-                        if (!TEST_uint64_t_lt(old_value, UINT64_MAX))
-                            goto err;
-                    }
-
-                    if (!TEST_true(ossl_qtx_write_pkt(qtx, op->pkt)))
+                    if (!TEST_uint64_t_lt(max_value, UINT64_MAX))
                         goto err;
 
-                    if (enc_level < QUIC_ENC_LEVEL_NUM) {
-                        new_value = ossl_qtx_get_cur_epoch_pkt_count(qtx, enc_level);
-                        if (!TEST_uint64_t_eq(old_value + 1, new_value))
-                            goto err;
-                    }
+                    old_value =
+                        ossl_qtx_get_cur_epoch_pkt_count(qtx, enc_level);
+                    if (!TEST_uint64_t_lt(old_value, UINT64_MAX))
+                        goto err;
                 }
-                break;
+
+                if (!TEST_true(ossl_qtx_write_pkt(qtx, op->pkt)))
+                    goto err;
+
+                if (enc_level < QUIC_ENC_LEVEL_NUM) {
+                    new_value =
+                        ossl_qtx_get_cur_epoch_pkt_count(qtx, enc_level);
+                    if (!TEST_uint64_t_eq(old_value + 1, new_value))
+                        goto err;
+                }
+            }
+            break;
             case TX_TEST_OP_CHECK_DGRAM:
                 if (!TEST_true(ossl_qtx_pop_net(qtx, &msg)))
                     goto err;

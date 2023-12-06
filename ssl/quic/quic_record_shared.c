@@ -42,7 +42,7 @@ OSSL_QRL_ENC_LEVEL *ossl_qrl_enc_level_set_get(OSSL_QRL_ENC_LEVEL_SET *els,
 }
 
 int ossl_qrl_enc_level_set_have_el(OSSL_QRL_ENC_LEVEL_SET *els,
-                                  uint32_t enc_level)
+                                   uint32_t enc_level)
 {
     OSSL_QRL_ENC_LEVEL *el = ossl_qrl_enc_level_set_get(els, enc_level, 0);
 
@@ -114,7 +114,8 @@ static int el_setup_keyslot(OSSL_QRL_ENC_LEVEL_SET *els,
 
     if (!ossl_assert(el != NULL
                      && ossl_qrl_enc_level_set_has_keyslot(els, enc_level,
-                                                           tgt_state, keyslot))) {
+                                                           tgt_state,
+                                                           keyslot))) {
         ERR_raise(ERR_LIB_SSL, ERR_R_PASSED_INVALID_ARGUMENT);
         return 0;
     }
@@ -156,7 +157,8 @@ static int el_setup_keyslot(OSSL_QRL_ENC_LEVEL_SET *els,
         goto err;
 
     /* Create and initialise cipher context. */
-    if ((cipher = EVP_CIPHER_fetch(el->libctx, cipher_name, el->propq)) == NULL) {
+    if ((cipher =
+             EVP_CIPHER_fetch(el->libctx, cipher_name, el->propq)) == NULL) {
         ERR_raise(ERR_LIB_SSL, ERR_R_EVP_LIB);
         goto err;
     }
@@ -185,7 +187,7 @@ static int el_setup_keyslot(OSSL_QRL_ENC_LEVEL_SET *els,
     EVP_CIPHER_free(cipher);
     return 1;
 
- err:
+err:
     EVP_CIPHER_CTX_free(cctx);
     EVP_CIPHER_free(cipher);
     OPENSSL_cleanse(el->iv[keyslot], sizeof(el->iv[keyslot]));
@@ -312,7 +314,8 @@ int ossl_qrl_enc_level_set_provide_secret(OSSL_QRL_ENC_LEVEL_SET *els,
     /* Setup header protection context. */
     if (!ossl_quic_hdr_protector_init(&el->hpr,
                                       libctx, propq,
-                                      ossl_qrl_get_suite_hdr_prot_cipher_id(suite_id),
+                                      ossl_qrl_get_suite_hdr_prot_cipher_id(
+                                          suite_id),
                                       hpr_key, hpr_key_len))
         goto err;
 
@@ -327,7 +330,7 @@ int ossl_qrl_enc_level_set_provide_secret(OSSL_QRL_ENC_LEVEL_SET *els,
     el->state = QRL_EL_STATE_PROV_NORMAL;
     return 1;
 
- err:
+err:
     el->suite_id = 0;
     el->md = NULL;
     OPENSSL_cleanse(hpr_key, sizeof(hpr_key));

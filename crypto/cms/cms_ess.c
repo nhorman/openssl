@@ -105,8 +105,8 @@ int ossl_cms_check_signing_certs(const CMS_SignerInfo *si,
     ESS_SIGNING_CERT *ss = NULL;
     ESS_SIGNING_CERT_V2 *ssv2 = NULL;
     int ret = ossl_cms_signerinfo_get_signing_cert(si, &ss) >= 0
-        && ossl_cms_signerinfo_get_signing_cert_v2(si, &ssv2) >= 0
-        && OSSL_ESS_check_signing_certs(ss, ssv2, chain, 1) > 0;
+              && ossl_cms_signerinfo_get_signing_cert_v2(si, &ssv2) >= 0
+              && OSSL_ESS_check_signing_certs(ss, ssv2, chain, 1) > 0;
 
     ESS_SIGNING_CERT_free(ss);
     ESS_SIGNING_CERT_V2_free(ssv2);
@@ -150,7 +150,7 @@ CMS_ReceiptRequest *CMS_ReceiptRequest_create0_ex(
 
     return rr;
 
- err:
+err:
     CMS_ReceiptRequest_free(rr);
     return NULL;
 
@@ -183,7 +183,7 @@ int CMS_add1_ReceiptRequest(CMS_SignerInfo *si, CMS_ReceiptRequest *rr)
 
     r = 1;
 
- err:
+err:
     OPENSSL_free(rrder);
 
     return r;
@@ -313,7 +313,7 @@ int ossl_cms_Receipt_verify(CMS_ContentInfo *cms, CMS_ContentInfo *req_cms)
 
     msig = CMS_signed_get0_data_by_OBJ(si,
                                        OBJ_nid2obj
-                                       (NID_id_smime_aa_msgSigDigest), -3,
+                                           (NID_id_smime_aa_msgSigDigest), -3,
                                        V_ASN1_OCTET_STRING);
 
     if (!msig) {
@@ -368,7 +368,7 @@ int ossl_cms_Receipt_verify(CMS_ContentInfo *cms, CMS_ContentInfo *req_cms)
 
     r = 1;
 
- err:
+err:
     CMS_ReceiptRequest_free(rr);
     M_ASN1_free_of(rct, CMS_Receipt);
     return r;
@@ -413,7 +413,7 @@ ASN1_OCTET_STRING *ossl_cms_encode_Receipt(CMS_SignerInfo *si)
 
     os = ASN1_item_pack(&rct, ASN1_ITEM_rptr(CMS_Receipt), NULL);
 
- err:
+err:
     CMS_ReceiptRequest_free(rr);
     return os;
 }

@@ -44,8 +44,8 @@ static int x509_name_ex_print(BIO *out, const ASN1_VALUE **pval,
                               const char *fname, const ASN1_PCTX *pctx);
 
 ASN1_SEQUENCE(X509_NAME_ENTRY) = {
-        ASN1_SIMPLE(X509_NAME_ENTRY, object, ASN1_OBJECT),
-        ASN1_SIMPLE(X509_NAME_ENTRY, value, ASN1_PRINTABLE)
+    ASN1_SIMPLE(X509_NAME_ENTRY, object, ASN1_OBJECT),
+    ASN1_SIMPLE(X509_NAME_ENTRY, value, ASN1_PRINTABLE)
 } ASN1_SEQUENCE_END(X509_NAME_ENTRY)
 
 IMPLEMENT_ASN1_FUNCTIONS(X509_NAME_ENTRY)
@@ -57,12 +57,12 @@ IMPLEMENT_ASN1_DUP_FUNCTION(X509_NAME_ENTRY)
  */
 
 ASN1_ITEM_TEMPLATE(X509_NAME_ENTRIES) =
-        ASN1_EX_TEMPLATE_TYPE(ASN1_TFLG_SET_OF, 0, RDNS, X509_NAME_ENTRY)
-static_ASN1_ITEM_TEMPLATE_END(X509_NAME_ENTRIES)
+    ASN1_EX_TEMPLATE_TYPE(ASN1_TFLG_SET_OF, 0, RDNS, X509_NAME_ENTRY)
+    static_ASN1_ITEM_TEMPLATE_END(X509_NAME_ENTRIES)
 
-ASN1_ITEM_TEMPLATE(X509_NAME_INTERNAL) =
+    ASN1_ITEM_TEMPLATE(X509_NAME_INTERNAL) =
         ASN1_EX_TEMPLATE_TYPE(ASN1_TFLG_SEQUENCE_OF, 0, Name, X509_NAME_ENTRIES)
-static_ASN1_ITEM_TEMPLATE_END(X509_NAME_INTERNAL)
+        static_ASN1_ITEM_TEMPLATE_END(X509_NAME_INTERNAL)
 
 /*
  * Normally that's where it would end: we'd have two nested STACK structures
@@ -71,7 +71,7 @@ static_ASN1_ITEM_TEMPLATE_END(X509_NAME_INTERNAL)
  * convert to the external form.
  */
 
-static const ASN1_EXTERN_FUNCS x509_name_ff = {
+        static const ASN1_EXTERN_FUNCS x509_name_ff = {
     NULL,
     x509_name_ex_new,
     x509_name_ex_free,
@@ -105,7 +105,7 @@ static int x509_name_ex_new(ASN1_VALUE **val, const ASN1_ITEM *it)
     *val = (ASN1_VALUE *)ret;
     return 1;
 
- err:
+err:
     if (ret) {
         sk_X509_NAME_ENTRY_free(ret->entries);
         OPENSSL_free(ret);
@@ -202,7 +202,7 @@ static int x509_name_ex_d2i(ASN1_VALUE **val,
     *in = p;
     return ret;
 
- err:
+err:
     if (nm.x != NULL)
         X509_NAME_free(nm.x);
     sk_STACK_OF_X509_NAME_ENTRY_pop_free(intname.s,
@@ -278,9 +278,9 @@ static int x509_name_encode(X509_NAME *a)
                                          local_sk_X509_NAME_ENTRY_free);
     a->modified = 0;
     return len;
- cerr:
+cerr:
     ERR_raise(ERR_LIB_ASN1, ERR_R_CRYPTO_LIB);
- err:
+err:
     sk_STACK_OF_X509_NAME_ENTRY_pop_free(intname.s,
                                          local_sk_X509_NAME_ENTRY_free);
     return -1;
@@ -375,7 +375,7 @@ static int x509_name_canon(X509_NAME *a)
 
     ret = 1;
 
- err:
+err:
     X509_NAME_ENTRY_free(tmpentry);
     sk_STACK_OF_X509_NAME_ENTRY_pop_free(intname,
                                          local_sk_X509_NAME_ENTRY_pop_free);
@@ -386,8 +386,8 @@ static int x509_name_canon(X509_NAME *a)
 
 #define ASN1_MASK_CANON \
         (B_ASN1_UTF8STRING | B_ASN1_BMPSTRING | B_ASN1_UNIVERSALSTRING \
-        | B_ASN1_PRINTABLESTRING | B_ASN1_T61STRING | B_ASN1_IA5STRING \
-        | B_ASN1_VISIBLESTRING)
+         | B_ASN1_PRINTABLESTRING | B_ASN1_T61STRING | B_ASN1_IA5STRING \
+         | B_ASN1_VISIBLESTRING)
 
 static int asn1_string_canon(ASN1_STRING *out, const ASN1_STRING *in)
 {
@@ -473,7 +473,7 @@ static int i2d_name_canon(const STACK_OF(STACK_OF_X509_NAME_ENTRY) * _intname,
 {
     int i, len, ltmp;
     const ASN1_VALUE *v;
-    STACK_OF(ASN1_VALUE) *intname = (STACK_OF(ASN1_VALUE) *)_intname;
+    STACK_OF(ASN1_VALUE) *intname = (STACK_OF(ASN1_VALUE) *) _intname;
 
     len = 0;
     for (i = 0; i < sk_ASN1_VALUE_num(intname); i++) {
@@ -518,8 +518,8 @@ int X509_NAME_print(BIO *bp, const X509_NAME *name, int obase)
     for (;;) {
         if (((*s == '/') &&
              (ossl_isupper(s[1]) && ((s[2] == '=') ||
-                                (ossl_isupper(s[2]) && (s[3] == '='))
-              ))) || (*s == '\0'))
+                                     (ossl_isupper(s[2]) && (s[3] == '='))
+                                    ))) || (*s == '\0'))
         {
             i = s - c;
             if (BIO_write(bp, c, i) != i)
@@ -537,7 +537,7 @@ int X509_NAME_print(BIO *bp, const X509_NAME *name, int obase)
 
     OPENSSL_free(b);
     return 1;
- err:
+err:
     ERR_raise(ERR_LIB_X509, ERR_R_BUF_LIB);
     OPENSSL_free(b);
     return 0;

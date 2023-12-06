@@ -20,9 +20,11 @@ int ossl_siv128_init(SIV128_CONTEXT *ctx, const unsigned char *key, int klen,
 int ossl_siv128_copy_ctx(SIV128_CONTEXT *dest, SIV128_CONTEXT *src);
 int ossl_siv128_aad(SIV128_CONTEXT *ctx, const unsigned char *aad, size_t len);
 int ossl_siv128_encrypt(SIV128_CONTEXT *ctx,
-                        const unsigned char *in, unsigned char *out, size_t len);
+                        const unsigned char *in, unsigned char *out,
+                        size_t len);
 int ossl_siv128_decrypt(SIV128_CONTEXT *ctx,
-                        const unsigned char *in, unsigned char *out, size_t len);
+                        const unsigned char *in, unsigned char *out,
+                        size_t len);
 int ossl_siv128_finish(SIV128_CONTEXT *ctx);
 int ossl_siv128_set_tag(SIV128_CONTEXT *ctx, const unsigned char *tag,
                         size_t len);

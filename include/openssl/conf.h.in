@@ -103,7 +103,7 @@ OSSL_DEPRECATEDIN_1_1_0 void OPENSSL_config(const char *config_name);
 
 #ifndef OPENSSL_NO_DEPRECATED_1_1_0
 # define OPENSSL_no_config() \
-    OPENSSL_init_crypto(OPENSSL_INIT_NO_LOAD_CONFIG, NULL)
+        OPENSSL_init_crypto(OPENSSL_INIT_NO_LOAD_CONFIG, NULL)
 #endif
 
 /*

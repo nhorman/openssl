@@ -34,23 +34,27 @@ typedef struct {
 } EVP_SM4_KEY;
 
 # define BLOCK_CIPHER_generic(nid,blocksize,ivlen,nmode,mode,MODE,flags) \
-static const EVP_CIPHER sm4_##mode = { \
-        nid##_##nmode,blocksize,128/8,ivlen, \
-        flags|EVP_CIPH_##MODE##_MODE,   \
-        EVP_ORIG_GLOBAL,                \
-        sm4_init_key,                   \
-        sm4_##mode##_cipher,            \
-        NULL,                           \
-        sizeof(EVP_SM4_KEY),            \
-        NULL,NULL,NULL,NULL }; \
-const EVP_CIPHER *EVP_sm4_##mode(void) \
-{ return &sm4_##mode; }
+        static const EVP_CIPHER sm4_ ## mode = { \
+            nid ## _ ## nmode,blocksize,128/8,ivlen, \
+            flags|EVP_CIPH_ ## MODE ## _MODE,   \
+            EVP_ORIG_GLOBAL,                \
+            sm4_init_key,                   \
+            sm4_ ## mode ## _cipher,            \
+            NULL,                           \
+            sizeof(EVP_SM4_KEY),            \
+            NULL,NULL,NULL,NULL }; \
+        const EVP_CIPHER *EVP_sm4_ ## mode(void) \
+        { return &sm4_ ## mode; }
 
 #define DEFINE_BLOCK_CIPHERS(nid,flags)             \
-        BLOCK_CIPHER_generic(nid,16,16,cbc,cbc,CBC,flags|EVP_CIPH_FLAG_DEFAULT_ASN1)     \
-        BLOCK_CIPHER_generic(nid,16,0,ecb,ecb,ECB,flags|EVP_CIPH_FLAG_DEFAULT_ASN1)      \
-        BLOCK_CIPHER_generic(nid,1,16,ofb128,ofb,OFB,flags|EVP_CIPH_FLAG_DEFAULT_ASN1)   \
-        BLOCK_CIPHER_generic(nid,1,16,cfb128,cfb,CFB,flags|EVP_CIPH_FLAG_DEFAULT_ASN1)   \
+        BLOCK_CIPHER_generic(nid,16,16,cbc,cbc,CBC, \
+                             flags|EVP_CIPH_FLAG_DEFAULT_ASN1)     \
+        BLOCK_CIPHER_generic(nid,16,0,ecb,ecb,ECB, \
+                             flags|EVP_CIPH_FLAG_DEFAULT_ASN1)      \
+        BLOCK_CIPHER_generic(nid,1,16,ofb128,ofb,OFB, \
+                             flags|EVP_CIPH_FLAG_DEFAULT_ASN1)   \
+        BLOCK_CIPHER_generic(nid,1,16,cfb128,cfb,CFB, \
+                             flags|EVP_CIPH_FLAG_DEFAULT_ASN1)   \
         BLOCK_CIPHER_generic(nid,1,16,ctr,ctr,CTR,flags)
 
 static int sm4_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
@@ -113,7 +117,7 @@ static int sm4_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
             dat->stream.ctr = (ctr128_f) HWSM4_ctr32_encrypt_blocks;
         else
 # endif
-            (void)0;            /* terminate potentially open 'else' */
+        (void)0;                /* terminate potentially open 'else' */
     } else
 #endif
 #ifdef VPSM4_CAPABLE

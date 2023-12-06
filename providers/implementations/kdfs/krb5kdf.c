@@ -110,14 +110,14 @@ static void *krb5kdf_dup(void *vctx)
     if (dest != NULL) {
         if (!ossl_prov_memdup(src->key, src->key_len,
                               &dest->key, &dest->key_len)
-                || !ossl_prov_memdup(src->constant, src->constant_len,
-                                     &dest->constant , &dest->constant_len)
-                || !ossl_prov_cipher_copy(&dest->cipher, &src->cipher))
+            || !ossl_prov_memdup(src->constant, src->constant_len,
+                                 &dest->constant, &dest->constant_len)
+            || !ossl_prov_cipher_copy(&dest->cipher, &src->cipher))
             goto err;
     }
     return dest;
 
- err:
+err:
     krb5kdf_free(dest);
     return NULL;
 }
@@ -217,19 +217,19 @@ static const OSSL_PARAM *krb5kdf_gettable_ctx_params(ossl_unused void *ctx,
 }
 
 const OSSL_DISPATCH ossl_kdf_krb5kdf_functions[] = {
-    { OSSL_FUNC_KDF_NEWCTX, (void(*)(void))krb5kdf_new },
-    { OSSL_FUNC_KDF_DUPCTX, (void(*)(void))krb5kdf_dup },
-    { OSSL_FUNC_KDF_FREECTX, (void(*)(void))krb5kdf_free },
-    { OSSL_FUNC_KDF_RESET, (void(*)(void))krb5kdf_reset },
-    { OSSL_FUNC_KDF_DERIVE, (void(*)(void))krb5kdf_derive },
+    { OSSL_FUNC_KDF_NEWCTX, (void (*)(void)) krb5kdf_new },
+    { OSSL_FUNC_KDF_DUPCTX, (void (*)(void)) krb5kdf_dup },
+    { OSSL_FUNC_KDF_FREECTX, (void (*)(void)) krb5kdf_free },
+    { OSSL_FUNC_KDF_RESET, (void (*)(void)) krb5kdf_reset },
+    { OSSL_FUNC_KDF_DERIVE, (void (*)(void)) krb5kdf_derive },
     { OSSL_FUNC_KDF_SETTABLE_CTX_PARAMS,
-      (void(*)(void))krb5kdf_settable_ctx_params },
+      (void (*)(void)) krb5kdf_settable_ctx_params },
     { OSSL_FUNC_KDF_SET_CTX_PARAMS,
-      (void(*)(void))krb5kdf_set_ctx_params },
+      (void (*)(void)) krb5kdf_set_ctx_params },
     { OSSL_FUNC_KDF_GETTABLE_CTX_PARAMS,
-      (void(*)(void))krb5kdf_gettable_ctx_params },
+      (void (*)(void)) krb5kdf_gettable_ctx_params },
     { OSSL_FUNC_KDF_GET_CTX_PARAMS,
-      (void(*)(void))krb5kdf_get_ctx_params },
+      (void (*)(void)) krb5kdf_get_ctx_params },
     OSSL_DISPATCH_END
 };
 
@@ -395,13 +395,13 @@ static int KRB5KDF(const EVP_CIPHER *cipher, ENGINE *engine,
          * the random raw key, instead of the fixed up key  */
         if (EVP_CIPHER_get_nid(cipher) == NID_des_ede3_cbc &&
             key_len == 24 && okey_len == 21) {
-                des3_no_fixup = 1;
+            des3_no_fixup = 1;
         } else {
 #endif
-            ERR_raise(ERR_LIB_PROV, PROV_R_WRONG_OUTPUT_BUFFER_SIZE);
-            return 0;
+        ERR_raise(ERR_LIB_PROV, PROV_R_WRONG_OUTPUT_BUFFER_SIZE);
+        return 0;
 #ifndef OPENSSL_NO_DES
-        }
+    }
 #endif
     }
 

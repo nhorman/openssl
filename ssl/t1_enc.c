@@ -76,7 +76,7 @@ static int tls1_PRF(SSL_CONNECTION *s,
         return 1;
     }
 
- err:
+err:
     if (fatal)
         SSLfatal(s, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
     else
@@ -114,12 +114,12 @@ int tls_provider_set_tls_params(SSL_CONNECTION *s, EVP_CIPHER_CTX *ctx,
     int imacsize = -1;
 
     if ((EVP_CIPHER_get_flags(ciph) & EVP_CIPH_FLAG_AEAD_CIPHER) == 0
-               /*
-                * We look at s->ext.use_etm instead of SSL_READ_ETM() or
-                * SSL_WRITE_ETM() because this test applies to both reading
-                * and writing.
-                */
-            && !s->ext.use_etm)
+        /*
+         * We look at s->ext.use_etm instead of SSL_READ_ETM() or
+         * SSL_WRITE_ETM() because this test applies to both reading
+         * and writing.
+         */
+        && !s->ext.use_etm)
         imacsize = EVP_MD_get_size(md);
     if (imacsize >= 0)
         macsize = (size_t)imacsize;
@@ -210,24 +210,24 @@ int tls1_change_cipher_state(SSL_CONNECTION *s, int which)
     }
 
     switch (EVP_CIPHER_get_mode(c)) {
-    case EVP_CIPH_GCM_MODE:
-        taglen = EVP_GCM_TLS_TAG_LEN;
-        break;
-    case EVP_CIPH_CCM_MODE:
-        if ((s->s3.tmp.new_cipher->algorithm_enc
-                & (SSL_AES128CCM8 | SSL_AES256CCM8)) != 0)
-            taglen = EVP_CCM8_TLS_TAG_LEN;
-        else
-            taglen = EVP_CCM_TLS_TAG_LEN;
-        break;
-    default:
-        if (EVP_CIPHER_is_a(c, "CHACHA20-POLY1305")) {
-            taglen = EVP_CHACHAPOLY_TLS_TAG_LEN;
-        } else {
-            /* MAC secret size corresponds to the MAC output size */
-            taglen = s->s3.tmp.new_mac_secret_size;
-        }
-        break;
+        case EVP_CIPH_GCM_MODE:
+            taglen = EVP_GCM_TLS_TAG_LEN;
+            break;
+        case EVP_CIPH_CCM_MODE:
+            if ((s->s3.tmp.new_cipher->algorithm_enc
+                 & (SSL_AES128CCM8 | SSL_AES256CCM8)) != 0)
+                taglen = EVP_CCM8_TLS_TAG_LEN;
+            else
+                taglen = EVP_CCM_TLS_TAG_LEN;
+            break;
+        default:
+            if (EVP_CIPHER_is_a(c, "CHACHA20-POLY1305")) {
+                taglen = EVP_CHACHAPOLY_TLS_TAG_LEN;
+            } else {
+                /* MAC secret size corresponds to the MAC output size */
+                taglen = s->s3.tmp.new_mac_secret_size;
+            }
+            break;
     }
 
     if (which & SSL3_CC_READ) {
@@ -267,10 +267,10 @@ int tls1_change_cipher_state(SSL_CONNECTION *s, int which)
     }
 
     if (!ssl_set_new_record_layer(s, s->version, direction,
-                                    OSSL_RECORD_PROTECTION_LEVEL_APPLICATION,
-                                    NULL, 0, key, cl, iv, (size_t)k, mac_secret,
-                                    mac_secret_size, c, taglen, mac_type,
-                                    m, comp, NULL)) {
+                                  OSSL_RECORD_PROTECTION_LEVEL_APPLICATION,
+                                  NULL, 0, key, cl, iv, (size_t)k, mac_secret,
+                                  mac_secret_size, c, taglen, mac_type,
+                                  m, comp, NULL)) {
         /* SSLfatal already called */
         goto err;
     }
@@ -283,7 +283,7 @@ int tls1_change_cipher_state(SSL_CONNECTION *s, int which)
     } OSSL_TRACE_END(TLS);
 
     return 1;
- err:
+err:
     return 0;
 }
 
@@ -356,7 +356,7 @@ int tls1_setup_key_block(SSL_CONNECTION *s)
     } OSSL_TRACE_END(TLS);
 
     ret = 1;
- err:
+err:
     return ret;
 }
 
@@ -403,7 +403,7 @@ int tls1_generate_master_secret(SSL_CONNECTION *s, unsigned char *out,
          * point (after client key exchange and before certificate verify)
          */
         if (!ssl3_digest_cached_records(s, 1)
-                || !ssl_handshake_hash(s, hash, sizeof(hash), &hashlen)) {
+            || !ssl_handshake_hash(s, hash, sizeof(hash), &hashlen)) {
             /* SSLfatal() already called */
             return 0;
         }
@@ -432,7 +432,7 @@ int tls1_generate_master_secret(SSL_CONNECTION *s, unsigned char *out,
                       s->s3.server_random, SSL3_RANDOM_SIZE,
                       NULL, 0, p, len, out,
                       SSL3_MASTER_SECRET_SIZE, 1)) {
-           /* SSLfatal() already called */
+            /* SSLfatal() already called */
             return 0;
         }
     }
@@ -534,9 +534,9 @@ int tls1_export_keying_material(SSL_CONNECTION *s, unsigned char *out,
                   out, olen, 0);
 
     goto ret;
- err1:
+err1:
     ERR_raise(ERR_LIB_SSL, SSL_R_TLS_ILLEGAL_EXPORTER_LABEL);
- ret:
+ret:
     OPENSSL_clear_free(val, vallen);
     return rv;
 }
@@ -544,75 +544,75 @@ int tls1_export_keying_material(SSL_CONNECTION *s, unsigned char *out,
 int tls1_alert_code(int code)
 {
     switch (code) {
-    case SSL_AD_CLOSE_NOTIFY:
-        return SSL3_AD_CLOSE_NOTIFY;
-    case SSL_AD_UNEXPECTED_MESSAGE:
-        return SSL3_AD_UNEXPECTED_MESSAGE;
-    case SSL_AD_BAD_RECORD_MAC:
-        return SSL3_AD_BAD_RECORD_MAC;
-    case SSL_AD_DECRYPTION_FAILED:
-        return TLS1_AD_DECRYPTION_FAILED;
-    case SSL_AD_RECORD_OVERFLOW:
-        return TLS1_AD_RECORD_OVERFLOW;
-    case SSL_AD_DECOMPRESSION_FAILURE:
-        return SSL3_AD_DECOMPRESSION_FAILURE;
-    case SSL_AD_HANDSHAKE_FAILURE:
-        return SSL3_AD_HANDSHAKE_FAILURE;
-    case SSL_AD_NO_CERTIFICATE:
-        return -1;
-    case SSL_AD_BAD_CERTIFICATE:
-        return SSL3_AD_BAD_CERTIFICATE;
-    case SSL_AD_UNSUPPORTED_CERTIFICATE:
-        return SSL3_AD_UNSUPPORTED_CERTIFICATE;
-    case SSL_AD_CERTIFICATE_REVOKED:
-        return SSL3_AD_CERTIFICATE_REVOKED;
-    case SSL_AD_CERTIFICATE_EXPIRED:
-        return SSL3_AD_CERTIFICATE_EXPIRED;
-    case SSL_AD_CERTIFICATE_UNKNOWN:
-        return SSL3_AD_CERTIFICATE_UNKNOWN;
-    case SSL_AD_ILLEGAL_PARAMETER:
-        return SSL3_AD_ILLEGAL_PARAMETER;
-    case SSL_AD_UNKNOWN_CA:
-        return TLS1_AD_UNKNOWN_CA;
-    case SSL_AD_ACCESS_DENIED:
-        return TLS1_AD_ACCESS_DENIED;
-    case SSL_AD_DECODE_ERROR:
-        return TLS1_AD_DECODE_ERROR;
-    case SSL_AD_DECRYPT_ERROR:
-        return TLS1_AD_DECRYPT_ERROR;
-    case SSL_AD_EXPORT_RESTRICTION:
-        return TLS1_AD_EXPORT_RESTRICTION;
-    case SSL_AD_PROTOCOL_VERSION:
-        return TLS1_AD_PROTOCOL_VERSION;
-    case SSL_AD_INSUFFICIENT_SECURITY:
-        return TLS1_AD_INSUFFICIENT_SECURITY;
-    case SSL_AD_INTERNAL_ERROR:
-        return TLS1_AD_INTERNAL_ERROR;
-    case SSL_AD_USER_CANCELLED:
-        return TLS1_AD_USER_CANCELLED;
-    case SSL_AD_NO_RENEGOTIATION:
-        return TLS1_AD_NO_RENEGOTIATION;
-    case SSL_AD_UNSUPPORTED_EXTENSION:
-        return TLS1_AD_UNSUPPORTED_EXTENSION;
-    case SSL_AD_CERTIFICATE_UNOBTAINABLE:
-        return TLS1_AD_CERTIFICATE_UNOBTAINABLE;
-    case SSL_AD_UNRECOGNIZED_NAME:
-        return TLS1_AD_UNRECOGNIZED_NAME;
-    case SSL_AD_BAD_CERTIFICATE_STATUS_RESPONSE:
-        return TLS1_AD_BAD_CERTIFICATE_STATUS_RESPONSE;
-    case SSL_AD_BAD_CERTIFICATE_HASH_VALUE:
-        return TLS1_AD_BAD_CERTIFICATE_HASH_VALUE;
-    case SSL_AD_UNKNOWN_PSK_IDENTITY:
-        return TLS1_AD_UNKNOWN_PSK_IDENTITY;
-    case SSL_AD_INAPPROPRIATE_FALLBACK:
-        return TLS1_AD_INAPPROPRIATE_FALLBACK;
-    case SSL_AD_NO_APPLICATION_PROTOCOL:
-        return TLS1_AD_NO_APPLICATION_PROTOCOL;
-    case SSL_AD_CERTIFICATE_REQUIRED:
-        return SSL_AD_HANDSHAKE_FAILURE;
-    case TLS13_AD_MISSING_EXTENSION:
-        return SSL_AD_HANDSHAKE_FAILURE;
-    default:
-        return -1;
+        case SSL_AD_CLOSE_NOTIFY:
+            return SSL3_AD_CLOSE_NOTIFY;
+        case SSL_AD_UNEXPECTED_MESSAGE:
+            return SSL3_AD_UNEXPECTED_MESSAGE;
+        case SSL_AD_BAD_RECORD_MAC:
+            return SSL3_AD_BAD_RECORD_MAC;
+        case SSL_AD_DECRYPTION_FAILED:
+            return TLS1_AD_DECRYPTION_FAILED;
+        case SSL_AD_RECORD_OVERFLOW:
+            return TLS1_AD_RECORD_OVERFLOW;
+        case SSL_AD_DECOMPRESSION_FAILURE:
+            return SSL3_AD_DECOMPRESSION_FAILURE;
+        case SSL_AD_HANDSHAKE_FAILURE:
+            return SSL3_AD_HANDSHAKE_FAILURE;
+        case SSL_AD_NO_CERTIFICATE:
+            return -1;
+        case SSL_AD_BAD_CERTIFICATE:
+            return SSL3_AD_BAD_CERTIFICATE;
+        case SSL_AD_UNSUPPORTED_CERTIFICATE:
+            return SSL3_AD_UNSUPPORTED_CERTIFICATE;
+        case SSL_AD_CERTIFICATE_REVOKED:
+            return SSL3_AD_CERTIFICATE_REVOKED;
+        case SSL_AD_CERTIFICATE_EXPIRED:
+            return SSL3_AD_CERTIFICATE_EXPIRED;
+        case SSL_AD_CERTIFICATE_UNKNOWN:
+            return SSL3_AD_CERTIFICATE_UNKNOWN;
+        case SSL_AD_ILLEGAL_PARAMETER:
+            return SSL3_AD_ILLEGAL_PARAMETER;
+        case SSL_AD_UNKNOWN_CA:
+            return TLS1_AD_UNKNOWN_CA;
+        case SSL_AD_ACCESS_DENIED:
+            return TLS1_AD_ACCESS_DENIED;
+        case SSL_AD_DECODE_ERROR:
+            return TLS1_AD_DECODE_ERROR;
+        case SSL_AD_DECRYPT_ERROR:
+            return TLS1_AD_DECRYPT_ERROR;
+        case SSL_AD_EXPORT_RESTRICTION:
+            return TLS1_AD_EXPORT_RESTRICTION;
+        case SSL_AD_PROTOCOL_VERSION:
+            return TLS1_AD_PROTOCOL_VERSION;
+        case SSL_AD_INSUFFICIENT_SECURITY:
+            return TLS1_AD_INSUFFICIENT_SECURITY;
+        case SSL_AD_INTERNAL_ERROR:
+            return TLS1_AD_INTERNAL_ERROR;
+        case SSL_AD_USER_CANCELLED:
+            return TLS1_AD_USER_CANCELLED;
+        case SSL_AD_NO_RENEGOTIATION:
+            return TLS1_AD_NO_RENEGOTIATION;
+        case SSL_AD_UNSUPPORTED_EXTENSION:
+            return TLS1_AD_UNSUPPORTED_EXTENSION;
+        case SSL_AD_CERTIFICATE_UNOBTAINABLE:
+            return TLS1_AD_CERTIFICATE_UNOBTAINABLE;
+        case SSL_AD_UNRECOGNIZED_NAME:
+            return TLS1_AD_UNRECOGNIZED_NAME;
+        case SSL_AD_BAD_CERTIFICATE_STATUS_RESPONSE:
+            return TLS1_AD_BAD_CERTIFICATE_STATUS_RESPONSE;
+        case SSL_AD_BAD_CERTIFICATE_HASH_VALUE:
+            return TLS1_AD_BAD_CERTIFICATE_HASH_VALUE;
+        case SSL_AD_UNKNOWN_PSK_IDENTITY:
+            return TLS1_AD_UNKNOWN_PSK_IDENTITY;
+        case SSL_AD_INAPPROPRIATE_FALLBACK:
+            return TLS1_AD_INAPPROPRIATE_FALLBACK;
+        case SSL_AD_NO_APPLICATION_PROTOCOL:
+            return TLS1_AD_NO_APPLICATION_PROTOCOL;
+        case SSL_AD_CERTIFICATE_REQUIRED:
+            return SSL_AD_HANDSHAKE_FAILURE;
+        case TLS13_AD_MISSING_EXTENSION:
+            return SSL_AD_HANDSHAKE_FAILURE;
+        default:
+            return -1;
     }
 }

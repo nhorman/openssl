@@ -60,9 +60,9 @@ static CMP_VFY_TEST_FIXTURE *set_up(const char *const test_case_name)
     ts = X509_STORE_new();
     fixture->test_case_name = test_case_name;
     if (ts == NULL
-            || !TEST_ptr(fixture->cmp_ctx = OSSL_CMP_CTX_new(libctx, NULL))
-            || !OSSL_CMP_CTX_set0_trusted(fixture->cmp_ctx, ts)
-            || !OSSL_CMP_CTX_set_log_cb(fixture->cmp_ctx, print_to_bio_out)) {
+        || !TEST_ptr(fixture->cmp_ctx = OSSL_CMP_CTX_new(libctx, NULL))
+        || !OSSL_CMP_CTX_set0_trusted(fixture->cmp_ctx, ts)
+        || !OSSL_CMP_CTX_set_log_cb(fixture->cmp_ctx, print_to_bio_out)) {
         tear_down(fixture);
         X509_STORE_free(ts);
         return NULL;
@@ -76,7 +76,7 @@ static X509 *srvcert = NULL;
 static X509 *clcert = NULL;
 /* chain */
 static X509 *endentity1 = NULL, *endentity2 = NULL,
-    *intermediate = NULL, *root = NULL;
+            *intermediate = NULL, *root = NULL;
 /* INSTA chain */
 static X509 *insta_cert = NULL, *instaca_cert = NULL;
 
@@ -162,7 +162,7 @@ static int test_validate_msg_mac_alg_protection(int miss, int wrong)
     if (!TEST_true(miss ? OSSL_CMP_CTX_set0_trusted(fixture->cmp_ctx, NULL)
                    : OSSL_CMP_CTX_set1_secretValue(fixture->cmp_ctx, sec_1,
                                                    wrong ? 4 : sizeof(sec_1)))
-            || !TEST_ptr(fixture->msg = load_pkimsg(ip_waiting_f, libctx))) {
+        || !TEST_ptr(fixture->msg = load_pkimsg(ip_waiting_f, libctx))) {
         tear_down(fixture);
         fixture = NULL;
     }
@@ -199,7 +199,7 @@ static int test_validate_msg_mac_alg_protection_bad(void)
 
     if (!TEST_true(OSSL_CMP_CTX_set1_secretValue(fixture->cmp_ctx, sec_bad,
                                                  sizeof(sec_bad)))
-            || !TEST_ptr(fixture->msg = load_pkimsg(ip_waiting_f, libctx))) {
+        || !TEST_ptr(fixture->msg = load_pkimsg(ip_waiting_f, libctx))) {
         tear_down(fixture);
         fixture = NULL;
     }
@@ -229,8 +229,8 @@ static int test_validate_msg_signature_partial_chain(int expired)
     ts = OSSL_CMP_CTX_get0_trusted(fixture->cmp_ctx);
     fixture->expected = !expired;
     if (ts == NULL
-            || !TEST_ptr(fixture->msg = load_pkimsg(ir_protected_f, libctx))
-            || !add_trusted(fixture->cmp_ctx, srvcert)) {
+        || !TEST_ptr(fixture->msg = load_pkimsg(ir_protected_f, libctx))
+        || !add_trusted(fixture->cmp_ctx, srvcert)) {
         tear_down(fixture);
         fixture = NULL;
     } else {
@@ -304,8 +304,8 @@ static int test_validate_msg_signature_sender_cert_untrusted(void)
     fixture->cert = insta_cert;
     fixture->expected = 1;
     if (!TEST_ptr(fixture->msg = load_pkimsg(ir_protected_0_extracerts, libctx))
-            || !add_trusted(fixture->cmp_ctx, instaca_cert)
-            || !add_untrusted(fixture->cmp_ctx, insta_cert)) {
+        || !add_trusted(fixture->cmp_ctx, instaca_cert)
+        || !add_untrusted(fixture->cmp_ctx, insta_cert)) {
         tear_down(fixture);
         fixture = NULL;
     }
@@ -319,8 +319,8 @@ static int test_validate_msg_signature_sender_cert_trusted(void)
     fixture->cert = insta_cert;
     fixture->expected = 1;
     if (!TEST_ptr(fixture->msg = load_pkimsg(ir_protected_0_extracerts, libctx))
-            || !add_trusted(fixture->cmp_ctx, instaca_cert)
-            || !add_trusted(fixture->cmp_ctx, insta_cert)) {
+        || !add_trusted(fixture->cmp_ctx, instaca_cert)
+        || !add_trusted(fixture->cmp_ctx, insta_cert)) {
         tear_down(fixture);
         fixture = NULL;
     }
@@ -333,7 +333,7 @@ static int test_validate_msg_signature_sender_cert_extracert(void)
     SETUP_TEST_FIXTURE(CMP_VFY_TEST_FIXTURE, set_up);
     fixture->expected = 1;
     if (!TEST_ptr(fixture->msg = load_pkimsg(ir_protected_2_extracerts, libctx))
-            || !add_trusted(fixture->cmp_ctx, instaca_cert)) {
+        || !add_trusted(fixture->cmp_ctx, instaca_cert)) {
         tear_down(fixture);
         fixture = NULL;
     }
@@ -348,7 +348,7 @@ static int test_validate_msg_signature_sender_cert_absent(void)
     SETUP_TEST_FIXTURE(CMP_VFY_TEST_FIXTURE, set_up);
     fixture->expected = 0;
     if (!TEST_ptr(fixture->msg =
-                  load_pkimsg(ir_protected_0_extracerts, libctx))) {
+                      load_pkimsg(ir_protected_0_extracerts, libctx))) {
         tear_down(fixture);
         fixture = NULL;
     }
@@ -407,8 +407,8 @@ static void setup_path(CMP_VFY_TEST_FIXTURE **fixture, X509 *wrong, int expired)
         X509_VERIFY_PARAM_set_time(vpm, test_time_after_expiration);
     }
     if (!add_trusted((*fixture)->cmp_ctx, wrong == NULL ? root : wrong)
-            || !add_untrusted((*fixture)->cmp_ctx, endentity1)
-            || !add_untrusted((*fixture)->cmp_ctx, intermediate)) {
+        || !add_untrusted((*fixture)->cmp_ctx, endentity1)
+        || !add_untrusted((*fixture)->cmp_ctx, intermediate)) {
         tear_down((*fixture));
         (*fixture) = NULL;
     }
@@ -592,13 +592,13 @@ void cleanup_tests(void)
 }
 
 #define USAGE "server.crt client.crt " \
-    "EndEntity1.crt EndEntity2.crt " \
-    "Root_CA.crt Intermediate_CA.crt " \
-    "CMP_IR_protected.der CMP_IR_unprotected.der " \
-    "IP_waitingStatus_PBM.der IR_rmprotection.der " \
-    "insta.cert.pem insta_ca.cert.pem " \
-    "IR_protected_0_extraCerts.der " \
-    "IR_protected_2_extraCerts.der module_name [module_conf_file]\n"
+        "EndEntity1.crt EndEntity2.crt " \
+        "Root_CA.crt Intermediate_CA.crt " \
+        "CMP_IR_protected.der CMP_IR_unprotected.der " \
+        "IP_waitingStatus_PBM.der IR_rmprotection.der " \
+        "insta.cert.pem insta_ca.cert.pem " \
+        "IR_protected_0_extraCerts.der " \
+        "IR_protected_2_extraCerts.der module_name [module_conf_file]\n"
 OPT_TEST_DECLARE_USAGE(USAGE)
 
 int setup_tests(void)
@@ -620,19 +620,19 @@ int setup_tests(void)
 
     RAND_bytes(rand_data, OSSL_CMP_TRANSACTIONID_LENGTH);
     if (!TEST_ptr(server_f = test_get_argument(0))
-            || !TEST_ptr(client_f = test_get_argument(1))
-            || !TEST_ptr(endentity1_f = test_get_argument(2))
-            || !TEST_ptr(endentity2_f = test_get_argument(3))
-            || !TEST_ptr(root_f = test_get_argument(4))
-            || !TEST_ptr(intermediate_f = test_get_argument(5))
-            || !TEST_ptr(ir_protected_f = test_get_argument(6))
-            || !TEST_ptr(ir_unprotected_f = test_get_argument(7))
-            || !TEST_ptr(ip_waiting_f = test_get_argument(8))
-            || !TEST_ptr(ir_rmprotection_f = test_get_argument(9))
-            || !TEST_ptr(instacert_f = test_get_argument(10))
-            || !TEST_ptr(instaca_f = test_get_argument(11))
-            || !TEST_ptr(ir_protected_0_extracerts = test_get_argument(12))
-            || !TEST_ptr(ir_protected_2_extracerts = test_get_argument(13))) {
+        || !TEST_ptr(client_f = test_get_argument(1))
+        || !TEST_ptr(endentity1_f = test_get_argument(2))
+        || !TEST_ptr(endentity2_f = test_get_argument(3))
+        || !TEST_ptr(root_f = test_get_argument(4))
+        || !TEST_ptr(intermediate_f = test_get_argument(5))
+        || !TEST_ptr(ir_protected_f = test_get_argument(6))
+        || !TEST_ptr(ir_unprotected_f = test_get_argument(7))
+        || !TEST_ptr(ip_waiting_f = test_get_argument(8))
+        || !TEST_ptr(ir_rmprotection_f = test_get_argument(9))
+        || !TEST_ptr(instacert_f = test_get_argument(10))
+        || !TEST_ptr(instaca_f = test_get_argument(11))
+        || !TEST_ptr(ir_protected_0_extracerts = test_get_argument(12))
+        || !TEST_ptr(ir_protected_2_extracerts = test_get_argument(13))) {
         TEST_error("usage: cmp_vfy_test %s", USAGE);
         return 0;
     }
@@ -642,24 +642,24 @@ int setup_tests(void)
 
     /* Load certificates for cert chain */
     if (!TEST_ptr(endentity1 = load_cert_pem(endentity1_f, libctx))
-            || !TEST_ptr(endentity2 = load_cert_pem(endentity2_f, libctx))
-            || !TEST_ptr(root = load_cert_pem(root_f, NULL))
-            || !TEST_ptr(intermediate = load_cert_pem(intermediate_f, libctx)))
+        || !TEST_ptr(endentity2 = load_cert_pem(endentity2_f, libctx))
+        || !TEST_ptr(root = load_cert_pem(root_f, NULL))
+        || !TEST_ptr(intermediate = load_cert_pem(intermediate_f, libctx)))
         goto err;
 
     if (!TEST_ptr(insta_cert = load_cert_pem(instacert_f, libctx))
-            || !TEST_ptr(instaca_cert = load_cert_pem(instaca_f, libctx)))
+        || !TEST_ptr(instaca_cert = load_cert_pem(instaca_f, libctx)))
         goto err;
 
     /* Load certificates for message validation */
     if (!TEST_ptr(srvcert = load_cert_pem(server_f, libctx))
-            || !TEST_ptr(clcert = load_cert_pem(client_f, libctx)))
+        || !TEST_ptr(clcert = load_cert_pem(client_f, libctx)))
         goto err;
     if (!TEST_int_eq(1, RAND_bytes(rand_data, OSSL_CMP_TRANSACTIONID_LENGTH)))
         goto err;
     if (!TEST_ptr(ir_unprotected = load_pkimsg(ir_unprotected_f, libctx))
-            || !TEST_ptr(ir_rmprotection = load_pkimsg(ir_rmprotection_f,
-                                                       libctx)))
+        || !TEST_ptr(ir_rmprotection = load_pkimsg(ir_rmprotection_f,
+                                                   libctx)))
         goto err;
 
     /* Message validation tests */
@@ -716,7 +716,7 @@ int setup_tests(void)
 
     return 1;
 
- err:
+err:
     cleanup_tests();
     return 0;
 

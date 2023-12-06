@@ -41,15 +41,15 @@ const X509V3_EXT_METHOD ossl_v3_sxnet = {
 };
 
 ASN1_SEQUENCE(SXNETID) = {
-        ASN1_SIMPLE(SXNETID, zone, ASN1_INTEGER),
-        ASN1_SIMPLE(SXNETID, user, ASN1_OCTET_STRING)
+    ASN1_SIMPLE(SXNETID, zone, ASN1_INTEGER),
+    ASN1_SIMPLE(SXNETID, user, ASN1_OCTET_STRING)
 } ASN1_SEQUENCE_END(SXNETID)
 
 IMPLEMENT_ASN1_FUNCTIONS(SXNETID)
 
 ASN1_SEQUENCE(SXNET) = {
-        ASN1_SIMPLE(SXNET, version, ASN1_INTEGER),
-        ASN1_SEQUENCE_OF(SXNET, ids, SXNETID)
+    ASN1_SIMPLE(SXNET, version, ASN1_INTEGER),
+    ASN1_SEQUENCE_OF(SXNET, ids, SXNETID)
 } ASN1_SEQUENCE_END(SXNET)
 
 IMPLEMENT_ASN1_FUNCTIONS(SXNET)
@@ -67,8 +67,8 @@ static int sxnet_i2r(X509V3_EXT_METHOD *method, SXNET *sx, BIO *out,
      * LONG_MAX since that would cause on overflow.
      */
     if (!ASN1_INTEGER_get_int64(&v, sx->version)
-            || v >= LONG_MAX
-            || v < LONG_MIN) {
+        || v >= LONG_MAX
+        || v < LONG_MIN) {
         BIO_printf(out, "%*sVersion: <unsupported>", indent, "");
     } else {
         long vl = (long)v;
@@ -115,7 +115,8 @@ static SXNET *sxnet_v2i(X509V3_EXT_METHOD *method, X509V3_CTX *ctx,
 
 /* Add an id given the zone as an ASCII number */
 
-int SXNET_add_id_asc(SXNET **psx, const char *zone, const char *user, int userlen)
+int SXNET_add_id_asc(SXNET **psx, const char *zone, const char *user,
+                     int userlen)
 {
     ASN1_INTEGER *izone;
 
@@ -199,7 +200,7 @@ int SXNET_add_id_INTEGER(SXNET **psx, ASN1_INTEGER *zone, const char *user,
     *psx = sx;
     return 1;
 
- err:
+err:
     SXNETID_free(id);
     if (*psx == NULL)
         SXNET_free(sx);

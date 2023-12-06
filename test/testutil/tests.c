@@ -69,7 +69,7 @@ static void test_fail_message(const char *prefix, const char *file, int line,
                               const char *type, const char *left,
                               const char *right, const char *op,
                               const char *fmt, ...)
-            PRINTF_FORMAT(8, 9);
+PRINTF_FORMAT(8, 9);
 
 static void test_fail_message_va(const char *prefix, const char *file,
                                  int line, const char *type,
@@ -208,25 +208,25 @@ void test_openssl_errors(void)
  * this is included in the output if the condition being tested for is false.
  */
 #define DEFINE_COMPARISON(type, name, opname, op, fmt, cast)            \
-    int test_ ## name ## _ ## opname(const char *file, int line,        \
-                                     const char *s1, const char *s2,    \
-                                     const type t1, const type t2)      \
-    {                                                                   \
-        if (t1 op t2)                                                   \
+        int test_ ## name ## _ ## opname(const char *file, int line,        \
+                                         const char *s1, const char *s2,    \
+                                         const type t1, const type t2)      \
+        {                                                                   \
+            if (t1 op t2)                                                   \
             return 1;                                                   \
-        test_fail_message(NULL, file, line, #type, s1, s2, #op,         \
-                          "[" fmt "] compared to [" fmt "]",            \
-                          (cast)t1, (cast)t2);                          \
-        return 0;                                                       \
-    }
+            test_fail_message(NULL, file, line, #type, s1, s2, #op,         \
+                              "[" fmt "] compared to [" fmt "]",            \
+                              (cast)t1, (cast)t2);                          \
+            return 0;                                                       \
+        }
 
 #define DEFINE_COMPARISONS(type, name, fmt, cast)                       \
-    DEFINE_COMPARISON(type, name, eq, ==, fmt, cast)                    \
-    DEFINE_COMPARISON(type, name, ne, !=, fmt, cast)                    \
-    DEFINE_COMPARISON(type, name, lt, <, fmt, cast)                     \
-    DEFINE_COMPARISON(type, name, le, <=, fmt, cast)                    \
-    DEFINE_COMPARISON(type, name, gt, >, fmt, cast)                     \
-    DEFINE_COMPARISON(type, name, ge, >=, fmt, cast)
+        DEFINE_COMPARISON(type, name, eq, ==, fmt, cast)                    \
+        DEFINE_COMPARISON(type, name, ne, !=, fmt, cast)                    \
+        DEFINE_COMPARISON(type, name, lt, <, fmt, cast)                     \
+        DEFINE_COMPARISON(type, name, le, <=, fmt, cast)                    \
+        DEFINE_COMPARISON(type, name, gt, >, fmt, cast)                     \
+        DEFINE_COMPARISON(type, name, ge, >=, fmt, cast)
 
 DEFINE_COMPARISONS(int, int, "%d", int)
 DEFINE_COMPARISONS(unsigned int, uint, "%u", unsigned int)
@@ -278,7 +278,7 @@ int test_str_eq(const char *file, int line, const char *st1, const char *st2,
                 const char *s1, const char *s2)
 {
     if (s1 == NULL && s2 == NULL)
-      return 1;
+        return 1;
     if (s1 == NULL || s2 == NULL || strcmp(s1, s2) != 0) {
         test_fail_string_message(NULL, file, line, "string", st1, st2, "==",
                                  s1, s1 == NULL ? 0 : strlen(s1),
@@ -292,7 +292,7 @@ int test_str_ne(const char *file, int line, const char *st1, const char *st2,
                 const char *s1, const char *s2)
 {
     if ((s1 == NULL) ^ (s2 == NULL))
-      return 1;
+        return 1;
     if (s1 == NULL || strcmp(s1, s2) == 0) {
         test_fail_string_message(NULL, file, line, "string", st1, st2, "!=",
                                  s1, s1 == NULL ? 0 : strlen(s1),
@@ -306,7 +306,7 @@ int test_strn_eq(const char *file, int line, const char *st1, const char *st2,
                  const char *s1, size_t n1, const char *s2, size_t n2)
 {
     if (s1 == NULL && s2 == NULL)
-      return 1;
+        return 1;
     if (n1 != n2 || s1 == NULL || s2 == NULL || strncmp(s1, s2, n1) != 0) {
         test_fail_string_message(NULL, file, line, "string", st1, st2, "==",
                                  s1, s1 == NULL ? 0 : OPENSSL_strnlen(s1, n1),
@@ -320,7 +320,7 @@ int test_strn_ne(const char *file, int line, const char *st1, const char *st2,
                  const char *s1, size_t n1, const char *s2, size_t n2)
 {
     if ((s1 == NULL) ^ (s2 == NULL))
-      return 1;
+        return 1;
     if (n1 != n2 || s1 == NULL || strncmp(s1, s2, n1) == 0) {
         test_fail_string_message(NULL, file, line, "string", st1, st2, "!=",
                                  s1, s1 == NULL ? 0 : OPENSSL_strnlen(s1, n1),
@@ -359,25 +359,25 @@ int test_mem_ne(const char *file, int line, const char *st1, const char *st2,
 }
 
 #define DEFINE_BN_COMPARISONS(opname, op, zero_cond)                    \
-    int test_BN_ ## opname(const char *file, int line,                  \
-                           const char *s1, const char *s2,              \
-                           const BIGNUM *t1, const BIGNUM *t2)          \
-    {                                                                   \
-        if (BN_cmp(t1, t2) op 0)                                        \
+        int test_BN_ ## opname(const char *file, int line,                  \
+                               const char *s1, const char *s2,              \
+                               const BIGNUM *t1, const BIGNUM *t2)          \
+        {                                                                   \
+            if (BN_cmp(t1, t2) op 0)                                        \
             return 1;                                                   \
-        test_fail_bignum_message(NULL, file, line, "BIGNUM", s1, s2,    \
-                                 #op, t1, t2);                          \
-        return 0;                                                       \
-    }                                                                   \
-    int test_BN_ ## opname ## _zero(const char *file, int line,         \
-                                    const char *s, const BIGNUM *a)     \
-    {                                                                   \
-        if (a != NULL &&(zero_cond))                                    \
+            test_fail_bignum_message(NULL, file, line, "BIGNUM", s1, s2,    \
+                                     #op, t1, t2);                          \
+            return 0;                                                       \
+        }                                                                   \
+        int test_BN_ ## opname ## _zero(const char *file, int line,         \
+                                        const char *s, const BIGNUM *a)     \
+        {                                                                   \
+            if (a != NULL &&(zero_cond))                                    \
             return 1;                                                   \
-        test_fail_bignum_mono_message(NULL, file, line, "BIGNUM",       \
-                                      s, "0", #op, a);                  \
-        return 0;                                                       \
-    }
+            test_fail_bignum_mono_message(NULL, file, line, "BIGNUM",       \
+                                          s, "0", #op, a);                  \
+            return 0;                                                       \
+        }
 
 DEFINE_BN_COMPARISONS(eq, ==, BN_is_zero(a))
 DEFINE_BN_COMPARISONS(ne, !=, !BN_is_zero(a))
@@ -398,7 +398,8 @@ int test_BN_odd(const char *file, int line, const char *s, const BIGNUM *a)
 {
     if (a != NULL && BN_is_odd(a))
         return 1;
-    test_fail_bignum_mono_message(NULL, file, line, "BIGNUM", "ODD(", ")", s, a);
+    test_fail_bignum_mono_message(NULL, file, line, "BIGNUM", "ODD(", ")", s,
+                                  a);
     return 0;
 }
 
@@ -449,22 +450,22 @@ static const char *print_time(const ASN1_TIME *t)
 }
 
 #define DEFINE_TIME_T_COMPARISON(opname, op)                            \
-    int test_time_t_ ## opname(const char *file, int line,              \
-                               const char *s1, const char *s2,          \
-                               const time_t t1, const time_t t2)        \
-    {                                                                   \
-        ASN1_TIME *at1 = ASN1_TIME_set(NULL, t1);                       \
-        ASN1_TIME *at2 = ASN1_TIME_set(NULL, t2);                       \
-        int r = at1 != NULL && at2 != NULL                              \
-                && ASN1_TIME_compare(at1, at2) op 0;                    \
-        if (!r)                                                         \
+        int test_time_t_ ## opname(const char *file, int line,              \
+                                   const char *s1, const char *s2,          \
+                                   const time_t t1, const time_t t2)        \
+        {                                                                   \
+            ASN1_TIME *at1 = ASN1_TIME_set(NULL, t1);                       \
+            ASN1_TIME *at2 = ASN1_TIME_set(NULL, t2);                       \
+            int r = at1 != NULL && at2 != NULL                              \
+                    && ASN1_TIME_compare(at1, at2) op 0;                    \
+            if (!r)                                                         \
             test_fail_message(NULL, file, line, "time_t", s1, s2, #op,  \
                               "[%s] compared to [%s]",                  \
                               print_time(at1), print_time(at2));        \
-        ASN1_STRING_free(at1);                                          \
-        ASN1_STRING_free(at2);                                          \
-        return r;                                                       \
-    }
+            ASN1_STRING_free(at1);                                          \
+            ASN1_STRING_free(at2);                                          \
+            return r;                                                       \
+        }
 DEFINE_TIME_T_COMPARISON(eq, ==)
 DEFINE_TIME_T_COMPARISON(ne, !=)
 DEFINE_TIME_T_COMPARISON(gt, >)

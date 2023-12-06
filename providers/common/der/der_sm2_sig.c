@@ -15,10 +15,10 @@
 #define ossl_der_oid_id_sm2_with_sm3   ossl_der_oid_sm2_with_SM3
 
 #define MD_CASE(name)                                                   \
-    case NID_##name:                                                    \
-        precompiled = ossl_der_oid_id_sm2_with_##name;                  \
-        precompiled_sz = sizeof(ossl_der_oid_id_sm2_with_##name);       \
-        break;
+            case NID_ ## name:                                                    \
+                precompiled = ossl_der_oid_id_sm2_with_ ## name;                  \
+                precompiled_sz = sizeof(ossl_der_oid_id_sm2_with_ ## name);       \
+                break;
 
 int ossl_DER_w_algorithmIdentifier_SM2_with_MD(WPACKET *pkt, int cont,
                                                EC_KEY *ec, int mdnid)
@@ -27,13 +27,13 @@ int ossl_DER_w_algorithmIdentifier_SM2_with_MD(WPACKET *pkt, int cont,
     size_t precompiled_sz = 0;
 
     switch (mdnid) {
-        MD_CASE(sm3);
-    default:
-        return 0;
+    MD_CASE(sm3);
+        default:
+            return 0;
     }
 
     return ossl_DER_w_begin_sequence(pkt, cont)
-        /* No parameters (yet?) */
-        && ossl_DER_w_precompiled(pkt, -1, precompiled, precompiled_sz)
-        && ossl_DER_w_end_sequence(pkt, cont);
+           /* No parameters (yet?) */
+           && ossl_DER_w_precompiled(pkt, -1, precompiled, precompiled_sz)
+           && ossl_DER_w_end_sequence(pkt, cont);
 }

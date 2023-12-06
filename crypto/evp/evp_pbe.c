@@ -55,7 +55,8 @@ static const EVP_PBE_CTL builtin_pbe[] = {
     {EVP_PBE_TYPE_OUTER, NID_pbe_WithSHA1And40BitRC2_CBC,
      NID_rc2_40_cbc, NID_sha1, PKCS12_PBE_keyivgen, &PKCS12_PBE_keyivgen_ex},
 
-    {EVP_PBE_TYPE_OUTER, NID_pbes2, -1, -1, PKCS5_v2_PBE_keyivgen, &PKCS5_v2_PBE_keyivgen_ex},
+    {EVP_PBE_TYPE_OUTER, NID_pbes2, -1, -1, PKCS5_v2_PBE_keyivgen,
+     &PKCS5_v2_PBE_keyivgen_ex},
 
     {EVP_PBE_TYPE_OUTER, NID_pbeWithMD2AndRC2_CBC,
      NID_rc2_64_cbc, NID_md2, PKCS5_PBE_keyivgen, PKCS5_PBE_keyivgen_ex},
@@ -86,9 +87,11 @@ static const EVP_PBE_CTL builtin_pbe[] = {
 #ifndef OPENSSL_NO_SM3
     {EVP_PBE_TYPE_PRF, NID_hmacWithSM3, -1, NID_sm3, 0},
 #endif
-    {EVP_PBE_TYPE_KDF, NID_id_pbkdf2, -1, -1, PKCS5_v2_PBKDF2_keyivgen, &PKCS5_v2_PBKDF2_keyivgen_ex},
+    {EVP_PBE_TYPE_KDF, NID_id_pbkdf2, -1, -1, PKCS5_v2_PBKDF2_keyivgen,
+     &PKCS5_v2_PBKDF2_keyivgen_ex},
 #ifndef OPENSSL_NO_SCRYPT
-    {EVP_PBE_TYPE_KDF, NID_id_scrypt, -1, -1, PKCS5_v2_scrypt_keyivgen, &PKCS5_v2_scrypt_keyivgen_ex}
+    {EVP_PBE_TYPE_KDF, NID_id_scrypt, -1, -1, PKCS5_v2_scrypt_keyivgen,
+     &PKCS5_v2_scrypt_keyivgen_ex}
 #endif
 };
 
@@ -125,7 +128,8 @@ int EVP_PBE_CipherInit_ex(ASN1_OBJECT *pbe_obj, const char *pass, int passlen,
 
     if (cipher_nid != -1) {
         (void)ERR_set_mark();
-        cipher = cipher_fetch = EVP_CIPHER_fetch(libctx, OBJ_nid2sn(cipher_nid), propq);
+        cipher = cipher_fetch = EVP_CIPHER_fetch(libctx, OBJ_nid2sn(
+                                                     cipher_nid), propq);
         /* Fallback to legacy method */
         if (cipher == NULL)
             cipher = EVP_get_cipherbynid(cipher_nid);
@@ -155,7 +159,8 @@ int EVP_PBE_CipherInit_ex(ASN1_OBJECT *pbe_obj, const char *pass, int passlen,
 
     /* Try extended keygen with libctx/propq first, fall back to legacy keygen */
     if (keygen_ex != NULL)
-        ret = keygen_ex(ctx, pass, passlen, param, cipher, md, en_de, libctx, propq);
+        ret = keygen_ex(ctx, pass, passlen, param, cipher, md, en_de, libctx,
+                        propq);
     else
         ret = keygen(ctx, pass, passlen, param, cipher, md, en_de);
 
@@ -169,7 +174,8 @@ err:
 int EVP_PBE_CipherInit(ASN1_OBJECT *pbe_obj, const char *pass, int passlen,
                        ASN1_TYPE *param, EVP_CIPHER_CTX *ctx, int en_de)
 {
-    return EVP_PBE_CipherInit_ex(pbe_obj, pass, passlen, param, ctx, en_de, NULL, NULL);
+    return EVP_PBE_CipherInit_ex(pbe_obj, pass, passlen, param, ctx, en_de,
+                                 NULL, NULL);
 }
 
 DECLARE_OBJ_BSEARCH_CMP_FN(EVP_PBE_CTL, EVP_PBE_CTL, pbe2);
@@ -224,7 +230,7 @@ int EVP_PBE_alg_add_type(int pbe_type, int pbe_nid, int cipher_nid,
     }
     return 1;
 
- err:
+err:
     OPENSSL_free(pbe_tmp);
     return 0;
 }

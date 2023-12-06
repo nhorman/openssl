@@ -75,7 +75,7 @@ static int afalg_init_aio(afalg_aio *aio);
 static int afalg_fin_cipher_aio(afalg_aio *ptr, int sfd,
                                 unsigned char *buf, size_t len);
 static int afalg_create_sk(afalg_ctx *actx, const char *ciphertype,
-                                const char *ciphername);
+                           const char *ciphername);
 static int afalg_destroy(ENGINE *e);
 static int afalg_init(ENGINE *e);
 static int afalg_finish(ENGINE *e);
@@ -101,8 +101,8 @@ static int afalg_cipher_nids[] = {
 };
 
 static cbc_handles cbc_handle[] = {{AES_KEY_SIZE_128, NULL},
-                                    {AES_KEY_SIZE_192, NULL},
-                                    {AES_KEY_SIZE_256, NULL}};
+                                   {AES_KEY_SIZE_192, NULL},
+                                   {AES_KEY_SIZE_256, NULL}};
 
 static ossl_inline int io_setup(unsigned n, aio_context_t *ctx)
 {
@@ -127,13 +127,13 @@ static ossl_inline int io_read(aio_context_t ctx, long n, struct iocb **iocb)
 /* A version of 'struct timespec' with 32-bit time_t and nanoseconds.  */
 struct __timespec32
 {
-  __kernel_long_t tv_sec;
-  __kernel_long_t tv_nsec;
+    __kernel_long_t tv_sec;
+    __kernel_long_t tv_nsec;
 };
 
 static ossl_inline int io_getevents(aio_context_t ctx, long min, long max,
-                               struct io_event *events,
-                               struct timespec *timeout)
+                                    struct io_event *events,
+                                    struct timespec *timeout)
 {
 #if defined(__NR_io_pgetevents_time64)
     /* Check if we are a 32-bit architecture with a 64-bit time_t */
@@ -373,17 +373,18 @@ static int afalg_fin_cipher_aio(afalg_aio *aio, int sfd, unsigned char *buf,
                          */
                         ALG_WARN
                             ("%s(%d): Crypto Operation failed with code %lld\n",
-                             __FILE__, __LINE__, events[0].res);
+                            __FILE__, __LINE__, events[0].res);
                         BIO_snprintf(strbuf, sizeof(strbuf), "%lld", op_ret);
                         switch (events[0].res) {
-                        case -ENOMEM:
-                            AFALGerr(0, AFALG_R_KERNEL_OP_FAILED);
-                            ERR_add_error_data(3, "-ENOMEM ( code ", strbuf, " )");
-                            break;
-                        default:
-                            AFALGerr(0, AFALG_R_KERNEL_OP_FAILED);
-                            ERR_add_error_data(2, "code ", strbuf);
-                            break;
+                            case -ENOMEM:
+                                AFALGerr(0, AFALG_R_KERNEL_OP_FAILED);
+                                ERR_add_error_data(3, "-ENOMEM ( code ", strbuf,
+                                                   " )");
+                                break;
+                            default:
+                                AFALGerr(0, AFALG_R_KERNEL_OP_FAILED);
+                                ERR_add_error_data(2, "code ", strbuf);
+                                break;
                         }
                         return 0;
                     }
@@ -404,7 +405,7 @@ static int afalg_fin_cipher_aio(afalg_aio *aio, int sfd, unsigned char *buf,
 }
 
 static ossl_inline void afalg_set_op_sk(struct cmsghdr *cmsg,
-                                   const ALG_OP_TYPE op)
+                                        const ALG_OP_TYPE op)
 {
     cmsg->cmsg_level = SOL_ALG;
     cmsg->cmsg_type = ALG_SET_OP;
@@ -426,7 +427,7 @@ static void afalg_set_iv_sk(struct cmsghdr *cmsg, const unsigned char *iv,
 }
 
 static ossl_inline int afalg_set_key(afalg_ctx *actx, const unsigned char *key,
-                                const int klen)
+                                     const int klen)
 {
     int ret;
     ret = setsockopt(actx->bfd, SOL_ALG, ALG_SET_KEY, key, klen);
@@ -439,7 +440,7 @@ static ossl_inline int afalg_set_key(afalg_ctx *actx, const unsigned char *key,
 }
 
 static int afalg_create_sk(afalg_ctx *actx, const char *ciphertype,
-                                const char *ciphername)
+                           const char *ciphername)
 {
     struct sockaddr_alg sa;
     int r = -1;
@@ -474,7 +475,7 @@ static int afalg_create_sk(afalg_ctx *actx, const char *ciphertype,
 
     return 1;
 
- err:
+err:
     if (actx->bfd >= 0)
         close(actx->bfd);
     if (actx->sfd >= 0)
@@ -564,7 +565,7 @@ static int afalg_start_cipher_sk(afalg_ctx *actx, const unsigned char *in,
 
     if (sbytes != (ssize_t) inl) {
         ALG_WARN("Cipher operation send bytes %zd != inlen %zd\n", sbytes,
-                inl);
+                 inl);
         return 0;
     }
 # endif
@@ -598,15 +599,15 @@ static int afalg_cipher_init(EVP_CIPHER_CTX *ctx, const unsigned char *key,
 
     ciphertype = EVP_CIPHER_CTX_get_nid(ctx);
     switch (ciphertype) {
-    case NID_aes_128_cbc:
-    case NID_aes_192_cbc:
-    case NID_aes_256_cbc:
-        ciphername = "cbc(aes)";
-        break;
-    default:
-        ALG_WARN("%s(%d): Unsupported Cipher type %d\n", __FILE__, __LINE__,
-                 ciphertype);
-        return 0;
+        case NID_aes_128_cbc:
+        case NID_aes_192_cbc:
+        case NID_aes_256_cbc:
+            ciphername = "cbc(aes)";
+            break;
+        default:
+            ALG_WARN("%s(%d): Unsupported Cipher type %d\n", __FILE__, __LINE__,
+                     ciphertype);
+            return 0;
     }
 
     if (ALG_AES_IV_LEN != EVP_CIPHER_CTX_get_iv_length(ctx)) {
@@ -726,14 +727,14 @@ static int afalg_cipher_cleanup(EVP_CIPHER_CTX *ctx)
 static cbc_handles *get_cipher_handle(int nid)
 {
     switch (nid) {
-    case NID_aes_128_cbc:
-        return &cbc_handle[AES_CBC_128];
-    case NID_aes_192_cbc:
-        return &cbc_handle[AES_CBC_192];
-    case NID_aes_256_cbc:
-        return &cbc_handle[AES_CBC_256];
-    default:
-        return NULL;
+        case NID_aes_128_cbc:
+            return &cbc_handle[AES_CBC_128];
+        case NID_aes_192_cbc:
+            return &cbc_handle[AES_CBC_192];
+        case NID_aes_256_cbc:
+            return &cbc_handle[AES_CBC_256];
+        default:
+            return NULL;
     }
 }
 
@@ -742,25 +743,25 @@ static const EVP_CIPHER *afalg_aes_cbc(int nid)
     cbc_handles *cipher_handle = get_cipher_handle(nid);
 
     if (cipher_handle == NULL)
-            return NULL;
+        return NULL;
     if (cipher_handle->_hidden == NULL
         && ((cipher_handle->_hidden =
-         EVP_CIPHER_meth_new(nid,
-                             AES_BLOCK_SIZE,
-                             cipher_handle->key_size)) == NULL
-        || !EVP_CIPHER_meth_set_iv_length(cipher_handle->_hidden,
-                                          AES_IV_LEN)
-        || !EVP_CIPHER_meth_set_flags(cipher_handle->_hidden,
-                                      EVP_CIPH_CBC_MODE |
-                                      EVP_CIPH_FLAG_DEFAULT_ASN1)
-        || !EVP_CIPHER_meth_set_init(cipher_handle->_hidden,
-                                     afalg_cipher_init)
-        || !EVP_CIPHER_meth_set_do_cipher(cipher_handle->_hidden,
-                                          afalg_do_cipher)
-        || !EVP_CIPHER_meth_set_cleanup(cipher_handle->_hidden,
-                                        afalg_cipher_cleanup)
-        || !EVP_CIPHER_meth_set_impl_ctx_size(cipher_handle->_hidden,
-                                              sizeof(afalg_ctx)))) {
+                 EVP_CIPHER_meth_new(nid,
+                                     AES_BLOCK_SIZE,
+                                     cipher_handle->key_size)) == NULL
+            || !EVP_CIPHER_meth_set_iv_length(cipher_handle->_hidden,
+                                              AES_IV_LEN)
+            || !EVP_CIPHER_meth_set_flags(cipher_handle->_hidden,
+                                          EVP_CIPH_CBC_MODE |
+                                          EVP_CIPH_FLAG_DEFAULT_ASN1)
+            || !EVP_CIPHER_meth_set_init(cipher_handle->_hidden,
+                                         afalg_cipher_init)
+            || !EVP_CIPHER_meth_set_do_cipher(cipher_handle->_hidden,
+                                              afalg_do_cipher)
+            || !EVP_CIPHER_meth_set_cleanup(cipher_handle->_hidden,
+                                            afalg_cipher_cleanup)
+            || !EVP_CIPHER_meth_set_impl_ctx_size(cipher_handle->_hidden,
+                                                  sizeof(afalg_ctx)))) {
         EVP_CIPHER_meth_free(cipher_handle->_hidden);
         cipher_handle->_hidden= NULL;
     }
@@ -778,14 +779,14 @@ static int afalg_ciphers(ENGINE *e, const EVP_CIPHER **cipher,
     }
 
     switch (nid) {
-    case NID_aes_128_cbc:
-    case NID_aes_192_cbc:
-    case NID_aes_256_cbc:
-        *cipher = afalg_aes_cbc(nid);
-        break;
-    default:
-        *cipher = NULL;
-        r = 0;
+        case NID_aes_128_cbc:
+        case NID_aes_192_cbc:
+        case NID_aes_256_cbc:
+            *cipher = afalg_aes_cbc(nid);
+            break;
+        default:
+            *cipher = NULL;
+            r = 0;
     }
     return r;
 }
@@ -840,7 +841,7 @@ static int bind_helper(ENGINE *e, const char *id)
 }
 
 IMPLEMENT_DYNAMIC_CHECK_FN()
-    IMPLEMENT_DYNAMIC_BIND_FN(bind_helper)
+IMPLEMENT_DYNAMIC_BIND_FN(bind_helper)
 # endif
 
 static int afalg_chk_platform(void)
@@ -868,9 +869,9 @@ static int afalg_chk_platform(void)
     if (KERNEL_VERSION(kver[0], kver[1], kver[2])
         < KERNEL_VERSION(K_MAJ, K_MIN1, K_MIN2)) {
         ALG_ERR("ASYNC AFALG not supported this kernel(%d.%d.%d)\n",
-                 kver[0], kver[1], kver[2]);
+                kver[0], kver[1], kver[2]);
         ALG_ERR("ASYNC AFALG requires kernel version %d.%d.%d or later\n",
-                 K_MAJ, K_MIN1, K_MIN2);
+                K_MAJ, K_MIN1, K_MIN2);
         AFALGerr(AFALG_F_AFALG_CHK_PLATFORM,
                  AFALG_R_KERNEL_DOES_NOT_SUPPORT_ASYNC_AFALG);
         return 0;

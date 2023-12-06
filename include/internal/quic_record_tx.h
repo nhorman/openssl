@@ -23,13 +23,14 @@
  */
 typedef struct ossl_qtx_iovec_st {
     const unsigned char    *buf;
-    size_t                  buf_len;
+    size_t buf_len;
 } OSSL_QTX_IOVEC;
 
 typedef struct ossl_qtx_st OSSL_QTX;
 
 typedef int (*ossl_mutate_packet_cb)(const QUIC_PKT_HDR *hdrin,
-                                     const OSSL_QTX_IOVEC *iovecin, size_t numin,
+                                     const OSSL_QTX_IOVEC *iovecin,
+                                     size_t numin,
                                      QUIC_PKT_HDR **hdrout,
                                      const OSSL_QTX_IOVEC **iovecout,
                                      size_t *numout,
@@ -45,7 +46,7 @@ typedef struct ossl_qtx_args_st {
     BIO            *bio;
 
     /* Maximum datagram payload length (MDPL) for TX purposes. */
-    size_t          mdpl;
+    size_t mdpl;
 } OSSL_QTX_ARGS;
 
 /* Instantiates a new QTX. */
@@ -56,7 +57,8 @@ void ossl_qtx_free(OSSL_QTX *qtx);
 
 /* Set mutator callbacks for test framework support */
 void ossl_qtx_set_mutator(OSSL_QTX *qtx, ossl_mutate_packet_cb mutatecb,
-                          ossl_finish_mutate_cb finishmutatecb, void *mutatearg);
+                          ossl_finish_mutate_cb finishmutatecb,
+                          void *mutatearg);
 
 /* Setters for the msg_callback and the msg_callback_arg */
 void ossl_qtx_set_msg_callback(OSSL_QTX *qtx, ossl_msg_cb msg_callback,
@@ -102,11 +104,11 @@ void ossl_qtx_set_msg_callback_arg(OSSL_QTX *qtx, void *msg_callback_arg);
  * Returns 1 on success or 0 on failure.
  */
 int ossl_qtx_provide_secret(OSSL_QTX              *qtx,
-                            uint32_t               enc_level,
-                            uint32_t               suite_id,
+                            uint32_t enc_level,
+                            uint32_t suite_id,
                             EVP_MD                *md,
                             const unsigned char   *secret,
-                            size_t                 secret_len);
+                            size_t secret_len);
 
 /*
  * Informs the QTX that it can now discard key material for a given EL. The QTX
@@ -157,7 +159,7 @@ typedef struct ossl_qtx_pkt_st {
      * are permitted.
      */
     const OSSL_QTX_IOVEC       *iovec;
-    size_t                      num_iovec;
+    size_t num_iovec;
 
     /* Destination address. Will be passed through to the BIO if non-NULL. */
     const BIO_ADDR             *peer;
@@ -172,10 +174,10 @@ typedef struct ossl_qtx_pkt_st {
      * Logical PN. Used for encryption. This will automatically be encoded to
      * hdr->pn, which need not be initialized.
      */
-    QUIC_PN                     pn;
+    QUIC_PN pn;
 
     /* Packet flags. Zero or more OSSL_QTX_PKT_FLAG_* values. */
-    uint32_t                    flags;
+    uint32_t flags;
 } OSSL_QTX_PKT;
 
 /*

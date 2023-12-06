@@ -342,18 +342,18 @@ int ossl_quic_wire_decode_pkt_hdr(PACKET *pkt,
             raw_type = ((b0 >> 4) & 0x3);
 
             switch (raw_type) {
-            case 0:
-                hdr->type = QUIC_PKT_TYPE_INITIAL;
-                break;
-            case 1:
-                hdr->type = QUIC_PKT_TYPE_0RTT;
-                break;
-            case 2:
-                hdr->type = QUIC_PKT_TYPE_HANDSHAKE;
-                break;
-            case 3:
-                hdr->type = QUIC_PKT_TYPE_RETRY;
-                break;
+                case 0:
+                    hdr->type = QUIC_PKT_TYPE_INITIAL;
+                    break;
+                case 1:
+                    hdr->type = QUIC_PKT_TYPE_0RTT;
+                    break;
+                case 2:
+                    hdr->type = QUIC_PKT_TYPE_HANDSHAKE;
+                    break;
+                case 3:
+                    hdr->type = QUIC_PKT_TYPE_RETRY;
+                    break;
             }
 
             hdr->pn_len     = 0;
@@ -404,7 +404,7 @@ int ossl_quic_wire_decode_pkt_hdr(PACKET *pkt,
                 hdr->reserved   = partial ? 0 : ((b0 & 0x0C) >> 2);
 
                 if (!PACKET_get_quic_vlint(pkt, &len)
-                        || len < sizeof(hdr->pn))
+                    || len < sizeof(hdr->pn))
                     return 0;
 
                 if (!nodata && len > PACKET_remaining(pkt))
@@ -621,9 +621,9 @@ int ossl_quic_wire_get_encoded_pkt_hdr_len(size_t short_conn_id_len,
             return 0;
 
         len += 1 /* Initial byte */ + 4 /* Version */
-            + 1 + hdr->dst_conn_id.id_len /* DCID Len, DCID */
-            + 1 + hdr->src_conn_id.id_len /* SCID Len, SCID */
-            ;
+               + 1 + hdr->dst_conn_id.id_len /* DCID Len, DCID */
+               + 1 + hdr->src_conn_id.id_len /* SCID Len, SCID */
+        ;
 
         if (ossl_quic_pkt_type_has_pn(hdr->type)) {
             if (hdr->pn_len < 1 || hdr->pn_len > 4)
@@ -715,18 +715,18 @@ int ossl_quic_wire_decode_pkt_hdr_pn(const unsigned char *enc_pn,
             break;
         case 2:
             truncated_pn = ((QUIC_PN)enc_pn[0] << 8)
-                         |  (QUIC_PN)enc_pn[1];
+                           |  (QUIC_PN)enc_pn[1];
             break;
         case 3:
             truncated_pn = ((QUIC_PN)enc_pn[0] << 16)
-                         | ((QUIC_PN)enc_pn[1] << 8)
-                         |  (QUIC_PN)enc_pn[2];
+                           | ((QUIC_PN)enc_pn[1] << 8)
+                           |  (QUIC_PN)enc_pn[2];
             break;
         case 4:
             truncated_pn = ((QUIC_PN)enc_pn[0] << 24)
-                         | ((QUIC_PN)enc_pn[1] << 16)
-                         | ((QUIC_PN)enc_pn[2] << 8)
-                         |  (QUIC_PN)enc_pn[3];
+                           | ((QUIC_PN)enc_pn[1] << 16)
+                           | ((QUIC_PN)enc_pn[2] << 8)
+                           |  (QUIC_PN)enc_pn[3];
             break;
         default:
             return 0;
@@ -903,7 +903,8 @@ int ossl_quic_calculate_retry_integrity_tag(OSSL_LIB_CTX *libctx,
     }
 
     if (!EVP_CipherInit_ex(cctx, cipher, NULL,
-                           retry_integrity_key, retry_integrity_nonce, /*enc=*/1)) {
+                           retry_integrity_key, retry_integrity_nonce,
+                           /*enc=*/ 1)) {
         ERR_raise(ERR_LIB_SSL, ERR_R_EVP_LIB);
         goto err;
     }

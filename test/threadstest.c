@@ -211,12 +211,12 @@ static int test_atomic(void)
     if (CRYPTO_atomic_or(&val64, 2, &ret64, NULL)) {
         /* This succeeds therefore we're on a platform with lockless atomics */
         if (!TEST_uint_eq((unsigned int)val64, 3)
-                || !TEST_uint_eq((unsigned int)val64, (unsigned int)ret64))
+            || !TEST_uint_eq((unsigned int)val64, (unsigned int)ret64))
             goto err;
     } else {
         /* This failed therefore we're on a platform without lockless atomics */
         if (!TEST_uint_eq((unsigned int)val64, 1)
-                || !TEST_int_eq((unsigned int)ret64, 0))
+            || !TEST_int_eq((unsigned int)ret64, 0))
             goto err;
     }
     val64 = 1;
@@ -226,19 +226,19 @@ static int test_atomic(void)
         goto err;
 
     if (!TEST_uint_eq((unsigned int)val64, 3)
-            || !TEST_uint_eq((unsigned int)val64, (unsigned int)ret64))
+        || !TEST_uint_eq((unsigned int)val64, (unsigned int)ret64))
         goto err;
 
     ret64 = 0;
     if (CRYPTO_atomic_load(&val64, &ret64, NULL)) {
         /* This succeeds therefore we're on a platform with lockless atomics */
         if (!TEST_uint_eq((unsigned int)val64, 3)
-                || !TEST_uint_eq((unsigned int)val64, (unsigned int)ret64))
+            || !TEST_uint_eq((unsigned int)val64, (unsigned int)ret64))
             goto err;
     } else {
         /* This failed therefore we're on a platform without lockless atomics */
         if (!TEST_uint_eq((unsigned int)val64, 3)
-                || !TEST_int_eq((unsigned int)ret64, 0))
+            || !TEST_int_eq((unsigned int)ret64, 0))
             goto err;
     }
 
@@ -247,11 +247,11 @@ static int test_atomic(void)
         goto err;
 
     if (!TEST_uint_eq((unsigned int)val64, 3)
-            || !TEST_uint_eq((unsigned int)val64, (unsigned int)ret64))
+        || !TEST_uint_eq((unsigned int)val64, (unsigned int)ret64))
         goto err;
 
     testresult = 1;
- err:
+err:
     CRYPTO_THREAD_lock_free(lock);
     return testresult;
 }
@@ -305,8 +305,10 @@ static int thread_setup_libctx(int libctx, const char *providers[])
     if (providers != NULL)
         for (n = 0; providers[n] != NULL; n++)
             if (!TEST_size_t_lt(n, MAXIMUM_PROVIDERS)
-                || !TEST_ptr(multi_provider[n] = OSSL_PROVIDER_load(multi_libctx,
-                                                                    providers[n]))) {
+                || !TEST_ptr(multi_provider[n] =
+                                 OSSL_PROVIDER_load(multi_libctx,
+                                                    providers[n])))
+            {
                 thead_teardown_libctx();
                 return 0;
             }
@@ -331,7 +333,8 @@ static int start_threads(size_t n, void (*thread_func)(void))
         return 0;
 
     for (i = 0 ; i < n; i++)
-        if (!TEST_true(run_thread(multi_threads + multi_num_threads++, thread_func)))
+        if (!TEST_true(run_thread(multi_threads + multi_num_threads++,
+                                  thread_func)))
             return 0;
     return 1;
 }
@@ -345,17 +348,17 @@ static int thread_run_test(void (*main_func)(void),
 
     multi_intialise();
     if (!thread_setup_libctx(libctx, providers)
-            || !start_threads(num_threads, thread_func))
+        || !start_threads(num_threads, thread_func))
         goto err;
 
     if (main_func != NULL)
         main_func();
 
     if (!teardown_threads()
-            || !TEST_true(multi_success))
+        || !TEST_true(multi_success))
         goto err;
     testresult = 1;
- err:
+err:
     thead_teardown_libctx();
     return testresult;
 }
@@ -387,24 +390,24 @@ static void thread_general_worker(void)
     isfips = OSSL_PROVIDER_available(multi_libctx, "fips");
 
     if (!TEST_ptr(mdctx)
-            || !TEST_ptr(md)
-            || !TEST_ptr(cipherctx)
-            || !TEST_ptr(ciph))
+        || !TEST_ptr(md)
+        || !TEST_ptr(cipherctx)
+        || !TEST_ptr(ciph))
         goto err;
 
     /* Do some work */
     for (i = 0; i < 5; i++) {
         if (!TEST_true(EVP_DigestInit_ex(mdctx, md, NULL))
-                || !TEST_true(EVP_DigestUpdate(mdctx, message, messlen))
-                || !TEST_true(EVP_DigestFinal(mdctx, out, &mdoutl)))
+            || !TEST_true(EVP_DigestUpdate(mdctx, message, messlen))
+            || !TEST_true(EVP_DigestFinal(mdctx, out, &mdoutl)))
             goto err;
     }
     for (i = 0; i < 5; i++) {
         if (!TEST_true(EVP_EncryptInit_ex(cipherctx, ciph, NULL, key, iv))
-                || !TEST_true(EVP_EncryptUpdate(cipherctx, out, &ciphoutl,
-                                                (unsigned char *)message,
-                                                messlen))
-                || !TEST_true(EVP_EncryptFinal(cipherctx, out, &ciphoutl)))
+            || !TEST_true(EVP_EncryptUpdate(cipherctx, out, &ciphoutl,
+                                            (unsigned char *)message,
+                                            messlen))
+            || !TEST_true(EVP_EncryptFinal(cipherctx, out, &ciphoutl)))
             goto err;
     }
 
@@ -418,7 +421,7 @@ static void thread_general_worker(void)
         goto err;
 
     testresult = 1;
- err:
+err:
     EVP_MD_CTX_free(mdctx);
     EVP_MD_free(md);
     EVP_CIPHER_CTX_free(cipherctx);
@@ -460,9 +463,9 @@ static void thread_shared_evp_pkey(void)
             goto err;
 
         if (!TEST_int_ge(EVP_PKEY_encrypt_init(ctx), 0)
-                || !TEST_int_ge(EVP_PKEY_encrypt(ctx, ctbuf, &ctlen,
-                                                (unsigned char *)msg, strlen(msg)),
-                                                0))
+            || !TEST_int_ge(EVP_PKEY_encrypt(ctx, ctbuf, &ctlen,
+                                             (unsigned char *)msg, strlen(msg)),
+                            0))
             goto err;
 
         EVP_PKEY_CTX_free(ctx);
@@ -473,15 +476,15 @@ static void thread_shared_evp_pkey(void)
 
         ptlen = sizeof(ptbuf);
         if (!TEST_int_ge(EVP_PKEY_decrypt_init(ctx), 0)
-                || !TEST_int_gt(EVP_PKEY_decrypt(ctx, ptbuf, &ptlen, ctbuf, ctlen),
-                                                0)
-                || !TEST_mem_eq(msg, strlen(msg), ptbuf, ptlen))
+            || !TEST_int_gt(EVP_PKEY_decrypt(ctx, ptbuf, &ptlen, ctbuf, ctlen),
+                            0)
+            || !TEST_mem_eq(msg, strlen(msg), ptbuf, ptlen))
             goto err;
     }
 
     success = 1;
 
- err:
+err:
     EVP_PKEY_CTX_free(ctx);
     if (!success)
         multi_set_success(0);
@@ -492,7 +495,7 @@ static void thread_provider_load_unload(void)
     OSSL_PROVIDER *deflt = OSSL_PROVIDER_load(multi_libctx, "default");
 
     if (!TEST_ptr(deflt)
-            || !TEST_true(OSSL_PROVIDER_available(multi_libctx, "default")))
+        || !TEST_true(OSSL_PROVIDER_available(multi_libctx, "default")))
         multi_set_success(0);
 
     OSSL_PROVIDER_unload(deflt);
@@ -525,18 +528,18 @@ static int test_multi_shared_pkey_common(void (*worker)(void))
     multi_intialise();
     if (!thread_setup_libctx(1, do_fips ? fips_and_default_providers
                                         : default_provider)
-            || !TEST_ptr(shared_evp_pkey = load_pkey_pem(privkey, multi_libctx))
-            || !start_threads(1, &thread_shared_evp_pkey)
-            || !start_threads(1, worker))
+        || !TEST_ptr(shared_evp_pkey = load_pkey_pem(privkey, multi_libctx))
+        || !start_threads(1, &thread_shared_evp_pkey)
+        || !start_threads(1, worker))
         goto err;
 
     thread_shared_evp_pkey();
 
     if (!teardown_threads()
-            || !TEST_true(multi_success))
+        || !TEST_true(multi_success))
         goto err;
     testresult = 1;
- err:
+err:
     EVP_PKEY_free(shared_evp_pkey);
     thead_teardown_libctx();
     return testresult;
@@ -572,9 +575,9 @@ static int test_multi_load_unload_provider(void)
 
     multi_intialise();
     if (!thread_setup_libctx(1, NULL)
-            || !TEST_ptr(prov = OSSL_PROVIDER_load(multi_libctx, "default"))
-            || !TEST_ptr(sha256 = EVP_MD_fetch(multi_libctx, "SHA2-256", NULL))
-            || !TEST_true(OSSL_PROVIDER_unload(prov)))
+        || !TEST_ptr(prov = OSSL_PROVIDER_load(multi_libctx, "default"))
+        || !TEST_ptr(sha256 = EVP_MD_fetch(multi_libctx, "SHA2-256", NULL))
+        || !TEST_true(OSSL_PROVIDER_unload(prov)))
         goto err;
     prov = NULL;
 
@@ -584,10 +587,10 @@ static int test_multi_load_unload_provider(void)
     thread_provider_load_unload();
 
     if (!teardown_threads()
-            || !TEST_true(multi_success))
+        || !TEST_true(multi_success))
         goto err;
     testresult = 1;
- err:
+err:
     OSSL_PROVIDER_unload(prov);
     EVP_MD_free(sha256);
     thead_teardown_libctx();
@@ -605,7 +608,7 @@ static void test_multi_load_worker(void)
     OSSL_PROVIDER *prov;
 
     if (!TEST_ptr(prov = OSSL_PROVIDER_load(multi_libctx, multi_load_provider))
-            || !TEST_true(OSSL_PROVIDER_unload(prov)))
+        || !TEST_true(OSSL_PROVIDER_unload(prov)))
         multi_set_success(0);
 }
 
@@ -641,13 +644,14 @@ static int test_multi_load(void)
      */
     prov = OSSL_PROVIDER_load(NULL, "legacy");
     if (prov == NULL) {
-        TEST_info("Cannot load legacy provider - assuming this is a no-legacy build");
+        TEST_info(
+            "Cannot load legacy provider - assuming this is a no-legacy build");
         multi_load_provider = "default";
     }
     OSSL_PROVIDER_unload(prov);
 
     return thread_run_test(NULL, MAXIMUM_THREADS, &test_multi_load_worker, 0,
-                          NULL) && res;
+                           NULL) && res;
 }
 
 static void test_obj_create_one(void)
@@ -660,8 +664,8 @@ static void test_obj_create_one(void)
     BIO_snprintf(sn, sizeof(sn), "short-name-%s", tids);
     BIO_snprintf(ln, sizeof(ln), "long-name-%s", tids);
     if (!TEST_int_ne(id, 0)
-            || !TEST_true(id = OBJ_create(oid, sn, ln))
-            || !TEST_true(OBJ_add_sigid(id, NID_sha3_256, NID_rsa)))
+        || !TEST_true(id = OBJ_create(oid, sn, ln))
+        || !TEST_true(OBJ_add_sigid(id, NID_sha3_256, NID_rsa)))
         multi_set_success(0);
 }
 
@@ -779,7 +783,7 @@ static void test_pem_read_one(void)
     if (key == NULL)
         multi_set_success(0);
 
- err:
+err:
     EVP_PKEY_free(key);
     BIO_free(pem);
     OPENSSL_free(pemdata);
@@ -818,16 +822,16 @@ int setup_tests(void)
 
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_FIPS:
-            do_fips = 1;
-            break;
-        case OPT_CONFIG_FILE:
-            config_file = opt_arg();
-            break;
-        case OPT_TEST_CASES:
-            break;
-        default:
-            return 0;
+            case OPT_FIPS:
+                do_fips = 1;
+                break;
+            case OPT_CONFIG_FILE:
+                config_file = opt_arg();
+                break;
+            case OPT_TEST_CASES:
+                break;
+            default:
+                return 0;
         }
     }
 

@@ -72,7 +72,7 @@ int ossl_policy_cache_set_mapping(X509 *x, POLICY_MAPPINGS *maps)
     }
 
     ret = 1;
- bad_mapping:
+bad_mapping:
     sk_POLICY_MAPPING_pop_free(maps, POLICY_MAPPING_free);
     return ret;
 

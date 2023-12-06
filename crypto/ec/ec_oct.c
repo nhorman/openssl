@@ -35,7 +35,8 @@ int EC_POINT_set_compressed_coordinates(const EC_GROUP *group, EC_POINT *point,
     }
     if (group->meth->flags & EC_FLAGS_DEFAULT_OCT) {
         if (group->meth->field_type == NID_X9_62_prime_field)
-            return ossl_ec_GFp_simple_set_compressed_coordinates(group, point, x,
+            return ossl_ec_GFp_simple_set_compressed_coordinates(group, point,
+                                                                 x,
                                                                  y_bit, ctx);
         else
 #ifdef OPENSSL_NO_EC2M
@@ -45,7 +46,8 @@ int EC_POINT_set_compressed_coordinates(const EC_GROUP *group, EC_POINT *point,
         }
 #else
             return ossl_ec_GF2m_simple_set_compressed_coordinates(group, point,
-                                                                  x, y_bit, ctx);
+                                                                  x, y_bit,
+                                                                  ctx);
 #endif
     }
     return group->meth->point_set_compressed_coordinates(group, point, x,

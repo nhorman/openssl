@@ -62,7 +62,7 @@ int tls_provider_init(const OSSL_CORE_HANDLE *handle,
 /*
  * Top secret. This algorithm only works if no one knows what this number is.
  * Please don't tell anyone what it is.
- * 
+ *
  * This algorithm is for testing only - don't really use it!
  */
 static const unsigned char private_constant[XOR_KEY_SIZE] = {
@@ -170,7 +170,7 @@ xor_prov_get_keymgmt_export(const OSSL_DISPATCH *fns)
 }
 
 static void *xor_prov_import_key(const OSSL_DISPATCH *fns, void *provctx,
-                           int selection, const OSSL_PARAM params[])
+                                 int selection, const OSSL_PARAM params[])
 {
     OSSL_FUNC_keymgmt_new_fn *kmgmt_new = xor_prov_get_keymgmt_new(fns);
     OSSL_FUNC_keymgmt_free_fn *kmgmt_free = xor_prov_get_keymgmt_free(fns);
@@ -405,8 +405,8 @@ static int tls_prov_get_capabilities(void *provctx, const char *capability,
                 if (dummy_group_names[i] == NULL)
                     return 0;
                 BIO_snprintf(dummy_group_names[i],
-                         dummy_name_max_size,
-                         "%s%d", dummy_base, i);
+                             dummy_name_max_size,
+                             "%s%d", dummy_base, i);
             }
             dummygroup[0].data = dummy_group_names[i];
             dummygroup[0].data_size = strlen(dummy_group_names[i]) + 1;
@@ -531,12 +531,12 @@ static void *xor_dupctx(void *vpxorctx)
 }
 
 static const OSSL_DISPATCH xor_keyexch_functions[] = {
-    { OSSL_FUNC_KEYEXCH_NEWCTX, (void (*)(void))xor_newkemkexctx },
-    { OSSL_FUNC_KEYEXCH_INIT, (void (*)(void))xor_init },
-    { OSSL_FUNC_KEYEXCH_DERIVE, (void (*)(void))xor_derive },
-    { OSSL_FUNC_KEYEXCH_SET_PEER, (void (*)(void))xor_set_peer },
-    { OSSL_FUNC_KEYEXCH_FREECTX, (void (*)(void))xor_freectx },
-    { OSSL_FUNC_KEYEXCH_DUPCTX, (void (*)(void))xor_dupctx },
+    { OSSL_FUNC_KEYEXCH_NEWCTX, (void (*)(void)) xor_newkemkexctx },
+    { OSSL_FUNC_KEYEXCH_INIT, (void (*)(void)) xor_init },
+    { OSSL_FUNC_KEYEXCH_DERIVE, (void (*)(void)) xor_derive },
+    { OSSL_FUNC_KEYEXCH_SET_PEER, (void (*)(void)) xor_set_peer },
+    { OSSL_FUNC_KEYEXCH_FREECTX, (void (*)(void)) xor_freectx },
+    { OSSL_FUNC_KEYEXCH_DUPCTX, (void (*)(void)) xor_dupctx },
     OSSL_DISPATCH_END
 };
 
@@ -598,14 +598,14 @@ static int xor_encapsulate(void *vpxorctx,
     /* 3. Derive ss via KEX */
     derivectx = xor_newkemkexctx(pxorctx->provctx);
     if (derivectx == NULL
-            || !xor_init(derivectx, ourkey, NULL)
-            || !xor_set_peer(derivectx, pxorctx->key)
-            || !xor_derive(derivectx, ss, sslen, XOR_KEY_SIZE))
+        || !xor_init(derivectx, ourkey, NULL)
+        || !xor_set_peer(derivectx, pxorctx->key)
+        || !xor_derive(derivectx, ss, sslen, XOR_KEY_SIZE))
         goto end;
 
     rv = 1;
 
- end:
+end:
     xor_gen_cleanup(genctx);
     xor_freekey(ourkey);
     xor_freectx(derivectx);
@@ -645,27 +645,27 @@ static int xor_decapsulate(void *vpxorctx,
     /* Derive ss via KEX */
     derivectx = xor_newkemkexctx(pxorctx->provctx);
     if (derivectx == NULL
-            || !xor_init(derivectx, pxorctx->key, NULL)
-            || !xor_set_peer(derivectx, peerkey)
-            || !xor_derive(derivectx, ss, sslen, XOR_KEY_SIZE))
+        || !xor_init(derivectx, pxorctx->key, NULL)
+        || !xor_set_peer(derivectx, peerkey)
+        || !xor_derive(derivectx, ss, sslen, XOR_KEY_SIZE))
         goto end;
 
     rv = 1;
 
- end:
+end:
     xor_freekey(peerkey);
     xor_freectx(derivectx);
     return rv;
 }
 
 static const OSSL_DISPATCH xor_kem_functions[] = {
-    { OSSL_FUNC_KEM_NEWCTX, (void (*)(void))xor_newkemkexctx },
-    { OSSL_FUNC_KEM_FREECTX, (void (*)(void))xor_freectx },
-    { OSSL_FUNC_KEM_DUPCTX, (void (*)(void))xor_dupctx },
-    { OSSL_FUNC_KEM_ENCAPSULATE_INIT, (void (*)(void))xor_init },
-    { OSSL_FUNC_KEM_ENCAPSULATE, (void (*)(void))xor_encapsulate },
-    { OSSL_FUNC_KEM_DECAPSULATE_INIT, (void (*)(void))xor_init },
-    { OSSL_FUNC_KEM_DECAPSULATE, (void (*)(void))xor_decapsulate },
+    { OSSL_FUNC_KEM_NEWCTX, (void (*)(void)) xor_newkemkexctx },
+    { OSSL_FUNC_KEM_FREECTX, (void (*)(void)) xor_freectx },
+    { OSSL_FUNC_KEM_DUPCTX, (void (*)(void)) xor_dupctx },
+    { OSSL_FUNC_KEM_ENCAPSULATE_INIT, (void (*)(void)) xor_init },
+    { OSSL_FUNC_KEM_ENCAPSULATE, (void (*)(void)) xor_encapsulate },
+    { OSSL_FUNC_KEM_DECAPSULATE_INIT, (void (*)(void)) xor_init },
+    { OSSL_FUNC_KEM_DECAPSULATE, (void (*)(void)) xor_decapsulate },
     OSSL_DISPATCH_END
 };
 
@@ -825,7 +825,7 @@ static int xor_set_params(void *vkey, const OSSL_PARAM params[])
     p = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_ENCODED_PUBLIC_KEY);
     if (p != NULL) {
         if (p->data_type != OSSL_PARAM_OCTET_STRING
-                || p->data_size != XOR_KEY_SIZE)
+            || p->data_size != XOR_KEY_SIZE)
             return 0;
         memcpy(key->pubkey, p->data, XOR_KEY_SIZE);
         key->haspubkey = 1;
@@ -891,7 +891,9 @@ static int xor_match(const void *keydata1, const void *keydata2, int selection)
     if ((selection & OSSL_KEYMGMT_SELECT_PUBLIC_KEY) != 0)  {
         if (key1->haspubkey) {
             if (key2->haspubkey)
-                ok = ok & (CRYPTO_memcmp(key1->pubkey, key2->pubkey, XOR_KEY_SIZE) == 0);
+                ok = ok &
+                     (CRYPTO_memcmp(key1->pubkey, key2->pubkey,
+                                    XOR_KEY_SIZE) == 0);
             else
                 ok = ok & xor_recreate(key1->pubkey, key2->privkey);
         } else {
@@ -947,8 +949,8 @@ static int xor_gen_set_params(void *genctx, const OSSL_PARAM params[])
     p = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_GROUP_NAME);
     if (p != NULL) {
         if (p->data_type != OSSL_PARAM_UTF8_STRING
-                || (strcmp(p->data, XORGROUP_NAME_INTERNAL) != 0
-                    &&  strcmp(p->data, XORKEMGROUP_NAME_INTERNAL) != 0))
+            || (strcmp(p->data, XORGROUP_NAME_INTERNAL) != 0
+                &&  strcmp(p->data, XORKEMGROUP_NAME_INTERNAL) != 0))
             return 0;
     }
 
@@ -1025,7 +1027,7 @@ static int xor_import(void *vkey, int select, const OSSL_PARAM params[])
         key->haspubkey = 1;
     }
     res = 1;
- err:
+err:
     return res;
 }
 
@@ -1086,31 +1088,34 @@ static void xor_gen_cleanup(void *genctx)
 }
 
 static const OSSL_DISPATCH xor_keymgmt_functions[] = {
-    { OSSL_FUNC_KEYMGMT_NEW, (void (*)(void))xor_newkey },
-    { OSSL_FUNC_KEYMGMT_GEN_INIT, (void (*)(void))xor_gen_init },
-    { OSSL_FUNC_KEYMGMT_GEN_SET_PARAMS, (void (*)(void))xor_gen_set_params },
+    { OSSL_FUNC_KEYMGMT_NEW, (void (*)(void)) xor_newkey },
+    { OSSL_FUNC_KEYMGMT_GEN_INIT, (void (*)(void)) xor_gen_init },
+    { OSSL_FUNC_KEYMGMT_GEN_SET_PARAMS, (void (*)(void)) xor_gen_set_params },
     { OSSL_FUNC_KEYMGMT_GEN_SETTABLE_PARAMS,
-      (void (*)(void))xor_gen_settable_params },
-    { OSSL_FUNC_KEYMGMT_GEN, (void (*)(void))xor_gen },
-    { OSSL_FUNC_KEYMGMT_GEN_CLEANUP, (void (*)(void))xor_gen_cleanup },
-    { OSSL_FUNC_KEYMGMT_GET_PARAMS, (void (*) (void))xor_get_params },
-    { OSSL_FUNC_KEYMGMT_GETTABLE_PARAMS, (void (*) (void))xor_gettable_params },
-    { OSSL_FUNC_KEYMGMT_SET_PARAMS, (void (*) (void))xor_set_params },
-    { OSSL_FUNC_KEYMGMT_SETTABLE_PARAMS, (void (*) (void))xor_settable_params },
-    { OSSL_FUNC_KEYMGMT_HAS, (void (*)(void))xor_has },
-    { OSSL_FUNC_KEYMGMT_DUP, (void (*)(void))xor_dup },
-    { OSSL_FUNC_KEYMGMT_FREE, (void (*)(void))xor_freekey },
-    { OSSL_FUNC_KEYMGMT_IMPORT, (void (*)(void))xor_import },
-    { OSSL_FUNC_KEYMGMT_IMPORT_TYPES, (void (*)(void))xor_import_types },
-    { OSSL_FUNC_KEYMGMT_IMPORT_TYPES_EX, (void (*)(void))xor_import_types_ex },
-    { OSSL_FUNC_KEYMGMT_EXPORT, (void (*)(void))xor_export },
-    { OSSL_FUNC_KEYMGMT_EXPORT_TYPES, (void (*)(void))xor_export_types },
-    { OSSL_FUNC_KEYMGMT_EXPORT_TYPES_EX, (void (*)(void))xor_export_types_ex },
+      (void (*)(void)) xor_gen_settable_params },
+    { OSSL_FUNC_KEYMGMT_GEN, (void (*)(void)) xor_gen },
+    { OSSL_FUNC_KEYMGMT_GEN_CLEANUP, (void (*)(void)) xor_gen_cleanup },
+    { OSSL_FUNC_KEYMGMT_GET_PARAMS, (void (*) (void)) xor_get_params },
+    { OSSL_FUNC_KEYMGMT_GETTABLE_PARAMS,
+      (void (*) (void)) xor_gettable_params },
+    { OSSL_FUNC_KEYMGMT_SET_PARAMS, (void (*) (void)) xor_set_params },
+    { OSSL_FUNC_KEYMGMT_SETTABLE_PARAMS,
+      (void (*) (void)) xor_settable_params },
+    { OSSL_FUNC_KEYMGMT_HAS, (void (*)(void)) xor_has },
+    { OSSL_FUNC_KEYMGMT_DUP, (void (*)(void)) xor_dup },
+    { OSSL_FUNC_KEYMGMT_FREE, (void (*)(void)) xor_freekey },
+    { OSSL_FUNC_KEYMGMT_IMPORT, (void (*)(void)) xor_import },
+    { OSSL_FUNC_KEYMGMT_IMPORT_TYPES, (void (*)(void)) xor_import_types },
+    { OSSL_FUNC_KEYMGMT_IMPORT_TYPES_EX, (void (*)(void)) xor_import_types_ex },
+    { OSSL_FUNC_KEYMGMT_EXPORT, (void (*)(void)) xor_export },
+    { OSSL_FUNC_KEYMGMT_EXPORT_TYPES, (void (*)(void)) xor_export_types },
+    { OSSL_FUNC_KEYMGMT_EXPORT_TYPES_EX, (void (*)(void)) xor_export_types_ex },
     OSSL_DISPATCH_END
 };
 
 /* We're re-using most XOR keymgmt functions also for signature operations: */
-static void *xor_xorhmacsig_gen(void *genctx, OSSL_CALLBACK *osslcb, void *cbarg)
+static void *xor_xorhmacsig_gen(void *genctx, OSSL_CALLBACK *osslcb,
+                                void *cbarg)
 {
     XORKEY *k = xor_gen(genctx, osslcb, cbarg);
 
@@ -1124,7 +1129,8 @@ static void *xor_xorhmacsig_gen(void *genctx, OSSL_CALLBACK *osslcb, void *cbarg
     return k;
 }
 
-static void *xor_xorhmacsha2sig_gen(void *genctx, OSSL_CALLBACK *osslcb, void *cbarg)
+static void *xor_xorhmacsha2sig_gen(void *genctx, OSSL_CALLBACK *osslcb,
+                                    void *cbarg)
 {
     XORKEY* k = xor_gen(genctx, osslcb, cbarg);
 
@@ -1140,50 +1146,54 @@ static void *xor_xorhmacsha2sig_gen(void *genctx, OSSL_CALLBACK *osslcb, void *c
 
 
 static const OSSL_DISPATCH xor_xorhmacsig_keymgmt_functions[] = {
-    { OSSL_FUNC_KEYMGMT_NEW, (void (*)(void))xor_newkey },
-    { OSSL_FUNC_KEYMGMT_GEN_INIT, (void (*)(void))xor_gen_init },
-    { OSSL_FUNC_KEYMGMT_GEN_SET_PARAMS, (void (*)(void))xor_gen_set_params },
+    { OSSL_FUNC_KEYMGMT_NEW, (void (*)(void)) xor_newkey },
+    { OSSL_FUNC_KEYMGMT_GEN_INIT, (void (*)(void)) xor_gen_init },
+    { OSSL_FUNC_KEYMGMT_GEN_SET_PARAMS, (void (*)(void)) xor_gen_set_params },
     { OSSL_FUNC_KEYMGMT_GEN_SETTABLE_PARAMS,
-      (void (*)(void))xor_gen_settable_params },
-    { OSSL_FUNC_KEYMGMT_GEN, (void (*)(void))xor_xorhmacsig_gen },
-    { OSSL_FUNC_KEYMGMT_GEN_CLEANUP, (void (*)(void))xor_gen_cleanup },
-    { OSSL_FUNC_KEYMGMT_GET_PARAMS, (void (*) (void))xor_get_params },
-    { OSSL_FUNC_KEYMGMT_GETTABLE_PARAMS, (void (*) (void))xor_gettable_params },
-    { OSSL_FUNC_KEYMGMT_SET_PARAMS, (void (*) (void))xor_set_params },
-    { OSSL_FUNC_KEYMGMT_SETTABLE_PARAMS, (void (*) (void))xor_settable_params },
-    { OSSL_FUNC_KEYMGMT_HAS, (void (*)(void))xor_has },
-    { OSSL_FUNC_KEYMGMT_DUP, (void (*)(void))xor_dup },
-    { OSSL_FUNC_KEYMGMT_FREE, (void (*)(void))xor_freekey },
-    { OSSL_FUNC_KEYMGMT_IMPORT, (void (*)(void))xor_import },
-    { OSSL_FUNC_KEYMGMT_IMPORT_TYPES, (void (*)(void))xor_import_types },
-    { OSSL_FUNC_KEYMGMT_EXPORT, (void (*)(void))xor_export },
-    { OSSL_FUNC_KEYMGMT_EXPORT_TYPES, (void (*)(void))xor_export_types },
-    { OSSL_FUNC_KEYMGMT_LOAD, (void (*)(void))xor_load },
-    { OSSL_FUNC_KEYMGMT_MATCH, (void (*)(void))xor_match },
+      (void (*)(void)) xor_gen_settable_params },
+    { OSSL_FUNC_KEYMGMT_GEN, (void (*)(void)) xor_xorhmacsig_gen },
+    { OSSL_FUNC_KEYMGMT_GEN_CLEANUP, (void (*)(void)) xor_gen_cleanup },
+    { OSSL_FUNC_KEYMGMT_GET_PARAMS, (void (*) (void)) xor_get_params },
+    { OSSL_FUNC_KEYMGMT_GETTABLE_PARAMS,
+      (void (*) (void)) xor_gettable_params },
+    { OSSL_FUNC_KEYMGMT_SET_PARAMS, (void (*) (void)) xor_set_params },
+    { OSSL_FUNC_KEYMGMT_SETTABLE_PARAMS,
+      (void (*) (void)) xor_settable_params },
+    { OSSL_FUNC_KEYMGMT_HAS, (void (*)(void)) xor_has },
+    { OSSL_FUNC_KEYMGMT_DUP, (void (*)(void)) xor_dup },
+    { OSSL_FUNC_KEYMGMT_FREE, (void (*)(void)) xor_freekey },
+    { OSSL_FUNC_KEYMGMT_IMPORT, (void (*)(void)) xor_import },
+    { OSSL_FUNC_KEYMGMT_IMPORT_TYPES, (void (*)(void)) xor_import_types },
+    { OSSL_FUNC_KEYMGMT_EXPORT, (void (*)(void)) xor_export },
+    { OSSL_FUNC_KEYMGMT_EXPORT_TYPES, (void (*)(void)) xor_export_types },
+    { OSSL_FUNC_KEYMGMT_LOAD, (void (*)(void)) xor_load },
+    { OSSL_FUNC_KEYMGMT_MATCH, (void (*)(void)) xor_match },
     OSSL_DISPATCH_END
 };
 
 static const OSSL_DISPATCH xor_xorhmacsha2sig_keymgmt_functions[] = {
-    { OSSL_FUNC_KEYMGMT_NEW, (void (*)(void))xor_newkey },
-    { OSSL_FUNC_KEYMGMT_GEN_INIT, (void (*)(void))xor_gen_init },
-    { OSSL_FUNC_KEYMGMT_GEN_SET_PARAMS, (void (*)(void))xor_gen_set_params },
+    { OSSL_FUNC_KEYMGMT_NEW, (void (*)(void)) xor_newkey },
+    { OSSL_FUNC_KEYMGMT_GEN_INIT, (void (*)(void)) xor_gen_init },
+    { OSSL_FUNC_KEYMGMT_GEN_SET_PARAMS, (void (*)(void)) xor_gen_set_params },
     { OSSL_FUNC_KEYMGMT_GEN_SETTABLE_PARAMS,
-      (void (*)(void))xor_gen_settable_params },
-    { OSSL_FUNC_KEYMGMT_GEN, (void (*)(void))xor_xorhmacsha2sig_gen },
-    { OSSL_FUNC_KEYMGMT_GEN_CLEANUP, (void (*)(void))xor_gen_cleanup },
-    { OSSL_FUNC_KEYMGMT_GET_PARAMS, (void (*) (void))xor_get_params },
-    { OSSL_FUNC_KEYMGMT_GETTABLE_PARAMS, (void (*) (void))xor_gettable_params },
-    { OSSL_FUNC_KEYMGMT_SET_PARAMS, (void (*) (void))xor_set_params },
-    { OSSL_FUNC_KEYMGMT_SETTABLE_PARAMS, (void (*) (void))xor_settable_params },
-    { OSSL_FUNC_KEYMGMT_HAS, (void (*)(void))xor_has },
-    { OSSL_FUNC_KEYMGMT_DUP, (void (*)(void))xor_dup },
-    { OSSL_FUNC_KEYMGMT_FREE, (void (*)(void))xor_freekey },
-    { OSSL_FUNC_KEYMGMT_IMPORT, (void (*)(void))xor_import },
-    { OSSL_FUNC_KEYMGMT_IMPORT_TYPES, (void (*)(void))xor_import_types },
-    { OSSL_FUNC_KEYMGMT_EXPORT, (void (*)(void))xor_export },
-    { OSSL_FUNC_KEYMGMT_EXPORT_TYPES, (void (*)(void))xor_export_types },
-    { OSSL_FUNC_KEYMGMT_LOAD, (void (*)(void))xor_load },
-    { OSSL_FUNC_KEYMGMT_MATCH, (void (*)(void))xor_match },
+      (void (*)(void)) xor_gen_settable_params },
+    { OSSL_FUNC_KEYMGMT_GEN, (void (*)(void)) xor_xorhmacsha2sig_gen },
+    { OSSL_FUNC_KEYMGMT_GEN_CLEANUP, (void (*)(void)) xor_gen_cleanup },
+    { OSSL_FUNC_KEYMGMT_GET_PARAMS, (void (*) (void)) xor_get_params },
+    { OSSL_FUNC_KEYMGMT_GETTABLE_PARAMS,
+      (void (*) (void)) xor_gettable_params },
+    { OSSL_FUNC_KEYMGMT_SET_PARAMS, (void (*) (void)) xor_set_params },
+    { OSSL_FUNC_KEYMGMT_SETTABLE_PARAMS,
+      (void (*) (void)) xor_settable_params },
+    { OSSL_FUNC_KEYMGMT_HAS, (void (*)(void)) xor_has },
+    { OSSL_FUNC_KEYMGMT_DUP, (void (*)(void)) xor_dup },
+    { OSSL_FUNC_KEYMGMT_FREE, (void (*)(void)) xor_freekey },
+    { OSSL_FUNC_KEYMGMT_IMPORT, (void (*)(void)) xor_import },
+    { OSSL_FUNC_KEYMGMT_IMPORT_TYPES, (void (*)(void)) xor_import_types },
+    { OSSL_FUNC_KEYMGMT_EXPORT, (void (*)(void)) xor_export },
+    { OSSL_FUNC_KEYMGMT_EXPORT_TYPES, (void (*)(void)) xor_export_types },
+    { OSSL_FUNC_KEYMGMT_LOAD, (void (*)(void)) xor_load },
+    { OSSL_FUNC_KEYMGMT_MATCH, (void (*)(void)) xor_match },
     OSSL_DISPATCH_END
 };
 
@@ -1243,13 +1253,13 @@ static XORKEY *xor_key_op(const X509_ALGOR *palg,
         goto err;
     return key;
 
- err:
+err:
     xor_freekey(key);
     return NULL;
 }
 
 static XORKEY *xor_key_from_x509pubkey(const X509_PUBKEY *xpk,
-                                 OSSL_LIB_CTX *libctx, const char *propq)
+                                       OSSL_LIB_CTX *libctx, const char *propq)
 {
     const unsigned char *p;
     int plen;
@@ -1262,7 +1272,7 @@ static XORKEY *xor_key_from_x509pubkey(const X509_PUBKEY *xpk,
 }
 
 static XORKEY *xor_key_from_pkcs8(const PKCS8_PRIV_KEY_INFO *p8inf,
-                           OSSL_LIB_CTX *libctx, const char *propq)
+                                  OSSL_LIB_CTX *libctx, const char *propq)
 {
     XORKEY *xork = NULL;
     const unsigned char *p;
@@ -1294,12 +1304,12 @@ static const OSSL_ALGORITHM tls_prov_keymgmt[] = {
      * with the FIPS provider we pretend that it is.
      */
     { "XOR", "provider=tls-provider,fips=yes",
-             xor_keymgmt_functions },
+      xor_keymgmt_functions },
     { XORSIGALG_NAME, "provider=tls-provider,fips=yes",
-             xor_xorhmacsig_keymgmt_functions },
+      xor_xorhmacsig_keymgmt_functions },
     { XORSIGALG_HASH_NAME,
-    "provider=tls-provider,fips=yes",
-             xor_xorhmacsha2sig_keymgmt_functions },
+      "provider=tls-provider,fips=yes",
+      xor_xorhmacsha2sig_keymgmt_functions },
     { NULL, NULL, NULL }
 };
 
@@ -1332,12 +1342,12 @@ typedef int write_bio_of_void_fn(BIO *bp, const void *x);
 static void free_asn1_data(int type, void *data)
 {
     switch(type) {
-    case V_ASN1_OBJECT:
-        ASN1_OBJECT_free(data);
-        break;
-    case V_ASN1_SEQUENCE:
-        ASN1_STRING_free(data);
-        break;
+        case V_ASN1_OBJECT:
+            ASN1_OBJECT_free(data);
+            break;
+        case V_ASN1_SEQUENCE:
+            ASN1_STRING_free(data);
+            break;
     }
 }
 
@@ -1381,7 +1391,8 @@ static X509_SIG *p8info_to_encp8(PKCS8_PRIV_KEY_INFO *p8info,
         return NULL;
     }
     /* First argument == -1 means "standard" */
-    p8 = PKCS8_encrypt_ex(-1, ctx->cipher, kstr, klen, NULL, 0, 0, p8info, libctx, NULL);
+    p8 = PKCS8_encrypt_ex(-1, ctx->cipher, kstr, klen, NULL, 0, 0, p8info,
+                          libctx, NULL);
     OPENSSL_cleanse(kstr, klen);
     return p8;
 }
@@ -1404,8 +1415,8 @@ static X509_SIG *key_to_encp8(const void *key, int key_nid,
 }
 
 static X509_PUBKEY *xorx_key_to_pubkey(const void *key, int key_nid,
-                                  void *params, int params_type,
-                                  i2d_of_void k2d)
+                                       void *params, int params_type,
+                                       i2d_of_void k2d)
 {
     /* der, derlen store the key DER output and its length */
     unsigned char *der = NULL;
@@ -1416,8 +1427,8 @@ static X509_PUBKEY *xorx_key_to_pubkey(const void *key, int key_nid,
     if ((xpk = X509_PUBKEY_new()) == NULL
         || (derlen = k2d(key, &der)) <= 0
         || !X509_PUBKEY_set0_param(xpk, OBJ_nid2obj(key_nid),
-                        V_ASN1_UNDEF, NULL,
-                        der, derlen)) {
+                                   V_ASN1_UNDEF, NULL,
+                                   der, derlen)) {
         ERR_raise(ERR_LIB_USER, ERR_R_MALLOC_FAILURE);
         X509_PUBKEY_free(xpk);
         OPENSSL_free(der);
@@ -1622,7 +1633,7 @@ static int key_to_spki_pem_pub_bio(BIO *out, const void *key,
 /* ---------------------------------------------------------------------- */
 
 static int prepare_xorx_params(const void *xorxkey, int nid, int save,
-                             void **pstr, int *pstrtype)
+                               void **pstr, int *pstrtype)
 {
     ASN1_OBJECT *params = NULL;
     XORKEY *k = (XORKEY*)xorxkey;
@@ -1777,7 +1788,7 @@ static int key2any_set_ctx_params(void *vctx, const OSSL_PARAM params[])
         ctx->cipher_intent = ciphername != NULL;
         if (ciphername != NULL
             && ((ctx->cipher =
-                 EVP_CIPHER_fetch(libctx, ciphername, props)) == NULL)) {
+                     EVP_CIPHER_fetch(libctx, ciphername, props)) == NULL)) {
             return 0;
         }
     }
@@ -1815,7 +1826,7 @@ static int key2any_check_selection(int selection, int selection_mask)
          * If the caller asked for the currently checked bit(s), return
          * whether the decoder description says it's supported.
          */
-        if (check1) 
+        if (check1)
             return check2;
     }
 
@@ -1824,7 +1835,8 @@ static int key2any_check_selection(int selection, int selection_mask)
 }
 
 static int key2any_encode(struct key2any_ctx_st *ctx, OSSL_CORE_BIO *cout,
-                          const void *key, const char* typestr, const char *pemname,
+                          const void *key, const char* typestr,
+                          const char *pemname,
                           key_to_der_fn *writer,
                           OSSL_PASSPHRASE_CALLBACK *pwcb, void *pwcbarg,
                           key_to_paramstring_fn *key2paramstring,
@@ -1842,7 +1854,8 @@ static int key2any_encode(struct key2any_ctx_st *ctx, OSSL_CORE_BIO *cout,
             ctx->pwcb = pwcb;
             ctx->pwcbarg = pwcbarg;
 
-            ret = writer(out, key, type, pemname, key2paramstring, key2der, ctx);
+            ret =
+                writer(out, key, type, pemname, key2paramstring, key2der, ctx);
         }
 
         BIO_free(out);
@@ -1854,30 +1867,30 @@ static int key2any_encode(struct key2any_ctx_st *ctx, OSSL_CORE_BIO *cout,
 
 #define DO_ENC_PRIVATE_KEY_selection_mask OSSL_KEYMGMT_SELECT_PRIVATE_KEY
 #define DO_ENC_PRIVATE_KEY(impl, type, kind, output)                            \
-    if ((selection & DO_ENC_PRIVATE_KEY_selection_mask) != 0)                   \
-        return key2any_encode(ctx, cout, key, impl##_pem_type,              \
-                              impl##_pem_type " PRIVATE KEY",               \
-                              key_to_##kind##_##output##_priv_bio,          \
-                              cb, cbarg, prepare_##type##_params,           \
-                              type##_##kind##_priv_to_der);
+        if ((selection & DO_ENC_PRIVATE_KEY_selection_mask) != 0)                   \
+        return key2any_encode(ctx, cout, key, impl ## _pem_type,              \
+                              impl ## _pem_type " PRIVATE KEY",               \
+                              key_to_ ## kind ## _ ## output ## _priv_bio,          \
+                              cb, cbarg, prepare_ ## type ## _params,           \
+                              type ## _ ## kind ## _priv_to_der);
 
 #define DO_ENC_PUBLIC_KEY_selection_mask OSSL_KEYMGMT_SELECT_PUBLIC_KEY
 #define DO_ENC_PUBLIC_KEY(impl, type, kind, output)                             \
-    if ((selection & DO_ENC_PUBLIC_KEY_selection_mask) != 0)                    \
-        return key2any_encode(ctx, cout, key, impl##_pem_type,              \
-                              impl##_pem_type " PUBLIC KEY",                \
-                              key_to_##kind##_##output##_pub_bio,           \
-                              cb, cbarg, prepare_##type##_params,           \
-                              type##_##kind##_pub_to_der);
+        if ((selection & DO_ENC_PUBLIC_KEY_selection_mask) != 0)                    \
+        return key2any_encode(ctx, cout, key, impl ## _pem_type,              \
+                              impl ## _pem_type " PUBLIC KEY",                \
+                              key_to_ ## kind ## _ ## output ## _pub_bio,           \
+                              cb, cbarg, prepare_ ## type ## _params,           \
+                              type ## _ ## kind ## _pub_to_der);
 
 #define DO_ENC_PARAMETERS_selection_mask OSSL_KEYMGMT_SELECT_ALL_PARAMETERS
 #define DO_ENC_PARAMETERS(impl, type, kind, output)                             \
-    if ((selection & DO_ENC_PARAMETERS_selection_mask) != 0)                    \
-        return key2any_encode(ctx, cout, key, impl##_pem_type,              \
-                              impl##_pem_type " PARAMETERS",                \
-                              key_to_##kind##_##output##_param_bio,         \
+        if ((selection & DO_ENC_PARAMETERS_selection_mask) != 0)                    \
+        return key2any_encode(ctx, cout, key, impl ## _pem_type,              \
+                              impl ## _pem_type " PARAMETERS",                \
+                              key_to_ ## kind ## _ ## output ## _param_bio,         \
                               NULL, NULL, NULL,                             \
-                              type##_##kind##_params_to_der);
+                              type ## _ ## kind ## _params_to_der);
 
 /*-
  * Implement the kinds of output structure that can be produced.  They are
@@ -1914,16 +1927,18 @@ static int key2any_encode(struct key2any_ctx_st *ctx, OSSL_CORE_BIO *cout,
  */
 #define DO_ENC_PrivateKeyInfo_selection_mask DO_ENC_PRIVATE_KEY_selection_mask
 #define DO_ENC_PrivateKeyInfo(impl, type, output)                               \
-    DO_ENC_PRIVATE_KEY(impl, type, pki, output)
+        DO_ENC_PRIVATE_KEY(impl, type, pki, output)
 
-#define DO_ENC_EncryptedPrivateKeyInfo_selection_mask DO_ENC_PRIVATE_KEY_selection_mask
+#define DO_ENC_EncryptedPrivateKeyInfo_selection_mask \
+        DO_ENC_PRIVATE_KEY_selection_mask
 #define DO_ENC_EncryptedPrivateKeyInfo(impl, type, output)                      \
-    DO_ENC_PRIVATE_KEY(impl, type, epki, output)
+        DO_ENC_PRIVATE_KEY(impl, type, epki, output)
 
 /* SubjectPublicKeyInfo is a structure for public keys only */
-#define DO_ENC_SubjectPublicKeyInfo_selection_mask DO_ENC_PUBLIC_KEY_selection_mask
+#define DO_ENC_SubjectPublicKeyInfo_selection_mask \
+        DO_ENC_PUBLIC_KEY_selection_mask
 #define DO_ENC_SubjectPublicKeyInfo(impl, type, output)                         \
-    DO_ENC_PUBLIC_KEY(impl, type, spki, output)
+        DO_ENC_PUBLIC_KEY(impl, type, spki, output)
 
 /*
  * MAKE_ENCODER is the single driver for creating OSSL_DISPATCH tables.
@@ -1943,70 +1958,77 @@ static int key2any_encode(struct key2any_ctx_st *ctx, OSSL_CORE_BIO *cout,
  * xor_##impl##_to_##kind##_##output##_encoder_functions
  */
 #define MAKE_ENCODER(impl, type, kind, output)                              \
-    static OSSL_FUNC_encoder_import_object_fn                               \
-    impl##_to_##kind##_##output##_import_object;                            \
-    static OSSL_FUNC_encoder_free_object_fn                                 \
-    impl##_to_##kind##_##output##_free_object;                              \
-    static OSSL_FUNC_encoder_encode_fn                                      \
-    impl##_to_##kind##_##output##_encode;                                   \
+        static OSSL_FUNC_encoder_import_object_fn                               \
+        impl ## _to_ ## kind ## _ ## output ## _import_object;                            \
+        static OSSL_FUNC_encoder_free_object_fn                                 \
+        impl ## _to_ ## kind ## _ ## output ## _free_object;                              \
+        static OSSL_FUNC_encoder_encode_fn                                      \
+        impl ## _to_ ## kind ## _ ## output ## _encode;                                   \
                                                                             \
-    static void *                                                           \
-    impl##_to_##kind##_##output##_import_object(void *vctx, int selection,  \
-                                                const OSSL_PARAM params[])  \
-    {                                                                       \
-        struct key2any_ctx_st *ctx = vctx;                                  \
+        static void *                                                           \
+        impl ## _to_ ## kind ## _ ## output ## _import_object(void *vctx, \
+                                                              int selection,  \
+                                                              const OSSL_PARAM params[])  \
+        {                                                                       \
+            struct key2any_ctx_st *ctx = vctx;                                  \
                                                                             \
-        return xor_prov_import_key(xor_##impl##_keymgmt_functions,          \
-                                    ctx->provctx, selection, params);       \
-    }                                                                       \
-    static void impl##_to_##kind##_##output##_free_object(void *key)        \
-    {                                                                       \
-        xor_prov_free_key(xor_##impl##_keymgmt_functions, key);             \
-    }                                                                       \
-    static int impl##_to_##kind##_##output##_does_selection(void *ctx,      \
-                                                            int selection)  \
-    {                                                                       \
-        return key2any_check_selection(selection,                           \
-                                       DO_ENC_##kind##_selection_mask);     \
-    }                                                                       \
-    static int                                                              \
-    impl##_to_##kind##_##output##_encode(void *ctx, OSSL_CORE_BIO *cout,    \
-                                         const void *key,                   \
-                                         const OSSL_PARAM key_abstract[],   \
-                                         int selection,                     \
-                                         OSSL_PASSPHRASE_CALLBACK *cb,      \
-                                         void *cbarg)                       \
-    {                                                                       \
-        /* We don't deal with abstract objects */                           \
-        if (key_abstract != NULL) {                                         \
-            ERR_raise(ERR_LIB_USER, ERR_R_PASSED_INVALID_ARGUMENT);         \
-            return 0;                                                       \
-        }                                                                   \
-        DO_ENC_##kind(impl, type, output)                                   \
+            return xor_prov_import_key(xor_ ## impl ## _keymgmt_functions,          \
+                                       ctx->provctx, selection, params);       \
+        }                                                                       \
+        static void impl ## _to_ ## kind ## _ ## output ## _free_object( \
+            void *key)        \
+        {                                                                       \
+            xor_prov_free_key(xor_ ## impl ## _keymgmt_functions, key);             \
+        }                                                                       \
+        static int impl ## _to_ ## kind ## _ ## output ## _does_selection( \
+            void *ctx,      \
+            int selection)  \
+        {                                                                       \
+            return key2any_check_selection(selection,                           \
+                                           DO_ENC_ ## kind ## _selection_mask);     \
+        }                                                                       \
+        static int                                                              \
+        impl ## _to_ ## kind ## _ ## output ## _encode(void *ctx, \
+                                                       OSSL_CORE_BIO *cout,    \
+                                                       const void *key,                   \
+                                                       const OSSL_PARAM key_abstract[],   \
+                                                       int selection,                     \
+                                                       OSSL_PASSPHRASE_CALLBACK *cb,      \
+                                                       void *cbarg)                       \
+        {                                                                       \
+            /* We don't deal with abstract objects */                           \
+            if (key_abstract != NULL) {                                         \
+                ERR_raise(ERR_LIB_USER, ERR_R_PASSED_INVALID_ARGUMENT);         \
+                return 0;                                                       \
+            }                                                                   \
+            DO_ENC_ ## kind(impl, type, output)                                   \
                                                                             \
-        ERR_raise(ERR_LIB_USER, ERR_R_PASSED_INVALID_ARGUMENT);             \
-        return 0;                                                           \
-    }                                                                       \
-    static const OSSL_DISPATCH                                              \
-    xor_##impl##_to_##kind##_##output##_encoder_functions[] = {             \
-        { OSSL_FUNC_ENCODER_NEWCTX,                                         \
-          (void (*)(void))key2any_newctx },                                 \
-        { OSSL_FUNC_ENCODER_FREECTX,                                        \
-          (void (*)(void))key2any_freectx },                                \
-        { OSSL_FUNC_ENCODER_SETTABLE_CTX_PARAMS,                            \
-          (void (*)(void))key2any_settable_ctx_params },                    \
-        { OSSL_FUNC_ENCODER_SET_CTX_PARAMS,                                 \
-          (void (*)(void))key2any_set_ctx_params },                         \
-        { OSSL_FUNC_ENCODER_DOES_SELECTION,                                 \
-          (void (*)(void))impl##_to_##kind##_##output##_does_selection },   \
-        { OSSL_FUNC_ENCODER_IMPORT_OBJECT,                                  \
-          (void (*)(void))impl##_to_##kind##_##output##_import_object },    \
-        { OSSL_FUNC_ENCODER_FREE_OBJECT,                                    \
-          (void (*)(void))impl##_to_##kind##_##output##_free_object },      \
-        { OSSL_FUNC_ENCODER_ENCODE,                                         \
-          (void (*)(void))impl##_to_##kind##_##output##_encode },           \
-        OSSL_DISPATCH_END                                                   \
-    }
+            ERR_raise(ERR_LIB_USER, ERR_R_PASSED_INVALID_ARGUMENT);             \
+            return 0;                                                           \
+        }                                                                       \
+        static const OSSL_DISPATCH                                              \
+        xor_ ## impl ## _to_ ## kind ## _ ## output ## _encoder_functions[] = {             \
+            { OSSL_FUNC_ENCODER_NEWCTX,                                         \
+              (void (*)(void)) key2any_newctx },                                 \
+            { OSSL_FUNC_ENCODER_FREECTX,                                        \
+              (void (*)(void)) key2any_freectx },                                \
+            { OSSL_FUNC_ENCODER_SETTABLE_CTX_PARAMS,                            \
+              (void (*)(void)) key2any_settable_ctx_params },                    \
+            { OSSL_FUNC_ENCODER_SET_CTX_PARAMS,                                 \
+              (void (*)(void)) key2any_set_ctx_params },                         \
+            { OSSL_FUNC_ENCODER_DOES_SELECTION,                                 \
+              (void (*)(void)) impl ## _to_ ## kind ## _ ## output ## \
+              _does_selection },   \
+            { OSSL_FUNC_ENCODER_IMPORT_OBJECT,                                  \
+              (void (*)(void)) impl ## _to_ ## kind ## _ ## output ## \
+              _import_object },    \
+            { OSSL_FUNC_ENCODER_FREE_OBJECT,                                    \
+              (void (*)(void)) impl ## _to_ ## kind ## _ ## output ## \
+              _free_object },      \
+            { OSSL_FUNC_ENCODER_ENCODE,                                         \
+              (void (*)(void)) impl ## _to_ ## kind ## _ ## output ## _encode },           \
+            OSSL_DISPATCH_END                                                   \
+        }
 
 /*
  * Replacements for i2d_{TYPE}PrivateKey, i2d_{TYPE}PublicKey,
@@ -2044,7 +2066,8 @@ static const OSSL_ALGORITHM tls_prov_encoder[] = {
 #define ENCODER_STRUCTURE_PKCS8                         "pkcs8"
 #define ENCODER_STRUCTURE_SubjectPublicKeyInfo          "SubjectPublicKeyInfo"
 #define ENCODER_STRUCTURE_PrivateKeyInfo                "PrivateKeyInfo"
-#define ENCODER_STRUCTURE_EncryptedPrivateKeyInfo       "EncryptedPrivateKeyInfo"
+#define ENCODER_STRUCTURE_EncryptedPrivateKeyInfo \
+        "EncryptedPrivateKeyInfo"
 #define ENCODER_STRUCTURE_PKCS1                         "pkcs1"
 #define ENCODER_STRUCTURE_PKCS3                         "pkcs3"
 
@@ -2054,19 +2077,20 @@ static const OSSL_ALGORITHM tls_prov_encoder[] = {
  * with the FIPS provider we pretend that it is.
  */
 #define ENCODER_TEXT(_name, _sym)                                \
-    { _name,                                                            \
-      "provider=" ENCODER_PROVIDER ",fips=yes,output=text",      \
-      (xor_##_sym##_to_text_encoder_functions) }
+        { _name,                                                            \
+          "provider=" ENCODER_PROVIDER ",fips=yes,output=text",      \
+          (xor_ ## _sym ## _to_text_encoder_functions) }
 #define ENCODER(_name, _sym, _fips, _output)                            \
-    { _name,                                                            \
-      "provider=" ENCODER_PROVIDER ",fips=yes,output=" #_output, \
-      (xor_##_sym##_to_##_output##_encoder_functions) }
+        { _name,                                                            \
+          "provider=" ENCODER_PROVIDER ",fips=yes,output=" #_output, \
+          (xor_ ## _sym ## _to_ ## _output ## _encoder_functions) }
 
 #define ENCODER_w_structure(_name, _sym, _output, _structure)    \
-    { _name,                                                            \
-      "provider=" ENCODER_PROVIDER ",fips=yes,output=" #_output  \
-      ",structure=" ENCODER_STRUCTURE_##_structure,                     \
-      (xor_##_sym##_to_##_structure##_##_output##_encoder_functions) }
+        { _name,                                                            \
+          "provider=" ENCODER_PROVIDER ",fips=yes,output=" #_output  \
+          ",structure=" ENCODER_STRUCTURE_ ## _structure,                     \
+          (xor_ ## _sym ## _to_ ## _structure ## _ ## _output ## \
+           _encoder_functions) }
 
 /*
  * Entries for human text "encoders"
@@ -2080,24 +2104,26 @@ static const OSSL_ALGORITHM tls_prov_encoder[] = {
  * PEM_write_bio_PUBKEY().
  */
 
-ENCODER_w_structure(XORSIGALG_NAME, xorhmacsig, der, PrivateKeyInfo),
-ENCODER_w_structure(XORSIGALG_NAME, xorhmacsig, pem, PrivateKeyInfo),
-ENCODER_w_structure(XORSIGALG_NAME, xorhmacsig, der, EncryptedPrivateKeyInfo),
-ENCODER_w_structure(XORSIGALG_NAME, xorhmacsig, pem, EncryptedPrivateKeyInfo),
-ENCODER_w_structure(XORSIGALG_NAME, xorhmacsig, der, SubjectPublicKeyInfo),
-ENCODER_w_structure(XORSIGALG_NAME, xorhmacsig, pem, SubjectPublicKeyInfo),
-ENCODER_w_structure(XORSIGALG_HASH_NAME, xorhmacsha2sig,
-                    der, PrivateKeyInfo),
-ENCODER_w_structure(XORSIGALG_HASH_NAME, xorhmacsha2sig,
-                    pem, PrivateKeyInfo),
-ENCODER_w_structure(XORSIGALG_HASH_NAME, xorhmacsha2sig,
-                    der, EncryptedPrivateKeyInfo),
-ENCODER_w_structure(XORSIGALG_HASH_NAME, xorhmacsha2sig,
-                    pem, EncryptedPrivateKeyInfo),
-ENCODER_w_structure(XORSIGALG_HASH_NAME, xorhmacsha2sig,
-                    der, SubjectPublicKeyInfo),
-ENCODER_w_structure(XORSIGALG_HASH_NAME, xorhmacsha2sig,
-                    pem, SubjectPublicKeyInfo),
+    ENCODER_w_structure(XORSIGALG_NAME, xorhmacsig, der, PrivateKeyInfo),
+    ENCODER_w_structure(XORSIGALG_NAME, xorhmacsig, pem, PrivateKeyInfo),
+    ENCODER_w_structure(XORSIGALG_NAME, xorhmacsig, der,
+                        EncryptedPrivateKeyInfo),
+    ENCODER_w_structure(XORSIGALG_NAME, xorhmacsig, pem,
+                        EncryptedPrivateKeyInfo),
+    ENCODER_w_structure(XORSIGALG_NAME, xorhmacsig, der, SubjectPublicKeyInfo),
+    ENCODER_w_structure(XORSIGALG_NAME, xorhmacsig, pem, SubjectPublicKeyInfo),
+    ENCODER_w_structure(XORSIGALG_HASH_NAME, xorhmacsha2sig,
+                        der, PrivateKeyInfo),
+    ENCODER_w_structure(XORSIGALG_HASH_NAME, xorhmacsha2sig,
+                        pem, PrivateKeyInfo),
+    ENCODER_w_structure(XORSIGALG_HASH_NAME, xorhmacsha2sig,
+                        der, EncryptedPrivateKeyInfo),
+    ENCODER_w_structure(XORSIGALG_HASH_NAME, xorhmacsha2sig,
+                        pem, EncryptedPrivateKeyInfo),
+    ENCODER_w_structure(XORSIGALG_HASH_NAME, xorhmacsha2sig,
+                        der, SubjectPublicKeyInfo),
+    ENCODER_w_structure(XORSIGALG_HASH_NAME, xorhmacsha2sig,
+                        pem, SubjectPublicKeyInfo),
 #undef ENCODER_PROVIDER
     { NULL, NULL, NULL }
 };
@@ -2167,12 +2193,13 @@ struct X509_pubkey_st {
 };
 
 ASN1_SEQUENCE(X509_PUBKEY_INTERNAL) = {
-        ASN1_SIMPLE(X509_PUBKEY, algor, X509_ALGOR),
-        ASN1_SIMPLE(X509_PUBKEY, public_key, ASN1_BIT_STRING)
+    ASN1_SIMPLE(X509_PUBKEY, algor, X509_ALGOR),
+    ASN1_SIMPLE(X509_PUBKEY, public_key, ASN1_BIT_STRING)
 } static_ASN1_SEQUENCE_END_name(X509_PUBKEY, X509_PUBKEY_INTERNAL)
 
 static X509_PUBKEY *xorx_d2i_X509_PUBKEY_INTERNAL(const unsigned char **pp,
-                                           long len, OSSL_LIB_CTX *libctx)
+                                                  long len,
+                                                  OSSL_LIB_CTX *libctx)
 {
     X509_PUBKEY *xpub = OPENSSL_zalloc(sizeof(*xpub));
 
@@ -2215,14 +2242,16 @@ static int xor_read_der(PROV_XOR_CTX *provctx, OSSL_CORE_BIO *cin,
 typedef void *key_from_pkcs8_t(const PKCS8_PRIV_KEY_INFO *p8inf,
                                OSSL_LIB_CTX *libctx, const char *propq);
 static void *xor_der2key_decode_p8(const unsigned char **input_der,
-                               long input_der_len, struct der2key_ctx_st *ctx,
-                               key_from_pkcs8_t *key_from_pkcs8)
+                                   long input_der_len,
+                                   struct der2key_ctx_st *ctx,
+                                   key_from_pkcs8_t *key_from_pkcs8)
 {
     PKCS8_PRIV_KEY_INFO *p8inf = NULL;
     const X509_ALGOR *alg = NULL;
     void *key = NULL;
 
-    if ((p8inf = d2i_PKCS8_PRIV_KEY_INFO(NULL, input_der, input_der_len)) != NULL
+    if ((p8inf =
+             d2i_PKCS8_PRIV_KEY_INFO(NULL, input_der, input_der_len)) != NULL
         && PKCS8_pkey_get0(NULL, NULL, NULL, &alg, p8inf)
         && OBJ_obj2nid(alg->algorithm) == ctx->desc->evp_type)
         key = key_from_pkcs8(p8inf, PROV_XOR_LIBCTX_OF(ctx->provctx), NULL);
@@ -2232,7 +2261,7 @@ static void *xor_der2key_decode_p8(const unsigned char **input_der,
 }
 
 static XORKEY *xor_d2i_PUBKEY(XORKEY **a,
-                               const unsigned char **pp, long length)
+                              const unsigned char **pp, long length)
 {
     XORKEY *key = NULL;
     X509_PUBKEY *xpk;
@@ -2249,7 +2278,7 @@ static XORKEY *xor_d2i_PUBKEY(XORKEY **a,
         *a = key;
     }
 
-    err_exit:
+err_exit:
     X509_PUBKEY_free(xpk);
     return key;
 }
@@ -2262,7 +2291,8 @@ static OSSL_FUNC_decoder_decode_fn xor_der2key_decode;
 static OSSL_FUNC_decoder_export_object_fn der2key_export_object;
 
 static struct der2key_ctx_st *
-der2key_newctx(void *provctx, struct keytype_desc_st *desc, const char* tls_name)
+der2key_newctx(void *provctx, struct keytype_desc_st *desc,
+               const char* tls_name)
 {
     struct der2key_ctx_st *ctx = OPENSSL_zalloc(sizeof(*ctx));
 
@@ -2270,7 +2300,7 @@ der2key_newctx(void *provctx, struct keytype_desc_st *desc, const char* tls_name
         ctx->provctx = provctx;
         ctx->desc = desc;
         if (desc->evp_type == 0) {
-           ctx->desc->evp_type = OBJ_sn2nid(tls_name);
+            ctx->desc->evp_type = OBJ_sn2nid(tls_name);
         }
     }
     return ctx;
@@ -2318,8 +2348,8 @@ static int der2key_check_selection(int selection,
 }
 
 static int xor_der2key_decode(void *vctx, OSSL_CORE_BIO *cin, int selection,
-                          OSSL_CALLBACK *data_cb, void *data_cbarg,
-                          OSSL_PASSPHRASE_CALLBACK *pw_cb, void *pw_cbarg)
+                              OSSL_CALLBACK *data_cb, void *data_cbarg,
+                              OSSL_PASSPHRASE_CALLBACK *pw_cb, void *pw_cbarg)
 {
     struct der2key_ctx_st *ctx = vctx;
     unsigned char *der = NULL;
@@ -2396,7 +2426,7 @@ static int xor_der2key_decode(void *vctx, OSSL_CORE_BIO *cin, int selection,
     if (key != NULL && ctx->desc->adjust_key != NULL)
         ctx->desc->adjust_key(key, ctx);
 
- next:
+next:
     /*
      * Indicated that we successfully decoded something, or not at all.
      * Ending up "empty handed" is not an error.
@@ -2430,7 +2460,7 @@ static int xor_der2key_decode(void *vctx, OSSL_CORE_BIO *cin, int selection,
         ok = data_cb(params, data_cbarg);
     }
 
- end:
+end:
     ctx->desc->free_key(key);
     OPENSSL_free(der);
 
@@ -2458,10 +2488,10 @@ static int der2key_export_object(void *vctx,
 /* ---------------------------------------------------------------------- */
 
 static void *xorx_d2i_PKCS8(void **key, const unsigned char **der, long der_len,
-                           struct der2key_ctx_st *ctx)
+                            struct der2key_ctx_st *ctx)
 {
     return xor_der2key_decode_p8(der, der_len, ctx,
-                             (key_from_pkcs8_t *)xor_key_from_pkcs8);
+                                 (key_from_pkcs8_t *)xor_key_from_pkcs8);
 }
 
 static void xorx_key_adjust(void *key, struct der2key_ctx_st *ctx)
@@ -2471,7 +2501,7 @@ static void xorx_key_adjust(void *key, struct der2key_ctx_st *ctx)
 /* ---------------------------------------------------------------------- */
 
 #define DO_PrivateKeyInfo(keytype)                      \
-    "PrivateKeyInfo", 0,                                \
+        "PrivateKeyInfo", 0,                                \
         ( OSSL_KEYMGMT_SELECT_PRIVATE_KEY ),            \
         NULL,                                           \
         NULL,                                           \
@@ -2483,7 +2513,7 @@ static void xorx_key_adjust(void *key, struct der2key_ctx_st *ctx)
         (free_key_fn *)xor_freekey
 
 #define DO_SubjectPublicKeyInfo(keytype)                \
-    "SubjectPublicKeyInfo", 0,                          \
+        "SubjectPublicKeyInfo", 0,                          \
         ( OSSL_KEYMGMT_SELECT_PUBLIC_KEY ),             \
         NULL,                                           \
         NULL,                                           \
@@ -2512,36 +2542,37 @@ static void xorx_key_adjust(void *key, struct der2key_ctx_st *ctx)
  *              structure.
  */
 #define MAKE_DECODER(keytype_name, keytype, type, kind)                 \
-    static struct keytype_desc_st kind##_##keytype##_desc =             \
-        { keytype_name, xor_##keytype##_keymgmt_functions,              \
-          DO_##kind(keytype) };                                         \
+        static struct keytype_desc_st kind ## _ ## keytype ## _desc =             \
+        { keytype_name, xor_ ## keytype ## _keymgmt_functions,              \
+          DO_ ## kind(keytype) };                                         \
                                                                         \
-    static OSSL_FUNC_decoder_newctx_fn kind##_der2##keytype##_newctx;   \
+        static OSSL_FUNC_decoder_newctx_fn kind ## _der2 ## keytype ## _newctx;   \
                                                                         \
-    static void *kind##_der2##keytype##_newctx(void *provctx)           \
-    {                                                                   \
-        return der2key_newctx(provctx, &kind##_##keytype##_desc, keytype_name );\
-    }                                                                   \
-    static int kind##_der2##keytype##_does_selection(void *provctx,     \
-                                                     int selection)     \
-    {                                                                   \
-        return der2key_check_selection(selection,                       \
-                                       &kind##_##keytype##_desc);       \
-    }                                                                   \
-    static const OSSL_DISPATCH                                          \
-    xor_##kind##_der_to_##keytype##_decoder_functions[] = {             \
-        { OSSL_FUNC_DECODER_NEWCTX,                                     \
-          (void (*)(void))kind##_der2##keytype##_newctx },              \
-        { OSSL_FUNC_DECODER_FREECTX,                                    \
-          (void (*)(void))der2key_freectx },                            \
-        { OSSL_FUNC_DECODER_DOES_SELECTION,                             \
-          (void (*)(void))kind##_der2##keytype##_does_selection },      \
-        { OSSL_FUNC_DECODER_DECODE,                                     \
-          (void (*)(void))xor_der2key_decode },                         \
-        { OSSL_FUNC_DECODER_EXPORT_OBJECT,                              \
-          (void (*)(void))der2key_export_object },                      \
-        OSSL_DISPATCH_END                                               \
-    }
+        static void *kind ## _der2 ## keytype ## _newctx(void *provctx)           \
+        {                                                                   \
+            return der2key_newctx(provctx, &kind ## _ ## keytype ## _desc, \
+                                  keytype_name ); \
+        }                                                                   \
+        static int kind ## _der2 ## keytype ## _does_selection(void *provctx,     \
+                                                               int selection)     \
+        {                                                                   \
+            return der2key_check_selection(selection,                       \
+                                           &kind ## _ ## keytype ## _desc);       \
+        }                                                                   \
+        static const OSSL_DISPATCH                                          \
+        xor_ ## kind ## _der_to_ ## keytype ## _decoder_functions[] = {             \
+            { OSSL_FUNC_DECODER_NEWCTX,                                     \
+              (void (*)(void)) kind ## _der2 ## keytype ## _newctx },              \
+            { OSSL_FUNC_DECODER_FREECTX,                                    \
+              (void (*)(void)) der2key_freectx },                            \
+            { OSSL_FUNC_DECODER_DOES_SELECTION,                             \
+              (void (*)(void)) kind ## _der2 ## keytype ## _does_selection },      \
+            { OSSL_FUNC_DECODER_DECODE,                                     \
+              (void (*)(void)) xor_der2key_decode },                         \
+            { OSSL_FUNC_DECODER_EXPORT_OBJECT,                              \
+              (void (*)(void)) der2key_export_object },                      \
+            OSSL_DISPATCH_END                                               \
+        }
 
 MAKE_DECODER(XORSIGALG_NAME, xorhmacsig, xor, PrivateKeyInfo);
 MAKE_DECODER(XORSIGALG_NAME, xorhmacsig, xor, SubjectPublicKeyInfo);
@@ -2560,19 +2591,22 @@ static const OSSL_ALGORITHM tls_prov_decoder[] = {
  */
 
 #define DECODER(_name, _input, _output)                          \
-    { _name,                                                            \
-      "provider=" DECODER_PROVIDER ",fips=yes,input=" #_input,   \
-      (xor_##_input##_to_##_output##_decoder_functions) }
+        { _name,                                                            \
+          "provider=" DECODER_PROVIDER ",fips=yes,input=" #_input,   \
+          (xor_ ## _input ## _to_ ## _output ## _decoder_functions) }
 #define DECODER_w_structure(_name, _input, _structure, _output)  \
-    { _name,                                                            \
-      "provider=" DECODER_PROVIDER ",fips=yes,input=" #_input    \
-      ",structure=" DECODER_STRUCTURE_##_structure,                     \
-      (xor_##_structure##_##_input##_to_##_output##_decoder_functions) }
+        { _name,                                                            \
+          "provider=" DECODER_PROVIDER ",fips=yes,input=" #_input    \
+          ",structure=" DECODER_STRUCTURE_ ## _structure,                     \
+          (xor_ ## _structure ## _ ## _input ## _to_ ## _output ## \
+           _decoder_functions) }
 
-DECODER_w_structure(XORSIGALG_NAME, der, PrivateKeyInfo, xorhmacsig),
-DECODER_w_structure(XORSIGALG_NAME, der, SubjectPublicKeyInfo, xorhmacsig),
-DECODER_w_structure(XORSIGALG_HASH_NAME, der, PrivateKeyInfo, xorhmacsha2sig),
-DECODER_w_structure(XORSIGALG_HASH_NAME, der, SubjectPublicKeyInfo, xorhmacsha2sig),
+    DECODER_w_structure(XORSIGALG_NAME, der, PrivateKeyInfo, xorhmacsig),
+    DECODER_w_structure(XORSIGALG_NAME, der, SubjectPublicKeyInfo, xorhmacsig),
+    DECODER_w_structure(XORSIGALG_HASH_NAME, der, PrivateKeyInfo,
+                        xorhmacsha2sig),
+    DECODER_w_structure(XORSIGALG_HASH_NAME, der, SubjectPublicKeyInfo,
+                        xorhmacsha2sig),
 #undef DECODER_PROVIDER
     { NULL, NULL, NULL }
 };
@@ -2586,10 +2620,12 @@ static OSSL_FUNC_signature_verify_init_fn xor_sig_verify_init;
 static OSSL_FUNC_signature_sign_fn xor_sig_sign;
 static OSSL_FUNC_signature_verify_fn xor_sig_verify;
 static OSSL_FUNC_signature_digest_sign_init_fn xor_sig_digest_sign_init;
-static OSSL_FUNC_signature_digest_sign_update_fn xor_sig_digest_signverify_update;
+static OSSL_FUNC_signature_digest_sign_update_fn
+    xor_sig_digest_signverify_update;
 static OSSL_FUNC_signature_digest_sign_final_fn xor_sig_digest_sign_final;
 static OSSL_FUNC_signature_digest_verify_init_fn xor_sig_digest_verify_init;
-static OSSL_FUNC_signature_digest_verify_update_fn xor_sig_digest_signverify_update;
+static OSSL_FUNC_signature_digest_verify_update_fn
+    xor_sig_digest_signverify_update;
 static OSSL_FUNC_signature_digest_verify_final_fn xor_sig_digest_verify_final;
 static OSSL_FUNC_signature_freectx_fn xor_sig_freectx;
 static OSSL_FUNC_signature_dupctx_fn xor_sig_dupctx;
@@ -2598,19 +2634,21 @@ static OSSL_FUNC_signature_gettable_ctx_params_fn xor_sig_gettable_ctx_params;
 static OSSL_FUNC_signature_set_ctx_params_fn xor_sig_set_ctx_params;
 static OSSL_FUNC_signature_settable_ctx_params_fn xor_sig_settable_ctx_params;
 static OSSL_FUNC_signature_get_ctx_md_params_fn xor_sig_get_ctx_md_params;
-static OSSL_FUNC_signature_gettable_ctx_md_params_fn xor_sig_gettable_ctx_md_params;
+static OSSL_FUNC_signature_gettable_ctx_md_params_fn
+    xor_sig_gettable_ctx_md_params;
 static OSSL_FUNC_signature_set_ctx_md_params_fn xor_sig_set_ctx_md_params;
-static OSSL_FUNC_signature_settable_ctx_md_params_fn xor_sig_settable_ctx_md_params;
+static OSSL_FUNC_signature_settable_ctx_md_params_fn
+    xor_sig_settable_ctx_md_params;
 
 static int xor_get_aid(unsigned char** oidbuf, const char *tls_name) {
-   X509_ALGOR *algor = X509_ALGOR_new();
-   int aidlen = 0;
+    X509_ALGOR *algor = X509_ALGOR_new();
+    int aidlen = 0;
 
-   X509_ALGOR_set0(algor, OBJ_txt2obj(tls_name, 0), V_ASN1_UNDEF, NULL);
+    X509_ALGOR_set0(algor, OBJ_txt2obj(tls_name, 0), V_ASN1_UNDEF, NULL);
 
-   aidlen = i2d_X509_ALGOR(algor, oidbuf); 
-   X509_ALGOR_free(algor);
-   return(aidlen);
+    aidlen = i2d_X509_ALGOR(algor, oidbuf);
+    X509_ALGOR_free(algor);
+    return(aidlen);
 }
 
 /*
@@ -2633,7 +2671,7 @@ typedef struct {
 
     /* The Algorithm Identifier of the combined signature algorithm */
     unsigned char *aid;
-    size_t  aid_len;
+    size_t aid_len;
 
     /* main digest */
     EVP_MD *md;
@@ -2660,7 +2698,7 @@ static void *xor_sig_newctx(void *provctx, const char *propq)
 }
 
 static int xor_sig_setup_md(PROV_XORSIG_CTX *ctx,
-                        const char *mdname, const char *mdprops)
+                            const char *mdname, const char *mdprops)
 {
     EVP_MD *md;
 
@@ -2725,7 +2763,7 @@ static int xor_sig_verify_init(void *vpxor_sigctx, void *vxorsig,
 }
 
 static int xor_sig_sign(void *vpxor_sigctx, unsigned char *sig, size_t *siglen,
-                    size_t sigsize, const unsigned char *tbs, size_t tbslen)
+                        size_t sigsize, const unsigned char *tbs, size_t tbslen)
 {
     PROV_XORSIG_CTX *pxor_sigctx = (PROV_XORSIG_CTX *)vpxor_sigctx;
     XORKEY *xorkey = pxor_sigctx->sig;
@@ -2762,12 +2800,12 @@ static int xor_sig_sign(void *vpxor_sigctx, unsigned char *sig, size_t *siglen,
     *siglen = xor_sig_len;
     rv = 1; /* success */
 
- endsign:
+endsign:
     return rv;
 }
 
 static int xor_sig_verify(void *vpxor_sigctx,
-    const unsigned char *sig, size_t siglen,
+                          const unsigned char *sig, size_t siglen,
                           const unsigned char *tbs, size_t tbslen)
 {
     PROV_XORSIG_CTX *pxor_sigctx = (PROV_XORSIG_CTX *)vpxor_sigctx;
@@ -2805,8 +2843,9 @@ static int xor_sig_verify(void *vpxor_sigctx,
     return 1;
 }
 
-static int xor_sig_digest_signverify_init(void *vpxor_sigctx, const char *mdname,
-                                      void *vxorsig, int operation)
+static int xor_sig_digest_signverify_init(void *vpxor_sigctx,
+                                          const char *mdname,
+                                          void *vxorsig, int operation)
 {
     PROV_XORSIG_CTX *pxor_sigctx = (PROV_XORSIG_CTX *)vpxor_sigctx;
     char *rmdname = (char *)mdname;
@@ -2830,7 +2869,7 @@ static int xor_sig_digest_signverify_init(void *vpxor_sigctx, const char *mdname
 
     return 1;
 
- error:
+error:
     EVP_MD_CTX_free(pxor_sigctx->mdctx);
     EVP_MD_free(pxor_sigctx->md);
     pxor_sigctx->mdctx = NULL;
@@ -2839,13 +2878,14 @@ static int xor_sig_digest_signverify_init(void *vpxor_sigctx, const char *mdname
 }
 
 static int xor_sig_digest_sign_init(void *vpxor_sigctx, const char *mdname,
-                                      void *vxorsig, const OSSL_PARAM params[])
+                                    void *vxorsig, const OSSL_PARAM params[])
 {
     return xor_sig_digest_signverify_init(vpxor_sigctx, mdname, vxorsig,
                                           EVP_PKEY_OP_SIGN);
 }
 
-static int xor_sig_digest_verify_init(void *vpxor_sigctx, const char *mdname, void *vxorsig, const OSSL_PARAM params[])
+static int xor_sig_digest_verify_init(void *vpxor_sigctx, const char *mdname,
+                                      void *vxorsig, const OSSL_PARAM params[])
 {
     return xor_sig_digest_signverify_init(vpxor_sigctx, mdname,
                                           vxorsig, EVP_PKEY_OP_VERIFY);
@@ -2881,12 +2921,13 @@ int xor_sig_digest_sign_final(void *vpxor_sigctx,
         pxor_sigctx->flag_allow_md = 1;
     }
 
-    return xor_sig_sign(vpxor_sigctx, sig, siglen, sigsize, digest, (size_t)dlen);
-        
+    return xor_sig_sign(vpxor_sigctx, sig, siglen, sigsize, digest,
+                        (size_t)dlen);
+
 }
 
 int xor_sig_digest_verify_final(void *vpxor_sigctx, const unsigned char *sig,
-                            size_t siglen)
+                                size_t siglen)
 {
     PROV_XORSIG_CTX *pxor_sigctx = (PROV_XORSIG_CTX *)vpxor_sigctx;
     unsigned char digest[EVP_MAX_MD_SIZE];
@@ -2945,12 +2986,12 @@ static void *xor_sig_dupctx(void *vpxor_sigctx)
     if (srcctx->mdctx != NULL) {
         dstctx->mdctx = EVP_MD_CTX_new();
         if (dstctx->mdctx == NULL
-                || !EVP_MD_CTX_copy_ex(dstctx->mdctx, srcctx->mdctx))
+            || !EVP_MD_CTX_copy_ex(dstctx->mdctx, srcctx->mdctx))
             goto err;
     }
 
     return dstctx;
- err:
+err:
     xor_sig_freectx(dstctx);
     return NULL;
 }
@@ -2966,10 +3007,12 @@ static int xor_sig_get_ctx_params(void *vpxor_sigctx, OSSL_PARAM *params)
     p = OSSL_PARAM_locate(params, OSSL_SIGNATURE_PARAM_ALGORITHM_ID);
 
     if (pxor_sigctx->aid == NULL)
-        pxor_sigctx->aid_len = xor_get_aid(&(pxor_sigctx->aid), pxor_sigctx->sig->tls_name);
+        pxor_sigctx->aid_len = xor_get_aid(&(pxor_sigctx->aid),
+                                           pxor_sigctx->sig->tls_name);
 
     if (p != NULL
-        && !OSSL_PARAM_set_octet_string(p, pxor_sigctx->aid, pxor_sigctx->aid_len))
+        && !OSSL_PARAM_set_octet_string(p, pxor_sigctx->aid,
+                                        pxor_sigctx->aid_len))
         return 0;
 
     p = OSSL_PARAM_locate(params, OSSL_SIGNATURE_PARAM_DIGEST);
@@ -2985,7 +3028,8 @@ static const OSSL_PARAM known_gettable_ctx_params[] = {
     OSSL_PARAM_END
 };
 
-static const OSSL_PARAM *xor_sig_gettable_ctx_params(ossl_unused void *vpxor_sigctx, ossl_unused void *vctx)
+static const OSSL_PARAM *xor_sig_gettable_ctx_params(
+    ossl_unused void *vpxor_sigctx, ossl_unused void *vctx)
 {
     return known_gettable_ctx_params;
 }
@@ -3053,7 +3097,8 @@ static const OSSL_PARAM *xor_sig_gettable_ctx_md_params(void *vpxor_sigctx)
     return EVP_MD_gettable_ctx_params(pxor_sigctx->md);
 }
 
-static int xor_sig_set_ctx_md_params(void *vpxor_sigctx, const OSSL_PARAM params[])
+static int xor_sig_set_ctx_md_params(void *vpxor_sigctx,
+                                     const OSSL_PARAM params[])
 {
     PROV_XORSIG_CTX *pxor_sigctx = (PROV_XORSIG_CTX *)vpxor_sigctx;
 
@@ -3074,39 +3119,41 @@ static const OSSL_PARAM *xor_sig_settable_ctx_md_params(void *vpxor_sigctx)
 }
 
 static const OSSL_DISPATCH xor_signature_functions[] = {
-    { OSSL_FUNC_SIGNATURE_NEWCTX, (void (*)(void))xor_sig_newctx },
-    { OSSL_FUNC_SIGNATURE_SIGN_INIT, (void (*)(void))xor_sig_sign_init },
-    { OSSL_FUNC_SIGNATURE_SIGN, (void (*)(void))xor_sig_sign },
-    { OSSL_FUNC_SIGNATURE_VERIFY_INIT, (void (*)(void))xor_sig_verify_init },
-    { OSSL_FUNC_SIGNATURE_VERIFY, (void (*)(void))xor_sig_verify },
+    { OSSL_FUNC_SIGNATURE_NEWCTX, (void (*)(void)) xor_sig_newctx },
+    { OSSL_FUNC_SIGNATURE_SIGN_INIT, (void (*)(void)) xor_sig_sign_init },
+    { OSSL_FUNC_SIGNATURE_SIGN, (void (*)(void)) xor_sig_sign },
+    { OSSL_FUNC_SIGNATURE_VERIFY_INIT, (void (*)(void)) xor_sig_verify_init },
+    { OSSL_FUNC_SIGNATURE_VERIFY, (void (*)(void)) xor_sig_verify },
     { OSSL_FUNC_SIGNATURE_DIGEST_SIGN_INIT,
-      (void (*)(void))xor_sig_digest_sign_init },
+      (void (*)(void)) xor_sig_digest_sign_init },
     { OSSL_FUNC_SIGNATURE_DIGEST_SIGN_UPDATE,
-      (void (*)(void))xor_sig_digest_signverify_update },
+      (void (*)(void)) xor_sig_digest_signverify_update },
     { OSSL_FUNC_SIGNATURE_DIGEST_SIGN_FINAL,
-      (void (*)(void))xor_sig_digest_sign_final },
+      (void (*)(void)) xor_sig_digest_sign_final },
     { OSSL_FUNC_SIGNATURE_DIGEST_VERIFY_INIT,
-      (void (*)(void))xor_sig_digest_verify_init },
+      (void (*)(void)) xor_sig_digest_verify_init },
     { OSSL_FUNC_SIGNATURE_DIGEST_VERIFY_UPDATE,
-      (void (*)(void))xor_sig_digest_signverify_update },
+      (void (*)(void)) xor_sig_digest_signverify_update },
     { OSSL_FUNC_SIGNATURE_DIGEST_VERIFY_FINAL,
-      (void (*)(void))xor_sig_digest_verify_final },
-    { OSSL_FUNC_SIGNATURE_FREECTX, (void (*)(void))xor_sig_freectx },
-    { OSSL_FUNC_SIGNATURE_DUPCTX, (void (*)(void))xor_sig_dupctx },
-    { OSSL_FUNC_SIGNATURE_GET_CTX_PARAMS, (void (*)(void))xor_sig_get_ctx_params },
+      (void (*)(void)) xor_sig_digest_verify_final },
+    { OSSL_FUNC_SIGNATURE_FREECTX, (void (*)(void)) xor_sig_freectx },
+    { OSSL_FUNC_SIGNATURE_DUPCTX, (void (*)(void)) xor_sig_dupctx },
+    { OSSL_FUNC_SIGNATURE_GET_CTX_PARAMS,
+      (void (*)(void)) xor_sig_get_ctx_params },
     { OSSL_FUNC_SIGNATURE_GETTABLE_CTX_PARAMS,
-      (void (*)(void))xor_sig_gettable_ctx_params },
-    { OSSL_FUNC_SIGNATURE_SET_CTX_PARAMS, (void (*)(void))xor_sig_set_ctx_params },
+      (void (*)(void)) xor_sig_gettable_ctx_params },
+    { OSSL_FUNC_SIGNATURE_SET_CTX_PARAMS,
+      (void (*)(void)) xor_sig_set_ctx_params },
     { OSSL_FUNC_SIGNATURE_SETTABLE_CTX_PARAMS,
-      (void (*)(void))xor_sig_settable_ctx_params },
+      (void (*)(void)) xor_sig_settable_ctx_params },
     { OSSL_FUNC_SIGNATURE_GET_CTX_MD_PARAMS,
-      (void (*)(void))xor_sig_get_ctx_md_params },
+      (void (*)(void)) xor_sig_get_ctx_md_params },
     { OSSL_FUNC_SIGNATURE_GETTABLE_CTX_MD_PARAMS,
-      (void (*)(void))xor_sig_gettable_ctx_md_params },
+      (void (*)(void)) xor_sig_gettable_ctx_md_params },
     { OSSL_FUNC_SIGNATURE_SET_CTX_MD_PARAMS,
-      (void (*)(void))xor_sig_set_ctx_md_params },
+      (void (*)(void)) xor_sig_set_ctx_md_params },
     { OSSL_FUNC_SIGNATURE_SETTABLE_CTX_MD_PARAMS,
-      (void (*)(void))xor_sig_settable_ctx_md_params },
+      (void (*)(void)) xor_sig_settable_ctx_md_params },
     OSSL_DISPATCH_END
 };
 
@@ -3116,11 +3163,11 @@ static const OSSL_ALGORITHM tls_prov_signature[] = {
      * with the FIPS provider we pretend that it is.
      */
     { XORSIGALG_NAME, "provider=tls-provider,fips=yes",
-                           xor_signature_functions },
+      xor_signature_functions },
     { XORSIGALG_HASH_NAME, "provider=tls-provider,fips=yes",
-                           xor_signature_functions },
+      xor_signature_functions },
     { XORSIGALG12_NAME, "provider=tls-provider,fips=yes",
-                           xor_signature_functions },
+      xor_signature_functions },
     { NULL, NULL, NULL }
 };
 
@@ -3130,18 +3177,18 @@ static const OSSL_ALGORITHM *tls_prov_query(void *provctx, int operation_id,
 {
     *no_cache = 0;
     switch (operation_id) {
-    case OSSL_OP_KEYMGMT:
-        return tls_prov_keymgmt;
-    case OSSL_OP_KEYEXCH:
-        return tls_prov_keyexch;
-    case OSSL_OP_KEM:
-        return tls_prov_kem;
-    case OSSL_OP_ENCODER:
-        return tls_prov_encoder;
-    case OSSL_OP_DECODER:
-        return tls_prov_decoder;
-    case OSSL_OP_SIGNATURE:
-        return tls_prov_signature;
+        case OSSL_OP_KEYMGMT:
+            return tls_prov_keymgmt;
+        case OSSL_OP_KEYEXCH:
+            return tls_prov_keyexch;
+        case OSSL_OP_KEM:
+            return tls_prov_kem;
+        case OSSL_OP_ENCODER:
+            return tls_prov_encoder;
+        case OSSL_OP_DECODER:
+            return tls_prov_decoder;
+        case OSSL_OP_SIGNATURE:
+            return tls_prov_signature;
     }
     return NULL;
 }
@@ -3162,9 +3209,10 @@ static void tls_prov_teardown(void *provctx)
 
 /* Functions we provide to the core */
 static const OSSL_DISPATCH tls_prov_dispatch_table[] = {
-    { OSSL_FUNC_PROVIDER_TEARDOWN, (void (*)(void))tls_prov_teardown },
-    { OSSL_FUNC_PROVIDER_QUERY_OPERATION, (void (*)(void))tls_prov_query },
-    { OSSL_FUNC_PROVIDER_GET_CAPABILITIES, (void (*)(void))tls_prov_get_capabilities },
+    { OSSL_FUNC_PROVIDER_TEARDOWN, (void (*)(void)) tls_prov_teardown },
+    { OSSL_FUNC_PROVIDER_QUERY_OPERATION, (void (*)(void)) tls_prov_query },
+    { OSSL_FUNC_PROVIDER_GET_CAPABILITIES,
+      (void (*)(void)) tls_prov_get_capabilities },
     OSSL_DISPATCH_END
 };
 
@@ -3180,7 +3228,7 @@ unsigned int randomize_tls_alg_id(OSSL_LIB_CTX *libctx)
     static int in_mem = 0;
     int i;
 
- retry:
+retry:
     if (RAND_bytes_ex(libctx, (unsigned char *)&id, sizeof(id), 0) <= 0)
         return 0;
     /*
@@ -3228,15 +3276,15 @@ int tls_provider_init(const OSSL_CORE_HANDLE *handle,
     /* Retrieve registration functions */
     for (; in->function_id != 0; in++) {
         switch (in->function_id) {
-        case OSSL_FUNC_CORE_OBJ_CREATE:
-            c_obj_create = OSSL_FUNC_core_obj_create(in);
-            break;
-        case OSSL_FUNC_CORE_OBJ_ADD_SIGID:
-            c_obj_add_sigid = OSSL_FUNC_core_obj_add_sigid(in);
-            break;
-        /* Just ignore anything we don't understand */
-        default:
-            break;
+            case OSSL_FUNC_CORE_OBJ_CREATE:
+                c_obj_create = OSSL_FUNC_core_obj_create(in);
+                break;
+            case OSSL_FUNC_CORE_OBJ_ADD_SIGID:
+                c_obj_add_sigid = OSSL_FUNC_core_obj_add_sigid(in);
+                break;
+            /* Just ignore anything we don't understand */
+            default:
+                break;
         }
     }
 
@@ -3259,7 +3307,8 @@ int tls_provider_init(const OSSL_CORE_HANDLE *handle,
         return 0;
     }
 
-    if (!c_obj_add_sigid(handle, XORSIGALG_HASH_OID, XORSIGALG_HASH, XORSIGALG_HASH_OID)) {
+    if (!c_obj_add_sigid(handle, XORSIGALG_HASH_OID, XORSIGALG_HASH,
+                         XORSIGALG_HASH_OID)) {
         ERR_raise(ERR_LIB_USER, XORPROV_R_OBJ_CREATE_ERR);
         return 0;
     }

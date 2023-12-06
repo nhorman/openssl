@@ -56,7 +56,7 @@ static void gf_invert(gf y, const gf x, int assert_nonzero)
 
 /** identity = (0,1) */
 const curve448_point_t ossl_curve448_point_identity =
-    { {{{{0}}}, {{{1}}}, {{{1}}}, {{{0}}}} };
+{ {{{{0}}}, {{{1}}}, {{{1}}}, {{{0}}}} };
 
 static void point_double_internal(curve448_point_t p, const curve448_point_t q,
                                   int before_double)
@@ -237,7 +237,8 @@ ossl_curve448_precomputed_scalarmul(curve448_point_t out,
     niels_t ni;
     curve448_scalar_t scalar1x;
 
-    ossl_curve448_scalar_add(scalar1x, scalar, precomputed_scalarmul_adjustment);
+    ossl_curve448_scalar_add(scalar1x, scalar,
+                             precomputed_scalarmul_adjustment);
     ossl_curve448_scalar_halve(scalar1x, scalar1x);
 
     for (i = s; i > 0; i--) {
@@ -277,8 +278,8 @@ ossl_curve448_precomputed_scalarmul(curve448_point_t out,
 
 void
 ossl_curve448_point_mul_by_ratio_and_encode_like_eddsa(
-                                    uint8_t enc[EDDSA_448_PUBLIC_BYTES],
-                                    const curve448_point_t p)
+    uint8_t enc[EDDSA_448_PUBLIC_BYTES],
+    const curve448_point_t p)
 {
     gf x, y, z, t;
     curve448_point_t q;
@@ -325,8 +326,8 @@ ossl_curve448_point_mul_by_ratio_and_encode_like_eddsa(
 
 c448_error_t
 ossl_curve448_point_decode_like_eddsa_and_mul_by_ratio(
-                                curve448_point_t p,
-                                const uint8_t enc[EDDSA_448_PUBLIC_BYTES])
+    curve448_point_t p,
+    const uint8_t enc[EDDSA_448_PUBLIC_BYTES])
 {
     uint8_t enc2[EDDSA_448_PUBLIC_BYTES];
     mask_t low;
@@ -577,7 +578,7 @@ static int recode_wnaf(struct smvt_control *control,
         if (w < (C448_SCALAR_BITS - 1) / 16 + 1) {
             /* Refill the 16 high bits of current */
             current += (uint32_t)((scalar->limb[w / B_OVER_16]
-                       >> (16 * (w % B_OVER_16))) << 16);
+                                   >> (16 * (w % B_OVER_16))) << 16);
         }
 
         while (current & 0xFFFF) {
@@ -705,12 +706,14 @@ ossl_curve448_base_double_scalarmul_non_secret(curve448_point_t combo,
 
             if (control_pre[contp].addend > 0)
                 add_niels_to_pt(combo,
-                                ossl_curve448_wnaf_base[control_pre[contp].addend
-                                                   >> 1], i);
+                                ossl_curve448_wnaf_base[control_pre[contp].
+                                                        addend
+                                                        >> 1], i);
             else
                 sub_niels_from_pt(combo,
                                   ossl_curve448_wnaf_base[(-control_pre
-                                                      [contp].addend) >> 1], i);
+                                                           [contp].addend) >> 1],
+                                  i);
             contp++;
         }
     }

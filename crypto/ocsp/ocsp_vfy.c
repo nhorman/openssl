@@ -48,7 +48,7 @@ static int ocsp_verify_signer(X509 *signer, int response,
     if ((flags & OCSP_PARTIAL_CHAIN) != 0)
         X509_VERIFY_PARAM_set_flags(vp, X509_V_FLAG_PARTIAL_CHAIN);
     if (response
-            && X509_get_ext_by_NID(signer, NID_id_pkix_OCSP_noCheck, -1) >= 0)
+        && X509_get_ext_by_NID(signer, NID_id_pkix_OCSP_noCheck, -1) >= 0)
         /*
          * Locally disable revocation status checking for OCSP responder cert.
          * Done here for CRLs; should be done also for OCSP-based checks.
@@ -68,7 +68,7 @@ static int ocsp_verify_signer(X509 *signer, int response,
     if (chain != NULL)
         *chain = X509_STORE_CTX_get1_chain(ctx);
 
- end:
+end:
     X509_STORE_CTX_free(ctx);
     return ret;
 }
@@ -87,7 +87,8 @@ static int ocsp_verify(OCSP_REQUEST *req, OCSP_BASICRESP *bs,
         if (req != NULL)
             ret = OCSP_REQUEST_verify(req, skey, signer->libctx, signer->propq);
         else
-            ret = OCSP_BASICRESP_verify(bs, skey, signer->libctx, signer->propq);
+            ret =
+                OCSP_BASICRESP_verify(bs, skey, signer->libctx, signer->propq);
         if (ret <= 0)
             ERR_raise(ERR_LIB_OCSP, OCSP_R_SIGNATURE_FAILURE);
     }
@@ -153,7 +154,7 @@ int OCSP_basic_verify(OCSP_BASICRESP *bs, STACK_OF(X509) *certs,
         ret = 1;
     }
 
- end:
+end:
     OSSL_STACK_OF_X509_free(chain);
     sk_X509_free(untrusted);
     return ret;

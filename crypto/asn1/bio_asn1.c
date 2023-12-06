@@ -169,81 +169,81 @@ static int asn1_bio_write(BIO *b, const char *in, int inl)
     for (;;) {
         switch (ctx->state) {
             /* Setup prefix data, call it */
-        case ASN1_STATE_START:
-            if (!asn1_bio_setup_ex(b, ctx, ctx->prefix,
-                                   ASN1_STATE_PRE_COPY, ASN1_STATE_HEADER))
-                return -1;
-            break;
+            case ASN1_STATE_START:
+                if (!asn1_bio_setup_ex(b, ctx, ctx->prefix,
+                                       ASN1_STATE_PRE_COPY, ASN1_STATE_HEADER))
+                    return -1;
+                break;
 
             /* Copy any pre data first */
-        case ASN1_STATE_PRE_COPY:
+            case ASN1_STATE_PRE_COPY:
 
-            ret = asn1_bio_flush_ex(b, ctx, ctx->prefix_free,
-                                    ASN1_STATE_HEADER);
+                ret = asn1_bio_flush_ex(b, ctx, ctx->prefix_free,
+                                        ASN1_STATE_HEADER);
 
-            if (ret <= 0)
-                goto done;
+                if (ret <= 0)
+                    goto done;
 
-            break;
+                break;
 
-        case ASN1_STATE_HEADER:
-            ctx->buflen = ASN1_object_size(0, inl, ctx->asn1_tag) - inl;
-            if (!ossl_assert(ctx->buflen <= ctx->bufsize))
-                return -1;
-            p = ctx->buf;
-            ASN1_put_object(&p, 0, inl, ctx->asn1_tag, ctx->asn1_class);
-            ctx->copylen = inl;
-            ctx->state = ASN1_STATE_HEADER_COPY;
+            case ASN1_STATE_HEADER:
+                ctx->buflen = ASN1_object_size(0, inl, ctx->asn1_tag) - inl;
+                if (!ossl_assert(ctx->buflen <= ctx->bufsize))
+                    return -1;
+                p = ctx->buf;
+                ASN1_put_object(&p, 0, inl, ctx->asn1_tag, ctx->asn1_class);
+                ctx->copylen = inl;
+                ctx->state = ASN1_STATE_HEADER_COPY;
 
-            break;
+                break;
 
-        case ASN1_STATE_HEADER_COPY:
-            ret = BIO_write(next, ctx->buf + ctx->bufpos, ctx->buflen);
-            if (ret <= 0)
-                goto done;
+            case ASN1_STATE_HEADER_COPY:
+                ret = BIO_write(next, ctx->buf + ctx->bufpos, ctx->buflen);
+                if (ret <= 0)
+                    goto done;
 
-            ctx->buflen -= ret;
-            if (ctx->buflen)
-                ctx->bufpos += ret;
-            else {
-                ctx->bufpos = 0;
-                ctx->state = ASN1_STATE_DATA_COPY;
-            }
+                ctx->buflen -= ret;
+                if (ctx->buflen)
+                    ctx->bufpos += ret;
+                else {
+                    ctx->bufpos = 0;
+                    ctx->state = ASN1_STATE_DATA_COPY;
+                }
 
-            break;
+                break;
 
-        case ASN1_STATE_DATA_COPY:
+            case ASN1_STATE_DATA_COPY:
 
-            if (inl > ctx->copylen)
-                wrmax = ctx->copylen;
-            else
-                wrmax = inl;
-            ret = BIO_write(next, in, wrmax);
-            if (ret <= 0)
-                goto done;
-            wrlen += ret;
-            ctx->copylen -= ret;
-            in += ret;
-            inl -= ret;
+                if (inl > ctx->copylen)
+                    wrmax = ctx->copylen;
+                else
+                    wrmax = inl;
+                ret = BIO_write(next, in, wrmax);
+                if (ret <= 0)
+                    goto done;
+                wrlen += ret;
+                ctx->copylen -= ret;
+                in += ret;
+                inl -= ret;
 
-            if (ctx->copylen == 0)
-                ctx->state = ASN1_STATE_HEADER;
+                if (ctx->copylen == 0)
+                    ctx->state = ASN1_STATE_HEADER;
 
-            if (inl == 0)
-                goto done;
+                if (inl == 0)
+                    goto done;
 
-            break;
+                break;
 
-        case ASN1_STATE_POST_COPY:
-        case ASN1_STATE_DONE:
-            BIO_clear_retry_flags(b);
-            return 0;
+            case ASN1_STATE_POST_COPY:
+            case ASN1_STATE_DONE:
+                BIO_clear_retry_flags(b);
+                return 0;
 
         }
 
     }
 
- done:
+done:
     BIO_clear_retry_flags(b);
     BIO_copy_next_retry(b);
 
@@ -334,67 +334,67 @@ static long asn1_bio_ctrl(BIO *b, int cmd, long arg1, void *arg2)
     next = BIO_next(b);
     switch (cmd) {
 
-    case BIO_C_SET_PREFIX:
-        ex_func = arg2;
-        ctx->prefix = ex_func->ex_func;
-        ctx->prefix_free = ex_func->ex_free_func;
-        break;
+        case BIO_C_SET_PREFIX:
+            ex_func = arg2;
+            ctx->prefix = ex_func->ex_func;
+            ctx->prefix_free = ex_func->ex_free_func;
+            break;
 
-    case BIO_C_GET_PREFIX:
-        ex_func = arg2;
-        ex_func->ex_func = ctx->prefix;
-        ex_func->ex_free_func = ctx->prefix_free;
-        break;
+        case BIO_C_GET_PREFIX:
+            ex_func = arg2;
+            ex_func->ex_func = ctx->prefix;
+            ex_func->ex_free_func = ctx->prefix_free;
+            break;
 
-    case BIO_C_SET_SUFFIX:
-        ex_func = arg2;
-        ctx->suffix = ex_func->ex_func;
-        ctx->suffix_free = ex_func->ex_free_func;
-        break;
+        case BIO_C_SET_SUFFIX:
+            ex_func = arg2;
+            ctx->suffix = ex_func->ex_func;
+            ctx->suffix_free = ex_func->ex_free_func;
+            break;
 
-    case BIO_C_GET_SUFFIX:
-        ex_func = arg2;
-        ex_func->ex_func = ctx->suffix;
-        ex_func->ex_free_func = ctx->suffix_free;
-        break;
+        case BIO_C_GET_SUFFIX:
+            ex_func = arg2;
+            ex_func->ex_func = ctx->suffix;
+            ex_func->ex_free_func = ctx->suffix_free;
+            break;
 
-    case BIO_C_SET_EX_ARG:
-        ctx->ex_arg = arg2;
-        break;
+        case BIO_C_SET_EX_ARG:
+            ctx->ex_arg = arg2;
+            break;
 
-    case BIO_C_GET_EX_ARG:
-        *(void **)arg2 = ctx->ex_arg;
-        break;
+        case BIO_C_GET_EX_ARG:
+            *(void **)arg2 = ctx->ex_arg;
+            break;
 
-    case BIO_CTRL_FLUSH:
-        if (next == NULL)
-            return 0;
-
-        /* Call post function if possible */
-        if (ctx->state == ASN1_STATE_HEADER) {
-            if (!asn1_bio_setup_ex(b, ctx, ctx->suffix,
-                                   ASN1_STATE_POST_COPY, ASN1_STATE_DONE))
+        case BIO_CTRL_FLUSH:
+            if (next == NULL)
                 return 0;
-        }
 
-        if (ctx->state == ASN1_STATE_POST_COPY) {
-            ret = asn1_bio_flush_ex(b, ctx, ctx->suffix_free,
-                                    ASN1_STATE_DONE);
-            if (ret <= 0)
-                return ret;
-        }
+            /* Call post function if possible */
+            if (ctx->state == ASN1_STATE_HEADER) {
+                if (!asn1_bio_setup_ex(b, ctx, ctx->suffix,
+                                       ASN1_STATE_POST_COPY, ASN1_STATE_DONE))
+                    return 0;
+            }
 
-        if (ctx->state == ASN1_STATE_DONE)
+            if (ctx->state == ASN1_STATE_POST_COPY) {
+                ret = asn1_bio_flush_ex(b, ctx, ctx->suffix_free,
+                                        ASN1_STATE_DONE);
+                if (ret <= 0)
+                    return ret;
+            }
+
+            if (ctx->state == ASN1_STATE_DONE)
+                return BIO_ctrl(next, cmd, arg1, arg2);
+            else {
+                BIO_clear_retry_flags(b);
+                return 0;
+            }
+
+        default:
+            if (next == NULL)
+                return 0;
             return BIO_ctrl(next, cmd, arg1, arg2);
-        else {
-            BIO_clear_retry_flags(b);
-            return 0;
-        }
-
-    default:
-        if (next == NULL)
-            return 0;
-        return BIO_ctrl(next, cmd, arg1, arg2);
 
     }
 

@@ -14,33 +14,33 @@
 #ifndef OPENSSL_NO_DH
 
 # define FFDHE(sz, keylength) {                                             \
-        SN_ffdhe##sz, NID_ffdhe##sz,                                        \
-        sz,                                                                 \
-        keylength,                                                          \
-        &ossl_bignum_ffdhe##sz##_p, &ossl_bignum_ffdhe##sz##_q,             \
-        &ossl_bignum_const_2,                                               \
-    }
+            SN_ffdhe ## sz, NID_ffdhe ## sz,                                        \
+                        sz,                                                                 \
+                        keylength,                                                          \
+            &ossl_bignum_ffdhe ## sz ## _p, &ossl_bignum_ffdhe ## sz ## _q,             \
+            &ossl_bignum_const_2,                                               \
+}
 
 # define MODP(sz, keylength)  {                                             \
-        SN_modp_##sz, NID_modp_##sz,                                        \
-        sz,                                                                 \
-        keylength,                                                          \
-        &ossl_bignum_modp_##sz##_p, &ossl_bignum_modp_##sz##_q,             \
-        &ossl_bignum_const_2                                                \
-    }
+            SN_modp_ ## sz, NID_modp_ ## sz,                                        \
+                        sz,                                                                 \
+                        keylength,                                                          \
+            &ossl_bignum_modp_ ## sz ## _p, &ossl_bignum_modp_ ## sz ## _q,             \
+            &ossl_bignum_const_2                                                \
+}
 
 # define RFC5114(name, uid, sz, tag) {                                      \
-        name, uid,                                                          \
-        sz,                                                                 \
-        0,                                                                  \
-        &ossl_bignum_dh##tag##_p, &ossl_bignum_dh##tag##_q,                 \
-        &ossl_bignum_dh##tag##_g                                            \
-    }
+            name, uid,                                                          \
+            sz,                                                                 \
+            0,                                                                  \
+            &ossl_bignum_dh ## tag ## _p, &ossl_bignum_dh ## tag ## _q,                 \
+            &ossl_bignum_dh ## tag ## _g                                            \
+}
 
 #else
 
-# define FFDHE(sz, keylength)           { SN_ffdhe##sz, NID_ffdhe##sz }
-# define MODP(sz, keylength)            { SN_modp_##sz, NID_modp_##sz }
+# define FFDHE(sz, keylength)           { SN_ffdhe ## sz, NID_ffdhe ## sz }
+# define MODP(sz, keylength)            { SN_modp_ ## sz, NID_modp_ ## sz }
 # define RFC5114(name, uid, sz, tag)    { name, uid }
 
 #endif

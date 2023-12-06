@@ -147,7 +147,7 @@ int BN_X931_derive_prime_ex(BIGNUM *p, BIGNUM *p1, BIGNUM *p2,
 
     ret = 1;
 
- err:
+err:
 
     BN_CTX_end(ctx);
 
@@ -203,7 +203,7 @@ int BN_X931_generate_Xpq(BIGNUM *Xp, BIGNUM *Xq, int nbits, BN_CTX *ctx)
 
     return 0;
 
- err:
+err:
     BN_CTX_end(ctx);
     return 0;
 }
@@ -240,7 +240,7 @@ int BN_X931_generate_prime_ex(BIGNUM *p, BIGNUM *p1, BIGNUM *p2,
 
     ret = 1;
 
- error:
+error:
     BN_CTX_end(ctx);
 
     return ret;

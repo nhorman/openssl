@@ -125,60 +125,61 @@ static int pkey_dsa_ctrl(EVP_PKEY_CTX *ctx, int type, int p1, void *p2)
     DSA_PKEY_CTX *dctx = ctx->data;
 
     switch (type) {
-    case EVP_PKEY_CTRL_DSA_PARAMGEN_BITS:
-        if (p1 < 256)
+        case EVP_PKEY_CTRL_DSA_PARAMGEN_BITS:
+            if (p1 < 256)
+                return -2;
+            dctx->nbits = p1;
+            return 1;
+
+        case EVP_PKEY_CTRL_DSA_PARAMGEN_Q_BITS:
+            if (p1 != 160 && p1 != 224 && p1 && p1 != 256)
+                return -2;
+            dctx->qbits = p1;
+            return 1;
+
+        case EVP_PKEY_CTRL_DSA_PARAMGEN_MD:
+            if (EVP_MD_get_type((const EVP_MD *)p2) != NID_sha1 &&
+                EVP_MD_get_type((const EVP_MD *)p2) != NID_sha224 &&
+                EVP_MD_get_type((const EVP_MD *)p2) != NID_sha256) {
+                ERR_raise(ERR_LIB_DSA, DSA_R_INVALID_DIGEST_TYPE);
+                return 0;
+            }
+            dctx->pmd = p2;
+            return 1;
+
+        case EVP_PKEY_CTRL_MD:
+            if (EVP_MD_get_type((const EVP_MD *)p2) != NID_sha1 &&
+                EVP_MD_get_type((const EVP_MD *)p2) != NID_dsa &&
+                EVP_MD_get_type((const EVP_MD *)p2) != NID_dsaWithSHA &&
+                EVP_MD_get_type((const EVP_MD *)p2) != NID_sha224 &&
+                EVP_MD_get_type((const EVP_MD *)p2) != NID_sha256 &&
+                EVP_MD_get_type((const EVP_MD *)p2) != NID_sha384 &&
+                EVP_MD_get_type((const EVP_MD *)p2) != NID_sha512 &&
+                EVP_MD_get_type((const EVP_MD *)p2) != NID_sha3_224 &&
+                EVP_MD_get_type((const EVP_MD *)p2) != NID_sha3_256 &&
+                EVP_MD_get_type((const EVP_MD *)p2) != NID_sha3_384 &&
+                EVP_MD_get_type((const EVP_MD *)p2) != NID_sha3_512) {
+                ERR_raise(ERR_LIB_DSA, DSA_R_INVALID_DIGEST_TYPE);
+                return 0;
+            }
+            dctx->md = p2;
+            return 1;
+
+        case EVP_PKEY_CTRL_GET_MD:
+            *(const EVP_MD **)p2 = dctx->md;
+            return 1;
+
+        case EVP_PKEY_CTRL_DIGESTINIT:
+        case EVP_PKEY_CTRL_PKCS7_SIGN:
+        case EVP_PKEY_CTRL_CMS_SIGN:
+            return 1;
+
+        case EVP_PKEY_CTRL_PEER_KEY:
+            ERR_raise(ERR_LIB_DSA,
+                      EVP_R_OPERATION_NOT_SUPPORTED_FOR_THIS_KEYTYPE);
             return -2;
-        dctx->nbits = p1;
-        return 1;
-
-    case EVP_PKEY_CTRL_DSA_PARAMGEN_Q_BITS:
-        if (p1 != 160 && p1 != 224 && p1 && p1 != 256)
+        default:
             return -2;
-        dctx->qbits = p1;
-        return 1;
-
-    case EVP_PKEY_CTRL_DSA_PARAMGEN_MD:
-        if (EVP_MD_get_type((const EVP_MD *)p2) != NID_sha1 &&
-            EVP_MD_get_type((const EVP_MD *)p2) != NID_sha224 &&
-            EVP_MD_get_type((const EVP_MD *)p2) != NID_sha256) {
-            ERR_raise(ERR_LIB_DSA, DSA_R_INVALID_DIGEST_TYPE);
-            return 0;
-        }
-        dctx->pmd = p2;
-        return 1;
-
-    case EVP_PKEY_CTRL_MD:
-        if (EVP_MD_get_type((const EVP_MD *)p2) != NID_sha1 &&
-            EVP_MD_get_type((const EVP_MD *)p2) != NID_dsa &&
-            EVP_MD_get_type((const EVP_MD *)p2) != NID_dsaWithSHA &&
-            EVP_MD_get_type((const EVP_MD *)p2) != NID_sha224 &&
-            EVP_MD_get_type((const EVP_MD *)p2) != NID_sha256 &&
-            EVP_MD_get_type((const EVP_MD *)p2) != NID_sha384 &&
-            EVP_MD_get_type((const EVP_MD *)p2) != NID_sha512 &&
-            EVP_MD_get_type((const EVP_MD *)p2) != NID_sha3_224 &&
-            EVP_MD_get_type((const EVP_MD *)p2) != NID_sha3_256 &&
-            EVP_MD_get_type((const EVP_MD *)p2) != NID_sha3_384 &&
-            EVP_MD_get_type((const EVP_MD *)p2) != NID_sha3_512) {
-            ERR_raise(ERR_LIB_DSA, DSA_R_INVALID_DIGEST_TYPE);
-            return 0;
-        }
-        dctx->md = p2;
-        return 1;
-
-    case EVP_PKEY_CTRL_GET_MD:
-        *(const EVP_MD **)p2 = dctx->md;
-        return 1;
-
-    case EVP_PKEY_CTRL_DIGESTINIT:
-    case EVP_PKEY_CTRL_PKCS7_SIGN:
-    case EVP_PKEY_CTRL_CMS_SIGN:
-        return 1;
-
-    case EVP_PKEY_CTRL_PEER_KEY:
-        ERR_raise(ERR_LIB_DSA, EVP_R_OPERATION_NOT_SUPPORTED_FOR_THIS_KEYTYPE);
-        return -2;
-    default:
-        return -2;
 
     }
 }

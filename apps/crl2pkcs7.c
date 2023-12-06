@@ -63,43 +63,43 @@ int crl2pkcs7_main(int argc, char **argv)
     prog = opt_init(argc, argv, crl2pkcs7_options);
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_EOF:
-        case OPT_ERR:
- opthelp:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto end;
-        case OPT_HELP:
-            opt_help(crl2pkcs7_options);
-            ret = 0;
-            goto end;
-        case OPT_INFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &informat))
-                goto opthelp;
-            break;
-        case OPT_OUTFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &outformat))
-                goto opthelp;
-            break;
-        case OPT_IN:
-            infile = opt_arg();
-            break;
-        case OPT_OUT:
-            outfile = opt_arg();
-            break;
-        case OPT_NOCRL:
-            nocrl = 1;
-            break;
-        case OPT_CERTFILE:
-            if ((certflst == NULL)
-                && (certflst = sk_OPENSSL_STRING_new_null()) == NULL)
+            case OPT_EOF:
+            case OPT_ERR:
+opthelp:
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
                 goto end;
-            if (!sk_OPENSSL_STRING_push(certflst, opt_arg()))
+            case OPT_HELP:
+                opt_help(crl2pkcs7_options);
+                ret = 0;
                 goto end;
-            break;
-        case OPT_PROV_CASES:
-            if (!opt_provider(o))
-                goto end;
-            break;
+            case OPT_INFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &informat))
+                    goto opthelp;
+                break;
+            case OPT_OUTFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &outformat))
+                    goto opthelp;
+                break;
+            case OPT_IN:
+                infile = opt_arg();
+                break;
+            case OPT_OUT:
+                outfile = opt_arg();
+                break;
+            case OPT_NOCRL:
+                nocrl = 1;
+                break;
+            case OPT_CERTFILE:
+                if ((certflst == NULL)
+                    && (certflst = sk_OPENSSL_STRING_new_null()) == NULL)
+                    goto end;
+                if (!sk_OPENSSL_STRING_push(certflst, opt_arg()))
+                    goto end;
+                break;
+            case OPT_PROV_CASES:
+                if (!opt_provider(o))
+                    goto end;
+                break;
         }
     }
 
@@ -171,7 +171,7 @@ int crl2pkcs7_main(int argc, char **argv)
         goto end;
     }
     ret = 0;
- end:
+end:
     sk_OPENSSL_STRING_free(certflst);
     BIO_free(in);
     BIO_free_all(out);
@@ -224,7 +224,7 @@ static int add_certs_from_file(STACK_OF(X509) *stack, char *certfile)
     }
 
     ret = count;
- end:
+end:
     /* never need to OPENSSL_free x */
     BIO_free(in);
     sk_X509_INFO_free(sk);

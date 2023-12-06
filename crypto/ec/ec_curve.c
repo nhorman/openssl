@@ -25,7 +25,7 @@
 typedef struct {
     int field_type,             /* either NID_X9_62_prime_field or
                                  * NID_X9_62_characteristic_two_field */
-     seed_len, param_len;
+        seed_len, param_len;
     unsigned int cofactor;      /* promoted to BN_ULONG */
 } EC_CURVE_DATA;
 
@@ -2783,7 +2783,7 @@ static const struct {
     unsigned char data[0 + 32 * 6];
 } _EC_sm2p256v1 = {
     {
-       NID_X9_62_prime_field, 0, 32, 1
+        NID_X9_62_prime_field, 0, 32, 1
     },
     {
         /* no seed */
@@ -3270,7 +3270,7 @@ static EC_GROUP *ec_group_new_from_data(OSSL_LIB_CTX *libctx,
 #endif
 
     ok = 1;
- err:
+err:
     if (!ok) {
         EC_GROUP_free(group);
         group = NULL;
@@ -3397,14 +3397,15 @@ int ossl_ec_curve_nid_from_params(const EC_GROUP *group, BN_CTX *ctx)
      */
     /* Get p, a & b */
     if (!(EC_GROUP_get_curve(group, bn[0], bn[1], bn[2], ctx)
-        && ((generator = EC_GROUP_get0_generator(group)) != NULL)
-        /* Get x & y */
-        && EC_POINT_get_affine_coordinates(group, generator, bn[3], bn[4], ctx)
-        /* Get order */
-        && EC_GROUP_get_order(group, bn[5], ctx)))
+          && ((generator = EC_GROUP_get0_generator(group)) != NULL)
+          /* Get x & y */
+          && EC_POINT_get_affine_coordinates(group, generator, bn[3], bn[4],
+                                             ctx)
+          /* Get order */
+          && EC_GROUP_get_order(group, bn[5], ctx)))
         goto end;
 
-   /*
+    /*
      * Convert the bignum array to bytes that are joined together to form
      * a single buffer that contains data for all fields.
      * (p, a, b, x, y, order) are all zero padded to be the same size.
@@ -3432,10 +3433,10 @@ int ossl_ec_curve_nid_from_params(const EC_GROUP *group, BN_CTX *ctx)
             /* Check the optional seed (ignore if its not set) */
             && (data->seed_len == 0 || seed_len == 0
                 || ((size_t)data->seed_len == seed_len
-                     && memcmp(params_seed, seed, seed_len) == 0))
+                    && memcmp(params_seed, seed, seed_len) == 0))
             /* Check that the groups params match the built-in curve params */
             && memcmp(param_bytes, params, param_len * NUM_BN_FIELDS)
-                             == 0) {
+            == 0) {
             ret = curve.nid;
             goto end;
         }

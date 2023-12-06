@@ -118,10 +118,10 @@ int setup_tests(void)
 
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_TEST_CASES:
-            break;
-        default:
-            return 0;
+            case OPT_TEST_CASES:
+                break;
+            default:
+                return 0;
         }
     }
     filename = test_get_argument(0);

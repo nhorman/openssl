@@ -11,7 +11,7 @@
 # define OSSL_ENGINES_E_AFALG_H
 
 # if defined(__GNUC__) && __GNUC__ >= 4 && \
-     (!defined(__STDC_VERSION__) || __STDC_VERSION__ < 199901L)
+    (!defined(__STDC_VERSION__) || __STDC_VERSION__ < 199901L)
 #  pragma GCC diagnostic ignored "-Wvariadic-macros"
 # endif
 
@@ -27,15 +27,15 @@
 
 # define ALG_ERR(x, ...) fprintf(stderr, "ALG_ERR: " x, __VA_ARGS__)
 # define ALG_PERR(x, ...) \
-                do { \
-                    fprintf(stderr, "ALG_PERR: " x, __VA_ARGS__); \
-                    perror(NULL); \
-                } while(0)
+        do { \
+            fprintf(stderr, "ALG_PERR: " x, __VA_ARGS__); \
+            perror(NULL); \
+        } while(0)
 # define ALG_PWARN(x, ...) \
-                do { \
-                    fprintf(stderr, "ALG_PERR: " x, __VA_ARGS__); \
-                    perror(NULL); \
-                } while(0)
+        do { \
+            fprintf(stderr, "ALG_PERR: " x, __VA_ARGS__); \
+            perror(NULL); \
+        } while(0)
 
 # ifndef AES_BLOCK_SIZE
 #  define AES_BLOCK_SIZE   16

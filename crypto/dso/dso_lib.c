@@ -149,7 +149,7 @@ DSO *DSO_load(DSO *dso, const char *filename, DSO_METHOD *meth, int flags)
     }
     /* Load succeeded */
     return ret;
- err:
+err:
     if (allocated)
         DSO_free(ret);
     return NULL;
@@ -195,16 +195,16 @@ long DSO_ctrl(DSO *dso, int cmd, long larg, void *parg)
      * the method-specific ctrl() function if it's something we don't handle.
      */
     switch (cmd) {
-    case DSO_CTRL_GET_FLAGS:
-        return dso->flags;
-    case DSO_CTRL_SET_FLAGS:
-        dso->flags = (int)larg;
-        return 0;
-    case DSO_CTRL_OR_FLAGS:
-        dso->flags |= (int)larg;
-        return 0;
-    default:
-        break;
+        case DSO_CTRL_GET_FLAGS:
+            return dso->flags;
+        case DSO_CTRL_SET_FLAGS:
+            dso->flags = (int)larg;
+            return 0;
+        case DSO_CTRL_OR_FLAGS:
+            dso->flags |= (int)larg;
+            return 0;
+        default:
+            break;
     }
     if ((dso->meth == NULL) || (dso->meth->dso_ctrl == NULL)) {
         ERR_raise(ERR_LIB_DSO, DSO_R_UNSUPPORTED);
@@ -310,7 +310,7 @@ DSO *DSO_dsobyaddr(void *addr, int flags)
 
     filename = OPENSSL_malloc(len);
     if (filename != NULL
-            && DSO_pathbyaddr(addr, filename, len) == len)
+        && DSO_pathbyaddr(addr, filename, len) == len)
         ret = DSO_load(NULL, filename, NULL, flags);
 
     OPENSSL_free(filename);

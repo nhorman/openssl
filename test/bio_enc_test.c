@@ -36,7 +36,7 @@ static const unsigned char IV[] = {
 };
 
 static int do_bio_cipher(const EVP_CIPHER* cipher, const unsigned char* key,
-    const unsigned char* iv)
+                         const unsigned char* iv)
 {
     BIO *b, *mem;
     static unsigned char inp[BUF_SIZE] = { 0 };

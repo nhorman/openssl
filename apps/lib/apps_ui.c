@@ -31,8 +31,8 @@ static int ui_read(UI *ui, UI_STRING *uis)
     if (UI_get_input_flags(uis) & UI_INPUT_FLAG_DEFAULT_PWD
         && UI_get0_user_data(ui)) {
         switch (UI_get_string_type(uis)) {
-        case UIT_PROMPT:
-        case UIT_VERIFY:
+            case UIT_PROMPT:
+            case UIT_VERIFY:
             {
                 const char *password =
                     ((PW_CB_DATA *)UI_get0_user_data(ui))->password;
@@ -43,11 +43,11 @@ static int ui_read(UI *ui, UI_STRING *uis)
                 }
             }
             break;
-        case UIT_NONE:
-        case UIT_BOOLEAN:
-        case UIT_INFO:
-        case UIT_ERROR:
-            break;
+            case UIT_NONE:
+            case UIT_BOOLEAN:
+            case UIT_INFO:
+            case UIT_ERROR:
+                break;
         }
     }
 
@@ -66,8 +66,8 @@ static int ui_write(UI *ui, UI_STRING *uis)
     if (UI_get_input_flags(uis) & UI_INPUT_FLAG_DEFAULT_PWD
         && UI_get0_user_data(ui)) {
         switch (UI_get_string_type(uis)) {
-        case UIT_PROMPT:
-        case UIT_VERIFY:
+            case UIT_PROMPT:
+            case UIT_VERIFY:
             {
                 const char *password =
                     ((PW_CB_DATA *)UI_get0_user_data(ui))->password;
@@ -76,11 +76,11 @@ static int ui_write(UI *ui, UI_STRING *uis)
                     return 1;
             }
             break;
-        case UIT_NONE:
-        case UIT_BOOLEAN:
-        case UIT_INFO:
-        case UIT_ERROR:
-            break;
+            case UIT_NONE:
+            case UIT_BOOLEAN:
+            case UIT_INFO:
+            case UIT_ERROR:
+                break;
         }
     }
 
@@ -128,12 +128,12 @@ int setup_ui_method(void)
 #endif
     ui_method = UI_create_method("OpenSSL application user interface");
     return ui_method != NULL
-        && 0 == UI_method_set_opener(ui_method, ui_open)
-        && 0 == UI_method_set_reader(ui_method, ui_read)
-        && 0 == UI_method_set_writer(ui_method, ui_write)
-        && 0 == UI_method_set_closer(ui_method, ui_close)
-        && 0 == UI_method_set_prompt_constructor(ui_method,
-                                                 ui_prompt_construct);
+           && 0 == UI_method_set_opener(ui_method, ui_open)
+           && 0 == UI_method_set_reader(ui_method, ui_read)
+           && 0 == UI_method_set_writer(ui_method, ui_write)
+           && 0 == UI_method_set_closer(ui_method, ui_close)
+           && 0 == UI_method_set_prompt_constructor(ui_method,
+                                                    ui_prompt_construct);
 }
 
 void destroy_ui_method(void)

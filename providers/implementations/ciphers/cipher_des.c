@@ -128,7 +128,7 @@ static int des_generatekey(PROV_CIPHER_CTX *ctx, void *ptr)
 }
 
 CIPHER_DEFAULT_GETTABLE_CTX_PARAMS_START(des)
-    OSSL_PARAM_octet_string(OSSL_CIPHER_PARAM_RANDOM_KEY, NULL, 0),
+OSSL_PARAM_octet_string(OSSL_CIPHER_PARAM_RANDOM_KEY, NULL, 0),
 CIPHER_DEFAULT_GETTABLE_CTX_PARAMS_END(des)
 
 static int des_get_ctx_params(void *vctx, OSSL_PARAM params[])
@@ -149,43 +149,48 @@ static int des_get_ctx_params(void *vctx, OSSL_PARAM params[])
 
 #define IMPLEMENT_des_cipher(type, lcmode, UCMODE, flags,                      \
                              kbits, blkbits, ivbits, block)                    \
-static OSSL_FUNC_cipher_newctx_fn type##_##lcmode##_newctx;                    \
-static void *des_##lcmode##_newctx(void *provctx)                              \
-{                                                                              \
-    return des_newctx(provctx, kbits, blkbits, ivbits,                         \
-                      EVP_CIPH_##UCMODE##_MODE, flags,                         \
-                      ossl_prov_cipher_hw_des_##lcmode());                          \
-}                                                                              \
-static OSSL_FUNC_cipher_get_params_fn des_##lcmode##_get_params;               \
-static int des_##lcmode##_get_params(OSSL_PARAM params[])                      \
-{                                                                              \
-    return ossl_cipher_generic_get_params(params, EVP_CIPH_##UCMODE##_MODE,    \
-                                          flags, kbits, blkbits, ivbits);      \
-}                                                                              \
-const OSSL_DISPATCH ossl_##des_##lcmode##_functions[] = {                      \
-    { OSSL_FUNC_CIPHER_ENCRYPT_INIT, (void (*)(void))des_einit },              \
-    { OSSL_FUNC_CIPHER_DECRYPT_INIT, (void (*)(void))des_dinit },              \
-    { OSSL_FUNC_CIPHER_UPDATE,                                                 \
-      (void (*)(void))ossl_cipher_generic_##block##_update },                  \
-    { OSSL_FUNC_CIPHER_FINAL, (void (*)(void))ossl_cipher_generic_##block##_final },\
-    { OSSL_FUNC_CIPHER_CIPHER, (void (*)(void))ossl_cipher_generic_cipher },   \
-    { OSSL_FUNC_CIPHER_NEWCTX,                                                 \
-      (void (*)(void))des_##lcmode##_newctx },                                 \
-    { OSSL_FUNC_CIPHER_DUPCTX, (void (*)(void))des_dupctx },                   \
-    { OSSL_FUNC_CIPHER_FREECTX, (void (*)(void))des_freectx },                 \
-    { OSSL_FUNC_CIPHER_GET_PARAMS,                                             \
-      (void (*)(void))des_##lcmode##_get_params },                             \
-    { OSSL_FUNC_CIPHER_GETTABLE_PARAMS,                                        \
-      (void (*)(void))ossl_cipher_generic_gettable_params },                   \
-    { OSSL_FUNC_CIPHER_GET_CTX_PARAMS, (void (*)(void))des_get_ctx_params },   \
-    { OSSL_FUNC_CIPHER_GETTABLE_CTX_PARAMS,                                    \
-      (void (*)(void))des_gettable_ctx_params },                               \
-    { OSSL_FUNC_CIPHER_SET_CTX_PARAMS,                                         \
-     (void (*)(void))ossl_cipher_generic_set_ctx_params },                     \
-    { OSSL_FUNC_CIPHER_SETTABLE_CTX_PARAMS,                                    \
-     (void (*)(void))ossl_cipher_generic_settable_ctx_params },                \
-    OSSL_DISPATCH_END                                                          \
-}
+        static OSSL_FUNC_cipher_newctx_fn type ## _ ## lcmode ## _newctx;                    \
+        static void *des_ ## lcmode ## _newctx(void *provctx)                              \
+        {                                                                              \
+            return des_newctx(provctx, kbits, blkbits, ivbits,                         \
+                              EVP_CIPH_ ## UCMODE ## _MODE, flags,                         \
+                              ossl_prov_cipher_hw_des_ ## lcmode());                          \
+        }                                                                              \
+        static OSSL_FUNC_cipher_get_params_fn des_ ## lcmode ## _get_params;               \
+        static int des_ ## lcmode ## _get_params(OSSL_PARAM params[])                      \
+        {                                                                              \
+            return ossl_cipher_generic_get_params(params, \
+                                                  EVP_CIPH_ ## UCMODE ## _MODE,    \
+                                                  flags, kbits, blkbits, \
+                                                  ivbits);      \
+        }                                                                              \
+        const OSSL_DISPATCH ossl_ ## des_ ## lcmode ## _functions[] = {                      \
+            { OSSL_FUNC_CIPHER_ENCRYPT_INIT, (void (*)(void)) des_einit },              \
+            { OSSL_FUNC_CIPHER_DECRYPT_INIT, (void (*)(void)) des_dinit },              \
+            { OSSL_FUNC_CIPHER_UPDATE,                                                 \
+              (void (*)(void)) ossl_cipher_generic_ ## block ## _update },                  \
+            { OSSL_FUNC_CIPHER_FINAL, \
+              (void (*)(void)) ossl_cipher_generic_ ## block ## _final }, \
+            { OSSL_FUNC_CIPHER_CIPHER, \
+              (void (*)(void)) ossl_cipher_generic_cipher },   \
+            { OSSL_FUNC_CIPHER_NEWCTX,                                                 \
+              (void (*)(void)) des_ ## lcmode ## _newctx },                                 \
+            { OSSL_FUNC_CIPHER_DUPCTX, (void (*)(void)) des_dupctx },                   \
+            { OSSL_FUNC_CIPHER_FREECTX, (void (*)(void)) des_freectx },                 \
+            { OSSL_FUNC_CIPHER_GET_PARAMS,                                             \
+              (void (*)(void)) des_ ## lcmode ## _get_params },                             \
+            { OSSL_FUNC_CIPHER_GETTABLE_PARAMS,                                        \
+              (void (*)(void)) ossl_cipher_generic_gettable_params },                   \
+            { OSSL_FUNC_CIPHER_GET_CTX_PARAMS, \
+              (void (*)(void)) des_get_ctx_params },   \
+            { OSSL_FUNC_CIPHER_GETTABLE_CTX_PARAMS,                                    \
+              (void (*)(void)) des_gettable_ctx_params },                               \
+            { OSSL_FUNC_CIPHER_SET_CTX_PARAMS,                                         \
+              (void (*)(void)) ossl_cipher_generic_set_ctx_params },                     \
+            { OSSL_FUNC_CIPHER_SETTABLE_CTX_PARAMS,                                    \
+              (void (*)(void)) ossl_cipher_generic_settable_ctx_params },                \
+            OSSL_DISPATCH_END                                                          \
+        }
 
 /* ossl_des_ecb_functions */
 IMPLEMENT_des_cipher(des, ecb, ECB, DES_FLAGS, 64, 64, 0, block);

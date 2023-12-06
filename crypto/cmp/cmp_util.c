@@ -142,7 +142,7 @@ int OSSL_CMP_print_to_bio(BIO *bio, const char *component, const char *file,
                    file, line) < 0)
         return 0;
 #endif
-    return BIO_printf(bio, OSSL_CMP_LOG_PREFIX"%s: %s\n",
+    return BIO_printf(bio, OSSL_CMP_LOG_PREFIX "%s: %s\n",
                       level_string, msg) >= 0;
 }
 
@@ -234,7 +234,7 @@ int ossl_cmp_sk_ASN1_UTF8STRING_push_str(STACK_OF(ASN1_UTF8STRING) *sk,
         goto err;
     return 1;
 
- err:
+err:
     ASN1_UTF8STRING_free(utf8string);
     return 0;
 }
@@ -274,7 +274,7 @@ int ossl_cmp_asn1_octet_string_set1_bytes(ASN1_OCTET_STRING **tgt,
     }
     if (bytes != NULL) {
         if ((new = ASN1_OCTET_STRING_new()) == NULL
-                || !(ASN1_OCTET_STRING_set(new, bytes, len))) {
+            || !(ASN1_OCTET_STRING_set(new, bytes, len))) {
             ASN1_OCTET_STRING_free(new);
             return 0;
         }

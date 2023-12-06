@@ -47,18 +47,18 @@ static int test_encrypt_decrypt(const EVP_CIPHER *cipher)
         goto end;
 
     if (!TEST_ptr(contentbio =
-                  CMS_EnvelopedData_decrypt(content->d.envelopedData,
-                                            NULL, privkey, cert, NULL,
-                                            CMS_TEXT, NULL, NULL)))
+                      CMS_EnvelopedData_decrypt(content->d.envelopedData,
+                                                NULL, privkey, cert, NULL,
+                                                CMS_TEXT, NULL, NULL)))
         goto end;
 
     /* Check we got the message we first started with */
     if (!TEST_int_eq(BIO_gets(outmsgbio, buf, sizeof(buf)), strlen(msg))
-            || !TEST_int_eq(strcmp(buf, msg), 0))
+        || !TEST_int_eq(strcmp(buf, msg), 0))
         goto end;
 
     testresult = 1;
- end:
+end:
     BIO_free(contentbio);
     sk_X509_free(certstack);
     BIO_free(msgbio);
@@ -94,8 +94,8 @@ static int test_CMS_add1_cert(void)
     int ret = 0;
 
     ret = TEST_ptr(cms = CMS_ContentInfo_new())
-        && TEST_ptr(CMS_add1_signer(cms, cert, privkey, NULL, 0))
-        && TEST_true(CMS_add1_cert(cms, cert)); /* add cert again */
+          && TEST_ptr(CMS_add1_signer(cms, cert, privkey, NULL, 0))
+          && TEST_true(CMS_add1_cert(cms, cert)); /* add cert again */
 
     CMS_ContentInfo_free(cms);
     return ret;
@@ -304,11 +304,12 @@ static int test_d2i_CMS_bio_NULL(void)
     };
 
     ret = TEST_ptr(bio = BIO_new_mem_buf(cms_data, sizeof(cms_data)))
-        && TEST_ptr(cms = d2i_CMS_bio(bio, NULL))
-        && TEST_true(CMS_verify(cms, NULL, NULL, NULL, NULL, flags))
-        && TEST_ptr(content =
-                    CMS_SignedData_verify(cms->d.signedData, NULL, NULL, NULL,
-                                          NULL, NULL, flags, NULL, NULL));
+          && TEST_ptr(cms = d2i_CMS_bio(bio, NULL))
+          && TEST_true(CMS_verify(cms, NULL, NULL, NULL, NULL, flags))
+          && TEST_ptr(content =
+                          CMS_SignedData_verify(cms->d.signedData, NULL, NULL,
+                                                NULL,
+                                                NULL, NULL, flags, NULL, NULL));
     BIO_free(content);
     CMS_ContentInfo_free(cms);
     BIO_free(bio);
@@ -354,20 +355,20 @@ static int test_d2i_CMS_decode(const int idx)
     int ret = 0;
 
     if (!TEST_ptr(bio = BIO_new_file(derin, "r")))
-      goto end;
+        goto end;
 
     switch (idx) {
-    case 0:
-        if (!TEST_ptr(cms = d2i_CMS_bio(bio, NULL)))
-            goto end;
-        break;
-    case 1:
-        if (!TEST_ptr(buf = read_all(bio, &buf_len)))
-            goto end;
-        tmp = buf;
-        if (!TEST_ptr(cms = d2i_CMS_ContentInfo(NULL, &tmp, buf_len)))
-            goto end;
-        break;
+        case 0:
+            if (!TEST_ptr(cms = d2i_CMS_bio(bio, NULL)))
+                goto end;
+            break;
+        case 1:
+            if (!TEST_ptr(buf = read_all(bio, &buf_len)))
+                goto end;
+            tmp = buf;
+            if (!TEST_ptr(cms = d2i_CMS_ContentInfo(NULL, &tmp, buf_len)))
+                goto end;
+            break;
     }
 
     if (!TEST_int_eq(ERR_peek_error(), 0))
@@ -395,8 +396,8 @@ int setup_tests(void)
     }
 
     if (!TEST_ptr(certin = test_get_argument(0))
-            || !TEST_ptr(privkeyin = test_get_argument(1))
-            || !TEST_ptr(derin = test_get_argument(2)))
+        || !TEST_ptr(privkeyin = test_get_argument(1))
+        || !TEST_ptr(derin = test_get_argument(2)))
         return 0;
 
     certbio = BIO_new_file(certin, "r");

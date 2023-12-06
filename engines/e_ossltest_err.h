@@ -16,7 +16,8 @@
 # include <openssl/symhacks.h>
 
 
-# define OSSLTESTerr(f, r) ERR_OSSLTEST_error(0, (r), OPENSSL_FILE, OPENSSL_LINE)
+# define OSSLTESTerr(f, r) ERR_OSSLTEST_error(0, (r), OPENSSL_FILE, \
+                                              OPENSSL_LINE)
 
 
 /*

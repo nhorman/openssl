@@ -112,8 +112,8 @@ static void *kdf_scrypt_dup(void *vctx)
         }
         if (!ossl_prov_memdup(src->salt, src->salt_len,
                               &dest->salt, &dest->salt_len)
-                || !ossl_prov_memdup(src->pass, src->pass_len,
-                                     &dest->pass , &dest->pass_len))
+            || !ossl_prov_memdup(src->pass, src->pass_len,
+                                 &dest->pass, &dest->pass_len))
             goto err;
         dest->N = src->N;
         dest->r = src->r;
@@ -123,7 +123,7 @@ static void *kdf_scrypt_dup(void *vctx)
     }
     return dest;
 
- err:
+err:
     kdf_scrypt_free(dest);
     return NULL;
 }
@@ -306,17 +306,19 @@ static const OSSL_PARAM *kdf_scrypt_gettable_ctx_params(ossl_unused void *ctx,
 }
 
 const OSSL_DISPATCH ossl_kdf_scrypt_functions[] = {
-    { OSSL_FUNC_KDF_NEWCTX, (void(*)(void))kdf_scrypt_new },
-    { OSSL_FUNC_KDF_DUPCTX, (void(*)(void))kdf_scrypt_dup },
-    { OSSL_FUNC_KDF_FREECTX, (void(*)(void))kdf_scrypt_free },
-    { OSSL_FUNC_KDF_RESET, (void(*)(void))kdf_scrypt_reset },
-    { OSSL_FUNC_KDF_DERIVE, (void(*)(void))kdf_scrypt_derive },
+    { OSSL_FUNC_KDF_NEWCTX, (void (*)(void)) kdf_scrypt_new },
+    { OSSL_FUNC_KDF_DUPCTX, (void (*)(void)) kdf_scrypt_dup },
+    { OSSL_FUNC_KDF_FREECTX, (void (*)(void)) kdf_scrypt_free },
+    { OSSL_FUNC_KDF_RESET, (void (*)(void)) kdf_scrypt_reset },
+    { OSSL_FUNC_KDF_DERIVE, (void (*)(void)) kdf_scrypt_derive },
     { OSSL_FUNC_KDF_SETTABLE_CTX_PARAMS,
-      (void(*)(void))kdf_scrypt_settable_ctx_params },
-    { OSSL_FUNC_KDF_SET_CTX_PARAMS, (void(*)(void))kdf_scrypt_set_ctx_params },
+      (void (*)(void)) kdf_scrypt_settable_ctx_params },
+    { OSSL_FUNC_KDF_SET_CTX_PARAMS,
+      (void (*)(void)) kdf_scrypt_set_ctx_params },
     { OSSL_FUNC_KDF_GETTABLE_CTX_PARAMS,
-      (void(*)(void))kdf_scrypt_gettable_ctx_params },
-    { OSSL_FUNC_KDF_GET_CTX_PARAMS, (void(*)(void))kdf_scrypt_get_ctx_params },
+      (void (*)(void)) kdf_scrypt_gettable_ctx_params },
+    { OSSL_FUNC_KDF_GET_CTX_PARAMS,
+      (void (*)(void)) kdf_scrypt_get_ctx_params },
     OSSL_DISPATCH_END
 };
 
@@ -537,7 +539,7 @@ static int scrypt_alg(const char *pass, size_t passlen,
                                   keylen, key, libctx, propq) == 0)
         goto err;
     rv = 1;
- err:
+err:
     if (rv == 0)
         ERR_raise(ERR_LIB_EVP, EVP_R_PBKDF2_ERROR);
 

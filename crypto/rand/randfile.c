@@ -54,7 +54,7 @@
  * is as questionable, we settle for this poor-man fallback...
  */
 # if !defined(S_ISREG)
-#   define S_ISREG(m) ((m) & S_IFREG)
+#   define S_ISREG(m) ((m)&S_IFREG)
 # endif
 
 #define RAND_BUF_SIZE 1024
@@ -70,7 +70,7 @@
  * passing in sharing options being disabled by /STANDARD=ANSI89
  */
 static __FILE_ptr32 (*const vms_fopen)(const char *, const char *, ...) =
-        (__FILE_ptr32 (*)(const char *, const char *, ...))fopen;
+    (__FILE_ptr32 (*)(const char *, const char *, ...)) fopen;
 # define VMS_OPEN_ATTRS \
         "shr=get,put,upd,del","ctx=bin,stm","rfm=stm","rat=none","mrs=0"
 # define openssl_fopen(fname, mode) vms_fopen((fname), (mode), VMS_OPEN_ATTRS)
@@ -195,7 +195,7 @@ int RAND_write_file(const char *file)
 
     /* Collect enough random data. */
     if (RAND_priv_bytes(buf, (int)sizeof(buf)) != 1)
-        return  -1;
+        return -1;
 
 #if defined(O_CREAT) && !defined(OPENSSL_NO_POSIX_IO) && \
     !defined(OPENSSL_SYS_VMS) && !defined(OPENSSL_SYS_WINDOWS)
@@ -269,8 +269,8 @@ const char *RAND_file_name(char *buf, size_t size)
     if ((envlen = GetEnvironmentVariableW(var = L"RANDFILE", NULL, 0)) == 0) {
         use_randfile = 0;
         if ((envlen = GetEnvironmentVariableW(var = L"HOME", NULL, 0)) == 0
-                && (envlen = GetEnvironmentVariableW(var = L"USERPROFILE",
-                                                  NULL, 0)) == 0)
+            && (envlen = GetEnvironmentVariableW(var = L"USERPROFILE",
+                                                 NULL, 0)) == 0)
             envlen = GetEnvironmentVariableW(var = L"SYSTEMROOT", NULL, 0);
     }
 
@@ -280,8 +280,8 @@ const char *RAND_file_name(char *buf, size_t size)
         WCHAR *val = _alloca(envlen * sizeof(WCHAR));
 
         if (GetEnvironmentVariableW(var, val, envlen) < envlen
-                && (sz = WideCharToMultiByte(CP_UTF8, 0, val, -1, NULL, 0,
-                                             NULL, NULL)) != 0) {
+            && (sz = WideCharToMultiByte(CP_UTF8, 0, val, -1, NULL, 0,
+                                         NULL, NULL)) != 0) {
             s = _alloca(sz);
             if (WideCharToMultiByte(CP_UTF8, 0, val, -1, s, sz,
                                     NULL, NULL) == 0)

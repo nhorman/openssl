@@ -114,23 +114,23 @@ static void ssl_set_option(SSL_CONF_CTX *cctx, unsigned int name_flags,
         onoff ^= 1;
     switch (name_flags & SSL_TFLAG_TYPE_MASK) {
 
-    case SSL_TFLAG_CERT:
-        pflags = cctx->pcert_flags;
-        break;
+        case SSL_TFLAG_CERT:
+            pflags = cctx->pcert_flags;
+            break;
 
-    case SSL_TFLAG_VFY:
-        pflags = cctx->pvfy_flags;
-        break;
+        case SSL_TFLAG_VFY:
+            pflags = cctx->pvfy_flags;
+            break;
 
-    case SSL_TFLAG_OPTION:
-        if (onoff)
-            *cctx->poptions |= option_value;
-        else
-            *cctx->poptions &= ~option_value;
-        return;
+        case SSL_TFLAG_OPTION:
+            if (onoff)
+                *cctx->poptions |= option_value;
+            else
+                *cctx->poptions &= ~option_value;
+            return;
 
-    default:
-        return;
+        default:
+            return;
 
     }
     if (onoff)
@@ -233,8 +233,8 @@ static int cmd_ECDHParameters(SSL_CONF_CTX *cctx, const char *value)
 
     /* Ignore values supported by 1.0.2 for the automatic selection */
     if ((cctx->flags & SSL_CONF_FLAG_FILE)
-            && (OPENSSL_strcasecmp(value, "+automatic") == 0
-                || OPENSSL_strcasecmp(value, "automatic") == 0))
+        && (OPENSSL_strcasecmp(value, "+automatic") == 0
+            || OPENSSL_strcasecmp(value, "automatic") == 0))
         return 1;
     if ((cctx->flags & SSL_CONF_FLAG_CMDLINE) &&
         strcmp(value, "auto") == 0)
@@ -395,13 +395,17 @@ static int cmd_Options(SSL_CONF_CTX *cctx, const char *value)
         SSL_FLAG_TBL("PrioritizeChaCha", SSL_OP_PRIORITIZE_CHACHA),
         SSL_FLAG_TBL("MiddleboxCompat", SSL_OP_ENABLE_MIDDLEBOX_COMPAT),
         SSL_FLAG_TBL_INV("AntiReplay", SSL_OP_NO_ANTI_REPLAY),
-        SSL_FLAG_TBL_INV("ExtendedMasterSecret", SSL_OP_NO_EXTENDED_MASTER_SECRET),
+        SSL_FLAG_TBL_INV("ExtendedMasterSecret",
+                         SSL_OP_NO_EXTENDED_MASTER_SECRET),
         SSL_FLAG_TBL_INV("CANames", SSL_OP_DISABLE_TLSEXT_CA_NAMES),
         SSL_FLAG_TBL("KTLS", SSL_OP_ENABLE_KTLS),
         SSL_FLAG_TBL_CERT("StrictCertCheck", SSL_CERT_FLAG_TLS_STRICT),
-        SSL_FLAG_TBL_INV("TxCertificateCompression", SSL_OP_NO_TX_CERTIFICATE_COMPRESSION),
-        SSL_FLAG_TBL_INV("RxCertificateCompression", SSL_OP_NO_RX_CERTIFICATE_COMPRESSION),
-        SSL_FLAG_TBL("KTLSTxZerocopySendfile", SSL_OP_ENABLE_KTLS_TX_ZEROCOPY_SENDFILE),
+        SSL_FLAG_TBL_INV("TxCertificateCompression",
+                         SSL_OP_NO_TX_CERTIFICATE_COMPRESSION),
+        SSL_FLAG_TBL_INV("RxCertificateCompression",
+                         SSL_OP_NO_RX_CERTIFICATE_COMPRESSION),
+        SSL_FLAG_TBL("KTLSTxZerocopySendfile",
+                     SSL_OP_ENABLE_KTLS_TX_ZEROCOPY_SENDFILE),
         SSL_FLAG_TBL("IgnoreUnexpectedEOF", SSL_OP_IGNORE_UNEXPECTED_EOF),
     };
     if (value == NULL)
@@ -643,7 +647,7 @@ static int cmd_DHParameters(SSL_CONF_CTX *cctx, const char *value)
         if ((rv = SSL_set0_tmp_dh_pkey(cctx->ssl, dhpkey)) > 0)
             dhpkey = NULL;
     }
- end:
+end:
     EVP_PKEY_free(dhpkey);
     BIO_free(in);
     return rv > 0;
@@ -693,7 +697,7 @@ typedef struct {
 /* Table of supported parameters */
 
 #define SSL_CONF_CMD(name, cmdopt, flags, type) \
-        {cmd_##name, #name, cmdopt, flags, type}
+        {cmd_ ## name, #name, cmdopt, flags, type}
 
 #define SSL_CONF_CMD_STRING(name, cmdopt, flags) \
         SSL_CONF_CMD(name, cmdopt, flags, SSL_CONF_TYPE_STRING)

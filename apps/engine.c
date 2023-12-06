@@ -134,8 +134,8 @@ static int util_flags(BIO *out, unsigned int flags, const char *indent)
     }
     /* Check for unknown flags */
     flags = flags & ~ENGINE_CMD_FLAG_NUMERIC &
-        ~ENGINE_CMD_FLAG_STRING &
-        ~ENGINE_CMD_FLAG_NO_INPUT & ~ENGINE_CMD_FLAG_INTERNAL;
+            ~ENGINE_CMD_FLAG_STRING &
+            ~ENGINE_CMD_FLAG_NO_INPUT & ~ENGINE_CMD_FLAG_INTERNAL;
     if (flags) {
         if (started)
             BIO_printf(out, "|");
@@ -229,7 +229,7 @@ static int util_verbose(ENGINE *e, int verbose, BIO *out, const char *indent)
     if (xpos > 0)
         BIO_printf(out, "\n");
     ret = 1;
- err:
+err:
     sk_OPENSSL_STRING_free(cmds);
     OPENSSL_free(name);
     OPENSSL_free(desc);
@@ -325,38 +325,38 @@ int engine_main(int argc, char **argv)
 
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_EOF:
-        case OPT_ERR:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto end;
-        case OPT_HELP:
-            opt_help(engine_options);
-            ret = 0;
-            goto end;
-        case OPT_VVVV:
-        case OPT_VVV:
-        case OPT_VV:
-        case OPT_V:
-            /* Convert to an integer from one to four. */
-            i = (int)(o - OPT_V) + 1;
-            if (verbose < i)
-                verbose = i;
-            break;
-        case OPT_C:
-            list_cap = 1;
-            break;
-        case OPT_TT:
-            test_avail_noise++;
+            case OPT_EOF:
+            case OPT_ERR:
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
+                goto end;
+            case OPT_HELP:
+                opt_help(engine_options);
+                ret = 0;
+                goto end;
+            case OPT_VVVV:
+            case OPT_VVV:
+            case OPT_VV:
+            case OPT_V:
+                /* Convert to an integer from one to four. */
+                i = (int)(o - OPT_V) + 1;
+                if (verbose < i)
+                    verbose = i;
+                break;
+            case OPT_C:
+                list_cap = 1;
+                break;
+            case OPT_TT:
+                test_avail_noise++;
             /* fall through */
-        case OPT_T:
-            test_avail++;
-            break;
-        case OPT_PRE:
-            sk_OPENSSL_STRING_push(pre_cmds, opt_arg());
-            break;
-        case OPT_POST:
-            sk_OPENSSL_STRING_push(post_cmds, opt_arg());
-            break;
+            case OPT_T:
+                test_avail++;
+                break;
+            case OPT_PRE:
+                sk_OPENSSL_STRING_push(pre_cmds, opt_arg());
+                break;
+            case OPT_POST:
+                sk_OPENSSL_STRING_push(post_cmds, opt_arg());
+                break;
         }
     }
 
@@ -423,7 +423,7 @@ int engine_main(int argc, char **argv)
                     if (!append_buf(&cap_buf, &cap_size, OBJ_nid2sn(nids[k])))
                         goto end;
 
- skip_ciphers:
+skip_ciphers:
                 fn_d = ENGINE_get_digests(e);
                 if (fn_d == NULL)
                     goto skip_digests;
@@ -432,7 +432,7 @@ int engine_main(int argc, char **argv)
                     if (!append_buf(&cap_buf, &cap_size, OBJ_nid2sn(nids[k])))
                         goto end;
 
- skip_digests:
+skip_digests:
                 fn_pk = ENGINE_get_pkey_meths(e);
                 if (fn_pk == NULL)
                     goto skip_pmeths;
@@ -440,7 +440,7 @@ int engine_main(int argc, char **argv)
                 for (k = 0; k < n; ++k)
                     if (!append_buf(&cap_buf, &cap_size, OBJ_nid2sn(nids[k])))
                         goto end;
- skip_pmeths:
+skip_pmeths:
                 {
                     struct util_store_cap_data store_ctx;
 
@@ -482,7 +482,7 @@ int engine_main(int argc, char **argv)
         }
     }
 
- end:
+end:
 
     ERR_print_errors(bio_err);
     sk_OPENSSL_CSTRING_free(engines);

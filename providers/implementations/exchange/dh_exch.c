@@ -98,9 +98,9 @@ static int dh_init(void *vpdhctx, void *vdh, const OSSL_PARAM params[])
     PROV_DH_CTX *pdhctx = (PROV_DH_CTX *)vpdhctx;
 
     if (!ossl_prov_is_running()
-            || pdhctx == NULL
-            || vdh == NULL
-            || !DH_up_ref(vdh))
+        || pdhctx == NULL
+        || vdh == NULL
+        || !DH_up_ref(vdh))
         return 0;
     DH_free(pdhctx->dh);
     pdhctx->dh = vdh;
@@ -129,10 +129,10 @@ static int dh_set_peer(void *vpdhctx, void *vdh)
     PROV_DH_CTX *pdhctx = (PROV_DH_CTX *)vpdhctx;
 
     if (!ossl_prov_is_running()
-            || pdhctx == NULL
-            || vdh == NULL
-            || !dh_match_params(vdh, pdhctx->dh)
-            || !DH_up_ref(vdh))
+        || pdhctx == NULL
+        || vdh == NULL
+        || !dh_match_params(vdh, pdhctx->dh)
+        || !DH_up_ref(vdh))
         return 0;
     DH_free(pdhctx->dhpeer);
     pdhctx->dhpeer = vdh;
@@ -470,9 +470,10 @@ static int dh_get_ctx_params(void *vpdhctx, OSSL_PARAM params[])
 
     p = OSSL_PARAM_locate(params, OSSL_EXCHANGE_PARAM_KDF_DIGEST);
     if (p != NULL
-            && !OSSL_PARAM_set_utf8_string(p, pdhctx->kdf_md == NULL
+        && !OSSL_PARAM_set_utf8_string(p, pdhctx->kdf_md == NULL
                                            ? ""
-                                           : EVP_MD_get0_name(pdhctx->kdf_md))) {
+                                           : EVP_MD_get0_name(pdhctx->kdf_md)))
+    {
         return 0;
     }
 
@@ -487,7 +488,7 @@ static int dh_get_ctx_params(void *vpdhctx, OSSL_PARAM params[])
 
     p = OSSL_PARAM_locate(params, OSSL_KDF_PARAM_CEK_ALG);
     if (p != NULL
-            && !OSSL_PARAM_set_utf8_string(p, pdhctx->kdf_cekalg == NULL
+        && !OSSL_PARAM_set_utf8_string(p, pdhctx->kdf_cekalg == NULL
                                            ? "" :  pdhctx->kdf_cekalg))
         return 0;
 
@@ -495,17 +496,17 @@ static int dh_get_ctx_params(void *vpdhctx, OSSL_PARAM params[])
 }
 
 const OSSL_DISPATCH ossl_dh_keyexch_functions[] = {
-    { OSSL_FUNC_KEYEXCH_NEWCTX, (void (*)(void))dh_newctx },
-    { OSSL_FUNC_KEYEXCH_INIT, (void (*)(void))dh_init },
-    { OSSL_FUNC_KEYEXCH_DERIVE, (void (*)(void))dh_derive },
-    { OSSL_FUNC_KEYEXCH_SET_PEER, (void (*)(void))dh_set_peer },
-    { OSSL_FUNC_KEYEXCH_FREECTX, (void (*)(void))dh_freectx },
-    { OSSL_FUNC_KEYEXCH_DUPCTX, (void (*)(void))dh_dupctx },
-    { OSSL_FUNC_KEYEXCH_SET_CTX_PARAMS, (void (*)(void))dh_set_ctx_params },
+    { OSSL_FUNC_KEYEXCH_NEWCTX, (void (*)(void)) dh_newctx },
+    { OSSL_FUNC_KEYEXCH_INIT, (void (*)(void)) dh_init },
+    { OSSL_FUNC_KEYEXCH_DERIVE, (void (*)(void)) dh_derive },
+    { OSSL_FUNC_KEYEXCH_SET_PEER, (void (*)(void)) dh_set_peer },
+    { OSSL_FUNC_KEYEXCH_FREECTX, (void (*)(void)) dh_freectx },
+    { OSSL_FUNC_KEYEXCH_DUPCTX, (void (*)(void)) dh_dupctx },
+    { OSSL_FUNC_KEYEXCH_SET_CTX_PARAMS, (void (*)(void)) dh_set_ctx_params },
     { OSSL_FUNC_KEYEXCH_SETTABLE_CTX_PARAMS,
-      (void (*)(void))dh_settable_ctx_params },
-    { OSSL_FUNC_KEYEXCH_GET_CTX_PARAMS, (void (*)(void))dh_get_ctx_params },
+      (void (*)(void)) dh_settable_ctx_params },
+    { OSSL_FUNC_KEYEXCH_GET_CTX_PARAMS, (void (*)(void)) dh_get_ctx_params },
     { OSSL_FUNC_KEYEXCH_GETTABLE_CTX_PARAMS,
-      (void (*)(void))dh_gettable_ctx_params },
+      (void (*)(void)) dh_gettable_ctx_params },
     OSSL_DISPATCH_END
 };

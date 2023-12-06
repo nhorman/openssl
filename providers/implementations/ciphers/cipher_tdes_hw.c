@@ -34,7 +34,7 @@ int ossl_cipher_hw_tdes_ede3_initkey(PROV_CIPHER_CTX *ctx,
             des_t4_key_expand(&deskey[1], &tctx->ks2);
             des_t4_key_expand(&deskey[2], &tctx->ks3);
             tctx->tstream.cbc = ctx->enc ? des_t4_ede3_cbc_encrypt :
-                                           des_t4_ede3_cbc_decrypt;
+                                des_t4_ede3_cbc_decrypt;
             return 1;
         }
     }

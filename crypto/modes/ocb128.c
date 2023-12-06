@@ -351,7 +351,7 @@ int CRYPTO_ocb128_encrypt(OCB128_CONTEXT *ctx,
 
         ctx->stream(in, out, num_blocks, ctx->keyenc,
                     (size_t)ctx->sess.blocks_processed + 1, ctx->sess.offset.c,
-                    (const unsigned char (*)[16])ctx->l, ctx->sess.checksum.c);
+                    (const unsigned char (*)[16]) ctx->l, ctx->sess.checksum.c);
     } else {
         /* Loop through all full blocks to be encrypted */
         for (i = ctx->sess.blocks_processed + 1; i <= all_num_blocks; i++) {
@@ -443,7 +443,7 @@ int CRYPTO_ocb128_decrypt(OCB128_CONTEXT *ctx,
 
         ctx->stream(in, out, num_blocks, ctx->keydec,
                     (size_t)ctx->sess.blocks_processed + 1, ctx->sess.offset.c,
-                    (const unsigned char (*)[16])ctx->l, ctx->sess.checksum.c);
+                    (const unsigned char (*)[16]) ctx->l, ctx->sess.checksum.c);
     } else {
         OCB_BLOCK tmp;
 

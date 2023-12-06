@@ -151,7 +151,7 @@ int ossl_store_handle_load_result(const OSSL_PARAM params[], void *arg)
         ERR_raise(ERR_LIB_OSSL_STORE, ERR_R_UNSUPPORTED);
 
     return (*v != NULL);
- err:
+err:
     ERR_clear_last_mark();
     return 0;
 }
@@ -268,21 +268,21 @@ static EVP_PKEY *try_key_value(struct extracted_param_data_st *data,
     int selection = 0;
 
     switch (ctx->expected_type) {
-    case 0:
-        break;
-    case OSSL_STORE_INFO_PARAMS:
-        selection = OSSL_KEYMGMT_SELECT_ALL_PARAMETERS;
-        break;
-    case OSSL_STORE_INFO_PUBKEY:
-        selection =
-            OSSL_KEYMGMT_SELECT_PUBLIC_KEY
-            | OSSL_KEYMGMT_SELECT_ALL_PARAMETERS;
-        break;
-    case OSSL_STORE_INFO_PKEY:
-        selection = OSSL_KEYMGMT_SELECT_ALL;
-        break;
-    default:
-        return NULL;
+        case 0:
+            break;
+        case OSSL_STORE_INFO_PARAMS:
+            selection = OSSL_KEYMGMT_SELECT_ALL_PARAMETERS;
+            break;
+        case OSSL_STORE_INFO_PUBKEY:
+            selection =
+                OSSL_KEYMGMT_SELECT_PUBLIC_KEY
+                | OSSL_KEYMGMT_SELECT_ALL_PARAMETERS;
+            break;
+        case OSSL_STORE_INFO_PKEY:
+            selection = OSSL_KEYMGMT_SELECT_ALL;
+            break;
+        default:
+            return NULL;
     }
 
     decoderctx =
@@ -475,7 +475,8 @@ static int try_cert(struct extracted_param_data_st *data, OSSL_STORE_INFO **v,
 
         /* If we have a data type, it should be a PEM name */
         if (data->data_type != NULL
-            && (OPENSSL_strcasecmp(data->data_type, PEM_STRING_X509_TRUSTED) == 0))
+            && (OPENSSL_strcasecmp(data->data_type,
+                                   PEM_STRING_X509_TRUSTED) == 0))
             ignore_trusted = 0;
 
         if (d2i_X509_AUX(&cert, (const unsigned char **)&data->octet_data,
@@ -639,7 +640,7 @@ static int try_pkcs12(struct extracted_param_data_st *data, OSSL_STORE_INFO **v,
                 }
                 ctx->cached_info = infos;
             }
-         p12_end:
+p12_end:
             OPENSSL_cleanse(tpass, sizeof(tpass));
             PKCS12_free(p12);
         }

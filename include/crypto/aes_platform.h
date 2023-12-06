@@ -63,9 +63,9 @@ void AES_xts_decrypt(const unsigned char *inp, unsigned char *out, size_t len,
 #  if (defined(__powerpc__) || defined(__ppc__) || defined(_ARCH_PPC))
 #   include "crypto/ppc_arch.h"
 #   ifdef VPAES_ASM
-#    define VPAES_CAPABLE (OPENSSL_ppccap_P & PPC_ALTIVEC)
+#    define VPAES_CAPABLE (OPENSSL_ppccap_P &PPC_ALTIVEC)
 #   endif
-#   define HWAES_CAPABLE  (OPENSSL_ppccap_P & PPC_CRYPTO207)
+#   define HWAES_CAPABLE  (OPENSSL_ppccap_P &PPC_CRYPTO207)
 #   define HWAES_set_encrypt_key aes_p8_set_encrypt_key
 #   define HWAES_set_decrypt_key aes_p8_set_decrypt_key
 #   define HWAES_encrypt aes_p8_encrypt
@@ -75,7 +75,7 @@ void AES_xts_decrypt(const unsigned char *inp, unsigned char *out, size_t len,
 #   define HWAES_xts_encrypt aes_p8_xts_encrypt
 #   define HWAES_xts_decrypt aes_p8_xts_decrypt
 #   if !defined(OPENSSL_SYS_AIX) && !defined(OPENSSL_SYS_MACOSX)
-#    define PPC_AES_GCM_CAPABLE (OPENSSL_ppccap_P & PPC_MADD300)
+#    define PPC_AES_GCM_CAPABLE (OPENSSL_ppccap_P &PPC_MADD300)
 #    define AES_GCM_ENC_BYTES 128
 #    define AES_GCM_DEC_BYTES 128
 size_t ppc_aes_gcm_encrypt(const unsigned char *in, unsigned char *out,
@@ -90,16 +90,17 @@ void gcm_ghash_p8(u64 Xi[2],const u128 Htable[16],const u8 *inp, size_t len);
 #   endif /* OPENSSL_SYS_AIX || OPENSSL_SYS_MACOSX */
 #  endif /* PPC */
 
-#  if (defined(__arm__) || defined(__arm) || defined(__aarch64__) || defined(_M_ARM64)) 
+#  if (defined(__arm__) || defined(__arm) || defined(__aarch64__) || \
+    defined(_M_ARM64))
 #   include "arm_arch.h"
 #   if __ARM_MAX_ARCH__>=7
 #    if defined(BSAES_ASM)
-#     define BSAES_CAPABLE (OPENSSL_armcap_P & ARMV7_NEON)
+#     define BSAES_CAPABLE (OPENSSL_armcap_P &ARMV7_NEON)
 #    endif
 #    if defined(VPAES_ASM)
-#     define VPAES_CAPABLE (OPENSSL_armcap_P & ARMV7_NEON)
+#     define VPAES_CAPABLE (OPENSSL_armcap_P &ARMV7_NEON)
 #    endif
-#    define HWAES_CAPABLE (OPENSSL_armcap_P & ARMV8_AES)
+#    define HWAES_CAPABLE (OPENSSL_armcap_P &ARMV8_AES)
 #    define HWAES_set_encrypt_key aes_v8_set_encrypt_key
 #    define HWAES_set_decrypt_key aes_v8_set_decrypt_key
 #    define HWAES_encrypt aes_v8_encrypt
@@ -107,51 +108,86 @@ void gcm_ghash_p8(u64 Xi[2],const u128 Htable[16],const u8 *inp, size_t len);
 #    define HWAES_cbc_encrypt aes_v8_cbc_encrypt
 #    define HWAES_ecb_encrypt aes_v8_ecb_encrypt
 #    if __ARM_MAX_ARCH__>=8 && (defined(__aarch64__) || defined(_M_ARM64))
-#     define ARMv8_HWAES_CAPABLE (OPENSSL_armcap_P & ARMV8_AES)
+#     define ARMv8_HWAES_CAPABLE (OPENSSL_armcap_P &ARMV8_AES)
 #     define HWAES_xts_encrypt aes_v8_xts_encrypt
 #     define HWAES_xts_decrypt aes_v8_xts_decrypt
 #    endif
 #    define HWAES_ctr32_encrypt_blocks aes_v8_ctr32_encrypt_blocks
-#    define HWAES_ctr32_encrypt_blocks_unroll12_eor3 aes_v8_ctr32_encrypt_blocks_unroll12_eor3
-#    define AES_PMULL_CAPABLE ((OPENSSL_armcap_P & ARMV8_PMULL) && (OPENSSL_armcap_P & ARMV8_AES))
-#    define AES_UNROLL12_EOR3_CAPABLE (OPENSSL_armcap_P & ARMV8_UNROLL12_EOR3)
+#    define HWAES_ctr32_encrypt_blocks_unroll12_eor3 \
+        aes_v8_ctr32_encrypt_blocks_unroll12_eor3
+#    define AES_PMULL_CAPABLE ((OPENSSL_armcap_P &ARMV8_PMULL) && \
+                               (OPENSSL_armcap_P &ARMV8_AES))
+#    define AES_UNROLL12_EOR3_CAPABLE (OPENSSL_armcap_P &ARMV8_UNROLL12_EOR3)
 #    define AES_GCM_ENC_BYTES 512
 #    define AES_GCM_DEC_BYTES 512
 #    if __ARM_MAX_ARCH__>=8 && (defined(__aarch64__) || defined(_M_ARM64))
 #     define AES_gcm_encrypt armv8_aes_gcm_encrypt
 #     define AES_gcm_decrypt armv8_aes_gcm_decrypt
-#     define AES_GCM_ASM(gctx) (((gctx)->ctr==aes_v8_ctr32_encrypt_blocks_unroll12_eor3 || \
+#     define AES_GCM_ASM(gctx) (((gctx)->ctr== \
+                                 aes_v8_ctr32_encrypt_blocks_unroll12_eor3 || \
                                  (gctx)->ctr==aes_v8_ctr32_encrypt_blocks) && \
                                 (gctx)->gcm.funcs.ghash==gcm_ghash_v8)
 /* The [unroll8_eor3_]aes_gcm_(enc|dec)_(128|192|256)_kernel() functions
  * take input length in BITS and return number of BYTES processed */
-size_t aes_gcm_enc_128_kernel(const uint8_t *plaintext, uint64_t plaintext_length, uint8_t *ciphertext,
-                              uint64_t *Xi, unsigned char ivec[16], const void *key);
-size_t aes_gcm_enc_192_kernel(const uint8_t *plaintext, uint64_t plaintext_length, uint8_t *ciphertext,
-                              uint64_t *Xi, unsigned char ivec[16], const void *key);
-size_t aes_gcm_enc_256_kernel(const uint8_t *plaintext, uint64_t plaintext_length, uint8_t *ciphertext,
-                              uint64_t *Xi, unsigned char ivec[16], const void *key);
-size_t aes_gcm_dec_128_kernel(const uint8_t *ciphertext, uint64_t plaintext_length, uint8_t *plaintext,
-                              uint64_t *Xi, unsigned char ivec[16], const void *key);
-size_t aes_gcm_dec_192_kernel(const uint8_t *ciphertext, uint64_t plaintext_length, uint8_t *plaintext,
-                              uint64_t *Xi, unsigned char ivec[16], const void *key);
-size_t aes_gcm_dec_256_kernel(const uint8_t *ciphertext, uint64_t plaintext_length, uint8_t *plaintext,
-                              uint64_t *Xi, unsigned char ivec[16], const void *key);
-size_t unroll8_eor3_aes_gcm_enc_128_kernel(const uint8_t *plaintext, uint64_t plaintext_length, uint8_t *ciphertext,
-                              uint64_t *Xi, unsigned char ivec[16], const void *key);
-size_t unroll8_eor3_aes_gcm_enc_192_kernel(const uint8_t *plaintext, uint64_t plaintext_length, uint8_t *ciphertext,
-                              uint64_t *Xi, unsigned char ivec[16], const void *key);
-size_t unroll8_eor3_aes_gcm_enc_256_kernel(const uint8_t *plaintext, uint64_t plaintext_length, uint8_t *ciphertext,
-                              uint64_t *Xi, unsigned char ivec[16], const void *key);
-size_t unroll8_eor3_aes_gcm_dec_128_kernel(const uint8_t *ciphertext, uint64_t plaintext_length, uint8_t *plaintext,
-                              uint64_t *Xi, unsigned char ivec[16], const void *key);
-size_t unroll8_eor3_aes_gcm_dec_192_kernel(const uint8_t *ciphertext, uint64_t plaintext_length, uint8_t *plaintext,
-                              uint64_t *Xi, unsigned char ivec[16], const void *key);
-size_t unroll8_eor3_aes_gcm_dec_256_kernel(const uint8_t *ciphertext, uint64_t plaintext_length, uint8_t *plaintext,
-                              uint64_t *Xi, unsigned char ivec[16], const void *key);
-size_t armv8_aes_gcm_encrypt(const unsigned char *in, unsigned char *out, size_t len, const void *key,
+size_t aes_gcm_enc_128_kernel(const uint8_t *plaintext,
+                              uint64_t plaintext_length, uint8_t *ciphertext,
+                              uint64_t *Xi, unsigned char ivec[16],
+                              const void *key);
+size_t aes_gcm_enc_192_kernel(const uint8_t *plaintext,
+                              uint64_t plaintext_length, uint8_t *ciphertext,
+                              uint64_t *Xi, unsigned char ivec[16],
+                              const void *key);
+size_t aes_gcm_enc_256_kernel(const uint8_t *plaintext,
+                              uint64_t plaintext_length, uint8_t *ciphertext,
+                              uint64_t *Xi, unsigned char ivec[16],
+                              const void *key);
+size_t aes_gcm_dec_128_kernel(const uint8_t *ciphertext,
+                              uint64_t plaintext_length, uint8_t *plaintext,
+                              uint64_t *Xi, unsigned char ivec[16],
+                              const void *key);
+size_t aes_gcm_dec_192_kernel(const uint8_t *ciphertext,
+                              uint64_t plaintext_length, uint8_t *plaintext,
+                              uint64_t *Xi, unsigned char ivec[16],
+                              const void *key);
+size_t aes_gcm_dec_256_kernel(const uint8_t *ciphertext,
+                              uint64_t plaintext_length, uint8_t *plaintext,
+                              uint64_t *Xi, unsigned char ivec[16],
+                              const void *key);
+size_t unroll8_eor3_aes_gcm_enc_128_kernel(const uint8_t *plaintext,
+                                           uint64_t plaintext_length,
+                                           uint8_t *ciphertext,
+                                           uint64_t *Xi, unsigned char ivec[16],
+                                           const void *key);
+size_t unroll8_eor3_aes_gcm_enc_192_kernel(const uint8_t *plaintext,
+                                           uint64_t plaintext_length,
+                                           uint8_t *ciphertext,
+                                           uint64_t *Xi, unsigned char ivec[16],
+                                           const void *key);
+size_t unroll8_eor3_aes_gcm_enc_256_kernel(const uint8_t *plaintext,
+                                           uint64_t plaintext_length,
+                                           uint8_t *ciphertext,
+                                           uint64_t *Xi, unsigned char ivec[16],
+                                           const void *key);
+size_t unroll8_eor3_aes_gcm_dec_128_kernel(const uint8_t *ciphertext,
+                                           uint64_t plaintext_length,
+                                           uint8_t *plaintext,
+                                           uint64_t *Xi, unsigned char ivec[16],
+                                           const void *key);
+size_t unroll8_eor3_aes_gcm_dec_192_kernel(const uint8_t *ciphertext,
+                                           uint64_t plaintext_length,
+                                           uint8_t *plaintext,
+                                           uint64_t *Xi, unsigned char ivec[16],
+                                           const void *key);
+size_t unroll8_eor3_aes_gcm_dec_256_kernel(const uint8_t *ciphertext,
+                                           uint64_t plaintext_length,
+                                           uint8_t *plaintext,
+                                           uint64_t *Xi, unsigned char ivec[16],
+                                           const void *key);
+size_t armv8_aes_gcm_encrypt(const unsigned char *in, unsigned char *out,
+                             size_t len, const void *key,
                              unsigned char ivec[16], u64 *Xi);
-size_t armv8_aes_gcm_decrypt(const unsigned char *in, unsigned char *out, size_t len, const void *key,
+size_t armv8_aes_gcm_decrypt(const unsigned char *in, unsigned char *out,
+                             size_t len, const void *key,
                              unsigned char ivec[16], u64 *Xi);
 void gcm_ghash_v8(u64 Xi[2],const u128 Htable[16],const u8 *inp, size_t len);
 #    endif
@@ -160,8 +196,8 @@ void gcm_ghash_v8(u64 Xi[2],const u128 Htable[16],const u8 *inp, size_t len);
 # endif /* OPENSSL_CPUID_OBJ */
 
 # if     defined(AES_ASM) &&     ( \
-         defined(__x86_64)       || defined(__x86_64__)  || \
-         defined(_M_AMD64)       || defined(_M_X64)      )
+    defined(__x86_64)       || defined(__x86_64__)  || \
+    defined(_M_AMD64)       || defined(_M_X64)      )
 #  define AES_CBC_HMAC_SHA_CAPABLE 1
 #  define AESNI_CBC_HMAC_SHA_CAPABLE (OPENSSL_ia32cap_P[1]&(1<<(57-32)))
 # endif
@@ -169,15 +205,15 @@ void gcm_ghash_v8(u64 Xi[2],const u128 Htable[16],const u8 *inp, size_t len);
 # if defined(__loongarch__) || defined(__loongarch64)
 #  include "loongarch_arch.h"
 #  if defined(VPAES_ASM)
-#   define VPAES_CAPABLE  (OPENSSL_loongarch_hwcap_P & LOONGARCH_HWCAP_LSX)
+#   define VPAES_CAPABLE  (OPENSSL_loongarch_hwcap_P &LOONGARCH_HWCAP_LSX)
 #  endif
 # endif
 
 # if     defined(AES_ASM) && !defined(I386_ONLY) &&      (  \
-         ((defined(__i386)       || defined(__i386__)    || \
-           defined(_M_IX86)) && defined(OPENSSL_IA32_SSE2))|| \
-         defined(__x86_64)       || defined(__x86_64__)  || \
-         defined(_M_AMD64)       || defined(_M_X64)      )
+    ((defined(__i386)       || defined(__i386__)    || \
+    defined(_M_IX86)) && defined(OPENSSL_IA32_SSE2))|| \
+    defined(__x86_64)       || defined(__x86_64__)  || \
+    defined(_M_AMD64)       || defined(_M_X64)      )
 
 /* AES-NI section */
 
@@ -255,10 +291,13 @@ void aesni_ccm64_decrypt_blocks(const unsigned char *in,
                                 const unsigned char ivec[16],
                                 unsigned char cmac[16]);
 
-#  if defined(__x86_64) || defined(__x86_64__) || defined(_M_AMD64) || defined(_M_X64)
-size_t aesni_gcm_encrypt(const unsigned char *in, unsigned char *out, size_t len,
+#  if defined(__x86_64) || defined(__x86_64__) || defined(_M_AMD64) || \
+    defined(_M_X64)
+size_t aesni_gcm_encrypt(const unsigned char *in, unsigned char *out,
+                         size_t len,
                          const void *key, unsigned char ivec[16], u64 *Xi);
-size_t aesni_gcm_decrypt(const unsigned char *in, unsigned char *out, size_t len,
+size_t aesni_gcm_decrypt(const unsigned char *in, unsigned char *out,
+                         size_t len,
                          const void *key, unsigned char ivec[16], u64 *Xi);
 void gcm_ghash_avx(u64 Xi[2], const u128 Htable[16], const u8 *in, size_t len);
 
@@ -274,8 +313,8 @@ void gcm_ghash_avx(u64 Xi[2], const u128 Htable[16], const u8 *in, size_t len);
 /* Fujitsu SPARC64 X support */
 #  include "crypto/sparc_arch.h"
 
-#  define SPARC_AES_CAPABLE       (OPENSSL_sparcv9cap_P[1] & CFR_AES)
-#  define HWAES_CAPABLE           (OPENSSL_sparcv9cap_P[0] & SPARCV9_FJAESX)
+#  define SPARC_AES_CAPABLE       (OPENSSL_sparcv9cap_P[1] &CFR_AES)
+#  define HWAES_CAPABLE           (OPENSSL_sparcv9cap_P[0] &SPARCV9_FJAESX)
 #  define HWAES_set_encrypt_key aes_fx_set_encrypt_key
 #  define HWAES_set_decrypt_key aes_fx_set_decrypt_key
 #  define HWAES_encrypt aes_fx_encrypt
@@ -350,11 +389,11 @@ void aes256_t4_xts_decrypt(const unsigned char *in, unsigned char *out,
 
 /* Most modes of operation need km for partial block processing. */
 #  define S390X_aes_128_CAPABLE (OPENSSL_s390xcap_P.km[0] &  \
-                                S390X_CAPBIT(S390X_AES_128))
+                                 S390X_CAPBIT(S390X_AES_128))
 #  define S390X_aes_192_CAPABLE (OPENSSL_s390xcap_P.km[0] &  \
-                                S390X_CAPBIT(S390X_AES_192))
+                                 S390X_CAPBIT(S390X_AES_192))
 #  define S390X_aes_256_CAPABLE (OPENSSL_s390xcap_P.km[0] &  \
-                                S390X_CAPBIT(S390X_AES_256))
+                                 S390X_CAPBIT(S390X_AES_256))
 
 #  define S390X_aes_128_cbc_CAPABLE     1       /* checked by callee */
 #  define S390X_aes_192_cbc_CAPABLE     1
@@ -365,30 +404,30 @@ void aes256_t4_xts_decrypt(const unsigned char *in, unsigned char *out,
 #  define S390X_aes_256_ecb_CAPABLE     S390X_aes_256_CAPABLE
 
 #  define S390X_aes_128_ofb_CAPABLE (S390X_aes_128_CAPABLE &&           \
-                                    (OPENSSL_s390xcap_P.kmo[0] &        \
-                                     S390X_CAPBIT(S390X_AES_128)))
+                                     (OPENSSL_s390xcap_P.kmo[0] &        \
+                                      S390X_CAPBIT(S390X_AES_128)))
 #  define S390X_aes_192_ofb_CAPABLE (S390X_aes_192_CAPABLE &&           \
-                                    (OPENSSL_s390xcap_P.kmo[0] &        \
-                                     S390X_CAPBIT(S390X_AES_192)))
+                                     (OPENSSL_s390xcap_P.kmo[0] &        \
+                                      S390X_CAPBIT(S390X_AES_192)))
 #  define S390X_aes_256_ofb_CAPABLE (S390X_aes_256_CAPABLE &&           \
-                                    (OPENSSL_s390xcap_P.kmo[0] &        \
-                                     S390X_CAPBIT(S390X_AES_256)))
+                                     (OPENSSL_s390xcap_P.kmo[0] &        \
+                                      S390X_CAPBIT(S390X_AES_256)))
 
 #  define S390X_aes_128_cfb_CAPABLE (S390X_aes_128_CAPABLE &&           \
-                                    (OPENSSL_s390xcap_P.kmf[0] &        \
-                                     S390X_CAPBIT(S390X_AES_128)))
+                                     (OPENSSL_s390xcap_P.kmf[0] &        \
+                                      S390X_CAPBIT(S390X_AES_128)))
 #  define S390X_aes_192_cfb_CAPABLE (S390X_aes_192_CAPABLE &&           \
-                                    (OPENSSL_s390xcap_P.kmf[0] &        \
-                                     S390X_CAPBIT(S390X_AES_192)))
+                                     (OPENSSL_s390xcap_P.kmf[0] &        \
+                                      S390X_CAPBIT(S390X_AES_192)))
 #  define S390X_aes_256_cfb_CAPABLE (S390X_aes_256_CAPABLE &&           \
-                                    (OPENSSL_s390xcap_P.kmf[0] &        \
-                                     S390X_CAPBIT(S390X_AES_256)))
+                                     (OPENSSL_s390xcap_P.kmf[0] &        \
+                                      S390X_CAPBIT(S390X_AES_256)))
 #  define S390X_aes_128_cfb8_CAPABLE (OPENSSL_s390xcap_P.kmf[0] &       \
-                                     S390X_CAPBIT(S390X_AES_128))
+                                      S390X_CAPBIT(S390X_AES_128))
 #  define S390X_aes_192_cfb8_CAPABLE (OPENSSL_s390xcap_P.kmf[0] &       \
-                                     S390X_CAPBIT(S390X_AES_192))
+                                      S390X_CAPBIT(S390X_AES_192))
 #  define S390X_aes_256_cfb8_CAPABLE (OPENSSL_s390xcap_P.kmf[0] &       \
-                                     S390X_CAPBIT(S390X_AES_256))
+                                      S390X_CAPBIT(S390X_AES_256))
 #  define S390X_aes_128_cfb1_CAPABLE    0
 #  define S390X_aes_192_cfb1_CAPABLE    0
 #  define S390X_aes_256_cfb1_CAPABLE    0
@@ -411,14 +450,14 @@ void aes256_t4_xts_decrypt(const unsigned char *in, unsigned char *out,
                                      S390X_CAPBIT(S390X_AES_256)))
 
 #  define S390X_aes_128_ccm_CAPABLE (S390X_aes_128_CAPABLE &&       \
-                                    (OPENSSL_s390xcap_P.kmac[0] &   \
-                                     S390X_CAPBIT(S390X_AES_128)))
+                                     (OPENSSL_s390xcap_P.kmac[0] &   \
+                                      S390X_CAPBIT(S390X_AES_128)))
 #  define S390X_aes_192_ccm_CAPABLE (S390X_aes_192_CAPABLE &&       \
-                                    (OPENSSL_s390xcap_P.kmac[0] &   \
-                                     S390X_CAPBIT(S390X_AES_192)))
+                                     (OPENSSL_s390xcap_P.kmac[0] &   \
+                                      S390X_CAPBIT(S390X_AES_192)))
 #  define S390X_aes_256_ccm_CAPABLE (S390X_aes_256_CAPABLE &&       \
-                                    (OPENSSL_s390xcap_P.kmac[0] &   \
-                                     S390X_CAPBIT(S390X_AES_256)))
+                                     (OPENSSL_s390xcap_P.kmac[0] &   \
+                                      S390X_CAPBIT(S390X_AES_256)))
 #  define S390X_CCM_AAD_FLAG    0x40
 
 #  ifndef OPENSSL_NO_OCB
@@ -509,8 +548,8 @@ void gcm_ghash_rv64i_zvkg(u64 Xi[2], const u128 Htable[16], const u8 *inp,
 #define AES_gcm_encrypt rv64i_zvkb_zvkg_zvkned_aes_gcm_encrypt
 #define AES_gcm_decrypt rv64i_zvkb_zvkg_zvkned_aes_gcm_decrypt
 #define AES_GCM_ASM(ctx)                                                       \
-    (ctx->ctr == rv64i_zvkb_zvkned_ctr32_encrypt_blocks &&                     \
-     ctx->gcm.funcs.ghash == gcm_ghash_rv64i_zvkg)
+        (ctx->ctr == rv64i_zvkb_zvkned_ctr32_encrypt_blocks &&                     \
+         ctx->gcm.funcs.ghash == gcm_ghash_rv64i_zvkg)
 
 # elif defined(OPENSSL_CPUID_OBJ) && defined(__riscv) && __riscv_xlen == 32
 /* RISC-V 32 support */
@@ -519,11 +558,14 @@ void gcm_ghash_rv64i_zvkg(u64 Xi[2], const u128 Htable[16], const u8 *inp,
 int rv32i_zkne_set_encrypt_key(const unsigned char *userKey, const int bits,
                                AES_KEY *key);
 /* set_decrypt_key needs both zknd and zkne */
-int rv32i_zknd_zkne_set_decrypt_key(const unsigned char *userKey, const int bits,
+int rv32i_zknd_zkne_set_decrypt_key(const unsigned char *userKey,
+                                    const int bits,
                                     AES_KEY *key);
-int rv32i_zbkb_zkne_set_encrypt_key(const unsigned char *userKey, const int bits,
+int rv32i_zbkb_zkne_set_encrypt_key(const unsigned char *userKey,
+                                    const int bits,
                                     AES_KEY *key);
-int rv32i_zbkb_zknd_zkne_set_decrypt_key(const unsigned char *userKey, const int bits,
+int rv32i_zbkb_zknd_zkne_set_decrypt_key(const unsigned char *userKey,
+                                         const int bits,
                                          AES_KEY *key);
 void rv32i_zkne_encrypt(const unsigned char *in, unsigned char *out,
                         const AES_KEY *key);
@@ -550,7 +592,8 @@ void HWAES_ctr32_encrypt_blocks(const unsigned char *in, unsigned char *out,
                                 size_t len, const void *key,
                                 const unsigned char ivec[16]);
 #  if defined(AES_UNROLL12_EOR3_CAPABLE)
-void HWAES_ctr32_encrypt_blocks_unroll12_eor3(const unsigned char *in, unsigned char *out,
+void HWAES_ctr32_encrypt_blocks_unroll12_eor3(const unsigned char *in,
+                                              unsigned char *out,
                                               size_t len, const void *key,
                                               const unsigned char ivec[16]);
 #  endif

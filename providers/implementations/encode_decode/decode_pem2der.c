@@ -192,8 +192,9 @@ static int pem2der_decode(void *vctx, OSSL_CORE_BIO *cin, int selection,
         /* We expect this to be read only so casting away the const is ok */
         if (data_structure != NULL)
             *p++ =
-                OSSL_PARAM_construct_utf8_string(OSSL_OBJECT_PARAM_DATA_STRUCTURE,
-                                                 data_structure, 0);
+                OSSL_PARAM_construct_utf8_string(
+                    OSSL_OBJECT_PARAM_DATA_STRUCTURE,
+                    data_structure, 0);
         *p++ =
             OSSL_PARAM_construct_octet_string(OSSL_OBJECT_PARAM_DATA,
                                               der, der_len);
@@ -205,7 +206,7 @@ static int pem2der_decode(void *vctx, OSSL_CORE_BIO *cin, int selection,
         ok = data_cb(params, data_cbarg);
     }
 
- end:
+end:
     OPENSSL_free(pem_name);
     OPENSSL_free(pem_header);
     OPENSSL_free(der);
@@ -213,8 +214,8 @@ static int pem2der_decode(void *vctx, OSSL_CORE_BIO *cin, int selection,
 }
 
 const OSSL_DISPATCH ossl_pem_to_der_decoder_functions[] = {
-    { OSSL_FUNC_DECODER_NEWCTX, (void (*)(void))pem2der_newctx },
-    { OSSL_FUNC_DECODER_FREECTX, (void (*)(void))pem2der_freectx },
-    { OSSL_FUNC_DECODER_DECODE, (void (*)(void))pem2der_decode },
+    { OSSL_FUNC_DECODER_NEWCTX, (void (*)(void)) pem2der_newctx },
+    { OSSL_FUNC_DECODER_FREECTX, (void (*)(void)) pem2der_freectx },
+    { OSSL_FUNC_DECODER_DECODE, (void (*)(void)) pem2der_decode },
     OSSL_DISPATCH_END
 };

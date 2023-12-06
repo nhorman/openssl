@@ -73,99 +73,99 @@ int asn1_item_embed_new(ASN1_VALUE **pval, const ASN1_ITEM *it, int embed,
 
     switch (it->itype) {
 
-    case ASN1_ITYPE_EXTERN:
-        ef = it->funcs;
-        if (ef != NULL) {
-            if (ef->asn1_ex_new_ex != NULL) {
-                if (!ef->asn1_ex_new_ex(pval, it, libctx, propq))
-                    goto asn1err;
-            } else if (ef->asn1_ex_new != NULL) {
-                if (!ef->asn1_ex_new(pval, it))
-                    goto asn1err;
+        case ASN1_ITYPE_EXTERN:
+            ef = it->funcs;
+            if (ef != NULL) {
+                if (ef->asn1_ex_new_ex != NULL) {
+                    if (!ef->asn1_ex_new_ex(pval, it, libctx, propq))
+                        goto asn1err;
+                } else if (ef->asn1_ex_new != NULL) {
+                    if (!ef->asn1_ex_new(pval, it))
+                        goto asn1err;
+                }
             }
-        }
-        break;
+            break;
 
-    case ASN1_ITYPE_PRIMITIVE:
-        if (it->templates) {
-            if (!asn1_template_new(pval, it->templates, libctx, propq))
+        case ASN1_ITYPE_PRIMITIVE:
+            if (it->templates) {
+                if (!asn1_template_new(pval, it->templates, libctx, propq))
+                    goto asn1err;
+            } else if (!asn1_primitive_new(pval, it, embed))
                 goto asn1err;
-        } else if (!asn1_primitive_new(pval, it, embed))
-            goto asn1err;
-        break;
+            break;
 
-    case ASN1_ITYPE_MSTRING:
-        if (!asn1_primitive_new(pval, it, embed))
-            goto asn1err;
-        break;
+        case ASN1_ITYPE_MSTRING:
+            if (!asn1_primitive_new(pval, it, embed))
+                goto asn1err;
+            break;
 
-    case ASN1_ITYPE_CHOICE:
-        if (asn1_cb) {
-            i = asn1_cb(ASN1_OP_NEW_PRE, pval, it, NULL);
-            if (!i)
-                goto auxerr;
-            if (i == 2) {
-                return 1;
+        case ASN1_ITYPE_CHOICE:
+            if (asn1_cb) {
+                i = asn1_cb(ASN1_OP_NEW_PRE, pval, it, NULL);
+                if (!i)
+                    goto auxerr;
+                if (i == 2) {
+                    return 1;
+                }
             }
-        }
-        if (embed) {
-            memset(*pval, 0, it->size);
-        } else {
-            *pval = OPENSSL_zalloc(it->size);
-            if (*pval == NULL)
-                return 0;
-        }
-        ossl_asn1_set_choice_selector(pval, -1, it);
-        if (asn1_cb && !asn1_cb(ASN1_OP_NEW_POST, pval, it, NULL))
-            goto auxerr2;
-        break;
+            if (embed) {
+                memset(*pval, 0, it->size);
+            } else {
+                *pval = OPENSSL_zalloc(it->size);
+                if (*pval == NULL)
+                    return 0;
+            }
+            ossl_asn1_set_choice_selector(pval, -1, it);
+            if (asn1_cb && !asn1_cb(ASN1_OP_NEW_POST, pval, it, NULL))
+                goto auxerr2;
+            break;
 
-    case ASN1_ITYPE_NDEF_SEQUENCE:
-    case ASN1_ITYPE_SEQUENCE:
-        if (asn1_cb) {
-            i = asn1_cb(ASN1_OP_NEW_PRE, pval, it, NULL);
-            if (!i)
-                goto auxerr;
-            if (i == 2) {
-                return 1;
+        case ASN1_ITYPE_NDEF_SEQUENCE:
+        case ASN1_ITYPE_SEQUENCE:
+            if (asn1_cb) {
+                i = asn1_cb(ASN1_OP_NEW_PRE, pval, it, NULL);
+                if (!i)
+                    goto auxerr;
+                if (i == 2) {
+                    return 1;
+                }
             }
-        }
-        if (embed) {
-            memset(*pval, 0, it->size);
-        } else {
-            *pval = OPENSSL_zalloc(it->size);
-            if (*pval == NULL)
-                return 0;
-        }
-        /* 0 : init. lock */
-        if (ossl_asn1_do_lock(pval, 0, it) < 0) {
-            if (!embed) {
-                OPENSSL_free(*pval);
-                *pval = NULL;
+            if (embed) {
+                memset(*pval, 0, it->size);
+            } else {
+                *pval = OPENSSL_zalloc(it->size);
+                if (*pval == NULL)
+                    return 0;
             }
-            goto asn1err;
-        }
-        ossl_asn1_enc_init(pval, it);
-        for (i = 0, tt = it->templates; i < it->tcount; tt++, i++) {
-            pseqval = ossl_asn1_get_field_ptr(pval, tt);
-            if (!asn1_template_new(pseqval, tt, libctx, propq))
-                goto asn1err2;
-        }
-        if (asn1_cb && !asn1_cb(ASN1_OP_NEW_POST, pval, it, NULL))
-            goto auxerr2;
-        break;
+            /* 0 : init. lock */
+            if (ossl_asn1_do_lock(pval, 0, it) < 0) {
+                if (!embed) {
+                    OPENSSL_free(*pval);
+                    *pval = NULL;
+                }
+                goto asn1err;
+            }
+            ossl_asn1_enc_init(pval, it);
+            for (i = 0, tt = it->templates; i < it->tcount; tt++, i++) {
+                pseqval = ossl_asn1_get_field_ptr(pval, tt);
+                if (!asn1_template_new(pseqval, tt, libctx, propq))
+                    goto asn1err2;
+            }
+            if (asn1_cb && !asn1_cb(ASN1_OP_NEW_POST, pval, it, NULL))
+                goto auxerr2;
+            break;
     }
     return 1;
 
- asn1err2:
+asn1err2:
     ossl_asn1_item_embed_free(pval, it, embed);
- asn1err:
+asn1err:
     ERR_raise(ERR_LIB_ASN1, ERR_R_ASN1_LIB);
     return 0;
 
- auxerr2:
+auxerr2:
     ossl_asn1_item_embed_free(pval, it, embed);
- auxerr:
+auxerr:
     ERR_raise(ERR_LIB_ASN1, ASN1_R_AUX_ERROR);
     return 0;
 
@@ -177,30 +177,30 @@ static void asn1_item_clear(ASN1_VALUE **pval, const ASN1_ITEM *it)
 
     switch (it->itype) {
 
-    case ASN1_ITYPE_EXTERN:
-        ef = it->funcs;
-        if (ef && ef->asn1_ex_clear)
-            ef->asn1_ex_clear(pval, it);
-        else
-            *pval = NULL;
-        break;
+        case ASN1_ITYPE_EXTERN:
+            ef = it->funcs;
+            if (ef && ef->asn1_ex_clear)
+                ef->asn1_ex_clear(pval, it);
+            else
+                *pval = NULL;
+            break;
 
-    case ASN1_ITYPE_PRIMITIVE:
-        if (it->templates)
-            asn1_template_clear(pval, it->templates);
-        else
+        case ASN1_ITYPE_PRIMITIVE:
+            if (it->templates)
+                asn1_template_clear(pval, it->templates);
+            else
+                asn1_primitive_clear(pval, it);
+            break;
+
+        case ASN1_ITYPE_MSTRING:
             asn1_primitive_clear(pval, it);
-        break;
+            break;
 
-    case ASN1_ITYPE_MSTRING:
-        asn1_primitive_clear(pval, it);
-        break;
-
-    case ASN1_ITYPE_CHOICE:
-    case ASN1_ITYPE_SEQUENCE:
-    case ASN1_ITYPE_NDEF_SEQUENCE:
-        *pval = NULL;
-        break;
+        case ASN1_ITYPE_CHOICE:
+        case ASN1_ITYPE_SEQUENCE:
+        case ASN1_ITYPE_NDEF_SEQUENCE:
+            *pval = NULL;
+            break;
     }
 }
 
@@ -240,7 +240,7 @@ static int asn1_template_new(ASN1_VALUE **pval, const ASN1_TEMPLATE *tt,
     }
     /* Otherwise pass it back to the item routine */
     ret = asn1_item_embed_new(pval, it, embed, libctx, propq);
- done:
+done:
     return ret;
 }
 
@@ -285,39 +285,39 @@ static int asn1_primitive_new(ASN1_VALUE **pval, const ASN1_ITEM *it,
     else
         utype = it->utype;
     switch (utype) {
-    case V_ASN1_OBJECT:
-        *pval = (ASN1_VALUE *)OBJ_nid2obj(NID_undef);
-        return 1;
+        case V_ASN1_OBJECT:
+            *pval = (ASN1_VALUE *)OBJ_nid2obj(NID_undef);
+            return 1;
 
-    case V_ASN1_BOOLEAN:
-        *(ASN1_BOOLEAN *)pval = it->size;
-        return 1;
+        case V_ASN1_BOOLEAN:
+            *(ASN1_BOOLEAN *)pval = it->size;
+            return 1;
 
-    case V_ASN1_NULL:
-        *pval = (ASN1_VALUE *)1;
-        return 1;
+        case V_ASN1_NULL:
+            *pval = (ASN1_VALUE *)1;
+            return 1;
 
-    case V_ASN1_ANY:
-        if ((typ = OPENSSL_malloc(sizeof(*typ))) == NULL)
-            return 0;
-        typ->value.ptr = NULL;
-        typ->type = -1;
-        *pval = (ASN1_VALUE *)typ;
-        break;
+        case V_ASN1_ANY:
+            if ((typ = OPENSSL_malloc(sizeof(*typ))) == NULL)
+                return 0;
+            typ->value.ptr = NULL;
+            typ->type = -1;
+            *pval = (ASN1_VALUE *)typ;
+            break;
 
-    default:
-        if (embed) {
-            str = *(ASN1_STRING **)pval;
-            memset(str, 0, sizeof(*str));
-            str->type = utype;
-            str->flags = ASN1_STRING_FLAG_EMBED;
-        } else {
-            str = ASN1_STRING_type_new(utype);
-            *pval = (ASN1_VALUE *)str;
-        }
-        if (it->itype == ASN1_ITYPE_MSTRING && str)
-            str->flags |= ASN1_STRING_FLAG_MSTRING;
-        break;
+        default:
+            if (embed) {
+                str = *(ASN1_STRING **)pval;
+                memset(str, 0, sizeof(*str));
+                str->type = utype;
+                str->flags = ASN1_STRING_FLAG_EMBED;
+            } else {
+                str = ASN1_STRING_type_new(utype);
+                *pval = (ASN1_VALUE *)str;
+            }
+            if (it->itype == ASN1_ITYPE_MSTRING && str)
+                str->flags |= ASN1_STRING_FLAG_MSTRING;
+            break;
     }
     if (*pval)
         return 1;

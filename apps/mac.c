@@ -43,7 +43,7 @@ const OPTIONS mac_options[] = {
     OPT_SECTION("Output"),
     {"out", OPT_OUT, '>', "Output to filename rather than stdout"},
     {"binary", OPT_BIN, '-',
-        "Output in binary format (default is hexadecimal)"},
+     "Output in binary format (default is hexadecimal)"},
 
     OPT_PROV_OPTIONS,
 
@@ -94,45 +94,45 @@ int mac_main(int argc, char **argv)
     buf = app_malloc(BUFSIZE, "I/O buffer");
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        default:
+            default:
 opthelp:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto err;
-        case OPT_HELP:
-            opt_help(mac_options);
-            ret = 0;
-            goto err;
-        case OPT_BIN:
-            out_bin = 1;
-            break;
-        case OPT_IN:
-            infile = opt_arg();
-            break;
-        case OPT_OUT:
-            outfile = opt_arg();
-            break;
-        case OPT_MACOPT:
-            if (opts == NULL)
-                opts = sk_OPENSSL_STRING_new_null();
-            if (opts == NULL || !sk_OPENSSL_STRING_push(opts, opt_arg()))
-                goto opthelp;
-            break;
-        case OPT_CIPHER:
-            OPENSSL_free(cipher);
-            cipher = alloc_mac_algorithm_name(&opts, "cipher", opt_arg());
-            if (cipher == NULL)
-                goto opthelp;
-            break;
-        case OPT_DIGEST:
-            OPENSSL_free(digest);
-            digest = alloc_mac_algorithm_name(&opts, "digest", opt_arg());
-            if (digest == NULL)
-                goto opthelp;
-            break;
-        case OPT_PROV_CASES:
-            if (!opt_provider(o))
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
                 goto err;
-            break;
+            case OPT_HELP:
+                opt_help(mac_options);
+                ret = 0;
+                goto err;
+            case OPT_BIN:
+                out_bin = 1;
+                break;
+            case OPT_IN:
+                infile = opt_arg();
+                break;
+            case OPT_OUT:
+                outfile = opt_arg();
+                break;
+            case OPT_MACOPT:
+                if (opts == NULL)
+                    opts = sk_OPENSSL_STRING_new_null();
+                if (opts == NULL || !sk_OPENSSL_STRING_push(opts, opt_arg()))
+                    goto opthelp;
+                break;
+            case OPT_CIPHER:
+                OPENSSL_free(cipher);
+                cipher = alloc_mac_algorithm_name(&opts, "cipher", opt_arg());
+                if (cipher == NULL)
+                    goto opthelp;
+                break;
+            case OPT_DIGEST:
+                OPENSSL_free(digest);
+                digest = alloc_mac_algorithm_name(&opts, "digest", opt_arg());
+                if (digest == NULL)
+                    goto opthelp;
+                break;
+            case OPT_PROV_CASES:
+                if (!opt_provider(o))
+                    goto err;
+                break;
         }
     }
 

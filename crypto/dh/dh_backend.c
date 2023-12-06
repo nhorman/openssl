@@ -82,7 +82,7 @@ int ossl_dh_key_fromdata(DH *dh, const OSSL_PARAM params[], int include_private)
 
     return 1;
 
- err:
+err:
     BN_clear_free(priv_key);
     BN_free(pub_key);
     return 0;
@@ -95,7 +95,8 @@ int ossl_dh_params_todata(DH *dh, OSSL_PARAM_BLD *bld, OSSL_PARAM params[])
     if (!ossl_ffc_params_todata(ossl_dh_get0_params(dh), bld, params))
         return 0;
     if (l > 0
-        && !ossl_param_build_set_long(bld, params, OSSL_PKEY_PARAM_DH_PRIV_LEN, l))
+        && !ossl_param_build_set_long(bld, params, OSSL_PKEY_PARAM_DH_PRIV_LEN,
+                                      l))
         return 0;
     return 1;
 }
@@ -111,7 +112,8 @@ int ossl_dh_key_todata(DH *dh, OSSL_PARAM_BLD *bld, OSSL_PARAM params[],
     DH_get0_key(dh, &pub, &priv);
     if (priv != NULL
         && include_private
-        && !ossl_param_build_set_bn(bld, params, OSSL_PKEY_PARAM_PRIV_KEY, priv))
+        && !ossl_param_build_set_bn(bld, params, OSSL_PKEY_PARAM_PRIV_KEY,
+                                    priv))
         return 0;
     if (pub != NULL
         && !ossl_param_build_set_bn(bld, params, OSSL_PKEY_PARAM_PUB_KEY, pub))
@@ -172,7 +174,7 @@ DH *ossl_dh_dup(const DH *dh, int selection)
 
     return dupkey;
 
- err:
+err:
     DH_free(dupkey);
     return NULL;
 }
@@ -205,14 +207,14 @@ DH *ossl_dh_key_from_pkcs8(const PKCS8_PRIV_KEY_INFO *p8inf,
     pm = pstr->data;
     pmlen = pstr->length;
     switch (OBJ_obj2nid(palg->algorithm)) {
-    case NID_dhKeyAgreement:
-        dh = d2i_DHparams(NULL, &pm, pmlen);
-        break;
-    case NID_dhpublicnumber:
-        dh = d2i_DHxparams(NULL, &pm, pmlen);
-        break;
-    default:
-        goto decerr;
+        case NID_dhKeyAgreement:
+            dh = d2i_DHparams(NULL, &pm, pmlen);
+            break;
+        case NID_dhpublicnumber:
+            dh = d2i_DHxparams(NULL, &pm, pmlen);
+            break;
+        default:
+            goto decerr;
     }
     if (dh == NULL)
         goto decerr;
@@ -232,12 +234,12 @@ DH *ossl_dh_key_from_pkcs8(const PKCS8_PRIV_KEY_INFO *p8inf,
 
     goto done;
 
- decerr:
+decerr:
     ERR_raise(ERR_LIB_DH, EVP_R_DECODE_ERROR);
- dherr:
+dherr:
     DH_free(dh);
     dh = NULL;
- done:
+done:
     ASN1_STRING_clear_free(privkey);
     return dh;
 }

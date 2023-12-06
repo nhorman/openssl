@@ -98,30 +98,30 @@ static const TLS_GROUP_CONSTANTS group_list[] = {
 };
 
 #define TLS_GROUP_ENTRY(tlsname, realname, algorithm, idx) \
-    { \
-        OSSL_PARAM_utf8_string(OSSL_CAPABILITY_TLS_GROUP_NAME, \
-                               tlsname, \
-                               sizeof(tlsname)), \
-        OSSL_PARAM_utf8_string(OSSL_CAPABILITY_TLS_GROUP_NAME_INTERNAL, \
-                               realname, \
-                               sizeof(realname)), \
-        OSSL_PARAM_utf8_string(OSSL_CAPABILITY_TLS_GROUP_ALG, \
-                               algorithm, \
-                               sizeof(algorithm)), \
-        OSSL_PARAM_uint(OSSL_CAPABILITY_TLS_GROUP_ID, \
-                        (unsigned int *)&group_list[idx].group_id), \
-        OSSL_PARAM_uint(OSSL_CAPABILITY_TLS_GROUP_SECURITY_BITS, \
-                        (unsigned int *)&group_list[idx].secbits), \
-        OSSL_PARAM_int(OSSL_CAPABILITY_TLS_GROUP_MIN_TLS, \
-                        (unsigned int *)&group_list[idx].mintls), \
-        OSSL_PARAM_int(OSSL_CAPABILITY_TLS_GROUP_MAX_TLS, \
-                        (unsigned int *)&group_list[idx].maxtls), \
-        OSSL_PARAM_int(OSSL_CAPABILITY_TLS_GROUP_MIN_DTLS, \
-                        (unsigned int *)&group_list[idx].mindtls), \
-        OSSL_PARAM_int(OSSL_CAPABILITY_TLS_GROUP_MAX_DTLS, \
-                        (unsigned int *)&group_list[idx].maxdtls), \
-        OSSL_PARAM_END \
-    }
+        { \
+            OSSL_PARAM_utf8_string(OSSL_CAPABILITY_TLS_GROUP_NAME, \
+                                   tlsname, \
+                                   sizeof(tlsname)), \
+            OSSL_PARAM_utf8_string(OSSL_CAPABILITY_TLS_GROUP_NAME_INTERNAL, \
+                                   realname, \
+                                   sizeof(realname)), \
+            OSSL_PARAM_utf8_string(OSSL_CAPABILITY_TLS_GROUP_ALG, \
+                                   algorithm, \
+                                   sizeof(algorithm)), \
+            OSSL_PARAM_uint(OSSL_CAPABILITY_TLS_GROUP_ID, \
+                            (unsigned int *)&group_list[idx].group_id), \
+            OSSL_PARAM_uint(OSSL_CAPABILITY_TLS_GROUP_SECURITY_BITS, \
+                            (unsigned int *)&group_list[idx].secbits), \
+            OSSL_PARAM_int(OSSL_CAPABILITY_TLS_GROUP_MIN_TLS, \
+                           (unsigned int *)&group_list[idx].mintls), \
+            OSSL_PARAM_int(OSSL_CAPABILITY_TLS_GROUP_MAX_TLS, \
+                           (unsigned int *)&group_list[idx].maxtls), \
+            OSSL_PARAM_int(OSSL_CAPABILITY_TLS_GROUP_MIN_DTLS, \
+                           (unsigned int *)&group_list[idx].mindtls), \
+            OSSL_PARAM_int(OSSL_CAPABILITY_TLS_GROUP_MAX_DTLS, \
+                           (unsigned int *)&group_list[idx].maxdtls), \
+            OSSL_PARAM_END \
+        }
 
 static const OSSL_PARAM param_group_list[][10] = {
 # ifndef OPENSSL_NO_EC

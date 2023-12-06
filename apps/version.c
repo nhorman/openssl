@@ -51,50 +51,53 @@ int version_main(int argc, char **argv)
     prog = opt_init(argc, argv, version_options);
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_EOF:
-        case OPT_ERR:
+            case OPT_EOF:
+            case OPT_ERR:
 opthelp:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto end;
-        case OPT_HELP:
-            opt_help(version_options);
-            ret = 0;
-            goto end;
-        case OPT_B:
-            dirty = date = 1;
-            break;
-        case OPT_D:
-            dirty = dir = 1;
-            break;
-        case OPT_E:
-            dirty = engdir = 1;
-            break;
-        case OPT_M:
-            dirty = moddir = 1;
-            break;
-        case OPT_F:
-            dirty = cflags = 1;
-            break;
-        case OPT_O:
-            dirty = options = 1;
-            break;
-        case OPT_P:
-            dirty = platform = 1;
-            break;
-        case OPT_R:
-            dirty = seed = 1;
-            break;
-        case OPT_V:
-            dirty = version = 1;
-            break;
-        case OPT_C:
-            dirty = cpuinfo = 1;
-            break;
-        case OPT_A:
-            seed = options = cflags = version = date = platform
-                = dir = engdir = moddir = cpuinfo
-                = 1;
-            break;
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
+                goto end;
+            case OPT_HELP:
+                opt_help(version_options);
+                ret = 0;
+                goto end;
+            case OPT_B:
+                dirty = date = 1;
+                break;
+            case OPT_D:
+                dirty = dir = 1;
+                break;
+            case OPT_E:
+                dirty = engdir = 1;
+                break;
+            case OPT_M:
+                dirty = moddir = 1;
+                break;
+            case OPT_F:
+                dirty = cflags = 1;
+                break;
+            case OPT_O:
+                dirty = options = 1;
+                break;
+            case OPT_P:
+                dirty = platform = 1;
+                break;
+            case OPT_R:
+                dirty = seed = 1;
+                break;
+            case OPT_V:
+                dirty = version = 1;
+                break;
+            case OPT_C:
+                dirty = cpuinfo = 1;
+                break;
+            case OPT_A:
+                seed = options = cflags = version = date = platform
+                                                               = dir = engdir =
+                                                                     moddir =
+                                                                         cpuinfo
+                                                                         =
+                                                                             1;
+                break;
         }
     }
 
@@ -132,7 +135,7 @@ opthelp:
     if (cpuinfo)
         printf("%s\n", OpenSSL_version(OPENSSL_CPU_INFO));
     ret = 0;
- end:
+end:
     return ret;
 }
 
@@ -143,8 +146,9 @@ opthelp:
  * This is used by platform version identification tools.
  * Do not inline this procedure or make it static.
  */
-# define OPENSSL_VPROC_STRING_(x)    x##_OPENSSL
+# define OPENSSL_VPROC_STRING_(x)    x ## _OPENSSL
 # define OPENSSL_VPROC_STRING(x)     OPENSSL_VPROC_STRING_(x)
 # define OPENSSL_VPROC_FUNC          OPENSSL_VPROC_STRING(OPENSSL_VPROC)
-void OPENSSL_VPROC_FUNC(void) {}
+void OPENSSL_VPROC_FUNC(void) {
+}
 #endif

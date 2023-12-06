@@ -33,7 +33,8 @@ static int copy_bag_attr(PKCS12_SAFEBAG *bag, EVP_PKEY *pkey, int nid)
 }
 
 PKCS12 *PKCS12_create_ex2(const char *pass, const char *name, EVP_PKEY *pkey,
-                          X509 *cert, STACK_OF(X509) *ca, int nid_key, int nid_cert,
+                          X509 *cert, STACK_OF(X509) *ca, int nid_key,
+                          int nid_cert,
                           int iter, int mac_iter, int keytype,
                           OSSL_LIB_CTX *ctx, const char *propq,
                           PKCS12_create_cb *cb, void *cbarg)
@@ -81,7 +82,8 @@ PKCS12 *PKCS12_create_ex2(const char *pass, const char *name, EVP_PKEY *pkey,
             pkeyid = X509_keyid_get0(cert, &pkeyidlen);
         }
 
-        bag = pkcs12_add_cert_bag(&bags, cert, name, namelen, pkeyid, pkeyidlen);
+        bag =
+            pkcs12_add_cert_bag(&bags, cert, name, namelen, pkeyid, pkeyidlen);
         if (cb != NULL) {
             cbret = cb(bag, cbarg);
             if (cbret  == -1) {
@@ -163,7 +165,7 @@ PKCS12 *PKCS12_create_ex2(const char *pass, const char *name, EVP_PKEY *pkey,
 
     return p12;
 
- err:
+err:
     PKCS12_free(p12);
     sk_PKCS7_pop_free(safes, PKCS7_free);
     sk_PKCS12_SAFEBAG_pop_free(bags, PKCS12_SAFEBAG_free);
@@ -171,17 +173,20 @@ PKCS12 *PKCS12_create_ex2(const char *pass, const char *name, EVP_PKEY *pkey,
 
 }
 
-PKCS12 *PKCS12_create_ex(const char *pass, const char *name, EVP_PKEY *pkey, X509 *cert,
-                        STACK_OF(X509) *ca, int nid_key, int nid_cert, int iter,
-                        int mac_iter, int keytype,
-                        OSSL_LIB_CTX *ctx, const char *propq)
+PKCS12 *PKCS12_create_ex(const char *pass, const char *name, EVP_PKEY *pkey,
+                         X509 *cert,
+                         STACK_OF(X509) *ca, int nid_key, int nid_cert,
+                         int iter,
+                         int mac_iter, int keytype,
+                         OSSL_LIB_CTX *ctx, const char *propq)
 {
     return PKCS12_create_ex2(pass, name, pkey, cert, ca, nid_key, nid_cert,
                              iter, mac_iter, keytype, ctx, propq,
                              NULL, NULL);
 }
 
-PKCS12 *PKCS12_create(const char *pass, const char *name, EVP_PKEY *pkey, X509 *cert,
+PKCS12 *PKCS12_create(const char *pass, const char *name, EVP_PKEY *pkey,
+                      X509 *cert,
                       STACK_OF(X509) *ca, int nid_key, int nid_cert, int iter,
                       int mac_iter, int keytype)
 {
@@ -213,7 +218,7 @@ static PKCS12_SAFEBAG *pkcs12_add_cert_bag(STACK_OF(PKCS12_SAFEBAG) **pbags,
 
     return bag;
 
- err:
+err:
     PKCS12_SAFEBAG_free(bag);
     return NULL;
 }
@@ -263,7 +268,7 @@ PKCS12_SAFEBAG *PKCS12_add_key_ex(STACK_OF(PKCS12_SAFEBAG) **pbags,
 
     return bag;
 
- err:
+err:
     PKCS12_SAFEBAG_free(bag);
     return NULL;
 
@@ -277,20 +282,23 @@ PKCS12_SAFEBAG *PKCS12_add_key(STACK_OF(PKCS12_SAFEBAG) **pbags,
                              NULL, NULL);
 }
 
-PKCS12_SAFEBAG *PKCS12_add_secret(STACK_OF(PKCS12_SAFEBAG) **pbags, 
-                                  int nid_type, const unsigned char *value, int len)
+PKCS12_SAFEBAG *PKCS12_add_secret(STACK_OF(PKCS12_SAFEBAG) **pbags,
+                                  int nid_type, const unsigned char *value,
+                                  int len)
 {
     PKCS12_SAFEBAG *bag = NULL;
 
     /* Add secret, storing the value as an octet string */
-    if ((bag = PKCS12_SAFEBAG_create_secret(nid_type, V_ASN1_OCTET_STRING, value, len)) == NULL)
+    if ((bag =
+             PKCS12_SAFEBAG_create_secret(nid_type, V_ASN1_OCTET_STRING, value,
+                                          len)) == NULL)
         goto err;
 
     if (!pkcs12_add_bag(pbags, bag))
         goto err;
 
     return bag;
- err:
+err:
     PKCS12_SAFEBAG_free(bag);
     return NULL;
 }
@@ -319,7 +327,8 @@ int PKCS12_add_safe_ex(STACK_OF(PKCS7) **psafes, STACK_OF(PKCS12_SAFEBAG) *bags,
     if (nid_safe == -1)
         p7 = PKCS12_pack_p7data(bags);
     else
-        p7 = PKCS12_pack_p7encdata_ex(nid_safe, pass, -1, NULL, 0, iter, bags, ctx, propq);
+        p7 = PKCS12_pack_p7encdata_ex(nid_safe, pass, -1, NULL, 0, iter, bags,
+                                      ctx, propq);
     if (p7 == NULL)
         goto err;
 
@@ -328,7 +337,7 @@ int PKCS12_add_safe_ex(STACK_OF(PKCS7) **psafes, STACK_OF(PKCS12_SAFEBAG) *bags,
 
     return 1;
 
- err:
+err:
     if (free_safes) {
         sk_PKCS7_free(*psafes);
         *psafes = NULL;

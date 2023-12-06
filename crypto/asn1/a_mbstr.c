@@ -61,39 +61,39 @@ int ASN1_mbstring_ncopy(ASN1_STRING **out, const unsigned char *in, int len,
     /* First do a string check and work out the number of characters */
     switch (inform) {
 
-    case MBSTRING_BMP:
-        if (len & 1) {
-            ERR_raise(ERR_LIB_ASN1, ASN1_R_INVALID_BMPSTRING_LENGTH);
+        case MBSTRING_BMP:
+            if (len & 1) {
+                ERR_raise(ERR_LIB_ASN1, ASN1_R_INVALID_BMPSTRING_LENGTH);
+                return -1;
+            }
+            nchar = len >> 1;
+            break;
+
+        case MBSTRING_UNIV:
+            if (len & 3) {
+                ERR_raise(ERR_LIB_ASN1, ASN1_R_INVALID_UNIVERSALSTRING_LENGTH);
+                return -1;
+            }
+            nchar = len >> 2;
+            break;
+
+        case MBSTRING_UTF8:
+            nchar = 0;
+            /* This counts the characters and does utf8 syntax checking */
+            ret = traverse_string(in, len, MBSTRING_UTF8, in_utf8, &nchar);
+            if (ret < 0) {
+                ERR_raise(ERR_LIB_ASN1, ASN1_R_INVALID_UTF8STRING);
+                return -1;
+            }
+            break;
+
+        case MBSTRING_ASC:
+            nchar = len;
+            break;
+
+        default:
+            ERR_raise(ERR_LIB_ASN1, ASN1_R_UNKNOWN_FORMAT);
             return -1;
-        }
-        nchar = len >> 1;
-        break;
-
-    case MBSTRING_UNIV:
-        if (len & 3) {
-            ERR_raise(ERR_LIB_ASN1, ASN1_R_INVALID_UNIVERSALSTRING_LENGTH);
-            return -1;
-        }
-        nchar = len >> 2;
-        break;
-
-    case MBSTRING_UTF8:
-        nchar = 0;
-        /* This counts the characters and does utf8 syntax checking */
-        ret = traverse_string(in, len, MBSTRING_UTF8, in_utf8, &nchar);
-        if (ret < 0) {
-            ERR_raise(ERR_LIB_ASN1, ASN1_R_INVALID_UTF8STRING);
-            return -1;
-        }
-        break;
-
-    case MBSTRING_ASC:
-        nchar = len;
-        break;
-
-    default:
-        ERR_raise(ERR_LIB_ASN1, ASN1_R_UNKNOWN_FORMAT);
-        return -1;
     }
 
     if ((minsize > 0) && (nchar < minsize)) {
@@ -161,26 +161,26 @@ int ASN1_mbstring_ncopy(ASN1_STRING **out, const unsigned char *in, int len,
 
     /* Work out how much space the destination will need */
     switch (outform) {
-    case MBSTRING_ASC:
-        outlen = nchar;
-        cpyfunc = cpy_asc;
-        break;
+        case MBSTRING_ASC:
+            outlen = nchar;
+            cpyfunc = cpy_asc;
+            break;
 
-    case MBSTRING_BMP:
-        outlen = nchar << 1;
-        cpyfunc = cpy_bmp;
-        break;
+        case MBSTRING_BMP:
+            outlen = nchar << 1;
+            cpyfunc = cpy_bmp;
+            break;
 
-    case MBSTRING_UNIV:
-        outlen = nchar << 2;
-        cpyfunc = cpy_univ;
-        break;
+        case MBSTRING_UNIV:
+            outlen = nchar << 2;
+            cpyfunc = cpy_univ;
+            break;
 
-    case MBSTRING_UTF8:
-        outlen = 0;
-        traverse_string(in, len, inform, out_utf8, &outlen);
-        cpyfunc = cpy_utf8;
-        break;
+        case MBSTRING_UTF8:
+            outlen = 0;
+            traverse_string(in, len, inform, out_utf8, &outlen);
+            cpyfunc = cpy_utf8;
+            break;
     }
     if ((p = OPENSSL_malloc(outlen + 1)) == NULL) {
         if (free_out)

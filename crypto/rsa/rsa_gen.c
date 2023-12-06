@@ -188,7 +188,7 @@ static int rsa_multiprime_keygen(RSA *rsa, int bits, int primes,
         BN_set_flags(prime, BN_FLG_CONSTTIME);
 
         for (;;) {
- redo:
+redo:
             if (!BN_generate_prime_ex2(prime, bitsr[i] + adj, 0, NULL, NULL,
                                        cb, ctx))
                 goto err;
@@ -220,7 +220,7 @@ static int rsa_multiprime_keygen(RSA *rsa, int bits, int primes,
             ERR_set_mark();
             BN_set_flags(r2, BN_FLG_CONSTTIME);
             if (BN_mod_inverse(r1, r2, rsa->e, ctx) != NULL) {
-               /* GCD == 1 since inverse exists */
+                /* GCD == 1 since inverse exists */
                 break;
             }
             error = ERR_peek_last_error();
@@ -411,7 +411,7 @@ static int rsa_multiprime_keygen(RSA *rsa, int bits, int primes,
     }
 
     ok = 1;
- err:
+err:
     if (ok == -1) {
         ERR_raise(ERR_LIB_RSA, ERR_R_BN_LIB);
         ok = 0;
@@ -436,8 +436,8 @@ static int rsa_keygen(OSSL_LIB_CTX *libctx, RSA *rsa, int bits, int primes,
      * public exponent <= 2^16 will use the older rsa_multiprime_keygen().
      */
     if (primes == 2
-            && bits >= 2048
-            && (e_value == NULL || BN_num_bits(e_value) > 16))
+        && bits >= 2048
+        && (e_value == NULL || BN_num_bits(e_value) > 16))
         ok = ossl_rsa_sp800_56b_generate_key(rsa, bits, e_value, cb);
     else
         ok = rsa_multiprime_keygen(rsa, bits, primes, e_value, cb);

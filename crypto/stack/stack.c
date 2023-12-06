@@ -74,7 +74,7 @@ OPENSSL_STACK *OPENSSL_sk_dup(const OPENSSL_STACK *sk)
     memcpy(ret->data, sk->data, sizeof(void *) * sk->num);
     return ret;
 
- err:
+err:
     OPENSSL_sk_free(ret);
     return NULL;
 }
@@ -122,7 +122,7 @@ OPENSSL_STACK *OPENSSL_sk_deep_copy(const OPENSSL_STACK *sk,
     }
     return ret;
 
- err:
+err:
     OPENSSL_sk_free(ret);
     return NULL;
 }

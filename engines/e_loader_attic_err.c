@@ -17,21 +17,21 @@ static ERR_STRING_DATA ATTIC_str_reasons[] = {
     {ERR_PACK(0, 0, ATTIC_R_AMBIGUOUS_CONTENT_TYPE), "ambiguous content type"},
     {ERR_PACK(0, 0, ATTIC_R_BAD_PASSWORD_READ), "bad password read"},
     {ERR_PACK(0, 0, ATTIC_R_ERROR_VERIFYING_PKCS12_MAC),
-    "error verifying pkcs12 mac"},
+     "error verifying pkcs12 mac"},
     {ERR_PACK(0, 0, ATTIC_R_INIT_FAILED), "init failed"},
     {ERR_PACK(0, 0, ATTIC_R_PASSPHRASE_CALLBACK_ERROR),
-    "passphrase callback error"},
+     "passphrase callback error"},
     {ERR_PACK(0, 0, ATTIC_R_PATH_MUST_BE_ABSOLUTE), "path must be absolute"},
     {ERR_PACK(0, 0, ATTIC_R_SEARCH_ONLY_SUPPORTED_FOR_DIRECTORIES),
-    "search only supported for directories"},
+     "search only supported for directories"},
     {ERR_PACK(0, 0, ATTIC_R_UI_PROCESS_INTERRUPTED_OR_CANCELLED),
-    "ui process interrupted or cancelled"},
+     "ui process interrupted or cancelled"},
     {ERR_PACK(0, 0, ATTIC_R_UNSUPPORTED_CONTENT_TYPE),
-    "unsupported content type"},
+     "unsupported content type"},
     {ERR_PACK(0, 0, ATTIC_R_UNSUPPORTED_SEARCH_TYPE),
-    "unsupported search type"},
+     "unsupported search type"},
     {ERR_PACK(0, 0, ATTIC_R_URI_AUTHORITY_UNSUPPORTED),
-    "uri authority unsupported"},
+     "uri authority unsupported"},
     {0, NULL}
 };
 
@@ -64,7 +64,8 @@ static void ERR_unload_ATTIC_strings(void)
     }
 }
 
-static void ERR_ATTIC_error(int function, int reason, const char *file, int line)
+static void ERR_ATTIC_error(int function, int reason, const char *file,
+                            int line)
 {
     if (lib_code == 0)
         lib_code = ERR_get_next_error_library();

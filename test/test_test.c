@@ -455,7 +455,7 @@ static int test_single_eval(void)
     size_t st = 1234;
     char buf[4] = { 0 }, *p = buf;
 
-           /* int */
+    /* int */
     return TEST_int_eq(i++, 4)
            && TEST_int_eq(i, 5)
            && TEST_int_gt(++i, 5)
@@ -524,7 +524,7 @@ static int test_bn_output(int n)
     BIGNUM *b = NULL;
 
     if (bn_output_tests[n] != NULL
-            && !TEST_true(BN_hex2bn(&b, bn_output_tests[n])))
+        && !TEST_true(BN_hex2bn(&b, bn_output_tests[n])))
         return 0;
     test_output_bignum(bn_output_tests[n], b);
     BN_free(b);

@@ -12,7 +12,8 @@ typedef struct lower_write_op_st LOWER_WRITE_OP;
 
 typedef void (app_connect_cb)(APP_CONN *conn, int status, void *arg);
 typedef void (app_write_cb)(APP_CONN *conn, int status, void *arg);
-typedef void (app_read_cb)(APP_CONN *conn, void *buf, size_t buf_len, void *arg);
+typedef void (app_read_cb)(APP_CONN *conn, void *buf, size_t buf_len,
+                           void *arg);
 
 #ifdef USE_QUIC
 static void set_timer(APP_CONN *conn);
@@ -25,7 +26,8 @@ static void flush_write_buf(APP_CONN *conn);
 static void set_rx(APP_CONN *conn);
 static int try_write(APP_CONN *conn, UPPER_WRITE_OP *op);
 static void handle_pending_writes(APP_CONN *conn);
-static int write_deferred(APP_CONN *conn, const void *buf, size_t buf_len, app_write_cb *cb, void *arg);
+static int write_deferred(APP_CONN *conn, const void *buf, size_t buf_len,
+                          app_write_cb *cb, void *arg);
 static void teardown_continued(uv_handle_t *handle);
 static int setup_ssl(APP_CONN *conn, const char *hostname);
 
@@ -44,7 +46,7 @@ static inline int timeval_to_ms(const struct timeval *t)
 struct upper_write_op_st {
     struct upper_write_op_st   *prev, *next;
     const uint8_t              *buf;
-    size_t                      buf_len, written;
+    size_t buf_len, written;
     APP_CONN                   *conn;
     app_write_cb               *cb;
     void                       *cb_arg;
@@ -55,11 +57,11 @@ struct upper_write_op_st {
  */
 struct lower_write_op_st {
 #ifdef USE_QUIC
-    uv_udp_send_t   w;
+    uv_udp_send_t w;
 #else
-    uv_write_t      w;
+    uv_write_t w;
 #endif
-    uv_buf_t        b;
+    uv_buf_t b;
     uint8_t        *buf;
     APP_CONN       *conn;
 };
@@ -72,19 +74,19 @@ struct app_conn_st {
     SSL            *ssl;
     BIO            *net_bio;
 #ifdef USE_QUIC
-    uv_udp_t        udp;
-    uv_timer_t      timer;
+    uv_udp_t udp;
+    uv_timer_t timer;
 #else
     uv_stream_t    *stream;
-    uv_tcp_t        tcp;
-    uv_connect_t    tcp_connect;
+    uv_tcp_t tcp;
+    uv_connect_t tcp_connect;
 #endif
     app_connect_cb *app_connect_cb;   /* called once handshake is done */
     void           *app_connect_arg;
     app_read_cb    *app_read_cb;      /* application's on-RX callback */
     void           *app_read_arg;
     const char     *hostname;
-    char            init_handshake, done_handshake, closed;
+    char init_handshake, done_handshake, closed;
     char           *teardown_done;
 
     UPPER_WRITE_OP *pending_upper_write_head, *pending_upper_write_tail;
@@ -199,7 +201,8 @@ int app_read_start(APP_CONN *conn, app_read_cb *cb, void *arg)
  * The application wants to write. The callback is called once the
  * write is complete. The callback should free the buffer.
  */
-int app_write(APP_CONN *conn, const void *buf, size_t buf_len, app_write_cb *cb, void *arg)
+int app_write(APP_CONN *conn, const void *buf, size_t buf_len, app_write_cb *cb,
+              void *arg)
 {
     write_deferred(conn, buf, buf_len, cb, arg);
     handle_pending_writes(conn);
@@ -393,7 +396,9 @@ static void set_rx(APP_CONN *conn)
     else
         uv_udp_recv_stop(&conn->udp);
 #else
-    if (!conn->closed && (conn->app_read_cb || (!conn->done_handshake && conn->init_handshake) || conn->pending_upper_write_head != NULL))
+    if (!conn->closed &&
+        (conn->app_read_cb || (!conn->done_handshake && conn->init_handshake) ||
+         conn->pending_upper_write_head != NULL))
         uv_read_start(conn->stream, net_read_alloc, net_read_done);
     else
         uv_read_stop(conn->stream);
@@ -628,7 +633,8 @@ static int try_write(APP_CONN *conn, UPPER_WRITE_OP *op)
     return 1; /* op should be freed */
 }
 
-static int write_deferred(APP_CONN *conn, const void *buf, size_t buf_len, app_write_cb *cb, void *arg)
+static int write_deferred(APP_CONN *conn, const void *buf, size_t buf_len,
+                          app_write_cb *cb, void *arg)
 {
     UPPER_WRITE_OP *op = calloc(1, sizeof(UPPER_WRITE_OP));
     if (!op)
@@ -743,7 +749,8 @@ int main(int argc, char **argv)
         goto fail;
     }
 
-    conn = new_conn(ctx, argv[1], result->ai_addr, result->ai_addrlen, post_connect, NULL);
+    conn = new_conn(ctx, argv[1], result->ai_addr, result->ai_addrlen,
+                    post_connect, NULL);
     if (!conn)
         goto fail;
 

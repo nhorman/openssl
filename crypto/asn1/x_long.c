@@ -39,11 +39,11 @@ static ASN1_PRIMITIVE_FUNCS long_pf = {
 };
 
 ASN1_ITEM_start(LONG)
-        ASN1_ITYPE_PRIMITIVE, V_ASN1_INTEGER, NULL, 0, &long_pf, ASN1_LONG_UNDEF, "LONG"
+ASN1_ITYPE_PRIMITIVE, V_ASN1_INTEGER, NULL, 0, &long_pf, ASN1_LONG_UNDEF, "LONG"
 ASN1_ITEM_end(LONG)
 
 ASN1_ITEM_start(ZLONG)
-        ASN1_ITYPE_PRIMITIVE, V_ASN1_INTEGER, NULL, 0, &long_pf, 0, "ZLONG"
+ASN1_ITYPE_PRIMITIVE, V_ASN1_INTEGER, NULL, 0, &long_pf, 0, "ZLONG"
 ASN1_ITEM_end(ZLONG)
 
 static int long_new(ASN1_VALUE **pval, const ASN1_ITEM *it)
@@ -139,16 +139,16 @@ static int long_c2i(ASN1_VALUE **pval, const unsigned char *cont, int len,
          * accordingly, the result will be correct in the end anyway.
          */
         switch (cont[0]) {
-        case 0xff:
-            cont++;
-            len--;
-            sign = 0xff;
-            break;
-        case 0:
-            cont++;
-            len--;
-            sign = 0;
-            break;
+            case 0xff:
+                cont++;
+                len--;
+                sign = 0xff;
+                break;
+            case 0:
+                cont++;
+                len--;
+                sign = 0;
+                break;
         }
     }
     if (len > (int)sizeof(long)) {

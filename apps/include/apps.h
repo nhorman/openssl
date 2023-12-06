@@ -243,8 +243,10 @@ int rotate_index(const char *dbfile, const char *new_suffix,
                  const char *old_suffix);
 void free_index(CA_DB *db);
 # define index_name_cmp_noconst(a, b) \
-    index_name_cmp((const OPENSSL_CSTRING *)CHECKED_PTR_OF(OPENSSL_STRING, a), \
-                   (const OPENSSL_CSTRING *)CHECKED_PTR_OF(OPENSSL_STRING, b))
+        index_name_cmp((const OPENSSL_CSTRING *)CHECKED_PTR_OF(OPENSSL_STRING, \
+                                                               a), \
+                       (const OPENSSL_CSTRING *)CHECKED_PTR_OF(OPENSSL_STRING, \
+                                                               b))
 int index_name_cmp(const OPENSSL_CSTRING *a, const OPENSSL_CSTRING *b);
 int parse_yesno(const char *str, int def);
 

@@ -88,7 +88,7 @@ static int dsa_keygen_knownanswer_test(DSA *dsa, BN_CTX *ctx,
         goto err;
 
     OSSL_SELF_TEST_onbegin(st, OSSL_SELF_TEST_TYPE_PCT_KAT,
-                               OSSL_SELF_TEST_DESC_PCT_DSA);
+                           OSSL_SELF_TEST_DESC_PCT_DSA);
 
     if (!ossl_dsa_generate_public_key(ctx, dsa, dsa->priv_key, pub_key2))
         goto err;
@@ -210,7 +210,7 @@ static int dsa_keygen(DSA *dsa)
 #endif
     dsa->dirty_cnt++;
 
- err:
+err:
     if (pub_key != dsa->pub_key)
         BN_free(pub_key);
     if (priv_key != dsa->priv_key)

@@ -172,7 +172,7 @@ int ossl_sframe_list_insert(SFRAME_LIST *fl, UINT_RANGE *range,
 
     ++fl->num_frames;
 
- end:
+end:
     fl->fin = fin || fl->fin;
 
     return 1;

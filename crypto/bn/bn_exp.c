@@ -52,7 +52,7 @@ int BN_exp(BIGNUM *r, const BIGNUM *a, const BIGNUM *p, BN_CTX *ctx)
     BIGNUM *v, *rr;
 
     if (BN_get_flags(p, BN_FLG_CONSTTIME) != 0
-            || BN_get_flags(a, BN_FLG_CONSTTIME) != 0) {
+        || BN_get_flags(a, BN_FLG_CONSTTIME) != 0) {
         /* BN_FLG_CONSTTIME only supported by BN_mod_exp_mont() */
         ERR_raise(ERR_LIB_BN, ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
         return 0;
@@ -88,7 +88,7 @@ int BN_exp(BIGNUM *r, const BIGNUM *a, const BIGNUM *p, BN_CTX *ctx)
         goto err;
 
     ret = 1;
- err:
+err:
     BN_CTX_end(ctx);
     bn_check_top(r);
     return ret;
@@ -149,7 +149,7 @@ int BN_mod_exp(BIGNUM *r, const BIGNUM *a, const BIGNUM *p, const BIGNUM *m,
             ret = BN_mod_exp_mont_word(r, A, p, m, ctx, NULL);
         } else
 # endif
-            ret = BN_mod_exp_mont(r, a, p, m, ctx, NULL);
+        ret = BN_mod_exp_mont(r, a, p, m, ctx, NULL);
     } else
 #endif
 #ifdef RECP_MUL_MOD
@@ -177,8 +177,8 @@ int BN_mod_exp_recp(BIGNUM *r, const BIGNUM *a, const BIGNUM *p,
     BN_RECP_CTX recp;
 
     if (BN_get_flags(p, BN_FLG_CONSTTIME) != 0
-            || BN_get_flags(a, BN_FLG_CONSTTIME) != 0
-            || BN_get_flags(m, BN_FLG_CONSTTIME) != 0) {
+        || BN_get_flags(a, BN_FLG_CONSTTIME) != 0
+        || BN_get_flags(m, BN_FLG_CONSTTIME) != 0) {
         /* BN_FLG_CONSTTIME only supported by BN_mod_exp_mont() */
         ERR_raise(ERR_LIB_BN, ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
         return 0;
@@ -302,7 +302,7 @@ int BN_mod_exp_recp(BIGNUM *r, const BIGNUM *a, const BIGNUM *p,
             break;
     }
     ret = 1;
- err:
+err:
     BN_CTX_end(ctx);
     BN_RECP_CTX_free(&recp);
     bn_check_top(r);
@@ -478,7 +478,7 @@ int BN_mod_exp_mont(BIGNUM *rr, const BIGNUM *a, const BIGNUM *p,
     if (!BN_from_montgomery(rr, r, mont, ctx))
         goto err;
     ret = 1;
- err:
+err:
     if (in_mont == NULL)
         BN_MONT_CTX_free(mont);
     BN_CTX_end(ctx);
@@ -597,7 +597,9 @@ static int MOD_EXP_CTIME_COPY_FROM_PREBUF(BIGNUM *b, int top,
  * multiple.
  */
 #define MOD_EXP_CTIME_ALIGN(x_) \
-        ((unsigned char*)(x_) + (MOD_EXP_CTIME_MIN_CACHE_LINE_WIDTH - (((size_t)(x_)) & (MOD_EXP_CTIME_MIN_CACHE_LINE_MASK))))
+        ((unsigned char*)(x_) + \
+         (MOD_EXP_CTIME_MIN_CACHE_LINE_WIDTH - \
+          (((size_t)(x_)) & (MOD_EXP_CTIME_MIN_CACHE_LINE_MASK))))
 
 /*
  * This variant of BN_mod_exp_mont() uses fixed windows and the special
@@ -741,9 +743,9 @@ int BN_mod_exp_mont_consttime(BIGNUM *rr, const BIGNUM *a, const BIGNUM *p,
             alloca(powerbufLen + MOD_EXP_CTIME_MIN_CACHE_LINE_WIDTH);
     else
 #endif
-        if ((powerbufFree =
+    if ((powerbufFree =
              OPENSSL_malloc(powerbufLen + MOD_EXP_CTIME_MIN_CACHE_LINE_WIDTH))
-            == NULL)
+        == NULL)
         goto err;
 
     powerbuf = MOD_EXP_CTIME_ALIGN(powerbufFree);
@@ -1053,7 +1055,7 @@ int BN_mod_exp_mont_consttime(BIGNUM *rr, const BIGNUM *a, const BIGNUM *p,
     } else
 #endif
     {
- fallback:
+fallback:
         if (!MOD_EXP_CTIME_COPY_TO_PREBUF(&tmp, top, powerbuf, 0, window))
             goto err;
         if (!MOD_EXP_CTIME_COPY_TO_PREBUF(&am, top, powerbuf, 1, window))
@@ -1149,7 +1151,7 @@ int BN_mod_exp_mont_consttime(BIGNUM *rr, const BIGNUM *a, const BIGNUM *p,
     if (!BN_from_montgomery(rr, &tmp, mont, ctx))
         goto err;
     ret = 1;
- err:
+err:
     if (in_mont == NULL)
         BN_MONT_CTX_free(mont);
     if (powerbuf != NULL) {
@@ -1170,9 +1172,9 @@ int BN_mod_exp_mont_word(BIGNUM *rr, BN_ULONG a, const BIGNUM *p,
     BIGNUM *r, *t;
     BIGNUM *swap_tmp;
 #define BN_MOD_MUL_WORD(r, w, m) \
-                (BN_mul_word(r, (w)) && \
-                (/* BN_ucmp(r, (m)) < 0 ? 1 :*/  \
-                        (BN_mod(t, r, m, ctx) && (swap_tmp = r, r = t, t = swap_tmp, 1))))
+        (BN_mul_word(r, (w)) && \
+         (       /* BN_ucmp(r, (m)) < 0 ? 1 :*/  \
+             (BN_mod(t, r, m, ctx) && (swap_tmp = r, r = t, t = swap_tmp, 1))))
     /*
      * BN_MOD_MUL_WORD is only used with 'w' large, so the BN_ucmp test is
      * probably more overhead than always using BN_mod (which uses BN_copy if
@@ -1184,10 +1186,10 @@ int BN_mod_exp_mont_word(BIGNUM *rr, BN_ULONG a, const BIGNUM *p,
      * the modulus).
      */
 #define BN_TO_MONTGOMERY_WORD(r, w, mont) \
-                (BN_set_word(r, (w)) && BN_to_montgomery(r, r, (mont), ctx))
+        (BN_set_word(r, (w)) && BN_to_montgomery(r, r, (mont), ctx))
 
     if (BN_get_flags(p, BN_FLG_CONSTTIME) != 0
-            || BN_get_flags(m, BN_FLG_CONSTTIME) != 0) {
+        || BN_get_flags(m, BN_FLG_CONSTTIME) != 0) {
         /* BN_FLG_CONSTTIME only supported by BN_mod_exp_mont() */
         ERR_raise(ERR_LIB_BN, ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
         return 0;
@@ -1299,7 +1301,7 @@ int BN_mod_exp_mont_word(BIGNUM *rr, BN_ULONG a, const BIGNUM *p,
             goto err;
     }
     ret = 1;
- err:
+err:
     if (in_mont == NULL)
         BN_MONT_CTX_free(mont);
     BN_CTX_end(ctx);
@@ -1318,8 +1320,8 @@ int BN_mod_exp_simple(BIGNUM *r, const BIGNUM *a, const BIGNUM *p,
     BIGNUM *val[TABLE_SIZE];
 
     if (BN_get_flags(p, BN_FLG_CONSTTIME) != 0
-            || BN_get_flags(a, BN_FLG_CONSTTIME) != 0
-            || BN_get_flags(m, BN_FLG_CONSTTIME) != 0) {
+        || BN_get_flags(a, BN_FLG_CONSTTIME) != 0
+        || BN_get_flags(m, BN_FLG_CONSTTIME) != 0) {
         /* BN_FLG_CONSTTIME only supported by BN_mod_exp_mont() */
         ERR_raise(ERR_LIB_BN, ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
         return 0;
@@ -1434,7 +1436,7 @@ int BN_mod_exp_simple(BIGNUM *r, const BIGNUM *a, const BIGNUM *p,
             break;
     }
     ret = 1;
- err:
+err:
     BN_CTX_end(ctx);
     bn_check_top(r);
     return ret;
@@ -1447,9 +1449,11 @@ int BN_mod_exp_simple(BIGNUM *r, const BIGNUM *a, const BIGNUM *p,
  * If such instructions are not available, or input data size is not supported,
  * it falls back to two BN_mod_exp_mont_consttime() calls.
  */
-int BN_mod_exp_mont_consttime_x2(BIGNUM *rr1, const BIGNUM *a1, const BIGNUM *p1,
+int BN_mod_exp_mont_consttime_x2(BIGNUM *rr1, const BIGNUM *a1,
+                                 const BIGNUM *p1,
                                  const BIGNUM *m1, BN_MONT_CTX *in_mont1,
-                                 BIGNUM *rr2, const BIGNUM *a2, const BIGNUM *p2,
+                                 BIGNUM *rr2, const BIGNUM *a2,
+                                 const BIGNUM *p2,
                                  const BIGNUM *m2, BN_MONT_CTX *in_mont2,
                                  BN_CTX *ctx)
 {

@@ -131,18 +131,18 @@ int i2d_PublicKey(const EVP_PKEY *a, unsigned char **pp)
         return i2d_provided(a, EVP_PKEY_PUBLIC_KEY, output_info, pp);
     }
     switch (EVP_PKEY_get_base_id(a)) {
-    case EVP_PKEY_RSA:
-        return i2d_RSAPublicKey(EVP_PKEY_get0_RSA(a), pp);
+        case EVP_PKEY_RSA:
+            return i2d_RSAPublicKey(EVP_PKEY_get0_RSA(a), pp);
 #ifndef OPENSSL_NO_DSA
-    case EVP_PKEY_DSA:
-        return i2d_DSAPublicKey(EVP_PKEY_get0_DSA(a), pp);
+        case EVP_PKEY_DSA:
+            return i2d_DSAPublicKey(EVP_PKEY_get0_DSA(a), pp);
 #endif
 #ifndef OPENSSL_NO_EC
-    case EVP_PKEY_EC:
-        return i2o_ECPublicKey(EVP_PKEY_get0_EC_KEY(a), pp);
+        case EVP_PKEY_EC:
+            return i2o_ECPublicKey(EVP_PKEY_get0_EC_KEY(a), pp);
 #endif
-    default:
-        ERR_raise(ERR_LIB_ASN1, ASN1_R_UNSUPPORTED_PUBLIC_KEY_TYPE);
-        return -1;
+        default:
+            ERR_raise(ERR_LIB_ASN1, ASN1_R_UNSUPPORTED_PUBLIC_KEY_TYPE);
+            return -1;
     }
 }

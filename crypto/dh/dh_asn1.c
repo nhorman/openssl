@@ -46,9 +46,9 @@ static int dh_cb(int operation, ASN1_VALUE **pval, const ASN1_ITEM *it,
 }
 
 ASN1_SEQUENCE_cb(DHparams, dh_cb) = {
-        ASN1_SIMPLE(DH, params.p, BIGNUM),
-        ASN1_SIMPLE(DH, params.g, BIGNUM),
-        ASN1_OPT_EMBED(DH, length, ZINT32),
+    ASN1_SIMPLE(DH, params.p, BIGNUM),
+    ASN1_SIMPLE(DH, params.g, BIGNUM),
+    ASN1_OPT_EMBED(DH, length, ZINT32),
 } ASN1_SEQUENCE_END_cb(DH, DHparams)
 
 IMPLEMENT_ASN1_ENCODE_FUNCTIONS_fname(DH, DHparams, DHparams)
@@ -72,16 +72,16 @@ typedef struct {
 } int_dhx942_dh;
 
 ASN1_SEQUENCE(DHvparams) = {
-        ASN1_SIMPLE(int_dhvparams, seed, ASN1_BIT_STRING),
-        ASN1_SIMPLE(int_dhvparams, counter, BIGNUM)
+    ASN1_SIMPLE(int_dhvparams, seed, ASN1_BIT_STRING),
+    ASN1_SIMPLE(int_dhvparams, counter, BIGNUM)
 } static_ASN1_SEQUENCE_END_name(int_dhvparams, DHvparams)
 
 ASN1_SEQUENCE(DHxparams) = {
-        ASN1_SIMPLE(int_dhx942_dh, p, BIGNUM),
-        ASN1_SIMPLE(int_dhx942_dh, g, BIGNUM),
-        ASN1_SIMPLE(int_dhx942_dh, q, BIGNUM),
-        ASN1_OPT(int_dhx942_dh, j, BIGNUM),
-        ASN1_OPT(int_dhx942_dh, vparams, DHvparams),
+    ASN1_SIMPLE(int_dhx942_dh, p, BIGNUM),
+    ASN1_SIMPLE(int_dhx942_dh, g, BIGNUM),
+    ASN1_SIMPLE(int_dhx942_dh, q, BIGNUM),
+    ASN1_OPT(int_dhx942_dh, j, BIGNUM),
+    ASN1_OPT(int_dhx942_dh, vparams, DHvparams),
 } static_ASN1_SEQUENCE_END_name(int_dhx942_dh, DHxparams)
 
 int_dhx942_dh *d2i_int_dhx(int_dhx942_dh **a,

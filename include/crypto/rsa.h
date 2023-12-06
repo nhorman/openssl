@@ -31,7 +31,8 @@ RSA_PSS_PARAMS_30 *ossl_rsa_get0_pss_params_30(RSA *r);
 int ossl_rsa_pss_params_30_set_defaults(RSA_PSS_PARAMS_30 *rsa_pss_params);
 int ossl_rsa_pss_params_30_copy(RSA_PSS_PARAMS_30 *to,
                                 const RSA_PSS_PARAMS_30 *from);
-int ossl_rsa_pss_params_30_is_unrestricted(const RSA_PSS_PARAMS_30 *rsa_pss_params);
+int ossl_rsa_pss_params_30_is_unrestricted(
+    const RSA_PSS_PARAMS_30 *rsa_pss_params);
 int ossl_rsa_pss_params_30_set_hashalg(RSA_PSS_PARAMS_30 *rsa_pss_params,
                                        int hashalg_nid);
 int ossl_rsa_pss_params_30_set_maskgenhashalg(RSA_PSS_PARAMS_30 *rsa_pss_params,
@@ -42,9 +43,11 @@ int ossl_rsa_pss_params_30_set_trailerfield(RSA_PSS_PARAMS_30 *rsa_pss_params,
                                             int trailerfield);
 int ossl_rsa_pss_params_30_hashalg(const RSA_PSS_PARAMS_30 *rsa_pss_params);
 int ossl_rsa_pss_params_30_maskgenalg(const RSA_PSS_PARAMS_30 *rsa_pss_params);
-int ossl_rsa_pss_params_30_maskgenhashalg(const RSA_PSS_PARAMS_30 *rsa_pss_params);
+int ossl_rsa_pss_params_30_maskgenhashalg(
+    const RSA_PSS_PARAMS_30 *rsa_pss_params);
 int ossl_rsa_pss_params_30_saltlen(const RSA_PSS_PARAMS_30 *rsa_pss_params);
-int ossl_rsa_pss_params_30_trailerfield(const RSA_PSS_PARAMS_30 *rsa_pss_params);
+int ossl_rsa_pss_params_30_trailerfield(
+    const RSA_PSS_PARAMS_30 *rsa_pss_params);
 
 const char *ossl_rsa_mgf_nid2name(int mgf);
 int ossl_rsa_oaeppss_md2nid(const EVP_MD *md);
@@ -74,7 +77,8 @@ int ossl_rsa_pss_params_30_fromdata(RSA_PSS_PARAMS_30 *pss_params,
                                     OSSL_LIB_CTX *libctx);
 int ossl_rsa_set0_pss_params(RSA *r, RSA_PSS_PARAMS *pss);
 int ossl_rsa_pss_get_param_unverified(const RSA_PSS_PARAMS *pss,
-                                      const EVP_MD **pmd, const EVP_MD **pmgf1md,
+                                      const EVP_MD **pmd,
+                                      const EVP_MD **pmgf1md,
                                       int *psaltlen, int *ptrailerField);
 RSA_PSS_PARAMS *ossl_rsa_pss_decode(const X509_ALGOR *alg);
 int ossl_rsa_param_decode(RSA *rsa, const X509_ALGOR *alg);
@@ -85,7 +89,8 @@ int ossl_rsa_padding_check_PKCS1_type_2(OSSL_LIB_CTX *ctx,
                                         unsigned char *to, int tlen,
                                         const unsigned char *from, int flen,
                                         int num, unsigned char *kdk);
-int ossl_rsa_padding_check_PKCS1_type_2_TLS(OSSL_LIB_CTX *ctx, unsigned char *to,
+int ossl_rsa_padding_check_PKCS1_type_2_TLS(OSSL_LIB_CTX *ctx,
+                                            unsigned char *to,
                                             size_t tlen,
                                             const unsigned char *from,
                                             size_t flen, int client_version,

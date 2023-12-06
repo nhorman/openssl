@@ -60,7 +60,8 @@ size_t ossl_cipher_fillblock(unsigned char *buf, size_t *buflen,
  * Fills the buffer with trailing data from an encryption/decryption that didn't
  * fit into a full block.
  */
-int ossl_cipher_trailingdata(unsigned char *buf, size_t *buflen, size_t blocksize,
+int ossl_cipher_trailingdata(unsigned char *buf, size_t *buflen,
+                             size_t blocksize,
                              const unsigned char **in, size_t *inlen)
 {
     if (*inlen == 0)
@@ -147,27 +148,27 @@ int ossl_cipher_tlsunpadblock(OSSL_LIB_CTX *libctx, unsigned int tlsversion,
     int ret;
 
     switch (tlsversion) {
-    case SSL3_VERSION:
-        return ssl3_cbc_remove_padding_and_mac(buflen, *buflen, buf, mac,
-                                               alloced, blocksize, macsize,
-                                               libctx);
+        case SSL3_VERSION:
+            return ssl3_cbc_remove_padding_and_mac(buflen, *buflen, buf, mac,
+                                                   alloced, blocksize, macsize,
+                                                   libctx);
 
-    case TLS1_2_VERSION:
-    case DTLS1_2_VERSION:
-    case TLS1_1_VERSION:
-    case DTLS1_VERSION:
-    case DTLS1_BAD_VER:
-        /* Remove the explicit IV */
-        buf += blocksize;
-        *buflen -= blocksize;
+        case TLS1_2_VERSION:
+        case DTLS1_2_VERSION:
+        case TLS1_1_VERSION:
+        case DTLS1_VERSION:
+        case DTLS1_BAD_VER:
+            /* Remove the explicit IV */
+            buf += blocksize;
+            *buflen -= blocksize;
         /* Fall through */
-    case TLS1_VERSION:
-        ret = tls1_cbc_remove_padding_and_mac(buflen, *buflen, buf, mac,
-                                              alloced, blocksize, macsize,
-                                              aead, libctx);
-        return ret;
+        case TLS1_VERSION:
+            ret = tls1_cbc_remove_padding_and_mac(buflen, *buflen, buf, mac,
+                                                  alloced, blocksize, macsize,
+                                                  aead, libctx);
+            return ret;
 
-    default:
-        return 0;
+        default:
+            return 0;
     }
 }

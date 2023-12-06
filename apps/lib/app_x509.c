@@ -38,7 +38,7 @@ static int x509_ctrl(void *object, int cmd, void *value, size_t value_n)
 {
     switch (cmd) {
 #ifdef EVP_PKEY_CTRL_SET1_ID
-    case EVP_PKEY_CTRL_SET1_ID:
+        case EVP_PKEY_CTRL_SET1_ID:
         {
             ASN1_OCTET_STRING *v = mk_octet_string(value, value_n);
 
@@ -52,8 +52,8 @@ static int x509_ctrl(void *object, int cmd, void *value, size_t value_n)
             return 1;
         }
 #endif
-    default:
-        break;
+        default:
+            break;
     }
     return -2;     /* typical EVP_PKEY return for "unsupported" */
 }
@@ -62,7 +62,7 @@ static int x509_req_ctrl(void *object, int cmd, void *value, size_t value_n)
 {
     switch (cmd) {
 #ifdef EVP_PKEY_CTRL_SET1_ID
-    case EVP_PKEY_CTRL_SET1_ID:
+        case EVP_PKEY_CTRL_SET1_ID:
         {
             ASN1_OCTET_STRING *v = mk_octet_string(value, value_n);
 
@@ -76,8 +76,8 @@ static int x509_req_ctrl(void *object, int cmd, void *value, size_t value_n)
             return 1;
         }
 #endif
-    default:
-        break;
+        default:
+            break;
     }
     return -2;     /* typical EVP_PKEY return for "unsupported" */
 }

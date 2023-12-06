@@ -43,7 +43,7 @@ OSSL_HTTP_REQ_CTX *OCSP_sendreq_new(BIO *io, const char *path,
         goto err;
     return rctx;
 
- err:
+err:
     OSSL_HTTP_REQ_CTX_free(rctx);
     return NULL;
 }

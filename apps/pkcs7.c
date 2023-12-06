@@ -60,58 +60,59 @@ int pkcs7_main(int argc, char **argv)
     BIO *in = NULL, *out = NULL;
     int informat = FORMAT_PEM, outformat = FORMAT_PEM;
     char *infile = NULL, *outfile = NULL, *prog;
-    int i, print_certs = 0, text = 0, noout = 0, p7_print = 0, quiet = 0, ret = 1;
+    int i, print_certs = 0, text = 0, noout = 0, p7_print = 0, quiet = 0,
+        ret = 1;
     OPTION_CHOICE o;
     OSSL_LIB_CTX *libctx = app_get0_libctx();
 
     prog = opt_init(argc, argv, pkcs7_options);
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_EOF:
-        case OPT_ERR:
- opthelp:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto end;
-        case OPT_HELP:
-            opt_help(pkcs7_options);
-            ret = 0;
-            goto end;
-        case OPT_INFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &informat))
-                goto opthelp;
-            break;
-        case OPT_OUTFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &outformat))
-                goto opthelp;
-            break;
-        case OPT_IN:
-            infile = opt_arg();
-            break;
-        case OPT_OUT:
-            outfile = opt_arg();
-            break;
-        case OPT_NOOUT:
-            noout = 1;
-            break;
-        case OPT_TEXT:
-            text = 1;
-            break;
-        case OPT_PRINT:
-            p7_print = 1;
-            break;
-        case OPT_PRINT_CERTS:
-            print_certs = 1;
-            break;
-        case OPT_QUIET:
-            quiet = 1;
-            break;
-        case OPT_ENGINE:
-            e = setup_engine(opt_arg(), 0);
-            break;
-        case OPT_PROV_CASES:
-            if (!opt_provider(o))
+            case OPT_EOF:
+            case OPT_ERR:
+opthelp:
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
                 goto end;
-            break;
+            case OPT_HELP:
+                opt_help(pkcs7_options);
+                ret = 0;
+                goto end;
+            case OPT_INFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &informat))
+                    goto opthelp;
+                break;
+            case OPT_OUTFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &outformat))
+                    goto opthelp;
+                break;
+            case OPT_IN:
+                infile = opt_arg();
+                break;
+            case OPT_OUT:
+                outfile = opt_arg();
+                break;
+            case OPT_NOOUT:
+                noout = 1;
+                break;
+            case OPT_TEXT:
+                text = 1;
+                break;
+            case OPT_PRINT:
+                p7_print = 1;
+                break;
+            case OPT_PRINT_CERTS:
+                print_certs = 1;
+                break;
+            case OPT_QUIET:
+                quiet = 1;
+                break;
+            case OPT_ENGINE:
+                e = setup_engine(opt_arg(), 0);
+                break;
+            case OPT_PROV_CASES:
+                if (!opt_provider(o))
+                    goto end;
+                break;
         }
     }
 
@@ -153,20 +154,20 @@ int pkcs7_main(int argc, char **argv)
 
         i = OBJ_obj2nid(p7->type);
         switch (i) {
-        case NID_pkcs7_signed:
-            if (p7->d.sign != NULL) {
-                certs = p7->d.sign->cert;
-                crls = p7->d.sign->crl;
-            }
-            break;
-        case NID_pkcs7_signedAndEnveloped:
-            if (p7->d.signed_and_enveloped != NULL) {
-                certs = p7->d.signed_and_enveloped->cert;
-                crls = p7->d.signed_and_enveloped->crl;
-            }
-            break;
-        default:
-            break;
+            case NID_pkcs7_signed:
+                if (p7->d.sign != NULL) {
+                    certs = p7->d.sign->cert;
+                    crls = p7->d.sign->crl;
+                }
+                break;
+            case NID_pkcs7_signedAndEnveloped:
+                if (p7->d.signed_and_enveloped != NULL) {
+                    certs = p7->d.signed_and_enveloped->cert;
+                    crls = p7->d.signed_and_enveloped->crl;
+                }
+                break;
+            default:
+                break;
         }
 
         if (certs != NULL) {
@@ -215,7 +216,7 @@ int pkcs7_main(int argc, char **argv)
         }
     }
     ret = 0;
- end:
+end:
     PKCS7_free(p7);
     release_engine(e);
     BIO_free(in);

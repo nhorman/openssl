@@ -173,7 +173,7 @@ int X509_TRUST_add(int id, int flags, int (*ck) (X509_TRUST *, X509 *, int),
         }
     }
     return 1;
- err:
+err:
     if (idx < 0) {
         OPENSSL_free(trtmp->name);
         OPENSSL_free(trtmp);
@@ -258,7 +258,7 @@ static int obj_trust(int id, X509 *x, int flags)
             int nid = OBJ_obj2nid(obj);
 
             if (nid == id || (nid == NID_anyExtendedKeyUsage &&
-                (flags & X509_TRUST_OK_ANY_EKU)))
+                              (flags & X509_TRUST_OK_ANY_EKU)))
                 return X509_TRUST_REJECTED;
         }
     }
@@ -269,7 +269,7 @@ static int obj_trust(int id, X509 *x, int flags)
             int nid = OBJ_obj2nid(obj);
 
             if (nid == id || (nid == NID_anyExtendedKeyUsage &&
-                (flags & X509_TRUST_OK_ANY_EKU)))
+                              (flags & X509_TRUST_OK_ANY_EKU)))
                 return X509_TRUST_TRUSTED;
         }
         /*

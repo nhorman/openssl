@@ -28,7 +28,7 @@ static OSSL_FUNC_cleanup_user_nonce_fn *c_cleanup_user_nonce = NULL;
  * to the correct core handle before up-calling libcrypto.
  */
 # define CORE_HANDLE(provctx) \
-    FIPS_get_core_handle(ossl_prov_ctx_get0_libctx(provctx))
+        FIPS_get_core_handle(ossl_prov_ctx_get0_libctx(provctx))
 #else
 /*
  * The non-FIPS path *should* be unused because the full DRBG chain including
@@ -47,32 +47,34 @@ int ossl_prov_seeding_from_dispatch(const OSSL_DISPATCH *fns)
          * sharing a single fips.so. We do a simple sanity check here.
          */
 #define set_func(c, f) \
-    do { if (c == NULL) c = f; else if (c != f) return 0; } while (0)
+        do { if (c == NULL) c = f; else if (c != f) return 0; } while (0)
         switch (fns->function_id) {
-        case OSSL_FUNC_GET_ENTROPY:
-            set_func(c_get_entropy, OSSL_FUNC_get_entropy(fns));
-            break;
-        case OSSL_FUNC_GET_USER_ENTROPY:
-            set_func(c_get_user_entropy, OSSL_FUNC_get_user_entropy(fns));
-            break;
-        case OSSL_FUNC_CLEANUP_ENTROPY:
-            set_func(c_cleanup_entropy, OSSL_FUNC_cleanup_entropy(fns));
-            break;
-        case OSSL_FUNC_CLEANUP_USER_ENTROPY:
-            set_func(c_cleanup_user_entropy, OSSL_FUNC_cleanup_user_entropy(fns));
-            break;
-        case OSSL_FUNC_GET_NONCE:
-            set_func(c_get_nonce, OSSL_FUNC_get_nonce(fns));
-            break;
-        case OSSL_FUNC_GET_USER_NONCE:
-            set_func(c_get_user_nonce, OSSL_FUNC_get_user_nonce(fns));
-            break;
-        case OSSL_FUNC_CLEANUP_NONCE:
-            set_func(c_cleanup_nonce, OSSL_FUNC_cleanup_nonce(fns));
-            break;
-        case OSSL_FUNC_CLEANUP_USER_NONCE:
-            set_func(c_cleanup_user_nonce, OSSL_FUNC_cleanup_user_nonce(fns));
-            break;
+            case OSSL_FUNC_GET_ENTROPY:
+                set_func(c_get_entropy, OSSL_FUNC_get_entropy(fns));
+                break;
+            case OSSL_FUNC_GET_USER_ENTROPY:
+                set_func(c_get_user_entropy, OSSL_FUNC_get_user_entropy(fns));
+                break;
+            case OSSL_FUNC_CLEANUP_ENTROPY:
+                set_func(c_cleanup_entropy, OSSL_FUNC_cleanup_entropy(fns));
+                break;
+            case OSSL_FUNC_CLEANUP_USER_ENTROPY:
+                set_func(c_cleanup_user_entropy,
+                         OSSL_FUNC_cleanup_user_entropy(fns));
+                break;
+            case OSSL_FUNC_GET_NONCE:
+                set_func(c_get_nonce, OSSL_FUNC_get_nonce(fns));
+                break;
+            case OSSL_FUNC_GET_USER_NONCE:
+                set_func(c_get_user_nonce, OSSL_FUNC_get_user_nonce(fns));
+                break;
+            case OSSL_FUNC_CLEANUP_NONCE:
+                set_func(c_cleanup_nonce, OSSL_FUNC_cleanup_nonce(fns));
+                break;
+            case OSSL_FUNC_CLEANUP_USER_NONCE:
+                set_func(c_cleanup_user_nonce,
+                         OSSL_FUNC_cleanup_user_nonce(fns));
+                break;
         }
 #undef set_func
     }

@@ -175,7 +175,8 @@ static int test_txfc(int is_stream)
         if (!TEST_false(ossl_quic_txfc_has_become_blocked(txfc, 0)))
             goto err;
 
-        if (is_stream && !TEST_false(ossl_quic_txfc_has_become_blocked(parent_txfc, 0)))
+        if (is_stream &&
+            !TEST_false(ossl_quic_txfc_has_become_blocked(parent_txfc, 0)))
             goto err;
 
         if (!TEST_true(ossl_quic_txfc_consume_credit(txfc, 1)))
@@ -222,66 +223,67 @@ static OSSL_TIME fake_now(void *arg)
 #define RX_OPC_MSG                   16
 
 struct rx_test_op {
-    unsigned char   op;
-    size_t          stream_idx;
-    uint64_t        arg0, arg1;
-    unsigned char   expect_fail;
+    unsigned char op;
+    size_t stream_idx;
+    uint64_t arg0, arg1;
+    unsigned char expect_fail;
     const char     *msg;
 };
 
 #define RX_OP_END \
-    { RX_OPC_END }
+        { RX_OPC_END }
 #define RX_OP_INIT_CONN(init_window_size, max_window_size) \
-    { RX_OPC_INIT_CONN, 0, (init_window_size), (max_window_size) },
+        { RX_OPC_INIT_CONN, 0, (init_window_size), (max_window_size) },
 #define RX_OP_INIT_STREAM(stream_idx, init_window_size, max_window_size) \
-    { RX_OPC_INIT_STREAM, (stream_idx), (init_window_size), (max_window_size) },
+        { RX_OPC_INIT_STREAM, (stream_idx), (init_window_size), \
+          (max_window_size) },
 #define RX_OP_RX(stream_idx, end, is_fin) \
-    { RX_OPC_RX, (stream_idx), (end), (is_fin) },
+        { RX_OPC_RX, (stream_idx), (end), (is_fin) },
 #define RX_OP_RETIRE(stream_idx, num_bytes, rtt, expect_fail) \
-    { RX_OPC_RETIRE, (stream_idx), (num_bytes), (rtt), (expect_fail) },
+        { RX_OPC_RETIRE, (stream_idx), (num_bytes), (rtt), (expect_fail) },
 #define RX_OP_CHECK_CWM_CONN(expected) \
-    { RX_OPC_CHECK_CWM_CONN, 0, (expected) },
+        { RX_OPC_CHECK_CWM_CONN, 0, (expected) },
 #define RX_OP_CHECK_CWM_STREAM(stream_id, expected) \
-    { RX_OPC_CHECK_CWM_STREAM, (stream_id), (expected) },
+        { RX_OPC_CHECK_CWM_STREAM, (stream_id), (expected) },
 #define RX_OP_CHECK_SWM_CONN(expected) \
-    { RX_OPC_CHECK_SWM_CONN, 0, (expected) },
+        { RX_OPC_CHECK_SWM_CONN, 0, (expected) },
 #define RX_OP_CHECK_SWM_STREAM(stream_id, expected) \
-    { RX_OPC_CHECK_SWM_STREAM, (stream_id), (expected) },
+        { RX_OPC_CHECK_SWM_STREAM, (stream_id), (expected) },
 #define RX_OP_CHECK_RWM_CONN(expected) \
-    { RX_OPC_CHECK_RWM_CONN, 0, (expected) },
+        { RX_OPC_CHECK_RWM_CONN, 0, (expected) },
 #define RX_OP_CHECK_RWM_STREAM(stream_id, expected) \
-    { RX_OPC_CHECK_RWM_STREAM, (stream_id), (expected) },
+        { RX_OPC_CHECK_RWM_STREAM, (stream_id), (expected) },
 #define RX_OP_CHECK_CHANGED_CONN(expected, clear) \
-    { RX_OPC_CHECK_CHANGED_CONN, 0, (expected), (clear) },
+        { RX_OPC_CHECK_CHANGED_CONN, 0, (expected), (clear) },
 #define RX_OP_CHECK_CHANGED_STREAM(stream_id, expected, clear) \
-    { RX_OPC_CHECK_CHANGED_STREAM, (stream_id), (expected), (clear) },
+        { RX_OPC_CHECK_CHANGED_STREAM, (stream_id), (expected), (clear) },
 #define RX_OP_CHECK_ERROR_CONN(expected, clear) \
-    { RX_OPC_CHECK_ERROR_CONN, 0, (expected), (clear) },
+        { RX_OPC_CHECK_ERROR_CONN, 0, (expected), (clear) },
 #define RX_OP_CHECK_ERROR_STREAM(stream_id, expected, clear) \
-    { RX_OPC_CHECK_ERROR_STREAM, (stream_id), (expected), (clear) },
+        { RX_OPC_CHECK_ERROR_STREAM, (stream_id), (expected), (clear) },
 #define RX_OP_STEP_TIME(t) \
-    { RX_OPC_STEP_TIME, 0, (t) },
+        { RX_OPC_STEP_TIME, 0, (t) },
 #define RX_OP_MSG(msg) \
-    { RX_OPC_MSG, 0, 0, 0, 0, (msg) },
+        { RX_OPC_MSG, 0, 0, 0, 0, (msg) },
 
 #define RX_OP_INIT(init_window_size, max_window_size) \
-    RX_OP_INIT_CONN(init_window_size, max_window_size) \
-    RX_OP_INIT_STREAM(0, init_window_size, max_window_size)
+        RX_OP_INIT_CONN(init_window_size, max_window_size) \
+        RX_OP_INIT_STREAM(0, init_window_size, max_window_size)
 #define RX_OP_CHECK_CWM(expected) \
-    RX_OP_CHECK_CWM_CONN(expected) \
-    RX_OP_CHECK_CWM_STREAM(0, expected)
+        RX_OP_CHECK_CWM_CONN(expected) \
+        RX_OP_CHECK_CWM_STREAM(0, expected)
 #define RX_OP_CHECK_SWM(expected) \
-    RX_OP_CHECK_SWM_CONN(expected) \
-    RX_OP_CHECK_SWM_STREAM(0, expected)
+        RX_OP_CHECK_SWM_CONN(expected) \
+        RX_OP_CHECK_SWM_STREAM(0, expected)
 #define RX_OP_CHECK_RWM(expected) \
-    RX_OP_CHECK_RWM_CONN(expected) \
-    RX_OP_CHECK_RWM_STREAM(0, expected)
+        RX_OP_CHECK_RWM_CONN(expected) \
+        RX_OP_CHECK_RWM_STREAM(0, expected)
 #define RX_OP_CHECK_CHANGED(expected, clear) \
-    RX_OP_CHECK_CHANGED_CONN(expected, clear) \
-    RX_OP_CHECK_CHANGED_STREAM(0, expected, clear)
+        RX_OP_CHECK_CHANGED_CONN(expected, clear) \
+        RX_OP_CHECK_CHANGED_STREAM(0, expected, clear)
 #define RX_OP_CHECK_ERROR(expected, clear) \
-    RX_OP_CHECK_ERROR_CONN(expected, clear) \
-    RX_OP_CHECK_ERROR_STREAM(0, expected, clear)
+        RX_OP_CHECK_ERROR_CONN(expected, clear) \
+        RX_OP_CHECK_ERROR_STREAM(0, expected, clear)
 
 #define INIT_WINDOW_SIZE (1 * 1024 * 1024)
 #define INIT_S_WINDOW_SIZE (384 * 1024)
@@ -367,7 +369,7 @@ static const struct rx_test_op rx_script_1[] = {
     RX_OP_CHECK_ERROR(QUIC_ERR_FLOW_CONTROL_ERROR, 1)
     RX_OP_CHECK_ERROR(0, 0)
     RX_OP_CHECK_CWM(INIT_WINDOW_SIZE * 5)
-    /* 
+    /*
      * No window expansion due to flow control violation; window expansion is
      * triggered by retirement only.
      */
@@ -512,11 +514,15 @@ static int run_rxfc_script(const struct rx_test_op *script)
                 break;
 
             case RX_OPC_RX:
-                if (!TEST_true(conn_init_done && op->stream_idx < OSSL_NELEM(stream_rxfc)
+                if (!TEST_true(conn_init_done &&
+                               op->stream_idx < OSSL_NELEM(stream_rxfc)
                                && stream_init_done[op->stream_idx]))
                     goto err;
 
-                if (!TEST_true(ossl_quic_rxfc_on_rx_stream_frame(&stream_rxfc[op->stream_idx],
+                if (!TEST_true(ossl_quic_rxfc_on_rx_stream_frame(&stream_rxfc[op
+                                                                              ->
+                                                                              stream_idx
+                                                                 ],
                                                                  op->arg0,
                                                                  (int)op->arg1)))
                     goto err;
@@ -524,13 +530,17 @@ static int run_rxfc_script(const struct rx_test_op *script)
                 break;
 
             case RX_OPC_RETIRE:
-                if (!TEST_true(conn_init_done && op->stream_idx < OSSL_NELEM(stream_rxfc)
+                if (!TEST_true(conn_init_done &&
+                               op->stream_idx < OSSL_NELEM(stream_rxfc)
                                && stream_init_done[op->stream_idx]))
                     goto err;
 
-                if (!TEST_int_eq(ossl_quic_rxfc_on_retire(&stream_rxfc[op->stream_idx],
+                if (!TEST_int_eq(ossl_quic_rxfc_on_retire(&stream_rxfc[op->
+                                                                       stream_idx
+                                                          ],
                                                           op->arg0,
-                                                          ossl_ticks2time(op->arg1)),
+                                                          ossl_ticks2time(op->
+                                                                          arg1)),
                                  !op->expect_fail))
                     goto err;
 
@@ -546,7 +556,9 @@ static int run_rxfc_script(const struct rx_test_op *script)
                 if (!TEST_true(op->stream_idx < OSSL_NELEM(stream_rxfc)
                                && stream_init_done[op->stream_idx]))
                     goto err;
-                if (!TEST_uint64_t_eq(ossl_quic_rxfc_get_cwm(&stream_rxfc[op->stream_idx]),
+                if (!TEST_uint64_t_eq(ossl_quic_rxfc_get_cwm(&stream_rxfc[op->
+                                                                          stream_idx
+                                                             ]),
                                       op->arg0))
                     goto err;
                 break;
@@ -561,7 +573,9 @@ static int run_rxfc_script(const struct rx_test_op *script)
                 if (!TEST_true(op->stream_idx < OSSL_NELEM(stream_rxfc)
                                && stream_init_done[op->stream_idx]))
                     goto err;
-                if (!TEST_uint64_t_eq(ossl_quic_rxfc_get_swm(&stream_rxfc[op->stream_idx]),
+                if (!TEST_uint64_t_eq(ossl_quic_rxfc_get_swm(&stream_rxfc[op->
+                                                                          stream_idx
+                                                             ]),
                                       op->arg0))
                     goto err;
                 break;
@@ -576,7 +590,9 @@ static int run_rxfc_script(const struct rx_test_op *script)
                 if (!TEST_true(op->stream_idx < OSSL_NELEM(stream_rxfc)
                                && stream_init_done[op->stream_idx]))
                     goto err;
-                if (!TEST_uint64_t_eq(ossl_quic_rxfc_get_rwm(&stream_rxfc[op->stream_idx]),
+                if (!TEST_uint64_t_eq(ossl_quic_rxfc_get_rwm(&stream_rxfc[op->
+                                                                          stream_idx
+                                                             ]),
                                       op->arg0))
                     goto err;
                 break;
@@ -592,7 +608,10 @@ static int run_rxfc_script(const struct rx_test_op *script)
                 if (!TEST_true(op->stream_idx < OSSL_NELEM(stream_rxfc)
                                && stream_init_done[op->stream_idx]))
                     goto err;
-                if (!TEST_int_eq(ossl_quic_rxfc_has_cwm_changed(&stream_rxfc[op->stream_idx],
+                if (!TEST_int_eq(ossl_quic_rxfc_has_cwm_changed(&stream_rxfc[op
+                                                                             ->
+                                                                             stream_idx
+                                                                ],
                                                                 (int)op->arg1),
                                  (int)op->arg0))
                     goto err;
@@ -609,7 +628,9 @@ static int run_rxfc_script(const struct rx_test_op *script)
                 if (!TEST_true(op->stream_idx < OSSL_NELEM(stream_rxfc)
                                && stream_init_done[op->stream_idx]))
                     goto err;
-                if (!TEST_int_eq(ossl_quic_rxfc_get_error(&stream_rxfc[op->stream_idx],
+                if (!TEST_int_eq(ossl_quic_rxfc_get_error(&stream_rxfc[op->
+                                                                       stream_idx
+                                                          ],
                                                           (int)op->arg1),
                                  (int)op->arg0))
                     goto err;

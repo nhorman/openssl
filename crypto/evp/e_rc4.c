@@ -51,7 +51,7 @@ static const EVP_CIPHER r4_cipher = {
 
 static const EVP_CIPHER r4_40_cipher = {
     NID_rc4_40,
-    1, 5 /* 40 bit */ , 0,
+    1, 5 /* 40 bit */, 0,
     EVP_CIPH_VARIABLE_LENGTH,
     EVP_ORIG_GLOBAL,
     rc4_init_key,

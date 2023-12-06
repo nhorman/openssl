@@ -178,8 +178,8 @@ char *opt_init(int ac, char **av, const OPTIONS *o)
 #endif
 
         if (o->name == OPT_HELP_STR
-                || o->name == OPT_MORE_STR
-                || o->name == OPT_SECTION_STR)
+            || o->name == OPT_MORE_STR
+            || o->name == OPT_SECTION_STR)
             continue;
 #ifndef NDEBUG
         i = o->valtype;
@@ -191,13 +191,14 @@ char *opt_init(int ac, char **av, const OPTIONS *o)
         else
             OPENSSL_assert(o->retval == OPT_DUP || o->retval > OPT_PARAM);
         switch (i) {
-        case   0: case '-': case '.':
-        case '/': case '<': case '>': case 'E': case 'F':
-        case 'M': case 'U': case 'f': case 'l': case 'n': case 'p': case 's':
-        case 'u': case 'c': case ':': case 'N': case 'A':
-            break;
-        default:
-            OPENSSL_assert(0);
+            case   0: case '-': case '.':
+            case '/': case '<': case '>': case 'E': case 'F':
+            case 'M': case 'U': case 'f': case 'l': case 'n': case 'p': case 's'
+                :
+            case 'u': case 'c': case ':': case 'N': case 'A':
+                break;
+            default:
+                OPENSSL_assert(0);
         }
 
         /* Make sure there are no duplicates. */
@@ -206,7 +207,7 @@ char *opt_init(int ac, char **av, const OPTIONS *o)
              * Some compilers inline strcmp and the assert string is too long.
              */
             duplicated = next->retval != OPT_DUP
-                && strcmp(o->name, next->name) == 0;
+                         && strcmp(o->name, next->name) == 0;
             if (duplicated) {
                 opt_printf_stderr("%s: Internal error: duplicate option %s\n",
                                   prog, o->name);
@@ -262,90 +263,92 @@ static int opt_format_error(const char *s, unsigned long flags)
 int opt_format(const char *s, unsigned long flags, int *result)
 {
     switch (*s) {
-    default:
-        opt_printf_stderr("%s: Bad format \"%s\"\n", prog, s);
-        return 0;
-    case 'B':
-    case 'b':
-        if (s[1] == '\0'
-            || strcmp(s, "B64") == 0 || strcmp(s, "b64") == 0
-            || strcmp(s, "BASE64") == 0 || strcmp(s, "base64") == 0 ) {
-            if ((flags & OPT_FMT_B64) == 0)
-                return opt_format_error(s, flags);
-            *result = FORMAT_BASE64;
-        } else {
+        default:
+            opt_printf_stderr("%s: Bad format \"%s\"\n", prog, s);
             return 0;
-        }
-        break;
-    case 'D':
-    case 'd':
-        if ((flags & OPT_FMT_DER) == 0)
-            return opt_format_error(s, flags);
-        *result = FORMAT_ASN1;
-        break;
-    case 'T':
-    case 't':
-        if ((flags & OPT_FMT_TEXT) == 0)
-            return opt_format_error(s, flags);
-        *result = FORMAT_TEXT;
-        break;
-    case 'N':
-    case 'n':
-        if ((flags & OPT_FMT_NSS) == 0)
-            return opt_format_error(s, flags);
-        if (strcmp(s, "NSS") != 0 && strcmp(s, "nss") != 0)
-            return opt_format_error(s, flags);
-        *result = FORMAT_NSS;
-        break;
-    case 'S':
-    case 's':
-        if ((flags & OPT_FMT_SMIME) == 0)
-            return opt_format_error(s, flags);
-        *result = FORMAT_SMIME;
-        break;
-    case 'M':
-    case 'm':
-        if ((flags & OPT_FMT_MSBLOB) == 0)
-            return opt_format_error(s, flags);
-        *result = FORMAT_MSBLOB;
-        break;
-    case 'E':
-    case 'e':
-        if ((flags & OPT_FMT_ENGINE) == 0)
-            return opt_format_error(s, flags);
-        *result = FORMAT_ENGINE;
-        break;
-    case 'H':
-    case 'h':
-        if ((flags & OPT_FMT_HTTP) == 0)
-            return opt_format_error(s, flags);
-        *result = FORMAT_HTTP;
-        break;
-    case '1':
-        if ((flags & OPT_FMT_PKCS12) == 0)
-            return opt_format_error(s, flags);
-        *result = FORMAT_PKCS12;
-        break;
-    case 'P':
-    case 'p':
-        if (s[1] == '\0' || strcmp(s, "PEM") == 0 || strcmp(s, "pem") == 0) {
-            if ((flags & OPT_FMT_PEM) == 0)
+        case 'B':
+        case 'b':
+            if (s[1] == '\0'
+                || strcmp(s, "B64") == 0 || strcmp(s, "b64") == 0
+                || strcmp(s, "BASE64") == 0 || strcmp(s, "base64") == 0 ) {
+                if ((flags & OPT_FMT_B64) == 0)
+                    return opt_format_error(s, flags);
+                *result = FORMAT_BASE64;
+            } else {
+                return 0;
+            }
+            break;
+        case 'D':
+        case 'd':
+            if ((flags & OPT_FMT_DER) == 0)
                 return opt_format_error(s, flags);
-            *result = FORMAT_PEM;
-        } else if (strcmp(s, "PVK") == 0 || strcmp(s, "pvk") == 0) {
-            if ((flags & OPT_FMT_PVK) == 0)
+            *result = FORMAT_ASN1;
+            break;
+        case 'T':
+        case 't':
+            if ((flags & OPT_FMT_TEXT) == 0)
                 return opt_format_error(s, flags);
-            *result = FORMAT_PVK;
-        } else if (strcmp(s, "P12") == 0 || strcmp(s, "p12") == 0
-                   || strcmp(s, "PKCS12") == 0 || strcmp(s, "pkcs12") == 0) {
+            *result = FORMAT_TEXT;
+            break;
+        case 'N':
+        case 'n':
+            if ((flags & OPT_FMT_NSS) == 0)
+                return opt_format_error(s, flags);
+            if (strcmp(s, "NSS") != 0 && strcmp(s, "nss") != 0)
+                return opt_format_error(s, flags);
+            *result = FORMAT_NSS;
+            break;
+        case 'S':
+        case 's':
+            if ((flags & OPT_FMT_SMIME) == 0)
+                return opt_format_error(s, flags);
+            *result = FORMAT_SMIME;
+            break;
+        case 'M':
+        case 'm':
+            if ((flags & OPT_FMT_MSBLOB) == 0)
+                return opt_format_error(s, flags);
+            *result = FORMAT_MSBLOB;
+            break;
+        case 'E':
+        case 'e':
+            if ((flags & OPT_FMT_ENGINE) == 0)
+                return opt_format_error(s, flags);
+            *result = FORMAT_ENGINE;
+            break;
+        case 'H':
+        case 'h':
+            if ((flags & OPT_FMT_HTTP) == 0)
+                return opt_format_error(s, flags);
+            *result = FORMAT_HTTP;
+            break;
+        case '1':
             if ((flags & OPT_FMT_PKCS12) == 0)
                 return opt_format_error(s, flags);
             *result = FORMAT_PKCS12;
-        } else {
-            opt_printf_stderr("%s: Bad format \"%s\"\n", prog, s);
-            return 0;
-        }
-        break;
+            break;
+        case 'P':
+        case 'p':
+            if (s[1] == '\0' ||
+                strcmp(s, "PEM") == 0 || strcmp(s, "pem") == 0) {
+                if ((flags & OPT_FMT_PEM) == 0)
+                    return opt_format_error(s, flags);
+                *result = FORMAT_PEM;
+            } else if (strcmp(s, "PVK") == 0 || strcmp(s, "pvk") == 0) {
+                if ((flags & OPT_FMT_PVK) == 0)
+                    return opt_format_error(s, flags);
+                *result = FORMAT_PVK;
+            } else if (strcmp(s, "P12") == 0 || strcmp(s, "p12") == 0
+                       || strcmp(s,
+                                 "PKCS12") == 0 || strcmp(s, "pkcs12") == 0) {
+                if ((flags & OPT_FMT_PKCS12) == 0)
+                    return opt_format_error(s, flags);
+                *result = FORMAT_PKCS12;
+            } else {
+                opt_printf_stderr("%s: Bad format \"%s\"\n", prog, s);
+                return 0;
+            }
+            break;
     }
     return 1;
 }
@@ -354,28 +357,28 @@ int opt_format(const char *s, unsigned long flags, int *result)
 static const char *format2str(int format)
 {
     switch (format) {
-    default:
-        return "(undefined)";
-    case FORMAT_PEM:
-        return "PEM";
-    case FORMAT_ASN1:
-        return "DER";
-    case FORMAT_TEXT:
-        return "TEXT";
-    case FORMAT_NSS:
-        return "NSS";
-    case FORMAT_SMIME:
-        return "SMIME";
-    case FORMAT_MSBLOB:
-        return "MSBLOB";
-    case FORMAT_ENGINE:
-        return "ENGINE";
-    case FORMAT_HTTP:
-        return "HTTP";
-    case FORMAT_PKCS12:
-        return "P12";
-    case FORMAT_PVK:
-        return "PVK";
+        default:
+            return "(undefined)";
+        case FORMAT_PEM:
+            return "PEM";
+        case FORMAT_ASN1:
+            return "DER";
+        case FORMAT_TEXT:
+            return "TEXT";
+        case FORMAT_NSS:
+            return "NSS";
+        case FORMAT_SMIME:
+            return "SMIME";
+        case FORMAT_MSBLOB:
+            return "MSBLOB";
+        case FORMAT_ENGINE:
+            return "ENGINE";
+        case FORMAT_HTTP:
+            return "HTTP";
+        case FORMAT_PKCS12:
+            return "P12";
+        case FORMAT_PVK:
+            return "PVK";
     }
 }
 
@@ -416,7 +419,7 @@ int opt_cipher_any(const char *name, EVP_CIPHER **cipherp)
     int ret;
 
     if (name == NULL)
-         return 1;
+        return 1;
     if ((ret = opt_cipher_silent(name, cipherp)) == 0)
         opt_printf_stderr("%s: Unknown option or cipher: %s\n", prog, name);
     return ret;
@@ -424,13 +427,13 @@ int opt_cipher_any(const char *name, EVP_CIPHER **cipherp)
 
 int opt_cipher(const char *name, EVP_CIPHER **cipherp)
 {
-     int mode, ret = 0;
-     unsigned long int flags;
-     EVP_CIPHER *c = NULL;
+    int mode, ret = 0;
+    unsigned long int flags;
+    EVP_CIPHER *c = NULL;
 
     if (name == NULL)
-         return 1;
-     if (opt_cipher_any(name, &c)) {
+        return 1;
+    if (opt_cipher_any(name, &c)) {
         mode = EVP_CIPHER_get_mode(c);
         flags = EVP_CIPHER_get_flags(c);
         if (mode == EVP_CIPH_XTS_MODE) {
@@ -578,9 +581,9 @@ int opt_long(const char *value, long *result)
     errno = 0;
     l = strtol(value, &endp, 0);
     if (*endp
-            || endp == value
-            || ((l == LONG_MAX || l == LONG_MIN) && errno == ERANGE)
-            || (l == 0 && errno != 0)) {
+        || endp == value
+        || ((l == LONG_MAX || l == LONG_MIN) && errno == ERANGE)
+        || (l == 0 && errno != 0)) {
         opt_number_error(value);
         errno = oerrno;
         return 0;
@@ -604,10 +607,10 @@ int opt_intmax(const char *value, ossl_intmax_t *result)
     errno = 0;
     m = strtoimax(value, &endp, 0);
     if (*endp
-            || endp == value
-            || ((m == INTMAX_MAX || m == INTMAX_MIN)
-                && errno == ERANGE)
-            || (m == 0 && errno != 0)) {
+        || endp == value
+        || ((m == INTMAX_MAX || m == INTMAX_MIN)
+            && errno == ERANGE)
+        || (m == 0 && errno != 0)) {
         opt_number_error(value);
         errno = oerrno;
         return 0;
@@ -633,9 +636,9 @@ int opt_uintmax(const char *value, ossl_uintmax_t *result)
     errno = 0;
     m = strtoumax(value, &endp, 0);
     if (*endp
-            || endp == value
-            || (m == UINTMAX_MAX && errno == ERANGE)
-            || (m == 0 && errno != 0)) {
+        || endp == value
+        || (m == UINTMAX_MAX && errno == ERANGE)
+        || (m == 0 && errno != 0)) {
         opt_number_error(value);
         errno = oerrno;
         return 0;
@@ -685,9 +688,9 @@ int opt_ulong(const char *value, unsigned long *result)
     errno = 0;
     l = strtoul(value, &endptr, 0);
     if (*endptr
-            || endptr == value
-            || ((l == ULONG_MAX) && errno == ERANGE)
-            || (l == 0 && errno != 0)) {
+        || endptr == value
+        || ((l == ULONG_MAX) && errno == ERANGE)
+        || (l == 0 && errno != 0)) {
         opt_number_error(value);
         errno = oerrno;
         return 0;
@@ -717,143 +720,143 @@ int opt_verify(int opt, X509_VERIFY_PARAM *vpm)
     OPENSSL_assert(opt < OPT_V__LAST);
 
     switch ((enum range)opt) {
-    case OPT_V__FIRST:
-    case OPT_V__LAST:
-        return 0;
-    case OPT_V_POLICY:
-        otmp = OBJ_txt2obj(opt_arg(), 0);
-        if (otmp == NULL) {
-            opt_printf_stderr("%s: Invalid Policy %s\n", prog, opt_arg());
+        case OPT_V__FIRST:
+        case OPT_V__LAST:
             return 0;
-        }
-        X509_VERIFY_PARAM_add0_policy(vpm, otmp);
-        break;
-    case OPT_V_PURPOSE:
-        /* purpose name -> purpose index */
-        i = X509_PURPOSE_get_by_sname(opt_arg());
-        if (i < 0) {
-            opt_printf_stderr("%s: Invalid purpose %s\n", prog, opt_arg());
-            return 0;
-        }
+        case OPT_V_POLICY:
+            otmp = OBJ_txt2obj(opt_arg(), 0);
+            if (otmp == NULL) {
+                opt_printf_stderr("%s: Invalid Policy %s\n", prog, opt_arg());
+                return 0;
+            }
+            X509_VERIFY_PARAM_add0_policy(vpm, otmp);
+            break;
+        case OPT_V_PURPOSE:
+            /* purpose name -> purpose index */
+            i = X509_PURPOSE_get_by_sname(opt_arg());
+            if (i < 0) {
+                opt_printf_stderr("%s: Invalid purpose %s\n", prog, opt_arg());
+                return 0;
+            }
 
-        /* purpose index -> purpose object */
-        xptmp = X509_PURPOSE_get0(i);
+            /* purpose index -> purpose object */
+            xptmp = X509_PURPOSE_get0(i);
 
-        /* purpose object -> purpose value */
-        i = X509_PURPOSE_get_id(xptmp);
+            /* purpose object -> purpose value */
+            i = X509_PURPOSE_get_id(xptmp);
 
-        if (!X509_VERIFY_PARAM_set_purpose(vpm, i)) {
-            opt_printf_stderr("%s: Internal error setting purpose %s\n",
-                              prog, opt_arg());
-            return 0;
-        }
-        break;
-    case OPT_V_VERIFY_NAME:
-        vtmp = X509_VERIFY_PARAM_lookup(opt_arg());
-        if (vtmp == NULL) {
-            opt_printf_stderr("%s: Invalid verify name %s\n",
-                              prog, opt_arg());
-            return 0;
-        }
-        X509_VERIFY_PARAM_set1(vpm, vtmp);
-        break;
-    case OPT_V_VERIFY_DEPTH:
-        i = atoi(opt_arg());
-        if (i >= 0)
-            X509_VERIFY_PARAM_set_depth(vpm, i);
-        break;
-    case OPT_V_VERIFY_AUTH_LEVEL:
-        i = atoi(opt_arg());
-        if (i >= 0)
-            X509_VERIFY_PARAM_set_auth_level(vpm, i);
-        break;
-    case OPT_V_ATTIME:
-        if (!opt_intmax(opt_arg(), &t))
-            return 0;
-        if (t != (time_t)t) {
-            opt_printf_stderr("%s: epoch time out of range %s\n",
-                              prog, opt_arg());
-            return 0;
-        }
-        X509_VERIFY_PARAM_set_time(vpm, (time_t)t);
-        break;
-    case OPT_V_VERIFY_HOSTNAME:
-        if (!X509_VERIFY_PARAM_set1_host(vpm, opt_arg(), 0))
-            return 0;
-        break;
-    case OPT_V_VERIFY_EMAIL:
-        if (!X509_VERIFY_PARAM_set1_email(vpm, opt_arg(), 0))
-            return 0;
-        break;
-    case OPT_V_VERIFY_IP:
-        if (!X509_VERIFY_PARAM_set1_ip_asc(vpm, opt_arg()))
-            return 0;
-        break;
-    case OPT_V_IGNORE_CRITICAL:
-        X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_IGNORE_CRITICAL);
-        break;
-    case OPT_V_ISSUER_CHECKS:
-        /* NOP, deprecated */
-        break;
-    case OPT_V_CRL_CHECK:
-        X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_CRL_CHECK);
-        break;
-    case OPT_V_CRL_CHECK_ALL:
-        X509_VERIFY_PARAM_set_flags(vpm,
-                                    X509_V_FLAG_CRL_CHECK |
-                                    X509_V_FLAG_CRL_CHECK_ALL);
-        break;
-    case OPT_V_POLICY_CHECK:
-        X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_POLICY_CHECK);
-        break;
-    case OPT_V_EXPLICIT_POLICY:
-        X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_EXPLICIT_POLICY);
-        break;
-    case OPT_V_INHIBIT_ANY:
-        X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_INHIBIT_ANY);
-        break;
-    case OPT_V_INHIBIT_MAP:
-        X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_INHIBIT_MAP);
-        break;
-    case OPT_V_X509_STRICT:
-        X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_X509_STRICT);
-        break;
-    case OPT_V_EXTENDED_CRL:
-        X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_EXTENDED_CRL_SUPPORT);
-        break;
-    case OPT_V_USE_DELTAS:
-        X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_USE_DELTAS);
-        break;
-    case OPT_V_POLICY_PRINT:
-        X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_NOTIFY_POLICY);
-        break;
-    case OPT_V_CHECK_SS_SIG:
-        X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_CHECK_SS_SIGNATURE);
-        break;
-    case OPT_V_TRUSTED_FIRST:
-        X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_TRUSTED_FIRST);
-        break;
-    case OPT_V_SUITEB_128_ONLY:
-        X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_SUITEB_128_LOS_ONLY);
-        break;
-    case OPT_V_SUITEB_128:
-        X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_SUITEB_128_LOS);
-        break;
-    case OPT_V_SUITEB_192:
-        X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_SUITEB_192_LOS);
-        break;
-    case OPT_V_PARTIAL_CHAIN:
-        X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_PARTIAL_CHAIN);
-        break;
-    case OPT_V_NO_ALT_CHAINS:
-        X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_NO_ALT_CHAINS);
-        break;
-    case OPT_V_NO_CHECK_TIME:
-        X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_NO_CHECK_TIME);
-        break;
-    case OPT_V_ALLOW_PROXY_CERTS:
-        X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_ALLOW_PROXY_CERTS);
-        break;
+            if (!X509_VERIFY_PARAM_set_purpose(vpm, i)) {
+                opt_printf_stderr("%s: Internal error setting purpose %s\n",
+                                  prog, opt_arg());
+                return 0;
+            }
+            break;
+        case OPT_V_VERIFY_NAME:
+            vtmp = X509_VERIFY_PARAM_lookup(opt_arg());
+            if (vtmp == NULL) {
+                opt_printf_stderr("%s: Invalid verify name %s\n",
+                                  prog, opt_arg());
+                return 0;
+            }
+            X509_VERIFY_PARAM_set1(vpm, vtmp);
+            break;
+        case OPT_V_VERIFY_DEPTH:
+            i = atoi(opt_arg());
+            if (i >= 0)
+                X509_VERIFY_PARAM_set_depth(vpm, i);
+            break;
+        case OPT_V_VERIFY_AUTH_LEVEL:
+            i = atoi(opt_arg());
+            if (i >= 0)
+                X509_VERIFY_PARAM_set_auth_level(vpm, i);
+            break;
+        case OPT_V_ATTIME:
+            if (!opt_intmax(opt_arg(), &t))
+                return 0;
+            if (t != (time_t)t) {
+                opt_printf_stderr("%s: epoch time out of range %s\n",
+                                  prog, opt_arg());
+                return 0;
+            }
+            X509_VERIFY_PARAM_set_time(vpm, (time_t)t);
+            break;
+        case OPT_V_VERIFY_HOSTNAME:
+            if (!X509_VERIFY_PARAM_set1_host(vpm, opt_arg(), 0))
+                return 0;
+            break;
+        case OPT_V_VERIFY_EMAIL:
+            if (!X509_VERIFY_PARAM_set1_email(vpm, opt_arg(), 0))
+                return 0;
+            break;
+        case OPT_V_VERIFY_IP:
+            if (!X509_VERIFY_PARAM_set1_ip_asc(vpm, opt_arg()))
+                return 0;
+            break;
+        case OPT_V_IGNORE_CRITICAL:
+            X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_IGNORE_CRITICAL);
+            break;
+        case OPT_V_ISSUER_CHECKS:
+            /* NOP, deprecated */
+            break;
+        case OPT_V_CRL_CHECK:
+            X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_CRL_CHECK);
+            break;
+        case OPT_V_CRL_CHECK_ALL:
+            X509_VERIFY_PARAM_set_flags(vpm,
+                                        X509_V_FLAG_CRL_CHECK |
+                                        X509_V_FLAG_CRL_CHECK_ALL);
+            break;
+        case OPT_V_POLICY_CHECK:
+            X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_POLICY_CHECK);
+            break;
+        case OPT_V_EXPLICIT_POLICY:
+            X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_EXPLICIT_POLICY);
+            break;
+        case OPT_V_INHIBIT_ANY:
+            X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_INHIBIT_ANY);
+            break;
+        case OPT_V_INHIBIT_MAP:
+            X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_INHIBIT_MAP);
+            break;
+        case OPT_V_X509_STRICT:
+            X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_X509_STRICT);
+            break;
+        case OPT_V_EXTENDED_CRL:
+            X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_EXTENDED_CRL_SUPPORT);
+            break;
+        case OPT_V_USE_DELTAS:
+            X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_USE_DELTAS);
+            break;
+        case OPT_V_POLICY_PRINT:
+            X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_NOTIFY_POLICY);
+            break;
+        case OPT_V_CHECK_SS_SIG:
+            X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_CHECK_SS_SIGNATURE);
+            break;
+        case OPT_V_TRUSTED_FIRST:
+            X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_TRUSTED_FIRST);
+            break;
+        case OPT_V_SUITEB_128_ONLY:
+            X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_SUITEB_128_LOS_ONLY);
+            break;
+        case OPT_V_SUITEB_128:
+            X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_SUITEB_128_LOS);
+            break;
+        case OPT_V_SUITEB_192:
+            X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_SUITEB_192_LOS);
+            break;
+        case OPT_V_PARTIAL_CHAIN:
+            X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_PARTIAL_CHAIN);
+            break;
+        case OPT_V_NO_ALT_CHAINS:
+            X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_NO_ALT_CHAINS);
+            break;
+        case OPT_V_NO_CHECK_TIME:
+            X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_NO_CHECK_TIME);
+            break;
+        case OPT_V_ALLOW_PROXY_CERTS:
+            X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_ALLOW_PROXY_CERTS);
+            break;
     }
     return 1;
 
@@ -906,7 +909,7 @@ int opt_next(void)
     for (o = opts; o->name; ++o) {
         /* If not this option, move on to the next one. */
         if (!(strcmp(p, "h") == 0 && strcmp(o->name, "help") == 0)
-                && strcmp(p, o->name) != 0)
+            && strcmp(p, o->name) != 0)
             continue;
 
         /* If it doesn't take a value, make sure none was given. */
@@ -931,73 +934,75 @@ int opt_next(void)
 
         /* Syntax-check value. */
         switch (o->valtype) {
-        default:
-        case 's':
-        case ':':
-            /* Just a string. */
-            break;
-        case '.':
-            /* Parameters */
-            break;
-        case '/':
-            if (opt_isdir(arg) > 0)
+            default:
+            case 's':
+            case ':':
+                /* Just a string. */
                 break;
-            opt_printf_stderr("%s: Not a directory: %s\n", prog, arg);
-            return -1;
-        case '<':
-            /* Input file. */
-            break;
-        case '>':
-            /* Output file. */
-            break;
-        case 'p':
-        case 'n':
-        case 'N':
-            if (!opt_int(arg, &ival))
+            case '.':
+                /* Parameters */
+                break;
+            case '/':
+                if (opt_isdir(arg) > 0)
+                    break;
+                opt_printf_stderr("%s: Not a directory: %s\n", prog, arg);
                 return -1;
-            if (o->valtype == 'p' && ival <= 0) {
-                opt_printf_stderr("%s: Non-positive number \"%s\" for option -%s\n",
+            case '<':
+                /* Input file. */
+                break;
+            case '>':
+                /* Output file. */
+                break;
+            case 'p':
+            case 'n':
+            case 'N':
+                if (!opt_int(arg, &ival))
+                    return -1;
+                if (o->valtype == 'p' && ival <= 0) {
+                    opt_printf_stderr(
+                        "%s: Non-positive number \"%s\" for option -%s\n",
+                        prog, arg, o->name);
+                    return -1;
+                }
+                if (o->valtype == 'N' && ival < 0) {
+                    opt_printf_stderr(
+                        "%s: Negative number \"%s\" for option -%s\n",
+                        prog, arg, o->name);
+                    return -1;
+                }
+                break;
+            case 'M':
+                if (!opt_intmax(arg, &imval))
+                    return -1;
+                break;
+            case 'U':
+                if (!opt_uintmax(arg, &umval))
+                    return -1;
+                break;
+            case 'l':
+                if (!opt_long(arg, &lval))
+                    return -1;
+                break;
+            case 'u':
+                if (!opt_ulong(arg, &ulval))
+                    return -1;
+                break;
+            case 'c':
+            case 'E':
+            case 'F':
+            case 'f':
+            case 'A':
+            case 'a':
+                if (opt_format(arg,
+                               o->valtype == 'c' ? OPT_FMT_PDS :
+                               o->valtype == 'E' ? OPT_FMT_PDE :
+                               o->valtype == 'F' ? OPT_FMT_PEMDER :
+                               o->valtype == 'A' ? OPT_FMT_ASN1 :
+                               OPT_FMT_ANY, &ival))
+                    break;
+                opt_printf_stderr("%s: Invalid format \"%s\" for option -%s\n",
                                   prog, arg, o->name);
                 return -1;
-            }
-            if (o->valtype == 'N' && ival < 0) {
-                opt_printf_stderr("%s: Negative number \"%s\" for option -%s\n",
-                                  prog, arg, o->name);
-                return -1;
-            }
-            break;
-        case 'M':
-            if (!opt_intmax(arg, &imval))
-                return -1;
-            break;
-        case 'U':
-            if (!opt_uintmax(arg, &umval))
-                return -1;
-            break;
-        case 'l':
-            if (!opt_long(arg, &lval))
-                return -1;
-            break;
-        case 'u':
-            if (!opt_ulong(arg, &ulval))
-                return -1;
-            break;
-        case 'c':
-        case 'E':
-        case 'F':
-        case 'f':
-        case 'A':
-        case 'a':
-            if (opt_format(arg,
-                           o->valtype == 'c' ? OPT_FMT_PDS :
-                           o->valtype == 'E' ? OPT_FMT_PDE :
-                           o->valtype == 'F' ? OPT_FMT_PEMDER :
-                           o->valtype == 'A' ? OPT_FMT_ASN1 :
-                           OPT_FMT_ANY, &ival))
-                break;
-            opt_printf_stderr("%s: Invalid format \"%s\" for option -%s\n",
-                              prog, arg, o->name);
-            return -1;
         }
 
         /* Return the flag value. */
@@ -1005,8 +1010,9 @@ int opt_next(void)
     }
     if (unknown != NULL) {
         if (dunno != NULL) {
-            opt_printf_stderr("%s: Multiple %s or unknown options: -%s and -%s\n",
-                              prog, unknown_name, dunno, p);
+            opt_printf_stderr(
+                "%s: Multiple %s or unknown options: -%s and -%s\n",
+                prog, unknown_name, dunno, p);
             return -1;
         }
         dunno = p;
@@ -1071,7 +1077,8 @@ int opt_check_rest_arg(const char *expected)
         opt = argv[opt_index + 1];
         if (opt == NULL || *opt == '\0')
             return 1;
-        opt_printf_stderr("%s: Extra argument after %s: \"%s\"\n", prog, expected, opt);
+        opt_printf_stderr("%s: Extra argument after %s: \"%s\"\n", prog,
+                          expected, opt);
         return 0;
     }
     if (opt_unknown() == NULL)
@@ -1086,39 +1093,39 @@ int opt_check_rest_arg(const char *expected)
 static const char *valtype2param(const OPTIONS *o)
 {
     switch (o->valtype) {
-    case 0:
-    case '-':
-        return "";
-    case ':':
-        return "uri";
-    case 's':
-        return "val";
-    case '/':
-        return "dir";
-    case '<':
-        return "infile";
-    case '>':
-        return "outfile";
-    case 'p':
-        return "+int";
-    case 'n':
-        return "int";
-    case 'l':
-        return "long";
-    case 'u':
-        return "ulong";
-    case 'E':
-        return "PEM|DER|ENGINE";
-    case 'F':
-        return "PEM|DER";
-    case 'f':
-        return "format";
-    case 'M':
-        return "intmax";
-    case 'N':
-        return "nonneg";
-    case 'U':
-        return "uintmax";
+        case 0:
+        case '-':
+            return "";
+        case ':':
+            return "uri";
+        case 's':
+            return "val";
+        case '/':
+            return "dir";
+        case '<':
+            return "infile";
+        case '>':
+            return "outfile";
+        case 'p':
+            return "+int";
+        case 'n':
+            return "int";
+        case 'l':
+            return "long";
+        case 'u':
+            return "ulong";
+        case 'E':
+            return "PEM|DER|ENGINE";
+        case 'F':
+            return "PEM|DER";
+        case 'f':
+            return "format";
+        case 'M':
+            return "intmax";
+        case 'N':
+            return "nonneg";
+        case 'U':
+            return "uintmax";
     }
     return "parm";
 }
@@ -1163,11 +1170,11 @@ static void opt_print(const OPTIONS *o, int doingparams, int width)
     printlen = opt_printf_stderr(" %s", !doingparams ? "-" : "");
     linelen += (printlen > 0) ? printlen : MAX_OPT_HELP_WIDTH;
 
-    printlen = opt_printf_stderr("%s" , o->name[0] ? o->name : "*");
+    printlen = opt_printf_stderr("%s", o->name[0] ? o->name : "*");
     linelen += (printlen > 0) ? printlen : MAX_OPT_HELP_WIDTH;
 
     if (o->valtype != '-') {
-        printlen = opt_printf_stderr(" %s" , valtype2param(o));
+        printlen = opt_printf_stderr(" %s", valtype2param(o));
         linelen += (printlen > 0) ? printlen : MAX_OPT_HELP_WIDTH;
     }
 
@@ -1238,8 +1245,8 @@ int opt_isdir(const char *name)
 #  if !defined(_WIN32_WCE) || _WIN32_WCE>=101
     if (!MultiByteToWideChar(CP_ACP, 0, name, len_0, tempname, MAX_PATH))
 #  endif
-        for (i = 0; i < len_0; i++)
-            tempname[i] = (WCHAR)name[i];
+    for (i = 0; i < len_0; i++)
+        tempname[i] = (WCHAR)name[i];
 
     attr = GetFileAttributes(tempname);
 # else
@@ -1253,9 +1260,9 @@ int opt_isdir(const char *name)
 # include <sys/stat.h>
 # ifndef S_ISDIR
 #  if defined(_S_IFMT) && defined(_S_IFDIR)
-#   define S_ISDIR(a)   (((a) & _S_IFMT) == _S_IFDIR)
+#   define S_ISDIR(a)   (((a)&_S_IFMT) == _S_IFDIR)
 #  else
-#   define S_ISDIR(a)   (((a) & S_IFMT) == S_IFDIR)
+#   define S_ISDIR(a)   (((a)&S_IFMT) == S_IFDIR)
 #  endif
 # endif
 

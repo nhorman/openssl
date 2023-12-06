@@ -94,67 +94,67 @@ int dhparam_main(int argc, char **argv)
     prog = opt_init(argc, argv, dhparam_options);
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_EOF:
-        case OPT_ERR:
- opthelp:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto end;
-        case OPT_HELP:
-            opt_help(dhparam_options);
-            ret = 0;
-            goto end;
-        case OPT_INFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &informat))
-                goto opthelp;
-            break;
-        case OPT_OUTFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &outformat))
-                goto opthelp;
-            break;
-        case OPT_IN:
-            infile = opt_arg();
-            break;
-        case OPT_OUT:
-            outfile = opt_arg();
-            break;
-        case OPT_ENGINE:
-            e = setup_engine(opt_arg(), 0);
-            break;
-        case OPT_CHECK:
-            check = 1;
-            break;
-        case OPT_TEXT:
-            text = 1;
-            break;
-        case OPT_DSAPARAM:
-            dsaparam = 1;
-            break;
-        case OPT_2:
-            g = 2;
-            break;
-        case OPT_3:
-            g = 3;
-            break;
-        case OPT_5:
-            g = 5;
-            break;
-        case OPT_NOOUT:
-            noout = 1;
-            break;
-        case OPT_VERBOSE:
-            verbose = 1;
-            break;
-        case OPT_QUIET:
-            verbose = 0;
-            break;
-        case OPT_R_CASES:
-            if (!opt_rand(o))
+            case OPT_EOF:
+            case OPT_ERR:
+opthelp:
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
                 goto end;
-            break;
-        case OPT_PROV_CASES:
-            if (!opt_provider(o))
+            case OPT_HELP:
+                opt_help(dhparam_options);
+                ret = 0;
                 goto end;
-            break;
+            case OPT_INFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &informat))
+                    goto opthelp;
+                break;
+            case OPT_OUTFORM:
+                if (!opt_format(opt_arg(), OPT_FMT_PEMDER, &outformat))
+                    goto opthelp;
+                break;
+            case OPT_IN:
+                infile = opt_arg();
+                break;
+            case OPT_OUT:
+                outfile = opt_arg();
+                break;
+            case OPT_ENGINE:
+                e = setup_engine(opt_arg(), 0);
+                break;
+            case OPT_CHECK:
+                check = 1;
+                break;
+            case OPT_TEXT:
+                text = 1;
+                break;
+            case OPT_DSAPARAM:
+                dsaparam = 1;
+                break;
+            case OPT_2:
+                g = 2;
+                break;
+            case OPT_3:
+                g = 3;
+                break;
+            case OPT_5:
+                g = 5;
+                break;
+            case OPT_NOOUT:
+                noout = 1;
+                break;
+            case OPT_VERBOSE:
+                verbose = 1;
+                break;
+            case OPT_QUIET:
+                verbose = 0;
+                break;
+            case OPT_R_CASES:
+                if (!opt_rand(o))
+                    goto end;
+                break;
+            case OPT_PROV_CASES:
+                if (!opt_provider(o))
+                    goto end;
+                break;
         }
     }
 
@@ -194,25 +194,26 @@ int dhparam_main(int argc, char **argv)
             BIO_printf(bio_err, "Warning, input file %s ignored\n", infile);
         }
 
-        ctx = EVP_PKEY_CTX_new_from_name(app_get0_libctx(), alg, app_get0_propq());
+        ctx = EVP_PKEY_CTX_new_from_name(app_get0_libctx(), alg,
+                                         app_get0_propq());
         if (ctx == NULL) {
             BIO_printf(bio_err,
-                        "Error, %s param generation context allocation failed\n",
-                        alg);
+                       "Error, %s param generation context allocation failed\n",
+                       alg);
             goto end;
         }
         EVP_PKEY_CTX_set_app_data(ctx, bio_err);
         if (verbose) {
             EVP_PKEY_CTX_set_cb(ctx, progress_cb);
             BIO_printf(bio_err,
-                        "Generating %s parameters, %d bit long %sprime\n",
-                        alg, num, dsaparam ? "" : "safe ");
+                       "Generating %s parameters, %d bit long %sprime\n",
+                       alg, num, dsaparam ? "" : "safe ");
         }
 
         if (EVP_PKEY_paramgen_init(ctx) <= 0) {
             BIO_printf(bio_err,
-                        "Error, unable to initialise %s parameters\n",
-                        alg);
+                       "Error, unable to initialise %s parameters\n",
+                       alg);
             goto end;
         }
 
@@ -262,10 +263,10 @@ int dhparam_main(int argc, char **argv)
              */
             done = 1;
             /*
-            * We set NULL for the keytype to allow any key type. We don't know
-            * if we're going to get DH or DHX (or DSA in the event of dsaparam).
-            * We check that we got one of those key types afterwards.
-            */
+             * We set NULL for the keytype to allow any key type. We don't know
+             * if we're going to get DH or DHX (or DSA in the event of dsaparam).
+             * We check that we got one of those key types afterwards.
+             */
             decoderctx
                 = OSSL_DECODER_CTX_new_for_pkey(&tmppkey,
                                                 (informat == FORMAT_ASN1)
@@ -277,17 +278,17 @@ int dhparam_main(int argc, char **argv)
                                                 NULL, NULL);
 
             if (decoderctx != NULL
-                    && !OSSL_DECODER_from_bio(decoderctx, in)
-                    && informat == FORMAT_ASN1
-                    && strcmp(keytype, "DH") == 0) {
+                && !OSSL_DECODER_from_bio(decoderctx, in)
+                && informat == FORMAT_ASN1
+                && strcmp(keytype, "DH") == 0) {
                 /*
-                * When reading DER we explicitly state the expected keytype
-                * because, unlike PEM, there is no header to declare what
-                * the contents of the DER file are. The decoders just try
-                * and guess. Unfortunately with DHX key types they may guess
-                * wrong and think we have a DSA keytype. Therefore, we try
-                * both DH and DHX sequentially.
-                */
+                 * When reading DER we explicitly state the expected keytype
+                 * because, unlike PEM, there is no header to declare what
+                 * the contents of the DER file are. The decoders just try
+                 * and guess. Unfortunately with DHX key types they may guess
+                 * wrong and think we have a DSA keytype. Therefore, we try
+                 * both DH and DHX sequentially.
+                 */
                 keytype = "DHX";
                 /*
                  * BIO_reset() returns 0 for success for file BIOs only!!!
@@ -313,7 +314,7 @@ int dhparam_main(int argc, char **argv)
                 goto end;
         } else {
             if (!EVP_PKEY_is_a(tmppkey, "DH")
-                    && !EVP_PKEY_is_a(tmppkey, "DHX")) {
+                && !EVP_PKEY_is_a(tmppkey, "DHX")) {
                 BIO_printf(bio_err, "Error, unable to load DH parameters\n");
                 goto end;
             }
@@ -326,7 +327,8 @@ int dhparam_main(int argc, char **argv)
         EVP_PKEY_print_params(out, pkey, 4, NULL);
 
     if (check) {
-        ctx = EVP_PKEY_CTX_new_from_pkey(app_get0_libctx(), pkey, app_get0_propq());
+        ctx = EVP_PKEY_CTX_new_from_pkey(app_get0_libctx(), pkey,
+                                         app_get0_propq());
         if (ctx == NULL) {
             BIO_printf(bio_err, "Error, failed to check DH parameters\n");
             goto end;
@@ -354,7 +356,7 @@ int dhparam_main(int argc, char **argv)
         OSSL_ENCODER_CTX_free(ectx);
     }
     ret = 0;
- end:
+end:
     if (ret != 0)
         ERR_print_errors(bio_err);
     BIO_free(in);
@@ -380,33 +382,35 @@ static EVP_PKEY *dsa_to_dh(EVP_PKEY *dh)
     EVP_PKEY *pkey = NULL;
 
     if (!EVP_PKEY_get_bn_param(dh, OSSL_PKEY_PARAM_FFC_P, &bn_p)
-            || !EVP_PKEY_get_bn_param(dh, OSSL_PKEY_PARAM_FFC_Q, &bn_q)
-            || !EVP_PKEY_get_bn_param(dh, OSSL_PKEY_PARAM_FFC_G, &bn_g)) {
+        || !EVP_PKEY_get_bn_param(dh, OSSL_PKEY_PARAM_FFC_Q, &bn_q)
+        || !EVP_PKEY_get_bn_param(dh, OSSL_PKEY_PARAM_FFC_G, &bn_g)) {
         BIO_printf(bio_err, "Error, failed to set DH parameters\n");
         goto err;
     }
 
     if ((tmpl = OSSL_PARAM_BLD_new()) == NULL
-            || !OSSL_PARAM_BLD_push_BN(tmpl, OSSL_PKEY_PARAM_FFC_P,
-                                        bn_p)
-            || !OSSL_PARAM_BLD_push_BN(tmpl, OSSL_PKEY_PARAM_FFC_Q,
-                                        bn_q)
-            || !OSSL_PARAM_BLD_push_BN(tmpl, OSSL_PKEY_PARAM_FFC_G,
-                                        bn_g)
-            || (params = OSSL_PARAM_BLD_to_param(tmpl)) == NULL) {
+        || !OSSL_PARAM_BLD_push_BN(tmpl, OSSL_PKEY_PARAM_FFC_P,
+                                   bn_p)
+        || !OSSL_PARAM_BLD_push_BN(tmpl, OSSL_PKEY_PARAM_FFC_Q,
+                                   bn_q)
+        || !OSSL_PARAM_BLD_push_BN(tmpl, OSSL_PKEY_PARAM_FFC_G,
+                                   bn_g)
+        || (params = OSSL_PARAM_BLD_to_param(tmpl)) == NULL) {
         BIO_printf(bio_err, "Error, failed to set DH parameters\n");
         goto err;
     }
 
-    ctx = EVP_PKEY_CTX_new_from_name(app_get0_libctx(), "DHX", app_get0_propq());
+    ctx =
+        EVP_PKEY_CTX_new_from_name(app_get0_libctx(), "DHX", app_get0_propq());
     if (ctx == NULL
-            || EVP_PKEY_fromdata_init(ctx) <= 0
-            || EVP_PKEY_fromdata(ctx, &pkey, EVP_PKEY_KEY_PARAMETERS, params) <= 0) {
+        || EVP_PKEY_fromdata_init(ctx) <= 0
+        || EVP_PKEY_fromdata(ctx, &pkey, EVP_PKEY_KEY_PARAMETERS,
+                             params) <= 0) {
         BIO_printf(bio_err, "Error, failed to set DH parameters\n");
         goto err;
     }
 
- err:
+err:
     EVP_PKEY_CTX_free(ctx);
     OSSL_PARAM_free(params);
     OSSL_PARAM_BLD_free(tmpl);

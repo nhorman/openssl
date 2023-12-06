@@ -8,7 +8,7 @@
  */
 
 #if defined( __VMS) && !defined( OPENSSL_NO_DECC_INIT) && \
- defined( __DECC) && !defined( __VAX) && (__CRTL_VER >= 70301000)
+    defined( __DECC) && !defined( __VAX) && (__CRTL_VER >= 70301000)
 # define USE_DECC_INIT 1
 #endif
 

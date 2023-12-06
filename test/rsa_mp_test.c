@@ -159,8 +159,10 @@ static int key2048p3_v1(RSA *key)
         goto err;
 
     if (!TEST_int_eq(RSA_set0_crt_params(key,
-                                         BN_bin2bn(dmp1, sizeof(dmp1) - 1, NULL),
-                                         BN_bin2bn(dmq1, sizeof(dmq1) - 1, NULL),
+                                         BN_bin2bn(dmp1, sizeof(dmp1) - 1,
+                                                   NULL),
+                                         BN_bin2bn(dmq1, sizeof(dmq1) - 1,
+                                                   NULL),
                                          BN_bin2bn(iqmp, sizeof(iqmp) - 1,
                                                    NULL)), 1))
         return 0;
@@ -181,12 +183,12 @@ static int key2048p3_v1(RSA *key)
                                                coeffs, NUM_EXTRA_PRIMES)))
         goto err;
 
- ret:
+ret:
     OPENSSL_free(pris);
     OPENSSL_free(exps);
     OPENSSL_free(coeffs);
     return rv;
- err:
+err:
     if (pris != NULL)
         BN_free(pris[0]);
     if (exps != NULL)
@@ -220,25 +222,28 @@ static int key2048p3_v2(RSA *key)
         || !TEST_int_ne(sk_BIGNUM_push(exps, num), 0)
         || !TEST_ptr(num = BN_bin2bn(dmq1, sizeof(dmq1) - 1, NULL))
         || !TEST_int_ne(sk_BIGNUM_push(exps, num), 0)
-        || !TEST_ptr(num = BN_bin2bn(ex_exponent, sizeof(ex_exponent) - 1, NULL))
+        || !TEST_ptr(num = BN_bin2bn(ex_exponent, sizeof(ex_exponent) - 1,
+                                     NULL))
         || !TEST_int_ne(sk_BIGNUM_push(exps, num), 0))
         goto err;
 
     if (!TEST_ptr(num = BN_bin2bn(iqmp, sizeof(iqmp) - 1, NULL))
         || !TEST_int_ne(sk_BIGNUM_push(coeffs, num), 0)
-        || !TEST_ptr(num = BN_bin2bn(ex_coefficient, sizeof(ex_coefficient) - 1, NULL))
+        || !TEST_ptr(num =
+                         BN_bin2bn(ex_coefficient, sizeof(ex_coefficient) - 1,
+                                   NULL))
         || !TEST_int_ne(sk_BIGNUM_push(coeffs, num), 0))
         goto err;
 
     if (!TEST_true(ossl_rsa_set0_all_params(key, primes, exps, coeffs)))
         goto err;
 
- ret:
+ret:
     sk_BIGNUM_free(primes);
     sk_BIGNUM_free(exps);
     sk_BIGNUM_free(coeffs);
     return rv;
- err:
+err:
     sk_BIGNUM_pop_free(primes, BN_free);
     sk_BIGNUM_pop_free(exps, BN_free);
     sk_BIGNUM_pop_free(coeffs, BN_free);

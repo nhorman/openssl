@@ -115,7 +115,7 @@ ossl_quic_pkt_type_must_be_last(uint32_t pkt_type)
      * 1-RTT also must come last as it lacks a length field.
      */
     return !ossl_quic_pkt_type_can_share_dgram(pkt_type)
-        || pkt_type == QUIC_PKT_TYPE_1RTT;
+           || pkt_type == QUIC_PKT_TYPE_1RTT;
 }
 
 /*
@@ -124,7 +124,8 @@ ossl_quic_pkt_type_must_be_last(uint32_t pkt_type)
 static ossl_inline ossl_unused int
 ossl_quic_pkt_type_has_version(uint32_t pkt_type)
 {
-    return pkt_type != QUIC_PKT_TYPE_1RTT && pkt_type != QUIC_PKT_TYPE_VERSION_NEG;
+    return pkt_type != QUIC_PKT_TYPE_1RTT &&
+           pkt_type != QUIC_PKT_TYPE_VERSION_NEG;
 }
 
 /*
@@ -159,7 +160,7 @@ typedef struct quic_hdr_protector_st {
     const char         *propq;
     EVP_CIPHER_CTX     *cipher_ctx;
     EVP_CIPHER         *cipher;
-    uint32_t            cipher_id;
+    uint32_t cipher_id;
 } QUIC_HDR_PROTECTOR;
 
 #  define QUIC_HDR_PROT_CIPHER_AES_128    1
@@ -310,29 +311,29 @@ int ossl_quic_hdr_protector_encrypt_fields(QUIC_HDR_PROTECTOR *hpr,
  */
 typedef struct quic_pkt_hdr_st {
     /* [ALL] A QUIC_PKT_TYPE_* value. Always valid. */
-    unsigned int    type        :8;
+    unsigned int type        : 8;
 
     /* [S] Value of the spin bit. Valid if (type == 1RTT). */
-    unsigned int    spin_bit    :1;
+    unsigned int spin_bit    : 1;
 
     /*
      * [S] Value of the Key Phase bit in the short packet.
      * Valid if (type == 1RTT && !partial).
      */
-    unsigned int    key_phase   :1;
+    unsigned int key_phase   : 1;
 
     /*
      * [1i0h] Length of packet number in bytes. This is the decoded value.
      * Valid if ((type == 1RTT || (version && type != RETRY)) && !partial).
      */
-    unsigned int    pn_len      :4;
+    unsigned int pn_len      : 4;
 
     /*
      * [ALL] Set to 1 if this is a partial decode because the packet header
      * has not yet been deprotected. pn_len, pn and key_phase are not valid if
      * this is set.
      */
-    unsigned int    partial     :1;
+    unsigned int partial     : 1;
 
     /*
      * [ALL] Whether the fixed bit was set. Note that only Version Negotiation
@@ -340,7 +341,7 @@ typedef struct quic_pkt_hdr_st {
      * other packet types (decode will fail if it is not set). Ignored when
      * encoding unless encoding a Version Negotiation packet.
      */
-    unsigned int    fixed       :1;
+    unsigned int fixed       : 1;
 
     /*
      * The unused bits in the low 4 bits of a Retry packet header's first byte.
@@ -348,7 +349,7 @@ typedef struct quic_pkt_hdr_st {
      * representation in their header when decoding and encoding them again.
      * This is necessary to validate Retry packet headers.
      */
-    unsigned int    unused      :4;
+    unsigned int unused      : 4;
 
     /*
      * The 'Reserved' bits in an Initial, Handshake, 0-RTT or 1-RTT packet
@@ -356,19 +357,19 @@ typedef struct quic_pkt_hdr_st {
      * that they are zero, as this must be done after packet protection is
      * successfully removed to avoid creating a timing channel.
      */
-    unsigned int    reserved    :2;
+    unsigned int reserved    : 2;
 
     /* [L] Version field. Valid if (type != 1RTT). */
-    uint32_t        version;
+    uint32_t version;
 
     /* [ALL] The destination connection ID. Always valid. */
-    QUIC_CONN_ID    dst_conn_id;
+    QUIC_CONN_ID dst_conn_id;
 
     /*
      * [L] The source connection ID.
      * Valid if (type != 1RTT).
      */
-    QUIC_CONN_ID    src_conn_id;
+    QUIC_CONN_ID src_conn_id;
 
     /*
      * [1i0h] Relatively-encoded packet number in raw, encoded form. The correct
@@ -378,7 +379,7 @@ typedef struct quic_pkt_hdr_st {
      *
      * Valid if ((type == 1RTT || (version && type != RETRY)) && !partial).
      */
-    unsigned char           pn[4];
+    unsigned char pn[4];
 
     /*
      * [i] Token field in Initial packet. Points to memory inside the decoded
@@ -388,7 +389,7 @@ typedef struct quic_pkt_hdr_st {
      * Valid if (type == INITIAL).
      */
     const unsigned char    *token;
-    size_t                  token_len;
+    size_t token_len;
 
     /*
      * [ALL] Payload length in bytes.
@@ -399,7 +400,7 @@ typedef struct quic_pkt_hdr_st {
      * length, regardless of whether the packet type encoded or decoded uses an
      * explicit length indication.
      */
-    size_t                  len;
+    size_t len;
 
     /*
      * Pointer to start of payload data in the packet. Points to memory inside
@@ -435,7 +436,7 @@ typedef struct quic_pkt_hdr_st {
 struct quic_pkt_hdr_ptrs_st {
     unsigned char    *raw_start;        /* start of packet */
     unsigned char    *raw_sample;       /* start of sampling range */
-    size_t            raw_sample_len;   /* maximum length of sampling range */
+    size_t raw_sample_len;              /* maximum length of sampling range */
 
     /*
      * Start of PN field. Guaranteed to be NULL unless at least four bytes are

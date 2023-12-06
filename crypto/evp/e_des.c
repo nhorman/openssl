@@ -39,7 +39,7 @@ typedef struct {
  * assembler support was in general requested... */
 #  include "crypto/sparc_arch.h"
 
-#  define SPARC_DES_CAPABLE       (OPENSSL_sparcv9cap_P[1] & CFR_DES)
+#  define SPARC_DES_CAPABLE       (OPENSSL_sparcv9cap_P[1] &CFR_DES)
 
 void des_t4_key_expand(const void *key, DES_key_schedule *ks);
 void des_t4_cbc_encrypt(const void *inp, void *out, size_t len,
@@ -61,9 +61,9 @@ static int des_ecb_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
                           const unsigned char *in, size_t inl)
 {
     BLOCK_CIPHER_ecb_loop()
-        DES_ecb_encrypt((DES_cblock *)(in + i), (DES_cblock *)(out + i),
-                        EVP_CIPHER_CTX_get_cipher_data(ctx),
-                        EVP_CIPHER_CTX_is_encrypting(ctx));
+    DES_ecb_encrypt((DES_cblock *)(in + i), (DES_cblock *)(out + i),
+                    EVP_CIPHER_CTX_get_cipher_data(ctx),
+                    EVP_CIPHER_CTX_is_encrypting(ctx));
     return 1;
 }
 
@@ -199,11 +199,11 @@ BLOCK_CIPHER_defs(des, EVP_DES_KEY, NID_des, 8, 8, 8, 64,
                   EVP_CIPH_RAND_KEY, des_init_key, NULL,
                   EVP_CIPHER_set_asn1_iv, EVP_CIPHER_get_asn1_iv, des_ctrl)
 
-    BLOCK_CIPHER_def_cfb(des, EVP_DES_KEY, NID_des, 8, 8, 1,
+BLOCK_CIPHER_def_cfb(des, EVP_DES_KEY, NID_des, 8, 8, 1,
                      EVP_CIPH_RAND_KEY, des_init_key, NULL,
                      EVP_CIPHER_set_asn1_iv, EVP_CIPHER_get_asn1_iv, des_ctrl)
 
-    BLOCK_CIPHER_def_cfb(des, EVP_DES_KEY, NID_des, 8, 8, 8,
+BLOCK_CIPHER_def_cfb(des, EVP_DES_KEY, NID_des, 8, 8, 8,
                      EVP_CIPH_RAND_KEY, des_init_key, NULL,
                      EVP_CIPHER_set_asn1_iv, EVP_CIPHER_get_asn1_iv, des_ctrl)
 
@@ -233,14 +233,14 @@ static int des_ctrl(EVP_CIPHER_CTX *c, int type, int arg, void *ptr)
 {
 
     switch (type) {
-    case EVP_CTRL_RAND_KEY:
-        if (RAND_priv_bytes(ptr, 8) <= 0)
-            return 0;
-        DES_set_odd_parity((DES_cblock *)ptr);
-        return 1;
+        case EVP_CTRL_RAND_KEY:
+            if (RAND_priv_bytes(ptr, 8) <= 0)
+                return 0;
+            DES_set_odd_parity((DES_cblock *)ptr);
+            return 1;
 
-    default:
-        return -1;
+        default:
+            return -1;
     }
 }
 

@@ -26,14 +26,14 @@ extern CRYPTO_RWLOCK *global_engine_lock;
  * *after* the change.
  */
 # define ENGINE_REF_PRINT(e, isfunct, diff)                             \
-    OSSL_TRACE6(ENGINE_REF_COUNT,                                       \
-               "engine: %p %s from %d to %d (%s:%d)\n",                 \
-               (void *)(e), (isfunct ? "funct" : "struct"),             \
-               ((isfunct)                                               \
+        OSSL_TRACE6(ENGINE_REF_COUNT,                                       \
+                    "engine: %p %s from %d to %d (%s:%d)\n",                 \
+                    (void *)(e), (isfunct ? "funct" : "struct"),             \
+                    ((isfunct)                                               \
                 ? ((e)->funct_ref - (diff))                             \
                 : (eng_struct_ref(e) - (diff))),                        \
-               ((isfunct) ? (e)->funct_ref : eng_struct_ref(e)),        \
-               (OPENSSL_FILE), (OPENSSL_LINE))
+                    ((isfunct) ? (e)->funct_ref : eng_struct_ref(e)),        \
+                    (OPENSSL_FILE), (OPENSSL_LINE))
 
 /*
  * Any code that will need cleanup operations should use these functions to
@@ -64,7 +64,7 @@ void engine_table_unregister(ENGINE_TABLE **table, ENGINE *e);
 void engine_table_cleanup(ENGINE_TABLE **table);
 ENGINE *ossl_engine_table_select(ENGINE_TABLE **table, int nid,
                                  const char *f, int l);
-typedef void (engine_table_doall_cb) (int nid, STACK_OF(ENGINE) *sk,
+typedef void (engine_table_doall_cb) (int nid, STACK_OF (ENGINE) *sk,
                                       ENGINE *def, void *arg);
 void engine_table_doall(ENGINE_TABLE *table, engine_table_doall_cb *cb,
                         void *arg);

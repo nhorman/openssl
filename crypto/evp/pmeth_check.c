@@ -73,19 +73,21 @@ static int evp_pkey_public_check_combined(EVP_PKEY_CTX *ctx, int checktype)
 
     return pkey->ameth->pkey_public_check(pkey);
 #endif
- not_supported:
+not_supported:
     ERR_raise(ERR_LIB_EVP, EVP_R_OPERATION_NOT_SUPPORTED_FOR_THIS_KEYTYPE);
     return -2;
 }
 
 int EVP_PKEY_public_check(EVP_PKEY_CTX *ctx)
 {
-    return evp_pkey_public_check_combined(ctx, OSSL_KEYMGMT_VALIDATE_FULL_CHECK);
+    return evp_pkey_public_check_combined(ctx,
+                                          OSSL_KEYMGMT_VALIDATE_FULL_CHECK);
 }
 
 int EVP_PKEY_public_check_quick(EVP_PKEY_CTX *ctx)
 {
-    return evp_pkey_public_check_combined(ctx, OSSL_KEYMGMT_VALIDATE_QUICK_CHECK);
+    return evp_pkey_public_check_combined(ctx,
+                                          OSSL_KEYMGMT_VALIDATE_QUICK_CHECK);
 }
 
 static int evp_pkey_param_check_combined(EVP_PKEY_CTX *ctx, int checktype)
@@ -118,7 +120,7 @@ static int evp_pkey_param_check_combined(EVP_PKEY_CTX *ctx, int checktype)
 
     return pkey->ameth->pkey_param_check(pkey);
 #endif
- not_supported:
+not_supported:
     ERR_raise(ERR_LIB_EVP, EVP_R_OPERATION_NOT_SUPPORTED_FOR_THIS_KEYTYPE);
     return -2;
 }
@@ -130,7 +132,8 @@ int EVP_PKEY_param_check(EVP_PKEY_CTX *ctx)
 
 int EVP_PKEY_param_check_quick(EVP_PKEY_CTX *ctx)
 {
-    return evp_pkey_param_check_combined(ctx, OSSL_KEYMGMT_VALIDATE_QUICK_CHECK);
+    return evp_pkey_param_check_combined(ctx,
+                                         OSSL_KEYMGMT_VALIDATE_QUICK_CHECK);
 }
 
 int EVP_PKEY_private_check(EVP_PKEY_CTX *ctx)
@@ -186,7 +189,7 @@ int EVP_PKEY_pairwise_check(EVP_PKEY_CTX *ctx)
 
     return pkey->ameth->pkey_check(pkey);
 #endif
- not_supported:
+not_supported:
     ERR_raise(ERR_LIB_EVP, EVP_R_OPERATION_NOT_SUPPORTED_FOR_THIS_KEYTYPE);
     return -2;
 }

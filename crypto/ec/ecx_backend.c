@@ -28,26 +28,26 @@
 int ossl_ecx_public_from_private(ECX_KEY *key)
 {
     switch (key->type) {
-    case ECX_KEY_TYPE_X25519:
-        ossl_x25519_public_from_private(key->pubkey, key->privkey);
-        break;
-    case ECX_KEY_TYPE_ED25519:
-        if (!ossl_ed25519_public_from_private(key->libctx, key->pubkey,
-                                              key->privkey, key->propq)) {
-            ERR_raise(ERR_LIB_EC, EC_R_FAILED_MAKING_PUBLIC_KEY);
-            return 0;
-        }
-        break;
-    case ECX_KEY_TYPE_X448:
-        ossl_x448_public_from_private(key->pubkey, key->privkey);
-        break;
-    case ECX_KEY_TYPE_ED448:
-        if (!ossl_ed448_public_from_private(key->libctx, key->pubkey,
-                                            key->privkey, key->propq)) {
-            ERR_raise(ERR_LIB_EC, EC_R_FAILED_MAKING_PUBLIC_KEY);
-            return 0;
-        }
-        break;
+        case ECX_KEY_TYPE_X25519:
+            ossl_x25519_public_from_private(key->pubkey, key->privkey);
+            break;
+        case ECX_KEY_TYPE_ED25519:
+            if (!ossl_ed25519_public_from_private(key->libctx, key->pubkey,
+                                                  key->privkey, key->propq)) {
+                ERR_raise(ERR_LIB_EC, EC_R_FAILED_MAKING_PUBLIC_KEY);
+                return 0;
+            }
+            break;
+        case ECX_KEY_TYPE_X448:
+            ossl_x448_public_from_private(key->pubkey, key->privkey);
+            break;
+        case ECX_KEY_TYPE_ED448:
+            if (!ossl_ed448_public_from_private(key->libctx, key->pubkey,
+                                                key->privkey, key->propq)) {
+                ERR_raise(ERR_LIB_EC, EC_R_FAILED_MAKING_PUBLIC_KEY);
+                return 0;
+            }
+            break;
     }
     return 1;
 }
@@ -92,7 +92,7 @@ int ossl_ecx_key_fromdata(ECX_KEY *ecx, const OSSL_PARAM params[],
     if (param_pub_key != NULL
         && !OSSL_PARAM_get_octet_string(param_pub_key,
                                         (void **)&pubkey,
-                                         sizeof(ecx->pubkey), &pubkeylen))
+                                        sizeof(ecx->pubkey), &pubkeylen))
         return 0;
 
     if ((param_pub_key != NULL && pubkeylen != ecx->keylen))
@@ -218,7 +218,7 @@ ECX_KEY *ossl_ecx_key_op(const X509_ALGOR *palg,
     }
 
     return key;
- err:
+err:
     ossl_ecx_key_free(key);
     return NULL;
 }

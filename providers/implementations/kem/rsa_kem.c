@@ -78,7 +78,8 @@ static int name2id(const char *name, const OSSL_ITEM *map, size_t sz)
 
 static int rsakem_opname2id(const char *name)
 {
-    return name2id(name, rsakem_opname_id_map, OSSL_NELEM(rsakem_opname_id_map));
+    return name2id(name, rsakem_opname_id_map,
+                   OSSL_NELEM(rsakem_opname_id_map));
 }
 
 static void *rsakem_newctx(void *provctx)
@@ -314,7 +315,8 @@ static int rsasve_recover(PROV_RSA_CTX *prsactx,
         return 0;
     }
     /* Step (3): out = RSADP((n,d), in) */
-    return (RSA_private_decrypt(inlen, in, out, prsactx->rsa, RSA_NO_PADDING) > 0);
+    return (RSA_private_decrypt(inlen, in, out, prsactx->rsa,
+                                RSA_NO_PADDING) > 0);
 }
 
 static int rsakem_generate(void *vprsactx, unsigned char *out, size_t *outlen,
@@ -344,22 +346,22 @@ static int rsakem_recover(void *vprsactx, unsigned char *out, size_t *outlen,
 }
 
 const OSSL_DISPATCH ossl_rsa_asym_kem_functions[] = {
-    { OSSL_FUNC_KEM_NEWCTX, (void (*)(void))rsakem_newctx },
+    { OSSL_FUNC_KEM_NEWCTX, (void (*)(void)) rsakem_newctx },
     { OSSL_FUNC_KEM_ENCAPSULATE_INIT,
-      (void (*)(void))rsakem_encapsulate_init },
-    { OSSL_FUNC_KEM_ENCAPSULATE, (void (*)(void))rsakem_generate },
+      (void (*)(void)) rsakem_encapsulate_init },
+    { OSSL_FUNC_KEM_ENCAPSULATE, (void (*)(void)) rsakem_generate },
     { OSSL_FUNC_KEM_DECAPSULATE_INIT,
-      (void (*)(void))rsakem_decapsulate_init },
-    { OSSL_FUNC_KEM_DECAPSULATE, (void (*)(void))rsakem_recover },
-    { OSSL_FUNC_KEM_FREECTX, (void (*)(void))rsakem_freectx },
-    { OSSL_FUNC_KEM_DUPCTX, (void (*)(void))rsakem_dupctx },
+      (void (*)(void)) rsakem_decapsulate_init },
+    { OSSL_FUNC_KEM_DECAPSULATE, (void (*)(void)) rsakem_recover },
+    { OSSL_FUNC_KEM_FREECTX, (void (*)(void)) rsakem_freectx },
+    { OSSL_FUNC_KEM_DUPCTX, (void (*)(void)) rsakem_dupctx },
     { OSSL_FUNC_KEM_GET_CTX_PARAMS,
-      (void (*)(void))rsakem_get_ctx_params },
+      (void (*)(void)) rsakem_get_ctx_params },
     { OSSL_FUNC_KEM_GETTABLE_CTX_PARAMS,
-      (void (*)(void))rsakem_gettable_ctx_params },
+      (void (*)(void)) rsakem_gettable_ctx_params },
     { OSSL_FUNC_KEM_SET_CTX_PARAMS,
-      (void (*)(void))rsakem_set_ctx_params },
+      (void (*)(void)) rsakem_set_ctx_params },
     { OSSL_FUNC_KEM_SETTABLE_CTX_PARAMS,
-      (void (*)(void))rsakem_settable_ctx_params },
+      (void (*)(void)) rsakem_settable_ctx_params },
     OSSL_DISPATCH_END
 };

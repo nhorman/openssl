@@ -73,7 +73,8 @@ static void common_handler(int sig)
 
 #if defined(__sun) && defined(__SVR4)
 # if defined(__GNUC__) && __GNUC__>=2
-extern unsigned int getisax(unsigned int vec[], unsigned int sz) __attribute__ ((weak));
+extern unsigned int getisax(unsigned int vec[],
+                            unsigned int sz) __attribute__ ((weak));
 # elif defined(__SUNPRO_C)
 #pragma weak getisax
 extern unsigned int getisax(unsigned int vec[], unsigned int sz);

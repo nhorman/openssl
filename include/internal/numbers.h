@@ -16,19 +16,24 @@
 # if (-1 & 3) == 0x03           /* Two's complement */
 
 #  define __MAXUINT__(T) ((T) -1)
-#  define __MAXINT__(T) ((T) ((((T) 1) << ((sizeof(T) * CHAR_BIT) - 1)) ^ __MAXUINT__(T)))
+#  define __MAXINT__(T) ((T) ((((T) 1) << \
+    ((sizeof(T) * CHAR_BIT) - 1)) ^ __MAXUINT__(T)))
 #  define __MININT__(T) (-__MAXINT__(T) - 1)
 
 # elif (-1 & 3) == 0x02         /* One's complement */
 
 #  define __MAXUINT__(T) (((T) -1) + 1)
-#  define __MAXINT__(T) ((T) ((((T) 1) << ((sizeof(T) * CHAR_BIT) - 1)) ^ __MAXUINT__(T)))
+#  define __MAXINT__(T) ((T) ((((T) 1) << \
+    ((sizeof(T) * CHAR_BIT) - 1)) ^ __MAXUINT__(T)))
 #  define __MININT__(T) (-__MAXINT__(T))
 
 # elif (-1 & 3) == 0x01         /* Sign/magnitude */
 
-#  define __MAXINT__(T) ((T) (((((T) 1) << ((sizeof(T) * CHAR_BIT) - 2)) - 1) | (((T) 1) << ((sizeof(T) * CHAR_BIT) - 2))))
-#  define __MAXUINT__(T) ((T) (__MAXINT__(T) | (((T) 1) << ((sizeof(T) * CHAR_BIT) - 1))))
+#  define __MAXINT__(T) ((T) (((((T) 1) << \
+    ((sizeof(T) * CHAR_BIT) - 2)) - 1) | \
+                              (((T) 1) << ((sizeof(T) * CHAR_BIT) - 2))))
+#  define __MAXUINT__(T) ((T) (__MAXINT__(T) | \
+                               (((T) 1) << ((sizeof(T) * CHAR_BIT) - 1))))
 #  define __MININT__(T) (-__MAXINT__(T))
 
 # else
@@ -69,7 +74,7 @@
 #   define UINT32_C(c) (c)
 #  endif
 #  ifndef UINT64_C
-#   define UINT64_C(c) (c##UL)
+#   define UINT64_C(c) (c ## UL)
 #  endif
 # endif
 
@@ -78,10 +83,10 @@
  */
 # ifdef SIXTY_FOUR_BIT
 #  ifndef UINT32_C
-#   define UINT32_C(c) (c##UL)
+#   define UINT32_C(c) (c ## UL)
 #  endif
 #  ifndef UINT64_C
-#   define UINT64_C(c) (c##ULL)
+#   define UINT64_C(c) (c ## ULL)
 #  endif
 # endif
 

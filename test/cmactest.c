@@ -146,15 +146,15 @@ static int test_cmac_bad(void)
     if (!TEST_ptr(ctx)
         || !TEST_false(CMAC_Init(ctx, NULL, 0, NULL, NULL))
         || !TEST_false(CMAC_Update(ctx, test[0].data, test[0].data_len))
-           /* Should be able to pass cipher first, and then key */
+        /* Should be able to pass cipher first, and then key */
         || !TEST_true(CMAC_Init(ctx, NULL, 0, EVP_aes_128_cbc(), NULL))
-           /* Must have a key */
+        /* Must have a key */
         || !TEST_false(CMAC_Update(ctx, test[0].data, test[0].data_len))
-           /* Now supply the key */
+        /* Now supply the key */
         || !TEST_true(CMAC_Init(ctx, test[0].key, test[0].key_len, NULL, NULL))
-           /* Update should now work */
+        /* Update should now work */
         || !TEST_true(CMAC_Update(ctx, test[0].data, test[0].data_len))
-           /* XTS is not a suitable cipher to use */
+        /* XTS is not a suitable cipher to use */
         || !TEST_false(CMAC_Init(ctx, xtskey, sizeof(xtskey), EVP_aes_128_xts(),
                                  NULL))
         || !TEST_false(CMAC_Update(ctx, test[0].data, test[0].data_len)))
@@ -184,11 +184,13 @@ static int test_cmac_run(void)
         size_t fill_idx = str_len;
         while (fill_len > 0) {
             if (fill_len > str_len) {
-                memcpy(&test[case_idx].data[fill_idx], test[case_idx].data, str_len);
+                memcpy(&test[case_idx].data[fill_idx], test[case_idx].data,
+                       str_len);
                 fill_len -= str_len;
                 fill_idx += str_len;
             } else {
-                memcpy(&test[case_idx].data[fill_idx], test[case_idx].data, fill_len);
+                memcpy(&test[case_idx].data[fill_idx], test[case_idx].data,
+                       fill_len);
                 fill_len = 0;
             }
         }

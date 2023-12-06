@@ -35,25 +35,28 @@ static int parse_boolean(const char *value, int *result)
 }
 
 #define IMPLEMENT_SSL_TEST_BOOL_OPTION(struct_type, name, field)        \
-    static int parse_##name##_##field(struct_type *ctx, const char *value) \
-    {                                                                   \
-        return parse_boolean(value, &ctx->field);                       \
-    }
+        static int parse_ ## name ## _ ## field(struct_type *ctx, \
+                                                const char *value) \
+        {                                                                   \
+            return parse_boolean(value, &ctx->field);                       \
+        }
 
 #define IMPLEMENT_SSL_TEST_STRING_OPTION(struct_type, name, field)      \
-    static int parse_##name##_##field(struct_type *ctx, const char *value) \
-    {                                                                   \
-        OPENSSL_free(ctx->field);                                       \
-        ctx->field = OPENSSL_strdup(value);                             \
-        return TEST_ptr(ctx->field);                                    \
-    }
+        static int parse_ ## name ## _ ## field(struct_type *ctx, \
+                                                const char *value) \
+        {                                                                   \
+            OPENSSL_free(ctx->field);                                       \
+            ctx->field = OPENSSL_strdup(value);                             \
+            return TEST_ptr(ctx->field);                                    \
+        }
 
 #define IMPLEMENT_SSL_TEST_INT_OPTION(struct_type, name, field)        \
-    static int parse_##name##_##field(struct_type *ctx, const char *value) \
-    {                                                                   \
-        ctx->field = atoi(value);                                       \
-        return 1;                                                       \
-    }
+        static int parse_ ## name ## _ ## field(struct_type *ctx, \
+                                                const char *value) \
+        {                                                                   \
+            ctx->field = atoi(value);                                       \
+            return 1;                                                       \
+        }
 
 /* True enums and other test configuration values that map to an int. */
 typedef struct {
@@ -98,7 +101,8 @@ static const test_enum ssl_test_results[] = {
     {"FirstHandshakeFailed", SSL_TEST_FIRST_HANDSHAKE_FAILED},
 };
 
-__owur static int parse_expected_result(SSL_TEST_CTX *test_ctx, const char *value)
+__owur static int parse_expected_result(SSL_TEST_CTX *test_ctx,
+                                        const char *value)
 {
     int ret_value;
     if (!parse_enum(ssl_test_results, OSSL_NELEM(ssl_test_results),
@@ -149,13 +153,13 @@ const char *ssl_alert_name(int alert)
 /* ExpectedProtocol */
 
 static const test_enum ssl_protocols[] = {
-     {"TLSv1.3", TLS1_3_VERSION},
-     {"TLSv1.2", TLS1_2_VERSION},
-     {"TLSv1.1", TLS1_1_VERSION},
-     {"TLSv1", TLS1_VERSION},
-     {"SSLv3", SSL3_VERSION},
-     {"DTLSv1", DTLS1_VERSION},
-     {"DTLSv1.2", DTLS1_2_VERSION},
+    {"TLSv1.3", TLS1_3_VERSION},
+    {"TLSv1.2", TLS1_2_VERSION},
+    {"TLSv1.1", TLS1_1_VERSION},
+    {"TLSv1", TLS1_VERSION},
+    {"SSLv3", SSL3_VERSION},
+    {"DTLSv1", DTLS1_VERSION},
+    {"DTLSv1.2", DTLS1_2_VERSION},
 };
 
 __owur static int parse_protocol(SSL_TEST_CTX *test_ctx, const char *value)
@@ -178,8 +182,9 @@ static const test_enum ssl_verify_callbacks[] = {
     {"RejectAll", SSL_TEST_VERIFY_REJECT_ALL},
 };
 
-__owur static int parse_client_verify_callback(SSL_TEST_CLIENT_CONF *client_conf,
-                                               const char *value)
+__owur static int parse_client_verify_callback(
+    SSL_TEST_CLIENT_CONF *client_conf,
+    const char *value)
 {
     int ret_value;
 
@@ -275,7 +280,8 @@ static const test_enum ssl_session_ticket[] = {
     {"No", SSL_TEST_SESSION_TICKET_NO},
 };
 
-__owur static int parse_session_ticket(SSL_TEST_CTX *test_ctx, const char *value)
+__owur static int parse_session_ticket(SSL_TEST_CTX *test_ctx,
+                                       const char *value)
 {
     int ret_value;
     if (!parse_enum(ssl_session_ticket, OSSL_NELEM(ssl_session_ticket),
@@ -363,8 +369,10 @@ IMPLEMENT_SSL_TEST_STRING_OPTION(SSL_TEST_CLIENT_CONF, client, srp_password)
 IMPLEMENT_SSL_TEST_STRING_OPTION(SSL_TEST_SERVER_CONF, server, srp_password)
 
 /* Session Ticket App Data options */
-IMPLEMENT_SSL_TEST_STRING_OPTION(SSL_TEST_CTX, test, expected_session_ticket_app_data)
-IMPLEMENT_SSL_TEST_STRING_OPTION(SSL_TEST_SERVER_CONF, server, session_ticket_app_data)
+IMPLEMENT_SSL_TEST_STRING_OPTION(SSL_TEST_CTX, test,
+                                 expected_session_ticket_app_data)
+IMPLEMENT_SSL_TEST_STRING_OPTION(SSL_TEST_SERVER_CONF, server,
+                                 session_ticket_app_data)
 
 /* Handshake mode */
 
@@ -378,7 +386,8 @@ static const test_enum ssl_handshake_modes[] = {
     {"PostHandshakeAuth", SSL_TEST_HANDSHAKE_POST_HANDSHAKE_AUTH},
 };
 
-__owur static int parse_handshake_mode(SSL_TEST_CTX *test_ctx, const char *value)
+__owur static int parse_handshake_mode(SSL_TEST_CTX *test_ctx,
+                                       const char *value)
 {
     int ret_value;
     if (!parse_enum(ssl_handshake_modes, OSSL_NELEM(ssl_handshake_modes),
@@ -406,7 +415,8 @@ static const test_enum ssl_key_update_types[] = {
     {"KeyUpdateNotRequested", SSL_KEY_UPDATE_NOT_REQUESTED},
 };
 
-__owur static int parse_key_update_type(SSL_TEST_CTX *test_ctx, const char *value)
+__owur static int parse_key_update_type(SSL_TEST_CTX *test_ctx,
+                                        const char *value)
 {
     int ret_value;
     if (!parse_enum(ssl_key_update_types, OSSL_NELEM(ssl_key_update_types),
@@ -429,7 +439,8 @@ __owur static int parse_ct_validation(SSL_TEST_CLIENT_CONF *client_conf,
                                       const char *value)
 {
     int ret_value;
-    if (!parse_enum(ssl_ct_validation_modes, OSSL_NELEM(ssl_ct_validation_modes),
+    if (!parse_enum(ssl_ct_validation_modes,
+                    OSSL_NELEM(ssl_ct_validation_modes),
                     &ret_value, value)) {
         return 0;
     }
@@ -439,12 +450,14 @@ __owur static int parse_ct_validation(SSL_TEST_CLIENT_CONF *client_conf,
 
 const char *ssl_ct_validation_name(ssl_ct_validation_t mode)
 {
-    return enum_name(ssl_ct_validation_modes, OSSL_NELEM(ssl_ct_validation_modes),
+    return enum_name(ssl_ct_validation_modes, OSSL_NELEM(
+                         ssl_ct_validation_modes),
                      mode);
 }
 
 IMPLEMENT_SSL_TEST_BOOL_OPTION(SSL_TEST_CTX, test, resumption_expected)
-IMPLEMENT_SSL_TEST_BOOL_OPTION(SSL_TEST_SERVER_CONF, server, broken_session_ticket)
+IMPLEMENT_SSL_TEST_BOOL_OPTION(SSL_TEST_SERVER_CONF, server,
+                               broken_session_ticket)
 IMPLEMENT_SSL_TEST_BOOL_OPTION(SSL_TEST_CTX, test, use_sctp)
 IMPLEMENT_SSL_TEST_BOOL_OPTION(SSL_TEST_CTX, test, compress_certificates)
 IMPLEMENT_SSL_TEST_BOOL_OPTION(SSL_TEST_CTX, test, enable_client_sctp_label_bug)
@@ -459,7 +472,7 @@ static const test_enum ssl_certstatus[] = {
 };
 
 __owur static int parse_certstatus(SSL_TEST_SERVER_CONF *server_conf,
-                                            const char *value)
+                                   const char *value)
 {
     int ret_value;
     if (!parse_enum(ssl_certstatus, OSSL_NELEM(ssl_certstatus), &ret_value,
@@ -535,15 +548,15 @@ __owur static int parse_expected_key_type(int *ptype, const char *value)
         nid = EC_curve_nist2nid(value);
 #endif
     switch (nid) {
-    case NID_brainpoolP256r1tls13:
-        nid = NID_brainpoolP256r1;
-        break;
-    case NID_brainpoolP384r1tls13:
-        nid = NID_brainpoolP384r1;
-        break;
-    case NID_brainpoolP512r1tls13:
-        nid = NID_brainpoolP512r1;
-        break;
+        case NID_brainpoolP256r1tls13:
+            nid = NID_brainpoolP256r1;
+            break;
+        case NID_brainpoolP384r1tls13:
+            nid = NID_brainpoolP384r1;
+            break;
+        case NID_brainpoolP512r1tls13:
+            nid = NID_brainpoolP512r1;
+            break;
     }
     if (nid == NID_undef)
         return 0;
@@ -565,7 +578,7 @@ __owur static int parse_expected_server_cert_type(SSL_TEST_CTX *test_ctx,
 }
 
 __owur static int parse_expected_server_sign_type(SSL_TEST_CTX *test_ctx,
-                                                 const char *value)
+                                                  const char *value)
 {
     return parse_expected_key_type(&test_ctx->expected_server_sign_type,
                                    value);
@@ -579,7 +592,7 @@ __owur static int parse_expected_client_cert_type(SSL_TEST_CTX *test_ctx,
 }
 
 __owur static int parse_expected_client_sign_type(SSL_TEST_CTX *test_ctx,
-                                                 const char *value)
+                                                  const char *value)
 {
     return parse_expected_key_type(&test_ctx->expected_client_sign_type,
                                    value);
@@ -694,7 +707,8 @@ static const ssl_test_ctx_option ssl_test_ctx_options[] = {
     { "EnableClientSCTPLabelBug", &parse_test_enable_client_sctp_label_bug },
     { "EnableServerSCTPLabelBug", &parse_test_enable_server_sctp_label_bug },
     { "ExpectedCipher", &parse_test_expected_cipher },
-    { "ExpectedSessionTicketAppData", &parse_test_expected_session_ticket_app_data },
+    { "ExpectedSessionTicketAppData",
+      &parse_test_expected_session_ticket_app_data },
     { "FIPSversion", &parse_test_fips_version },
 };
 
@@ -839,7 +853,7 @@ static int parse_server_options(SSL_TEST_SERVER_CONF *server, const CONF *conf,
             if (strcmp(option->name, ssl_test_server_options[j].name) == 0) {
                 if (!ssl_test_server_options[j].parse(server, option->value)) {
                     TEST_info("Bad value %s for option %s",
-                               option->value, option->name);
+                              option->value, option->name);
                     return 0;
                 }
                 found = 1;
@@ -864,7 +878,7 @@ SSL_TEST_CTX *SSL_TEST_CTX_create(const CONF *conf, const char *test_section,
     size_t j;
 
     if (!TEST_ptr(sk_conf = NCONF_get_section(conf, test_section))
-            || !TEST_ptr(ctx = SSL_TEST_CTX_new(libctx)))
+        || !TEST_ptr(ctx = SSL_TEST_CTX_new(libctx)))
         goto err;
 
     for (i = 0; i < sk_CONF_VALUE_num(sk_conf); i++) {
@@ -898,7 +912,7 @@ SSL_TEST_CTX *SSL_TEST_CTX_create(const CONF *conf, const char *test_section,
                 if (strcmp(option->name, ssl_test_ctx_options[j].name) == 0) {
                     if (!ssl_test_ctx_options[j].parse(ctx, option->value)) {
                         TEST_info("Bad value %s for option %s",
-                                   option->value, option->name);
+                                  option->value, option->name);
                         goto err;
                     }
                     found = 1;
@@ -914,9 +928,9 @@ SSL_TEST_CTX *SSL_TEST_CTX_create(const CONF *conf, const char *test_section,
 
     goto done;
 
- err:
+err:
     SSL_TEST_CTX_free(ctx);
     ctx = NULL;
- done:
+done:
     return ctx;
 }

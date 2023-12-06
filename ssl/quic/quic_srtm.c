@@ -43,12 +43,12 @@ struct srtm_item_st {
     SRTM_ITEM                   *next_by_srt_blinded; /* SORT BY opaque  DESC */
     SRTM_ITEM                   *next_by_seq_num;     /* SORT BY seq_num DESC */
     void                        *opaque; /* \__ unique identity for item */
-    uint64_t                    seq_num; /* /                            */
-    QUIC_STATELESS_RESET_TOKEN  srt;
-    unsigned char               srt_blinded[BLINDED_SRT_LEN]; /* H(srt) */
+    uint64_t seq_num;                    /* /                            */
+    QUIC_STATELESS_RESET_TOKEN srt;
+    unsigned char srt_blinded[BLINDED_SRT_LEN];               /* H(srt) */
 
 #ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    uint32_t                    debug_token;
+    uint32_t debug_token;
 #endif
 };
 
@@ -63,7 +63,7 @@ struct quic_srtm_st {
      * Monotonically transitions to 1 in event of allocation failure. The only
      * valid operation on such an object is to free it.
      */
-    unsigned int                alloc_failed : 1;
+    unsigned int alloc_failed : 1;
 };
 
 static unsigned long items_fwd_hash(const SRTM_ITEM *item)
@@ -133,8 +133,10 @@ QUIC_SRTM *ossl_quic_srtm_new(OSSL_LIB_CTX *libctx, const char *propq)
     ecb = NULL;
 
     /* Create mappings. */
-    if ((srtm->items_fwd = lh_SRTM_ITEM_new(items_fwd_hash, items_fwd_cmp)) == NULL
-        || (srtm->items_rev = lh_SRTM_ITEM_new(items_rev_hash, items_rev_cmp)) == NULL)
+    if ((srtm->items_fwd =
+             lh_SRTM_ITEM_new(items_fwd_hash, items_fwd_cmp)) == NULL
+        || (srtm->items_rev =
+                lh_SRTM_ITEM_new(items_rev_hash, items_rev_cmp)) == NULL)
         goto err;
 
     return srtm;
@@ -217,7 +219,8 @@ static SRTM_ITEM *srtm_find(QUIC_SRTM *srtm, void *opaque, uint64_t seq_num,
  * The new head pointer is written to *new_head (which may or may not be
  * unchanged).
  */
-static void sorted_insert_seq_num(SRTM_ITEM *head, SRTM_ITEM *item, SRTM_ITEM **new_head)
+static void sorted_insert_seq_num(SRTM_ITEM *head, SRTM_ITEM *item,
+                                  SRTM_ITEM **new_head)
 {
     uint64_t seq_num = item->seq_num;
     SRTM_ITEM *cur = head, **fixup = new_head;
@@ -238,7 +241,8 @@ static void sorted_insert_seq_num(SRTM_ITEM *head, SRTM_ITEM *item, SRTM_ITEM **
  * The new head pointer is written to *new_head (which may or may not be
  * unchanged).
  */
-static void sorted_insert_srt(SRTM_ITEM *head, SRTM_ITEM *item, SRTM_ITEM **new_head)
+static void sorted_insert_srt(SRTM_ITEM *head, SRTM_ITEM *item,
+                              SRTM_ITEM **new_head)
 {
     uintptr_t opaque = (uintptr_t)item->opaque;
     SRTM_ITEM *cur = head, **fixup = new_head;
@@ -369,7 +373,7 @@ static int srtm_remove_from_rev(QUIC_SRTM *srtm, SRTM_ITEM *item)
     } else {
         /* Find our entry in the SRT list */
         for (; rh_item->next_by_srt_blinded != item;
-               rh_item = rh_item->next_by_srt_blinded);
+             rh_item = rh_item->next_by_srt_blinded);
         rh_item->next_by_srt_blinded = item->next_by_srt_blinded;
     }
 
@@ -471,7 +475,7 @@ static size_t tokens_seen;
 
 struct check_args {
     uint32_t token;
-    int      mode;
+    int mode;
 };
 
 static void check_mark(SRTM_ITEM *item, void *arg)
@@ -486,9 +490,12 @@ static void check_mark(SRTM_ITEM *item, void *arg)
 
     while (item != NULL) {
         if (have_prev) {
-            assert(!(item->opaque == prev_opaque && item->seq_num == prev_seq_num));
+            assert(!(item->opaque == prev_opaque &&
+                     item->seq_num == prev_seq_num));
             if (!arg_->mode)
-                assert(item->opaque != prev_opaque || item->seq_num < prev_seq_num);
+                assert(
+                    item->opaque != prev_opaque ||
+                    item->seq_num < prev_seq_num);
         }
 
         ++tokens_seen;

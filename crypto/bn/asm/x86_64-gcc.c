@@ -72,40 +72,40 @@
  *                      want to keep the value of zero;
  */
 # define mul_add(r,a,word,carry) do {   \
-        register BN_ULONG high,low;     \
-        asm ("mulq %3"                  \
-                : "=a"(low),"=d"(high)  \
-                : "a"(word),"m"(a)      \
-                : "cc");                \
-        asm ("addq %2,%0; adcq %3,%1"   \
-                : "+r"(carry),"+d"(high)\
-                : "a"(low),"g"(0)       \
-                : "cc");                \
-        asm ("addq %2,%0; adcq %3,%1"   \
-                : "+m"(r),"+d"(high)    \
-                : "r"(carry),"g"(0)     \
-                : "cc");                \
-        carry=high;                     \
-        } while (0)
+            register BN_ULONG high,low;     \
+            asm ("mulq %3"                  \
+                 : "=a" (low),"=d" (high)  \
+                 : "a" (word),"m" (a)      \
+                 : "cc");                \
+            asm ("addq %2,%0; adcq %3,%1"   \
+                 : "+r" (carry),"+d" (high) \
+                 : "a" (low),"g" (0)       \
+                 : "cc");                \
+            asm ("addq %2,%0; adcq %3,%1"   \
+                 : "+m" (r),"+d" (high)    \
+                 : "r" (carry),"g" (0)     \
+                 : "cc");                \
+            carry=high;                     \
+} while (0)
 
 # define mul(r,a,word,carry) do {       \
-        register BN_ULONG high,low;     \
-        asm ("mulq %3"                  \
-                : "=a"(low),"=d"(high)  \
-                : "a"(word),"g"(a)      \
-                : "cc");                \
-        asm ("addq %2,%0; adcq %3,%1"   \
-                : "+r"(carry),"+d"(high)\
-                : "a"(low),"g"(0)       \
-                : "cc");                \
-        (r)=carry, carry=high;          \
-        } while (0)
+            register BN_ULONG high,low;     \
+            asm ("mulq %3"                  \
+                 : "=a" (low),"=d" (high)  \
+                 : "a" (word),"g" (a)      \
+                 : "cc");                \
+            asm ("addq %2,%0; adcq %3,%1"   \
+                 : "+r" (carry),"+d" (high) \
+                 : "a" (low),"g" (0)       \
+                 : "cc");                \
+            (r)=carry, carry=high;          \
+} while (0)
 # undef sqr
 # define sqr(r0,r1,a)                   \
         asm ("mulq %2"                  \
-                : "=a"(r0),"=d"(r1)     \
-                : "a"(a)                \
-                : "cc");
+             : "=a" (r0),"=d" (r1)     \
+             : "a" (a)                \
+             : "cc");
 
 BN_ULONG bn_mul_add_words(BN_ULONG *rp, const BN_ULONG *ap, int num,
                           BN_ULONG w)
@@ -195,9 +195,9 @@ BN_ULONG bn_div_words(BN_ULONG h, BN_ULONG l, BN_ULONG d)
 {
     BN_ULONG ret, waste;
 
- asm("divq      %4":"=a"(ret), "=d"(waste)
- :     "a"(l), "d"(h), "r"(d)
- :     "cc");
+    asm ("divq      %4" : "=a" (ret), "=d" (waste)
+         :     "a" (l), "d" (h), "r" (d)
+         :     "cc");
 
     return ret;
 }
@@ -221,9 +221,9 @@ BN_ULONG bn_add_words(BN_ULONG *rp, const BN_ULONG *ap, const BN_ULONG *bp,
                   "       dec     %1              \n"
                   "       jnz     1b              \n"
                   "       sbbq    %0,%0           \n"
-                  :"=&r" (ret), "+c"(n), "+r"(i)
-                  :"r"(rp), "r"(ap), "r"(bp)
-                  :"cc", "memory");
+                  : "=&r" (ret), "+c" (n), "+r" (i)
+                  : "r" (rp), "r" (ap), "r" (bp)
+                  : "cc", "memory");
 
     return ret & 1;
 }
@@ -248,9 +248,9 @@ BN_ULONG bn_sub_words(BN_ULONG *rp, const BN_ULONG *ap, const BN_ULONG *bp,
                   "       dec     %1              \n"
                   "       jnz     1b              \n"
                   "       sbbq    %0,%0           \n"
-                  :"=&r" (ret), "+c"(n), "+r"(i)
-                  :"r"(rp), "r"(ap), "r"(bp)
-                  :"cc", "memory");
+                  : "=&r" (ret), "+c" (n), "+r" (i)
+                  : "r" (rp), "r" (ap), "r" (bp)
+                  : "cc", "memory");
 
     return ret & 1;
 }
@@ -321,70 +321,70 @@ BN_ULONG bn_sub_words(BN_ULONG *r, BN_ULONG *a, BN_ULONG *b, int n)
 # if 0
 /* original macros are kept for reference purposes */
 #  define mul_add_c(a,b,c0,c1,c2)       do {    \
-        BN_ULONG ta = (a), tb = (b);            \
-        BN_ULONG lo, hi;                        \
-        BN_UMULT_LOHI(lo,hi,ta,tb);             \
-        c0 += lo; hi += (c0<lo)?1:0;            \
-        c1 += hi; c2 += (c1<hi)?1:0;            \
-        } while(0)
+            BN_ULONG ta = (a), tb = (b);            \
+            BN_ULONG lo, hi;                        \
+            BN_UMULT_LOHI(lo,hi,ta,tb);             \
+            c0 += lo; hi += (c0<lo)?1:0;            \
+            c1 += hi; c2 += (c1<hi)?1:0;            \
+} while(0)
 
 #  define mul_add_c2(a,b,c0,c1,c2)      do {    \
-        BN_ULONG ta = (a), tb = (b);            \
-        BN_ULONG lo, hi, tt;                    \
-        BN_UMULT_LOHI(lo,hi,ta,tb);             \
-        c0 += lo; tt = hi+((c0<lo)?1:0);        \
-        c1 += tt; c2 += (c1<tt)?1:0;            \
-        c0 += lo; hi += (c0<lo)?1:0;            \
-        c1 += hi; c2 += (c1<hi)?1:0;            \
-        } while(0)
+            BN_ULONG ta = (a), tb = (b);            \
+            BN_ULONG lo, hi, tt;                    \
+            BN_UMULT_LOHI(lo,hi,ta,tb);             \
+            c0 += lo; tt = hi+((c0<lo)?1:0);        \
+            c1 += tt; c2 += (c1<tt)?1:0;            \
+            c0 += lo; hi += (c0<lo)?1:0;            \
+            c1 += hi; c2 += (c1<hi)?1:0;            \
+} while(0)
 
 #  define sqr_add_c(a,i,c0,c1,c2)       do {    \
-        BN_ULONG ta = (a)[i];                   \
-        BN_ULONG lo, hi;                        \
-        BN_UMULT_LOHI(lo,hi,ta,ta);             \
-        c0 += lo; hi += (c0<lo)?1:0;            \
-        c1 += hi; c2 += (c1<hi)?1:0;            \
-        } while(0)
+            BN_ULONG ta = (a)[i];                   \
+            BN_ULONG lo, hi;                        \
+            BN_UMULT_LOHI(lo,hi,ta,ta);             \
+            c0 += lo; hi += (c0<lo)?1:0;            \
+            c1 += hi; c2 += (c1<hi)?1:0;            \
+} while(0)
 # else
 #  define mul_add_c(a,b,c0,c1,c2) do {  \
-        BN_ULONG t1,t2;                 \
-        asm ("mulq %3"                  \
-                : "=a"(t1),"=d"(t2)     \
-                : "a"(a),"m"(b)         \
-                : "cc");                \
-        asm ("addq %3,%0; adcq %4,%1; adcq %5,%2"       \
-                : "+r"(c0),"+r"(c1),"+r"(c2)            \
-                : "r"(t1),"r"(t2),"g"(0)                \
-                : "cc");                                \
-        } while (0)
+            BN_ULONG t1,t2;                 \
+            asm ("mulq %3"                  \
+                 : "=a" (t1),"=d" (t2)     \
+                 : "a" (a),"m" (b)         \
+                 : "cc");                \
+            asm ("addq %3,%0; adcq %4,%1; adcq %5,%2"       \
+                 : "+r" (c0),"+r" (c1),"+r" (c2)            \
+                 : "r" (t1),"r" (t2),"g" (0)                \
+                 : "cc");                                \
+} while (0)
 
 #  define sqr_add_c(a,i,c0,c1,c2) do {  \
-        BN_ULONG t1,t2;                 \
-        asm ("mulq %2"                  \
-                : "=a"(t1),"=d"(t2)     \
-                : "a"(a[i])             \
-                : "cc");                \
-        asm ("addq %3,%0; adcq %4,%1; adcq %5,%2"       \
-                : "+r"(c0),"+r"(c1),"+r"(c2)            \
-                : "r"(t1),"r"(t2),"g"(0)                \
-                : "cc");                                \
-        } while (0)
+            BN_ULONG t1,t2;                 \
+            asm ("mulq %2"                  \
+                 : "=a" (t1),"=d" (t2)     \
+                 : "a" (a[i])             \
+                 : "cc");                \
+            asm ("addq %3,%0; adcq %4,%1; adcq %5,%2"       \
+                 : "+r" (c0),"+r" (c1),"+r" (c2)            \
+                 : "r" (t1),"r" (t2),"g" (0)                \
+                 : "cc");                                \
+} while (0)
 
 #  define mul_add_c2(a,b,c0,c1,c2) do { \
-        BN_ULONG t1,t2;                 \
-        asm ("mulq %3"                  \
-                : "=a"(t1),"=d"(t2)     \
-                : "a"(a),"m"(b)         \
-                : "cc");                \
-        asm ("addq %3,%0; adcq %4,%1; adcq %5,%2"       \
-                : "+r"(c0),"+r"(c1),"+r"(c2)            \
-                : "r"(t1),"r"(t2),"g"(0)                \
-                : "cc");                                \
-        asm ("addq %3,%0; adcq %4,%1; adcq %5,%2"       \
-                : "+r"(c0),"+r"(c1),"+r"(c2)            \
-                : "r"(t1),"r"(t2),"g"(0)                \
-                : "cc");                                \
-        } while (0)
+            BN_ULONG t1,t2;                 \
+            asm ("mulq %3"                  \
+                 : "=a" (t1),"=d" (t2)     \
+                 : "a" (a),"m" (b)         \
+                 : "cc");                \
+            asm ("addq %3,%0; adcq %4,%1; adcq %5,%2"       \
+                 : "+r" (c0),"+r" (c1),"+r" (c2)            \
+                 : "r" (t1),"r" (t2),"g" (0)                \
+                 : "cc");                                \
+            asm ("addq %3,%0; adcq %4,%1; adcq %5,%2"       \
+                 : "+r" (c0),"+r" (c1),"+r" (c2)            \
+                 : "r" (t1),"r" (t2),"g" (0)                \
+                 : "cc");                                \
+} while (0)
 # endif
 
 # define sqr_add_c2(a,i,j,c0,c1,c2)      \

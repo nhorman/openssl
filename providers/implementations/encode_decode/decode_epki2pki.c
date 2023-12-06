@@ -162,8 +162,9 @@ static int epki2pki_decode(void *vctx, OSSL_CORE_BIO *cin, int selection,
 
         *p++ = OSSL_PARAM_construct_utf8_string(OSSL_OBJECT_PARAM_DATA_TYPE,
                                                 keytype, 0);
-        *p++ = OSSL_PARAM_construct_utf8_string(OSSL_OBJECT_PARAM_DATA_STRUCTURE,
-                                                "PrivateKeyInfo", 0);
+        *p++ = OSSL_PARAM_construct_utf8_string(
+            OSSL_OBJECT_PARAM_DATA_STRUCTURE,
+            "PrivateKeyInfo", 0);
         *p++ = OSSL_PARAM_construct_octet_string(OSSL_OBJECT_PARAM_DATA,
                                                  der, der_len);
         *p++ = OSSL_PARAM_construct_int(OSSL_OBJECT_PARAM_TYPE, &objtype);
@@ -176,13 +177,14 @@ static int epki2pki_decode(void *vctx, OSSL_CORE_BIO *cin, int selection,
     return ok;
 }
 
-const OSSL_DISPATCH ossl_EncryptedPrivateKeyInfo_der_to_der_decoder_functions[] = {
-    { OSSL_FUNC_DECODER_NEWCTX, (void (*)(void))epki2pki_newctx },
-    { OSSL_FUNC_DECODER_FREECTX, (void (*)(void))epki2pki_freectx },
-    { OSSL_FUNC_DECODER_DECODE, (void (*)(void))epki2pki_decode },
+const OSSL_DISPATCH ossl_EncryptedPrivateKeyInfo_der_to_der_decoder_functions[]
+    = {
+    { OSSL_FUNC_DECODER_NEWCTX, (void (*)(void)) epki2pki_newctx },
+    { OSSL_FUNC_DECODER_FREECTX, (void (*)(void)) epki2pki_freectx },
+    { OSSL_FUNC_DECODER_DECODE, (void (*)(void)) epki2pki_decode },
     { OSSL_FUNC_DECODER_SETTABLE_CTX_PARAMS,
-      (void (*)(void))epki2pki_settable_ctx_params },
+      (void (*)(void)) epki2pki_settable_ctx_params },
     { OSSL_FUNC_DECODER_SET_CTX_PARAMS,
-      (void (*)(void))epki2pki_set_ctx_params },
+      (void (*)(void)) epki2pki_set_ctx_params },
     OSSL_DISPATCH_END
-};
+    };

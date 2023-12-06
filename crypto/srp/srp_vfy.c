@@ -84,11 +84,12 @@ static int t_fromb64(unsigned char *a, size_t alen, const char *src)
 
     /* Add any encoded padding that is required */
     if (padsize != 0
-            && EVP_DecodeUpdate(ctx, a, &outl, pad, padsize) < 0) {
+        && EVP_DecodeUpdate(ctx, a, &outl, pad, padsize) < 0) {
         outl = -1;
         goto err;
     }
-    if (EVP_DecodeUpdate(ctx, a, &outl2, (const unsigned char *)src, size) < 0) {
+    if (EVP_DecodeUpdate(ctx, a, &outl2, (const unsigned char *)src,
+                         size) < 0) {
         outl = -1;
         goto err;
     }
@@ -120,7 +121,7 @@ static int t_fromb64(unsigned char *a, size_t alen, const char *src)
         outl -= padsize;
     }
 
- err:
+err:
     EVP_ENCODE_CTX_free(ctx);
 
     return outl;
@@ -142,7 +143,7 @@ static int t_tob64(char *dst, const unsigned char *src, int size)
 
     EVP_EncodeInit(ctx);
     evp_encode_ctx_set_flags(ctx, EVP_ENCODE_CTX_NO_NEWLINES
-                                  | EVP_ENCODE_CTX_USE_SRP_ALPHABET);
+                             | EVP_ENCODE_CTX_USE_SRP_ALPHABET);
 
     /*
      * We pad at the front with zero bytes until the length is a multiple of 3
@@ -151,8 +152,8 @@ static int t_tob64(char *dst, const unsigned char *src, int size)
      */
     leadz = 3 - (size % 3);
     if (leadz != 3
-            && !EVP_EncodeUpdate(ctx, (unsigned char *)dst, &outl, pad,
-                                 leadz)) {
+        && !EVP_EncodeUpdate(ctx, (unsigned char *)dst, &outl, pad,
+                             leadz)) {
         EVP_ENCODE_CTX_free(ctx);
         return 0;
     }
@@ -240,7 +241,7 @@ static int SRP_user_pwd_set_sv(SRP_user_pwd *vinfo, const char *s,
     if (vinfo->s == NULL)
         goto err;
     return 1;
- err:
+err:
     BN_free(vinfo->v);
     vinfo->v = NULL;
     return 0;
@@ -267,8 +268,8 @@ static SRP_user_pwd *srp_user_pwd_dup(SRP_user_pwd *src)
     SRP_user_pwd_set_gN(ret, src->g, src->N);
     if (!SRP_user_pwd_set1_ids(ret, src->id, src->info)
         || !SRP_user_pwd_set0_sv(ret, BN_dup(src->s), BN_dup(src->v))) {
-            SRP_user_pwd_free(ret);
-            return NULL;
+        SRP_user_pwd_free(ret);
+        return NULL;
     }
     return ret;
 }
@@ -288,7 +289,8 @@ SRP_VBASE *SRP_VBASE_new(char *seed_key)
     vb->default_g = NULL;
     vb->default_N = NULL;
     vb->seed_key = NULL;
-    if ((seed_key != NULL) && (vb->seed_key = OPENSSL_strdup(seed_key)) == NULL) {
+    if ((seed_key != NULL) &&
+        (vb->seed_key = OPENSSL_strdup(seed_key)) == NULL) {
         sk_SRP_user_pwd_free(vb->users_pwd);
         sk_SRP_gN_cache_free(vb->gN_cache);
         OPENSSL_free(vb);
@@ -327,7 +329,7 @@ static SRP_gN_cache *SRP_gN_new_init(const char *ch)
         return newgN;
 
     OPENSSL_free(newgN->b64_bn);
- err:
+err:
     OPENSSL_free(newgN);
     return NULL;
 }
@@ -434,9 +436,9 @@ int SRP_VBASE_init(SRP_VBASE *vb, char *verifier_file)
 
             if ((gN->id = OPENSSL_strdup(pp[DB_srpid])) == NULL
                 || (gN->N = SRP_gN_place_bn(vb->gN_cache, pp[DB_srpverifier]))
-                        == NULL
+                == NULL
                 || (gN->g = SRP_gN_place_bn(vb->gN_cache, pp[DB_srpsalt]))
-                        == NULL
+                == NULL
                 || sk_SRP_gN_insert(SRP_gN_tab, gN, 0) == 0)
                 goto err;
 
@@ -456,12 +458,12 @@ int SRP_VBASE_init(SRP_VBASE *vb, char *verifier_file)
 
                 SRP_user_pwd_set_gN(user_pwd, lgN->g, lgN->N);
                 if (!SRP_user_pwd_set1_ids
-                    (user_pwd, pp[DB_srpid], pp[DB_srpinfo]))
+                        (user_pwd, pp[DB_srpid], pp[DB_srpinfo]))
                     goto err;
 
                 error_code = SRP_ERR_VBASE_BN_LIB;
                 if (!SRP_user_pwd_set_sv
-                    (user_pwd, pp[DB_srpsalt], pp[DB_srpverifier]))
+                        (user_pwd, pp[DB_srpsalt], pp[DB_srpverifier]))
                     goto err;
 
                 if (sk_SRP_user_pwd_insert(vb->users_pwd, user_pwd, 0) == 0)
@@ -484,7 +486,7 @@ int SRP_VBASE_init(SRP_VBASE *vb, char *verifier_file)
     }
     error_code = SRP_NO_ERROR;
 
- err:
+err:
     /*
      * there may be still some leaks to fix, if this fails, the application
      * terminates most likely
@@ -596,7 +598,7 @@ SRP_user_pwd *SRP_VBASE_get1_by_user(SRP_VBASE *vb, char *username)
                              BN_bin2bn(digv, SHA_DIGEST_LENGTH, NULL)))
         return user;
 
- err:
+err:
     EVP_MD_free(md);
     EVP_MD_CTX_free(ctxt);
     SRP_user_pwd_free(user);
@@ -688,7 +690,7 @@ char *SRP_create_verifier_ex(const char *user, const char *pass, char **salt,
     vf = NULL;
     result = defgNid;
 
- err:
+err:
     BN_free(N_bn_alloc);
     BN_free(g_bn_alloc);
     OPENSSL_clear_free(vf, vfsize);
@@ -757,7 +759,7 @@ int SRP_create_verifier_BN_ex(const char *user, const char *pass, BIGNUM **salt,
     *salt = salttmp;
     *verifier = verif;
 
- err:
+err:
     if (salt != NULL && *salt != salttmp)
         BN_clear_free(salttmp);
     BN_clear_free(x);

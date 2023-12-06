@@ -32,7 +32,7 @@ static void init_pint(int *pint)
 static int copy_substring(char **dest, const char *start, const char *end)
 {
     return dest == NULL
-        || (*dest = OPENSSL_strndup(start, end - start)) != NULL;
+           || (*dest = OPENSSL_strndup(start, end - start)) != NULL;
 }
 
 static void free_pstring(char **pstr)
@@ -155,11 +155,11 @@ int OSSL_parse_url(const char *url, char **pscheme, char **puser, char **phost,
     }
 
     if (!copy_substring(pscheme, scheme, scheme_end)
-            || !copy_substring(phost, host, host_end)
-            || !copy_substring(pport, port, port_end)
-            || !copy_substring(puser, user, user_end)
-            || !copy_substring(pquery, query, query_end)
-            || !copy_substring(pfrag, frag, frag_end))
+        || !copy_substring(phost, host, host_end)
+        || !copy_substring(pport, port, port_end)
+        || !copy_substring(puser, user, user_end)
+        || !copy_substring(pquery, query, query_end)
+        || !copy_substring(pfrag, frag, frag_end))
         goto err;
     if (pport_num != NULL)
         *pport_num = (int)portnum;
@@ -175,10 +175,10 @@ int OSSL_parse_url(const char *url, char **pscheme, char **puser, char **phost,
     }
     return 1;
 
- parse_err:
+parse_err:
     ERR_raise(ERR_LIB_HTTP, HTTP_R_ERROR_PARSING_URL);
 
- err:
+err:
     free_pstring(pscheme);
     free_pstring(puser);
     free_pstring(phost);
@@ -237,7 +237,7 @@ int OSSL_HTTP_parse_url(const char *url, int *pssl, char **puser, char **phost,
     }
     return 1;
 
- err:
+err:
     free_pstring(puser);
     free_pstring(phost);
     free_pstring(ppath);
@@ -285,7 +285,8 @@ const char *OSSL_HTTP_adapt_proxy(const char *proxy, const char *no_proxy,
     if (proxy == NULL)
         proxy = ossl_safe_getenv(use_ssl ? "https_proxy" : "http_proxy");
     if (proxy == NULL)
-        proxy = ossl_safe_getenv(use_ssl ? OPENSSL_HTTP_PROXY : OPENSSL_HTTPS_PROXY);
+        proxy = ossl_safe_getenv(
+            use_ssl ? OPENSSL_HTTP_PROXY : OPENSSL_HTTPS_PROXY);
 
     if (proxy == NULL || *proxy == '\0' || !use_proxy(no_proxy, server))
         return NULL;

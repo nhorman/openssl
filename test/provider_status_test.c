@@ -112,10 +112,17 @@ static int get_provider_params(const OSSL_PROVIDER *prov)
     const OSSL_PARAM *gettable, *p;
 
     if (!TEST_ptr(gettable = OSSL_PROVIDER_gettable_params(prov))
-        || !TEST_ptr(p = OSSL_PARAM_locate_const(gettable, OSSL_PROV_PARAM_NAME))
-        || !TEST_ptr(p = OSSL_PARAM_locate_const(gettable, OSSL_PROV_PARAM_VERSION))
-        || !TEST_ptr(p = OSSL_PARAM_locate_const(gettable, OSSL_PROV_PARAM_STATUS))
-        || !TEST_ptr(p = OSSL_PARAM_locate_const(gettable, OSSL_PROV_PARAM_BUILDINFO)))
+        || !TEST_ptr(p = OSSL_PARAM_locate_const(gettable,
+                                                 OSSL_PROV_PARAM_NAME))
+        || !TEST_ptr(p =
+                         OSSL_PARAM_locate_const(gettable,
+                                                 OSSL_PROV_PARAM_VERSION))
+        || !TEST_ptr(p =
+                         OSSL_PARAM_locate_const(gettable,
+                                                 OSSL_PROV_PARAM_STATUS))
+        || !TEST_ptr(p =
+                         OSSL_PARAM_locate_const(gettable,
+                                                 OSSL_PROV_PARAM_BUILDINFO)))
         goto end;
 
     params[0] = OSSL_PARAM_construct_utf8_ptr(OSSL_PROV_PARAM_NAME, &name, 0);
@@ -172,7 +179,8 @@ static int test_provider_status(void)
 
     /* Setup a callback that corrupts the self tests and causes status failures */
     self_test_args.count = 0;
-    OSSL_SELF_TEST_set_callback(libctx, self_test_on_demand_fail, &self_test_args);
+    OSSL_SELF_TEST_set_callback(libctx, self_test_on_demand_fail,
+                                &self_test_args);
     if (!TEST_false(OSSL_PROVIDER_self_test(prov)))
         goto err;
     if (!TEST_true(OSSL_PROVIDER_get_params(prov, params))
@@ -207,17 +215,17 @@ int setup_tests(void)
 
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_CONFIG_FILE:
-            config_file = opt_arg();
-            break;
-        case OPT_PROVIDER_NAME:
-            provider_name = opt_arg();
-            break;
-        case OPT_TEST_CASES:
-           break;
-        default:
-        case OPT_ERR:
-            return 0;
+            case OPT_CONFIG_FILE:
+                config_file = opt_arg();
+                break;
+            case OPT_PROVIDER_NAME:
+                provider_name = opt_arg();
+                break;
+            case OPT_TEST_CASES:
+                break;
+            default:
+            case OPT_ERR:
+                return 0;
         }
     }
 

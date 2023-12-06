@@ -48,7 +48,8 @@ int ossl_dsa_check_pub_key(const DSA *dsa, const BIGNUM *pub_key, int *ret)
  * To only be used with ephemeral FFC public keys generated using the approved
  * safe-prime groups.
  */
-int ossl_dsa_check_pub_key_partial(const DSA *dsa, const BIGNUM *pub_key, int *ret)
+int ossl_dsa_check_pub_key_partial(const DSA *dsa, const BIGNUM *pub_key,
+                                   int *ret)
 {
     return ossl_ffc_validate_public_key_partial(&dsa->params, pub_key, ret)
            && *ret == 0;

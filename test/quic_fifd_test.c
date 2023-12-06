@@ -22,7 +22,8 @@ static void step_time(uint64_t ms) {
     cur_time = ossl_time_add(cur_time, ossl_ms2time(ms));
 }
 
-static QUIC_SSTREAM *(*get_sstream_by_id_p)(uint64_t stream_id, uint32_t pn_space,
+static QUIC_SSTREAM *(*get_sstream_by_id_p)(uint64_t stream_id,
+                                            uint32_t pn_space,
                                             void *arg);
 
 static QUIC_SSTREAM *get_sstream_by_id(uint64_t stream_id, uint32_t pn_space,
@@ -42,10 +43,12 @@ static void regen_frame(uint64_t frame_type, uint64_t stream_id,
 
 static void confirm_frame(uint64_t frame_type, uint64_t stream_id,
                           QUIC_TXPIM_PKT *pkt, void *arg)
-{}
+{
+}
 
 static void sstream_updated(uint64_t stream_id, void *arg)
-{}
+{
+}
 
 typedef struct info_st {
     QUIC_FIFD fifd;
@@ -143,14 +146,19 @@ static int test_generic(INFO *info, int kind)
             || !TEST_int_eq(hdr.is_fin, i == 1)
             || !TEST_uint64_t_eq(hdr.offset, 0)
             || !TEST_uint64_t_eq(hdr.len, 12)
-            || !TEST_size_t_eq(ossl_quic_sstream_get_buffer_used(info->sstream[i]), 12)
+            || !TEST_size_t_eq(ossl_quic_sstream_get_buffer_used(info->sstream[i
+                                                                 ]), 12)
             || !TEST_true(ossl_quic_sstream_mark_transmitted(info->sstream[i],
                                                              hdr.offset,
-                                                             hdr.offset + hdr.len - 1)))
+                                                             hdr.offset +
+                                                             hdr.len - 1)))
             goto err;
 
-        if (i == 1 && !TEST_true(ossl_quic_sstream_mark_transmitted_fin(info->sstream[i],
-                                                                        hdr.offset + hdr.len)))
+        if (i == 1 &&
+            !TEST_true(ossl_quic_sstream_mark_transmitted_fin(info->sstream[i],
+                                                              hdr.
+                                                              offset +
+                                                              hdr.len)))
             goto err;
 
         chunk.has_fin   = hdr.is_fin;
@@ -162,11 +170,13 @@ static int test_generic(INFO *info, int kind)
     cfq_freed = 0;
     if (!TEST_ptr(cfq_item = ossl_quic_cfq_add_frame(info->cfq, 10,
                                                      pn_space,
-                                                     OSSL_QUIC_FRAME_TYPE_NEW_CONN_ID, 0,
+                                                     OSSL_QUIC_FRAME_TYPE_NEW_CONN_ID,
+                                                     0,
                                                      placeholder_data,
                                                      sizeof(placeholder_data),
                                                      cfq_free_cb_, NULL))
-        || !TEST_ptr_eq(cfq_item, ossl_quic_cfq_get_priority_head(info->cfq, pn_space)))
+        || !TEST_ptr_eq(cfq_item,
+                        ossl_quic_cfq_get_priority_head(info->cfq, pn_space)))
         goto err;
 
     ossl_quic_txpim_pkt_add_cfq_item(pkt, cfq_item);
@@ -199,111 +209,127 @@ static int test_generic(INFO *info, int kind)
         goto err;
 
     switch (kind) {
-    case TEST_KIND_ACK:
-        if (!TEST_true(ossl_ackm_on_rx_ack_frame(info->ackm, &ack,
-                                                 pn_space,
-                                                 cur_time)))
-            goto err;
-
-        for (i = 0; i < 2; ++i)
-            if (!TEST_size_t_eq(ossl_quic_sstream_get_buffer_used(info->sstream[i]), 0))
+        case TEST_KIND_ACK:
+            if (!TEST_true(ossl_ackm_on_rx_ack_frame(info->ackm, &ack,
+                                                     pn_space,
+                                                     cur_time)))
                 goto err;
 
-        /* This should fail, which proves the FIN was acked */
-        if (!TEST_false(ossl_quic_sstream_mark_lost_fin(info->sstream[1])))
-            goto err;
+            for (i = 0; i < 2; ++i)
+                if (!TEST_size_t_eq(ossl_quic_sstream_get_buffer_used(info->
+                                                                      sstream[i]),
+                                    0))
+                    goto err;
 
-        /* CFQ item must have been released */
-        if (!TEST_true(cfq_freed))
-            goto err;
+            /* This should fail, which proves the FIN was acked */
+            if (!TEST_false(ossl_quic_sstream_mark_lost_fin(info->sstream[1])))
+                goto err;
 
-        /* No regen calls should have been made */
-        if (!TEST_size_t_eq(regen_count, 0))
-            goto err;
+            /* CFQ item must have been released */
+            if (!TEST_true(cfq_freed))
+                goto err;
 
-        break;
+            /* No regen calls should have been made */
+            if (!TEST_size_t_eq(regen_count, 0))
+                goto err;
 
-    case TEST_KIND_LOSS:
-        /* Trigger loss detection via packet threshold. */
-        if (!TEST_ptr(pkt2 = ossl_quic_txpim_pkt_alloc(info->txpim)))
-            goto err;
+            break;
 
-        step_time(10000);
-        pkt2->ackm_pkt.pkt_num          = 50;
-        pkt2->ackm_pkt.pkt_space        = pn_space;
-        pkt2->ackm_pkt.largest_acked    = QUIC_PN_INVALID;
-        pkt2->ackm_pkt.num_bytes        = 50;
-        pkt2->ackm_pkt.time             = cur_time;
-        pkt2->ackm_pkt.is_inflight      = 1;
-        pkt2->ackm_pkt.is_ack_eliciting = 1;
+        case TEST_KIND_LOSS:
+            /* Trigger loss detection via packet threshold. */
+            if (!TEST_ptr(pkt2 = ossl_quic_txpim_pkt_alloc(info->txpim)))
+                goto err;
 
-        ack_ranges[0].start = 50;
-        ack_ranges[0].end   = 50;
-        ack.ack_ranges      = ack_ranges;
-        ack.num_ack_ranges  = 1;
+            step_time(10000);
+            pkt2->ackm_pkt.pkt_num          = 50;
+            pkt2->ackm_pkt.pkt_space        = pn_space;
+            pkt2->ackm_pkt.largest_acked    = QUIC_PN_INVALID;
+            pkt2->ackm_pkt.num_bytes        = 50;
+            pkt2->ackm_pkt.time             = cur_time;
+            pkt2->ackm_pkt.is_inflight      = 1;
+            pkt2->ackm_pkt.is_ack_eliciting = 1;
 
-        if (!TEST_true(ossl_quic_fifd_pkt_commit(&info->fifd, pkt2))
-            || !TEST_true(ossl_ackm_on_rx_ack_frame(info->ackm, &ack,
-                                                    pn_space, cur_time)))
-            goto err;
+            ack_ranges[0].start = 50;
+            ack_ranges[0].end   = 50;
+            ack.ack_ranges      = ack_ranges;
+            ack.num_ack_ranges  = 1;
 
-        for (i = 0; i < 2; ++i) {
+            if (!TEST_true(ossl_quic_fifd_pkt_commit(&info->fifd, pkt2))
+                || !TEST_true(ossl_ackm_on_rx_ack_frame(info->ackm, &ack,
+                                                        pn_space, cur_time)))
+                goto err;
+
+            for (i = 0; i < 2; ++i) {
+                num_iov = OSSL_NELEM(iov);
+                /*
+                 * Stream data we sent must have been marked as lost; check by
+                 * ensuring it is returned again
+                 */
+                if (!TEST_true(ossl_quic_sstream_get_stream_frame(info->sstream[
+                                                                      i], 0,
+                                                                  &hdr, iov,
+                                                                  &num_iov))
+                    || !TEST_uint64_t_eq(hdr.offset, 0)
+                    || !TEST_uint64_t_eq(hdr.len, 12))
+                    goto err;
+            }
+
+            /* FC frame should have regenerated for each stream */
+            if (!TEST_size_t_eq(regen_count, 7)
+                || !TEST_uint64_t_eq(regen_stream_id[0], 42)
+                || !TEST_uint64_t_eq(regen_frame_type[0],
+                                     OSSL_QUIC_FRAME_TYPE_MAX_STREAM_DATA)
+                || !TEST_uint64_t_eq(regen_stream_id[1], 43)
+                || !TEST_uint64_t_eq(regen_frame_type[1],
+                                     OSSL_QUIC_FRAME_TYPE_MAX_STREAM_DATA)
+                || !TEST_uint64_t_eq(regen_frame_type[2],
+                                     OSSL_QUIC_FRAME_TYPE_HANDSHAKE_DONE)
+                || !TEST_uint64_t_eq(regen_stream_id[2], UINT64_MAX)
+                || !TEST_uint64_t_eq(regen_frame_type[3],
+                                     OSSL_QUIC_FRAME_TYPE_MAX_DATA)
+                || !TEST_uint64_t_eq(regen_stream_id[3], UINT64_MAX)
+                || !TEST_uint64_t_eq(regen_frame_type[4],
+                                     OSSL_QUIC_FRAME_TYPE_MAX_STREAMS_BIDI)
+                || !TEST_uint64_t_eq(regen_stream_id[4], UINT64_MAX)
+                || !TEST_uint64_t_eq(regen_frame_type[5],
+                                     OSSL_QUIC_FRAME_TYPE_MAX_STREAMS_UNI)
+                || !TEST_uint64_t_eq(regen_stream_id[5], UINT64_MAX)
+                || !TEST_uint64_t_eq(regen_frame_type[6],
+                                     OSSL_QUIC_FRAME_TYPE_ACK_WITH_ECN)
+                || !TEST_uint64_t_eq(regen_stream_id[6], UINT64_MAX))
+                goto err;
+
+            /* CFQ item should have been marked as lost */
+            if (!TEST_ptr_eq(cfq_item,
+                             ossl_quic_cfq_get_priority_head(info->cfq,
+                                                             pn_space)))
+                goto err;
+
+            /* FIN should have been marked as lost */
             num_iov = OSSL_NELEM(iov);
-            /*
-             * Stream data we sent must have been marked as lost; check by
-             * ensuring it is returned again
-             */
-            if (!TEST_true(ossl_quic_sstream_get_stream_frame(info->sstream[i], 0,
-                                                              &hdr, iov, &num_iov))
-                || !TEST_uint64_t_eq(hdr.offset, 0)
-                || !TEST_uint64_t_eq(hdr.len, 12))
+            if (!TEST_true(ossl_quic_sstream_get_stream_frame(info->sstream[1],
+                                                              1,
+                                                              &hdr, iov,
+                                                              &num_iov))
+                || !TEST_true(hdr.is_fin)
+                || !TEST_uint64_t_eq(hdr.len, 0))
                 goto err;
-        }
 
-        /* FC frame should have regenerated for each stream */
-        if (!TEST_size_t_eq(regen_count, 7)
-            || !TEST_uint64_t_eq(regen_stream_id[0], 42)
-            || !TEST_uint64_t_eq(regen_frame_type[0], OSSL_QUIC_FRAME_TYPE_MAX_STREAM_DATA)
-            || !TEST_uint64_t_eq(regen_stream_id[1], 43)
-            || !TEST_uint64_t_eq(regen_frame_type[1], OSSL_QUIC_FRAME_TYPE_MAX_STREAM_DATA)
-            || !TEST_uint64_t_eq(regen_frame_type[2], OSSL_QUIC_FRAME_TYPE_HANDSHAKE_DONE)
-            || !TEST_uint64_t_eq(regen_stream_id[2], UINT64_MAX)
-            || !TEST_uint64_t_eq(regen_frame_type[3], OSSL_QUIC_FRAME_TYPE_MAX_DATA)
-            || !TEST_uint64_t_eq(regen_stream_id[3], UINT64_MAX)
-            || !TEST_uint64_t_eq(regen_frame_type[4], OSSL_QUIC_FRAME_TYPE_MAX_STREAMS_BIDI)
-            || !TEST_uint64_t_eq(regen_stream_id[4], UINT64_MAX)
-            || !TEST_uint64_t_eq(regen_frame_type[5], OSSL_QUIC_FRAME_TYPE_MAX_STREAMS_UNI)
-            || !TEST_uint64_t_eq(regen_stream_id[5], UINT64_MAX)
-            || !TEST_uint64_t_eq(regen_frame_type[6], OSSL_QUIC_FRAME_TYPE_ACK_WITH_ECN)
-            || !TEST_uint64_t_eq(regen_stream_id[6], UINT64_MAX))
+            break;
+
+        case TEST_KIND_DISCARD:
+            if (!TEST_true(ossl_ackm_on_pkt_space_discarded(info->ackm,
+                                                            pn_space)))
+                goto err;
+
+            /* CFQ item must have been released */
+            if (!TEST_true(cfq_freed))
+                goto err;
+
+            break;
+
+        default:
             goto err;
-
-        /* CFQ item should have been marked as lost */
-        if (!TEST_ptr_eq(cfq_item, ossl_quic_cfq_get_priority_head(info->cfq, pn_space)))
-            goto err;
-
-        /* FIN should have been marked as lost */
-        num_iov = OSSL_NELEM(iov);
-        if (!TEST_true(ossl_quic_sstream_get_stream_frame(info->sstream[1], 1,
-                                                          &hdr, iov, &num_iov))
-            || !TEST_true(hdr.is_fin)
-            || !TEST_uint64_t_eq(hdr.len, 0))
-            goto err;
-
-        break;
-
-    case TEST_KIND_DISCARD:
-        if (!TEST_true(ossl_ackm_on_pkt_space_discarded(info->ackm, pn_space)))
-            goto err;
-
-        /* CFQ item must have been released */
-        if (!TEST_true(cfq_freed))
-            goto err;
-
-        break;
-
-    default:
-        goto err;
     }
 
     /* TXPIM must have been released */

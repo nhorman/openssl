@@ -267,7 +267,7 @@ OSSL_STORE_LOADER *OSSL_STORE_LOADER_fetch(OSSL_LIB_CTX *libctx,
 int OSSL_STORE_LOADER_up_ref(OSSL_STORE_LOADER *loader);
 void OSSL_STORE_LOADER_free(OSSL_STORE_LOADER *loader);
 const OSSL_PROVIDER *OSSL_STORE_LOADER_get0_provider(const OSSL_STORE_LOADER *
-                                                loader);
+                                                     loader);
 const char *OSSL_STORE_LOADER_get0_properties(const OSSL_STORE_LOADER *loader);
 const char *OSSL_STORE_LOADER_get0_description(const OSSL_STORE_LOADER *loader);
 int OSSL_STORE_LOADER_is_a(const OSSL_STORE_LOADER *loader,
@@ -294,16 +294,16 @@ int OSSL_STORE_LOADER_names_do_all(const OSSL_STORE_LOADER *loader,
 typedef struct ossl_store_loader_ctx_st OSSL_STORE_LOADER_CTX;
 typedef OSSL_STORE_LOADER_CTX *(*OSSL_STORE_open_fn)
     (const OSSL_STORE_LOADER *loader, const char *uri,
-     const UI_METHOD *ui_method, void *ui_data);
+    const UI_METHOD *ui_method, void *ui_data);
 typedef OSSL_STORE_LOADER_CTX *(*OSSL_STORE_open_ex_fn)
     (const OSSL_STORE_LOADER *loader,
-     const char *uri, OSSL_LIB_CTX *libctx, const char *propq,
-     const UI_METHOD *ui_method, void *ui_data);
+    const char *uri, OSSL_LIB_CTX *libctx, const char *propq,
+    const UI_METHOD *ui_method, void *ui_data);
 
 typedef OSSL_STORE_LOADER_CTX *(*OSSL_STORE_attach_fn)
     (const OSSL_STORE_LOADER *loader, BIO *bio,
-     OSSL_LIB_CTX *libctx, const char *propq,
-     const UI_METHOD *ui_method, void *ui_data);
+    OSSL_LIB_CTX *libctx, const char *propq,
+    const UI_METHOD *ui_method, void *ui_data);
 typedef int (*OSSL_STORE_ctrl_fn)
     (OSSL_STORE_LOADER_CTX *ctx, int cmd, va_list args);
 typedef int (*OSSL_STORE_expect_fn)
@@ -366,8 +366,9 @@ OSSL_STORE_LOADER *OSSL_STORE_unregister_loader(const char *scheme);
  */
 # ifndef OPENSSL_NO_DEPRECATED_3_0
 OSSL_DEPRECATEDIN_3_0
-int OSSL_STORE_do_all_loaders(void (*do_function)(const OSSL_STORE_LOADER *loader,
-                                                  void *do_arg),
+int OSSL_STORE_do_all_loaders(void (*do_function)(
+                                  const OSSL_STORE_LOADER *loader,
+                                  void *do_arg),
                               void *do_arg);
 # endif
 

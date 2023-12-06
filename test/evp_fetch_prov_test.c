@@ -42,9 +42,11 @@ const OPTIONS *test_get_options(void)
 {
     static const OPTIONS test_options[] = {
         OPT_TEST_OPTIONS_WITH_EXTRA_USAGE("[provname...]\n"),
-        { "config", OPT_CONFIG_FILE, '<', "The configuration file to use for the libctx" },
+        { "config", OPT_CONFIG_FILE, '<',
+          "The configuration file to use for the libctx" },
         { "type", OPT_ALG_FETCH_TYPE, 's', "The fetch type to test" },
-        { "property", OPT_FETCH_PROPERTY, 's', "The fetch property e.g. provider=fips" },
+        { "property", OPT_FETCH_PROPERTY, 's',
+          "The fetch property e.g. provider=fips" },
         { "fetchfail", OPT_FETCH_FAILURE, '-', "fetch is expected to fail" },
         { "defaultctx", OPT_USE_DEFAULTCTX, '-',
           "Use the default context if this is set" },
@@ -62,16 +64,16 @@ static int calculate_digest(const EVP_MD *md, const char *msg, size_t len,
     int ret = 0;
 
     if (!TEST_ptr(ctx = EVP_MD_CTX_new())
-            || !TEST_true(EVP_DigestInit_ex(ctx, md, NULL))
-            || !TEST_true(EVP_DigestUpdate(ctx, msg, len))
-            || !TEST_true(EVP_DigestFinal_ex(ctx, out, NULL))
-            || !TEST_mem_eq(out, SHA256_DIGEST_LENGTH, exptd,
-                            SHA256_DIGEST_LENGTH)
-            || !TEST_true(md == EVP_MD_CTX_get0_md(ctx)))
+        || !TEST_true(EVP_DigestInit_ex(ctx, md, NULL))
+        || !TEST_true(EVP_DigestUpdate(ctx, msg, len))
+        || !TEST_true(EVP_DigestFinal_ex(ctx, out, NULL))
+        || !TEST_mem_eq(out, SHA256_DIGEST_LENGTH, exptd,
+                        SHA256_DIGEST_LENGTH)
+        || !TEST_true(md == EVP_MD_CTX_get0_md(ctx)))
         goto err;
 
     ret = 1;
- err:
+err:
     EVP_MD_CTX_free(ctx);
     return ret;
 }
@@ -141,16 +143,16 @@ static int test_md(const EVP_MD *md)
 {
     const char testmsg[] = "Hello world";
     const unsigned char exptd[] = {
-      0x27, 0x51, 0x8b, 0xa9, 0x68, 0x30, 0x11, 0xf6, 0xb3, 0x96, 0x07, 0x2c,
-      0x05, 0xf6, 0x65, 0x6d, 0x04, 0xf5, 0xfb, 0xc3, 0x78, 0x7c, 0xf9, 0x24,
-      0x90, 0xec, 0x60, 0x6e, 0x50, 0x92, 0xe3, 0x26
+        0x27, 0x51, 0x8b, 0xa9, 0x68, 0x30, 0x11, 0xf6, 0xb3, 0x96, 0x07, 0x2c,
+        0x05, 0xf6, 0x65, 0x6d, 0x04, 0xf5, 0xfb, 0xc3, 0x78, 0x7c, 0xf9, 0x24,
+        0x90, 0xec, 0x60, 0x6e, 0x50, 0x92, 0xe3, 0x26
     };
 
     return TEST_ptr(md)
-        && TEST_true(EVP_MD_is_a(md, "SHA256"))
-        && TEST_true(calculate_digest(md, testmsg, sizeof(testmsg), exptd))
-        && TEST_int_eq(EVP_MD_get_size(md), SHA256_DIGEST_LENGTH)
-        && TEST_int_eq(EVP_MD_get_block_size(md), SHA256_CBLOCK);
+           && TEST_true(EVP_MD_is_a(md, "SHA256"))
+           && TEST_true(calculate_digest(md, testmsg, sizeof(testmsg), exptd))
+           && TEST_int_eq(EVP_MD_get_size(md), SHA256_DIGEST_LENGTH)
+           && TEST_int_eq(EVP_MD_get_block_size(md), SHA256_CBLOCK);
 }
 
 static int test_implicit_EVP_MD_fetch(void)
@@ -160,7 +162,7 @@ static int test_implicit_EVP_MD_fetch(void)
     int ret = 0;
 
     ret = (use_default_ctx == 0 || load_providers(&ctx, prov))
-        && test_md(EVP_sha256());
+          && test_md(EVP_sha256());
 
     unload_providers(&ctx, prov);
     return ret;
@@ -192,7 +194,7 @@ static int test_explicit_EVP_MD_fetch(const char *id)
     }
     ret = 1;
 
- err:
+err:
     EVP_MD_free(md);
     unload_providers(&ctx, prov);
     return ret;
@@ -219,18 +221,18 @@ static int test_explicit_EVP_MD_fetch_by_X509_ALGOR(int idx)
 
     X509_ALGOR_get0(&obj, NULL, NULL, algor);
     switch (idx) {
-    case 0:
-        if (!TEST_int_gt(OBJ_obj2txt(id, sizeof(id), obj, 0), 0))
-            goto end;
-        break;
-    case 1:
-        if (!TEST_int_gt(OBJ_obj2txt(id, sizeof(id), obj, 1), 0))
-            goto end;
-        break;
+        case 0:
+            if (!TEST_int_gt(OBJ_obj2txt(id, sizeof(id), obj, 0), 0))
+                goto end;
+            break;
+        case 1:
+            if (!TEST_int_gt(OBJ_obj2txt(id, sizeof(id), obj, 1), 0))
+                goto end;
+            break;
     }
 
     ret = test_explicit_EVP_MD_fetch(id);
- end:
+end:
     X509_ALGOR_free(algor);
     return ret;
 }
@@ -248,13 +250,13 @@ static int encrypt_decrypt(const EVP_CIPHER *cipher, const unsigned char *msg,
 
     memset(key, 0, sizeof(key));
     if (!TEST_ptr(ctx = EVP_CIPHER_CTX_new())
-            || !TEST_true(EVP_CipherInit_ex(ctx, cipher, NULL, key, NULL, 1))
-            || !TEST_true(EVP_CipherUpdate(ctx, ct, &ctlen, msg, len))
-            || !TEST_true(EVP_CipherFinal_ex(ctx, ct, &ctlen))
-            || !TEST_true(EVP_CipherInit_ex(ctx, cipher, NULL, key, NULL, 0))
-            || !TEST_true(EVP_CipherUpdate(ctx, pt, &ptlen, ct, ctlen))
-            || !TEST_true(EVP_CipherFinal_ex(ctx, pt, &ptlen))
-            || !TEST_mem_eq(pt, ptlen, msg, len))
+        || !TEST_true(EVP_CipherInit_ex(ctx, cipher, NULL, key, NULL, 1))
+        || !TEST_true(EVP_CipherUpdate(ctx, ct, &ctlen, msg, len))
+        || !TEST_true(EVP_CipherFinal_ex(ctx, ct, &ctlen))
+        || !TEST_true(EVP_CipherInit_ex(ctx, cipher, NULL, key, NULL, 0))
+        || !TEST_true(EVP_CipherUpdate(ctx, pt, &ptlen, ct, ctlen))
+        || !TEST_true(EVP_CipherFinal_ex(ctx, pt, &ptlen))
+        || !TEST_mem_eq(pt, ptlen, msg, len))
         goto err;
 
     ret = 1;
@@ -268,7 +270,7 @@ static int test_cipher(const EVP_CIPHER *cipher)
     const unsigned char testmsg[] = "Hello world";
 
     return TEST_ptr(cipher)
-        && TEST_true(encrypt_decrypt(cipher, testmsg, sizeof(testmsg)));
+           && TEST_true(encrypt_decrypt(cipher, testmsg, sizeof(testmsg)));
 }
 
 static int test_implicit_EVP_CIPHER_fetch(void)
@@ -278,7 +280,7 @@ static int test_implicit_EVP_CIPHER_fetch(void)
     int ret = 0;
 
     ret = (use_default_ctx == 0 || load_providers(&ctx, prov))
-        && test_cipher(EVP_aes_128_cbc());
+          && test_cipher(EVP_aes_128_cbc());
 
     unload_providers(&ctx, prov);
     return ret;
@@ -335,18 +337,18 @@ static int test_explicit_EVP_CIPHER_fetch_by_X509_ALGOR(int idx)
 
     X509_ALGOR_get0(&obj, NULL, NULL, algor);
     switch (idx) {
-    case 0:
-        if (!TEST_int_gt(OBJ_obj2txt(id, sizeof(id), obj, 0), 0))
-            goto end;
-        break;
-    case 1:
-        if (!TEST_int_gt(OBJ_obj2txt(id, sizeof(id), obj, 1), 0))
-            goto end;
-        break;
+        case 0:
+            if (!TEST_int_gt(OBJ_obj2txt(id, sizeof(id), obj, 0), 0))
+                goto end;
+            break;
+        case 1:
+            if (!TEST_int_gt(OBJ_obj2txt(id, sizeof(id), obj, 1), 0))
+                goto end;
+            break;
     }
 
     ret = test_explicit_EVP_CIPHER_fetch(id);
- end:
+end:
     X509_ALGOR_free(algor);
     return ret;
 }
@@ -357,26 +359,26 @@ int setup_tests(void)
 
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_CONFIG_FILE:
-            config_file = opt_arg();
-            break;
-        case OPT_ALG_FETCH_TYPE:
-            alg = opt_arg();
-            break;
-        case OPT_FETCH_PROPERTY:
-            fetch_property = opt_arg();
-            break;
-        case OPT_FETCH_FAILURE:
-            expected_fetch_result = 0;
-            break;
-        case OPT_USE_DEFAULTCTX:
-            use_default_ctx = 1;
-            break;
-        case OPT_TEST_CASES:
-           break;
-        default:
-        case OPT_ERR:
-            return 0;
+            case OPT_CONFIG_FILE:
+                config_file = opt_arg();
+                break;
+            case OPT_ALG_FETCH_TYPE:
+                alg = opt_arg();
+                break;
+            case OPT_FETCH_PROPERTY:
+                fetch_property = opt_arg();
+                break;
+            case OPT_FETCH_FAILURE:
+                expected_fetch_result = 0;
+                break;
+            case OPT_USE_DEFAULTCTX:
+                use_default_ctx = 1;
+                break;
+            case OPT_TEST_CASES:
+                break;
+            default:
+            case OPT_ERR:
+                return 0;
         }
     }
     if (strcmp(alg, "digest") == 0) {
@@ -386,7 +388,8 @@ int setup_tests(void)
     } else {
         ADD_TEST(test_implicit_EVP_CIPHER_fetch);
         ADD_TEST(test_explicit_EVP_CIPHER_fetch_by_name);
-        ADD_ALL_TESTS_NOSUBTEST(test_explicit_EVP_CIPHER_fetch_by_X509_ALGOR, 2);
+        ADD_ALL_TESTS_NOSUBTEST(test_explicit_EVP_CIPHER_fetch_by_X509_ALGOR,
+                                2);
     }
     return 1;
 }

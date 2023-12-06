@@ -191,8 +191,8 @@ static int put_decoder_in_store(void *store, void *method,
         return 0;
 
     return ossl_method_store_add(store, prov, id, propdef, method,
-                                 (int (*)(void *))OSSL_DECODER_up_ref,
-                                 (void (*)(void *))OSSL_DECODER_free);
+                                 (int (*)(void *)) OSSL_DECODER_up_ref,
+                                 (void (*)(void *)) OSSL_DECODER_free);
 }
 
 /* Create and populate a decoder method */
@@ -206,60 +206,63 @@ void *ossl_decoder_from_algorithm(int id, const OSSL_ALGORITHM *algodef,
     if ((decoder = ossl_decoder_new()) == NULL)
         return NULL;
     decoder->base.id = id;
-    if ((decoder->base.name = ossl_algorithm_get1_first_name(algodef)) == NULL) {
+    if ((decoder->base.name = ossl_algorithm_get1_first_name(algodef)) ==
+        NULL) {
         OSSL_DECODER_free(decoder);
         return NULL;
     }
     decoder->base.algodef = algodef;
     if ((decoder->base.parsed_propdef
-         = ossl_parse_property(libctx, algodef->property_definition)) == NULL) {
+             = ossl_parse_property(libctx,
+                                   algodef->property_definition)) == NULL) {
         OSSL_DECODER_free(decoder);
         return NULL;
     }
 
     for (; fns->function_id != 0; fns++) {
         switch (fns->function_id) {
-        case OSSL_FUNC_DECODER_NEWCTX:
-            if (decoder->newctx == NULL)
-                decoder->newctx = OSSL_FUNC_decoder_newctx(fns);
-            break;
-        case OSSL_FUNC_DECODER_FREECTX:
-            if (decoder->freectx == NULL)
-                decoder->freectx = OSSL_FUNC_decoder_freectx(fns);
-            break;
-        case OSSL_FUNC_DECODER_GET_PARAMS:
-            if (decoder->get_params == NULL)
-                decoder->get_params =
-                    OSSL_FUNC_decoder_get_params(fns);
-            break;
-        case OSSL_FUNC_DECODER_GETTABLE_PARAMS:
-            if (decoder->gettable_params == NULL)
-                decoder->gettable_params =
-                    OSSL_FUNC_decoder_gettable_params(fns);
-            break;
-        case OSSL_FUNC_DECODER_SET_CTX_PARAMS:
-            if (decoder->set_ctx_params == NULL)
-                decoder->set_ctx_params =
-                    OSSL_FUNC_decoder_set_ctx_params(fns);
-            break;
-        case OSSL_FUNC_DECODER_SETTABLE_CTX_PARAMS:
-            if (decoder->settable_ctx_params == NULL)
-                decoder->settable_ctx_params =
-                    OSSL_FUNC_decoder_settable_ctx_params(fns);
-            break;
-        case OSSL_FUNC_DECODER_DOES_SELECTION:
-            if (decoder->does_selection == NULL)
-                decoder->does_selection =
-                    OSSL_FUNC_decoder_does_selection(fns);
-            break;
-        case OSSL_FUNC_DECODER_DECODE:
-            if (decoder->decode == NULL)
-                decoder->decode = OSSL_FUNC_decoder_decode(fns);
-            break;
-        case OSSL_FUNC_DECODER_EXPORT_OBJECT:
-            if (decoder->export_object == NULL)
-                decoder->export_object = OSSL_FUNC_decoder_export_object(fns);
-            break;
+            case OSSL_FUNC_DECODER_NEWCTX:
+                if (decoder->newctx == NULL)
+                    decoder->newctx = OSSL_FUNC_decoder_newctx(fns);
+                break;
+            case OSSL_FUNC_DECODER_FREECTX:
+                if (decoder->freectx == NULL)
+                    decoder->freectx = OSSL_FUNC_decoder_freectx(fns);
+                break;
+            case OSSL_FUNC_DECODER_GET_PARAMS:
+                if (decoder->get_params == NULL)
+                    decoder->get_params =
+                        OSSL_FUNC_decoder_get_params(fns);
+                break;
+            case OSSL_FUNC_DECODER_GETTABLE_PARAMS:
+                if (decoder->gettable_params == NULL)
+                    decoder->gettable_params =
+                        OSSL_FUNC_decoder_gettable_params(fns);
+                break;
+            case OSSL_FUNC_DECODER_SET_CTX_PARAMS:
+                if (decoder->set_ctx_params == NULL)
+                    decoder->set_ctx_params =
+                        OSSL_FUNC_decoder_set_ctx_params(fns);
+                break;
+            case OSSL_FUNC_DECODER_SETTABLE_CTX_PARAMS:
+                if (decoder->settable_ctx_params == NULL)
+                    decoder->settable_ctx_params =
+                        OSSL_FUNC_decoder_settable_ctx_params(fns);
+                break;
+            case OSSL_FUNC_DECODER_DOES_SELECTION:
+                if (decoder->does_selection == NULL)
+                    decoder->does_selection =
+                        OSSL_FUNC_decoder_does_selection(fns);
+                break;
+            case OSSL_FUNC_DECODER_DECODE:
+                if (decoder->decode == NULL)
+                    decoder->decode = OSSL_FUNC_decoder_decode(fns);
+                break;
+            case OSSL_FUNC_DECODER_EXPORT_OBJECT:
+                if (decoder->export_object == NULL)
+                    decoder->export_object =
+                        OSSL_FUNC_decoder_export_object(fns);
+                break;
         }
     }
     /*
@@ -521,7 +524,8 @@ static int resolve_name(OSSL_DECODER *decoder, const char *name)
     return ossl_namemap_name2num(namemap, name);
 }
 
-int ossl_decoder_fast_is_a(OSSL_DECODER *decoder, const char *name, int *id_cache)
+int ossl_decoder_fast_is_a(OSSL_DECODER *decoder, const char *name,
+                           int *id_cache)
 {
     int id = *id_cache;
 

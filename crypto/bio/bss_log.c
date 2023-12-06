@@ -43,7 +43,8 @@ void *_malloc32(__size_t);
                                  * _ANSI_C_SOURCE */
 #elif defined(__DJGPP__) && defined(OPENSSL_NO_SOCK)
 # define NO_SYSLOG
-#elif (!defined(MSDOS) || defined(WATT32)) && !defined(OPENSSL_SYS_VXWORKS) && !defined(NO_SYSLOG)
+#elif (!defined(MSDOS) || defined(WATT32)) && !defined(OPENSSL_SYS_VXWORKS) && \
+    !defined(NO_SYSLOG)
 # include <syslog.h>
 #endif
 
@@ -219,12 +220,12 @@ static int slg_write(BIO *b, const char *in, int inl)
 static long slg_ctrl(BIO *b, int cmd, long num, void *ptr)
 {
     switch (cmd) {
-    case BIO_CTRL_SET:
-        xcloselog(b);
-        xopenlog(b, ptr, num);
-        break;
-    default:
-        break;
+        case BIO_CTRL_SET:
+            xcloselog(b);
+            xopenlog(b, ptr, num);
+            break;
+        default:
+            break;
     }
     return 0;
 }
@@ -258,27 +259,27 @@ static void xsyslog(BIO *bp, int priority, const char *string)
         return;
 
     switch (priority) {
-    case LOG_EMERG:
-    case LOG_ALERT:
-    case LOG_CRIT:
-    case LOG_ERR:
-        evtype = EVENTLOG_ERROR_TYPE;
-        break;
-    case LOG_WARNING:
-        evtype = EVENTLOG_WARNING_TYPE;
-        break;
-    case LOG_NOTICE:
-    case LOG_INFO:
-    case LOG_DEBUG:
-        evtype = EVENTLOG_INFORMATION_TYPE;
-        break;
-    default:
-        /*
-         * Should never happen, but set it
-         * as error anyway.
-         */
-        evtype = EVENTLOG_ERROR_TYPE;
-        break;
+        case LOG_EMERG:
+        case LOG_ALERT:
+        case LOG_CRIT:
+        case LOG_ERR:
+            evtype = EVENTLOG_ERROR_TYPE;
+            break;
+        case LOG_WARNING:
+            evtype = EVENTLOG_WARNING_TYPE;
+            break;
+        case LOG_NOTICE:
+        case LOG_INFO:
+        case LOG_DEBUG:
+            evtype = EVENTLOG_INFORMATION_TYPE;
+            break;
+        default:
+            /*
+             * Should never happen, but set it
+             * as error anyway.
+             */
+            evtype = EVENTLOG_ERROR_TYPE;
+            break;
     }
 
     sprintf(pidbuf, "[%lu] ", GetCurrentProcessId());
@@ -328,34 +329,34 @@ static void xsyslog(BIO *bp, int priority, const char *string)
     char buf[10240];
     unsigned int len;
     struct dsc$descriptor_s buf_dsc;
-    $DESCRIPTOR(fao_cmd, "!AZ: !AZ");
+    $ DESCRIPTOR (fao_cmd, "!AZ: !AZ");
     char *priority_tag;
 
     switch (priority) {
-    case LOG_EMERG:
-        priority_tag = "Emergency";
-        break;
-    case LOG_ALERT:
-        priority_tag = "Alert";
-        break;
-    case LOG_CRIT:
-        priority_tag = "Critical";
-        break;
-    case LOG_ERR:
-        priority_tag = "Error";
-        break;
-    case LOG_WARNING:
-        priority_tag = "Warning";
-        break;
-    case LOG_NOTICE:
-        priority_tag = "Notice";
-        break;
-    case LOG_INFO:
-        priority_tag = "Info";
-        break;
-    case LOG_DEBUG:
-        priority_tag = "DEBUG";
-        break;
+        case LOG_EMERG:
+            priority_tag = "Emergency";
+            break;
+        case LOG_ALERT:
+            priority_tag = "Alert";
+            break;
+        case LOG_CRIT:
+            priority_tag = "Critical";
+            break;
+        case LOG_ERR:
+            priority_tag = "Error";
+            break;
+        case LOG_WARNING:
+            priority_tag = "Warning";
+            break;
+        case LOG_NOTICE:
+            priority_tag = "Notice";
+            break;
+        case LOG_INFO:
+            priority_tag = "Info";
+            break;
+        case LOG_DEBUG:
+            priority_tag = "DEBUG";
+            break;
     }
 
     buf_dsc.dsc$b_dtype = DSC$K_DTYPE_T;

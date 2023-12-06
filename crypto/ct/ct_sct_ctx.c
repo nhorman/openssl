@@ -123,7 +123,8 @@ int SCT_CTX_set1_cert(SCT_CTX *sctx, X509 *cert, X509 *presigner)
     int certderlen = 0, prederlen = 0;
     int idx = -1;
     int poison_ext_is_dup, sct_ext_is_dup;
-    int poison_idx = ct_x509_get_ext(cert, NID_ct_precert_poison, &poison_ext_is_dup);
+    int poison_idx = ct_x509_get_ext(cert, NID_ct_precert_poison,
+                                     &poison_ext_is_dup);
 
     /* Duplicate poison extensions are present - error */
     if (poison_ext_is_dup)
@@ -235,7 +236,7 @@ __owur static int ct_public_key_hash(SCT_CTX *sctx, X509_PUBKEY *pkey,
 
     md = NULL;
     ret = 1;
- err:
+err:
     EVP_MD_free(sha256);
     OPENSSL_free(md);
     OPENSSL_free(der);
@@ -259,7 +260,8 @@ int SCT_CTX_set1_pubkey(SCT_CTX *sctx, X509_PUBKEY *pubkey)
     if (pkey == NULL)
         return 0;
 
-    if (!ct_public_key_hash(sctx, pubkey, &sctx->pkeyhash, &sctx->pkeyhashlen)) {
+    if (!ct_public_key_hash(sctx, pubkey, &sctx->pkeyhash,
+                            &sctx->pkeyhashlen)) {
         EVP_PKEY_free(pkey);
         return 0;
     }

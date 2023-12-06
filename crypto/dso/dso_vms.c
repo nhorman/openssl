@@ -222,7 +222,7 @@ static int vms_load(DSO *dso)
     /* Success (for now, we lie.  We actually do not know...) */
     dso->loaded_filename = filename;
     return 1;
- err:
+err:
     /* Cleanup! */
     OPENSSL_free(p);
     OPENSSL_free(filename);
@@ -422,7 +422,7 @@ static char *vms_merger(DSO *dso, const char *filespec1,
     FAB_OR_NAML(fab, nam).FAB_OR_NAML_DNS = filespec2len;
     NAMX_DNA_FNA_SET(fab)
 
-        nam.NAMX_ESA = esa;
+    nam.NAMX_ESA = esa;
     nam.NAMX_ESS = NAMX_MAXRSS;
     nam.NAMX_NOP = NAM$M_SYNCHK | NAM$M_PWD;
     SET_NAMX_NO_SHORT_UPCASE(nam);

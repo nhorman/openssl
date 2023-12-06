@@ -13,9 +13,9 @@
 
 #if defined(OPENSSL_SMALL_FOOTPRINT) \
     || !(defined(AES_ASM) && (defined(__x86_64) \
-                              || defined(__x86_64__) \
-                              || defined(_M_AMD64) \
-                              || defined(_M_X64)))
+    || defined(__x86_64__) \
+    || defined(_M_AMD64) \
+    || defined(_M_X64)))
 # undef EVP_CIPH_FLAG_TLS1_1_MULTIBLOCK
 # define EVP_CIPH_FLAG_TLS1_1_MULTIBLOCK 0
 #endif
@@ -25,14 +25,14 @@ static int tls_is_multiblock_capable(OSSL_RECORD_LAYER *rl, uint8_t type,
 {
 #if !defined(OPENSSL_NO_MULTIBLOCK) && EVP_CIPH_FLAG_TLS1_1_MULTIBLOCK
     if (type == SSL3_RT_APPLICATION_DATA
-            && len >= 4 * fraglen
-            && rl->compctx == NULL
-            && rl->msg_callback == NULL
-            && !rl->use_etm
-            && RLAYER_USE_EXPLICIT_IV(rl)
-            && !BIO_get_ktls_send(rl->bio)
-            && (EVP_CIPHER_get_flags(EVP_CIPHER_CTX_get0_cipher(rl->enc_ctx))
-                & EVP_CIPH_FLAG_TLS1_1_MULTIBLOCK) != 0)
+        && len >= 4 * fraglen
+        && rl->compctx == NULL
+        && rl->msg_callback == NULL
+        && !rl->use_etm
+        && RLAYER_USE_EXPLICIT_IV(rl)
+        && !BIO_get_ktls_send(rl->bio)
+        && (EVP_CIPHER_get_flags(EVP_CIPHER_CTX_get0_cipher(rl->enc_ctx))
+            & EVP_CIPH_FLAG_TLS1_1_MULTIBLOCK) != 0)
         return 1;
 #endif
     return 0;
@@ -84,9 +84,9 @@ static int tls_write_records_multiblock_int(OSSL_RECORD_LAYER *rl,
      */
     for (i = 1; i < numtempl; i++) {
         if (templates[i - 1].type != templates[i].type
-                || templates[i - 1].buflen != templates[i].buflen
-                || templates[i - 1].buf + templates[i - 1].buflen
-                   != templates[i].buf)
+            || templates[i - 1].buflen != templates[i].buflen
+            || templates[i - 1].buf + templates[i - 1].buflen
+            != templates[i].buf)
             return 0;
     }
 
@@ -152,7 +152,7 @@ static int tls_write_records_multiblock_int(OSSL_RECORD_LAYER *rl,
     rl->sequence[7] += mb_param.interleave;
     if (rl->sequence[7] < mb_param.interleave) {
         int j = 6;
-        while (j >= 0 && (++rl->sequence[j--]) == 0) ;
+        while (j >= 0 && (++rl->sequence[j--]) == 0);
     }
 
     wb->offset = 0;

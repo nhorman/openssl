@@ -64,7 +64,7 @@ int OCSP_request_set1_name(OCSP_REQUEST *req, const X509_NAME *nm)
 int OCSP_request_add1_cert(OCSP_REQUEST *req, X509 *cert)
 {
     if (req->optionalSignature == NULL
-            && (req->optionalSignature = OCSP_SIGNATURE_new()) == NULL)
+        && (req->optionalSignature = OCSP_SIGNATURE_new()) == NULL)
         return 0;
     if (cert == NULL)
         return 1;
@@ -106,7 +106,7 @@ int OCSP_request_sign(OCSP_REQUEST *req,
     }
 
     return 1;
- err:
+err:
     OCSP_SIGNATURE_free(req->optionalSignature);
     req->optionalSignature = NULL;
     return 0;

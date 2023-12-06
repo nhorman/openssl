@@ -47,21 +47,26 @@ static ASN1_INTEGER *create_nonce(int bits);
 
 /* Reply related functions. */
 static int reply_command(CONF *conf, const char *section, const char *engine,
-                         const char *queryfile, const char *passin, const char *inkey,
-                         const EVP_MD *md, const char *signer, const char *chain,
+                         const char *queryfile, const char *passin,
+                         const char *inkey,
+                         const EVP_MD *md, const char *signer,
+                         const char *chain,
                          const char *policy, const char *in, int token_in,
                          const char *out, int token_out, int text);
 static TS_RESP *read_PKCS7(BIO *in_bio);
-static TS_RESP *create_response(CONF *conf, const char *section, const char *engine,
+static TS_RESP *create_response(CONF *conf, const char *section,
+                                const char *engine,
                                 const char *queryfile, const char *passin,
-                                const char *inkey, const EVP_MD *md, const char *signer,
+                                const char *inkey, const EVP_MD *md,
+                                const char *signer,
                                 const char *chain, const char *policy);
 static ASN1_INTEGER *serial_cb(TS_RESP_CTX *ctx, void *data);
 static ASN1_INTEGER *next_serial(const char *serialfile);
 static int save_ts_serial(const char *serialfile, ASN1_INTEGER *serial);
 
 /* Verify related functions. */
-static int verify_command(const char *data, const char *digest, const char *queryfile,
+static int verify_command(const char *data, const char *digest,
+                          const char *queryfile,
                           const char *in, int token_in,
                           const char *CApath, const char *CAfile,
                           const char *CAstore,
@@ -73,7 +78,8 @@ static TS_VERIFY_CTX *create_verify_ctx(const char *data, const char *digest,
                                         char *untrusted,
                                         X509_VERIFY_PARAM *vpm);
 static X509_STORE *create_cert_store(const char *CApath, const char *CAfile,
-                                     const char *CAstore, X509_VERIFY_PARAM *vpm);
+                                     const char *CAstore,
+                                     X509_VERIFY_PARAM *vpm);
 static int verify_cb(int ok, X509_STORE_CTX *ctx);
 
 typedef enum OPTION_choice {
@@ -185,108 +191,110 @@ int ts_main(int argc, char **argv)
     prog = opt_init(argc, argv, ts_options);
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
-        case OPT_EOF:
-        case OPT_ERR:
- opthelp:
-            BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
-            goto end;
-        case OPT_HELP:
-            opt_help(ts_options);
-            for (helpp = opt_helplist; *helpp; ++helpp)
-                BIO_printf(bio_err, "%s\n", *helpp);
-            ret = 0;
-            goto end;
-        case OPT_CONFIG:
-            configfile = opt_arg();
-            break;
-        case OPT_SECTION:
-            section = opt_arg();
-            break;
-        case OPT_QUERY:
-        case OPT_REPLY:
-        case OPT_VERIFY:
-            if (mode != OPT_ERR) {
-                BIO_printf(bio_err, "%s: Must give only one of -query, -reply, or -verify\n", prog);
-                goto opthelp;
-            }
-            mode = o;
-            break;
-        case OPT_DATA:
-            data = opt_arg();
-            break;
-        case OPT_DIGEST:
-            digest = opt_arg();
-            break;
-        case OPT_R_CASES:
-            if (!opt_rand(o))
+            case OPT_EOF:
+            case OPT_ERR:
+opthelp:
+                BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
                 goto end;
-            break;
-        case OPT_PROV_CASES:
-            if (!opt_provider(o))
+            case OPT_HELP:
+                opt_help(ts_options);
+                for (helpp = opt_helplist; *helpp; ++helpp)
+                    BIO_printf(bio_err, "%s\n", *helpp);
+                ret = 0;
                 goto end;
-            break;
-        case OPT_TSPOLICY:
-            policy = opt_arg();
-            break;
-        case OPT_NO_NONCE:
-            no_nonce = 1;
-            break;
-        case OPT_CERT:
-            cert = 1;
-            break;
-        case OPT_IN:
-            in = opt_arg();
-            break;
-        case OPT_TOKEN_IN:
-            token_in = 1;
-            break;
-        case OPT_OUT:
-            out = opt_arg();
-            break;
-        case OPT_TOKEN_OUT:
-            token_out = 1;
-            break;
-        case OPT_TEXT:
-            text = 1;
-            break;
-        case OPT_QUERYFILE:
-            queryfile = opt_arg();
-            break;
-        case OPT_PASSIN:
-            passin = opt_arg();
-            break;
-        case OPT_INKEY:
-            inkey = opt_arg();
-            break;
-        case OPT_SIGNER:
-            signer = opt_arg();
-            break;
-        case OPT_CHAIN:
-            chain = opt_arg();
-            break;
-        case OPT_CAPATH:
-            CApath = opt_arg();
-            break;
-        case OPT_CAFILE:
-            CAfile = opt_arg();
-            break;
-        case OPT_CASTORE:
-            CAstore = opt_arg();
-            break;
-        case OPT_UNTRUSTED:
-            untrusted = opt_arg();
-            break;
-        case OPT_ENGINE:
-            engine = opt_arg();
-            break;
-        case OPT_MD:
-            digestname = opt_unknown();
-            break;
-        case OPT_V_CASES:
-            if (!opt_verify(o, vpm))
-                goto end;
-            vpmtouched++;
-            break;
+            case OPT_CONFIG:
+                configfile = opt_arg();
+                break;
+            case OPT_SECTION:
+                section = opt_arg();
+                break;
+            case OPT_QUERY:
+            case OPT_REPLY:
+            case OPT_VERIFY:
+                if (mode != OPT_ERR) {
+                    BIO_printf(bio_err,
+                               "%s: Must give only one of -query, -reply, or -verify\n",
+                               prog);
+                    goto opthelp;
+                }
+                mode = o;
+                break;
+            case OPT_DATA:
+                data = opt_arg();
+                break;
+            case OPT_DIGEST:
+                digest = opt_arg();
+                break;
+            case OPT_R_CASES:
+                if (!opt_rand(o))
+                    goto end;
+                break;
+            case OPT_PROV_CASES:
+                if (!opt_provider(o))
+                    goto end;
+                break;
+            case OPT_TSPOLICY:
+                policy = opt_arg();
+                break;
+            case OPT_NO_NONCE:
+                no_nonce = 1;
+                break;
+            case OPT_CERT:
+                cert = 1;
+                break;
+            case OPT_IN:
+                in = opt_arg();
+                break;
+            case OPT_TOKEN_IN:
+                token_in = 1;
+                break;
+            case OPT_OUT:
+                out = opt_arg();
+                break;
+            case OPT_TOKEN_OUT:
+                token_out = 1;
+                break;
+            case OPT_TEXT:
+                text = 1;
+                break;
+            case OPT_QUERYFILE:
+                queryfile = opt_arg();
+                break;
+            case OPT_PASSIN:
+                passin = opt_arg();
+                break;
+            case OPT_INKEY:
+                inkey = opt_arg();
+                break;
+            case OPT_SIGNER:
+                signer = opt_arg();
+                break;
+            case OPT_CHAIN:
+                chain = opt_arg();
+                break;
+            case OPT_CAPATH:
+                CApath = opt_arg();
+                break;
+            case OPT_CAFILE:
+                CAfile = opt_arg();
+                break;
+            case OPT_CASTORE:
+                CAstore = opt_arg();
+                break;
+            case OPT_UNTRUSTED:
+                untrusted = opt_arg();
+                break;
+            case OPT_ENGINE:
+                engine = opt_arg();
+                break;
+            case OPT_MD:
+                digestname = opt_unknown();
+                break;
+            case OPT_V_CASES:
+                if (!opt_verify(o, vpm))
+                    goto end;
+                vpmtouched++;
+                break;
         }
     }
 
@@ -294,7 +302,8 @@ int ts_main(int argc, char **argv)
     if (!opt_check_rest_arg(NULL))
         goto opthelp;
     if (mode == OPT_ERR) {
-        BIO_printf(bio_err, "%s: Must give one of -query, -reply, or -verify\n", prog);
+        BIO_printf(bio_err, "%s: Must give one of -query, -reply, or -verify\n",
+                   prog);
         goto opthelp;
     }
 
@@ -345,7 +354,7 @@ int ts_main(int argc, char **argv)
         goto opthelp;
     }
 
- end:
+end:
     X509_VERIFY_PARAM_free(vpm);
     EVP_MD_free(md);
     NCONF_free(conf);
@@ -432,7 +441,7 @@ static int query_command(const char *data, const char *digest, const EVP_MD *md,
 
     ret = 1;
 
- end:
+end:
     ERR_print_errors(bio_err);
     BIO_free_all(in_bio);
     BIO_free_all(data_bio);
@@ -490,7 +499,7 @@ static TS_REQ *create_query(BIO *data_bio, const char *digest, const EVP_MD *md,
         goto err;
 
     ret = 1;
- err:
+err:
     if (!ret) {
         TS_REQ_free(ts_req);
         ts_req = NULL;
@@ -546,7 +555,7 @@ static int create_digest(BIO *input, const char *digest, const EVP_MD *md,
         }
     }
     rv = md_value_len;
- err:
+err:
     EVP_MD_CTX_free(md_ctx);
     return rv;
 }
@@ -574,7 +583,7 @@ static ASN1_INTEGER *create_nonce(int bits)
     memcpy(nonce->data, buf + i, nonce->length);
     return nonce;
 
- err:
+err:
     BIO_printf(bio_err, "could not create nonce\n");
     ASN1_INTEGER_free(nonce);
     return NULL;
@@ -585,8 +594,10 @@ static ASN1_INTEGER *create_nonce(int bits)
  */
 
 static int reply_command(CONF *conf, const char *section, const char *engine,
-                         const char *queryfile, const char *passin, const char *inkey,
-                         const EVP_MD *md, const char *signer, const char *chain,
+                         const char *queryfile, const char *passin,
+                         const char *inkey,
+                         const EVP_MD *md, const char *signer,
+                         const char *chain,
                          const char *policy, const char *in, int token_in,
                          const char *out, int token_out, int text)
 {
@@ -620,7 +631,7 @@ static int reply_command(CONF *conf, const char *section, const char *engine,
     /* Write response. */
     if (text) {
         if ((out_bio = bio_open_default(out, 'w', FORMAT_TEXT)) == NULL)
-        goto end;
+            goto end;
         if (token_out) {
             TS_TST_INFO *tst_info = TS_RESP_get_tst_info(response);
             if (!TS_TST_INFO_print_bio(out_bio, tst_info))
@@ -644,7 +655,7 @@ static int reply_command(CONF *conf, const char *section, const char *engine,
 
     ret = 1;
 
- end:
+end:
     ERR_print_errors(bio_err);
     BIO_free_all(in_bio);
     BIO_free_all(query_bio);
@@ -681,7 +692,7 @@ static TS_RESP *read_PKCS7(BIO *in_bio)
     tst_info = NULL;            /* Ownership is lost. */
     ret = 1;
 
- end:
+end:
     PKCS7_free(token);
     TS_TST_INFO_free(tst_info);
     if (!ret) {
@@ -692,9 +703,11 @@ static TS_RESP *read_PKCS7(BIO *in_bio)
     return resp;
 }
 
-static TS_RESP *create_response(CONF *conf, const char *section, const char *engine,
+static TS_RESP *create_response(CONF *conf, const char *section,
+                                const char *engine,
                                 const char *queryfile, const char *passin,
-                                const char *inkey, const EVP_MD *md, const char *signer,
+                                const char *inkey, const EVP_MD *md,
+                                const char *signer,
                                 const char *chain, const char *policy)
 {
     int ret = 0;
@@ -725,7 +738,7 @@ static TS_RESP *create_response(CONF *conf, const char *section, const char *eng
         if (!TS_RESP_CTX_set_signer_digest(resp_ctx, md))
             goto end;
     } else if (!TS_CONF_set_signer_digest(conf, section, NULL, resp_ctx)) {
-            goto end;
+        goto end;
     }
 
     if (!TS_CONF_set_ess_cert_id_digest(conf, section, resp_ctx))
@@ -750,7 +763,7 @@ static TS_RESP *create_response(CONF *conf, const char *section, const char *eng
         goto end;
     ret = 1;
 
- end:
+end:
     if (!ret) {
         TS_RESP_free(response);
         response = NULL;
@@ -811,7 +824,7 @@ static ASN1_INTEGER *next_serial(const char *serialfile)
     }
     ret = 1;
 
- err:
+err:
     if (!ret) {
         ASN1_INTEGER_free(serial);
         serial = NULL;
@@ -833,7 +846,7 @@ static int save_ts_serial(const char *serialfile, ASN1_INTEGER *serial)
     if (BIO_puts(out, "\n") <= 0)
         goto err;
     ret = 1;
- err:
+err:
     if (!ret)
         BIO_printf(bio_err, "could not save serial number to %s\n",
                    serialfile);
@@ -846,7 +859,8 @@ static int save_ts_serial(const char *serialfile, ASN1_INTEGER *serial)
  * Verify-related method definitions.
  */
 
-static int verify_command(const char *data, const char *digest, const char *queryfile,
+static int verify_command(const char *data, const char *digest,
+                          const char *queryfile,
                           const char *in, int token_in,
                           const char *CApath, const char *CAfile,
                           const char *CAstore, char *untrusted,
@@ -877,7 +891,7 @@ static int verify_command(const char *data, const char *digest, const char *quer
         ? TS_RESP_verify_token(verify_ctx, token)
         : TS_RESP_verify_response(verify_ctx, response);
 
- end:
+end:
     printf("Verification: ");
     if (ret)
         printf("OK\n");
@@ -948,7 +962,7 @@ static TS_VERIFY_CTX *create_verify_ctx(const char *data, const char *digest,
     /* Initialising the X509_STORE object. */
     if (TS_VERIFY_CTX_set_store(ctx,
                                 create_cert_store(CApath, CAfile, CAstore, vpm))
-            == NULL)
+        == NULL)
         goto err;
 
     /* Loading any extra untrusted certificates. */
@@ -960,7 +974,7 @@ static TS_VERIFY_CTX *create_verify_ctx(const char *data, const char *digest,
     }
     ret = 1;
 
- err:
+err:
     if (!ret) {
         TS_VERIFY_CTX_free(ctx);
         ctx = NULL;
@@ -971,7 +985,8 @@ static TS_VERIFY_CTX *create_verify_ctx(const char *data, const char *digest,
 }
 
 static X509_STORE *create_cert_store(const char *CApath, const char *CAfile,
-                                     const char *CAstore, X509_VERIFY_PARAM *vpm)
+                                     const char *CAstore,
+                                     X509_VERIFY_PARAM *vpm)
 {
     X509_STORE *cert_ctx = NULL;
     X509_LOOKUP *lookup = NULL;
@@ -1003,7 +1018,7 @@ static X509_STORE *create_cert_store(const char *CApath, const char *CAfile,
             goto err;
         }
         if (X509_LOOKUP_load_file_ex(lookup, CAfile, X509_FILETYPE_PEM, libctx,
-                                      propq) <= 0) {
+                                     propq) <= 0) {
             BIO_printf(bio_err, "Error loading file %s\n", CAfile);
             goto err;
         }
@@ -1026,7 +1041,7 @@ static X509_STORE *create_cert_store(const char *CApath, const char *CAfile,
 
     return cert_ctx;
 
- err:
+err:
     X509_STORE_free(cert_ctx);
     return NULL;
 }

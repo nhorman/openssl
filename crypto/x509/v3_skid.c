@@ -78,7 +78,7 @@ ASN1_OCTET_STRING *ossl_x509_pubkey_hash(X509_PUBKEY *pubkey)
 
     X509_PUBKEY_get0_param(NULL, &pk, &pklen, NULL, pubkey);
     if (EVP_Digest(pk, pklen, pkey_dig, &diglen, md, NULL)
-            && ASN1_OCTET_STRING_set(oct, pkey_dig, diglen)) {
+        && ASN1_OCTET_STRING_set(oct, pkey_dig, diglen)) {
         EVP_MD_free(md);
         return oct;
     }

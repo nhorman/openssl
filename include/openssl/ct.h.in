@@ -76,8 +76,8 @@ typedef enum {
 } sct_validation_status_t;
 
 /******************************************
- * CT policy evaluation context functions *
- ******************************************/
+* CT policy evaluation context functions *
+******************************************/
 
 /*
  * Creates a new, empty policy evaluation context associated with the given
@@ -118,7 +118,8 @@ X509* CT_POLICY_EVAL_CTX_get0_issuer(const CT_POLICY_EVAL_CTX *ctx);
 int CT_POLICY_EVAL_CTX_set1_issuer(CT_POLICY_EVAL_CTX *ctx, X509 *issuer);
 
 /* Gets the CT logs that are trusted sources of SCTs */
-const CTLOG_STORE *CT_POLICY_EVAL_CTX_get0_log_store(const CT_POLICY_EVAL_CTX *ctx);
+const CTLOG_STORE *CT_POLICY_EVAL_CTX_get0_log_store(
+    const CT_POLICY_EVAL_CTX *ctx);
 
 /* Sets the log store that is in use. It must outlive the CT_POLICY_EVAL_CTX. */
 void CT_POLICY_EVAL_CTX_set_shared_CTLOG_STORE(CT_POLICY_EVAL_CTX *ctx,
@@ -140,8 +141,8 @@ uint64_t CT_POLICY_EVAL_CTX_get_time(const CT_POLICY_EVAL_CTX *ctx);
 void CT_POLICY_EVAL_CTX_set_time(CT_POLICY_EVAL_CTX *ctx, uint64_t time_in_ms);
 
 /*****************
- * SCT functions *
- *****************/
+* SCT functions *
+*****************/
 
 /*
  * Creates a new, blank SCT.
@@ -342,8 +343,8 @@ __owur int SCT_LIST_validate(const STACK_OF(SCT) *scts,
 
 
 /*********************************
- * SCT parsing and serialization *
- *********************************/
+* SCT parsing and serialization *
+*********************************/
 
 /*
  * Serialize (to TLS format) a stack of SCTs and return the length.
@@ -424,8 +425,8 @@ __owur int i2o_SCT(const SCT *sct, unsigned char **out);
 SCT *o2i_SCT(SCT **psct, const unsigned char **in, size_t len);
 
 /********************
- * CT log functions *
- ********************/
+* CT log functions *
+********************/
 
 /*
  * Creates a new CT log instance with the given |public_key| and |name| and
@@ -435,7 +436,8 @@ SCT *o2i_SCT(SCT **psct, const unsigned char **in, size_t len);
  * Returns NULL if malloc fails or if |public_key| cannot be converted to DER.
  * Should be deleted by the caller using CTLOG_free when no longer needed.
  */
-CTLOG *CTLOG_new_ex(EVP_PKEY *public_key, const char *name, OSSL_LIB_CTX *libctx,
+CTLOG *CTLOG_new_ex(EVP_PKEY *public_key, const char *name,
+                    OSSL_LIB_CTX *libctx,
                     const char *propq);
 
 /*
@@ -478,8 +480,8 @@ void CTLOG_get0_log_id(const CTLOG *log, const uint8_t **log_id,
 EVP_PKEY *CTLOG_get0_public_key(const CTLOG *log);
 
 /**************************
- * CT log store functions *
- **************************/
+* CT log store functions *
+**************************/
 
 /*
  * Creates a new CT log store and associates it with the given libctx and

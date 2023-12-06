@@ -31,7 +31,7 @@
 #endif
 
 # if !defined(S_ISREG)
-#   define S_ISREG(m) ((m) & S_IFREG)
+#   define S_ISREG(m) ((m)&S_IFREG)
 # endif
 
 static void testfile(const char *pathname)
@@ -83,7 +83,7 @@ int main(int argc, char **argv) {
 #ifdef __VMS
                 if (strchr(":<]", pathname[dirname_len - 1]) == NULL)
 #endif
-                    pathname[dirname_len++] = '/';
+                pathname[dirname_len++] = '/';
                 pathname[dirname_len] = '\0';
             }
             strcpy(pathname + dirname_len, filename);

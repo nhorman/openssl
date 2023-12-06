@@ -53,7 +53,7 @@ int EVP_OpenInit(EVP_CIPHER_CTX *ctx, const EVP_CIPHER *type,
         goto err;
 
     ret = 1;
- err:
+err:
     EVP_PKEY_CTX_free(pctx);
     OPENSSL_clear_free(key, keylen);
     return ret;
