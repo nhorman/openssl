@@ -1,0 +1,341 @@
+=pod
+
+=head1 NAME
+
+ossl_ht_new, ossl_ht_free,
+ossl_ht_flush, ossl_ht_insert,
+ossl_ht_delete, ossl_ht_count,
+ossl_ht_foreach, ossl_ht_filter,
+ossl_ht_value_list_free, ossl_ht_get,
+ossl_ht_put, HT_START_KEY_DEFN,
+HT_END_KEY_DEFN, HT_DEF_KEY_FIELD_CHAR_ARRAY,
+HT_DEF_KEY_FIELD_UINT8T_ARRAY, HT_DEF_KEY_FIELD,
+HT_INIT_KEY, HT_KEY_RESET, HT_SET_KEY_FIELD,
+HT_SET_KEY_STRING, HT_SET_KEY_BLOB,
+TO_HT_KEY, FROM_HT_KEY,
+IMPLEMENT_HT_VALUE_TYPE_FNS
+- internal rcu locked and refcounted hashtables
+
+=head1 SYNOPSIS
+
+ HT *ossl_ht_new(HT_CONFIG *conf);
+ void ossl_ht_free(HT *htable);
+ int  ossl_ht_flush(HT *htable);
+ int  ossl_ht_insert(HT *htable, HT_KEY *key, HT_VALUE *data, HT_VALUE **olddata);
+ HT_VALUE *ossl_ht_delete(HT *htable, HT_KEY *key);
+ size_t ossl_ht_count(HT *htable);
+ void ossl_ht_foreach(HT *htable, void (*cb)(HT_VALUE *obj, void *arg), void *arg);
+ HT_VALUE_LIST *ossl_ht_filter(HT *htable, size_t max_len, int (*filter)(HT_VALUE *obj));
+ void ossl_ht_value_list_free(HT_VALUE_LIST *list);
+ HT_VALUE *ossl_ht_get(HT *htable, HT_KEY *key);
+ void ossl_ht_put(HT_VALUE *value);
+ HT_START_KEY_DEFN(keyname);
+ HT_END_KEY_DEFN(keyname);
+ HT_DEF_KEY_FIELD(name, type);
+ HT_DEF_KEY_FIELD_CHAR_ARRAY(name, size);
+ HT_DEF_KEY_FIELD_UINT8T_ARRAY(name, size);
+ HT_INIT_KEY(key);
+ HT_KEY_RESET(key);
+ HT_SET_KEY_FIELD(key, member, value);
+ HT_SET_KEY_STRING(key, member, value);
+ HT_SET_KEY_BLOB(key, member, value, len);
+ TO_HT_KEY(key);
+ FROM_HT_KEY(key, type);
+ IMPLEMENT_HT_VALUE_TYPE_FNS(vtype, name, pfx);
+
+=head1 DESCRIPTION
+
+This api provides a library-internal implementation of a hashtable that provides
+reference counted object retrieval under the protection of an rcu lock.  API
+type safety is offered via conversion macros to and from the generic HT_VALUE
+type.
+
+=over 2
+
+=item *
+
+ossl_ht_new() returns a new HT (hashtable object) used to store data
+elements based on a defined key.  The call accepts an HT_CONFIG pointer which
+contains configurations options for hashtable.  Current config options consist
+of:
+    ht_free_fn The function to call to free a value, may be B<NULL>.
+    ht_hash_fn The function to generate a hash value for a key, may be B<NULL>.
+    init_bucket_len The initial number of buckets in the hash table.
+    lockless_read A boolean (1 or 0) to indicate lockless reads should be used.
+
+Note that init_bucket_len may be set to zero, which wil use the default initial
+bucket size, which will be automatically expanded with the hash table load
+average reaches 0.75.
+
+Note that lockless_read operation implies behavioral restrictions.  Specifically
+    Only element additions are allowed, deletion operations will fail
+    Hash table growth is inhibited.  init_bucket_len should be set to an
+    appropriate value to prevent performance degradation
+    The table owner is responsible for ensuring there are no readers during a
+    freeing of the table.
+
+=item *
+
+ossl_ht_free() frees an allocated hash table.  Each element in the table
+will have its reference count dropped, and, if said count reaches zero, the hash
+tables registered free function will be called to release the element data.
+
+=item *
+
+ossl_ht_flush() empties a hash table.  All elements will have their
+reference counts decremented, and, on reaching zero, the free function will be
+called to release the element data.
+
+=item *
+
+ossl_ht_insert() inserts an HT_VALUE element into the hash table, to be
+hashed using the corresponding HT_KEY value.
+
+=item *
+
+ossl_ht_delete() deletes an entry from the hastable indexed by the passed
+HT_KEY value.  Note that the returned value must have its reference count
+decremented via ossl_ht_put()
+
+=item *
+
+ossl_ht_count() returns the number of elements within the hash table.
+
+=item *
+
+ossl_ht_foreach() iterates over all elements in the hash table, calling
+the passed callback function for each.  Note that the iteration is done under
+read lock protection, and as such modifications to the table are disallowed in
+the callback function.  Modification to the value content are permitted, if the
+caller is able to properly synchronize such modifications with other threads.
+
+=item *
+
+ossl_ht_filter() iterates over all elements of the hash table, calling
+the filter callback for each element.  If the callback returns 1, the
+corresponding HT_VALUE is placed on a list, and its reference count incremented.
+The completed list is returned to the caller as an HT_VALUE_LIST object
+
+=item *
+
+ossl_ht_value_list_free() frees an HT_VALUE_LIST.  For each element on
+the list, its reference count is decremented, and after traversing the list, the
+list object is freed.  Note, NULL elements are allowed on the list, but for any
+element which is taken from the list by a caller, they must call
+ossl_ht_put on the HT_VALUE to prevent memory leaks.
+
+=item *
+
+ossl_ht_get() preforms a lookup of an HT_KEY in the hashtable, returning
+its corresponding value. Successful lookup increments the refcount on the value,
+which must then be decremented when the caller completes its usage of the value
+via ossl_ht_put()
+
+=item *
+
+ossl_ht_put() decrements the refcount of an HT_VALUE in the hashtable,
+freeing it via the hash_free_fn() callback if said count reaches zero.
+
+=item *
+
+HT_START_KEY_DEFN() Begins the defintion of a key type.  the keyname parameter
+defines the structure name, and presets a common key header.
+
+=item *
+
+HT_END_KEY_DEFN() Finalizes a key definiton.  the keyname parameter (which may
+differ from the name passed in HT_START_KEY_DEFN(), defines the key type name.
+The resulting type may be converted to an HT_KEY variable via the HT_TO_KEY()
+macro, and back using the HT_FROM_KEY() macro.
+
+=item *
+
+HT_DEF_KEY_FIELD() Allows for the creation of data fields within a key. Note,
+this macro can be used for any data type, but it is recommended that strings and
+binary arrays be creaed with the HT_DEF_KEY_FIELD_CHAR_ARRAY() and
+HT_DEF_KEY_FIELD_UINT8T_ARRAY() macros to ensure proper inlining of key data.
+
+=item *
+
+HT_DEF_KEY_FIELD_CHAR_ARRAY() Creates a string field of fixed size
+within a key definition. Note these items will be NULL terminated.
+
+=item *
+
+HT_DEF_KEY_FIELD_UINT8T_ARRAY() Creates an array of uint8_t elements within a
+key.
+
+=item *
+
+HT_INIT_KEY() Initalizes a key for use.  Can be called multiple times, but must
+be called at least once before using in any hashtable method.
+
+=item *
+
+HT_KEY_RESET() Resets a key's data to all zeros.
+
+=item *
+
+HT_SET_KEY_FIELD() Sets a field in a key (as defined by HT_DEF_KEY_FIELD()) to a
+given value.
+
+=item *
+
+HT_SET_KEY_STRING() Preforms a strncpy() of a source string to the destination
+key field.
+
+=item *
+
+HT_SET_KEY_BLOB() Preforms a memcpy() of a source uint8_t buffer to a
+destination key field.
+
+=item *
+
+TO_HT_KEY() Converts a key type as defined by HT_START_KEY_DEFN() and
+HE_END_KEY_DEFN() to the generic HT_KEY type
+
+=item *
+
+FROM_HT_KEY() Converts an HT_KEY back to a specific key type as defined by
+HT_START_KEY_DEFN() and HT_END_KEY_DEFN()
+
+=item *
+
+IMPLEMENT_HT_VALUE_TYPE_FNS() creates template conversion function for HT_VALUE
+structures.  For any value data a user wishes to store in a hash table, a
+function for that type is defined.  Calling of these functions will convert the
+indicates structure type to an HT_VALUE struct, and embed run time type
+identifiers, which can be validated with the corresponding function to convert
+an HT_VALUE back to the initial type. Creates the following functions:
+
+=over 2
+
+=item *
+
+ossl_ht_NAME_TYPE_insert() - Inserts a value to the hash table of type TYPE.
+
+=item *
+
+ossl_ht_NAME_TYPE_from_value() - Converts an HT_VALUE to its type
+
+=item *
+
+ossl_ht_NAME_TYPE_to_value() - Converts a TYPE to an HT_VALUE
+
+=item *
+
+ossl_ht_NAME_TYPE_type() - Boolean to detect if a value is of TYPE
+
+=back
+
+=back
+
+=head1 RETURN VALUES
+
+ossl_ht_new() returns an HT* struct on success and NULL on error
+
+void ossl_ht_free(HT *htable);
+
+ossl_ht_flush() and ossl_ht_insert() return 1 on success and 0 on error
+
+ossl_ht_delete() returns the deleted HT_VALUE on success, and NULL if the
+element was not found.
+
+ossl_ht_count() returns the number of elements in the hash table
+
+ossl_ht_filter() returns an HT_VALUE_LIST of all elements matching the
+provided filter
+
+ossl_ht_get() returns an HT_VALUE pointer, or NULL if the element was not
+found.
+
+=head1 EXAMPLES
+
+#include <stdio.h>
+#include <string.h>
+
+#include <openssl/err.h>
+#include <openssl/crypto.h>
+#include <internal/hashtable.h>
+
+HT_START_KEY_DEFN(intkey)
+HT_DEF_KEY_FIELD(myintkey, int)
+HT_END_KEY_DEFN(INTKEY)
+
+IMPLEMENT_HT_VALUE_TYPE_FNS(int, test, static)
+
+static void int_free_fn(HT_VALUE *v)
+{
+    int *i = ossl_crypto_test_int_from_value(v);
+    fprintf(stderr, "Freeing an element\n");
+    OPENSSL_free(i);
+}
+
+static int test_int_hashtable(void)
+{
+
+
+    /*
+     * our config says:
+     * int_free_fn - Our free handler
+     * NULL - Use deafult hash fn
+     * 0 - use default inital bucket size
+     */
+    HT_CONFIG hash_conf = {
+        int_free_fn,
+        NULL,
+        0
+    };
+    INTKEY key;
+    HT *ht = NULL;
+    HT_VALUE *v;
+    int *newval = OPENSSL_malloc(sizeof(int));
+
+    ht = ossl_ht_new(&hash_conf);
+
+    if (ht == NULL)
+        return 0;
+
+    if (newval == NULL)
+        goto out;
+
+    *newval = 1;
+
+    /* insert */
+    HT_INIT_KEY(&key);
+    HT_SET_KEY_FIELD(&key, myintkey, 47);
+    if (!ossl_ht_test_int_insert(ht, TO_HT_KEY(&key), newval, NULL))
+        goto out;
+
+    /* num_items */
+    if (ossl_ht_count(ht) != 1)
+        goto out;
+
+    /* lookup */
+    HT_RESET_KEY(&key);
+    HT_SET_KEY_FIELD(&key, myintkey, 47);
+    v = ossl_ht_get(ht, TO_HT_KEY(&key);
+    fprintf(stderr, "found element with key 47 holding value %d\n",
+            *ossl_ht_test_int_from_value(v));
+    /*
+     * drop the ref count when we're done with the object
+     */
+    ossl_ht_put(v);
+
+    rc = 1;
+end:
+    /* this will call the free function for our element */
+    ossl_ht_free(ht);
+    return rc;
+}
+
+=head1 COPYRIGHT
+
+Copyright 2024 The OpenSSL Project Authors. All Rights Reserved.
+
+Licensed under the Apache License 2.0 (the "License").  You may not use
+this file except in compliance with the License.  You can obtain a copy
+in the file LICENSE in the source distribution or at
+L<https://www.openssl.org/source/license.html>.
+
+=cut
