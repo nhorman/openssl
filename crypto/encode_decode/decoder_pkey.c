@@ -22,6 +22,7 @@
 #include "encoder_local.h"
 #include "internal/namemap.h"
 #include "internal/sizes.h"
+#include "internal/hashtable.h"
 
 int OSSL_DECODER_CTX_set_passphrase(OSSL_DECODER_CTX *ctx,
                                     const unsigned char *kstr,
@@ -594,12 +595,20 @@ typedef struct {
     OSSL_DECODER_CTX *template;
 } DECODER_CACHE_ENTRY;
 
-DEFINE_LHASH_OF_EX(DECODER_CACHE_ENTRY);
 
 typedef struct {
-    CRYPTO_RWLOCK *lock;
-    LHASH_OF(DECODER_CACHE_ENTRY) *hashtable;
+    HT *hashtable;
 } DECODER_CACHE;
+
+HT_START_KEY_DEFN(dcache_key)
+HT_DEF_KEY_FIELD_CHAR_ARRAY(propquery, 32)
+HT_DEF_KEY_FIELD_CHAR_ARRAY(input_structure, 32)
+HT_DEF_KEY_FIELD_CHAR_ARRAY(input_type, 32)
+HT_DEF_KEY_FIELD_CHAR_ARRAY(keytype, 32)
+HT_DEF_KEY_FIELD(selection, int)
+HT_END_KEY_DEFN(DCACHE_KEY)
+
+IMPLEMENT_HT_VALUE_TYPE_FNS(DECODER_CACHE_ENTRY, dcache, static)
 
 static void decoder_cache_entry_free(DECODER_CACHE_ENTRY *entry)
 {
@@ -613,88 +622,29 @@ static void decoder_cache_entry_free(DECODER_CACHE_ENTRY *entry)
     OPENSSL_free(entry);
 }
 
-static unsigned long decoder_cache_entry_hash(const DECODER_CACHE_ENTRY *cache)
+static void decoder_cache_ht_free(HT_VALUE *v)
 {
-    unsigned long hash = 17;
-
-    hash = (hash * 23)
-           + (cache->propquery == NULL
-              ? 0 : ossl_lh_strcasehash(cache->propquery));
-    hash = (hash * 23)
-           + (cache->input_structure == NULL
-              ? 0  : ossl_lh_strcasehash(cache->input_structure));
-    hash = (hash * 23)
-           + (cache->input_type == NULL
-              ? 0  : ossl_lh_strcasehash(cache->input_type));
-    hash = (hash * 23)
-           + (cache->keytype == NULL
-              ? 0  : ossl_lh_strcasehash(cache->keytype));
-
-    hash ^= cache->selection;
-
-    return hash;
-}
-
-static ossl_inline int nullstrcmp(const char *a, const char *b, int casecmp)
-{
-    if (a == NULL || b == NULL) {
-        if (a == NULL) {
-            if (b == NULL)
-                return 0;
-            else
-                return 1;
-        } else {
-            return -1;
-        }
-    } else {
-        if (casecmp)
-            return OPENSSL_strcasecmp(a, b);
-        else
-            return strcmp(a, b);
-    }
-}
-
-static int decoder_cache_entry_cmp(const DECODER_CACHE_ENTRY *a,
-                                   const DECODER_CACHE_ENTRY *b)
-{
-    int cmp;
-
-    if (a->selection != b->selection)
-        return (a->selection < b->selection) ? -1 : 1;
-
-    cmp = nullstrcmp(a->keytype, b->keytype, 1);
-    if (cmp != 0)
-        return cmp;
-
-    cmp = nullstrcmp(a->input_type, b->input_type, 1);
-    if (cmp != 0)
-        return cmp;
-
-    cmp = nullstrcmp(a->input_structure, b->input_structure, 1);
-    if (cmp != 0)
-        return cmp;
-
-    cmp = nullstrcmp(a->propquery, b->propquery, 0);
-
-    return cmp;
+    DECODER_CACHE_ENTRY *d = ossl_ht_dcache_DECODER_CACHE_ENTRY_from_value(v);
+    decoder_cache_entry_free(d);
 }
 
 void *ossl_decoder_cache_new(OSSL_LIB_CTX *ctx)
 {
     DECODER_CACHE *cache = OPENSSL_malloc(sizeof(*cache));
+    HT_CONFIG dcache_conf = {
+        decoder_cache_ht_free,
+        NULL, /* Use internal hash function */
+        0,    /* Default bucket list size */
+        0,    /* Don't do lockless reads */
+        1     /* Don't refcount */
+    };
 
     if (cache == NULL)
         return NULL;
 
-    cache->lock = CRYPTO_THREAD_lock_new();
-    if (cache->lock == NULL) {
-        OPENSSL_free(cache);
-        return NULL;
-    }
-    cache->hashtable = lh_DECODER_CACHE_ENTRY_new(decoder_cache_entry_hash,
-                                                  decoder_cache_entry_cmp);
+    cache->hashtable = ossl_ht_new(&dcache_conf);
+
     if (cache->hashtable == NULL) {
-        CRYPTO_THREAD_lock_free(cache->lock);
         OPENSSL_free(cache);
         return NULL;
     }
@@ -706,9 +656,7 @@ void ossl_decoder_cache_free(void *vcache)
 {
     DECODER_CACHE *cache = (DECODER_CACHE *)vcache;
 
-    lh_DECODER_CACHE_ENTRY_doall(cache->hashtable, decoder_cache_entry_free);
-    lh_DECODER_CACHE_ENTRY_free(cache->hashtable);
-    CRYPTO_THREAD_lock_free(cache->lock);
+    ossl_ht_free(cache->hashtable);
     OPENSSL_free(cache);
 }
 
@@ -725,15 +673,8 @@ int ossl_decoder_cache_flush(OSSL_LIB_CTX *libctx)
         return 0;
 
 
-    if (!CRYPTO_THREAD_write_lock(cache->lock)) {
-        ERR_raise(ERR_LIB_OSSL_DECODER, ERR_R_OSSL_DECODER_LIB);
-        return 0;
-    }
+    ossl_ht_flush(cache->hashtable);
 
-    lh_DECODER_CACHE_ENTRY_doall(cache->hashtable, decoder_cache_entry_free);
-    lh_DECODER_CACHE_ENTRY_flush(cache->hashtable);
-
-    CRYPTO_THREAD_unlock(cache->lock);
     return 1;
 }
 
@@ -751,7 +692,9 @@ OSSL_DECODER_CTX_new_for_pkey(EVP_PKEY **pkey,
     };
     DECODER_CACHE *cache
         = ossl_lib_ctx_get_data(libctx, OSSL_LIB_CTX_DECODER_CACHE_INDEX);
-    DECODER_CACHE_ENTRY cacheent, *res, *newcache = NULL;
+    DECODER_CACHE_ENTRY *res, *newcache = NULL;
+    HT_VALUE *v;
+    DCACHE_KEY key;
 
     if (cache == NULL) {
         ERR_raise(ERR_LIB_OSSL_DECODER, ERR_R_OSSL_DECODER_LIB);
@@ -761,28 +704,22 @@ OSSL_DECODER_CTX_new_for_pkey(EVP_PKEY **pkey,
         decoder_params[0] = OSSL_PARAM_construct_utf8_string(OSSL_DECODER_PARAM_PROPERTIES,
                                                              (char *)propquery, 0);
 
-    /* It is safe to cast away the const here */
-    cacheent.input_type = (char *)input_type;
-    cacheent.input_structure = (char *)input_structure;
-    cacheent.keytype = (char *)keytype;
-    cacheent.selection = selection;
-    cacheent.propquery = (char *)propquery;
-
-    if (!CRYPTO_THREAD_read_lock(cache->lock)) {
-        ERR_raise(ERR_LIB_OSSL_DECODER, ERR_R_CRYPTO_LIB);
-        return NULL;
-    }
+    HT_INIT_KEY(&key);
+    HT_SET_KEY_STRING(&key, input_type, input_type);
+    HT_SET_KEY_STRING(&key, input_structure, input_structure);
+    HT_SET_KEY_STRING(&key, keytype, keytype);
+    HT_SET_KEY_STRING(&key, propquery, propquery);
+    HT_SET_KEY_FIELD(&key, selection, selection);
 
     /* First see if we have a template OSSL_DECODER_CTX */
-    res = lh_DECODER_CACHE_ENTRY_retrieve(cache->hashtable, &cacheent);
+    v = ossl_ht_get(cache->hashtable, TO_HT_KEY(&key));
 
-    if (res == NULL) {
+    if (v == NULL) {
         /*
          * There is no template so we will have to construct one. This will be
          * time consuming so release the lock and we will later upgrade it to a
          * write lock.
          */
-        CRYPTO_THREAD_unlock(cache->lock);
 
         if ((ctx = OSSL_DECODER_CTX_new()) == NULL) {
             ERR_raise(ERR_LIB_OSSL_DECODER, ERR_R_OSSL_DECODER_LIB);
@@ -843,33 +780,31 @@ OSSL_DECODER_CTX_new_for_pkey(EVP_PKEY **pkey,
         newcache->selection = selection;
         newcache->template = ctx;
 
-        if (!CRYPTO_THREAD_write_lock(cache->lock)) {
-            ctx = NULL;
-            ERR_raise(ERR_LIB_OSSL_DECODER, ERR_R_CRYPTO_LIB);
-            goto err;
-        }
-        res = lh_DECODER_CACHE_ENTRY_retrieve(cache->hashtable, &cacheent);
-        if (res == NULL) {
-            (void)lh_DECODER_CACHE_ENTRY_insert(cache->hashtable, newcache);
-            if (lh_DECODER_CACHE_ENTRY_error(cache->hashtable)) {
-                ctx = NULL;
+        if (!ossl_ht_dcache_DECODER_CACHE_ENTRY_insert(cache->hashtable,
+                                                       TO_HT_KEY(&key),
+                                                       newcache, NULL)) {
+            /*
+             * We raced with another thread to construct this and lost.  Free
+             * what we just created and use the existing entry
+             */
+            decoder_cache_entry_free(newcache);
+            v = ossl_ht_get(cache->hashtable, TO_HT_KEY(&key));
+            if (v == NULL) {
+                /* This shouldn't happen */
                 ERR_raise(ERR_LIB_OSSL_DECODER, ERR_R_CRYPTO_LIB);
                 goto err;
             }
-        } else {
-            /*
-             * We raced with another thread to construct this and lost. Free
-             * what we just created and use the entry from the hashtable instead
-             */
-            decoder_cache_entry_free(newcache);
+            res = ossl_ht_dcache_DECODER_CACHE_ENTRY_from_value(v);
             ctx = res->template;
         }
+
     } else {
+        res = ossl_ht_dcache_DECODER_CACHE_ENTRY_from_value(v);
         ctx = res->template;
     }
 
     ctx = ossl_decoder_ctx_for_pkey_dup(ctx, pkey, input_type, input_structure);
-    CRYPTO_THREAD_unlock(cache->lock);
+    ossl_ht_put(v);
 
     return ctx;
  err:
