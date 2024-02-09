@@ -1614,7 +1614,7 @@ static int pkey_set_type(EVP_PKEY *pkey, ENGINE *e, int type, const char *str,
 }
 
 #ifndef FIPS_MODULE
-static void find_ameth(const char *name, void *data)
+static int find_ameth(const char *name, void *data)
 {
     const char **str = data;
 
@@ -1626,13 +1626,14 @@ static void find_ameth(const char *name, void *data)
 
     if (pkey_set_type(NULL, NULL, EVP_PKEY_NONE, name, strlen(name),
                       NULL)) {
-        if (str[0] == NULL)
+        if (str[0] == NULL) {
             str[0] = name;
-        else if (str[1] == NULL)
-            str[1] = name;
+            ERR_pop_to_mark();
+            return 0;
+        }
     }
-
     ERR_pop_to_mark();
+    return 1;
 }
 #endif
 
@@ -1648,7 +1649,7 @@ int EVP_PKEY_set_type_by_keymgmt(EVP_PKEY *pkey, EVP_KEYMGMT *keymgmt)
      */
     const char *str[2] = { NULL, NULL };
 
-    if (!EVP_KEYMGMT_names_do_all(keymgmt, find_ameth, &str)
+    if (!EVP_KEYMGMT_names_do_all_until(keymgmt, find_ameth, &str)
             || str[1] != NULL) {
         ERR_raise(ERR_LIB_EVP, ERR_R_INTERNAL_ERROR);
         return 0;

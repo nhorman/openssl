@@ -31,21 +31,23 @@ static void *keymgmt_new(void)
 }
 
 #ifndef FIPS_MODULE
-static void help_get_legacy_alg_type_from_keymgmt(const char *keytype,
+static int help_get_legacy_alg_type_from_keymgmt(const char *keytype,
                                                   void *arg)
 {
     int *type = arg;
 
+    *type = evp_pkey_name2type(keytype);
     if (*type == NID_undef)
-        *type = evp_pkey_name2type(keytype);
+        return 1;
+    return 0;
 }
 
 static int get_legacy_alg_type_from_keymgmt(const EVP_KEYMGMT *keymgmt)
 {
     int type = NID_undef;
 
-    EVP_KEYMGMT_names_do_all(keymgmt, help_get_legacy_alg_type_from_keymgmt,
-                             &type);
+    EVP_KEYMGMT_names_do_all_until(keymgmt, help_get_legacy_alg_type_from_keymgmt,
+                                   &type);
     return type;
 }
 #endif
