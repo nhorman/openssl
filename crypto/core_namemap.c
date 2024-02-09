@@ -106,7 +106,10 @@ int ossl_namemap_empty(OSSL_NAMEMAP *namemap)
 }
 
 struct do_each_name_data {
-    void (*fn)(const char *name, void *data);
+    union {
+        void (*fn)(const char *name, void *data);
+        int (*fnu)(const char *name, void *data);
+    };
     void *data;
     int number;
 };
@@ -120,6 +123,16 @@ static void do_each_name(HT_VALUE *v, void *arg)
         data->fn(namenum->name, data->data);
 }
 
+static int do_each_name_until(HT_VALUE *v, void *arg)
+{
+    NAMENUM_ENTRY *namenum = ossl_ht_nne_NAMENUM_ENTRY_from_value(v);
+    struct do_each_name_data *data = arg;
+
+    if (namenum != NULL && namenum->number == data->number)
+        return data->fnu(namenum->name, data->data);
+    return 1;
+}
+
 /*
  * Call the callback for all names in the namemap with the given number.
  * A return value 1 means that the callback was called for all names. A
@@ -129,7 +142,11 @@ int ossl_namemap_doall_names(const OSSL_NAMEMAP *namemap, int number,
                              void (*fn)(const char *name, void *data),
                              void *data)
 {
-    struct do_each_name_data foreach_data = { fn, data, number };
+    struct do_each_name_data foreach_data;
+
+    foreach_data.fn = fn;
+    foreach_data.data = data;
+    foreach_data.number = number;
 
     if (namemap == NULL)
         return 0;
@@ -139,6 +156,23 @@ int ossl_namemap_doall_names(const OSSL_NAMEMAP *namemap, int number,
     return 1;
 }
 
+int ossl_namemap_doall_names_until(const OSSL_NAMEMAP *namemap, int number,
+                                   int (*fn)(const char *name, void *data),
+                                   void *data)
+{
+    struct do_each_name_data foreach_data;
+
+    foreach_data.fnu = fn;
+    foreach_data.data = data;
+    foreach_data.number = number;
+
+    if (namemap == NULL)
+        return 0;
+
+    ossl_ht_foreach_until(namemap->namenum, do_each_name_until, &foreach_data);
+
+    return 1;
+}
 static int namemap_name2num(const OSSL_NAMEMAP *namemap,
                             const char *name)
 {

@@ -33,6 +33,9 @@ int ossl_namemap_doall_names(const OSSL_NAMEMAP *namemap, int number,
                              void (*fn)(const char *name, void *data),
                              void *data);
 
+int ossl_namemap_doall_names_until(const OSSL_NAMEMAP *namemap, int number,
+                                   int (*fn)(const char *name, void *data),
+                                   void *data);
 /*
  * A utility that handles several names in a string, divided by a given
  * separator.
