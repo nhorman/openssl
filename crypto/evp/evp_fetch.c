@@ -646,3 +646,13 @@ int evp_names_do_all(OSSL_PROVIDER *prov, int number,
 
     return ossl_namemap_doall_names(namemap, number, fn, data);
 }
+
+int evp_names_do_all_until(OSSL_PROVIDER *prov, int number,
+                           int (*fn)(const char *name, void *data),
+                           void *data)
+{
+    OSSL_LIB_CTX *libctx = ossl_provider_libctx(prov);
+    OSSL_NAMEMAP *namemap = ossl_namemap_stored(libctx);
+
+    return ossl_namemap_doall_names_until(namemap, number, fn, data);
+}
