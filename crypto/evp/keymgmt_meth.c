@@ -341,6 +341,16 @@ int EVP_KEYMGMT_names_do_all(const EVP_KEYMGMT *keymgmt,
     return 1;
 }
 
+int EVP_KEYMGMT_names_do_all_until(const EVP_KEYMGMT *keymgmt,
+                                   int (*fn)(const char *name, void *data),
+                                   void *data)
+{
+    if (keymgmt->prov != NULL)
+        return evp_names_do_all_until(keymgmt->prov, keymgmt->name_id, fn, data);
+
+    return 1;
+}
+
 /*
  * Internal API that interfaces with the method function pointers
  */

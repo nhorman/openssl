@@ -1777,6 +1777,10 @@ void EVP_KEYMGMT_do_all_provided(OSSL_LIB_CTX *libctx,
 int EVP_KEYMGMT_names_do_all(const EVP_KEYMGMT *keymgmt,
                              void (*fn)(const char *name, void *data),
                              void *data);
+
+int EVP_KEYMGMT_names_do_all_until(const EVP_KEYMGMT *keymgmt,
+                                   int (*fn)(const char *name, void *data),
+                                   void *data);
 const OSSL_PARAM *EVP_KEYMGMT_gettable_params(const EVP_KEYMGMT *keymgmt);
 const OSSL_PARAM *EVP_KEYMGMT_settable_params(const EVP_KEYMGMT *keymgmt);
 const OSSL_PARAM *EVP_KEYMGMT_gen_settable_params(const EVP_KEYMGMT *keymgmt);
