@@ -950,7 +950,7 @@ EVP_MD *evp_md_new(void)
  * NIDs or any functionality that use them.
  */
 #ifndef FIPS_MODULE
-static void set_legacy_nid(const char *name, void *vlegacy_nid)
+static int set_legacy_nid(const char *name, void *vlegacy_nid)
 {
     int nid;
     int *legacy_nid = vlegacy_nid;
@@ -962,16 +962,17 @@ static void set_legacy_nid(const char *name, void *vlegacy_nid)
     const void *legacy_method = OBJ_NAME_get(name, OBJ_NAME_TYPE_MD_METH);
 
     if (*legacy_nid == -1)       /* We found a clash already */
-        return;
+        return 1;
 
     if (legacy_method == NULL)
-        return;
+        return 1;
     nid = EVP_MD_nid(legacy_method);
     if (*legacy_nid != NID_undef && *legacy_nid != nid) {
         *legacy_nid = -1;
-        return;
+        return 1;
     }
     *legacy_nid = nid;
+    return 0;
 }
 #endif
 
@@ -1018,7 +1019,7 @@ static void *evp_md_from_algorithm(int name_id,
 
 #ifndef FIPS_MODULE
     md->type = NID_undef;
-    if (!evp_names_do_all(prov, name_id, set_legacy_nid, &md->type)
+    if (!evp_names_do_all_until(prov, name_id, set_legacy_nid, &md->type)
             || md->type == -1) {
         ERR_raise(ERR_LIB_EVP, ERR_R_INTERNAL_ERROR);
         EVP_MD_free(md);

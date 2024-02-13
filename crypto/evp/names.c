@@ -57,14 +57,13 @@ int EVP_add_digest(const EVP_MD *md)
     return r;
 }
 
-static void cipher_from_name(const char *name, void *data)
+static int cipher_from_name(const char *name, void *data)
 {
     const EVP_CIPHER **cipher = data;
 
-    if (*cipher != NULL)
-        return;
-
     *cipher = (const EVP_CIPHER *)OBJ_NAME_get(name, OBJ_NAME_TYPE_CIPHER_METH);
+
+    return (*cipher == NULL) ? 1 : 0;
 }
 
 const EVP_CIPHER *EVP_get_cipherbyname(const char *name)
@@ -98,20 +97,19 @@ const EVP_CIPHER *evp_get_cipherbyname_ex(OSSL_LIB_CTX *libctx,
     if (id == 0)
         return NULL;
 
-    if (!ossl_namemap_doall_names(namemap, id, cipher_from_name, &cp))
+    if (!ossl_namemap_doall_names_until(namemap, id, cipher_from_name, &cp))
         return NULL;
 
     return cp;
 }
 
-static void digest_from_name(const char *name, void *data)
+static int digest_from_name(const char *name, void *data)
 {
     const EVP_MD **md = data;
 
-    if (*md != NULL)
-        return;
-
     *md = (const EVP_MD *)OBJ_NAME_get(name, OBJ_NAME_TYPE_MD_METH);
+
+    return (*md == NULL) ? 1 : 0;
 }
 
 const EVP_MD *EVP_get_digestbyname(const char *name)
@@ -144,7 +142,7 @@ const EVP_MD *evp_get_digestbyname_ex(OSSL_LIB_CTX *libctx, const char *name)
     if (id == 0)
         return NULL;
 
-    if (!ossl_namemap_doall_names(namemap, id, digest_from_name, &dp))
+    if (!ossl_namemap_doall_names_until(namemap, id, digest_from_name, &dp))
         return NULL;
 
     return dp;
