@@ -36,7 +36,7 @@ int tls13_hkdf_expand_ex(OSSL_LIB_CTX *libctx, const char *propq,
                          const unsigned char *data, size_t datalen,
                          unsigned char *out, size_t outlen, int raise_error)
 {
-    EVP_KDF *kdf = EVP_KDF_fetch(libctx, OSSL_KDF_NAME_TLS1_3_KDF, propq);
+    EVP_KDF *kdf = NULL;
     EVP_KDF_CTX *kctx;
     OSSL_PARAM params[7], *p = params;
     int mode = EVP_PKEY_HKDEF_MODE_EXPAND_ONLY;
@@ -44,8 +44,11 @@ int tls13_hkdf_expand_ex(OSSL_LIB_CTX *libctx, const char *propq,
     int ret;
     size_t hashlen;
 
+    kdf = OSSL_LIB_CTX_get_kdf(libctx, OSSL_KDF_NAME_TLS1_3_KDF, propq);
+    if (kdf == NULL)
+        return 0;
     kctx = EVP_KDF_CTX_new(kdf);
-    EVP_KDF_free(kdf);
+
     if (kctx == NULL)
         return 0;
 
@@ -178,9 +181,11 @@ int tls13_generate_secret(SSL_CONNECTION *s, const EVP_MD *md,
     static const char derived_secret_label[] = "\x64\x65\x72\x69\x76\x65\x64";
     SSL_CTX *sctx = SSL_CONNECTION_GET_CTX(s);
 
-    kdf = EVP_KDF_fetch(sctx->libctx, OSSL_KDF_NAME_TLS1_3_KDF, sctx->propq);
+    kdf = OSSL_LIB_CTX_get_kdf(sctx->libctx, OSSL_KDF_NAME_TLS1_3_KDF,
+                               sctx->propq);
+    if (kdf == NULL)
+        return 0;
     kctx = EVP_KDF_CTX_new(kdf);
-    EVP_KDF_free(kdf);
     if (kctx == NULL) {
         SSLfatal(s, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
         return 0;
