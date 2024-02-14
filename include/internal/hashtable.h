@@ -153,7 +153,7 @@ memset((key), 0, sizeof(*(key))); \
  * ossl_ht_NAME_TYPE_type - boolean to detect if a value is of TYPE
  */
 #define IMPLEMENT_HT_VALUE_TYPE_FNS(vtype, name, pfx) \
-static uint32_t name##_##vtype##_id = __LINE__; \
+static uint32_t name##_##vtype##_id = __COUNTER__; \
 pfx ossl_unused int ossl_ht_##name##_##vtype##_insert(HT *h, HT_KEY *key, vtype *data, vtype **olddata) {\
     HT_VALUE inval;                                                            \
     HT_VALUE *oval = NULL;                                                     \
@@ -167,13 +167,26 @@ pfx ossl_unused int ossl_ht_##name##_##vtype##_insert(HT *h, HT_KEY *key, vtype 
     return rc;                                                                 \
 }                                                                              \
                                                                                \
-pfx ossl_unused vtype *ossl_ht_##name##_##vtype##_from_value(HT_VALUE *v)\
+pfx ossl_unused vtype *ossl_ht_##name##_##vtype##_from_value(HT_VALUE *v)      \
 {                                                                              \
     uint32_t expect_type = name##_##vtype##_id;                                \
     if (!ossl_assert(v->type_id == expect_type)) {                             \
         return NULL;                                                           \
     }                                                                          \
     return (vtype *)v->value;                                                  \
+}                                                                              \
+                                                                               \
+pfx ossl_unused vtype *ossl_unused ossl_ht_##name##_##vtype##_get(HT *h,       \
+                                                                  HT_KEY *key, \
+                                                                  HT_VALUE **v)\
+{                                                                              \
+    if (v == NULL)                                                             \
+        return NULL;                                                           \
+                                                                               \
+    *v = ossl_ht_get(h, key);                                                  \
+    if (*v == NULL)                                                            \
+        return NULL;                                                           \
+    return ossl_ht_##name##_##vtype##_from_value(*v);                          \
 }                                                                              \
                                                                                \
 pfx ossl_unused HT_VALUE *ossl_ht_##name##_##vtype##_to_value(vtype *data, HT_VALUE *v)      \
@@ -187,6 +200,15 @@ pfx ossl_unused inline int ossl_ht_##name##_##vtype##_type(HT_VALUE *h) \
 {                                                                              \
     return h->type_id == name##_##vtype##_id;                                  \
 }
+
+#define DECLARE_HT_VALUE_TYPE_FNS(vtype, name) \
+int ossl_ht_##name##_##vtype##_insert(HT *h, HT_KEY *key, vtype *data, vtype **olddata);\
+vtype *ossl_ht_##name##_##vtype##_from_value(HT_VALUE *v);      \
+vtype *ossl_unused ossl_ht_##name##_##vtype##_get(HT *h,       \
+                                                  HT_KEY *key, \
+                                                  HT_VALUE **v);\
+HT_VALUE *ossl_ht_##name##_##vtype##_to_value(vtype *data, HT_VALUE *v); \
+int ossl_ht_##name##_##vtype##_type(HT_VALUE *h);       \
 
 /*
  * Helper function to construct case insensitive keys
