@@ -138,7 +138,12 @@ ENGINE *ossl_prov_cipher_engine(const PROV_CIPHER *pc)
 
 void ossl_prov_digest_reset(PROV_DIGEST *pd)
 {
-    EVP_MD_free(pd->alloc_md);
+    /*
+     * NOTE: We don't free the ctx cached digest here
+     * as it might be useful in future lookups, just
+     * leave it in cache and let it get cleaned when the
+     * context is freed
+     */
     pd->alloc_md = NULL;
     pd->md = NULL;
 #if !defined(FIPS_MODULE) && !defined(OPENSSL_NO_ENGINE)
@@ -192,17 +197,20 @@ int ossl_prov_digest_load_from_params(PROV_DIGEST *pd,
         return 0;
 
     ERR_set_mark();
-    ossl_prov_digest_fetch(pd, ctx, p->data, propquery);
-#ifndef FIPS_MODULE /* Inside the FIPS module, we don't support legacy digests */
+    pd->md = pd->alloc_md = OSSL_LIB_CTX_get_md(ctx, p->data, propquery);
     if (pd->md == NULL) {
-        const EVP_MD *md;
+        ossl_prov_digest_fetch(pd, ctx, p->data, propquery);
+#ifndef FIPS_MODULE /* Inside the FIPS module, we don't support legacy digests */
+        if (pd->md == NULL) {
+            const EVP_MD *md;
 
-        md = EVP_get_digestbyname(p->data);
-        /* Do not use global EVP_MDs */
-        if (md != NULL && md->origin != EVP_ORIG_GLOBAL)
-            pd->md = md;
-    }
+            md = EVP_get_digestbyname(p->data);
+            /* Do not use global EVP_MDs */
+            if (md != NULL && md->origin != EVP_ORIG_GLOBAL)
+                pd->md = md;
+        }
 #endif
+    }
     if (pd->md != NULL)
         ERR_pop_to_mark();
     else
