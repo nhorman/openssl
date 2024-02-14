@@ -530,6 +530,16 @@ void OSSL_LIB_CTX_free(OSSL_LIB_CTX *);
 OSSL_LIB_CTX *OSSL_LIB_CTX_get0_global_default(void);
 OSSL_LIB_CTX *OSSL_LIB_CTX_set0_default(OSSL_LIB_CTX *libctx);
 
+EVP_KDF *OSSL_LIB_CTX_get_kdf(OSSL_LIB_CTX *libctx, const char *name,
+                              const char *propq);
+void OSSL_LIB_CTX_del_kdf(OSSL_LIB_CTX *libctx, const char *name,
+                          const char *propq);
+
+EVP_MD *OSSL_LIB_CTX_get_md(OSSL_LIB_CTX *libctx, const char *name,
+                            const char *propq);
+void OSSL_LIB_CTX_del_md(OSSL_LIB_CTX *libctx, const char *name,
+                         const char *propq);
+
 void OSSL_sleep(uint64_t millis);
 
 # ifdef  __cplusplus

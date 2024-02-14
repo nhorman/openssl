@@ -9,11 +9,14 @@
 
 #include "crypto/cryptlib.h"
 #include <openssl/conf.h>
+#include <openssl/kdf.h>
+#include <openssl/evp.h>
 #include "internal/thread_once.h"
 #include "internal/property.h"
 #include "internal/core.h"
 #include "internal/bio.h"
 #include "internal/provider.h"
+#include "internal/hashtable.h"
 #include "crypto/decoder.h"
 #include "crypto/context.h"
 
@@ -37,6 +40,7 @@ struct ossl_lib_ctx_st {
     void *decoder_cache;
     OSSL_METHOD_STORE *encoder_store;
     OSSL_METHOD_STORE *store_loader_store;
+    HT *algcache;
     void *self_test_cb;
 #endif
 #if defined(OPENSSL_THREADS)
@@ -50,6 +54,19 @@ struct ossl_lib_ctx_st {
 
     unsigned int ischild:1;
 };
+
+IMPLEMENT_HT_VALUE_TYPE_FNS(EVP_KDF, algcache, static)
+IMPLEMENT_HT_VALUE_TYPE_FNS(EVP_MD, algcache, static)
+
+HT_START_KEY_DEFN(ctx_kdf_key)
+HT_DEF_KEY_FIELD_CHAR_ARRAY(name, 32)
+HT_DEF_KEY_FIELD_CHAR_ARRAY(propq, 64)
+HT_END_KEY_DEFN(CTX_KDF_KEY)
+
+HT_START_KEY_DEFN(ctx_md_key)
+HT_DEF_KEY_FIELD_CHAR_ARRAY(name, 32)
+HT_DEF_KEY_FIELD_CHAR_ARRAY(propq, 64)
+HT_END_KEY_DEFN(CTX_MD_KEY)
 
 int ossl_lib_ctx_write_lock(OSSL_LIB_CTX *ctx)
 {
@@ -77,13 +94,41 @@ int ossl_lib_ctx_is_child(OSSL_LIB_CTX *ctx)
 
 static void context_deinit_objs(OSSL_LIB_CTX *ctx);
 
+static void algcache_free(HT_VALUE *v)
+{
+    EVP_KDF *k = ossl_ht_algcache_EVP_KDF_from_value(v);
+    EVP_MD *m = ossl_ht_algcache_EVP_MD_from_value(v);
+
+    /*
+     * This looks a bit odd, but its ok
+     * because the from_value calls do dynamic type checking
+     * only one of the above from_value calls will ever return non
+     * null, so we rely on the NULL checks in EVP_*_free to be no-ops
+     * here instead of having to do a buch of if !NULL checks here
+     */
+    EVP_KDF_free(k);
+    EVP_MD_free(m);
+}
+
 static int context_init(OSSL_LIB_CTX *ctx)
 {
+    HT_CONFIG algcache_conf = {
+        algcache_free,
+        NULL,
+        0,
+        1,
+        1
+    };
+
     int exdata_done = 0;
 
     ctx->lock = CRYPTO_THREAD_lock_new();
     if (ctx->lock == NULL)
         return 0;
+
+    ctx->algcache = ossl_ht_new(&algcache_conf);
+    if (ctx->algcache == NULL)
+        goto err;
 
     ctx->rand_crngt_lock = CRYPTO_THREAD_lock_new();
     if (ctx->rand_crngt_lock == NULL)
@@ -220,6 +265,8 @@ static void context_deinit_objs(OSSL_LIB_CTX *ctx)
         ossl_method_store_free(ctx->evp_method_store);
         ctx->evp_method_store = NULL;
     }
+
+    ossl_ht_free(ctx->algcache);
 
     /* P2. */
     if (ctx->drbg != NULL) {
@@ -651,4 +698,82 @@ const char *ossl_lib_ctx_get_descriptor(OSSL_LIB_CTX *libctx)
         return "Thread-local default library context";
     return "Non-default library context";
 #endif
+}
+
+EVP_KDF *OSSL_LIB_CTX_get_kdf(OSSL_LIB_CTX *libctx, const char *name,
+                              const char *propq)
+{
+    CTX_KDF_KEY key;
+    EVP_KDF *kdf = NULL;
+    HT_VALUE *v = NULL;
+    int retry = 0;
+
+    libctx = ossl_lib_ctx_get_concrete(libctx);
+
+    HT_INIT_KEY(&key);
+    HT_SET_KEY_STRING(&key, name, name);
+    HT_SET_KEY_STRING(&key, propq, propq);
+
+try_again:
+    kdf = ossl_ht_algcache_EVP_KDF_get(libctx->algcache, TO_HT_KEY(&key), &v);
+    if (kdf == NULL) {
+        if (retry)
+            return NULL;
+        kdf = EVP_KDF_fetch(libctx, name, propq);
+        if (kdf == NULL)
+            return NULL;
+        if (!ossl_ht_algcache_EVP_KDF_insert(libctx->algcache, TO_HT_KEY(&key),
+                                             kdf, NULL)) {
+            /*
+             * Its possible we raced with another thread and they cached the kdf
+             * we need after we did the get above
+             * so free the one we allocated, and try again
+             * it should be there, otherwise, its an error
+             */
+            EVP_KDF_free(kdf);
+            retry = 1;
+            goto try_again;
+        }
+    }
+    ossl_ht_put(v);
+    return kdf;
+}
+
+EVP_MD *OSSL_LIB_CTX_get_md(OSSL_LIB_CTX *libctx, const char *name,
+                              const char *propq)
+{
+    CTX_KDF_KEY key;
+    EVP_MD *md = NULL;
+    HT_VALUE *v = NULL;
+    int retry = 0;
+
+    libctx = ossl_lib_ctx_get_concrete(libctx);
+
+    HT_INIT_KEY(&key);
+    HT_SET_KEY_STRING(&key, name, name);
+    HT_SET_KEY_STRING(&key, propq, propq);
+
+try_again:
+    md = ossl_ht_algcache_EVP_MD_get(libctx->algcache, TO_HT_KEY(&key), &v);
+    if (md == NULL) {
+        if (retry)
+            return NULL;
+        md = EVP_MD_fetch(libctx, name, propq);
+        if (md == NULL)
+            return NULL;
+        if (!ossl_ht_algcache_EVP_MD_insert(libctx->algcache, TO_HT_KEY(&key),
+                                            md, NULL)) {
+            /*
+             * Its possible we raced with another thread and they cached the kdf
+             * we need after we did the get above
+             * so free the one we allocated, and try again
+             * it should be there, otherwise, its an error
+             */
+            EVP_MD_free(md);
+            retry = 1;
+            goto try_again;
+        }
+    }
+    ossl_ht_put(v);
+    return md;
 }
