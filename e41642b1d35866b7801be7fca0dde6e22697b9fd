@@ -1,0 +1,14 @@
+diff -u b/ssl/statem/statem_clnt.c b/ssl/statem/statem_clnt.c
+--- b/ssl/statem/statem_clnt.c
++++ b/ssl/statem/statem_clnt.c
+@@ -4068,8 +4068,8 @@
+     int min_proto_version_limit = SSL_CONNECTION_IS_DTLS(s)
+                                   ? DTLS1_3_VERSION : TLS1_3_VERSION;
+     int empty_reneg_info_scsv = !s->renegotiate
+-                                && (SSL_CONNECTION_IS_DTLS(s)
+-                                    || s->min_proto_version < TLS1_3_VERSION);
++                                && (ssl_version_cmp(s, s->min_proto_version, min_proto_version_limit) < 0
++                                    || s->min_proto_version == 0);
+     SSL *ssl = SSL_CONNECTION_GET_SSL(s);
+
+     /* Set disabled masks for this session */
