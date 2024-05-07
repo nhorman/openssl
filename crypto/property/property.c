@@ -16,6 +16,7 @@
 #include "internal/property.h"
 #include "internal/provider.h"
 #include "internal/tsan_assist.h"
+#include "internal/hashtable.h"
 #include "crypto/ctype.h"
 #include <openssl/lhash.h>
 #include <openssl/rand.h>
@@ -39,12 +40,13 @@ typedef struct {
 } METHOD;
 
 typedef struct {
+    int nid;
+    unsigned int insert_order;
     const OSSL_PROVIDER *provider;
     OSSL_PROPERTY_LIST *properties;
     METHOD method;
 } IMPLEMENTATION;
 
-DEFINE_STACK_OF(IMPLEMENTATION)
 
 typedef struct {
     const OSSL_PROVIDER *provider;
@@ -57,13 +59,27 @@ DEFINE_LHASH_OF_EX(QUERY);
 
 typedef struct {
     int nid;
-    STACK_OF(IMPLEMENTATION) *impls;
+    HT *iqcache;
     LHASH_OF(QUERY) *cache;
 } ALGORITHM;
+
+#define KEY_TYPE_QUERY 0
+#define KEY_TYPE_IMPLEMENTATION 1
+HT_START_KEY_DEFN(STOREKEY)
+HT_DEF_KEY_FIELD(nid, int)
+HT_DEF_KEY_FIELD(type, int)
+HT_DEF_KEY_FIELD_CHAR_ARRAY(propq, 128)
+HT_DEF_KEY_FIELD(provptr, const void *)
+HT_END_KEY_DEFN(STOREKEY)
+
+IMPLEMENT_HT_VALUE_TYPE_FNS(QUERY, store, static)
+IMPLEMENT_HT_VALUE_TYPE_FNS(IMPLEMENTATION, store, static)
 
 struct ossl_method_store_st {
     OSSL_LIB_CTX *ctx;
     SPARSE_ARRAY_OF(ALGORITHM) *algs;
+    unsigned int impl_order;
+
     /*
      * Lock to protect the |algs| array from concurrent writing, when
      * individual implementations or queries are inserted.  This is used
@@ -224,13 +240,21 @@ static void alg_cleanup(ossl_uintmax_t idx, ALGORITHM *a, void *arg)
     OSSL_METHOD_STORE *store = arg;
 
     if (a != NULL) {
-        sk_IMPLEMENTATION_pop_free(a->impls, &impl_free);
+        ossl_ht_free(a->iqcache);
         lh_QUERY_doall(a->cache, &impl_cache_free);
         lh_QUERY_free(a->cache);
         OPENSSL_free(a);
     }
     if (store != NULL)
         ossl_sa_ALGORITHM_set(store->algs, idx, NULL);
+}
+
+static void cache_free(HT_VALUE *v)
+{
+    IMPLEMENTATION *i = ossl_ht_store_IMPLEMENTATION_from_value(v);
+
+    if (i != NULL)
+        impl_free(i);
 }
 
 /*
@@ -293,8 +317,9 @@ int ossl_method_store_add(OSSL_METHOD_STORE *store, const OSSL_PROVIDER *prov,
 {
     ALGORITHM *alg = NULL;
     IMPLEMENTATION *impl;
+    STOREKEY key;
+    HT_CONFIG ht_conf = { store->ctx, cache_free, NULL, 0 };
     int ret = 0;
-    int i;
 
     if (nid <= 0 || method == NULL || store == NULL)
         return 0;
@@ -308,6 +333,7 @@ int ossl_method_store_add(OSSL_METHOD_STORE *store, const OSSL_PROVIDER *prov,
     impl = OPENSSL_malloc(sizeof(*impl));
     if (impl == NULL)
         return 0;
+    impl->nid = nid;
     impl->method.method = method;
     impl->method.up_ref = method_up_ref;
     impl->method.free = method_destruct;
@@ -337,7 +363,7 @@ int ossl_method_store_add(OSSL_METHOD_STORE *store, const OSSL_PROVIDER *prov,
     alg = ossl_method_store_retrieve(store, nid);
     if (alg == NULL) {
         if ((alg = OPENSSL_zalloc(sizeof(*alg))) == NULL
-                || (alg->impls = sk_IMPLEMENTATION_new_null()) == NULL
+                || (alg->iqcache = ossl_ht_new(&ht_conf)) == NULL
                 || (alg->cache = lh_QUERY_new(&query_hash, &query_cmp)) == NULL)
             goto err;
         alg->nid = nid;
@@ -345,20 +371,24 @@ int ossl_method_store_add(OSSL_METHOD_STORE *store, const OSSL_PROVIDER *prov,
             goto err;
     }
 
-    /* Push onto stack if there isn't one there already */
-    for (i = 0; i < sk_IMPLEMENTATION_num(alg->impls); i++) {
-        const IMPLEMENTATION *tmpimpl = sk_IMPLEMENTATION_value(alg->impls, i);
+    HT_INIT_KEY(&key);
+    HT_SET_KEY_FIELD(&key, nid, nid);
+    HT_SET_KEY_FIELD(&key, type, KEY_TYPE_IMPLEMENTATION);
+    HT_SET_KEY_STRING(&key, propq, properties);
+    HT_SET_KEY_FIELD(&key, provptr, prov);
+    ossl_ht_write_lock(alg->iqcache);
+    impl->insert_order = store->impl_order++;
+    if (!ossl_ht_store_IMPLEMENTATION_insert(alg->iqcache,
+                                             TO_HT_KEY(&key), impl, NULL)) {
 
-        if (tmpimpl->provider == impl->provider
-            && tmpimpl->properties == impl->properties)
-            break;
-    }
-    if (i == sk_IMPLEMENTATION_num(alg->impls)
-        && sk_IMPLEMENTATION_push(alg->impls, impl))
-        ret = 1;
-    ossl_property_unlock(store);
-    if (ret == 0)
+        /* This implementation already exists */
         impl_free(impl);
+        ret = 0;
+    } else {
+        ret = 1;
+    }
+    ossl_ht_write_unlock(alg->iqcache);
+    ossl_property_unlock(store);
     return ret;
 
 err:
@@ -368,11 +398,29 @@ err:
     return 0;
 }
 
+struct del_impl_by_method {
+    const void *method;
+    int nid;
+    int deleted_something;
+};
+
+static int should_del_impl_by_method(HT_VALUE *v, void *arg)
+{
+    IMPLEMENTATION *i = ossl_ht_store_IMPLEMENTATION_from_value(v);
+    struct del_impl_by_method *data = (struct del_impl_by_method *)arg;
+
+    if (i != NULL && data->nid == i->nid && i->method.method == data->method) {
+        data->deleted_something = 1;
+        return 1;
+    }
+    return 0;
+}
+
 int ossl_method_store_remove(OSSL_METHOD_STORE *store, int nid,
                              const void *method)
 {
     ALGORITHM *alg = NULL;
-    int i;
+    struct del_impl_by_method ddata = { method, nid, 0 };
 
     if (nid <= 0 || method == NULL || store == NULL)
         return 0;
@@ -386,23 +434,11 @@ int ossl_method_store_remove(OSSL_METHOD_STORE *store, int nid,
         return 0;
     }
 
-    /*
-     * A sorting find then a delete could be faster but these stacks should be
-     * relatively small, so we avoid the overhead.  Sorting could also surprise
-     * users when result orderings change (even though they are not guaranteed).
-     */
-    for (i = 0; i < sk_IMPLEMENTATION_num(alg->impls); i++) {
-        IMPLEMENTATION *impl = sk_IMPLEMENTATION_value(alg->impls, i);
-
-        if (impl->method.method == method) {
-            impl_free(impl);
-            (void)sk_IMPLEMENTATION_delete(alg->impls, i);
-            ossl_property_unlock(store);
-            return 1;
-        }
-    }
+    ossl_ht_write_lock(alg->iqcache);
+    ossl_ht_selective_delete(alg->iqcache, should_del_impl_by_method, &ddata);
+    ossl_ht_write_unlock(alg->iqcache);
     ossl_property_unlock(store);
-    return 0;
+    return ddata.deleted_something;
 }
 
 struct alg_cleanup_by_provider_data_st {
@@ -410,34 +446,34 @@ struct alg_cleanup_by_provider_data_st {
     const OSSL_PROVIDER *prov;
 };
 
+struct del_impl_by_prov {
+    const OSSL_PROVIDER *prov;
+    int del_some;
+};
+
+static int should_del_impl_by_provider(HT_VALUE *v, void *arg)
+{
+    IMPLEMENTATION *i = ossl_ht_store_IMPLEMENTATION_from_value(v);
+    struct del_impl_by_prov *data = (struct del_impl_by_prov *)arg;
+
+    if (i != NULL && i->provider == data->prov) {
+        data->del_some = 1;
+        return 1;
+    }
+    return 0;
+}
+
 static void
 alg_cleanup_by_provider(ossl_uintmax_t idx, ALGORITHM *alg, void *arg)
 {
     struct alg_cleanup_by_provider_data_st *data = arg;
-    int i, count;
+    struct del_impl_by_prov dp = { data->prov, 0 };
 
-    /*
-     * We walk the stack backwards, to avoid having to deal with stack shifts
-     * caused by deletion
-     */
-    for (count = 0, i = sk_IMPLEMENTATION_num(alg->impls); i-- > 0;) {
-        IMPLEMENTATION *impl = sk_IMPLEMENTATION_value(alg->impls, i);
+    ossl_ht_write_lock(alg->iqcache);
+    ossl_ht_selective_delete(alg->iqcache, should_del_impl_by_provider, &dp);
+    ossl_ht_write_unlock(alg->iqcache);
 
-        if (impl->provider == data->prov) {
-            impl_free(impl);
-            (void)sk_IMPLEMENTATION_delete(alg->impls, i);
-            count++;
-        }
-    }
-
-    /*
-     * If we removed any implementation, we also clear the whole associated
-     * cache, 'cause that's the sensible thing to do.
-     * There's no point flushing the cache entries where we didn't remove
-     * any implementation, though.
-     */
-    if (count > 0)
-        ossl_method_cache_flush_alg(data->store, alg);
+    ossl_method_cache_flush_alg(data->store, alg);
 }
 
 int ossl_method_store_remove_all_provided(OSSL_METHOD_STORE *store,
@@ -454,28 +490,28 @@ int ossl_method_store_remove_all_provided(OSSL_METHOD_STORE *store,
     return 1;
 }
 
-static void alg_do_one(ALGORITHM *alg, IMPLEMENTATION *impl,
-                       void (*fn)(int id, void *method, void *fnarg),
-                       void *fnarg)
-{
-    fn(alg->nid, impl->method.method, fnarg);
-}
-
 struct alg_do_each_data_st {
     void (*fn)(int id, void *method, void *fnarg);
     void *fnarg;
 };
 
+static int do_each_impl(HT_VALUE *v, void *arg)
+{
+    IMPLEMENTATION *i = ossl_ht_store_IMPLEMENTATION_from_value(v);
+    struct alg_do_each_data_st *data = arg;
+
+    if (i == NULL)
+        return 1;
+
+    data->fn(i->nid, i->method.method, data->fnarg);
+    return 1;
+}
+
 static void alg_do_each(ossl_uintmax_t idx, ALGORITHM *alg, void *arg)
 {
-    struct alg_do_each_data_st *data = arg;
-    int i, end = sk_IMPLEMENTATION_num(alg->impls);
-
-    for (i = 0; i < end; i++) {
-        IMPLEMENTATION *impl = sk_IMPLEMENTATION_value(alg->impls, i);
-
-        alg_do_one(alg, impl, data->fn, data->fnarg);
-    }
+    ossl_ht_read_lock(alg->iqcache);
+    ossl_ht_foreach_until(alg->iqcache, do_each_impl, arg);
+    ossl_ht_read_unlock(alg->iqcache);
 }
 
 void ossl_method_store_do_all(OSSL_METHOD_STORE *store,
@@ -490,17 +526,63 @@ void ossl_method_store_do_all(OSSL_METHOD_STORE *store,
         ossl_sa_ALGORITHM_doall_arg(store->algs, alg_do_each, &data);
 }
 
+struct best_impl_data {
+    IMPLEMENTATION *best;
+    OSSL_PROPERTY_LIST *pq;
+    const OSSL_PROVIDER *prov;
+    int nid;
+    int best_score;
+    int best_order;
+    int optional;
+};
+
+static int get_best_impl(HT_VALUE *v, void *arg)
+{
+    struct best_impl_data *data = (struct best_impl_data *)arg;
+    IMPLEMENTATION *i = ossl_ht_store_IMPLEMENTATION_from_value(v);
+    int score;
+
+    if (i == NULL)
+        return 1;
+
+    if (i->nid != data->nid)
+        return 1;
+
+    if (data->pq == NULL) {
+        if (data->prov == NULL || data->prov == i->provider) {
+                data->best = i;
+                return 0;
+        }
+    } else {
+        if (data->prov == NULL || data->prov == i->provider) {
+            score = ossl_property_match_count(data->pq, i->properties);
+            if (score > data->best_score) {
+                data->best = i;
+                data->best_score = score;
+                data->best_order = i->insert_order;
+            } else if (score == data->best_score) {
+                if (i->insert_order < data->best_order) {
+                    data->best = i;
+                    data->best_score = score;
+                    data->best_order = i->insert_order;
+                }
+            }
+        }
+    }
+    return 1;
+}
+
 int ossl_method_store_fetch(OSSL_METHOD_STORE *store,
                             int nid, const char *prop_query,
                             const OSSL_PROVIDER **prov_rw, void **method)
 {
     OSSL_PROPERTY_LIST **plp;
     ALGORITHM *alg;
-    IMPLEMENTATION *impl, *best_impl = NULL;
+    IMPLEMENTATION *best_impl = NULL;
     OSSL_PROPERTY_LIST *pq = NULL, *p2 = NULL;
     const OSSL_PROVIDER *prov = prov_rw != NULL ? *prov_rw : NULL;
     int ret = 0;
-    int j, best = -1, score, optional;
+    struct best_impl_data bd = { NULL, NULL, NULL, nid, -1, 0, 0 };
 
     if (nid <= 0 || method == NULL || store == NULL)
         return 0;
@@ -535,31 +617,16 @@ int ossl_method_store_fetch(OSSL_METHOD_STORE *store,
         }
     }
 
-    if (pq == NULL) {
-        for (j = 0; j < sk_IMPLEMENTATION_num(alg->impls); j++) {
-            if ((impl = sk_IMPLEMENTATION_value(alg->impls, j)) != NULL
-                && (prov == NULL || impl->provider == prov)) {
-                best_impl = impl;
-                ret = 1;
-                break;
-            }
-        }
-        goto fin;
-    }
-    optional = ossl_property_has_optional(pq);
-    for (j = 0; j < sk_IMPLEMENTATION_num(alg->impls); j++) {
-        if ((impl = sk_IMPLEMENTATION_value(alg->impls, j)) != NULL
-            && (prov == NULL || impl->provider == prov)) {
-            score = ossl_property_match_count(pq, impl->properties);
-            if (score > best) {
-                best_impl = impl;
-                best = score;
-                ret = 1;
-                if (!optional)
-                    goto fin;
-            }
-        }
-    }
+    bd.optional = ossl_property_has_optional(pq);
+    bd.pq = pq;
+    bd.prov = prov;
+    ossl_ht_read_lock(alg->iqcache);
+    ossl_ht_foreach_until(alg->iqcache, get_best_impl, &bd);
+    ossl_ht_read_unlock(alg->iqcache);
+    best_impl = bd.best;
+    if (best_impl != NULL)
+        ret = 1;
+
 fin:
     if (ret && ossl_method_up_ref(&best_impl->method)) {
         *method = best_impl->method.method;
