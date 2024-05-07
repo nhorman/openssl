@@ -108,7 +108,7 @@ SOURCE[../libcrypto]=$UTIL_COMMON \
         o_fopen.c getenv.c o_init.c init.c trace.c provider.c provider_child.c \
         punycode.c passphrase.c sleep.c deterministic_nonce.c quic_vlint.c \
         time.c
-SOURCE[../providers/libfips.a]=$UTIL_COMMON
+SOURCE[../providers/libfips.a]=$UTIL_COMMON hashtable/hashtable.c
 
 SOURCE[../libcrypto]=$UPLINKSRC
 DEFINE[../libcrypto]=$UPLINKDEF

@@ -74,6 +74,7 @@ static OSSL_FUNC_CRYPTO_secure_zalloc_fn *c_CRYPTO_secure_zalloc;
 static OSSL_FUNC_CRYPTO_secure_free_fn *c_CRYPTO_secure_free;
 static OSSL_FUNC_CRYPTO_secure_clear_free_fn *c_CRYPTO_secure_clear_free;
 static OSSL_FUNC_CRYPTO_secure_allocated_fn *c_CRYPTO_secure_allocated;
+static OSSL_FUNC_CRYPTO_aligned_alloc_fn *c_CRYPTO_aligned_alloc;
 static OSSL_FUNC_BIO_vsnprintf_fn *c_BIO_vsnprintf;
 static OSSL_FUNC_self_test_cb_fn *c_stcbfn = NULL;
 static OSSL_FUNC_core_get_libctx_fn *c_get_libctx = NULL;
@@ -689,6 +690,10 @@ int OSSL_provider_init_int(const OSSL_CORE_HANDLE *handle,
         case OSSL_FUNC_SELF_TEST_CB:
             set_func(c_stcbfn, OSSL_FUNC_self_test_cb(in));
             break;
+        case OSSL_FUNC_OPENSSL_ALIGNED_ALLOC:
+            set_func(c_CRYPTO_aligned_alloc,
+                     OSSL_FUNC_CRYPTO_aligned_alloc(in));
+            break;
         default:
             /* Just ignore anything we don't understand */
             break;
@@ -877,6 +882,13 @@ void *CRYPTO_malloc(size_t num, const char *file, int line)
 {
     return c_CRYPTO_malloc(num, file, line);
 }
+
+void *CRYPTO_aligned_alloc(size_t num, size_t alignment, void **freeptr,
+                           const char *file, int line)
+{
+    return c_CRYPTO_aligned_alloc(num, alignment, freeptr, file, line);
+}
+
 
 void *CRYPTO_zalloc(size_t num, const char *file, int line)
 {
