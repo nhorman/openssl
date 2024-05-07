@@ -577,7 +577,6 @@ static struct ht_internal_value_st *alloc_new_value(HT *h, HT_KEY *key,
     tmp->ht = h;
     tmp->value.value = data;
     tmp->value.type_id = type;
-
     return tmp;
 }
 
@@ -689,3 +688,29 @@ int ossl_ht_delete(HT *h, HT_KEY *key)
     return rc;
 }
 
+
+void ossl_ht_selective_delete(HT *h, int (*should_del)(HT_VALUE *, void *), void *arg)
+{
+    size_t i, j;
+    struct ht_mutable_data_st *md;
+    HT_VALUE *nv = NULL;
+    struct ht_internal_value_st *v;
+
+    md = ossl_rcu_deref(&h->md);
+    for (i = 0; i < md->neighborhood_mask + 1; i++) {
+        PREFETCH_NEIGHBORHOOD(md->neighborhoods[i + 1]);
+        for (j = 0; j < NEIGHBORHOOD_LEN; j++) {
+            if (md->neighborhoods[i].entries[j].value != NULL) {
+                if (should_del((HT_VALUE *)md->neighborhoods[i].entries[j].value, arg)) {
+                    h->wpd.value_count--;
+                    CRYPTO_atomic_store(&md->neighborhoods[i].entries[j].hash, 0, h->atomic_lock);
+                    v = (struct ht_internal_value_st *)h->md->neighborhoods[i].entries[j].value;
+                    ossl_rcu_assign_ptr(&h->md->neighborhoods[i].entries[j].value,
+                                        &nv);
+                    ossl_rcu_call(h->lock, free_old_entry, v);
+                    h->wpd.need_sync = 1;
+                }
+            }
+        }
+    }
+}

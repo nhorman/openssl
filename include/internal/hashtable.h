@@ -294,6 +294,13 @@ int ossl_ht_insert(HT *htable, HT_KEY *key, HT_VALUE *data,
 int ossl_ht_delete(HT *htable, HT_KEY *key);
 
 /*
+ * Deletes multiple values from a hash table, based on the return
+ * value of the should_del callback.  Returning 1 from the callback
+ * deletes the associated HT_VALUE, 0 keeps it in place
+ */
+void ossl_ht_selective_delete(HT *h, int (*should_del)(HT_VALUE *, void *), void *arg);
+
+/*
  * Returns number of elements in the hash table
  */
 size_t ossl_ht_count(HT *htable);
