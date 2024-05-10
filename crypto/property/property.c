@@ -183,21 +183,6 @@ static void ossl_method_free(METHOD *method)
     (*method->free)(method->method);
 }
 
-static __owur int ossl_property_read_lock(OSSL_METHOD_STORE *p)
-{
-    return p != NULL ? CRYPTO_THREAD_read_lock(p->lock) : 0;
-}
-
-static __owur int ossl_property_write_lock(OSSL_METHOD_STORE *p)
-{
-    return p != NULL ? CRYPTO_THREAD_write_lock(p->lock) : 0;
-}
-
-static int ossl_property_unlock(OSSL_METHOD_STORE *p)
-{
-    return p != 0 ? CRYPTO_THREAD_unlock(p->lock) : 0;
-}
-
 static void impl_free(IMPLEMENTATION *impl)
 {
     if (impl != NULL) {
@@ -339,11 +324,6 @@ int ossl_method_store_add(OSSL_METHOD_STORE *store, const OSSL_PROVIDER *prov,
     }
     impl->provider = prov;
 
-    /* Insert into the hash table if required */
-    if (!ossl_property_write_lock(store)) {
-        OPENSSL_free(impl);
-        return 0;
-    }
     ossl_method_cache_flush(store, nid);
     if ((impl->properties = ossl_prop_defn_get(store->ctx, properties)) == NULL) {
         impl->properties = ossl_parse_property(store->ctx, properties);
@@ -394,12 +374,10 @@ int ossl_method_store_add(OSSL_METHOD_STORE *store, const OSSL_PROVIDER *prov,
     }
     ossl_ht_write_unlock(alg->iqcache);
     ossl_ht_read_unlock(store->algcache);
-    ossl_property_unlock(store);
     return ret;
 
 err:
     ossl_ht_read_unlock(store->algcache);
-    ossl_property_unlock(store);
     alg_cleanup(alg);
     impl_free(impl);
     return 0;
@@ -434,8 +412,6 @@ int ossl_method_store_remove(OSSL_METHOD_STORE *store, int nid,
     if (nid <= 0 || method == NULL || store == NULL)
         return 0;
 
-    if (!ossl_property_write_lock(store))
-        return 0;
     ossl_method_cache_flush(store, nid);
     HT_INIT_KEY(&algkey);
     HT_SET_KEY_FIELD(&algkey, nid, nid);
@@ -443,7 +419,6 @@ int ossl_method_store_remove(OSSL_METHOD_STORE *store, int nid,
     alg = ossl_ht_store_ALGORITHM_get(store->algcache, TO_HT_KEY(&algkey), &v);
     if (alg == NULL) {
         ossl_ht_read_unlock(store->algcache);
-        ossl_property_unlock(store);
         return 0;
     }
 
@@ -452,7 +427,6 @@ int ossl_method_store_remove(OSSL_METHOD_STORE *store, int nid,
     ossl_ht_write_unlock(alg->iqcache);
 
     ossl_ht_read_unlock(store->algcache);
-    ossl_property_unlock(store);
     return ddata.deleted_something;
 }
 
@@ -501,14 +475,11 @@ int ossl_method_store_remove_all_provided(OSSL_METHOD_STORE *store,
 {
     struct alg_cleanup_by_provider_data_st data;
 
-    if (!ossl_property_write_lock(store))
-        return 0;
     data.prov = prov;
     data.store = store;
     ossl_ht_read_lock(store->algcache);
     ossl_ht_foreach_until(store->algcache, alg_cleanup_by_provider, &data);
     ossl_ht_read_unlock(store->algcache);
-    ossl_property_unlock(store);
     return 1;
 }
 
@@ -625,15 +596,12 @@ int ossl_method_store_fetch(OSSL_METHOD_STORE *store,
 #endif
 
     /* This only needs to be a read lock, because the query won't create anything */
-    if (!ossl_property_read_lock(store))
-        return 0;
     HT_INIT_KEY(&algkey);
     HT_SET_KEY_FIELD(&algkey, nid, nid);
     ossl_ht_read_lock(store->algcache);
     alg = ossl_ht_store_ALGORITHM_get(store->algcache, TO_HT_KEY(&algkey), &v);
     if (alg == NULL) {
         ossl_ht_read_unlock(store->algcache);
-        ossl_property_unlock(store);
         return 0;
     }
 
@@ -671,7 +639,6 @@ fin:
         ret = 0;
     }
     ossl_ht_read_unlock(store->algcache);
-    ossl_property_unlock(store);
     ossl_property_free(p2);
     return ret;
 }
@@ -707,13 +674,10 @@ static void ossl_method_cache_flush(OSSL_METHOD_STORE *store, int nid)
 
 int ossl_method_store_cache_flush_all(OSSL_METHOD_STORE *store)
 {
-    if (!ossl_property_write_lock(store))
-        return 0;
     ossl_ht_read_lock(store->algcache);
     ossl_ht_foreach_until(store->algcache, impl_cache_flush_alg, NULL);
     ossl_ht_read_unlock(store->algcache);
     store->cache_nelem = 0;
-    ossl_property_unlock(store);
     return 1;
 }
 
@@ -815,8 +779,6 @@ int ossl_method_store_cache_get(OSSL_METHOD_STORE *store, OSSL_PROVIDER *prov,
     if (nid <= 0 || store == NULL || prop_query == NULL)
         return 0;
 
-    if (!ossl_property_read_lock(store))
-        return 0;
     HT_INIT_KEY(&algkey);
     HT_SET_KEY_FIELD(&algkey, nid, nid);
     ossl_ht_read_lock(store->algcache);
@@ -852,7 +814,6 @@ int ossl_method_store_cache_get(OSSL_METHOD_STORE *store, OSSL_PROVIDER *prov,
     }
 err:
     ossl_ht_read_unlock(store->algcache);
-    ossl_property_unlock(store);
     return res;
 }
 
@@ -875,8 +836,6 @@ int ossl_method_store_cache_set(OSSL_METHOD_STORE *store, OSSL_PROVIDER *prov,
     if (!ossl_assert(prov != NULL))
         return 0;
 
-    if (!ossl_property_write_lock(store))
-        return 0;
     if (store->cache_need_flush)
         ossl_method_cache_flush_some(store);
     HT_INIT_KEY(&algkey);
@@ -926,6 +885,5 @@ err:
     OPENSSL_free(p);
 end:
     ossl_ht_read_unlock(store->algcache);
-    ossl_property_unlock(store);
     return res;
 }
