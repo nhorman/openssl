@@ -351,12 +351,17 @@ void ossl_ht_foreach_until(HT *h, int (*cb)(HT_VALUE *obj, void *arg),
 {
     size_t i, j;
     struct ht_mutable_data_st *md;
+    size_t count = h->wpd.value_count;
 
     md = ossl_rcu_deref(&h->md);
     for (i = 0; i < md->neighborhood_mask + 1; i++) {
         PREFETCH_NEIGHBORHOOD(md->neighborhoods[i + 1]);
         for (j = 0; j < NEIGHBORHOOD_LEN; j++) {
+            /* If we have visited all valid nodes, we're done */
+            if (count == 0)
+                goto out;
             if (md->neighborhoods[i].entries[j].value != NULL) {
+                count--;
                 if (!cb((HT_VALUE *)md->neighborhoods[i].entries[j].value, arg))
                     goto out;
             }
@@ -375,6 +380,7 @@ HT_VALUE_LIST *ossl_ht_filter(HT *h, size_t max_len,
                                          + (sizeof(HT_VALUE *) * max_len));
     size_t i, j;
     struct ht_internal_value_st *v;
+    size_t count = h->wpd.value_count;
 
     if (list == NULL)
         return NULL;
@@ -389,11 +395,16 @@ HT_VALUE_LIST *ossl_ht_filter(HT *h, size_t max_len,
     for (i = 0; i < md->neighborhood_mask + 1; i++) {
         PREFETCH_NEIGHBORHOOD(md->neighborhoods[i+1]);
         for (j = 0; j < NEIGHBORHOOD_LEN; j++) {
+            if (count == 0)
+                goto out;
             v = md->neighborhoods[i].entries[j].value;
-            if (v != NULL && filter((HT_VALUE *)v, arg)) {
-                list->list[list->list_len++] = (HT_VALUE *)v;
-                if (list->list_len == max_len)
-                    goto out;
+            if (v != NULL) {
+                count--;
+                if (filter((HT_VALUE *)v, arg)) {
+                    list->list[list->list_len++] = (HT_VALUE *)v;
+                    if (list->list_len == max_len)
+                        goto out;
+                }
             }
         }
     }
@@ -695,13 +706,18 @@ void ossl_ht_selective_delete(HT *h, int (*should_del)(HT_VALUE *, void *), void
     struct ht_mutable_data_st *md;
     HT_VALUE *nv = NULL;
     struct ht_internal_value_st *v;
+    size_t count = h->wpd.value_count;
 
     md = ossl_rcu_deref(&h->md);
     for (i = 0; i < md->neighborhood_mask + 1; i++) {
         PREFETCH_NEIGHBORHOOD(md->neighborhoods[i + 1]);
         for (j = 0; j < NEIGHBORHOOD_LEN; j++) {
+            /* If we have visited all our valid nodes, we're done */
+            if (count == 0)
+                return;
             if (md->neighborhoods[i].entries[j].value != NULL) {
                 if (should_del((HT_VALUE *)md->neighborhoods[i].entries[j].value, arg)) {
+                    count--;
                     h->wpd.value_count--;
                     CRYPTO_atomic_store(&md->neighborhoods[i].entries[j].hash, 0, h->atomic_lock);
                     v = (struct ht_internal_value_st *)h->md->neighborhoods[i].entries[j].value;
