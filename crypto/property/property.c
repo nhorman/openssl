@@ -107,6 +107,7 @@ struct ossl_method_store_st {
 
 typedef struct {
     size_t nelem;
+    size_t delcount;
     uint32_t seed;
     unsigned char using_global_seed;
 } IMPL_CACHE_FLUSH;
@@ -715,17 +716,19 @@ static int is_query_random_del(HT_VALUE *v, void *arg)
         return 1;
     else
         state->nelem++;
+    /* if we've deleted half the entries, end the cycle */
+    if (state->delcount < state->nelem)
+        return -1;
     return 0;
 }
 
 static int impl_cache_flush_one_alg(HT_VALUE *v, void *arg)
 {
-    IMPL_CACHE_FLUSH *state = (IMPL_CACHE_FLUSH *)arg;
     ALGORITHM *alg = ossl_ht_store_ALGORITHM_from_value(v);
 
     if (alg != NULL) {
         ossl_ht_write_lock(alg->iqcache);
-        ossl_ht_selective_delete(alg->iqcache, is_query_random_del, state);
+        ossl_ht_selective_delete(alg->iqcache, is_query_random_del, arg);
         ossl_ht_write_unlock(alg->iqcache);
     }
     return 1;
@@ -745,6 +748,7 @@ static void ossl_method_cache_flush_some(OSSL_METHOD_STORE *store)
     }
     store->cache_need_flush = 0;
     ossl_ht_read_lock(store->algcache);
+    state.delcount = ossl_ht_count(store->algcache) / 2;
     ossl_ht_foreach_until(store->algcache, impl_cache_flush_one_alg, &state);
     ossl_ht_read_unlock(store->algcache);
     store->cache_nelem = state.nelem;
