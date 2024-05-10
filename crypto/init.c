@@ -368,21 +368,6 @@ void OPENSSL_cleanup(void)
         return;
     stopped = 1;
 
-    /*
-     * Thread stop may not get automatically called by the thread library for
-     * the very last thread in some situations, so call it directly.
-     */
-    OPENSSL_thread_stop();
-
-    currhandler = stop_handlers;
-    while (currhandler != NULL) {
-        currhandler->handler();
-        lasthandler = currhandler;
-        currhandler = currhandler->next;
-        OPENSSL_free(lasthandler);
-    }
-    stop_handlers = NULL;
-
     CRYPTO_THREAD_lock_free(optsdone_lock);
     optsdone_lock = NULL;
     CRYPTO_THREAD_lock_free(init_lock);
@@ -464,6 +449,20 @@ void OPENSSL_cleanup(void)
     OSSL_TRACE(INIT, "OPENSSL_cleanup: ossl_trace_cleanup()\n");
     ossl_trace_cleanup();
 
+    /*
+     * Thread stop may not get automatically called by the thread library for
+     * the very last thread in some situations, so call it directly.
+     */
+    OPENSSL_thread_stop();
+    currhandler = stop_handlers;
+    while (currhandler != NULL) {
+        currhandler->handler();
+        lasthandler = currhandler;
+        currhandler = currhandler->next;
+        OPENSSL_free(lasthandler);
+    }
+
+    stop_handlers = NULL;
     base_inited = 0;
 }
 
