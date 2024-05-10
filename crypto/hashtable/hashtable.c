@@ -707,6 +707,7 @@ void ossl_ht_selective_delete(HT *h, int (*should_del)(HT_VALUE *, void *), void
     HT_VALUE *nv = NULL;
     struct ht_internal_value_st *v;
     size_t count = h->wpd.value_count;
+    int rc;
 
     md = ossl_rcu_deref(&h->md);
     for (i = 0; i < md->neighborhood_mask + 1; i++) {
@@ -716,7 +717,8 @@ void ossl_ht_selective_delete(HT *h, int (*should_del)(HT_VALUE *, void *), void
             if (count == 0)
                 return;
             if (md->neighborhoods[i].entries[j].value != NULL) {
-                if (should_del((HT_VALUE *)md->neighborhoods[i].entries[j].value, arg)) {
+                rc = should_del((HT_VALUE *)md->neighborhoods[i].entries[j].value, arg);
+                if (rc > 0) {
                     count--;
                     h->wpd.value_count--;
                     CRYPTO_atomic_store(&md->neighborhoods[i].entries[j].hash, 0, h->atomic_lock);
@@ -725,6 +727,8 @@ void ossl_ht_selective_delete(HT *h, int (*should_del)(HT_VALUE *, void *), void
                                         &nv);
                     ossl_rcu_call(h->lock, free_old_entry, v);
                     h->wpd.need_sync = 1;
+                } else if (rc < 0) {
+                    return;
                 }
             }
         }
