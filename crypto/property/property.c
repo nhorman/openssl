@@ -58,13 +58,11 @@ typedef struct {
 
 typedef struct {
     int nid;
-    HT *iqcache;
+    HT *icache;
+    HT *qcache;
 } ALGORITHM;
 
-#define KEY_TYPE_QUERY 0
-#define KEY_TYPE_IMPLEMENTATION 1
 HT_START_KEY_DEFN(STOREKEY)
-HT_DEF_KEY_FIELD(type, int)
 HT_DEF_KEY_FIELD_CHAR_ARRAY(propq, 128)
 HT_DEF_KEY_FIELD(provptr, const void *)
 HT_END_KEY_DEFN(STOREKEY)
@@ -82,12 +80,6 @@ struct ossl_method_store_st {
     HT *algcache;
     unsigned int impl_order;
 
-    /*
-     * Lock to protect the |algs| array from concurrent writing, when
-     * individual implementations or queries are inserted.  This is used
-     * by the appropriate functions here.
-     */
-    CRYPTO_RWLOCK *lock;
     /*
      * Lock to reserve the whole store.  This is used when fetching a set
      * of algorithms, via these functions, found in crypto/core_fetch.c:
@@ -108,11 +100,10 @@ struct ossl_method_store_st {
 typedef struct {
     size_t nelem;
     size_t delcount;
+    size_t cachecount;
     uint32_t seed;
     unsigned char using_global_seed;
 } IMPL_CACHE_FLUSH;
-
-DEFINE_SPARSE_ARRAY_OF(ALGORITHM);
 
 typedef struct ossl_global_properties_st {
     OSSL_PROPERTY_LIST *list;
@@ -121,8 +112,6 @@ typedef struct ossl_global_properties_st {
 #endif
 } OSSL_GLOBAL_PROPERTIES;
 
-static void ossl_method_cache_flush_alg(OSSL_METHOD_STORE *store,
-                                        ALGORITHM *alg);
 static void ossl_method_cache_flush(OSSL_METHOD_STORE *store, int nid);
 
 /* Global properties are stored per library context */
@@ -200,33 +189,16 @@ static void impl_cache_free(QUERY *elem)
     }
 }
 
-static int is_query(HT_VALUE *v, void *arg)
-{
-    QUERY *q = ossl_ht_store_QUERY_from_value(v);
-
-    if (q != NULL)
-        return 1;
-    return 0;
-}
-
 static int impl_cache_flush_alg(HT_VALUE *v, void *arg)
 {
     ALGORITHM *alg = ossl_ht_store_ALGORITHM_from_value(v);
 
     if (alg != NULL) {
-        ossl_ht_write_lock(alg->iqcache);
-        ossl_ht_selective_delete(alg->iqcache, is_query, NULL);
-        ossl_ht_write_unlock(alg->iqcache);
+        ossl_ht_write_lock(alg->qcache);
+        ossl_ht_flush(alg->qcache);
+        ossl_ht_write_unlock(alg->qcache);
     }
     return 1;
-}
-
-static void alg_cleanup(ALGORITHM *a)
-{
-    if (a != NULL) {
-        ossl_ht_free(a->iqcache);
-        OPENSSL_free(a);
-    }
 }
 
 static void cache_free(HT_VALUE *v)
@@ -244,8 +216,10 @@ static void alg_free(HT_VALUE *v)
 {
     ALGORITHM *alg = ossl_ht_store_ALGORITHM_from_value(v);
 
-    if (alg != NULL)
-        alg_cleanup(alg);
+    if (alg != NULL) {
+        ossl_ht_free(alg->icache);
+        ossl_ht_free(alg->qcache);
+    }
 }
 
 /*
@@ -260,7 +234,6 @@ OSSL_METHOD_STORE *ossl_method_store_new(OSSL_LIB_CTX *ctx)
     if (res != NULL) {
         res->ctx = ctx;
         if ((res->algcache = ossl_ht_new(&alg_conf)) == NULL
-            || (res->lock = CRYPTO_THREAD_lock_new()) == NULL
             || (res->biglock = CRYPTO_THREAD_lock_new()) == NULL) {
             ossl_method_store_free(res);
             return NULL;
@@ -274,7 +247,6 @@ void ossl_method_store_free(OSSL_METHOD_STORE *store)
     if (store != NULL) {
         if (store->algcache != NULL)
             ossl_ht_free(store->algcache);
-        CRYPTO_THREAD_lock_free(store->lock);
         CRYPTO_THREAD_lock_free(store->biglock);
         OPENSSL_free(store);
     }
@@ -300,6 +272,7 @@ int ossl_method_store_add(OSSL_METHOD_STORE *store, const OSSL_PROVIDER *prov,
     STOREKEY key;
     ALGKEY algkey;
     HT_VALUE *v;
+    HT *cacheptr = NULL;
     HT_CONFIG ht_conf = { store->ctx, cache_free, NULL, 0 };
     int ret = 0;
 
@@ -337,34 +310,40 @@ int ossl_method_store_add(OSSL_METHOD_STORE *store, const OSSL_PROVIDER *prov,
         }
     }
 
+    HT_INIT_KEY(&key);
+    HT_SET_KEY_STRING(&key, propq, properties);
+    HT_SET_KEY_FIELD(&key, provptr, prov);
+
     HT_INIT_KEY(&algkey);
     HT_SET_KEY_FIELD(&algkey, nid, nid);
     ossl_ht_read_lock(store->algcache);
     alg = ossl_ht_store_ALGORITHM_get(store->algcache, TO_HT_KEY(&algkey), &v);
+    if (alg != NULL) {
+        cacheptr = alg->icache;
+        ossl_ht_write_lock(cacheptr);
+    }
+    ossl_ht_read_unlock(store->algcache);
+
     if (alg == NULL) {
-        ossl_ht_read_unlock(store->algcache);
         if ((alg = OPENSSL_zalloc(sizeof(*alg))) == NULL
-                || (alg->iqcache = ossl_ht_new(&ht_conf)) == NULL)
+                || (alg->icache = ossl_ht_new(&ht_conf)) == NULL
+                || (alg->qcache = ossl_ht_new(&ht_conf)) == NULL) {
+            ossl_ht_free(alg->icache);
+            ossl_ht_free(alg->qcache);
+            OPENSSL_free(alg);
             goto err;
+        }
         alg->nid = nid;
         ossl_ht_write_lock(store->algcache);
         ossl_ht_store_ALGORITHM_insert(store->algcache,
                                        TO_HT_KEY(&algkey), alg, NULL);
+        cacheptr = alg->icache;
+        ossl_ht_write_lock(cacheptr);
         ossl_ht_write_unlock(store->algcache);
-        ossl_ht_read_lock(store->algcache);
-        alg = ossl_ht_store_ALGORITHM_get(store->algcache,
-              TO_HT_KEY(&algkey), &v);
-        if (alg == NULL)
-            goto err;
     }
 
-    HT_INIT_KEY(&key);
-    HT_SET_KEY_FIELD(&key, type, KEY_TYPE_IMPLEMENTATION);
-    HT_SET_KEY_STRING(&key, propq, properties);
-    HT_SET_KEY_FIELD(&key, provptr, prov);
-    ossl_ht_write_lock(alg->iqcache);
     impl->insert_order = store->impl_order++;
-    if (!ossl_ht_store_IMPLEMENTATION_insert(alg->iqcache,
+    if (!ossl_ht_store_IMPLEMENTATION_insert(cacheptr,
                                              TO_HT_KEY(&key), impl, NULL)) {
 
         /* This implementation already exists */
@@ -373,13 +352,10 @@ int ossl_method_store_add(OSSL_METHOD_STORE *store, const OSSL_PROVIDER *prov,
     } else {
         ret = 1;
     }
-    ossl_ht_write_unlock(alg->iqcache);
-    ossl_ht_read_unlock(store->algcache);
+    ossl_ht_write_unlock(cacheptr);
     return ret;
 
 err:
-    ossl_ht_read_unlock(store->algcache);
-    alg_cleanup(alg);
     impl_free(impl);
     return 0;
 }
@@ -408,6 +384,8 @@ int ossl_method_store_remove(OSSL_METHOD_STORE *store, int nid,
     ALGORITHM *alg = NULL;
     ALGKEY algkey;
     HT_VALUE *v;
+    HT *cacheptr;
+
     struct del_impl_by_method ddata = { method, nid, 0 };
 
     if (nid <= 0 || method == NULL || store == NULL)
@@ -422,12 +400,13 @@ int ossl_method_store_remove(OSSL_METHOD_STORE *store, int nid,
         ossl_ht_read_unlock(store->algcache);
         return 0;
     }
-
-    ossl_ht_write_lock(alg->iqcache);
-    ossl_ht_selective_delete(alg->iqcache, should_del_impl_by_method, &ddata);
-    ossl_ht_write_unlock(alg->iqcache);
-
+    cacheptr = alg->icache;
+    ossl_ht_write_lock(cacheptr);
     ossl_ht_read_unlock(store->algcache);
+
+    ossl_ht_selective_delete(cacheptr, should_del_impl_by_method, &ddata);
+    ossl_ht_write_unlock(cacheptr);
+
     return ddata.deleted_something;
 }
 
@@ -441,18 +420,15 @@ struct del_impl_by_prov {
     int del_some;
 };
 
-static int should_del_impl_by_provider_and_queries(HT_VALUE *v, void *arg)
+static int should_del_impl_by_provider(HT_VALUE *v, void *arg)
 {
     IMPLEMENTATION *i = ossl_ht_store_IMPLEMENTATION_from_value(v);
-    QUERY *q = ossl_ht_store_QUERY_from_value(v);
     struct del_impl_by_prov *data = (struct del_impl_by_prov *)arg;
 
-    if (i != NULL && i->provider == data->prov) {
+    if (i->provider == data->prov) {
         data->del_some = 1;
         return 1;
     }
-    if (q != NULL)
-        return 1;
     return 0;
 }
 
@@ -465,9 +441,13 @@ alg_cleanup_by_provider(HT_VALUE *v, void *arg)
 
     if (a == NULL)
         return 1;
-    ossl_ht_write_lock(a->iqcache);
-    ossl_ht_selective_delete(a->iqcache, should_del_impl_by_provider_and_queries, &dp);
-    ossl_ht_write_unlock(a->iqcache);
+    ossl_ht_write_lock(a->icache);
+    ossl_ht_selective_delete(a->icache, should_del_impl_by_provider, &dp);
+    ossl_ht_write_unlock(a->icache);
+
+    ossl_ht_write_lock(a->qcache);
+    ossl_ht_flush(a->qcache);
+    ossl_ht_write_unlock(a->qcache);
     return 1;
 }
 
@@ -494,9 +474,6 @@ static int do_each_impl(HT_VALUE *v, void *arg)
     IMPLEMENTATION *i = ossl_ht_store_IMPLEMENTATION_from_value(v);
     struct alg_do_each_data_st *data = arg;
 
-    if (i == NULL)
-        return 1;
-
     data->fn(i->nid, i->method.method, data->fnarg);
     return 1;
 }
@@ -506,9 +483,9 @@ static int alg_do_each(HT_VALUE *v, void *arg)
     ALGORITHM *alg = ossl_ht_store_ALGORITHM_from_value(v);
     if (v == NULL)
         return 1;
-    ossl_ht_read_lock(alg->iqcache);
-    ossl_ht_foreach_until(alg->iqcache, do_each_impl, arg);
-    ossl_ht_read_unlock(alg->iqcache);
+    ossl_ht_read_lock(alg->icache);
+    ossl_ht_foreach_until(alg->icache, do_each_impl, arg);
+    ossl_ht_read_unlock(alg->icache);
     return 1;
 }
 
@@ -543,12 +520,6 @@ static int get_best_impl(HT_VALUE *v, void *arg)
     IMPLEMENTATION *i = ossl_ht_store_IMPLEMENTATION_from_value(v);
     int score;
 
-    if (i == NULL)
-        return 1;
-
-    if (i->nid != data->nid)
-        return 1;
-
     if (data->pq == NULL) {
         if (data->prov == NULL || data->prov == i->provider) {
                 data->best = i;
@@ -581,6 +552,7 @@ int ossl_method_store_fetch(OSSL_METHOD_STORE *store,
     ALGORITHM *alg;
     ALGKEY algkey;
     HT_VALUE *v;
+    HT *cacheptr;
     IMPLEMENTATION *best_impl = NULL;
     OSSL_PROPERTY_LIST *pq = NULL, *p2 = NULL;
     const OSSL_PROVIDER *prov = prov_rw != NULL ? *prov_rw : NULL;
@@ -595,16 +567,6 @@ int ossl_method_store_fetch(OSSL_METHOD_STORE *store,
             && !OPENSSL_init_crypto(OPENSSL_INIT_LOAD_CONFIG, NULL))
         return 0;
 #endif
-
-    /* This only needs to be a read lock, because the query won't create anything */
-    HT_INIT_KEY(&algkey);
-    HT_SET_KEY_FIELD(&algkey, nid, nid);
-    ossl_ht_read_lock(store->algcache);
-    alg = ossl_ht_store_ALGORITHM_get(store->algcache, TO_HT_KEY(&algkey), &v);
-    if (alg == NULL) {
-        ossl_ht_read_unlock(store->algcache);
-        return 0;
-    }
 
     if (prop_query != NULL)
         p2 = pq = ossl_parse_query(store->ctx, prop_query, 0);
@@ -624,9 +586,23 @@ int ossl_method_store_fetch(OSSL_METHOD_STORE *store,
     bd.optional = ossl_property_has_optional(pq);
     bd.pq = pq;
     bd.prov = prov;
-    ossl_ht_read_lock(alg->iqcache);
-    ossl_ht_foreach_until(alg->iqcache, get_best_impl, &bd);
-    ossl_ht_read_unlock(alg->iqcache);
+
+    /* This only needs to be a read lock, because the query won't create anything */
+    HT_INIT_KEY(&algkey);
+    HT_SET_KEY_FIELD(&algkey, nid, nid);
+    ossl_ht_read_lock(store->algcache);
+
+    alg = ossl_ht_store_ALGORITHM_get(store->algcache, TO_HT_KEY(&algkey), &v);
+    if (alg == NULL) {
+        ossl_ht_read_unlock(store->algcache);
+        goto fin;
+    }
+    cacheptr = alg->icache;
+    ossl_ht_read_lock(cacheptr);
+    ossl_ht_read_unlock(store->algcache);
+
+    ossl_ht_foreach_until(cacheptr, get_best_impl, &bd);
+    ossl_ht_read_unlock(cacheptr);
     best_impl = bd.best;
     if (best_impl != NULL)
         ret = 1;
@@ -639,22 +615,8 @@ fin:
     } else {
         ret = 0;
     }
-    ossl_ht_read_unlock(store->algcache);
     ossl_property_free(p2);
     return ret;
-}
-
-static void ossl_method_cache_flush_alg(OSSL_METHOD_STORE *store,
-                                        ALGORITHM *alg)
-{
-    size_t delta;
-
-    ossl_ht_write_lock(alg->iqcache);
-    delta = ossl_ht_count(alg->iqcache);
-    ossl_ht_selective_delete(alg->iqcache, is_query, NULL);
-    delta -= ossl_ht_count(alg->iqcache);
-    ossl_ht_write_unlock(alg->iqcache);
-    store->cache_nelem -= delta;
 }
 
 static void ossl_method_cache_flush(OSSL_METHOD_STORE *store, int nid)
@@ -662,15 +624,23 @@ static void ossl_method_cache_flush(OSSL_METHOD_STORE *store, int nid)
     HT_VALUE *v;
     ALGKEY algkey;
     ALGORITHM *alg;
+    HT *cacheptr = NULL;
 
     HT_INIT_KEY(&algkey);
     HT_SET_KEY_FIELD(&algkey, nid, nid);
 
     ossl_ht_read_lock(store->algcache);
     alg = ossl_ht_store_ALGORITHM_get(store->algcache, TO_HT_KEY(&algkey), &v);
-    if (alg != NULL)
-        ossl_method_cache_flush_alg(store, alg);
+    if (alg != NULL) {
+        cacheptr = alg->qcache;
+        ossl_ht_write_lock(cacheptr);
+    }
     ossl_ht_read_unlock(store->algcache);
+    if (cacheptr != NULL) {
+        store->cache_nelem -= ossl_ht_count(cacheptr);
+        ossl_ht_flush(cacheptr);
+        ossl_ht_write_unlock(cacheptr);
+    }
 }
 
 int ossl_method_store_cache_flush_all(OSSL_METHOD_STORE *store)
@@ -702,10 +672,6 @@ static int is_query_random_del(HT_VALUE *v, void *arg)
 {
     uint32_t n;
     IMPL_CACHE_FLUSH *state = (IMPL_CACHE_FLUSH *)arg;
-    QUERY *q = ossl_ht_store_QUERY_from_value(v);
-
-    if (q == NULL)
-        return 0;
 
     n = state->seed;
     n ^= n << 13;
@@ -714,10 +680,12 @@ static int is_query_random_del(HT_VALUE *v, void *arg)
 
     if ((n & 1) != 0)
         return 1;
-    else
+    else {
         state->nelem++;
+        state->cachecount++;
+    }
     /* if we've deleted half the entries, end the cycle */
-    if (state->delcount < state->nelem)
+    if (state->delcount < state->cachecount)
         return -1;
     return 0;
 }
@@ -725,11 +693,14 @@ static int is_query_random_del(HT_VALUE *v, void *arg)
 static int impl_cache_flush_one_alg(HT_VALUE *v, void *arg)
 {
     ALGORITHM *alg = ossl_ht_store_ALGORITHM_from_value(v);
+    IMPL_CACHE_FLUSH *state = (IMPL_CACHE_FLUSH *)arg;
 
     if (alg != NULL) {
-        ossl_ht_write_lock(alg->iqcache);
-        ossl_ht_selective_delete(alg->iqcache, is_query_random_del, arg);
-        ossl_ht_write_unlock(alg->iqcache);
+        ossl_ht_write_lock(alg->qcache);
+        state->cachecount = 0;
+        state->delcount = ossl_ht_count(alg->qcache) / 2;
+        ossl_ht_selective_delete(alg->qcache, is_query_random_del, arg);
+        ossl_ht_write_unlock(alg->qcache);
     }
     return 1;
 }
@@ -748,7 +719,6 @@ static void ossl_method_cache_flush_some(OSSL_METHOD_STORE *store)
     }
     store->cache_need_flush = 0;
     ossl_ht_read_lock(store->algcache);
-    state.delcount = ossl_ht_count(store->algcache) / 2;
     ossl_ht_foreach_until(store->algcache, impl_cache_flush_one_alg, &state);
     ossl_ht_read_unlock(store->algcache);
     store->cache_nelem = state.nelem;
@@ -776,6 +746,7 @@ int ossl_method_store_cache_get(OSSL_METHOD_STORE *store, OSSL_PROVIDER *prov,
     STOREKEY key;
     ALGKEY algkey;
     HT_VALUE *v;
+    HT *cacheptr;
     HT_VALUE_LIST *list;
     QUERY *r = NULL;
     int res = 0;
@@ -787,12 +758,30 @@ int ossl_method_store_cache_get(OSSL_METHOD_STORE *store, OSSL_PROVIDER *prov,
     HT_SET_KEY_FIELD(&algkey, nid, nid);
     ossl_ht_read_lock(store->algcache);
     alg = ossl_ht_store_ALGORITHM_get(store->algcache, TO_HT_KEY(&algkey), &v);
-    if (alg == NULL)
+    if (alg == NULL) {
+        ossl_ht_read_unlock(store->algcache);
         goto err;
+    }
+    cacheptr = alg->qcache;
+    ossl_ht_read_lock(cacheptr);
+    ossl_ht_read_unlock(store->algcache);
 
-    if (prov == NULL) {
-        ossl_ht_read_lock(alg->iqcache);
-        list = ossl_ht_filter(alg->iqcache, 1, find_null_prov_match,
+    HT_INIT_KEY(&key);
+    HT_SET_KEY_STRING(&key, propq, prop_query);
+    HT_SET_KEY_FIELD(&key, provptr, prov);
+    r = ossl_ht_store_QUERY_get(cacheptr, TO_HT_KEY(&key), &v);
+    if (r != NULL && ossl_method_up_ref(&r->method)) {
+        if (prov == NULL)
+        *method = r->method.method;
+        res = 1;
+    }
+    if (r == NULL && prov == NULL) {
+        /*
+         * We need a *best* match for this alg, so lets find it
+         * And insert it with a NULL provider pointer to match in the future
+         */
+
+        list = ossl_ht_filter(cacheptr, 1, find_null_prov_match,
                               (void *)prop_query);
         if (list->list_len == 1) {
             r = ossl_ht_store_QUERY_from_value(list->list[0]);
@@ -802,22 +791,17 @@ int ossl_method_store_cache_get(OSSL_METHOD_STORE *store, OSSL_PROVIDER *prov,
             }
         }
         ossl_ht_value_list_free(list);
-        ossl_ht_read_unlock(alg->iqcache);
-    } else {
-        HT_INIT_KEY(&key);
-        HT_SET_KEY_FIELD(&key, type, KEY_TYPE_QUERY);
-        HT_SET_KEY_STRING(&key, propq, prop_query);
-        HT_SET_KEY_FIELD(&key, provptr, prov);
-        ossl_ht_read_lock(alg->iqcache);
-        r = ossl_ht_store_QUERY_get(alg->iqcache, TO_HT_KEY(&key), &v);
-        if (r != NULL && ossl_method_up_ref(&r->method)) {
-            *method = r->method.method;
-            res = 1;
+        /* This is safe, as we've taken a refcount on the method */
+        ossl_ht_read_unlock(cacheptr);
+        if (r != NULL) {
+            ossl_method_store_cache_set(store, NULL, nid, prop_query,
+                                        r->method.method, r->method.up_ref,
+                                        r->method.free);
         }
-        ossl_ht_read_unlock(alg->iqcache);
+    } else {
+        ossl_ht_read_unlock(cacheptr);
     }
 err:
-    ossl_ht_read_unlock(store->algcache);
     return res;
 }
 
@@ -837,11 +821,14 @@ int ossl_method_store_cache_set(OSSL_METHOD_STORE *store, OSSL_PROVIDER *prov,
     if (nid <= 0 || store == NULL || prop_query == NULL)
         return 0;
 
+#if 0
     if (!ossl_assert(prov != NULL))
         return 0;
+#endif
 
     if (store->cache_need_flush)
         ossl_method_cache_flush_some(store);
+
     HT_INIT_KEY(&algkey);
     HT_SET_KEY_FIELD(&algkey, nid, nid);
     ossl_ht_read_lock(store->algcache);
@@ -850,15 +837,14 @@ int ossl_method_store_cache_set(OSSL_METHOD_STORE *store, OSSL_PROVIDER *prov,
         goto err;
 
     HT_INIT_KEY(&key);
-    HT_SET_KEY_FIELD(&key, type, KEY_TYPE_QUERY);
     HT_SET_KEY_STRING(&key, propq, prop_query);
     HT_SET_KEY_FIELD(&key, provptr, prov);
 
     if (method == NULL) {
-        ossl_ht_write_lock(alg->iqcache);
-        ossl_ht_delete(alg->iqcache, TO_HT_KEY(&key));
+        ossl_ht_write_lock(alg->qcache);
+        ossl_ht_delete(alg->qcache, TO_HT_KEY(&key));
         store->cache_nelem--;
-        ossl_ht_write_unlock(alg->iqcache);
+        ossl_ht_write_unlock(alg->qcache);
         goto end;
     }
     p = OPENSSL_malloc(sizeof(*p) + (len = strlen(prop_query)));
@@ -871,14 +857,14 @@ int ossl_method_store_cache_set(OSSL_METHOD_STORE *store, OSSL_PROVIDER *prov,
         if (!ossl_method_up_ref(&p->method))
             goto err;
         memcpy((char *)p->query, prop_query, len + 1);
-        ossl_ht_write_lock(alg->iqcache);
-        if (!ossl_ht_store_QUERY_insert(alg->iqcache, TO_HT_KEY(&key),
+        ossl_ht_write_lock(alg->qcache);
+        if (!ossl_ht_store_QUERY_insert(alg->qcache, TO_HT_KEY(&key),
                                         p, NULL)) {
-            ossl_ht_write_unlock(alg->iqcache);
+            ossl_ht_write_unlock(alg->qcache);
             impl_cache_free(p);
             goto end;
         }
-        ossl_ht_write_unlock(alg->iqcache);
+        ossl_ht_write_unlock(alg->qcache);
 
         if (++store->cache_nelem >= IMPL_CACHE_FLUSH_THRESHOLD)
             store->cache_need_flush = 1;
