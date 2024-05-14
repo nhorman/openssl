@@ -36,12 +36,25 @@ typedef struct ht_value_list_st {
 } HT_VALUE_LIST;
 
 /*
+ * Types of Hash table operations
+ * For us in ht_select_fn callback
+ */
+typedef enum {
+    OP_INSERT,
+    OP_REPLACE,
+    OP_DELETE,
+    OP_LOOKUP
+} HT_OP;
+
+/*
  * Hashtable configuration
  */
 typedef struct ht_config_st {
     OSSL_LIB_CTX *ctx;
     void (*ht_free_fn)(HT_VALUE *obj);
     uint64_t (*ht_hash_fn)(uint8_t *key, size_t keylen);
+    uint32_t (*ht_select_fn)(HT_VALUE *haystack, void *sarg, HT_OP op);
+    int32_t max_chain_length;
     uint32_t init_neighborhoods;
 } HT_CONFIG;
 
@@ -167,14 +180,15 @@ memset((key), 0, sizeof(*(key))); \
 static uintptr_t name##_##vtype##_id = 0; \
 pfx ossl_unused int ossl_ht_##name##_##vtype##_insert(HT *h, HT_KEY *key,      \
                                                       vtype *data,             \
-                                                      vtype **olddata) {       \
+                                                      vtype **olddata,         \
+                                                      void *sarg) {            \
     HT_VALUE inval;                                                            \
     HT_VALUE *oval = NULL;                                                     \
     int rc;                                                                    \
                                                                                \
     inval.value = data;                                                        \
     inval.type_id = &name##_##vtype##_id;                                      \
-    rc = ossl_ht_insert(h, key, &inval, olddata == NULL ? NULL : &oval);       \
+    rc = ossl_ht_insert(h, key, &inval, olddata == NULL ? NULL : &oval, sarg); \
     if (oval != NULL)                                                          \
         *olddata = (vtype *)oval->value;                                       \
     return rc;                                                                 \
@@ -192,10 +206,11 @@ pfx ossl_unused vtype *ossl_ht_##name##_##vtype##_from_value(HT_VALUE *v)      \
                                                                                \
 pfx ossl_unused vtype *ossl_unused ossl_ht_##name##_##vtype##_get(HT *h,       \
                                                                   HT_KEY *key, \
-                                                                  HT_VALUE **v)\
+                                                                  HT_VALUE **v,\
+                                                                  void *sarg)  \
 {                                                                              \
     HT_VALUE *vv;                                                              \
-    vv = ossl_ht_get(h, key);                                                  \
+    vv = ossl_ht_get(h, key, sarg);                                            \
     if (vv == NULL)                                                            \
         return NULL;                                                           \
     *v = ossl_rcu_deref(&vv);                                                  \
@@ -217,11 +232,11 @@ pfx ossl_unused int ossl_ht_##name##_##vtype##_type(HT_VALUE *h)               \
 
 #define DECLARE_HT_VALUE_TYPE_FNS(vtype, name)                                 \
 int ossl_ht_##name##_##vtype##_insert(HT *h, HT_KEY *key, vtype *data,         \
-                                      vtype **olddata);                        \
+                                      vtype **olddata, void *sarg);            \
 vtype *ossl_ht_##name##_##vtype##_from_value(HT_VALUE *v);                     \
 vtype *ossl_unused ossl_ht_##name##_##vtype##_get(HT *h,                       \
                                                   HT_KEY *key,                 \
-                                                  HT_VALUE **v);               \
+                                                  HT_VALUE **v, void *sarg);   \
 HT_VALUE *ossl_ht_##name##_##vtype##_to_value(vtype *data, HT_VALUE *v);       \
 int ossl_ht_##name##_##vtype##_type(HT_VALUE *h);                              \
 
@@ -285,13 +300,13 @@ int  ossl_ht_flush(HT *htable);
  * Returns 1 if the insert was successful, 0 on error
  */
 int ossl_ht_insert(HT *htable, HT_KEY *key, HT_VALUE *data,
-                   HT_VALUE **olddata);
+                   HT_VALUE **olddata, void *selectarg);
 
 /*
  * Deletes a value from a hash table, based on key
  * Returns 1 if the key was removed, 0 if they key was not found
  */
-int ossl_ht_delete(HT *htable, HT_KEY *key);
+int ossl_ht_delete(HT *htable, HT_KEY *key, void *selectarg);
 
 /*
  * Returns number of elements in the hash table
@@ -327,6 +342,6 @@ void ossl_ht_value_list_free(HT_VALUE_LIST *list);
  * Fetches a value from the hash table, based
  * on key.  Returns NULL if the element was not found.
  */
-HT_VALUE *ossl_ht_get(HT *htable, HT_KEY *key);
+HT_VALUE *ossl_ht_get(HT *htable, HT_KEY *key, void *selectarg);
 
 #endif

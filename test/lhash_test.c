@@ -249,7 +249,7 @@ static int test_int_hashtable(void)
     for (i = 0; i < n_int_tests; i++) {
         HT_SET_KEY_FIELD(&key, mykey, int_tests[i]);
         if (!TEST_int_eq(ossl_ht_test_int_insert(ht, TO_HT_KEY(&key),
-                         &int_tests[i], NULL), 1)) {
+                         &int_tests[i], NULL, NULL), 1)) {
             TEST_info("int insert %zu", i);
             goto end;
         }
@@ -283,7 +283,7 @@ static int test_int_hashtable(void)
     /* delete */
     for (i = 0; i < n_dels; i++) {
         HT_SET_KEY_FIELD(&key, mykey, dels[i].data);
-        todel = ossl_ht_delete(ht, TO_HT_KEY(&key));
+        todel = ossl_ht_delete(ht, TO_HT_KEY(&key), NULL);
         if (dels[i].should_del) {
             if (!TEST_int_eq(todel, 1)) {
                 TEST_info("hashtable couldn't find entry %d to delete\n",
@@ -407,6 +407,7 @@ static int test_hashtable_stress(void)
         NULL,              /* use default context */
         hashtable_intfree, /* our free function */
         hashtable_hash,    /* our hash function */
+        NULL,              /* our selector function */
         625000,            /* preset hash size */
     };
     HT *h;
@@ -436,7 +437,7 @@ static int test_hashtable_stress(void)
         *p = 3 * i + 1;
         HT_SET_KEY_FIELD(&key, mykey, *p);
         if (!TEST_int_eq(ossl_ht_test_int_insert(h, TO_HT_KEY(&key),
-                         p, NULL), 1)) {
+                         p, NULL, NULL), 1)) {
             TEST_info("hashtable unable to insert element %d\n", *p);
             goto end;
         }
@@ -450,7 +451,7 @@ static int test_hashtable_stress(void)
     for (i = 0; i < n; i++) {
         const int j = (7 * i + 4) % n * 3 + 1;
         HT_SET_KEY_FIELD(&key, mykey, j);
-        if (!TEST_int_eq((ossl_ht_delete(h, TO_HT_KEY(&key))), 1)) {
+        if (!TEST_int_eq((ossl_ht_delete(h, TO_HT_KEY(&key), NULL)), 1)) {
             TEST_info("hashtable didn't delete key %d\n", j);
             goto end;
         }
@@ -560,7 +561,7 @@ static void do_mt_hash_work(void)
         switch(behavior) {
         case DO_LOOKUP:
             ossl_ht_read_lock(m_ht);
-            m = ossl_ht_mt_TEST_MT_ENTRY_get(m_ht, TO_HT_KEY(&key), &v);
+            m = ossl_ht_mt_TEST_MT_ENTRY_get(m_ht, TO_HT_KEY(&key), &v, NULL);
             if (m != NULL && m != expected_m) {
                 worker_exits[num] = "Read unexpected value from hashtable";
                 TEST_info("Iteration %d Read unexpected value %p when %p expected",
@@ -583,7 +584,8 @@ static void do_mt_hash_work(void)
 
             if (expected_rc != ossl_ht_mt_TEST_MT_ENTRY_insert(m_ht,
                                                                TO_HT_KEY(&key),
-                                                               expected_m, r)) {
+                                                               expected_m, r,
+                                                               NULL)) {
                 TEST_info("Iteration %d Expected rc %d on %s of element %d which is %s\n",
                           giter, expected_rc, behavior == DO_REPLACE ? "replace" : "insert",
                           index, expected_m->in_table ? "in table" : "not in table");
@@ -598,7 +600,7 @@ static void do_mt_hash_work(void)
         case DO_DELETE:
             ossl_ht_write_lock(m_ht);
             expected_rc = expected_m->in_table;
-            if (expected_rc != ossl_ht_delete(m_ht, TO_HT_KEY(&key))) {
+            if (expected_rc != ossl_ht_delete(m_ht, TO_HT_KEY(&key), NULL)) {
                 TEST_info("Iteration %d Expected rc %d on delete of element %d which is %s\n",
                           giter, expected_rc, index,
                           expected_m->in_table ? "in table" : "not in table");

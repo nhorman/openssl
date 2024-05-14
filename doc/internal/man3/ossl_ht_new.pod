@@ -66,6 +66,8 @@ contains configurations options for hashtable.  Current config options consist
 of:
     I<ht_free_fn> The function to call to free a value, may be NULL.
     I<ht_hash_fn> The function to generate a hash value for a key, may be NULL.
+    I<ht_select_fn> The function to select from a set of colliding values, may be NULL.
+    I<max_chain_length> The max length of colliding hash chains - ignored if ht_select_fn is NULL
     I<init_neighborhood_len> The initial number of neighborhoods in the hash table.
 
 Note that init_bucket_len may be set to zero, which will use the default initial
@@ -83,6 +85,9 @@ Note that lockless_write operations are done at your own risk.  Lockless
     operation in a multithreaded environment will cause data corruption.  It
     is the callers responsibility in this mode of operation to provide thread
     synchronization.
+
+Note The calling convention of I<ht_select_fn> is to return 0 if the passed value
+should not be selected for the operation requested, and to return 1 if it should. 
 
 =item *
 

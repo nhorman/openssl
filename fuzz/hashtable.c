@@ -99,7 +99,7 @@ static void fuzz_free_cb(HT_VALUE *v)
 
 int FuzzerInitialize(int *argc, char ***argv)
 {
-    HT_CONFIG fuzz_conf = {NULL, fuzz_free_cb, NULL, 0};
+    HT_CONFIG fuzz_conf = {NULL, fuzz_free_cb, NULL, NULL, 0};
 
     OPENSSL_init_crypto(OPENSSL_INIT_LOAD_CRYPTO_STRINGS, NULL);
     ERR_clear_error();
@@ -183,10 +183,10 @@ int FuzzerTestOneInput(const uint8_t *buf, size_t len)
          */
         if (IS_REPLACE(op_flags))
             rc = ossl_ht_fz_FUZZER_VALUE_insert(fuzzer_table, TO_HT_KEY(&key),
-                                                valptr, &lval);
+                                                valptr, &lval, NULL);
         else
             rc = ossl_ht_fz_FUZZER_VALUE_insert(fuzzer_table, TO_HT_KEY(&key),
-                                                valptr, NULL);
+                                                valptr, NULL, NULL);
 
         /*
          * mark the entry as being allocated
@@ -234,7 +234,7 @@ int FuzzerTestOneInput(const uint8_t *buf, size_t len)
         /*
          * do the delete
          */
-        rc = ossl_ht_delete(fuzzer_table, TO_HT_KEY(&key));
+        rc = ossl_ht_delete(fuzzer_table, TO_HT_KEY(&key), NULL);
 
         /*
          * unlock the table
@@ -286,7 +286,8 @@ int FuzzerTestOneInput(const uint8_t *buf, size_t len)
         /*
          * do the lookup
          */
-        lval = ossl_ht_fz_FUZZER_VALUE_get(fuzzer_table, TO_HT_KEY(&key), &v);
+        lval = ossl_ht_fz_FUZZER_VALUE_get(fuzzer_table, TO_HT_KEY(&key),
+                                           &v, NULL);
 
         /*
          * unlock the table

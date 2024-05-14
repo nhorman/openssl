@@ -177,6 +177,14 @@ static void internal_free_nop(HT_VALUE *v)
     return;
 }
 
+/*
+ * Internal selector that always say yes, select this value
+ */
+static uint32_t internal_select(HT_VALUE *v, void *arg, HT_OP op)
+{
+    return 1;
+}
+
 HT *ossl_ht_new(HT_CONFIG *conf)
 {
     HT *new = OPENSSL_zalloc(sizeof(*new));
@@ -206,6 +214,9 @@ HT *ossl_ht_new(HT_CONFIG *conf)
 
     if (new->config.ht_free_fn == NULL)
         new->config.ht_free_fn = internal_free_nop;
+
+    if (new->config.ht_select_fn == NULL)
+        new->config.ht_select_fn = internal_select;
 
     new->md = OPENSSL_zalloc(sizeof(*new->md));
     if (new->md == NULL)
@@ -517,7 +528,7 @@ static void free_old_ht_value(void *arg)
 
 static int ossl_ht_insert_locked(HT *h, uint64_t hash,
                                  struct ht_internal_value_st *newval,
-                                 HT_VALUE **olddata)
+                                 HT_VALUE **olddata, void *sarg)
 {
     struct ht_mutable_data_st *md = h->md;
     uint64_t neigh_idx = hash & md->neighborhood_mask;
@@ -535,9 +546,25 @@ static int ossl_ht_insert_locked(HT *h, uint64_t hash,
         if (ival == NULL)
             empty_idx = j;
         if (compare_hash(hash, ihash)) {
-            if (olddata == NULL) {
+            /*
+             * We don't allow inserts of duplicate hashes
+             * UNLESS we have a selct funciton, in which case
+             * We will store it at an alternate location in the neighborhood
+             */
+            if (olddata == NULL && h->config.ht_select_fn == internal_select) {
                 /* invalid */
                 return 0;
+            }
+
+            /*
+             * We're allowing collisions, so we need to see if this entry
+             * is the 'right one', call our selector function to make that
+             * determination
+             */
+            if (!h->config.ht_select_fn((HT_VALUE *)ival, sarg,
+                                        olddata == NULL ? OP_INSERT : OP_REPLACE)) {
+                /* This isn't the droid we're looking for */
+                continue;
             }
             /* Do a replacement */
             CRYPTO_atomic_store(&md->neighborhoods[neigh_idx].entries[j].hash,
@@ -553,11 +580,11 @@ static int ossl_ht_insert_locked(HT *h, uint64_t hash,
     /* If we get to here, its just an insert */
     if (empty_idx == SIZE_MAX)
         return -1; /* out of space */
-    h->wpd.value_count++;
-    CRYPTO_atomic_store(&md->neighborhoods[neigh_idx].entries[empty_idx].hash,
-                        hash, h->atomic_lock);
     ossl_rcu_assign_ptr(&md->neighborhoods[neigh_idx].entries[empty_idx].value,
                         &newval);
+    CRYPTO_atomic_store(&md->neighborhoods[neigh_idx].entries[empty_idx].hash,
+                        hash, h->atomic_lock);
+    h->wpd.value_count++;
     return 1;
 }
 
@@ -586,7 +613,8 @@ static void free_value(struct ht_internal_value_st *v)
     OPENSSL_free(v);
 }
 
-int ossl_ht_insert(HT *h, HT_KEY *key, HT_VALUE *data, HT_VALUE **olddata)
+int ossl_ht_insert(HT *h, HT_KEY *key, HT_VALUE *data,
+                   HT_VALUE **olddata, void *sarg)
 {
     struct ht_internal_value_st *newval = NULL;
     uint64_t hash;
@@ -606,7 +634,7 @@ int ossl_ht_insert(HT *h, HT_KEY *key, HT_VALUE *data, HT_VALUE **olddata)
     hash = h->config.ht_hash_fn(key->keybuf, key->keysize);
 
 try_again:
-    rc = ossl_ht_insert_locked(h, hash, newval, olddata);
+    rc = ossl_ht_insert_locked(h, hash, newval, olddata, sarg);
 
     if (rc == -1) {
         grow_hashtable(h, h->wpd.neighborhood_len);
@@ -620,7 +648,7 @@ out:
     return rc;
 }
 
-HT_VALUE *ossl_ht_get(HT *h, HT_KEY *key)
+HT_VALUE *ossl_ht_get(HT *h, HT_KEY *key, void *sarg)
 {
     struct ht_mutable_data_st *md;
     uint64_t hash;
@@ -641,6 +669,8 @@ HT_VALUE *ossl_ht_get(HT *h, HT_KEY *key)
         if (compare_hash(hash, ehash)) {
             CRYPTO_atomic_load((uint64_t *)&md->neighborhoods[neigh_idx].entries[j].value,
                                (uint64_t *)&vidx, h->atomic_lock);
+            if (!h->config.ht_select_fn((HT_VALUE *)vidx, sarg, OP_LOOKUP))
+                continue;
             ret = (HT_VALUE *)vidx;
             break;
         }
@@ -657,7 +687,7 @@ static void free_old_entry(void *arg)
     free_value(v);
 }
 
-int ossl_ht_delete(HT *h, HT_KEY *key)
+int ossl_ht_delete(HT *h, HT_KEY *key, void *sarg)
 {
     uint64_t hash;
     uint64_t neigh_idx;
@@ -672,6 +702,9 @@ int ossl_ht_delete(HT *h, HT_KEY *key)
     PREFETCH_NEIGHBORHOOD(h->md->neighborhoods[neigh_idx]);
     for (j = 0; j < NEIGHBORHOOD_LEN; j++) {
         if (compare_hash(hash, h->md->neighborhoods[neigh_idx].entries[j].hash)) {
+            if (!h->config.ht_select_fn((HT_VALUE *)&h->md->neighborhoods[neigh_idx].entries[j].value,
+                                        sarg, OP_DELETE))
+                continue;
             h->wpd.value_count--;
             CRYPTO_atomic_store(&h->md->neighborhoods[neigh_idx].entries[j].hash,
                                 0, h->atomic_lock);
