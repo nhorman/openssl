@@ -230,6 +230,7 @@ static int test_int_hashtable(void)
         NULL,
         NULL,
         NULL,
+        NULL,
         0,
     };
     INTKEY key;
@@ -627,6 +628,7 @@ static int test_hashtable_multithread(void)
         NULL,              /* use default context */
         hashtable_mt_free, /* our free function */
         NULL,              /* default hash function */
+        NULL,              /* default selector function */
         0,                 /* default hash size */
     };
     int ret = 0;
@@ -692,6 +694,118 @@ end:
     return ret;
 }
 
+typedef struct selector_hash_struct {
+    int val;
+} SELVAL;
+
+static SELVAL selector_values[] = {
+    { 1 },
+    { 2 }
+};
+
+HT_START_KEY_DEFN(selkey)
+HT_DEF_KEY_FIELD(val, int)
+HT_END_KEY_DEFN(SELKEY)
+
+IMPLEMENT_HT_VALUE_TYPE_FNS(SELVAL, selector, static)
+
+static void hashtable_sel_free(HT_VALUE *v)
+{
+    /* don't need to free anything here */
+    return;
+}
+
+static uint32_t ht_select(HT_VALUE *v, void *arg, HT_OP op)
+{
+    SELVAL *s = ossl_ht_selector_SELVAL_from_value(v);
+    int *n = (int *)arg;
+    switch (op) {
+        case OP_INSERT:
+        case OP_REPLACE:
+            return 0;  /* never select on insert/replace */
+        case OP_DELETE:
+        case OP_LOOKUP:
+            if (s->val == *n)
+                return 1;
+            return 0;
+        default:
+            return 0;
+    }
+}
+
+static int test_hashtable_selection(void)
+{
+    int ret = 0;
+    HT_CONFIG hash_conf = {
+        NULL,              /* use default context */
+        hashtable_sel_free, /* our free function */
+        NULL,              /* default hash function */
+        ht_select,        /* test selector function */
+        0,                 /* default hash size */
+    };
+    SELKEY key;
+    SELVAL *s;
+    HT_VALUE *v;
+    int discriminator;
+    int rc;
+    HT *hashtable = ossl_ht_new(&hash_conf);
+
+    if (!TEST_ptr(hashtable))
+        goto end;
+
+    /* Setup our key */
+    HT_INIT_KEY(&key);
+    HT_SET_KEY_FIELD(&key, val, 47); /* just pick a value */
+
+    /* Now add both values with the same key */
+    ossl_ht_write_lock(hashtable);
+    rc = ossl_ht_selector_SELVAL_insert(hashtable, TO_HT_KEY(&key),
+                                        &selector_values[0], NULL,
+                                        NULL);
+    ossl_ht_write_unlock(hashtable);
+    if (!TEST_int_eq(rc, 1))
+        goto out_free;
+
+    ossl_ht_write_lock(hashtable);
+    rc = ossl_ht_selector_SELVAL_insert(hashtable, TO_HT_KEY(&key),
+                                        &selector_values[1], NULL,
+                                        NULL);
+    ossl_ht_write_unlock(hashtable);
+    if (!TEST_int_eq(rc, 1))
+        goto out_free;
+
+    /* Now test our lookups */
+    discriminator = 1;
+    ossl_ht_read_lock(hashtable);
+    s = ossl_ht_selector_SELVAL_get(hashtable, TO_HT_KEY(&key), &v,
+                                    &discriminator);
+    ossl_ht_read_unlock(hashtable);
+    if (!TEST_ptr(s))
+        goto out_free;
+
+    if (!TEST_int_eq(s->val, discriminator))
+        goto out_free;
+
+    discriminator = 2;
+    ossl_ht_read_lock(hashtable);
+    s = ossl_ht_selector_SELVAL_get(hashtable, TO_HT_KEY(&key), &v,
+                                    &discriminator);
+    ossl_ht_read_unlock(hashtable);
+    if (!TEST_ptr(s))
+        goto out_free;
+
+    if (!TEST_int_eq(s->val, discriminator))
+        goto out_free;
+
+
+    ret = 1;
+
+out_free:
+    ossl_ht_free(hashtable);
+end:
+   return ret;
+}
+
 int setup_tests(void)
 {
     ADD_TEST(test_int_lhash);
@@ -699,5 +813,6 @@ int setup_tests(void)
     ADD_TEST(test_int_hashtable);
     ADD_TEST(test_hashtable_stress);
     ADD_TEST(test_hashtable_multithread);
+    ADD_TEST(test_hashtable_selection);
     return 1;
 }
