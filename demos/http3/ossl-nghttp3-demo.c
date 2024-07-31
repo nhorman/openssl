@@ -6,6 +6,7 @@
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
  */
+#include <unistd.h>
 #include "ossl-nghttp3.h"
 #include <openssl/err.h>
 
@@ -76,6 +77,13 @@ static int on_end_stream(nghttp3_conn *h3conn, int64_t stream_id,
     return 0;
 }
 
+static void usage(const char *prog)
+{
+   fprintf(stderr, "%s <-h host:port> [-n]\n", prog);
+   fprintf(stderr, "-h host:port - specify connection host:port\n");
+   fprintf(stderr, "-n skip peer validation of ssl connection\n");
+}
+
 int main(int argc, char **argv)
 {
     int ret = 1;
@@ -84,21 +92,38 @@ int main(int argc, char **argv)
     nghttp3_nv nva[16];
     nghttp3_callbacks callbacks = {0};
     size_t num_nv = 0;
-    const char *addr;
+    const char *addr = NULL;
+    int no_verify = 0;
+    int opt;
 
-    /* Check arguments. */
-    if (argc < 2) {
-        fprintf(stderr, "usage: %s <host:port>\n", argv[0]);
-        goto err;
+    while ((opt = getopt(argc, argv, "h:n")) != -1) {
+        switch(opt) {
+        case 'h':
+            addr = optarg;
+            break;
+        case 'n':
+            no_verify = 1;
+            break;
+        default:
+            usage(argv[0]);
+            goto err;
+        }
     }
 
-    addr = argv[1];
+    /* Check arguments. */
+    if (addr == NULL) {
+        usage(argv[0]);
+        goto err;
+    }
 
     /* Setup SSL_CTX. */
     if ((ctx = SSL_CTX_new(OSSL_QUIC_client_method())) == NULL)
         goto err;
 
-    SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, NULL);
+    if (no_verify == 1)
+        SSL_CTX_set_verify(ctx, SSL_VERIFY_NONE, NULL);
+    else
+        SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, NULL);
 
     if (SSL_CTX_set_default_verify_paths(ctx) == 0)
         goto err;
