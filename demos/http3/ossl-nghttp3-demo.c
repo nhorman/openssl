@@ -79,9 +79,10 @@ static int on_end_stream(nghttp3_conn *h3conn, int64_t stream_id,
 
 static void usage(const char *prog)
 {
-   fprintf(stderr, "%s <-h host:port> [-n]\n", prog);
+   fprintf(stderr, "%s <-h host:port> [-n] [-g <path>]\n", prog);
    fprintf(stderr, "-h host:port - specify connection host:port\n");
    fprintf(stderr, "-n skip peer validation of ssl connection\n");
+   fprintf(stderr, "-g <path> path to send for get request\n");
 }
 
 int main(int argc, char **argv)
@@ -95,14 +96,18 @@ int main(int argc, char **argv)
     const char *addr = NULL;
     int no_verify = 0;
     int opt;
+    char *path = "/";
 
-    while ((opt = getopt(argc, argv, "h:n")) != -1) {
+    while ((opt = getopt(argc, argv, "h:ng:")) != -1) {
         switch(opt) {
         case 'h':
             addr = optarg;
             break;
         case 'n':
             no_verify = 1;
+            break;
+        case 'g':
+            path = optarg;
             break;
         default:
             usage(argv[0]);
@@ -146,7 +151,7 @@ int main(int argc, char **argv)
     make_nv(&nva[num_nv++], ":method", "GET");
     make_nv(&nva[num_nv++], ":scheme", "https");
     make_nv(&nva[num_nv++], ":authority", addr);
-    make_nv(&nva[num_nv++], ":path", "/");
+    make_nv(&nva[num_nv++], ":path", path);
     make_nv(&nva[num_nv++], "user-agent", "OpenSSL-Demo/nghttp3");
 
     /* Submit request. */
