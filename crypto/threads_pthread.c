@@ -11,6 +11,7 @@
 #define OPENSSL_SUPPRESS_DEPRECATED
 
 #include <openssl/crypto.h>
+#include <openssl/trace.h>
 #include <crypto/cryptlib.h>
 #include "internal/cryptlib.h"
 #include "internal/rcu.h"
@@ -461,6 +462,10 @@ void ossl_rcu_read_lock(CRYPTO_RCU_LOCK *lock)
     data->thread_qps[available_qp].qp = get_hold_current_qp(lock);
     data->thread_qps[available_qp].depth = 1;
     data->thread_qps[available_qp].lock = lock;
+    OSSL_TRACE_BEGIN(LOCK) {
+        BIO_printf(trc_out, "rcu lock %p is held for read with qp %p\n",
+                   (void *)lock, (void *)data->thread_qps[available_qp].qp);
+    } OSSL_TRACE_END(LOCK);
 }
 
 void ossl_rcu_read_unlock(CRYPTO_RCU_LOCK *lock)
@@ -481,6 +486,10 @@ void ossl_rcu_read_unlock(CRYPTO_RCU_LOCK *lock)
              */
             data->thread_qps[i].depth--;
             if (data->thread_qps[i].depth == 0) {
+                OSSL_TRACE_BEGIN(LOCK) {
+                    BIO_printf(trc_out, "rcu lock %p is released from read on qp %p\n",
+                               (void *)lock, (void *)data->thread_qps[i].qp);
+                } OSSL_TRACE_END(LOCK);
                 ret = ATOMIC_SUB_FETCH(&data->thread_qps[i].qp->users, VAL_READER,
                                        __ATOMIC_RELEASE);
                 OPENSSL_assert(ret != UINT64_MAX);
@@ -580,12 +589,20 @@ void ossl_rcu_write_lock(CRYPTO_RCU_LOCK *lock)
 {
     pthread_mutex_lock(&lock->write_lock);
     TSAN_FAKE_UNLOCK(&lock->write_lock);
+    OSSL_TRACE_BEGIN(LOCK) {
+        BIO_printf(trc_out, "rcu lock %p is held for writing\n",
+                   (void *)lock);
+    } OSSL_TRACE_END(LOCK);
 }
 
 void ossl_rcu_write_unlock(CRYPTO_RCU_LOCK *lock)
 {
     TSAN_FAKE_LOCK(&lock->write_lock);
     pthread_mutex_unlock(&lock->write_lock);
+    OSSL_TRACE_BEGIN(LOCK) {
+        BIO_printf(trc_out, "rcu lock %p is released from writing\n",
+                   (void *)lock);
+    } OSSL_TRACE_END(LOCK);
 }
 
 void ossl_synchronize_rcu(CRYPTO_RCU_LOCK *lock)
@@ -607,9 +624,18 @@ void ossl_synchronize_rcu(CRYPTO_RCU_LOCK *lock)
      * prior __ATOMIC_RELEASE write operation in get_hold_current_qp
      * is visible prior to our read
      */
+    OSSL_TRACE_BEGIN(LOCK) {
+        BIO_printf(trc_out, "rcu lock %p synchronizing\n", (void *)lock);
+    } OSSL_TRACE_END(LOCK);
+
     do {
         count = ATOMIC_LOAD_N(uint64_t, &qp->users, __ATOMIC_ACQUIRE);
     } while (READER_COUNT(count) != 0);
+
+    OSSL_TRACE_BEGIN(LOCK) {
+        BIO_printf(trc_out, "rcu lock %p waiting to retire qp %p\n",
+                  (void *)lock, (void *)qp);
+    } OSSL_TRACE_END(LOCK);
 
     /* retire in order */
     pthread_mutex_lock(&lock->prior_lock);
@@ -619,12 +645,21 @@ void ossl_synchronize_rcu(CRYPTO_RCU_LOCK *lock)
     pthread_cond_broadcast(&lock->prior_signal);
     pthread_mutex_unlock(&lock->prior_lock);
 
+    OSSL_TRACE_BEGIN(LOCK) {
+        BIO_printf(trc_out, "rcu lock %p retiring qp %p\n",
+                  (void *)lock, (void *)qp);
+    } OSSL_TRACE_END(LOCK);
+
     retire_qp(lock, qp);
 
     /* handle any callbacks that we have */
     while (cb_items != NULL) {
         tmpcb = cb_items;
         cb_items = cb_items->next;
+        OSSL_TRACE_BEGIN(LOCK) {
+            BIO_printf(trc_out, "rcu lock %p handling cb %p\n",
+                      (void *)lock, (void *)tmpcb->fn);
+        } OSSL_TRACE_END(LOCK);
         tmpcb->fn(tmpcb->data);
         OPENSSL_free(tmpcb);
     }
@@ -648,6 +683,11 @@ int ossl_rcu_call(CRYPTO_RCU_LOCK *lock, rcu_cb_fn cb, void *data)
     new->next = ATOMIC_EXCHANGE_N(prcu_cb_item, &lock->cb_items, new,
                                   __ATOMIC_ACQ_REL);
 
+    OSSL_TRACE_BEGIN(LOCK) {
+        BIO_printf(trc_out, "rcu lock %p adding cb %p\n",
+                  (void *)lock, (void *)new->fn);
+    } OSSL_TRACE_END(LOCK);
+       
     return 1;
 }
 
@@ -687,6 +727,10 @@ CRYPTO_RCU_LOCK *ossl_rcu_lock_new(int num_writers, OSSL_LIB_CTX *ctx)
         OPENSSL_free(new);
         new = NULL;
     }
+    OSSL_TRACE_BEGIN(LOCK) {
+        BIO_printf(trc_out, "(ctx %p) allocating new rcu lock %p\n",
+                   (void *)ctx, (void *) new);
+    } OSSL_TRACE_END(LOCK);
     return new;
 }
 
@@ -696,6 +740,11 @@ void ossl_rcu_lock_free(CRYPTO_RCU_LOCK *lock)
 
     if (lock == NULL)
         return;
+
+    OSSL_TRACE_BEGIN(LOCK) {
+        BIO_printf(trc_out, "(ctx %p) rcu lock %p is freed\n",
+                   (void *)rlock->ctx, (void *)rlock);
+    } OSSL_TRACE_END(LOCK);
 
     /* make sure we're synchronized */
     ossl_synchronize_rcu(rlock);
