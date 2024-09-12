@@ -57,6 +57,16 @@ static int handle_io_failure(SSL *ssl, int res);
 static int set_keylog_file(SSL_CTX *ctx, const char *keylog_file);
 
 #define REQ_STRING_SZ 1024
+/**
+ * @brief a boolean flag to indicate if we should request a key update
+ *
+ * This variable is set by virtue of the presence of the REQ_KEY_UPD environment
+ * variable.  Setting this variable to any non-null value will trigger a key
+ * update early in the transfer process. It is treated as a "fire once"
+ * variable, in that, when set to true by the REQ_KEY_UPD environment setting
+ * It will send a key update then revert back to zero
+ */
+static int request_key_update = 0;
 
 /**
  * @brief A static pointer to a BIO object representing the session's BIO.
@@ -694,6 +704,16 @@ static size_t build_request_set(SSL *ssl)
             goto err;
         }
 
+        /*
+         * If request_key_update is set, fire off the request
+         */
+        if (request_key_update == 1) {
+            if (!SSL_key_update(ssl, SSL_KEY_UPDATE_REQUESTED ))
+                fprintf(stderr, "Key update request failed\n");
+            else
+                request_key_update = 0;
+        }
+
         /* create a request stream */
         new_stream = NULL;
 
@@ -990,6 +1010,13 @@ int main(int argc, char *argv[])
         fprintf(stderr, "Unable to establish connection\n");
         goto end;
     }
+
+    /*
+     * If we set this environment variable arm the trigger
+     * to request a key update
+     */
+    if (getenv("REQ_KEY_UPD") != NULL)
+        request_key_update = 1;
 
     req = strtok(reqnames, " ");
 
