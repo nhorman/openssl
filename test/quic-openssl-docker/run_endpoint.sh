@@ -42,7 +42,7 @@ if [ "$ROLE" == "client" ]; then
         SSL_CERT_FILE=/certs/ca.pem curl --config $CURLRC || exit 1
         exit 0
         ;;
-    "handshake"|"transfer"|"retry")
+    "handshake"|"transfer"|"retry"|"keyupdate")
        HOSTNAME=none
        for req in $REQUESTS
        do
@@ -54,6 +54,10 @@ if [ "$ROLE" == "client" ]; then
            fi
            echo -n "$OUTFILE " >> ./reqfile.txt
        done
+       if [ "$TESTCASE" == "keyupdate" ]
+       then
+            export REQ_KEY_UPD=1
+       fi
        SSLKEYLOGFILE=/logs/keys.log SSL_CERT_FILE=/certs/ca.pem SSL_CERT_DIR=/certs quic-hq-interop $HOSTNAME $HOSTPORT ./reqfile.txt || exit 1
        exit 0
        ;; 
