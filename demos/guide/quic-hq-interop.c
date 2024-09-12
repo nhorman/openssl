@@ -704,16 +704,6 @@ static size_t build_request_set(SSL *ssl)
             goto err;
         }
 
-        /*
-         * If request_key_update is set, fire off the request
-         */
-        if (request_key_update == 1) {
-            if (!SSL_key_update(ssl, SSL_KEY_UPDATE_REQUESTED ))
-                fprintf(stderr, "Key update request failed\n");
-            else
-                request_key_update = 0;
-        }
-
         /* create a request stream */
         new_stream = NULL;
 
@@ -753,6 +743,7 @@ static size_t build_request_set(SSL *ssl)
 
         req_idx++;
     }
+
     return poll_count;
 
 err:
@@ -965,6 +956,9 @@ int main(int argc, char *argv[])
     char *req = NULL;
     char *hostname, *port;
     int ipv6 = 0;
+    SSL *force_write_stream = NULL;
+    char *force_write_string = "forcing a key update";
+    size_t written;
 
     if (argc < 4) {
         fprintf(stderr, "Usage: quic-hq-interop [-6] hostname port reqfile\n");
@@ -1098,6 +1092,35 @@ int main(int argc, char *argv[])
                     poll_list[poll_idx].events = 0;
                     poll_done++;
                 }
+
+                /*
+                 * If request_key_update is set, fire off the request
+                 */
+                if (request_key_update == 1) {
+                    fprintf(stderr, "Sending key update\n");
+                    if (!SSL_key_update(ssl, SSL_KEY_UPDATE_REQUESTED )) {
+                        fprintf(stderr, "Key update request failed\n");
+                        ERR_print_errors_fp(stderr);
+                        ERR_clear_error();
+                    } else {
+                        force_write_stream = SSL_new_stream(ssl, 0);
+                        if (force_write_stream != NULL) {
+                            while (!SSL_write_ex2(force_write_stream,
+                                                  force_write_string,
+                                                  strlen(force_write_string),
+                                                  SSL_WRITE_FLAG_CONCLUDE,
+                                                  &written)) {
+                                if (handle_io_failure(force_write_stream, 0) == 1)
+                                    continue; /* Retry */
+                                fprintf(stderr, "Failed to write key update\n");
+                                goto end; /* Cannot retry: error */
+                            }
+                            SSL_free(force_write_stream);
+                            force_write_stream  = NULL;
+                            request_key_update = 0;
+                        }
+                    }
+                } 
             }
         }
 
