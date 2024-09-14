@@ -38,6 +38,8 @@
  * SSL_SESSION_FILE - set to a file path to record ssl sessions and restore
  *                    said sessions on next invocation
  * SSL_CERT_FILE - The ca file to use when validating a server
+ * SSL_CIPHER_LIST - Select the ciphers to use in the tls handshake, follows
+ *                   same naming syntax as s_client -cipher
  */
 #include <string.h>
 
@@ -791,6 +793,17 @@ static int setup_connection(char *hostname, char *port, int ipv6,
         goto end;
     }
 
+    /*
+     * If the SSL_CIPHER_LIST environment variable is set, attempt to
+     * set the ctx cipher list to that value
+     */
+    if (getenv("SSL_CIPHER_LIST") != NULL) {
+        if (!SSL_CTX_set_cipher_list(*ctx, getenv("SSL_CIPHER_LIST"))) {
+            fprintf(stderr, "Failed to set cipher list to %s\n",
+                    getenv("SSL_CIPHER_LIST"));
+           goto end;
+        }
+    }
     /*
      * Configure the client to abort the handshake if certificate
      * verification fails. Virtually all clients should do this unless you
