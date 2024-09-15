@@ -70,7 +70,10 @@ if [ "$ROLE" == "client" ]; then
        ;;
     "chacha20")
        OUTFILE=$(basename $REQUESTS)
-       SSL_CERT_FILE=/certs/ca.pem curl --verbose --tlsv1.3 --tls13-ciphers TLS_CHACHA20_POLY1305_SHA256 --http3 -o /downloads/$OUTFILE $REQUESTS || exit 1
+       echo -n "$OUTFILE " >> ./reqfile.txt
+       HOSTNAME=$(printf "%s\n" "$REQUESTS" | sed -ne 's,^https://\([^/:]*\).*,\1,p')
+       HOSTPORT=$(printf "%s\n" "$REQUESTS" | sed -ne 's,^https://[^:/]*:\([^/]*\).*,\1,p')
+       SSLKEYLOGFILE=/logs/keys.log SSL_CERT_FILE=/certs/ca.pem SSL_CERT_DIR=/certs SSL_CIPHER_LIST=TLS_CHACHA20_POLY1305_SHA256 quic-hq-interop $HOSTNAME $HOSTPORT ./reqfile.txt || exit 1
        exit 0
        ;; 
     *)
