@@ -1,0 +1,52 @@
+name: "Synchronize PR status with development board"
+
+on:
+  workflow_dispatch:
+    inputs:
+      reviewer:
+        description: 'simulated reviewer'
+        required: true
+        type: string
+      review_action:
+        description: 'action to take'
+        required: true
+        type: choice
+        options:
+        - approve
+        - request_change
+        - dismiss
+      pr_number:
+        description: 'pr to act on'
+        required: true
+        type: string
+
+
+jobs:
+  sync_review_state:
+    runs-on: ubuntu-latest
+    steps:
+    - name: "gether manual workflow data"
+      if: ${{ github.event_name == "workflow_dispatch" }}
+      run: |
+        echo "REVIEWER=${{ github.event.inputs.reviewer }}" >> $GITHUB_ENV
+        echo "ACTION=${{ github.event.inputs.review_action }}" >> $GITHUB_ENV
+        echo "PR_NUM=${{ github.event.inputs.pr_number }}" >> $GITHUB_ENV
+    - name: "gather review submission data"
+      if: ${{ github.event_name == "pull_request_review" }}
+      run: |
+        echo "REVIEWER=${{ github.event.review.user.login }}" >> $GITHUB_ENV
+        if [ "${{ github.event.review.state }} == "approved" ]
+        then
+          echo "ACTION=approve" >> $GITHUB_ENV
+        elif [ "${{ github.event.review.state }} == "changes_requested" ]
+        then
+          echo "ACTION=request_change" >> $GITHUB_ENV
+        else
+          echo "ACTION=dismiss" >> $GITHUB_ENV
+        fi
+        echo "PR_NUM=${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+    - name: "Identify associated issues"
+      run: |
+        gh api graphql -f query="query { repository(owner:"nhorman", name:"openssl") { pullRequest(number: $PR_NUM) { closingIssuesReferences(first: 10) { edges { node { number } } } } } }"
+
+
