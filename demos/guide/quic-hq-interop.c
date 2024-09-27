@@ -700,7 +700,9 @@ static size_t build_request_set(SSL *ssl)
          * our max data streams to 100, so we're just batching in groups of 100
          * for now
          */
-        new_stream = SSL_new_stream(ssl, 0);
+        new_stream = NULL;
+        if (poll_count <= 99)
+            new_stream = SSL_new_stream(ssl, SSL_STREAM_FLAG_ADVANCE);
 
         if (new_stream == NULL) {
             /*
