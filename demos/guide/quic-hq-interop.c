@@ -694,16 +694,16 @@ static size_t build_request_set(SSL *ssl)
             goto err;
         }
 
-        /* create a request stream */
-        new_stream = NULL;
-
         /*
          * We don't strictly have to do this check, but our quic client limits
          * our max data streams to 100, so we're just batching in groups of 100
          * for now
+         * Note, we also use the STREAM ADVANCE flag here, to ensure that we get
+         * a new stream, even if the processing of prior streams haven't been 
+         * completed from the above SSL_free yet. 
          */
         if (poll_count <= 99)
-            new_stream = SSL_new_stream(ssl, 0);
+            new_stream = SSL_new_stream(ssl, SSL_STREAM_FLAG_ADVANCE);
 
         if (new_stream == NULL) {
             /*
