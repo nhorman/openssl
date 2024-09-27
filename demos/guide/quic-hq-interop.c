@@ -695,16 +695,12 @@ static size_t build_request_set(SSL *ssl)
             goto err;
         }
 
-        /* create a request stream */
-        new_stream = NULL;
-
         /*
          * We don't strictly have to do this check, but our quic client limits
          * our max data streams to 100, so we're just batching in groups of 100
          * for now
          */
-        if (poll_count <= 99)
-            new_stream = SSL_new_stream(ssl, 0);
+        new_stream = SSL_new_stream(ssl, 0);
 
         if (new_stream == NULL) {
             /*
@@ -712,6 +708,7 @@ static size_t build_request_set(SSL *ssl)
              * return and process this batch before getting more
              */
             poll_count--;
+            fprintf(stderr, "Failed to get quic stream on poll count %d\n", poll_count);
             return poll_count;
         }
 
