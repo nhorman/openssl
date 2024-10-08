@@ -1,0 +1,72 @@
+# Copyright 2021-2024 The OpenSSL Project Authors. All Rights Reserved.
+#
+# Licensed under the Apache License 2.0 (the "License").  You may not use
+# this file except in compliance with the License.  You can obtain a copy
+# in the file LICENSE in the source distribution or at
+# https://www.openssl.org/source/license.html
+
+name: GitHub CI (basic gcc)
+
+on: [pull_request, push]
+
+# for some reason, this does not work:
+# variables:
+#   BUILDOPTS: "-j4"
+#   HARNESS_JOBS: "${HARNESS_JOBS:-4}"
+
+# for some reason, this does not work:
+# before_script:
+#     - make="make -s"
+
+permissions:
+  contents: read
+
+env:
+  OSSL_RUN_CI_TESTS: 1
+
+jobs:
+  basic_gcc:
+    runs-on: ${{ github.server_url == 'https://github.com' && 'ubuntu-latest' || 'ubuntu-22.04-self-hosted' }}
+    outputs:
+      workflow_name: ${{ steps.capture-job-id.outputs.WORKFLOW_NAME }}
+      build_run_id: ${{ steps.capture-job-id.outputs.JOB_ID }}
+    steps:
+    - name: capture_workflow_name
+      run: |
+        echo "WORKFLOW_NAME=${{ github.workflow }}" >> $GITHUB_OUTPUT
+        echo "RUN_ID=${{ github.run_id }}" >> $GITHUB_OUTPUT
+    - uses: actions/checkout@v4
+    - name: checkout fuzz/corpora submodule
+      run: git submodule update --init --depth 1 fuzz/corpora
+    - name: ccache
+      if: ${{ github.event_name  == 'pull_request' }}
+      uses: hendrikmuhs/ccache-action@v1.2.14
+      with:
+        key: ${{ github.job }}
+        create-symlink: true
+    - name: localegen
+      run: sudo locale-gen tr_TR.UTF-8
+    - name: fipsvendor
+      # Make one fips build use a customized FIPS vendor
+      run: echo "FIPS_VENDOR=CI" >> VERSION.dat
+    - name: config
+      # enable-quic is on by default, but we leave it here to check we're testing the explicit enable somewhere
+      run: CC=gcc ./config --banner=Configured enable-demos enable-h3demo enable-fips enable-quic --strict-warnings && perl configdata.pm --dump
+    - name: make
+      run: make -s -j4
+    - name: get cpu info
+      run: |
+        cat /proc/cpuinfo
+        ./util/opensslwrap.sh version -c
+    - name: check fipsvendor
+      run: |
+        util/wrap.pl -fips apps/openssl list -providers | grep 'name: CI FIPS Provider for OpenSSL$'
+    - name: tar build tree
+      run: |
+        tar -cvf "${{ github.workflow }}.tgz" .
+    - name: upload build tree
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ github.workflow }} 
+        path: "./${{ github.workflow }}.tgz"
+        retention-days: 1
