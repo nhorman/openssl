@@ -7,7 +7,7 @@
 
 name: GitHub CI (basic gcc)
 
-on: [pull_request, push]
+on: [pull_request]
 
 # for some reason, this does not work:
 # variables:
