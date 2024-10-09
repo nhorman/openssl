@@ -81,7 +81,15 @@ jobs:
 
   basic_gcc:
     runs-on: ${{ github.server_url == 'https://github.com' && 'ubuntu-latest' || 'ubuntu-22.04-self-hosted' }}
+    outputs:
+      job_name: ${{ steps.capture-job-id.outputs.JOB_NAME }}
+      run_id: ${{ steps.capture-job-id.outputs.RUN_ID }}
     steps:
+    - name: capture-job-id
+      id: capture-job-id
+      run: |
+        echo "JOB_NAME=${{ github.job }}" >> $GITHUB_OUTPUT
+        echo "RUN_ID=${{ github.run_id }}" >> $GITHUB_OUTPUT
     - uses: actions/checkout@v4
     - name: checkout fuzz/corpora submodule
       run: git submodule update --init --depth 1 fuzz/corpora
@@ -105,6 +113,33 @@ jobs:
       run: |
         cat /proc/cpuinfo
         ./util/opensslwrap.sh version -c
+    - name: tar build tree
+      run: |
+        tar -cvf "${{ github.job }}.tgz" .
+    - name: upload build tree
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ github.run_id }}
+        path: "./${{ github.job }}.tgz"
+        retention-days: 1
+
+  basic_gcc_test:
+    runs-on: ${{ github.server_url == 'https://github.com' && 'ubuntu-latest' || 'ubuntu-22.04-self-hosted' }}
+    needs: basic_gcc
+    env:
+      JOB_NAME: ${{ needs.basic_gcc.outputs.job_name }}
+      RUN_ID: ${{ needs.basic_gcc.outputs.run_id }}
+    steps:
+    - name: download build tree
+      uses: actions/download-artifact@v4
+      with:
+        name: ${JOB_NAME}
+        path: .
+        run-id: ${RUN_ID}
+    - name: extract artifacts
+      if: matrix.stage == 'test'
+      run: |
+        tar xvf "${JOB_NAME}.tgz"
     - name: make test
       run: .github/workflows/make-test
     - name: check fipsvendor
@@ -115,6 +150,12 @@ jobs:
       with:
         name: "ci@basic-gcc"
         path: artifacts.tar.gz
+    - name: delete build artifacts
+      if: always()
+      uses: geekyeggo/delete-artifact@v5
+      with:
+        name: ${JOB_NAME}
+        failOnError: false
 
   basic_clang:
     runs-on: ${{ github.server_url == 'https://github.com' && 'ubuntu-latest' || 'ubuntu-22.04-self-hosted' }}
