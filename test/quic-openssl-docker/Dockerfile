@@ -40,6 +40,8 @@ RUN git clone https://github.com/curl/curl.git && \
 # copy run script and run it
 COPY run_endpoint.sh .
 RUN chmod +x run_endpoint.sh
+COPY build_custom_openssl.sh .
+RUN chmod +x build_custom_openssl.sh
 RUN apt-get clean
 ENTRYPOINT [ "./run_endpoint.sh" ]
 
