@@ -185,8 +185,12 @@ static void internal_free_nop(HT_VALUE *v)
 
 HT *ossl_ht_new(const HT_CONFIG *conf)
 {
-    HT *new = OPENSSL_zalloc(sizeof(*new));
+    HT *new;
 
+    if (conf == NULL)
+        return NULL;
+
+    new = OPENSSL_zalloc(sizeof(*new));
     if (new == NULL)
         return NULL;
 

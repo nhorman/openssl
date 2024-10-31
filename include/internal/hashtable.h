@@ -11,6 +11,10 @@
 # define OPENSSL_HASHTABLE_H
 # pragma once
 
+# ifdef  __cplusplus
+extern "C" {
+# endif
+
 #include <stddef.h>
 #include <stdint.h>
 #include <openssl/e_os2.h>
@@ -332,4 +336,7 @@ void ossl_ht_value_list_free(HT_VALUE_LIST *list);
  */
 HT_VALUE *ossl_ht_get(HT *htable, HT_KEY *key);
 
+# ifdef  __cplusplus
+}
+# endif
 #endif
