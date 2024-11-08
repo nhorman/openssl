@@ -42,7 +42,11 @@ if [ "$ROLE" == "client" ]; then
         SSL_CERT_FILE=/certs/ca.pem curl --config $CURLRC || exit 1
         exit 0
         ;;
-    "handshake"|"transfer"|"retry")
+    "handshake"|"transfer"|"retry"|"keyupdate")
+       if [ "$TESTCASE" == "keyupdate" ]
+       then
+           export SSLKEYUPDATE="yes"
+       fi
        HOSTNAME=none
        for req in $REQUESTS
        do

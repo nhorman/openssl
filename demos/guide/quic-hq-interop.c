@@ -860,6 +860,7 @@ int main(int argc, char *argv[])
     char *req = NULL;
     char *hostname, *port;
     int ipv6 = 0;
+    int ssl_key_update = 1;
 
     if (argc < 4) {
         fprintf(stderr, "Usage: quic-hq-interop [-6] hostname port reqfile\n");
@@ -877,6 +878,14 @@ int main(int argc, char *argv[])
     hostname = argv[argnext++];
     port = argv[argnext++];
     reqfile = argv[argnext];
+
+    fprintf(stderr, "Cehcking SSLKEYUPDATE:\n");
+    if (getenv("SSLKEYUPDATE") != NULL) {
+        fprintf(stderr, "Seeting ssl_key_update to zero\n");
+        ssl_key_update = 0;
+    } else {
+        fprintf(stderr, "Not doing key update\n");
+    }
 
     req_bio = BIO_new_file(reqfile, "r");
     if (req_bio == NULL) {
@@ -980,6 +989,16 @@ int main(int argc, char *argv[])
                  */
                 if (!eof) {
                     BIO_write(outbiolist[poll_idx], buf, readbytes);
+                    if (ssl_key_update == 0) {
+                        fprintf(stderr, "SENDING KEY UPDATE\n");
+                        if (!SSL_key_update(ssl, SSL_KEY_UPDATE_REQUESTED)) {
+                            fprintf(stderr, "KEY UPDATE FAILED\n");
+                            ERR_print_errors_fp(stderr);
+                            ERR_clear_error();
+                        } else {
+                            ssl_key_update++;
+                        }
+                    }
                 } else {
                     fprintf(stderr, "completed %s\n", outnames[poll_idx]);
                     /* This file is done, take it out of polling contention */
