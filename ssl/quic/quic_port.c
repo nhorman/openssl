@@ -72,6 +72,7 @@ QUIC_PORT *ossl_quic_port_new(const QUIC_PORT_ARGS *args)
     port->engine        = args->engine;
     port->channel_ctx   = args->channel_ctx;
     port->is_multi_conn = args->is_multi_conn;
+    port->validate_addr = args->do_addr_validation;
 
     if (!port_init(port)) {
         OPENSSL_free(port);
@@ -1001,11 +1002,13 @@ static void port_default_packet_handler(QUIC_URXE *e, void *arg,
      * states in TCP. If we reach certain threshold, then we want to
      * validate clients.
      */
-    if (hdr.token == NULL) {
-        port_send_retry(port, &e->peer, &hdr);
-        goto undesirable;
-    } else if (port_validate_token(&hdr, &odcid) == 0) {
-        goto undesirable;
+    if (port->validate_addr == 1) {
+        if (hdr.token == NULL) {
+            port_send_retry(port, &e->peer, &hdr);
+            goto undesirable;
+        } else if (port_validate_token(&hdr, &odcid) == 0) {
+            goto undesirable;
+        }
     }
 
     port_bind_channel(port, &e->peer, &hdr.src_conn_id, &hdr.dst_conn_id,
