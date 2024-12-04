@@ -56,6 +56,7 @@ struct h3ssl {
     int received_from_two;    /* workaround for -607 on nghttp3_conn_read_stream on stream 2 */
     int restart;              /* new request/response cycle started */
     uint64_t id_bidi;         /* the id of the stream used to read request and send response */
+    char *fileprefix;         /* prefix of the directory to fetch files from */
     char url[MAXURL];         /* url to serve the request */
     uint8_t *ptr_data;        /* pointer to the data to send */
     unsigned int ldata;       /* amount of bytes to send */
@@ -74,9 +75,11 @@ static void make_nv(nghttp3_nv *nv, const char *name, const char *value)
 static void init_ids(struct h3ssl *h3ssl)
 {
     struct ssl_id *ssl_ids;
+    char *prior_fileprefix = h3ssl->fileprefix;
     int i;
 
     memset (h3ssl, 0, sizeof (struct h3ssl));
+    h3ssl->fileprefix = prior_fileprefix;
 
     ssl_ids = h3ssl->ssl_ids;
     for (i = 0; i < MAXSSL_IDS; i++) {
@@ -674,14 +677,21 @@ static void handle_events_from_ids(struct h3ssl *h3ssl)
     }
 }
 
-static int get_file_length(char *filename)
+static int get_file_length(struct h3ssl *h3ssl)
 {
+    char filename[PATH_MAX];
     struct stat st;
 
-    if (strcmp(filename, "big") == 0) {
+    memset(filename, 0, PATH_MAX);
+    if (h3ssl->fileprefix != NULL)
+        strcat(filename, h3ssl->fileprefix);
+    strcat(filename, h3ssl->url);
+
+    if (strcmp(h3ssl->url, "big") == 0) {
         printf("big!!!\n");
         return INT_MAX;
     }
+    fprintf(stderr, "filename to serve is %s\n", filename);
     if (stat(filename, &st) == 0) {
         /* Only process regular files */
         if (S_ISREG(st.st_mode)) {
@@ -693,14 +703,20 @@ static int get_file_length(char *filename)
     return 0;
 }
 
-static char *get_file_data(char *filename)
+static char *get_file_data(struct h3ssl *h3ssl)
 {
-    int size = get_file_length(filename);
+    char filename[PATH_MAX];
+    int size = get_file_length(h3ssl);
     char *res;
     int fd;
 
     if (size == 0)
         return NULL;
+
+    memset(filename, 0, PATH_MAX);
+    if (h3ssl->fileprefix != NULL)
+        strcat(filename, h3ssl->fileprefix);
+    strcat(filename, h3ssl->url);
 
     res = malloc(size+1);
     res[size] = '\0';
@@ -944,7 +960,11 @@ static int run_quic_server(SSL_CTX *ctx, int fd)
     int ok = 0;
     int hassomething = 0;
     SSL *listener = NULL;
+    struct h3ssl h3ssl;
 
+    h3ssl.fileprefix = getenv("FILEPREFIX");
+
+    fprintf(stderr, "FILEPREFIX is %s\n", getenv("FILEPREFIX"));
     /* Create a new QUIC listener. */
     if ((listener = SSL_new_listener(ctx, 0)) == NULL)
         goto err;
@@ -967,7 +987,6 @@ static int run_quic_server(SSL_CTX *ctx, int fd)
 
     for (;;) {
         nghttp3_conn *h3conn = NULL;
-        struct h3ssl h3ssl;
         nghttp3_nv resp[10];
         size_t num_nv;
         nghttp3_data_reader dr;
@@ -1073,7 +1092,7 @@ static int run_quic_server(SSL_CTX *ctx, int fd)
         /* we have receive the request build the response and send it */
         /* XXX add  MAKE_NV("connection", "close"), to resp[] and recheck */
         make_nv(&resp[num_nv++], ":status", "200");
-        h3ssl.ldata = get_file_length(h3ssl.url);
+        h3ssl.ldata = get_file_length(&h3ssl);
         if (h3ssl.ldata == 0) {
             /* We don't find the file: use default test string */
             sprintf(slength, "%d", 20);
@@ -1089,7 +1108,7 @@ static int run_quic_server(SSL_CTX *ctx, int fd)
         } else {
             /* normal file we have opened */
             sprintf(slength, "%d", h3ssl.ldata);
-            h3ssl.ptr_data = (uint8_t *) get_file_data(h3ssl.url);
+            h3ssl.ptr_data = (uint8_t *) get_file_data(&h3ssl);
             if (h3ssl.ptr_data == NULL)
                 abort();
             printf("before nghttp3_conn_submit_response on %llu for %s ...\n",
