@@ -1118,7 +1118,8 @@ static int run_quic_server(SSL_CTX *ctx, int fd)
             else if (strstr(h3ssl.url, ".ico"))
                 make_nv(&resp[num_nv++], "content-type", "image/vnd.microsoft.icon");
             else
-                make_nv(&resp[num_nv++], "content-type", "text/html");
+                make_nv(&resp[num_nv++], "content-type", "application/octet-stream");
+            make_nv(&resp[num_nv++], "content-length", slength);
         }
 
         dr.read_data = step_read_data;
