@@ -6,6 +6,50 @@
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
  */
+
+/**
+ * @file ossl-nghttp3-demo-server.c
+ * @brief Demonstrates a basic QUIC server utilizing OpenSSL and nghttp3.
+ *
+ * This server handles a single QUIC connection at a time and serves HTTP/3
+ * requests. It supports bidirectional and unidirectional streams, processes
+ * incoming HTTP/3 headers, and sends responses with simple file or static
+ * data handling.
+ *
+ * Features:
+ * - Manages QUIC streams and their states.
+ * - Handles HTTP/3 headers and data.
+ * - Supports ALPN for negotiating HTTP/3 protocol versions.
+ * - Processes files from a directory specified by the FILEPREFIX environment
+ *   variable or serves a default response.
+ *
+ * Limitations:
+ * - Single-threaded and handles one connection at a time.
+ * - Designed for demonstration purposes, not production-ready.
+ *
+ * Usage:
+ * Compile and run with:
+ * ```
+ * ./ossl-nghttp3-demo-server <port> <server.crt> <server.key>
+ * ```
+ * - `<port>`: The UDP port to bind the server.
+ * - `<server.crt>`: Path to the server's SSL certificate file.
+ * - `<server.key>`: Path to the server's private key file.
+ *
+ * Environment Variables:
+ * FILEPREFIX - The directory from which requests are served
+ *
+ * Dependencies:
+ * - OpenSSL library for QUIC and SSL/TLS support.
+ * - nghttp3 library for HTTP/3 stream handling.
+ * - POSIX APIs for socket and file handling.
+ *
+ * @note This implementation is for educational and testing purposes.
+ *
+ * @authors
+ *   The OpenSSL Project Authors, 2024.
+ *   Licensed under the Apache License, Version 2.0.
+ */
 #include <assert.h>
 #include <netinet/in.h>
 #include <nghttp3/nghttp3.h>
@@ -33,6 +77,7 @@ struct ssl_id {
     uint64_t id; /* the stream identifier the nghttp3 uses */
     int status;  /* 0 or one the below status and origin */
 };
+
 /* status and origin of the streams the possible values are: */
 #define CLIENTUNIOPEN  0x01 /* unidirectional open by the client (2, 6 and 10) */
 #define CLIENTCLOSED   0x02 /* closed by the client */
@@ -63,6 +108,13 @@ struct h3ssl {
     int offset_data;          /* offset to next data to send */
 };
 
+/**
+ * @brief Constructs an nghttp3 name-value pair.
+ *
+ * @param nv Pointer to the nghttp3_nv structure to populate.
+ * @param name Name of the HTTP/3 header.
+ * @param value Value of the HTTP/3 header.
+ */
 static void make_nv(nghttp3_nv *nv, const char *name, const char *value)
 {
     nv->name        = (uint8_t *)name;
@@ -72,6 +124,14 @@ static void make_nv(nghttp3_nv *nv, const char *name, const char *value)
     nv->flags       = NGHTTP3_NV_FLAG_NONE;
 }
 
+/**
+ * @brief Initializes the h3ssl structure with default values.
+ *
+ * @param h3ssl Pointer to the h3ssl structure to initialize.
+ *
+ * Note: All fields, except fileprefix are (re)initialized to zeros.
+ * Fileprefix is preserved accross re-inits
+ */
 static void init_ids(struct h3ssl *h3ssl)
 {
     struct ssl_id *ssl_ids;
@@ -88,6 +148,11 @@ static void init_ids(struct h3ssl *h3ssl)
     h3ssl->id_bidi = UINT64_MAX;
 }
 
+/**
+ * @brief Reuses an h3ssl structure by resetting its state.
+ *
+ * @param h3ssl Pointer to the h3ssl structure to reuse.
+ */
 static void reuse_h3ssl(struct h3ssl *h3ssl)
 {
     h3ssl->end_headers_received = 0;
@@ -103,6 +168,13 @@ static void reuse_h3ssl(struct h3ssl *h3ssl)
     h3ssl->ldata = 0;
 }
 
+/**
+ * @brief Adds a new stream ID and its associated SSL object to the h3ssl structure.
+ *
+ * @param id Stream ID to add.
+ * @param ssl Pointer to the SSL object for the stream.
+ * @param h3ssl Pointer to the h3ssl structure.
+ */
 static void add_id(uint64_t id, SSL *ssl, struct h3ssl *h3ssl)
 {
     struct ssl_id *ssl_ids;
@@ -119,6 +191,15 @@ static void add_id(uint64_t id, SSL *ssl, struct h3ssl *h3ssl)
     printf("Oops too many streams to add!!!\n");
     exit(1);
 }
+
+/**
+ * @brief Adds a stream ID and its associated SSL object at a specific index.
+ *
+ * @param id Stream ID to add.
+ * @param ssl Pointer to the SSL object for the stream.
+ * @param at Index where the ID should be added.
+ * @param h3ssl Pointer to the h3ssl structure.
+ */
 static void add_id_at(uint64_t id, SSL *ssl, int at, struct h3ssl *h3ssl)
 {
     struct ssl_id *ssl_ids;
@@ -133,7 +214,11 @@ static void add_id_at(uint64_t id, SSL *ssl, int at, struct h3ssl *h3ssl)
     exit(1);
 }
 
-/* remove the ids marked for removal */
+/**
+ * @brief Removes marked stream IDs from the h3ssl structure.
+ *
+ * @param h3ssl Pointer to the h3ssl structure.
+ */
 static void remove_marked_ids(struct h3ssl *h3ssl)
 {
     struct ssl_id *ssl_ids;
@@ -152,7 +237,13 @@ static void remove_marked_ids(struct h3ssl *h3ssl)
     }
 }
 
-/* add the status bytes to the status */
+/**
+ * @brief Sets the status for a given stream ID.
+ *
+ * @param id Stream ID for which the status is set.
+ * @param status New status to assign.
+ * @param h3ssl Pointer to the h3ssl structure.
+ */
 static void set_id_status(uint64_t id, int status, struct h3ssl *h3ssl)
 {
     struct ssl_id *ssl_ids;
@@ -169,6 +260,14 @@ static void set_id_status(uint64_t id, int status, struct h3ssl *h3ssl)
     printf("Oops can't get status, can't find stream!!!\n");
     assert(0);
 }
+
+/**
+ * @brief Gets the status of a given stream ID.
+ *
+ * @param id Stream ID for which the status is queried.
+ * @param h3ssl Pointer to the h3ssl structure.
+ * @return Status of the stream ID.
+ */
 static int get_id_status(uint64_t id, struct h3ssl *h3ssl)
 {
     struct ssl_id *ssl_ids;
@@ -187,6 +286,12 @@ static int get_id_status(uint64_t id, struct h3ssl *h3ssl)
     return -1;
 }
 
+/**
+ * @brief Checks if all client-side stream IDs are closed.
+ *
+ * @param h3ssl Pointer to the h3ssl structure.
+ * @return 1 if all client IDs are closed, 0 otherwise.
+ */
 static int are_all_clientid_closed(struct h3ssl *h3ssl)
 {
     struct ssl_id *ssl_ids;
@@ -212,6 +317,11 @@ static int are_all_clientid_closed(struct h3ssl *h3ssl)
     return 1;
 }
 
+/**
+ * @brief Closes all active stream IDs in the h3ssl structure.
+ *
+ * @param h3ssl Pointer to the h3ssl structure.
+ */
 static void close_all_ids(struct h3ssl *h3ssl)
 {
     struct ssl_id *ssl_ids;
@@ -227,6 +337,19 @@ static void close_all_ids(struct h3ssl *h3ssl)
     }
 }
 
+/**
+ * @brief Callback for receiving an HTTP/3 header.
+ *
+ * @param conn Pointer to the nghttp3 connection.
+ * @param stream_id ID of the stream receiving the header.
+ * @param token Token identifying the header type.
+ * @param name Header name buffer.
+ * @param value Header value buffer.
+ * @param flags Flags associated with the header.
+ * @param user_data Pointer to user data.
+ * @param stream_user_data Pointer to stream-specific user data.
+ * @return 0 on success.
+ */
 static int on_recv_header(nghttp3_conn *conn, int64_t stream_id, int32_t token,
                           nghttp3_rcbuf *name, nghttp3_rcbuf *value,
                           uint8_t flags, void *user_data,
@@ -259,6 +382,16 @@ static int on_recv_header(nghttp3_conn *conn, int64_t stream_id, int32_t token,
     return 0;
 }
 
+/**
+ * @brief Callback for the end of HTTP/3 headers.
+ *
+ * @param conn Pointer to the nghttp3 connection.
+ * @param stream_id ID of the stream receiving headers.
+ * @param fin Finality flag.
+ * @param user_data Pointer to user data.
+ * @param stream_user_data Pointer to stream-specific user data.
+ * @return 0 on success.
+ */
 static int on_end_headers(nghttp3_conn *conn, int64_t stream_id, int fin,
                           void *user_data, void *stream_user_data)
 {
@@ -269,6 +402,17 @@ static int on_end_headers(nghttp3_conn *conn, int64_t stream_id, int fin,
     return 0;
 }
 
+/**
+ * @brief Callback for receiving HTTP/3 data.
+ *
+ * @param conn Pointer to the nghttp3 connection.
+ * @param stream_id ID of the stream receiving data.
+ * @param data Pointer to the data buffer.
+ * @param datalen Length of the data buffer.
+ * @param conn_user_data Pointer to connection-specific user data.
+ * @param stream_user_data Pointer to stream-specific user data.
+ * @return 0 on success.
+ */
 static int on_recv_data(nghttp3_conn *conn, int64_t stream_id,
                         const uint8_t *data, size_t datalen,
                         void *conn_user_data, void *stream_user_data)
@@ -278,6 +422,15 @@ static int on_recv_data(nghttp3_conn *conn, int64_t stream_id,
     return 0;
 }
 
+/**
+ * @brief Callback for the end of an HTTP/3 stream.
+ *
+ * @param h3conn Pointer to the nghttp3 connection.
+ * @param stream_id ID of the stream ending.
+ * @param conn_user_data Pointer to connection-specific user data.
+ * @param stream_user_data Pointer to stream-specific user data.
+ * @return 0 on success.
+ */
 static int on_end_stream(nghttp3_conn *h3conn, int64_t stream_id,
                          void *conn_user_data, void *stream_user_data)
 {
@@ -288,7 +441,15 @@ static int on_end_stream(nghttp3_conn *h3conn, int64_t stream_id,
     return 0;
 }
 
-/* Read from the stream and push to the h3conn */
+/**
+ * @brief Reads data from a QUIC stream and pushes it to nghttp3.
+ *
+ * @param h3conn Pointer to the nghttp3 connection.
+ * @param stream Pointer to the SSL stream.
+ * @param id Stream ID to read from.
+ * @param h3ssl Pointer to the h3ssl structure.
+ * @return 1 on success, -1 on error, 0 if no data is available.
+ */
 static int quic_server_read(nghttp3_conn *h3conn, SSL *stream, uint64_t id, struct h3ssl *h3ssl)
 {
     int ret, r;
@@ -332,9 +493,12 @@ static int quic_server_read(nghttp3_conn *h3conn, SSL *stream, uint64_t id, stru
     return 1;
 }
 
-/*
- * creates the control stream, the encoding and decoding streams.
- * nghttp3_conn_bind_control_stream() is for the control stream.
+/**
+ * @brief Creates necessary HTTP/3 streams for control and QPACK.
+ *
+ * @param h3conn Pointer to the nghttp3 connection.
+ * @param h3ssl Pointer to the h3ssl structure.
+ * @return 0 on success, -1 on failure.
  */
 static int quic_server_h3streams(nghttp3_conn *h3conn, struct h3ssl *h3ssl)
 {
@@ -396,7 +560,13 @@ static int quic_server_h3streams(nghttp3_conn *h3conn, struct h3ssl *h3ssl)
     return 0;
 }
 
-/* Try to read from the streams we have */
+/**
+ * @brief Processes events for all active streams in the h3ssl structure.
+ *
+ * @param curh3conn Pointer to the current nghttp3 connection.
+ * @param h3ssl Pointer to the h3ssl structure.
+ * @return 1 if events were processed, 0 otherwise, -1 on error.
+ */
 static int read_from_ssl_ids(nghttp3_conn **curh3conn, struct h3ssl *h3ssl)
 {
     int hassomething = 0, i;
@@ -663,6 +833,11 @@ err:
     return ret;
 }
 
+/**
+ * @brief Handles pending events for all streams in the h3ssl structure.
+ *
+ * @param h3ssl Pointer to the h3ssl structure.
+ */
 static void handle_events_from_ids(struct h3ssl *h3ssl)
 {
     struct ssl_id *ssl_ids = h3ssl->ssl_ids;
@@ -677,6 +852,12 @@ static void handle_events_from_ids(struct h3ssl *h3ssl)
     }
 }
 
+/**
+ * @brief Gets the length of a requested file.
+ *
+ * @param h3ssl Pointer to the h3ssl structure.
+ * @return Length of the file, or 0 if the file is not found.
+ */
 static int get_file_length(struct h3ssl *h3ssl)
 {
     char filename[PATH_MAX];
@@ -703,6 +884,12 @@ static int get_file_length(struct h3ssl *h3ssl)
     return 0;
 }
 
+/**
+ * @brief Retrieves the content of a requested file.
+ *
+ * @param h3ssl Pointer to the h3ssl structure.
+ * @return Pointer to the file content buffer, or NULL on failure.
+ */
 static char *get_file_data(struct h3ssl *h3ssl)
 {
     char filename[PATH_MAX];
@@ -731,6 +918,18 @@ static char *get_file_data(struct h3ssl *h3ssl)
     return res;
 }
 
+/**
+ * @brief Reads data in chunks for HTTP/3 response.
+ *
+ * @param conn Pointer to the nghttp3 connection.
+ * @param stream_id ID of the stream to send data.
+ * @param vec Pointer to the vector of data buffers.
+ * @param veccnt Count of buffers.
+ * @param pflags Pointer to data flags.
+ * @param user_data Pointer to user data.
+ * @param stream_user_data Pointer to stream-specific user data.
+ * @return Number of bytes written, or 0 for EOF.
+ */
 static nghttp3_ssize step_read_data(nghttp3_conn *conn, int64_t stream_id,
                                     nghttp3_vec *vec, size_t veccnt,
                                     uint32_t *pflags, void *user_data,
@@ -763,6 +962,17 @@ static nghttp3_ssize step_read_data(nghttp3_conn *conn, int64_t stream_id,
     return 1;
 }
 
+/**
+ * @brief Writes data to a QUIC stream.
+ *
+ * @param h3ssl Pointer to the h3ssl structure.
+ * @param streamid ID of the stream to write to.
+ * @param buff Pointer to the data buffer.
+ * @param len Length of the data buffer.
+ * @param flags Write flags.
+ * @param written Pointer to store the number of bytes written.
+ * @return 1 on success, 0 on failure.
+ */
 static int quic_server_write(struct h3ssl *h3ssl, uint64_t streamid,
                              uint8_t *buff, size_t len, uint64_t flags,
                              size_t *written)
@@ -796,12 +1006,26 @@ static int quic_server_write(struct h3ssl *h3ssl, uint64_t streamid,
  * a time is accepted in a blocking loop.
  */
 
-/* ALPN string for TLS handshake. We pretent h3-29 and h3 */
+/* ALPN string for TLS handshake. We present h3-29 and h3 */
 static const unsigned char alpn_ossltest[] = { 5,   'h', '3', '-', '2',
                                                '9', 2,   'h', '3' };
 
-/*
- * This callback validates and negotiates the desired ALPN on the server side.
+/**
+ * @brief Callback to select the Application-Layer Protocol Negotiation (ALPN).
+ *
+ * This function is called during the TLS handshake to negotiate the ALPN
+ * protocol. It matches the client's supported protocols against the server's
+ * supported list and selects the most suitable one.
+ *
+ * @param ssl Pointer to the SSL object representing the TLS connection.
+ * @param out Output pointer to the selected protocol.
+ * @param out_len Length of the selected protocol.
+ * @param in Pointer to the client's supported protocol list.
+ * @param in_len Length of the client's supported protocol list.
+ * @param arg User-defined argument (unused in this implementation).
+ *
+ * @return SSL_TLSEXT_ERR_OK on successful protocol negotiation, or
+ *         SSL_TLSEXT_ERR_ALERT_FATAL if no suitable protocol is found.
  */
 static int select_alpn(SSL *ssl, const unsigned char **out,
                        unsigned char *out_len, const unsigned char *in,
@@ -815,7 +1039,24 @@ static int select_alpn(SSL *ssl, const unsigned char **out,
     return SSL_TLSEXT_ERR_OK;
 }
 
-/* Create SSL_CTX. */
+/**
+ * @brief Creates and configures an SSL_CTX for a QUIC server.
+ *
+ * This function initializes an SSL context for a QUIC server using OpenSSL.
+ * It loads the server's certificate and private key and configures the ALPN
+ * (Application-Layer Protocol Negotiation) callback.
+ *
+ * @param cert_path Path to the server's certificate file in PEM format.
+ * @param key_path Path to the server's private key file in PEM format.
+ *
+ * @return Pointer to the created SSL_CTX on success, or NULL on failure.
+ *
+ * @note The returned SSL_CTX must be freed using SSL_CTX_free() when no
+ * longer needed.
+ *
+ * @warning Ensure the certificate and key files are accessible and valid,
+ * or this function will return NULL.
+ */
 static SSL_CTX *create_ctx(const char *cert_path, const char *key_path)
 {
     SSL_CTX *ctx;
@@ -849,7 +1090,23 @@ err:
     return NULL;
 }
 
-/* Create UDP socket using given port. */
+/**
+ * @brief Creates and binds a UDP socket to the specified port.
+ *
+ * This function initializes a UDP socket, binds it to the given port, and
+ * prepares it for use in network communication.
+ *
+ * @param port The UDP port to bind the socket to.
+ *
+ * @return The file descriptor for the created socket on success, or -1 on
+ *         failure.
+ *
+ * @note The caller is responsible for closing the socket using close() or
+ *       BIO_closesocket() when it is no longer needed.
+ *
+ * @warning Ensure the specified port is not already in use, or the binding
+ *          will fail.
+ */
 static int create_socket(uint16_t port)
 {
     int fd = -1;
@@ -877,7 +1134,6 @@ err:
     return -1;
 }
 
-/* Copied from demos/guide/quic-server-non-block.c */
 /**
  * @brief Waits for activity on the SSL socket, either for reading or writing.
  *
@@ -954,7 +1210,32 @@ static int wait_for_activity(SSL *ssl)
     return (select(sock + 1, &read_fd, &write_fd, NULL, tvp));
 }
 
-/* Main loop for server to accept QUIC connections. */
+/**
+ * @brief Runs the main event loop for the QUIC server.
+ *
+ * This function sets up a QUIC listener using the provided SSL context and
+ * socket, then enters a loop to handle incoming HTTP/3 connections and
+ * requests. It manages bidirectional and unidirectional streams, processes
+ * requests, and sends responses.
+ *
+ * @param ctx Pointer to the SSL_CTX configured for the QUIC server.
+ * @param fd File descriptor of the UDP socket used for QUIC communication.
+ *
+ * @return 1 on successful execution of the server loop, or 0 on failure.
+ *
+ * @note This function blocks the calling thread and handles one connection
+ *       at a time in a single-threaded manner.
+ *
+ * @warning Ensure that the provided SSL_CTX and socket are properly
+ *          initialized before calling this function.
+ *
+ * @details
+ * - Creates a QUIC listener with the given SSL context and UDP socket.
+ * - Accepts connections and initializes the HTTP/3 session.
+ * - Processes HTTP/3 headers, data, and events.
+ * - Sends responses for client requests using file data or default responses.
+ * - Handles connection termination and resource cleanup.
+ */
 static int run_quic_server(SSL_CTX *ctx, int fd)
 {
     int ok = 0;
@@ -1257,9 +1538,36 @@ err:
     return ok;
 }
 
-/*
- * demo server... just return a 20 bytes ascii string as response for any
- * request single h3 connection and single threaded.
+/**
+ * @brief Entry point for the QUIC server application.
+ *
+ * This function initializes the server by setting up the SSL context, parsing
+ * command-line arguments, creating a UDP socket, and starting the QUIC server's
+ * main event loop.
+ *
+ * @param argc The number of command-line arguments.
+ * @param argv An array of command-line arguments:
+ * - `argv[0]`: Program name.
+ * - `argv[1]`: Port number to bind the server.
+ * - `argv[2]`: Path to the server's SSL certificate file.
+ * - `argv[3]`: Path to the server's private key file.
+ *
+ * @return 0 on successful execution, or 1 on failure.
+ *
+ * @usage
+ * ```
+ * ./server <port> <server.crt> <server.key>
+ * ```
+ *
+ * @details
+ * - Validates the command-line arguments.
+ * - Creates an SSL_CTX using the provided certificate and key.
+ * - Parses the port number and verifies its validity.
+ * - Creates a UDP socket bound to the specified port.
+ * - Starts the QUIC server to handle incoming HTTP/3 connections.
+ *
+ * @note On failure, this function outputs error details to stderr and
+ * cleans up allocated resources.
  */
 int main(int argc, char **argv)
 {
