@@ -17,6 +17,7 @@
 
 #include <openssl/err.h>
 
+
 #ifndef OPENSSL_NO_SOCK
 # ifdef SO_MAXCONN
 #  define MAX_LISTEN  SO_MAXCONN
@@ -181,6 +182,7 @@ int BIO_connect(int sock, const BIO_ADDR *addr, int options)
         }
         return 0;
     }
+
 # ifndef OPENSSL_NO_KTLS
     /*
      * The new socket is created successfully regardless of ktls_enable.

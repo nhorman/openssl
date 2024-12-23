@@ -6,7 +6,7 @@
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
  */
-
+#include <execinfo.h>
 #include <openssl/rand.h>
 #include <openssl/err.h>
 #include "internal/ssl_unwrap.h"
@@ -1994,9 +1994,12 @@ void ossl_quic_channel_subtick(QUIC_CHANNEL *ch, QUIC_TICK_RESULT *res,
 
         /* If a ping is due, inform TXP. */
         if (ossl_time_compare(now, ch->ping_deadline) >= 0) {
-            int pn_space = ossl_quic_enc_level_to_pn_space(ch->tx_enc_level);
-
-            ossl_quic_tx_packetiser_schedule_ack_eliciting(ch->txp, pn_space);
+            int pn_space;
+            int i;
+            for (i = QUIC_ENC_LEVEL_INITIAL; i < QUIC_ENC_LEVEL_NUM; i++) {
+                pn_space = ossl_quic_enc_level_to_pn_space(i);
+                ossl_quic_tx_packetiser_schedule_ack_eliciting(ch->txp, pn_space);
+            }
 
             /*
              * If we have no CC budget at this time we cannot process the above
@@ -2114,10 +2117,8 @@ static int ch_rx(QUIC_CHANNEL *ch, int channel_only, int *notify_other_threads)
             ossl_quic_tx_packetiser_record_received_closing_bytes(
                     ch->txp, ch->qrx_pkt->hdr->len);
 
-        if (!handled_any) {
-            ch_update_idle(ch);
-            ch_update_ping_deadline(ch);
-        }
+        ch_update_idle(ch);
+        ch_update_ping_deadline(ch);
 
         ch_rx_handle_packet(ch, channel_only); /* best effort */
 
@@ -2414,12 +2415,13 @@ static void ch_rx_handle_packet(QUIC_CHANNEL *ch, int channel_only)
     case QUIC_PKT_TYPE_INITIAL:
     case QUIC_PKT_TYPE_HANDSHAKE:
     case QUIC_PKT_TYPE_1RTT:
-        if (ch->is_server && ch->qrx_pkt->hdr->type == QUIC_PKT_TYPE_HANDSHAKE)
+        if (ch->is_server && ch->qrx_pkt->hdr->type == QUIC_PKT_TYPE_HANDSHAKE) {
             /*
              * We automatically drop INITIAL EL keys when first successfully
              * decrypting a HANDSHAKE packet, as per the RFC.
              */
             ch_discard_el(ch, QUIC_ENC_LEVEL_INITIAL);
+        }
 
         if (ch->rxku_in_progress
             && ch->qrx_pkt->hdr->type == QUIC_PKT_TYPE_1RTT
@@ -2592,12 +2594,13 @@ static int ch_tx(QUIC_CHANNEL *ch, int *notify_other_threads)
                 ch->have_sent_ack_eliciting_since_rx = 1;
             }
 
-            if (!ch->is_server && status.sent_handshake)
+            if (!ch->is_server && status.sent_handshake) {
                 /*
                 * RFC 9001 s. 4.9.1: A client MUST discard Initial keys when it
                 * first sends a Handshake packet.
                 */
                 ch_discard_el(ch, QUIC_ENC_LEVEL_INITIAL);
+            }
 
             if (ch->rxku_pending_confirm_done)
                 ch->rxku_pending_confirm = 0;
@@ -3030,6 +3033,7 @@ static void copy_tcause(QUIC_TERMINATE_CAUSE *dst,
     }
 }
 
+#define BT_BUF_SIZE 2048
 static void ch_start_terminating(QUIC_CHANNEL *ch,
                                  const QUIC_TERMINATE_CAUSE *tcause,
                                  int force_immediate)

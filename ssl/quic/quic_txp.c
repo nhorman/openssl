@@ -1946,13 +1946,11 @@ static int txp_generate_pre_token(OSSL_QUIC_TX_PACKETISER *txp,
         /* We do not currently support ECN */
         ack2 = *ack;
         ack2.ecn_present = 0;
-
         if (ossl_quic_wire_encode_frame_ack(wpkt,
                                             txp->args.ack_delay_exponent,
                                             &ack2)) {
             if (!tx_helper_commit(h))
                 return 0;
-
             tpkt->had_ack_frame = 1;
 
             if (ack->num_ack_ranges > 0)
@@ -2172,8 +2170,9 @@ static int txp_generate_crypto_frames(OSSL_QUIC_TX_PACKETISER *txp,
 
         /* Find best fit (header length, payload length) combination. */
         if (!determine_crypto_len(h, &chdr, space_left, &hdr_bytes,
-                                  &chdr.len))
+                                  &chdr.len)) {
             return 1; /* can't fit anything */
+        }
 
         /*
          * Truncate IOVs to match our chosen length.
@@ -2885,11 +2884,12 @@ static int txp_generate_for_el(OSSL_QUIC_TX_PACKETISER *txp,
             goto fatal_err;
 
     /* Stream-specific frames */
-    if (a.allow_stream_rel && txp->handshake_complete)
+    if (a.allow_stream_rel && txp->handshake_complete) {
         if (!txp_generate_stream_related(txp, pkt,
                                          &have_ack_eliciting,
                                          &pkt->stream_head))
             goto fatal_err;
+    }
 
     /* PING */
     tx_helper_unrestrict(h);

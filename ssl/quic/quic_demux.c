@@ -66,6 +66,7 @@ struct quic_demux_st {
 
     /* Whether to use local address support. */
     char                        use_local_addr;
+    int printed_peer;
 };
 
 QUIC_DEMUX *ossl_quic_demux_new(BIO *net_bio,

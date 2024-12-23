@@ -435,6 +435,7 @@ static void rx_pkt_history_trim_range_count(struct rx_pkt_history_st *h)
      */
     if (highest != QUIC_PN_INVALID)
         rx_pkt_history_bump_watermark(h, highest + 1);
+
 }
 
 static int rx_pkt_history_add_pn(struct rx_pkt_history_st *h,
@@ -445,13 +446,15 @@ static int rx_pkt_history_add_pn(struct rx_pkt_history_st *h,
     r.start = pn;
     r.end   = pn;
 
+
     if (pn < h->watermark)
         return 1; /* consider this a success case */
 
     if (ossl_uint_set_insert(&h->set, &r) != 1)
         return 0;
-
+#if 0
     rx_pkt_history_trim_range_count(h);
+#endif
     return 1;
 }
 
@@ -459,6 +462,7 @@ static int rx_pkt_history_bump_watermark(struct rx_pkt_history_st *h,
                                          QUIC_PN watermark)
 {
     UINT_RANGE r;
+
 
     if (watermark <= h->watermark)
         return 1;
@@ -768,7 +772,6 @@ static OSSL_ACKM_TX_PKT *ackm_detect_and_remove_lost_pkts(OSSL_ACKM *ackm,
     /* Packets sent before this time are deemed lost. */
     now = ackm->now(ackm->now_arg);
     lost_send_time = ossl_time_subtract(now, loss_delay);
-
     h   = get_tx_history(ackm, pkt_space);
     pkt = ossl_list_tx_history_head(&h->packets);
 
@@ -796,13 +799,14 @@ static OSSL_ACKM_TX_PKT *ackm_detect_and_remove_lost_pkts(OSSL_ACKM *ackm,
             fixup = &pkt->lnext;
             *fixup = NULL;
         } else {
-            if (ossl_time_is_zero(ackm->loss_time[pkt_space]))
+            if (ossl_time_is_zero(ackm->loss_time[pkt_space])) {
                 ackm->loss_time[pkt_space] =
                     ossl_time_add(pkt->time, loss_delay);
-            else
+            } else {
                 ackm->loss_time[pkt_space] =
                     ossl_time_min(ackm->loss_time[pkt_space],
                                   ossl_time_add(pkt->time, loss_delay));
+            }
         }
     }
 
@@ -1006,6 +1010,8 @@ static void ackm_on_pkts_acked(OSSL_ACKM *ackm, const OSSL_ACKM_TX_PKT *apkt)
                                               apkt->largest_acked + 1);
         }
 
+        rx_pkt_history_trim_range_count(get_rx_history(ackm, apkt->pkt_space));
+
         ainfo.tx_time = apkt->time;
         ainfo.tx_size = apkt->num_bytes;
 
@@ -1082,19 +1088,22 @@ int ossl_ackm_on_tx_packet(OSSL_ACKM *ackm, OSSL_ACKM_TX_PKT *pkt)
     /* Time must be set and not move backwards. */
     if (ossl_time_is_zero(pkt->time)
         || ossl_time_compare(ackm->time_of_last_ack_eliciting_pkt[pkt->pkt_space],
-                             pkt->time) > 0)
+                             pkt->time) > 0) {
         return 0;
+    }
 
     /* Must have non-zero number of bytes. */
     if (pkt->num_bytes == 0)
         return 0;
 
     /* Does not make any sense for a non-in-flight packet to be ACK-eliciting. */
-    if (!pkt->is_inflight && pkt->is_ack_eliciting)
+    if (!pkt->is_inflight && pkt->is_ack_eliciting) {
         return 0;
+    }
 
-    if (tx_pkt_history_add(h, pkt) == 0)
+    if (tx_pkt_history_add(h, pkt) == 0) {
         return 0;
+    }
 
     if (pkt->is_inflight) {
         if (pkt->is_ack_eliciting) {
@@ -1209,8 +1218,9 @@ int ossl_ackm_on_rx_ack_frame(OSSL_ACKM *ackm, const OSSL_QUIC_FRAME_ACK *ack,
 
     /* Handle inferred loss. */
     lost_pkts = ackm_detect_and_remove_lost_pkts(ackm, pkt_space);
-    if (lost_pkts != NULL)
+    if (lost_pkts != NULL) {
         ackm_on_pkts_lost(ackm, pkt_space, lost_pkts, /*pseudo=*/0);
+    }
 
     ackm_on_pkts_acked(ackm, na_pkts);
 
@@ -1296,6 +1306,7 @@ int ossl_ackm_on_timeout(OSSL_ACKM *ackm)
     int pkt_space;
     OSSL_TIME earliest_loss_time;
     OSSL_ACKM_TX_PKT *lost_pkts;
+
 
     earliest_loss_time = ackm_get_loss_time_and_space(ackm, &pkt_space);
     if (!ossl_time_is_zero(earliest_loss_time)) {

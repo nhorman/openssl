@@ -4391,6 +4391,8 @@ SSL *ossl_quic_accept_connection(SSL *ssl, uint64_t flags)
     QCTX ctx;
     QUIC_CONNECTION *qc = NULL;
     QUIC_CHANNEL *new_ch = NULL;
+    BIO_ADDR peer;
+
     int no_block = ((flags & SSL_ACCEPT_CONNECTION_NO_BLOCK) != 0);
 
     if (!expect_quic_listener(ssl, &ctx))
@@ -4429,11 +4431,13 @@ SSL *ossl_quic_accept_connection(SSL *ssl, uint64_t flags)
     }
 
     qc = create_qc_from_incoming_conn(ctx.ql, new_ch);
+
     if (qc == NULL) {
         ossl_quic_channel_free(new_ch);
         goto out;
     }
 
+    ossl_quic_channel_get_peer_addr(new_ch, &peer);
 out:
     qctx_unlock(&ctx);
     return qc != NULL ? &qc->obj.ssl : NULL;

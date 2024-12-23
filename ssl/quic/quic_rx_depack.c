@@ -45,6 +45,7 @@ static int depack_do_frame_ping(PACKET *pkt, QUIC_CHANNEL *ch,
                                 uint32_t enc_level,
                                 OSSL_ACKM_RX_PKT *ackm_data)
 {
+    //QDBG("got ping frame for enc_level %d\n", enc_level);
     /* We ignore this frame, apart from eliciting an ACK */
     if (!ossl_quic_wire_decode_frame_ping(pkt)) {
         ossl_quic_channel_raise_protocol_error(ch,

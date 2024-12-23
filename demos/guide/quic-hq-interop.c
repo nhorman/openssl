@@ -54,7 +54,7 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 
-static int handle_io_failure(SSL *ssl, int res);
+static int handle_io_failure(SSL *ssl, int res, int is_stream);
 
 #define REQ_STRING_SZ 1024
 
@@ -280,7 +280,7 @@ static void wait_for_activity(SSL *ssl)
  * @note If the failure is due to an SSL verification error, additional
  * information will be logged to stderr.
  */
-static int handle_io_failure(SSL *ssl, int res)
+static int handle_io_failure(SSL *ssl, int res, int is_stream)
 {
     switch (SSL_get_error(ssl, res)) {
     case SSL_ERROR_WANT_READ:
@@ -302,6 +302,10 @@ static int handle_io_failure(SSL *ssl, int res)
          * stream reset - or some failure occurred on the underlying
          * connection.
          */
+        if (is_stream == 0) {
+            ERR_print_errors_fp(stderr);
+            return -1;
+        }
         switch (SSL_get_stream_read_state(ssl)) {
         case SSL_STREAM_STATE_RESET_REMOTE:
             fprintf(stderr, "Stream reset occurred\n");
@@ -315,9 +319,11 @@ static int handle_io_failure(SSL *ssl, int res)
             fprintf(stderr, "Connection closed\n");
             /* Connection is already closed. */
             break;
-
+        case SSL_STREAM_STATE_NONE:
+            fprintf(stderr, "Stream has no error\n");
+            return 0;
         default:
-            fprintf(stderr, "Unknown stream failure\n");
+            fprintf(stderr, "Unknown stream failure %d\n", SSL_get_stream_read_state(ssl));
             break;
         }
         /*
@@ -439,8 +445,10 @@ static int setup_session_cache(SSL *ssl, SSL_CTX *ctx, const char *filename)
     rc = 1;
 
 err:
-    if (rc == 0)
+    if (rc == 0) {
         BIO_free(session_bio);
+        session_bio = NULL;
+    }
     return rc;
 }
 
@@ -536,7 +544,9 @@ static size_t build_request_set(SSL *ssl)
     for (poll_idx = 0; poll_idx < poll_count; poll_idx++) {
         (void)BIO_flush(outbiolist[poll_idx]);
         BIO_free(outbiolist[poll_idx]);
+        outbiolist[poll_idx] = NULL;
         SSL_free(poll_list[poll_idx].desc.value.ssl);
+        poll_list[poll_idx].desc.value.ssl = NULL;
     }
 
     /*
@@ -633,7 +643,7 @@ static size_t build_request_set(SSL *ssl)
         while (!SSL_write_ex2(poll_list[poll_idx].desc.value.ssl,
                               req_string, strlen(req_string),
                               SSL_WRITE_FLAG_CONCLUDE, &written)) {
-            if (handle_io_failure(poll_list[poll_idx].desc.value.ssl, 0) == 1)
+            if (handle_io_failure(poll_list[poll_idx].desc.value.ssl, 0, 1) == 1)
                 continue; /* Retry */
             fprintf(stderr, "Failed to write start of HTTP request\n");
             goto err; /* Cannot retry: error */
@@ -646,7 +656,9 @@ static size_t build_request_set(SSL *ssl)
 err:
     for (poll_idx = 0; poll_idx < poll_count; poll_idx++) {
         BIO_free(outbiolist[poll_idx]);
+        outbiolist[poll_idx] = NULL;
         SSL_free(poll_list[poll_idx].desc.value.ssl);
+        poll_list[poll_idx].desc.value.ssl = NULL;
     }
     OPENSSL_free(poll_list);
     OPENSSL_free(outbiolist);
@@ -794,9 +806,12 @@ static int setup_connection(char *hostname, char *port,
     }
 
     /* Do the handshake with the server */
+    ERR_clear_error();
     while ((ret = SSL_connect(*ssl)) != 1) {
-        if (handle_io_failure(*ssl, ret) == 1)
+        if (handle_io_failure(*ssl, ret, 0) == 1) {
+            ERR_clear_error();
             continue; /* Retry */
+        }
         fprintf(stderr, "Failed to connect to server\n");
         goto end; /* Cannot retry: error */
     }
@@ -804,8 +819,11 @@ static int setup_connection(char *hostname, char *port,
     return 1;
 end:
     SSL_CTX_free(*ctx);
+    *ctx = NULL;
     SSL_free(*ssl);
+    *ssl = NULL;
     BIO_ADDR_free(peer_addr);
+    peer_addr = NULL;
     return 0;
 }
 
@@ -855,6 +873,8 @@ int main(int argc, char *argv[])
     size_t this_poll_count = 0;
     char *req = NULL;
     char *hostname, *port;
+    int ipv6 = 0;
+    int close_rc;
 
     if (argc < 4) {
         fprintf(stderr, "Usage: quic-hq-interop hostname port reqfile\n");
@@ -948,11 +968,14 @@ int main(int argc, char *argv[])
                 if (!SSL_read_ex(poll_list[poll_idx].desc.value.ssl, buf,
                                  sizeof(buf), &readbytes)) {
                     switch (handle_io_failure(poll_list[poll_idx].desc.value.ssl,
-                                              0)) {
+                                              0, 1)) {
                     case 1:
                         eof = 0;
                         break; /* Retry on next poll */
                     case 0:
+                        if (readbytes != 0) {
+                            fprintf(stderr, "ODD. GOT ZERO_RETURN for zero bytes\n");
+                        }
                         eof = 1;
                         break;
                     case -1:
@@ -970,7 +993,7 @@ int main(int argc, char *argv[])
                 if (!eof) {
                     BIO_write(outbiolist[poll_idx], buf, readbytes);
                 } else {
-                    fprintf(stderr, "completed %s\n", outnames[poll_idx]);
+                    //fprintf(stderr, "completed %s\n", outnames[poll_idx]);
                     /* This file is done, take it out of polling contention */
                     poll_list[poll_idx].events = 0;
                     poll_done++;
@@ -993,9 +1016,14 @@ int main(int argc, char *argv[])
      */
     fprintf(stderr, "Shutting down\n");
     while ((ret = SSL_shutdown(ssl)) != 1) {
-        if (ret < 0 && handle_io_failure(ssl, ret) == 1)
-            continue; /* Retry */
+        if (ret < 0) {
+            close_rc = handle_io_failure(ssl, ret, 0);
+            if (close_rc == 1)
+                continue; /* Retry */
+            break;
+        }
     }
+    fprintf(stderr, "Shutdown complete\n");
 
     /* Success! */
     res = EXIT_SUCCESS;
@@ -1016,6 +1044,7 @@ int main(int argc, char *argv[])
     BIO_ADDR_free(peer_addr);
     OPENSSL_free(reqnames);
     BIO_free(session_bio);
+
     for (poll_idx = 0; poll_idx < poll_count; poll_idx++) {
         BIO_free(outbiolist[poll_idx]);
         SSL_free(poll_list[poll_idx].desc.value.ssl);

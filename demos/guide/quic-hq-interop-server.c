@@ -360,6 +360,7 @@ err:
  * @param ssl A pointer to the SSL object representing the stream.
  * @param res The result code from the SSL I/O operation.
  * @return An integer indicating the outcome:
+ *         - 1: Temporary failure, the operation should be retried.
  *         - 0: EOF, indicating the stream has been closed.
  *         - -1: A fatal error occurred or the stream has been reset.
  *
@@ -370,6 +371,10 @@ err:
 static int handle_io_failure(SSL *ssl, int res)
 {
     switch (SSL_get_error(ssl, res)) {
+    case SSL_ERROR_WANT_READ:
+    case SSL_ERROR_WANT_WRITE:
+        return 1;
+
     case SSL_ERROR_ZERO_RETURN:
         /* EOF */
         return 0;
@@ -469,7 +474,11 @@ static void process_new_stream(SSL *stream)
         total_read += nread;
         if (ret <= 0) {
             ret = handle_io_failure(stream, ret);
-            if (ret == 0) {
+            if (ret >= 1) {
+                /* Transient failure, retry */
+                fprintf(stderr, "Transient read failure, retrying\n");
+                continue;
+            } else if (ret == 0) {
                 /* EOF condition, fin bit set, we got the whole request */
                 break;
             } else {
@@ -551,6 +560,56 @@ out:
     return;
 }
 
+static void handle_streams(SSL *conn)
+{
+    SSL *stream;
+    unsigned long errcode;
+
+    for (;;) {
+        /*
+         * Note that SSL_accept_stream is blocking here, as the
+         * conn SSL object inherited the deafult blocking property
+         * from its parent, the listener SSL object.  As such there
+         * is no need to handle retry failures here.
+         */
+        stream = SSL_accept_stream(conn, 0);
+        if (stream == NULL) {
+            /*
+             * If we don't get a stream, either we
+             * Hit a legitimate error, and should bail out
+             * or
+             * The Client closed the connection, and there are no
+             * more incomming streams expected
+             *
+             * Filter on the shutdown error, and only print an error
+             * message if the cause is not SHUTDOWN
+             */
+            ERR_print_errors_fp(stderr);
+            errcode = ERR_get_error();
+            if (ERR_GET_REASON(errcode) != SSL_R_PROTOCOL_IS_SHUTDOWN)
+                fprintf(stderr, "Failure in accept stream, error %s\n",
+                        ERR_reason_error_string(errcode));
+            break;
+        }
+        process_new_stream(stream);
+        SSL_free(stream);
+    }
+    fprintf(stderr, "Shutting down connection\n");
+    while (SSL_shutdown(conn) != 1)
+            continue;
+
+    SSL_free(conn);
+}
+
+static void *handle_streams_in_thread(void *arg)
+{
+    SSL *conn = (SSL *)arg;
+
+    fprintf(stderr, "Handling streams in new thread\n");
+    handle_streams(conn);
+    return NULL;
+}
+
 /**
  * @brief Runs the QUIC server to accept and handle client connections.
  *
@@ -590,9 +649,13 @@ out:
 static int run_quic_server(SSL_CTX *ctx, BIO *sock)
 {
     int ok = 0;
-    SSL *listener, *conn, *stream;
-    unsigned long errcode;
+    SSL *listener, *conn;
     uint64_t flags = 0;
+    int do_multithread = 0;
+    pthread_t new_thread;
+
+    if (getenv("MULTITHREAD") != NULL)
+        do_multithread = 1;
 
     /*
      * If NO_ADDR_VALIDATE exists in our environment
@@ -621,6 +684,7 @@ static int run_quic_server(SSL_CTX *ctx, BIO *sock)
      * exit this loop if we encounter an error.
      */
     for (;;) {
+        ok = 0;
         /* Pristine error stack for each new connection */
         ERR_clear_error();
 
@@ -633,6 +697,7 @@ static int run_quic_server(SSL_CTX *ctx, BIO *sock)
         }
         printf("Accepted new connection\n");
 
+
         /*
          * QUIC requires that we inform the connection that
          * we always want to accept new streams, rather than reject them
@@ -644,54 +709,16 @@ static int run_quic_server(SSL_CTX *ctx, BIO *sock)
                                             SSL_INCOMING_STREAM_POLICY_ACCEPT,
                                             0)) {
             fprintf(stderr, "Failed to set incomming stream policy\n");
-            goto close_conn;
+            goto err;
         }
 
-        /*
-         * Until the connection is closed, accept incomming stream
-         * requests and serve them
-         */
-        for (;;) {
-            /*
-             * Note that SSL_accept_stream is blocking here, as the
-             * conn SSL object inherited the deafult blocking property
-             * from its parent, the listener SSL object.  As such there
-             * is no need to handle retry failures here.
-             */
-            stream = SSL_accept_stream(conn, 0);
-            if (stream == NULL) {
-                /*
-                 * If we don't get a stream, either we
-                 * Hit a legitimate error, and should bail out
-                 * or
-                 * The Client closed the connection, and there are no
-                 * more incomming streams expected
-                 *
-                 * Filter on the shutdown error, and only print an error
-                 * message if the cause is not SHUTDOWN
-                 */
-                ERR_print_errors_fp(stderr);
-                errcode = ERR_get_error();
-                if (ERR_GET_REASON(errcode) != SSL_R_PROTOCOL_IS_SHUTDOWN)
-                    fprintf(stderr, "Failure in accept stream, error %s\n",
-                            ERR_reason_error_string(errcode));
-                break;
-            }
-            process_new_stream(stream);
-            SSL_free(stream);
+        ok = 1;
+        if (do_multithread == 1) {
+            pthread_create(&new_thread, NULL, handle_streams_in_thread, conn); 
+        } else {
+            handle_streams(conn);
         }
-
-        /*
-         * Shut down the connection. We may need to call this multiple times
-         * to ensure the connection is shutdown completely.
-         */
-close_conn:
-        while (SSL_shutdown(conn) != 1)
-            continue;
-
-        SSL_free(conn);
     }
-
 err:
     SSL_free(listener);
     return ok;

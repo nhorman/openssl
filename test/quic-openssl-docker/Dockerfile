@@ -11,7 +11,7 @@ ARG OPENSSL_BRANCH=master
 # Install needed tools
 RUN apt-get update && apt-get install -y \
     git make gcc perl cmake build-essential \
-    autoconf libtool pkg-config libpsl-dev
+    autoconf libtool pkg-config libpsl-dev gdb
 
 WORKDIR /
 
@@ -46,5 +46,6 @@ RUN git clone --depth 1 https://github.com/curl/curl.git && \
 COPY run_endpoint.sh .
 RUN chmod +x run_endpoint.sh
 RUN apt-get clean
+RUN mkdir /cores
 ENTRYPOINT [ "./run_endpoint.sh" ]
 

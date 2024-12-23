@@ -405,6 +405,8 @@ static int newreno_on_data_lost(OSSL_CC_DATA *cc,
 {
     OSSL_CC_NEWRENO *nr = (OSSL_CC_NEWRENO *)cc;
 
+    //fprintf(stderr, "In newreno_on_data_lost\n");
+
     if (info->tx_size > nr->bytes_in_flight)
         return 0;
 

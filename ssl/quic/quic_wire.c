@@ -82,7 +82,6 @@ int ossl_quic_wire_encode_frame_ack(WPACKET *pkt,
 
     for (i = 1; i < num_ack_ranges; ++i) {
         uint64_t gap, range_len;
-
         gap         = ack->ack_ranges[i - 1].start - ack->ack_ranges[i].end - 2;
         range_len   = ack->ack_ranges[i].end - ack->ack_ranges[i].start;
 

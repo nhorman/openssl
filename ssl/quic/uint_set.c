@@ -9,6 +9,7 @@
 
 #include "internal/uint_set.h"
 #include "internal/common.h"
+#include "internal/time.h"
 #include <assert.h>
 
 /*
@@ -330,3 +331,4 @@ int ossl_uint_set_query(const UINT_SET *s, uint64_t v)
 
     return 0;
 }
+
