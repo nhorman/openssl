@@ -714,6 +714,7 @@ static OSSL_ACKM_TX_PKT *ackm_detect_and_remove_newly_acked_pkts(OSSL_ACKM *ackm
             }
 
             if (range_contains(&ack->ack_ranges[ridx], pkt->pkt_num)) {
+                fprintf(stderr, "pkt num %lu is within range %d, confirmed receipt at peer\n", pkt->pkt_num, ridx);
                 /* We have matched this range. */
                 tx_pkt_history_remove(h, pkt->pkt_num);
 
@@ -794,7 +795,7 @@ static OSSL_ACKM_TX_PKT *ackm_detect_and_remove_lost_pkts(OSSL_ACKM *ackm,
                 || ackm->largest_acked_pkt[pkt_space]
                 >= pkt->pkt_num + K_PKT_THRESHOLD) {
             tx_pkt_history_remove(h, pkt->pkt_num);
-
+            fprintf(stderr, "pkt num %lu is beyond the threshold of largest acked packet %lu or loss time, considering lost\n", pkt->pkt_num, ackm->largest_acked_pkt[pkt_space], ossl_time2ms(lost_send_time));
             *fixup = pkt;
             fixup = &pkt->lnext;
             *fixup = NULL;
