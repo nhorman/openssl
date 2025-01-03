@@ -1156,6 +1156,13 @@ int ossl_ackm_on_rx_ack_frame(OSSL_ACKM *ackm, const OSSL_QUIC_FRAME_ACK *ack,
 {
     OSSL_ACKM_TX_PKT *na_pkts, *lost_pkts;
     int must_set_timer = 0;
+    size_t i;
+
+    fprintf(stderr, "Received an ACK fram with the following ranges\n");
+    fprintf(stderr, "largest acked %lu\n", ack->ack_ranges[0].end);
+    for (i=0; i < ack->num_ack_ranges; i++) {
+        fprintf(stderr, "range[%lu] start %lu end %lu\n", i, ack->ack_ranges[i].start, ack->ack_ranges[i].end);
+    }
 
     if (ackm->largest_acked_pkt[pkt_space] == QUIC_PN_INVALID)
         ackm->largest_acked_pkt[pkt_space] = ack->ack_ranges[0].end;
