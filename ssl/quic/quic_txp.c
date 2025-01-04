@@ -2934,6 +2934,7 @@ static int txp_generate_for_el(OSSL_QUIC_TX_PACKETISER *txp,
     tpkt->ackm_pkt.time             = txp->args.now(txp->args.now_arg);
     tpkt->pkt_type                  = pkt->phdr.type;
 
+    fprintf(stderr, "Ranges comitted in pkt %lu\n", tpkt->ackm_pkt.pkt_num);
     /* Done. */
     return rc;
 

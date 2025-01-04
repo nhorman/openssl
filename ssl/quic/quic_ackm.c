@@ -12,6 +12,12 @@
 #include "internal/common.h"
 #include <assert.h>
 
+static char *spaces[] = {
+        "initial",
+        "handshake",
+        "app"
+};
+
 DEFINE_LIST_OF(tx_history, OSSL_ACKM_TX_PKT);
 
 /*
@@ -714,7 +720,7 @@ static OSSL_ACKM_TX_PKT *ackm_detect_and_remove_newly_acked_pkts(OSSL_ACKM *ackm
             }
 
             if (range_contains(&ack->ack_ranges[ridx], pkt->pkt_num)) {
-                fprintf(stderr, "pkt num %lu is within range %d, confirmed receipt at peer\n", pkt->pkt_num, ridx);
+                fprintf(stderr, "pkt num %lu is within range %lu, confirmed receipt at peer\n", pkt->pkt_num, ridx);
                 /* We have matched this range. */
                 tx_pkt_history_remove(h, pkt->pkt_num);
 
@@ -795,7 +801,7 @@ static OSSL_ACKM_TX_PKT *ackm_detect_and_remove_lost_pkts(OSSL_ACKM *ackm,
                 || ackm->largest_acked_pkt[pkt_space]
                 >= pkt->pkt_num + K_PKT_THRESHOLD) {
             tx_pkt_history_remove(h, pkt->pkt_num);
-            fprintf(stderr, "pkt num %lu is beyond the threshold of largest acked packet %lu or loss time, considering lost\n", pkt->pkt_num, ackm->largest_acked_pkt[pkt_space], ossl_time2ms(lost_send_time));
+            fprintf(stderr, "pkt num %lu is beyond the threshold of largest acked packet %lu or loss time %lu, considering lost\n", pkt->pkt_num, ackm->largest_acked_pkt[pkt_space], ossl_time2ms(lost_send_time));
             *fixup = pkt;
             fixup = &pkt->lnext;
             *fixup = NULL;
@@ -1159,7 +1165,7 @@ int ossl_ackm_on_rx_ack_frame(OSSL_ACKM *ackm, const OSSL_QUIC_FRAME_ACK *ack,
     int must_set_timer = 0;
     size_t i;
 
-    fprintf(stderr, "Received an ACK fram with the following ranges\n");
+    fprintf(stderr, "Received an ACK fram with the following ranges in the %s space\n", spaces[pkt_space]);
     fprintf(stderr, "largest acked %lu\n", ack->ack_ranges[0].end);
     for (i=0; i < ack->num_ack_ranges; i++) {
         fprintf(stderr, "range[%lu] start %lu end %lu\n", i, ack->ack_ranges[i].start, ack->ack_ranges[i].end);
@@ -1315,6 +1321,8 @@ int ossl_ackm_on_timeout(OSSL_ACKM *ackm)
     OSSL_TIME earliest_loss_time;
     OSSL_ACKM_TX_PKT *lost_pkts;
 
+
+    fprintf(stderr, "ACK timeout in ossl_ackm_on_timeout\n");
 
     earliest_loss_time = ackm_get_loss_time_and_space(ackm, &pkt_space);
     if (!ossl_time_is_zero(earliest_loss_time)) {

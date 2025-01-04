@@ -11,6 +11,12 @@
 #include "internal/quic_wire.h"
 #include "internal/qlog_event_helpers.h"
 
+static char *spaces[] = {
+        "initial",
+        "handshake",
+        "app"
+};
+
 DEFINE_LIST_OF(tx_history, OSSL_ACKM_TX_PKT);
 
 int ossl_quic_fifd_init(QUIC_FIFD *fifd,
@@ -149,6 +155,7 @@ static void on_lost(void *arg)
              * by (sstream == NULL) above as the QSM will free the QUIC_SSTREAM
              * and our call to get_sstream_by_id above will return NULL.
              */
+            fprintf(stderr, "Making chunk range %lu-%lu lost for pkt %lu space %s\n", chunks[i].start, chunks[i].end, pkt->ackm_pkt.pkt_num, spaces[pkt->ackm_pkt.pkt_space]);
             ossl_quic_sstream_mark_lost(sstream,
                                         chunks[i].start, chunks[i].end);
             sstream_updated = 1;

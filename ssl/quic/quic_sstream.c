@@ -130,6 +130,7 @@ int ossl_quic_sstream_get_stream_frame(QUIC_SSTREAM *qss,
      */
     max_len = range->range.end - range->range.start + 1;
 
+    fprintf(stderr, "Preping byte range %lu-%lu for sending\n", range->range.start, range->range.end);
     for (i = 0;; ++i) {
         if (total_len >= max_len)
             break;
