@@ -583,6 +583,7 @@ void ossl_quic_port_drop_incoming(QUIC_PORT *port)
 {
     QUIC_CHANNEL *ch;
     SSL *tls;
+    SSL *user_ssl;
 
     for (;;) {
         ch = ossl_quic_port_pop_incoming(port);
@@ -590,8 +591,21 @@ void ossl_quic_port_drop_incoming(QUIC_PORT *port)
             break;
 
         tls = ossl_quic_channel_get0_tls(ch);
-        ossl_quic_channel_free(ch);
-        SSL_free(tls);
+        /*
+         * The user ssl may or may not have been created via the
+         * get_conn_user_ssl callback in the QUIC stack.  The
+         * differentiation being if the user_ssl pointer and tls pointer
+         * are different.  If they are, then the user_ssl needs freeing here
+         * which sends us through ossl_quic_free, which then drops the actual
+         * ch->tls ref and frees the channel
+         */
+        user_ssl = SSL_CONNECTION_GET_USER_SSL(SSL_CONNECTION_FROM_SSL(tls));
+        if (user_ssl == tls) {
+            ossl_quic_channel_free(ch);
+            SSL_free(tls);
+        } else {
+            SSL_free(user_ssl);
+        }
     }
 }
 
