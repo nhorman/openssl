@@ -19,7 +19,7 @@
 
 #define DEMUX_MAX_MSGS_PER_CALL    32
 
-#define DEMUX_DEFAULT_MTU        1500
+#define DEMUX_DEFAULT_MTU        1200
 
 struct quic_demux_st {
     /* The underlying transport BIO with datagram semantics. */
