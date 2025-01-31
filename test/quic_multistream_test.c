@@ -51,6 +51,7 @@ DEFINE_LHASH_OF_EX(STREAM_INFO);
 struct helper {
     int                     s_fd;
     BIO                     *s_net_bio, *s_net_bio_own, *s_qtf_wbio, *s_qtf_wbio_own;
+    BIO                     *trace_bio;
     /* The BIO_ADDR used for BIO_bind() */
     BIO_ADDR                *s_net_bio_orig_addr;
     /* The resulting address, which is the one to connect to */
@@ -665,6 +666,7 @@ static void helper_cleanup(struct helper *h)
     CRYPTO_THREAD_lock_free(h->time_lock);
     h->time_lock = NULL;
 
+    BIO_free(h->trace_bio);
 #if defined(OPENSSL_THREADS)
     ossl_crypto_mutex_free(&h->misc_m);
     ossl_crypto_condvar_free(&h->misc_cv);
@@ -793,6 +795,17 @@ static int helper_init(struct helper *h, const char *script_name,
 
     if (!TEST_ptr(h->c_conn = SSL_new(h->c_ctx)))
         goto err;
+
+    /*
+     * Add a tracing bio here to the client connection
+     * We don't actually use it for testing, but doing so allows
+     * us to exercize almost all of the code in quic_trace.c, as this
+     * test suite is where we send most of our quic frames from, so they
+     * all get parsed in the logs
+     */
+    h->trace_bio = BIO_new(BIO_s_mem());
+    SSL_set_msg_callback(h->c_conn, SSL_trace);
+    SSL_set_msg_callback_arg(h->c_conn, h->trace_bio);
 
     /* Use custom time function for virtual time skip. */
     if (!TEST_true(ossl_quic_set_override_now_cb(h->c_conn, get_time, h)))
