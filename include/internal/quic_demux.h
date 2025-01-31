@@ -240,20 +240,6 @@ void ossl_quic_demux_release_urxe(QUIC_DEMUX *demux,
                                   QUIC_URXE *e);
 
 /*
- * Reinjects a URXE which was issued to a registered DCID callback or the
- * default packet handler callback back into the pending queue. This is useful
- * when a packet has been handled by the default packet handler callback such
- * that a DCID has now been registered and can be dispatched normally by DCID.
- * Once this has been called, the caller must not touch the URXE anymore and
- * must not also call ossl_quic_demux_release_urxe().
- *
- * The URXE is reinjected at the head of the queue, so it will be reprocessed
- * immediately.
- */
-void ossl_quic_demux_reinject_urxe(QUIC_DEMUX *demux,
-                                   QUIC_URXE *e);
-
-/*
  * Process any unprocessed RX'd datagrams, by calling registered callbacks by
  * connection ID, reading more datagrams from the BIO if necessary.
  *
