@@ -287,13 +287,6 @@ ossl_quic_obj_get0_reactor(const QUIC_OBJ *obj)
     return ossl_quic_engine_get0_reactor(ossl_quic_obj_get0_engine(obj));
 }
 
-/* Get a reference to the OSSL_LIB_CTX pointer applicable to a leader. */
-static ossl_inline ossl_unused OSSL_LIB_CTX *
-ossl_quic_obj_get0_libctx(const QUIC_OBJ *obj)
-{
-    return ossl_quic_engine_get0_libctx(ossl_quic_obj_get0_engine(obj));
-}
-
 /* Get a reference to the propq pointer applicable to a leader. */
 static ossl_inline ossl_unused const char *
 ossl_quic_obj_get0_propq(const QUIC_OBJ *obj)
