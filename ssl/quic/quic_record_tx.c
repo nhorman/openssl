@@ -213,21 +213,75 @@ int ossl_qtx_is_enc_level_provisioned(OSSL_QTX *qtx, uint32_t enc_level)
     return ossl_qrl_enc_level_set_get(&qtx->el_set, enc_level, 1) != NULL;
 }
 
+/*
+ * Resize the data buffer attached to an TXE to be n bytes in size. The address
+ * of the TXE might change; the new address is returned, or NULL on failure, in
+ * which case the original TXE remains valid.
+ */
+static TXE *qtx_resize_txe(OSSL_QTX *qtx, TXE_LIST *txl, TXE *txe, size_t n)
+{
+    TXE *txe2 = NULL, *p = NULL;
+
+    /* Should never happen. */
+    if (txe == NULL)
+        return NULL;
+
+    if (n >= SIZE_MAX - sizeof(TXE))
+        return NULL;
+
+    /*
+     * Remove the item from the list to avoid accessing freed memory
+     * Note: If txl is NULL, then the caller has already removed this
+     * from its list, and should not be replaced
+     */
+    if (txl != NULL) {
+        p = ossl_list_txe_prev(txe);
+        ossl_list_txe_remove(txl, txe);
+    }
+
+    /*
+     * NOTE: We do not clear old memory, although it does contain decrypted
+     * data.
+     */
+    txe2 = OPENSSL_realloc(txe, sizeof(TXE) + n);
+    if (txl != NULL) {
+        if (txe2 == NULL || txe == txe2) {
+            if (p == NULL)
+                ossl_list_txe_insert_head(txl, txe);
+            else
+                ossl_list_txe_insert_after(txl, p, txe);
+            return txe2;
+        }
+
+        if (p == NULL)
+            ossl_list_txe_insert_head(txl, txe2);
+        else
+            ossl_list_txe_insert_after(txl, p, txe2);
+    }
+    if (qtx->cons == txe)
+        qtx->cons = txe2;
+
+    txe2->alloc_len = n;
+    return txe2;
+}
+
 /* Allocate a new TXE. */
-static TXE *qtx_alloc_txe(size_t alloc_len)
+static TXE *qtx_alloc_txe(OSSL_QTX *qtx, size_t alloc_len)
 {
     TXE *txe;
 
     if (alloc_len >= SIZE_MAX - sizeof(TXE))
         return NULL;
 
-    txe = OPENSSL_malloc(sizeof(TXE) + alloc_len);
+    txe = OPENSSL_malloc(sizeof(TXE));
     if (txe == NULL)
         return NULL;
 
     ossl_list_txe_init_elem(txe);
-    txe->alloc_len = alloc_len;
     txe->data_len = 0;
+
+    /* use the resize path to grow to the requested size */
+    txe = qtx_resize_txe(qtx, NULL, txe, alloc_len);
     return txe;
 }
 
@@ -246,57 +300,12 @@ static TXE *qtx_ensure_free_txe(OSSL_QTX *qtx, size_t alloc_len)
     if (txe != NULL)
         return txe;
 
-    txe = qtx_alloc_txe(alloc_len);
+    txe = qtx_alloc_txe(qtx, alloc_len);
     if (txe == NULL)
         return NULL;
 
     ossl_list_txe_insert_tail(&qtx->free, txe);
     return txe;
-}
-
-/*
- * Resize the data buffer attached to an TXE to be n bytes in size. The address
- * of the TXE might change; the new address is returned, or NULL on failure, in
- * which case the original TXE remains valid.
- */
-static TXE *qtx_resize_txe(OSSL_QTX *qtx, TXE_LIST *txl, TXE *txe, size_t n)
-{
-    TXE *txe2, *p;
-
-    /* Should never happen. */
-    if (txe == NULL)
-        return NULL;
-
-    if (n >= SIZE_MAX - sizeof(TXE))
-        return NULL;
-
-    /* Remove the item from the list to avoid accessing freed memory */
-    p = ossl_list_txe_prev(txe);
-    ossl_list_txe_remove(txl, txe);
-
-    /*
-     * NOTE: We do not clear old memory, although it does contain decrypted
-     * data.
-     */
-    txe2 = OPENSSL_realloc(txe, sizeof(TXE) + n);
-    if (txe2 == NULL || txe == txe2) {
-        if (p == NULL)
-            ossl_list_txe_insert_head(txl, txe);
-        else
-            ossl_list_txe_insert_after(txl, p, txe);
-        return txe2;
-    }
-
-    if (p == NULL)
-        ossl_list_txe_insert_head(txl, txe2);
-    else
-        ossl_list_txe_insert_after(txl, p, txe2);
-
-    if (qtx->cons == txe)
-        qtx->cons = txe2;
-
-    txe2->alloc_len = n;
-    return txe2;
 }
 
 /*
