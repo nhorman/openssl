@@ -306,13 +306,6 @@ int ossl_qrx_processed_read_pending(OSSL_QRX *qrx)
     return !ossl_list_rxe_is_empty(&qrx->rx_pending);
 }
 
-/* Returns 1 if there are yet-unprocessed packets. */
-int ossl_qrx_unprocessed_read_pending(OSSL_QRX *qrx)
-{
-    return !ossl_list_urxe_is_empty(&qrx->urx_pending)
-           || !ossl_list_urxe_is_empty(&qrx->urx_deferred);
-}
-
 /* Pop the next pending RXE. Returns NULL if no RXE is pending. */
 static RXE *qrx_pop_pending_rxe(OSSL_QRX *qrx)
 {
@@ -1262,16 +1255,6 @@ void ossl_qrx_pkt_up_ref(OSSL_QRX_PKT *pkt)
 
     assert(rxe->refcount > 0);
     ++rxe->refcount;
-}
-
-uint64_t ossl_qrx_get_bytes_received(OSSL_QRX *qrx, int clear)
-{
-    uint64_t v = qrx->bytes_received;
-
-    if (clear)
-        qrx->bytes_received = 0;
-
-    return v;
 }
 
 int ossl_qrx_set_late_validation_cb(OSSL_QRX *qrx,

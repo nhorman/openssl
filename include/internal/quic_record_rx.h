@@ -265,29 +265,6 @@ void ossl_qrx_pkt_up_ref(OSSL_QRX_PKT *pkt);
 int ossl_qrx_processed_read_pending(OSSL_QRX *qrx);
 
 /*
- * Returns 1 if there are any unprocessed (i.e. not yet decrypted) packets
- * waiting to be processed by the QRX. These may or may not result in
- * successfully decrypted packets once processed. This indicates whether
- * unprocessed data is buffered by the QRX, not whether any data is available in
- * a kernel socket buffer.
- */
-int ossl_qrx_unprocessed_read_pending(OSSL_QRX *qrx);
-
-/*
- * Returns the number of UDP payload bytes received from the network so far
- * since the last time this counter was cleared. If clear is 1, clears the
- * counter and returns the old value.
- *
- * The intended use of this is to allow callers to determine how much credit to
- * add to their anti-amplification budgets. This is reported separately instead
- * of in the OSSL_QRX_PKT structure so that a caller can apply
- * anti-amplification credit as soon as a datagram is received, before it has
- * necessarily read all processed packets contained within that datagram from
- * the QRX.
- */
-uint64_t ossl_qrx_get_bytes_received(OSSL_QRX *qrx, int clear);
-
-/*
  * Sets a callback which is called when a packet is received and being validated
  * before being queued in the read queue. This is called after packet body
  * decryption and authentication to prevent exposing side channels. pn_space is
