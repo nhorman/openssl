@@ -43,6 +43,7 @@ typedef struct quic_tserver_args_st {
     void *now_cb_arg;
     const unsigned char *alpn;
     size_t alpnlen;
+    int validate_addr;
 } QUIC_TSERVER_ARGS;
 
 QUIC_TSERVER *ossl_quic_tserver_new(const QUIC_TSERVER_ARGS *args,

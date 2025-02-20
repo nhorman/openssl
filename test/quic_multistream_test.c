@@ -757,6 +757,7 @@ static int helper_init(struct helper *h, const char *script_name,
     s_args.now_cb       = get_time;
     s_args.now_cb_arg   = h;
     s_args.ctx          = NULL;
+    s_args.validate_addr = 1;
 
     if (!TEST_ptr(h->s_priv = ossl_quic_tserver_new(&s_args, certfile, keyfile)))
         goto err;
