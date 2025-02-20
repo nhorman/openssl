@@ -9897,13 +9897,13 @@ static int test_configuration_of_groups(void)
         )
         goto end;
 
-#if !defined(OPENSSL_NO_EC)
+# if !defined(OPENSSL_NO_EC)
     if (!TEST_int_gt(SSL_CTX_set1_groups_list(ctx, "?P-256:?P-521:-?P-256"), 0)
         || !TEST_size_t_eq(ctx->ext.supportedgroups_len, 1)
         || !TEST_int_eq(ctx->ext.supportedgroups[0], OSSL_TLS_GROUP_ID_secp521r1)
         )
         goto end;
-#endif
+# endif
 
     ret = 1;
 
