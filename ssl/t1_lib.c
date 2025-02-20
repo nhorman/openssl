@@ -1624,12 +1624,6 @@ int tls1_set_groups_list(SSL_CTX *ctx,
     }
     gcb.tplcnt = i;
 
-    /* Some more checks (at least one remaining group, not more that nominally 4 key shares */
-    if (gcb.gidcnt == 0) {
-        ERR_raise_data(ERR_LIB_SSL, ERR_R_PASSED_INVALID_ARGUMENT,
-                       "No valid groups in '%s'", str);
-        goto end;
-    }
     if (gcb.ksidcnt > OPENSSL_CLIENT_MAX_KEY_SHARES) {
         ERR_raise_data(ERR_LIB_SSL, ERR_R_PASSED_INVALID_ARGUMENT,
                        "To many keyshares requested in '%s' (max = %d)",
@@ -1641,7 +1635,7 @@ int tls1_set_groups_list(SSL_CTX *ctx,
      * For backward compatibility we let the rest of the code know that a key share
      * for the first valid group should be added if no "*" prefix was used anywhere
      */
-    if (gcb.ksidcnt == 0) {
+    if (gcb.gidcnt > 0 && gcb.ksidcnt == 0) {
         /*
          * No key share group prefix character was used, hence we indicate that a single
          * key share should be sent and flag that it should come from the supported_groups list
