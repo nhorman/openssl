@@ -13065,7 +13065,9 @@ int setup_tests(void)
 #endif
     ADD_ALL_TESTS(test_servername, 10);
     ADD_TEST(test_unknown_sigalgs_groups);
+#if (!defined(OPENSSL_NO_EC) || !defined(OPENSSL_NO_DH)) || !defined(OPENSSL_NO_ML_KEM)
     ADD_TEST(test_configuration_of_groups);
+#endif
 #if !defined(OPENSSL_NO_EC) \
     && (!defined(OSSL_NO_USABLE_TLS1_3) || !defined(OPENSSL_NO_TLS1_2))
     ADD_ALL_TESTS(test_sigalgs_available, 6);
