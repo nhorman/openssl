@@ -263,6 +263,7 @@ struct rcu_lock_st {
 /* Read side acquisition of the current qp */
 static struct rcu_qp *get_hold_current_qp(struct rcu_lock_st *lock)
 {
+    uint32_t reader_idx;
     uint32_t qp_idx;
     int expect_idx_update;
     uint64_t count;
@@ -283,7 +284,8 @@ static struct rcu_qp *get_hold_current_qp(struct rcu_lock_st *lock)
          * systems like x86, but is relevant on other arches
          * Note: This applies to the reload below as well
          */
-        qp_idx = ATOMIC_LOAD_N(uint32_t, &lock->reader_idx, __ATOMIC_ACQUIRE);
+        reader_idx = ATOMIC_LOAD_N(uint32_t, &lock->reader_idx, __ATOMIC_ACQUIRE);
+	qp_idx = reader_idx % lock->group_count;
 	temp_generation = generation;
         count = ATOMIC_ADD_FETCH(&lock->qp_group[qp_idx].users, (uint64_t)1,
                          __ATOMIC_ACQUIRE);
@@ -291,7 +293,7 @@ static struct rcu_qp *get_hold_current_qp(struct rcu_lock_st *lock)
 		expect_idx_update = 1;
 
         /* if the idx hasn't changed, we're good, else try again */
-        if (qp_idx == ATOMIC_LOAD_N(uint32_t, &lock->reader_idx,
+        if (reader_idx == ATOMIC_LOAD_N(uint32_t, &lock->reader_idx,
                                     __ATOMIC_ACQUIRE)) {
 	    if (count & (QP_OBTAINED|QP_RETIRED)) {
 		    fprintf(stderr, "qp %d with count %lx should have been followed with index update\n", qp_idx, count);
@@ -398,6 +400,7 @@ void ossl_rcu_read_unlock(CRYPTO_RCU_LOCK *lock)
 static struct rcu_qp *update_qp(CRYPTO_RCU_LOCK *lock, uint32_t *curr_id, uint32_t *curr_idx)
 {
     uint32_t current_idx;
+    uint32_t next_idx;
     uint64_t count;
 
     pthread_mutex_lock(&lock->alloc_lock);
@@ -411,23 +414,24 @@ static struct rcu_qp *update_qp(CRYPTO_RCU_LOCK *lock, uint32_t *curr_id, uint32
         /* we have to wait for one to be free */
         pthread_cond_wait(&lock->alloc_signal, &lock->alloc_lock);
 
-    *curr_idx = current_idx = lock->current_alloc_idx;
+    *curr_idx = current_idx = lock->current_alloc_idx % lock->group_count;
 
     /* Allocate the qp */
     lock->writers_alloced++;
 
     /* increment the allocation index */
-    lock->current_alloc_idx =
-        (lock->current_alloc_idx + 1) % lock->group_count;
+    lock->current_alloc_idx++;
+
+    next_idx = lock->current_alloc_idx % lock->group_count;
 
     *curr_id = lock->id_ctr;
     lock->id_ctr++;
 
     /* mark the next qp as being available */
-    count = ATOMIC_SUB_FETCH(&lock->qp_group[lock->current_alloc_idx].users, (QP_OBTAINED|QP_RETIRED), __ATOMIC_RELEASE);
+    count = ATOMIC_SUB_FETCH(&lock->qp_group[next_idx].users, (QP_OBTAINED|QP_RETIRED), __ATOMIC_RELEASE);
     OPENSSL_assert((count & (QP_OBTAINED|QP_RETIRED)) == 0);
 
-    ATOMIC_STORE_N(uint32_t, &lock->reader_idx, lock->current_alloc_idx,
+    ATOMIC_STORE_N(uint32_t, &lock->reader_idx, next_idx,
                    __ATOMIC_RELEASE);
     /* mark our current qp as obtained after we update the reader idx */
     count = ATOMIC_ADD_FETCH(&lock->qp_group[current_idx].users, QP_OBTAINED, __ATOMIC_RELEASE);
