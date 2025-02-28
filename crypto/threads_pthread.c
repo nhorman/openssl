@@ -264,6 +264,7 @@ struct rcu_lock_st {
 static struct rcu_qp *get_hold_current_qp(struct rcu_lock_st *lock)
 {
     uint32_t reader_idx;
+    uint32_t old_reader_idx;
     uint32_t qp_idx;
     int expect_idx_update;
     uint64_t count;
@@ -286,10 +287,11 @@ static struct rcu_qp *get_hold_current_qp(struct rcu_lock_st *lock)
          */
         reader_idx = ATOMIC_LOAD_N(uint32_t, &lock->reader_idx, __ATOMIC_ACQUIRE);
 	qp_idx = reader_idx % lock->group_count;
+	old_reader_idx = reader_idx;
 	temp_generation = generation;
         count = ATOMIC_ADD_FETCH(&lock->qp_group[qp_idx].users, (uint64_t)1,
                          __ATOMIC_ACQUIRE);
-	if (count & (QP_RETIRED | QP_OBTAINED))
+	if (count & (QP_OBTAINED|QP_RETIRED))
 		expect_idx_update = 1;
 
         /* if the idx hasn't changed, we're good, else try again */
@@ -297,7 +299,7 @@ static struct rcu_qp *get_hold_current_qp(struct rcu_lock_st *lock)
                                     __ATOMIC_ACQUIRE)) {
 	    if (count & (QP_OBTAINED|QP_RETIRED)) {
 		    fprintf(stderr, "qp %d with count %lx should have been followed with index update\n", qp_idx, count);
-		    fprintf(stderr, "last_retired is %lu, start generation %lu, end generation %lu\n", last_retired, temp_generation, generation);
+		    fprintf(stderr, "reader_idx %lu old_reader_idx %lu last_retired is %lu, start generation %lu, end generation %lu\n", reader_idx, old_reader_idx, last_retired, temp_generation, generation);
 	    }
 	    OPENSSL_assert(expect_idx_update == 0);
             break;
@@ -431,7 +433,7 @@ static struct rcu_qp *update_qp(CRYPTO_RCU_LOCK *lock, uint32_t *curr_id, uint32
     count = ATOMIC_SUB_FETCH(&lock->qp_group[next_idx].users, (QP_OBTAINED|QP_RETIRED), __ATOMIC_RELEASE);
     OPENSSL_assert((count & (QP_OBTAINED|QP_RETIRED)) == 0);
 
-    ATOMIC_STORE_N(uint32_t, &lock->reader_idx, next_idx,
+    ATOMIC_STORE_N(uint32_t, &lock->reader_idx, lock->current_alloc_idx,
                    __ATOMIC_RELEASE);
     /* mark our current qp as obtained after we update the reader idx */
     count = ATOMIC_ADD_FETCH(&lock->qp_group[current_idx].users, QP_OBTAINED, __ATOMIC_RELEASE);
@@ -443,20 +445,46 @@ static struct rcu_qp *update_qp(CRYPTO_RCU_LOCK *lock, uint32_t *curr_id, uint32
     return &lock->qp_group[current_idx];
 }
 
-static void retire_qp(CRYPTO_RCU_LOCK *lock, struct rcu_qp *qp, uint32_t curr_idx)
+static void retire_qp(CRYPTO_RCU_LOCK *lock, struct rcu_qp *qp, uint32_t curr_id, uint32_t curr_idx)
 {
     uint64_t count;
 
-    pthread_mutex_lock(&lock->alloc_lock);
+    /* retire in order */
+    pthread_mutex_lock(&lock->prior_lock);
+    while (lock->next_to_retire != curr_id)
+        pthread_cond_wait(&lock->prior_signal, &lock->prior_lock);
+    lock->next_to_retire++;
+    
+    /*
+     * wait for the reader count to reach zero
+     * Note the use of __ATOMIC_ACQUIRE here to ensure that any
+     * prior __ATOMIC_RELEASE write operation in ossl_rcu_read_unlock
+     * is visible prior to our read
+     * however this is likely just necessary to silence a tsan warning
+     */
+    do {
+        count = ATOMIC_LOAD_N(uint64_t, &qp->users, __ATOMIC_ACQUIRE);
+	if ((count & (QP_RETIRED|QP_OBTAINED)) != QP_OBTAINED)
+		fprintf(stderr, "Draining qp %d has count %lx\n", curr_idx, count);
+	OPENSSL_assert((count & (QP_RETIRED|QP_OBTAINED)) == QP_OBTAINED);
+	count &= ~QP_OBTAINED;
+    } while (count != (uint64_t)0);
+
     count = ATOMIC_ADD_FETCH(&qp->users, QP_RETIRED, __ATOMIC_RELEASE);
     OPENSSL_assert((count & (QP_OBTAINED|QP_RETIRED)) == (QP_OBTAINED|QP_RETIRED));
     OPENSSL_assert(&lock->qp_group[curr_idx] == qp);
+
+    pthread_cond_broadcast(&lock->prior_signal);
+    pthread_mutex_unlock(&lock->prior_lock);
+
+    pthread_mutex_lock(&lock->alloc_lock);
     lock->writers_alloced--;
     last_retired = curr_idx;
     if (curr_idx == 0)
 	generation++;
     pthread_cond_signal(&lock->alloc_signal);
     pthread_mutex_unlock(&lock->alloc_lock);
+
 }
 
 /* TODO: count should be unsigned, e.g uint32_t */
@@ -498,35 +526,10 @@ void ossl_synchronize_rcu(CRYPTO_RCU_LOCK *lock)
     cb_items = lock->cb_items;
     lock->cb_items = NULL;
     pthread_mutex_unlock(&lock->write_lock);
-    pthread_cond_broadcast(&lock->prior_signal);
-    pthread_mutex_unlock(&lock->prior_lock);
 
     qp = update_qp(lock, &curr_id, &curr_idx);
 
-    /* retire in order */
-    pthread_mutex_lock(&lock->prior_lock);
-    while (lock->next_to_retire != curr_id)
-        pthread_cond_wait(&lock->prior_signal, &lock->prior_lock);
-    lock->next_to_retire++;
-    pthread_cond_broadcast(&lock->prior_signal);
-    pthread_mutex_unlock(&lock->prior_lock);
-
-    /*
-     * wait for the reader count to reach zero
-     * Note the use of __ATOMIC_ACQUIRE here to ensure that any
-     * prior __ATOMIC_RELEASE write operation in ossl_rcu_read_unlock
-     * is visible prior to our read
-     * however this is likely just necessary to silence a tsan warning
-     */
-    do {
-        count = ATOMIC_LOAD_N(uint64_t, &qp->users, __ATOMIC_ACQUIRE);
-	if ((count & (QP_RETIRED|QP_OBTAINED)) != QP_OBTAINED)
-		fprintf(stderr, "Draining qp %d has count %lx\n", curr_idx, count);
-	OPENSSL_assert((count & (QP_RETIRED|QP_OBTAINED)) == QP_OBTAINED);
-	count &= ~QP_OBTAINED;
-    } while (count != (uint64_t)0);
-
-    retire_qp(lock, qp, curr_idx);
+    retire_qp(lock, qp, curr_id, curr_idx);
 
     /* handle any callbacks that we have */
     while (cb_items != NULL) {
