@@ -1,0 +1,12 @@
+name: "Install Nasm"
+
+on:
+  workflow_dispatch:
+
+jobs:
+  install_nasm:
+    - name: "Install Nasm"
+      shell: pwsh
+      run: |
+        winget install nasm 
+
