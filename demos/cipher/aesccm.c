@@ -21,43 +21,34 @@
 /* AES-CCM test data obtained from NIST public test vectors */
 
 /* AES key */
-static const unsigned char ccm_key[] = {
-    0xce, 0xb0, 0x09, 0xae, 0xa4, 0x45, 0x44, 0x51, 0xfe, 0xad, 0xf0, 0xe6,
-    0xb3, 0x6f, 0x45, 0x55, 0x5d, 0xd0, 0x47, 0x23, 0xba, 0xa4, 0x48, 0xe8
-};
+static const unsigned char ccm_key[] = {0xce, 0xb0, 0x09, 0xae, 0xa4, 0x45, 0x44, 0x51,
+                                        0xfe, 0xad, 0xf0, 0xe6, 0xb3, 0x6f, 0x45, 0x55,
+                                        0x5d, 0xd0, 0x47, 0x23, 0xba, 0xa4, 0x48, 0xe8};
 
 /* Unique nonce to be used for this message */
-static const unsigned char ccm_nonce[] = {
-    0x76, 0x40, 0x43, 0xc4, 0x94, 0x60, 0xb7
-};
+static const unsigned char ccm_nonce[] = {0x76, 0x40, 0x43, 0xc4, 0x94, 0x60, 0xb7};
 
 /*
  * Example of Additional Authenticated Data (AAD), i.e. unencrypted data
  * which can be authenticated using the generated Tag value.
  */
 static const unsigned char ccm_adata[] = {
-    0x6e, 0x80, 0xdd, 0x7f, 0x1b, 0xad, 0xf3, 0xa1, 0xc9, 0xab, 0x25, 0xc7,
-    0x5f, 0x10, 0xbd, 0xe7, 0x8c, 0x23, 0xfa, 0x0e, 0xb8, 0xf9, 0xaa, 0xa5,
-    0x3a, 0xde, 0xfb, 0xf4, 0xcb, 0xf7, 0x8f, 0xe4
-};
+    0x6e, 0x80, 0xdd, 0x7f, 0x1b, 0xad, 0xf3, 0xa1, 0xc9, 0xab, 0x25, 0xc7, 0x5f, 0x10, 0xbd, 0xe7,
+    0x8c, 0x23, 0xfa, 0x0e, 0xb8, 0xf9, 0xaa, 0xa5, 0x3a, 0xde, 0xfb, 0xf4, 0xcb, 0xf7, 0x8f, 0xe4};
 
 /* Example plaintext to encrypt */
-static const unsigned char ccm_pt[] = {
-    0xc8, 0xd2, 0x75, 0xf9, 0x19, 0xe1, 0x7d, 0x7f, 0xe6, 0x9c, 0x2a, 0x1f,
-    0x58, 0x93, 0x9d, 0xfe, 0x4d, 0x40, 0x37, 0x91, 0xb5, 0xdf, 0x13, 0x10
-};
+static const unsigned char ccm_pt[] = {0xc8, 0xd2, 0x75, 0xf9, 0x19, 0xe1, 0x7d, 0x7f,
+                                       0xe6, 0x9c, 0x2a, 0x1f, 0x58, 0x93, 0x9d, 0xfe,
+                                       0x4d, 0x40, 0x37, 0x91, 0xb5, 0xdf, 0x13, 0x10};
 
 /* Expected ciphertext value */
-static const unsigned char ccm_ct[] = {
-    0x8a, 0x0f, 0x3d, 0x82, 0x29, 0xe4, 0x8e, 0x74, 0x87, 0xfd, 0x95, 0xa2,
-    0x8a, 0xd3, 0x92, 0xc8, 0x0b, 0x36, 0x81, 0xd4, 0xfb, 0xc7, 0xbb, 0xfd
-};
+static const unsigned char ccm_ct[] = {0x8a, 0x0f, 0x3d, 0x82, 0x29, 0xe4, 0x8e, 0x74,
+                                       0x87, 0xfd, 0x95, 0xa2, 0x8a, 0xd3, 0x92, 0xc8,
+                                       0x0b, 0x36, 0x81, 0xd4, 0xfb, 0xc7, 0xbb, 0xfd};
 
 /* Expected AEAD Tag value */
-static const unsigned char ccm_tag[] = {
-    0x2d, 0xd6, 0xef, 0x1c, 0x45, 0xd4, 0xcc, 0xb7, 0x23, 0xdc, 0x07, 0x44,
-    0x14, 0xdb, 0x50, 0x6d
-};
+static const unsigned char ccm_tag[] = {0x2d, 0xd6, 0xef, 0x1c, 0x45, 0xd4, 0xcc, 0xb7,
+                                        0x23, 0xdc, 0x07, 0x44, 0x14, 0xdb, 0x50, 0x6d};
 
 /*
  * A library context and property query can be used to select & filter
@@ -67,8 +58,8 @@ static const unsigned char ccm_tag[] = {
 static OSSL_LIB_CTX *libctx = NULL;
 static const char *propq = NULL;
 
-
-static int aes_ccm_encrypt(void)
+static int
+aes_ccm_encrypt(void)
 {
     int ret = 0;
     EVP_CIPHER_CTX *ctx;
@@ -78,9 +69,7 @@ static int aes_ccm_encrypt(void)
     size_t ccm_tag_len = sizeof(ccm_tag);
     unsigned char outbuf[1024];
     unsigned char outtag[16];
-    OSSL_PARAM params[3] = {
-        OSSL_PARAM_END, OSSL_PARAM_END, OSSL_PARAM_END
-    };
+    OSSL_PARAM params[3] = {OSSL_PARAM_END, OSSL_PARAM_END, OSSL_PARAM_END};
 
     printf("AES CCM Encrypt:\n");
     printf("Plaintext:\n");
@@ -95,11 +84,9 @@ static int aes_ccm_encrypt(void)
         goto err;
 
     /* Default nonce length for AES-CCM is 7 bytes (56 bits). */
-    params[0] = OSSL_PARAM_construct_size_t(OSSL_CIPHER_PARAM_AEAD_IVLEN,
-                                            &ccm_nonce_len);
+    params[0] = OSSL_PARAM_construct_size_t(OSSL_CIPHER_PARAM_AEAD_IVLEN, &ccm_nonce_len);
     /* Set tag length */
-    params[1] = OSSL_PARAM_construct_octet_string(OSSL_CIPHER_PARAM_AEAD_TAG,
-                                                  NULL, ccm_tag_len);
+    params[1] = OSSL_PARAM_construct_octet_string(OSSL_CIPHER_PARAM_AEAD_TAG, NULL, ccm_tag_len);
 
     /*
      * Initialise encrypt operation with the cipher & mode,
@@ -133,8 +120,7 @@ static int aes_ccm_encrypt(void)
         goto err;
 
     /* Get tag */
-    params[0] = OSSL_PARAM_construct_octet_string(OSSL_CIPHER_PARAM_AEAD_TAG,
-                                                  outtag, ccm_tag_len);
+    params[0] = OSSL_PARAM_construct_octet_string(OSSL_CIPHER_PARAM_AEAD_TAG, outtag, ccm_tag_len);
     params[1] = OSSL_PARAM_construct_end();
 
     if (!EVP_CIPHER_CTX_get_params(ctx, params))
@@ -155,7 +141,8 @@ err:
     return ret;
 }
 
-static int aes_ccm_decrypt(void)
+static int
+aes_ccm_decrypt(void)
 {
     int ret = 0;
     EVP_CIPHER_CTX *ctx;
@@ -163,9 +150,7 @@ static int aes_ccm_decrypt(void)
     int outlen, rv;
     unsigned char outbuf[1024];
     size_t ccm_nonce_len = sizeof(ccm_nonce);
-    OSSL_PARAM params[3] = {
-        OSSL_PARAM_END, OSSL_PARAM_END, OSSL_PARAM_END
-    };
+    OSSL_PARAM params[3] = {OSSL_PARAM_END, OSSL_PARAM_END, OSSL_PARAM_END};
 
     printf("AES CCM Decrypt:\n");
     printf("Ciphertext:\n");
@@ -179,12 +164,10 @@ static int aes_ccm_decrypt(void)
         goto err;
 
     /* Set nonce length if default 96 bits is not appropriate */
-    params[0] = OSSL_PARAM_construct_size_t(OSSL_CIPHER_PARAM_AEAD_IVLEN,
-                                            &ccm_nonce_len);
+    params[0] = OSSL_PARAM_construct_size_t(OSSL_CIPHER_PARAM_AEAD_IVLEN, &ccm_nonce_len);
     /* Set tag length */
     params[1] = OSSL_PARAM_construct_octet_string(OSSL_CIPHER_PARAM_AEAD_TAG,
-                                                  (unsigned char *)ccm_tag,
-                                                  sizeof(ccm_tag));
+                                                  (unsigned char *)ccm_tag, sizeof(ccm_tag));
     /*
      * Initialise decrypt operation with the cipher & mode,
      * nonce length and expected tag parameters.
@@ -226,7 +209,8 @@ err:
     return ret;
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
     if (!aes_ccm_encrypt())
         return EXIT_FAILURE;

@@ -63,7 +63,7 @@ typedef struct handshake_result {
     /* server signature type */
     int server_sign_type;
     /* server CA names */
-    STACK_OF(X509_NAME) *server_ca_names;
+    STACK_OF(X509_NAME) * server_ca_names;
     /* client certificate key type */
     int client_cert_type;
     /* client signing hash */
@@ -71,7 +71,7 @@ typedef struct handshake_result {
     /* client signature type */
     int client_sign_type;
     /* Client CA names */
-    STACK_OF(X509_NAME) *client_ca_names;
+    STACK_OF(X509_NAME) * client_ca_names;
     /* Session id status */
     ssl_session_id_t session_id;
     char *cipher;
@@ -83,16 +83,12 @@ HANDSHAKE_RESULT *HANDSHAKE_RESULT_new(void);
 void HANDSHAKE_RESULT_free(HANDSHAKE_RESULT *result);
 
 /* Do a handshake and report some information about the result. */
-HANDSHAKE_RESULT *do_handshake(SSL_CTX *server_ctx, SSL_CTX *server2_ctx,
-                               SSL_CTX *client_ctx, SSL_CTX *resume_server_ctx,
-                               SSL_CTX *resume_client_ctx,
+HANDSHAKE_RESULT *do_handshake(SSL_CTX *server_ctx, SSL_CTX *server2_ctx, SSL_CTX *client_ctx,
+                               SSL_CTX *resume_server_ctx, SSL_CTX *resume_client_ctx,
                                const SSL_TEST_CTX *test_ctx);
 
-int configure_handshake_ctx_for_srp(SSL_CTX *server_ctx, SSL_CTX *server2_ctx,
-                                    SSL_CTX *client_ctx,
-                                    const SSL_TEST_EXTRA_CONF *extra,
-                                    CTX_DATA *server_ctx_data,
-                                    CTX_DATA *server2_ctx_data,
-                                    CTX_DATA *client_ctx_data);
+int configure_handshake_ctx_for_srp(SSL_CTX *server_ctx, SSL_CTX *server2_ctx, SSL_CTX *client_ctx,
+                                    const SSL_TEST_EXTRA_CONF *extra, CTX_DATA *server_ctx_data,
+                                    CTX_DATA *server2_ctx_data, CTX_DATA *client_ctx_data);
 
-#endif  /* OSSL_TEST_HANDSHAKE_HELPER_H */
+#endif /* OSSL_TEST_HANDSHAKE_HELPER_H */

@@ -25,11 +25,11 @@ static const EVP_MD mdc2_md = {
     MDC2_DIGEST_LENGTH,
     0,
     EVP_ORIG_GLOBAL,
-    LEGACY_EVP_MD_METH_TABLE(mdc2_init, mdc2_update, mdc2_final, NULL,
-                             MDC2_BLOCK),
+    LEGACY_EVP_MD_METH_TABLE(mdc2_init, mdc2_update, mdc2_final, NULL, MDC2_BLOCK),
 };
 
-const EVP_MD *EVP_mdc2(void)
+const EVP_MD *
+EVP_mdc2(void)
 {
     return &mdc2_md;
 }

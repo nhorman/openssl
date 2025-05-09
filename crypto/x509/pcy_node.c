@@ -14,19 +14,19 @@
 
 #include "pcy_local.h"
 
-static int node_cmp(const X509_POLICY_NODE *const *a,
-                    const X509_POLICY_NODE *const *b)
+static int
+node_cmp(const X509_POLICY_NODE *const *a, const X509_POLICY_NODE *const *b)
 {
     return OBJ_cmp((*a)->data->valid_policy, (*b)->data->valid_policy);
 }
 
-STACK_OF(X509_POLICY_NODE) *ossl_policy_node_cmp_new(void)
+STACK_OF(X509_POLICY_NODE) * ossl_policy_node_cmp_new(void)
 {
     return sk_X509_POLICY_NODE_new(node_cmp);
 }
 
-X509_POLICY_NODE *ossl_policy_tree_find_sk(STACK_OF(X509_POLICY_NODE) *nodes,
-                                           const ASN1_OBJECT *id)
+X509_POLICY_NODE *
+ossl_policy_tree_find_sk(STACK_OF(X509_POLICY_NODE) * nodes, const ASN1_OBJECT *id)
 {
     X509_POLICY_DATA n;
     X509_POLICY_NODE l;
@@ -37,12 +37,11 @@ X509_POLICY_NODE *ossl_policy_tree_find_sk(STACK_OF(X509_POLICY_NODE) *nodes,
 
     idx = sk_X509_POLICY_NODE_find(nodes, &l);
     return sk_X509_POLICY_NODE_value(nodes, idx);
-
 }
 
-X509_POLICY_NODE *ossl_policy_level_find_node(const X509_POLICY_LEVEL *level,
-                                              const X509_POLICY_NODE *parent,
-                                              const ASN1_OBJECT *id)
+X509_POLICY_NODE *
+ossl_policy_level_find_node(const X509_POLICY_LEVEL *level, const X509_POLICY_NODE *parent,
+                            const ASN1_OBJECT *id)
 {
     X509_POLICY_NODE *node;
     int i;
@@ -56,11 +55,9 @@ X509_POLICY_NODE *ossl_policy_level_find_node(const X509_POLICY_LEVEL *level,
     return NULL;
 }
 
-X509_POLICY_NODE *ossl_policy_level_add_node(X509_POLICY_LEVEL *level,
-                                             X509_POLICY_DATA *data,
-                                             X509_POLICY_NODE *parent,
-                                             X509_POLICY_TREE *tree,
-                                             int extra_data)
+X509_POLICY_NODE *
+ossl_policy_level_add_node(X509_POLICY_LEVEL *level, X509_POLICY_DATA *data,
+                           X509_POLICY_NODE *parent, X509_POLICY_TREE *tree, int extra_data)
 {
     X509_POLICY_NODE *node;
 
@@ -112,20 +109,21 @@ X509_POLICY_NODE *ossl_policy_level_add_node(X509_POLICY_LEVEL *level,
 
     return node;
 
- extra_data_error:
+extra_data_error:
     if (level != NULL) {
         if (level->anyPolicy == node)
             level->anyPolicy = NULL;
         else
-            (void) sk_X509_POLICY_NODE_pop(level->nodes);
+            (void)sk_X509_POLICY_NODE_pop(level->nodes);
     }
 
- node_error:
+node_error:
     ossl_policy_node_free(node);
     return NULL;
 }
 
-void ossl_policy_node_free(X509_POLICY_NODE *node)
+void
+ossl_policy_node_free(X509_POLICY_NODE *node)
 {
     OPENSSL_free(node);
 }
@@ -135,15 +133,15 @@ void ossl_policy_node_free(X509_POLICY_NODE *node)
  * expected policy set otherwise just valid policy.
  */
 
-int ossl_policy_node_match(const X509_POLICY_LEVEL *lvl,
-                           const X509_POLICY_NODE *node, const ASN1_OBJECT *oid)
+int
+ossl_policy_node_match(const X509_POLICY_LEVEL *lvl, const X509_POLICY_NODE *node,
+                       const ASN1_OBJECT *oid)
 {
     int i;
     ASN1_OBJECT *policy_oid;
     const X509_POLICY_DATA *x = node->data;
 
-    if ((lvl->flags & X509_V_FLAG_INHIBIT_MAP)
-        || !(x->flags & POLICY_DATA_FLAG_MAP_MASK)) {
+    if ((lvl->flags & X509_V_FLAG_INHIBIT_MAP) || !(x->flags & POLICY_DATA_FLAG_MAP_MASK)) {
         if (!OBJ_cmp(x->valid_policy, oid))
             return 1;
         return 0;
@@ -155,5 +153,4 @@ int ossl_policy_node_match(const X509_POLICY_LEVEL *lvl,
             return 1;
     }
     return 0;
-
 }

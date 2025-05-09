@@ -21,18 +21,18 @@ typedef enum OPTION_choice {
     OPT_TEST_ENUM
 } OPTION_CHOICE;
 
-const OPTIONS *test_get_options(void)
+const OPTIONS *
+test_get_options(void)
 {
     static const OPTIONS test_options[] = {
         OPT_TEST_OPTIONS_DEFAULT_USAGE,
-        { "config", OPT_CONFIG_FILE, '<',
-          "The configuration file to use for the libctx" },
-        { NULL }
-    };
+        {"config", OPT_CONFIG_FILE, '<', "The configuration file to use for the libctx"},
+        {NULL}};
     return test_options;
 }
 
-static int test_fips_version(int n)
+static int
+test_fips_version(int n)
 {
     const char *version = test_get_argument(n);
 
@@ -41,7 +41,8 @@ static int test_fips_version(int n)
     return TEST_int_eq(fips_provider_version_match(libctx, version), 1);
 }
 
-int setup_tests(void)
+int
+setup_tests(void)
 {
     char *config_file = NULL;
     OPTION_CHOICE o;
@@ -53,7 +54,7 @@ int setup_tests(void)
             config_file = opt_arg();
             break;
         case OPT_TEST_CASES:
-           break;
+            break;
         default:
         case OPT_ERR:
             return 0;
@@ -71,7 +72,8 @@ int setup_tests(void)
     return 1;
 }
 
-void cleanup_tests(void)
+void
+cleanup_tests(void)
 {
     OSSL_PROVIDER_unload(libprov);
     OSSL_LIB_CTX_free(libctx);

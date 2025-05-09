@@ -12,18 +12,18 @@
  */
 
 #ifndef OSSL_CRYPTO_CRMF_LOCAL_H
-# define OSSL_CRYPTO_CRMF_LOCAL_H
+#define OSSL_CRYPTO_CRMF_LOCAL_H
 
-# include <openssl/crmf.h>
-# include <openssl/cms.h> /* for CMS_EnvelopedData and CMS_SignedData */
-# include <openssl/err.h>
-# include "internal/crmf.h" /* for ossl_crmf_attributetypeandvalue_st */
+#include <openssl/crmf.h>
+#include <openssl/cms.h> /* for CMS_EnvelopedData and CMS_SignedData */
+#include <openssl/err.h>
+#include "internal/crmf.h" /* for ossl_crmf_attributetypeandvalue_st */
 
 /* explicit #includes not strictly needed since implied by the above: */
-# include <openssl/types.h>
-# include <openssl/safestack.h>
-# include <openssl/x509.h>
-# include <openssl/x509v3.h>
+#include <openssl/types.h>
+#include <openssl/safestack.h>
+#include <openssl/x509.h>
+#include <openssl/x509v3.h>
 
 /*-
  * EncryptedValue ::= SEQUENCE {
@@ -60,15 +60,15 @@ struct ossl_crmf_encryptedvalue_st {
  *       -- The encrypted private key MUST be placed in the envelopedData
  *       -- encryptedContentInfo encryptedContent OCTET STRING.
  */
-# define OSSL_CRMF_ENCRYPTEDKEY_ENVELOPEDDATA 1
+#define OSSL_CRMF_ENCRYPTEDKEY_ENVELOPEDDATA 1
 
 struct ossl_crmf_encryptedkey_st {
     int type;
     union {
         OSSL_CRMF_ENCRYPTEDVALUE *encryptedValue; /* 0 */ /* Deprecated */
-# ifndef OPENSSL_NO_CMS
+#ifndef OPENSSL_NO_CMS
         CMS_EnvelopedData *envelopedData; /* 1 */
-# endif
+#endif
     } value;
 } /* OSSL_CRMF_ENCRYPTEDKEY */;
 
@@ -87,7 +87,7 @@ typedef struct ossl_crmf_privatekeyinfo_st {
     ASN1_INTEGER *version;
     X509_ALGOR *privateKeyAlgorithm;
     ASN1_OCTET_STRING *privateKey;
-    STACK_OF(X509_ATTRIBUTE) *attributes; /* [ 0 ] */
+    STACK_OF(X509_ATTRIBUTE) * attributes; /* [ 0 ] */
 } OSSL_CRMF_PRIVATEKEYINFO;
 DECLARE_ASN1_FUNCTIONS(OSSL_CRMF_PRIVATEKEYINFO)
 
@@ -205,10 +205,10 @@ typedef struct ossl_crmf_popoprivkey_st {
     int type;
     union {
         ASN1_BIT_STRING *thisMessage; /* 0 */ /* Deprecated */
-        ASN1_INTEGER *subsequentMessage; /* 1 */
-        ASN1_BIT_STRING *dhMAC; /* 2 */ /* Deprecated */
-        OSSL_CRMF_PKMACVALUE *agreeMAC; /* 3 */
-        ASN1_NULL *encryptedKey; /* 4 */
+        ASN1_INTEGER *subsequentMessage;      /* 1 */
+        ASN1_BIT_STRING *dhMAC; /* 2 */       /* Deprecated */
+        OSSL_CRMF_PKMACVALUE *agreeMAC;       /* 3 */
+        ASN1_NULL *encryptedKey;              /* 4 */
         /* When supported, ASN1_NULL needs to be replaced by CMS_ENVELOPEDDATA */
     } value;
 } OSSL_CRMF_POPOPRIVKEY;
@@ -232,7 +232,7 @@ struct ossl_crmf_pbmparameter_st {
     ASN1_INTEGER *iterationCount;
     X509_ALGOR *mac;
 } /* OSSL_CRMF_PBMPARAMETER */;
-# define OSSL_CRMF_PBM_MAX_ITERATION_COUNT 100000 /* if too large allows DoS */
+#define OSSL_CRMF_PBM_MAX_ITERATION_COUNT 100000 /* if too large allows DoS */
 
 /*-
  * POPOSigningKeyInput ::= SEQUENCE {
@@ -290,10 +290,10 @@ DECLARE_ASN1_FUNCTIONS(OSSL_CRMF_POPOSIGNINGKEY)
 typedef struct ossl_crmf_popo_st {
     int type;
     union {
-        ASN1_NULL *raVerified; /* 0 */
-        OSSL_CRMF_POPOSIGNINGKEY *signature; /* 1 */
+        ASN1_NULL *raVerified;                  /* 0 */
+        OSSL_CRMF_POPOSIGNINGKEY *signature;    /* 1 */
         OSSL_CRMF_POPOPRIVKEY *keyEncipherment; /* 2 */
-        OSSL_CRMF_POPOPRIVKEY *keyAgreement; /* 3 */
+        OSSL_CRMF_POPOPRIVKEY *keyAgreement;    /* 3 */
     } value;
 } OSSL_CRMF_POPO;
 DECLARE_ASN1_FUNCTIONS(OSSL_CRMF_POPO)
@@ -338,7 +338,7 @@ struct ossl_crmf_certtemplate_st {
     /* According to rfc 3280: UniqueIdentifier ::= BIT STRING */
     ASN1_BIT_STRING *subjectUID; /* deprecated in version 2 */
     /* Could be X509_EXTENSION*S*, but that's only cosmetic */
-    STACK_OF(X509_EXTENSION) *extensions;
+    STACK_OF(X509_EXTENSION) * extensions;
 } /* OSSL_CRMF_CERTTEMPLATE */;
 
 /*-
@@ -351,7 +351,7 @@ struct ossl_crmf_certtemplate_st {
 struct ossl_crmf_certrequest_st {
     ASN1_INTEGER *certReqId;
     OSSL_CRMF_CERTTEMPLATE *certTemplate;
-    STACK_OF(OSSL_CRMF_ATTRIBUTETYPEANDVALUE /* Controls expanded */) *controls;
+    STACK_OF(OSSL_CRMF_ATTRIBUTETYPEANDVALUE /* Controls expanded */) * controls;
 } /* OSSL_CRMF_CERTREQUEST */;
 DECLARE_ASN1_FUNCTIONS(OSSL_CRMF_CERTREQUEST)
 DECLARE_ASN1_DUP_FUNCTION(OSSL_CRMF_CERTREQUEST)
@@ -370,6 +370,6 @@ struct ossl_crmf_msg_st {
     /* 0 */
     OSSL_CRMF_POPO *popo;
     /* 1 */
-    STACK_OF(OSSL_CRMF_ATTRIBUTETYPEANDVALUE) *regInfo;
+    STACK_OF(OSSL_CRMF_ATTRIBUTETYPEANDVALUE) * regInfo;
 } /* OSSL_CRMF_MSG */;
 #endif

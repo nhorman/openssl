@@ -22,9 +22,9 @@
  * The extra state information to record how much of the 64bit block we have
  * used is contained in *num;
  */
-void IDEA_ofb64_encrypt(const unsigned char *in, unsigned char *out,
-                        long length, IDEA_KEY_SCHEDULE *schedule,
-                        unsigned char *ivec, int *num)
+void
+IDEA_ofb64_encrypt(const unsigned char *in, unsigned char *out, long length,
+                   IDEA_KEY_SCHEDULE *schedule, unsigned char *ivec, int *num)
 {
     register unsigned long v0, v1, t;
     register int n = *num;

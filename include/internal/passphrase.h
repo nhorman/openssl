@@ -8,8 +8,8 @@
  */
 
 #ifndef OSSL_INTERNAL_PASSPHRASE_H
-# define OSSL_INTERNAL_PASSPHRASE_H
-# pragma once
+#define OSSL_INTERNAL_PASSPHRASE_H
+#pragma once
 
 /*
  * This is a passphrase reader bridge with bells and whistles.
@@ -72,7 +72,7 @@ struct ossl_passphrase_data_st {
      */
 
     /* Set to indicate that caching should be done */
-    unsigned int flag_cache_passphrase:1;
+    unsigned int flag_cache_passphrase : 1;
 
     /*-
      * Misc section: caches and other
@@ -87,15 +87,14 @@ struct ossl_passphrase_data_st {
 void ossl_pw_clear_passphrase_data(struct ossl_passphrase_data_st *data);
 void ossl_pw_clear_passphrase_cache(struct ossl_passphrase_data_st *data);
 
-int ossl_pw_set_passphrase(struct ossl_passphrase_data_st *data,
-                           const unsigned char *passphrase,
+int ossl_pw_set_passphrase(struct ossl_passphrase_data_st *data, const unsigned char *passphrase,
                            size_t passphrase_len);
-int ossl_pw_set_pem_password_cb(struct ossl_passphrase_data_st *data,
-                                pem_password_cb *cb, void *cbarg);
+int ossl_pw_set_pem_password_cb(struct ossl_passphrase_data_st *data, pem_password_cb *cb,
+                                void *cbarg);
 int ossl_pw_set_ossl_passphrase_cb(struct ossl_passphrase_data_st *data,
                                    OSSL_PASSPHRASE_CALLBACK *cb, void *cbarg);
-int ossl_pw_set_ui_method(struct ossl_passphrase_data_st *data,
-                          const UI_METHOD *ui_method, void *ui_data);
+int ossl_pw_set_ui_method(struct ossl_passphrase_data_st *data, const UI_METHOD *ui_method,
+                          void *ui_data);
 
 int ossl_pw_enable_passphrase_caching(struct ossl_passphrase_data_st *data);
 int ossl_pw_disable_passphrase_caching(struct ossl_passphrase_data_st *data);

@@ -30,8 +30,7 @@ static const unsigned char privkeydata[] = {
     0x45, 0x6b, 0xd4, 0x50, 0x64, 0x9b, 0xd5, 0x8d, 0x5a, 0xd9, 0xdc, 0xc9, 0x24, 0x23, 0x7a, 0x3b,
     0x48, 0x23, 0xe2, 0x2a, 0x24, 0xf2, 0x9c, 0x6f, 0x87, 0xd0, 0xc4, 0x0f, 0xcc, 0x7e, 0x7c, 0x8d,
     0xfc, 0x08, 0x46, 0x37, 0x85, 0x4f, 0x5b, 0x3a, 0x0b, 0x97, 0xd7, 0x57, 0x2a, 0x5a, 0x6b, 0x7a,
-    0x0b, 0xe4, 0xe8, 0x9c, 0x4a, 0xbb, 0xbf, 0x09, 0x4d
-};
+    0x0b, 0xe4, 0xe8, 0x9c, 0x4a, 0xbb, 0xbf, 0x09, 0x4d};
 
 static const unsigned char pubkeydata[] = {
     0x30, 0x59, 0x30, 0x13, 0x06, 0x07, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02, 0x01, 0x06, 0x08, 0x2a,
@@ -39,8 +38,7 @@ static const unsigned char pubkeydata[] = {
     0x19, 0x43, 0x45, 0x6b, 0xd4, 0x50, 0x64, 0x9b, 0xd5, 0x8d, 0x5a, 0xd9, 0xdc, 0xc9, 0x24, 0x23,
     0x7a, 0x3b, 0x48, 0x23, 0xe2, 0x2a, 0x24, 0xf2, 0x9c, 0x6f, 0x87, 0xd0, 0xc4, 0x0f, 0xcc, 0x7e,
     0x7c, 0x8d, 0xfc, 0x08, 0x46, 0x37, 0x85, 0x4f, 0x5b, 0x3a, 0x0b, 0x97, 0xd7, 0x57, 0x2a, 0x5a,
-    0x6b, 0x7a, 0x0b, 0xe4, 0xe8, 0x9c, 0x4a, 0xbb, 0xbf, 0x09, 0x4d
-};
+    0x6b, 0x7a, 0x0b, 0xe4, 0xe8, 0x9c, 0x4a, 0xbb, 0xbf, 0x09, 0x4d};
 
 /* Self signed cert using ECDSA-SHA256 with the keypair listed above */
 static const unsigned char certdata[] = {
@@ -68,8 +66,7 @@ static const unsigned char certdata[] = {
     0xf3, 0x42, 0x43, 0x38, 0x5b, 0x81, 0x08, 0x1a, 0x47, 0x8e, 0x59, 0x3a, 0x28, 0x5b, 0x97, 0x67,
     0x47, 0x66, 0x2a, 0x16, 0xf5, 0xce, 0xf5, 0x92, 0x02, 0x20, 0x22, 0x0e, 0xab, 0x35, 0xdf, 0x49,
     0xb1, 0x86, 0xa3, 0x3b, 0x26, 0xda, 0x7e, 0x8b, 0x44, 0x45, 0xc6, 0x46, 0x14, 0x04, 0x22, 0x2b,
-    0xe5, 0x2a, 0x62, 0x84, 0xc5, 0x94, 0xa0, 0x1b, 0xaa, 0xa9
-};
+    0xe5, 0x2a, 0x62, 0x84, 0xc5, 0x94, 0xa0, 0x1b, 0xaa, 0xa9};
 
 /* Some simple CRL data */
 static const unsigned char crldata[] = {
@@ -81,23 +78,22 @@ static const unsigned char crldata[] = {
     0x63, 0x09, 0x8B, 0x57, 0x4F, 0xBB, 0xC6, 0x0C, 0xA9, 0x9A, 0x7C, 0x55, 0x89, 0xF9, 0x9C, 0x48,
     0xE9, 0xF3, 0xED, 0xE5, 0xC2, 0x88, 0xCE, 0xEC, 0xB1, 0x51, 0xF1, 0x02, 0x21, 0x00, 0x8B, 0x93,
     0xC5, 0xA6, 0x28, 0x48, 0x5A, 0x4E, 0x10, 0x52, 0x82, 0x12, 0x2F, 0xC4, 0x62, 0x2D, 0x3F, 0x5A,
-    0x62, 0x7F, 0x9D, 0x1B, 0x12, 0xC5, 0x36, 0x25, 0x73, 0x03, 0xF4, 0xDE, 0x62, 0x24
-};
+    0x62, 0x7F, 0x9D, 0x1B, 0x12, 0xC5, 0x36, 0x25, 0x73, 0x03, 0xF4, 0xDE, 0x62, 0x24};
 
 /*
  * Test for Regression discussed in PR #19388
  * In order for this simple test to fail, it requires the digest used for
  * signing to be different from the alg within the loaded cert.
  */
-static int test_x509_tbs_cache(void)
+static int
+test_x509_tbs_cache(void)
 {
     int ret;
     X509 *x = NULL;
     const unsigned char *p = certdata;
 
-    ret = TEST_ptr(x = d2i_X509(NULL, &p, sizeof(certdata)))
-          && TEST_int_gt(X509_sign(x, privkey, signmd), 0)
-          && TEST_int_eq(X509_verify(x, pubkey), 1);
+    ret = TEST_ptr(x = d2i_X509(NULL, &p, sizeof(certdata))) &&
+          TEST_int_gt(X509_sign(x, privkey, signmd), 0) && TEST_int_eq(X509_verify(x, pubkey), 1);
     X509_free(x);
     return ret;
 }
@@ -107,21 +103,23 @@ static int test_x509_tbs_cache(void)
  * In order for this simple test to fail, it requires the digest used for
  * signing to be different from the alg within the loaded cert.
  */
-static int test_x509_crl_tbs_cache(void)
+static int
+test_x509_crl_tbs_cache(void)
 {
     int ret;
     X509_CRL *crl = NULL;
     const unsigned char *p = crldata;
 
-    ret = TEST_ptr(crl = d2i_X509_CRL(NULL, &p, sizeof(crldata)))
-          && TEST_int_gt(X509_CRL_sign(crl, privkey, signmd), 0)
-          && TEST_int_eq(X509_CRL_verify(crl, pubkey), 1);
+    ret = TEST_ptr(crl = d2i_X509_CRL(NULL, &p, sizeof(crldata))) &&
+          TEST_int_gt(X509_CRL_sign(crl, privkey, signmd), 0) &&
+          TEST_int_eq(X509_CRL_verify(crl, pubkey), 1);
 
     X509_CRL_free(crl);
     return ret;
 }
 
-static int test_asn1_item_verify(void)
+static int
+test_asn1_item_verify(void)
 {
     int ret = 0;
     BIO *bio = NULL;
@@ -134,10 +132,10 @@ static int test_asn1_item_verify(void)
     RSA *rsa = NULL;
 #endif
 
-    if (!TEST_ptr(certfile = test_get_argument(0))
-        || !TEST_ptr(bio = BIO_new_file(certfile, "r"))
-        || !TEST_ptr(x509 = PEM_read_bio_X509(bio, NULL, NULL, NULL))
-        || !TEST_ptr(pkey = X509_get0_pubkey(x509)))
+    if (!TEST_ptr(certfile = test_get_argument(0)) ||
+        !TEST_ptr(bio = BIO_new_file(certfile, "r")) ||
+        !TEST_ptr(x509 = PEM_read_bio_X509(bio, NULL, NULL, NULL)) ||
+        !TEST_ptr(pkey = X509_get0_pubkey(x509)))
         goto err;
 
 #ifndef OPENSSL_NO_DEPRECATED_3_0
@@ -151,15 +149,15 @@ static int test_asn1_item_verify(void)
 
     X509_get0_signature(&sig, &alg, x509);
 
-    if (!TEST_int_gt(ASN1_item_verify(ASN1_ITEM_rptr(X509_CINF),
-                                      (X509_ALGOR *)alg, (ASN1_BIT_STRING *)sig,
-                                      &x509->cert_info, pkey), 0))
+    if (!TEST_int_gt(ASN1_item_verify(ASN1_ITEM_rptr(X509_CINF), (X509_ALGOR *)alg,
+                                      (ASN1_BIT_STRING *)sig, &x509->cert_info, pkey),
+                     0))
         goto err;
 
     ERR_set_mark();
-    if (!TEST_int_lt(ASN1_item_verify(ASN1_ITEM_rptr(X509_CINF),
-                                     (X509_ALGOR *)alg, (ASN1_BIT_STRING *)sig,
-                                     NULL, pkey), 0)) {
+    if (!TEST_int_lt(ASN1_item_verify(ASN1_ITEM_rptr(X509_CINF), (X509_ALGOR *)alg,
+                                      (ASN1_BIT_STRING *)sig, NULL, pkey),
+                     0)) {
         ERR_clear_last_mark();
         goto err;
     }
@@ -167,7 +165,7 @@ static int test_asn1_item_verify(void)
 
     ret = 1;
 
- err:
+err:
 #ifndef OPENSSL_NO_DEPRECATED_3_0
     RSA_free(rsa);
 #endif
@@ -178,7 +176,8 @@ static int test_asn1_item_verify(void)
 
 OPT_TEST_DECLARE_USAGE("<pss-self-signed-cert.pem>\n")
 
-int setup_tests(void)
+int
+setup_tests(void)
 {
     const unsigned char *p;
     int cnt;
@@ -213,7 +212,8 @@ int setup_tests(void)
     return 1;
 }
 
-void cleanup_tests(void)
+void
+cleanup_tests(void)
 {
     EVP_MD_free(signmd);
     EVP_PKEY_free(pubkey);

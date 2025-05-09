@@ -16,7 +16,8 @@
 #include "internal/packet.h"
 #include "prov/der_ml_dsa.h"
 
-int ossl_DER_w_algorithmIdentifier_ML_DSA(WPACKET *pkt, int tag, ML_DSA_KEY *key)
+int
+ossl_DER_w_algorithmIdentifier_ML_DSA(WPACKET *pkt, int tag, ML_DSA_KEY *key)
 {
     const uint8_t *alg;
     size_t len;
@@ -35,7 +36,6 @@ int ossl_DER_w_algorithmIdentifier_ML_DSA(WPACKET *pkt, int tag, ML_DSA_KEY *key
         return 0;
     }
     return ossl_DER_w_begin_sequence(pkt, tag)
-        /* No parameters */
-        && ossl_DER_w_precompiled(pkt, -1, alg, len)
-        && ossl_DER_w_end_sequence(pkt, tag);
+           /* No parameters */
+           && ossl_DER_w_precompiled(pkt, -1, alg, len) && ossl_DER_w_end_sequence(pkt, tag);
 }

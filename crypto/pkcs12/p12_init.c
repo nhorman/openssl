@@ -15,7 +15,8 @@
 
 /* Initialise a PKCS12 structure to take data */
 
-PKCS12 *PKCS12_init_ex(int mode, OSSL_LIB_CTX *ctx, const char *propq)
+PKCS12 *
+PKCS12_init_ex(int mode, OSSL_LIB_CTX *ctx, const char *propq)
 {
     PKCS12 *pkcs12;
 
@@ -46,17 +47,19 @@ PKCS12 *PKCS12_init_ex(int mode, OSSL_LIB_CTX *ctx, const char *propq)
     }
     return pkcs12;
 
- err:
+err:
     PKCS12_free(pkcs12);
     return NULL;
 }
 
-PKCS12 *PKCS12_init(int mode)
+PKCS12 *
+PKCS12_init(int mode)
 {
     return PKCS12_init_ex(mode, NULL, NULL);
 }
 
-const PKCS7_CTX *ossl_pkcs12_get0_pkcs7ctx(const PKCS12 *p12)
+const PKCS7_CTX *
+ossl_pkcs12_get0_pkcs7ctx(const PKCS12 *p12)
 {
     if (p12 == NULL || p12->authsafes == NULL)
         return NULL;

@@ -29,23 +29,22 @@ struct self_test_arg {
 static OSSL_LIB_CTX *libctx = NULL;
 static char *pairwise_name = NULL;
 static char *dsaparam_file = NULL;
-static struct self_test_arg self_test_args = { 0 };
+static struct self_test_arg self_test_args = {0};
 
-const OPTIONS *test_get_options(void)
+const OPTIONS *
+test_get_options(void)
 {
     static const OPTIONS test_options[] = {
         OPT_TEST_OPTIONS_DEFAULT_USAGE,
-        { "config", OPT_CONFIG_FILE, '<',
-          "The configuration file to use for the libctx" },
-        { "pairwise", OPT_PAIRWISETEST, 's',
-          "Test keygen pairwise test failures" },
-        { "dsaparam", OPT_DSAPARAM, 's', "DSA param file" },
-        { NULL }
-    };
+        {"config", OPT_CONFIG_FILE, '<', "The configuration file to use for the libctx"},
+        {"pairwise", OPT_PAIRWISETEST, 's', "Test keygen pairwise test failures"},
+        {"dsaparam", OPT_DSAPARAM, 's', "DSA param file"},
+        {NULL}};
     return test_options;
 }
 
-static int self_test_on_pairwise_fail(const OSSL_PARAM params[], void *arg)
+static int
+self_test_on_pairwise_fail(const OSSL_PARAM params[], void *arg)
 {
     struct self_test_arg *args = arg;
     const OSSL_PARAM *p = NULL;
@@ -66,7 +65,8 @@ static int self_test_on_pairwise_fail(const OSSL_PARAM params[], void *arg)
     return 1;
 }
 
-static int setup_selftest_pairwise_failure(const char *type)
+static int
+setup_selftest_pairwise_failure(const char *type)
 {
     int ret = 0;
     OSSL_PROVIDER *prov = NULL;
@@ -84,7 +84,8 @@ err:
     return ret;
 }
 
-static int test_keygen_pairwise_failure(void)
+static int
+test_keygen_pairwise_failure(void)
 {
     BIO *bio = NULL;
     EVP_PKEY_CTX *ctx = NULL;
@@ -176,7 +177,8 @@ err:
     return ret;
 }
 
-int setup_tests(void)
+int
+setup_tests(void)
 {
     OPTION_CHOICE o;
     char *config_file = NULL;
@@ -193,7 +195,7 @@ int setup_tests(void)
             dsaparam_file = opt_arg();
             break;
         case OPT_TEST_CASES:
-           break;
+            break;
         default:
         case OPT_ERR:
             return 0;
@@ -211,7 +213,8 @@ int setup_tests(void)
     return 1;
 }
 
-void cleanup_tests(void)
+void
+cleanup_tests(void)
 {
     OSSL_LIB_CTX_free(libctx);
 }

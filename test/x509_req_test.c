@@ -21,7 +21,8 @@ static char *certsDir = NULL;
  * version 6, instead of 1. As this request is malformed, even its
  * signature is valid, the verification must fail.
  */
-static int test_x509_req_detect_invalid_version(void)
+static int
+test_x509_req_detect_invalid_version(void)
 {
     char *certFilePath;
     BIO *bio = NULL;
@@ -55,7 +56,8 @@ err:
 
 OPT_TEST_DECLARE_USAGE("certdir\n")
 
-int setup_tests(void)
+int
+setup_tests(void)
 {
     if (!test_skip_common_options()) {
         TEST_error("Error parsing test options\n");
@@ -68,6 +70,7 @@ int setup_tests(void)
     return 1;
 }
 
-void cleanup_tests(void)
+void
+cleanup_tests(void)
 {
 }

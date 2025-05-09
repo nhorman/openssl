@@ -16,32 +16,38 @@
 
 #include "buildinf.h"
 
-unsigned long OpenSSL_version_num(void)
+unsigned long
+OpenSSL_version_num(void)
 {
     return OPENSSL_VERSION_NUMBER;
 }
 
-unsigned int OPENSSL_version_major(void)
+unsigned int
+OPENSSL_version_major(void)
 {
     return OPENSSL_VERSION_MAJOR;
 }
 
-unsigned int OPENSSL_version_minor(void)
+unsigned int
+OPENSSL_version_minor(void)
 {
     return OPENSSL_VERSION_MINOR;
 }
 
-unsigned int OPENSSL_version_patch(void)
+unsigned int
+OPENSSL_version_patch(void)
 {
     return OPENSSL_VERSION_PATCH;
 }
 
-const char *OPENSSL_version_pre_release(void)
+const char *
+OPENSSL_version_pre_release(void)
 {
     return OPENSSL_VERSION_PRE_RELEASE;
 }
 
-const char *OPENSSL_version_build_metadata(void)
+const char *
+OPENSSL_version_build_metadata(void)
 {
     return OPENSSL_VERSION_BUILD_METADATA;
 }
@@ -62,12 +68,9 @@ static CRYPTO_ONCE version_strings_once = CRYPTO_ONCE_STATIC_INIT;
 
 DEFINE_RUN_ONCE_STATIC(version_strings_setup)
 {
-    BIO_snprintf(openssldir, sizeof(openssldir), "OPENSSLDIR: \"%s\"",
-                 ossl_get_openssldir());
-    BIO_snprintf(enginesdir, sizeof(enginesdir), "ENGINESDIR: \"%s\"",
-                 ossl_get_enginesdir());
-    BIO_snprintf(modulesdir, sizeof(modulesdir), "MODULESDIR: \"%s\"",
-                 ossl_get_modulesdir());
+    BIO_snprintf(openssldir, sizeof(openssldir), "OPENSSLDIR: \"%s\"", ossl_get_openssldir());
+    BIO_snprintf(enginesdir, sizeof(enginesdir), "ENGINESDIR: \"%s\"", ossl_get_enginesdir());
+    BIO_snprintf(modulesdir, sizeof(modulesdir), "MODULESDIR: \"%s\"", ossl_get_modulesdir());
     return 1;
 }
 
@@ -76,7 +79,8 @@ DEFINE_RUN_ONCE_STATIC(version_strings_setup)
 
 #endif
 
-const char *OpenSSL_version(int t)
+const char *
+OpenSSL_version(int t)
 {
 #if defined(_WIN32) && defined(OSSL_WINCTX)
     /* Cannot really fail but we would return empty strings anyway */

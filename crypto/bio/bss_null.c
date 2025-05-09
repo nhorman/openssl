@@ -18,36 +18,30 @@ static int null_puts(BIO *h, const char *str);
 static int null_gets(BIO *h, char *str, int size);
 static long null_ctrl(BIO *h, int cmd, long arg1, void *arg2);
 static const BIO_METHOD null_method = {
-    BIO_TYPE_NULL,
-    "NULL",
-    bwrite_conv,
-    null_write,
-    bread_conv,
-    null_read,
-    null_puts,
-    null_gets,
-    null_ctrl,
-    NULL,
-    NULL,
-    NULL,                     /* null_callback_ctrl */
+    BIO_TYPE_NULL, "NULL",    bwrite_conv, null_write, bread_conv, null_read,
+    null_puts,     null_gets, null_ctrl,   NULL,       NULL,       NULL, /* null_callback_ctrl */
 };
 
-const BIO_METHOD *BIO_s_null(void)
+const BIO_METHOD *
+BIO_s_null(void)
 {
     return &null_method;
 }
 
-static int null_read(BIO *b, char *out, int outl)
+static int
+null_read(BIO *b, char *out, int outl)
 {
     return 0;
 }
 
-static int null_write(BIO *b, const char *in, int inl)
+static int
+null_write(BIO *b, const char *in, int inl)
 {
     return inl;
 }
 
-static long null_ctrl(BIO *b, int cmd, long num, void *ptr)
+static long
+null_ctrl(BIO *b, int cmd, long num, void *ptr)
 {
     long ret = 1;
 
@@ -72,12 +66,14 @@ static long null_ctrl(BIO *b, int cmd, long num, void *ptr)
     return ret;
 }
 
-static int null_gets(BIO *bp, char *buf, int size)
+static int
+null_gets(BIO *bp, char *buf, int size)
 {
     return 0;
 }
 
-static int null_puts(BIO *bp, const char *str)
+static int
+null_puts(BIO *bp, const char *str)
 {
     if (str == NULL)
         return 0;

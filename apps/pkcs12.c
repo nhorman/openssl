@@ -23,54 +23,88 @@
 #include <openssl/kdf.h>
 #include <openssl/rand.h>
 
-#define NOKEYS          0x1
-#define NOCERTS         0x2
-#define INFO            0x4
-#define CLCERTS         0x8
-#define CACERTS         0x10
+#define NOKEYS 0x1
+#define NOCERTS 0x2
+#define INFO 0x4
+#define CLCERTS 0x8
+#define CACERTS 0x10
 
 #define PASSWD_BUF_SIZE 2048
 
-#define WARN_EXPORT(opt) \
-    BIO_printf(bio_err, "Warning: -%s option ignored with -export\n", opt);
-#define WARN_NO_EXPORT(opt) \
+#define WARN_EXPORT(opt) BIO_printf(bio_err, "Warning: -%s option ignored with -export\n", opt);
+#define WARN_NO_EXPORT(opt)                                                                        \
     BIO_printf(bio_err, "Warning: -%s option ignored without -export\n", opt);
 
-static int get_cert_chain(X509 *cert, X509_STORE *store,
-                          STACK_OF(X509) *untrusted_certs,
-                          STACK_OF(X509) **chain);
-int dump_certs_keys_p12(BIO *out, const PKCS12 *p12,
-                        const char *pass, int passlen, int options,
+static int get_cert_chain(X509 *cert, X509_STORE *store, STACK_OF(X509) * untrusted_certs,
+                          STACK_OF(X509) * *chain);
+int dump_certs_keys_p12(BIO *out, const PKCS12 *p12, const char *pass, int passlen, int options,
                         char *pempass, const EVP_CIPHER *enc);
-int dump_certs_pkeys_bags(BIO *out, const STACK_OF(PKCS12_SAFEBAG) *bags,
-                          const char *pass, int passlen, int options,
-                          char *pempass, const EVP_CIPHER *enc);
-int dump_certs_pkeys_bag(BIO *out, const PKCS12_SAFEBAG *bags,
-                         const char *pass, int passlen,
+int dump_certs_pkeys_bags(BIO *out, const STACK_OF(PKCS12_SAFEBAG) * bags, const char *pass,
+                          int passlen, int options, char *pempass, const EVP_CIPHER *enc);
+int dump_certs_pkeys_bag(BIO *out, const PKCS12_SAFEBAG *bags, const char *pass, int passlen,
                          int options, char *pempass, const EVP_CIPHER *enc);
 void print_attribute(BIO *out, const ASN1_TYPE *av);
-int print_attribs(BIO *out, const STACK_OF(X509_ATTRIBUTE) *attrlst,
-                  const char *name);
+int print_attribs(BIO *out, const STACK_OF(X509_ATTRIBUTE) * attrlst, const char *name);
 void hex_prin(BIO *out, unsigned char *buf, int len);
 static int alg_print(const X509_ALGOR *alg);
-int cert_load(BIO *in, STACK_OF(X509) *sk);
+int cert_load(BIO *in, STACK_OF(X509) * sk);
 static int set_pbe(int *ppbe, const char *str);
 static int jdk_trust(PKCS12_SAFEBAG *bag, void *cbarg);
 
 typedef enum OPTION_choice {
     OPT_COMMON,
-    OPT_CIPHER, OPT_NOKEYS, OPT_KEYEX, OPT_KEYSIG, OPT_NOCERTS, OPT_CLCERTS,
-    OPT_CACERTS, OPT_NOOUT, OPT_INFO, OPT_CHAIN, OPT_TWOPASS, OPT_NOMACVER,
+    OPT_CIPHER,
+    OPT_NOKEYS,
+    OPT_KEYEX,
+    OPT_KEYSIG,
+    OPT_NOCERTS,
+    OPT_CLCERTS,
+    OPT_CACERTS,
+    OPT_NOOUT,
+    OPT_INFO,
+    OPT_CHAIN,
+    OPT_TWOPASS,
+    OPT_NOMACVER,
 #ifndef OPENSSL_NO_DES
     OPT_DESCERT,
 #endif
-    OPT_EXPORT, OPT_ITER, OPT_NOITER, OPT_MACITER, OPT_NOMACITER, OPT_MACSALTLEN,
-    OPT_NOMAC, OPT_LMK, OPT_NODES, OPT_NOENC, OPT_MACALG, OPT_CERTPBE, OPT_KEYPBE,
-    OPT_INKEY, OPT_CERTFILE, OPT_UNTRUSTED, OPT_PASSCERTS,
-    OPT_NAME, OPT_CSP, OPT_CANAME,
-    OPT_IN, OPT_OUT, OPT_PASSIN, OPT_PASSOUT, OPT_PASSWORD, OPT_CAPATH,
-    OPT_CAFILE, OPT_CASTORE, OPT_NOCAPATH, OPT_NOCAFILE, OPT_NOCASTORE, OPT_ENGINE,
-    OPT_R_ENUM, OPT_PROV_ENUM, OPT_JDKTRUST, OPT_PBMAC1_PBKDF2, OPT_PBMAC1_PBKDF2_MD,
+    OPT_EXPORT,
+    OPT_ITER,
+    OPT_NOITER,
+    OPT_MACITER,
+    OPT_NOMACITER,
+    OPT_MACSALTLEN,
+    OPT_NOMAC,
+    OPT_LMK,
+    OPT_NODES,
+    OPT_NOENC,
+    OPT_MACALG,
+    OPT_CERTPBE,
+    OPT_KEYPBE,
+    OPT_INKEY,
+    OPT_CERTFILE,
+    OPT_UNTRUSTED,
+    OPT_PASSCERTS,
+    OPT_NAME,
+    OPT_CSP,
+    OPT_CANAME,
+    OPT_IN,
+    OPT_OUT,
+    OPT_PASSIN,
+    OPT_PASSOUT,
+    OPT_PASSWORD,
+    OPT_CAPATH,
+    OPT_CAFILE,
+    OPT_CASTORE,
+    OPT_NOCAPATH,
+    OPT_NOCAFILE,
+    OPT_NOCASTORE,
+    OPT_ENGINE,
+    OPT_R_ENUM,
+    OPT_PROV_ENUM,
+    OPT_JDKTRUST,
+    OPT_PBMAC1_PBKDF2,
+    OPT_PBMAC1_PBKDF2_MD,
 #ifndef OPENSSL_NO_DES
     OPT_LEGACY_ALG
 #endif
@@ -118,24 +152,20 @@ const OPTIONS pkcs12_options[] = {
     {"certfile", OPT_CERTFILE, '<', "Extra certificates for PKCS12 output"},
     {"passcerts", OPT_PASSCERTS, 's', "Certificate file pass phrase source"},
     {"chain", OPT_CHAIN, '-', "Build and add certificate chain for EE cert,"},
-    {OPT_MORE_STR, 0, 0,
-     "which is the 1st cert from -in matching the private key (if given)"},
+    {OPT_MORE_STR, 0, 0, "which is the 1st cert from -in matching the private key (if given)"},
     {"untrusted", OPT_UNTRUSTED, '<', "Untrusted certificates for chain building"},
     {"CAfile", OPT_CAFILE, '<', "PEM-format file of CA's"},
     {"CApath", OPT_CAPATH, '/', "PEM-format directory of CA's"},
     {"CAstore", OPT_CASTORE, ':', "URI to store of CA's"},
-    {"no-CAfile", OPT_NOCAFILE, '-',
-     "Do not load the default certificates file"},
+    {"no-CAfile", OPT_NOCAFILE, '-', "Do not load the default certificates file"},
     {"no-CApath", OPT_NOCAPATH, '-',
      "Do not load certificates from the default certificates directory"},
     {"no-CAstore", OPT_NOCASTORE, '-',
      "Do not load certificates from the default certificates store"},
     {"name", OPT_NAME, 's', "Use name as friendly name"},
-    {"caname", OPT_CANAME, 's',
-     "Use name as CA friendly name (can be repeated)"},
+    {"caname", OPT_CANAME, 's', "Use name as CA friendly name (can be repeated)"},
     {"CSP", OPT_CSP, 's', "Microsoft CSP name"},
-    {"LMK", OPT_LMK, '-',
-     "Add local machine keyset attribute to private key"},
+    {"LMK", OPT_LMK, '-', "Add local machine keyset attribute to private key"},
     {"keyex", OPT_KEYEX, '-', "Set key type to MS key exchange"},
     {"keysig", OPT_KEYSIG, '-', "Set key type to MS key signature"},
     {"keypbe", OPT_KEYPBE, 's', "Private key PBE algorithm (default AES-256 CBC)"},
@@ -145,21 +175,22 @@ const OPTIONS pkcs12_options[] = {
     {"descert", OPT_DESCERT, '-',
      "Encrypt output with 3DES (default PBES2 with PBKDF2 and AES-256 CBC)"},
 #endif
-    {"macalg", OPT_MACALG, 's',
-     "Digest algorithm to use in MAC (default SHA256)"},
+    {"macalg", OPT_MACALG, 's', "Digest algorithm to use in MAC (default SHA256)"},
     {"pbmac1_pbkdf2", OPT_PBMAC1_PBKDF2, '-', "Use PBMAC1 with PBKDF2 instead of MAC"},
-    {"pbmac1_pbkdf2_md", OPT_PBMAC1_PBKDF2_MD, 's', "Digest to use for PBMAC1 KDF (default SHA256)"},
+    {"pbmac1_pbkdf2_md", OPT_PBMAC1_PBKDF2_MD, 's',
+     "Digest to use for PBMAC1 KDF (default SHA256)"},
     {"iter", OPT_ITER, 'p', "Specify the iteration count for encryption and MAC"},
     {"noiter", OPT_NOITER, '-', "Don't use encryption iteration"},
     {"nomaciter", OPT_NOMACITER, '-', "Don't use MAC iteration)"},
     {"maciter", OPT_MACITER, '-', "Unused, kept for backwards compatibility"},
     {"macsaltlen", OPT_MACSALTLEN, 'p', "Specify the salt len for MAC"},
     {"nomac", OPT_NOMAC, '-', "Don't generate MAC"},
-    {"jdktrust", OPT_JDKTRUST, 's', "Mark certificate in PKCS#12 store as trusted for JDK compatibility"},
-    {NULL}
-};
+    {"jdktrust", OPT_JDKTRUST, 's',
+     "Mark certificate in PKCS#12 store as trusted for JDK compatibility"},
+    {NULL}};
 
-int pkcs12_main(int argc, char **argv)
+int
+pkcs12_main(int argc, char **argv)
 {
     char *infile = NULL, *outfile = NULL, *keyname = NULL, *certfile = NULL;
     char *untrusted = NULL, *ciphername = NULL, *enc_name = NULL;
@@ -197,7 +228,7 @@ int pkcs12_main(int argc, char **argv)
         switch (o) {
         case OPT_EOF:
         case OPT_ERR:
- opthelp:
+        opthelp:
             BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
             goto end;
         case OPT_HELP:
@@ -325,8 +356,7 @@ int pkcs12_main(int argc, char **argv)
             csp_name = opt_arg();
             break;
         case OPT_CANAME:
-            if (canames == NULL
-                && (canames = sk_OPENSSL_STRING_new_null()) == NULL)
+            if (canames == NULL && (canames = sk_OPENSSL_STRING_new_null()) == NULL)
                 goto end;
             if (sk_OPENSSL_STRING_push(canames, opt_arg()) <= 0)
                 goto end;
@@ -398,8 +428,8 @@ int pkcs12_main(int argc, char **argv)
         if ((options & CACERTS) != 0)
             WARN_EXPORT("cacerts");
         if (enc != default_enc)
-            BIO_printf(bio_err,
-                       "Warning: output encryption option -%s ignored with -export\n", enc_name);
+            BIO_printf(bio_err, "Warning: output encryption option -%s ignored with -export\n",
+                       enc_name);
     } else {
         if (keyname != NULL)
             WARN_NO_EXPORT("inkey");
@@ -523,8 +553,8 @@ int pkcs12_main(int argc, char **argv)
         /* To avoid bit rot */
         if (1) {
 #ifndef OPENSSL_NO_UI_CONSOLE
-            if (EVP_read_pw_string(
-                macpass, sizeof(macpass), "Enter MAC Password:", export_pkcs12)) {
+            if (EVP_read_pw_string(macpass, sizeof(macpass),
+                                   "Enter MAC Password:", export_pkcs12)) {
                 BIO_printf(bio_err, "Can't read Password\n");
                 goto end;
             }
@@ -556,19 +586,15 @@ int pkcs12_main(int argc, char **argv)
         }
 
         if (!(options & NOKEYS)) {
-            key = load_key(keyname ? keyname : infile,
-                           FORMAT_PEM, 1, passin, e,
-                           keyname ?
-                           "private key from -inkey file" :
-                           "private key from -in file");
+            key = load_key(keyname ? keyname : infile, FORMAT_PEM, 1, passin, e,
+                           keyname ? "private key from -inkey file" : "private key from -in file");
             if (key == NULL)
                 goto export_end;
         }
 
         /* Load all certs in input file */
         if (!(options & NOCERTS)) {
-            if (!load_certs(infile, 1, &certs, passin,
-                            "certificates from -in file"))
+            if (!load_certs(infile, 1, &certs, passin, "certificates from -in file"))
                 goto export_end;
             if (sk_X509_num(certs) < 1) {
                 BIO_printf(bio_err, "No certificate in -in file %s\n", infile);
@@ -590,9 +616,7 @@ int pkcs12_main(int argc, char **argv)
                     }
                 }
                 if (ee_cert == NULL) {
-                    BIO_printf(bio_err,
-                               "No cert in -in file '%s' matches private key\n",
-                               infile);
+                    BIO_printf(bio_err, "No cert in -in file '%s' matches private key\n", infile);
                     goto export_end;
                 }
             }
@@ -600,15 +624,14 @@ int pkcs12_main(int argc, char **argv)
 
         /* Load any untrusted certificates for chain building */
         if (untrusted != NULL) {
-            if (!load_certs(untrusted, 0, &untrusted_certs, passcerts,
-                            "untrusted certificates"))
+            if (!load_certs(untrusted, 0, &untrusted_certs, passcerts, "untrusted certificates"))
                 goto export_end;
         }
 
         /* If chaining get chain from end entity cert */
         if (chain) {
             int vret;
-            STACK_OF(X509) *chain2;
+            STACK_OF(X509) * chain2;
             X509_STORE *store;
             X509 *ee_cert_tmp = ee_cert;
 
@@ -617,14 +640,12 @@ int pkcs12_main(int argc, char **argv)
                 ee_cert_tmp = sk_X509_value(certs, 0);
 
             if (ee_cert_tmp == NULL) {
-                BIO_printf(bio_err,
-                           "No end entity certificate to check with -chain\n");
+                BIO_printf(bio_err, "No end entity certificate to check with -chain\n");
                 goto export_end;
             }
 
-            if ((store = setup_verify(CAfile, noCAfile, CApath, noCApath,
-                                      CAstore, noCAstore))
-                    == NULL)
+            if ((store = setup_verify(CAfile, noCAfile, CApath, noCApath, CAstore, noCAstore)) ==
+                NULL)
                 goto export_end;
 
             vret = get_cert_chain(ee_cert_tmp, store, untrusted_certs, &chain2);
@@ -635,8 +656,8 @@ int pkcs12_main(int argc, char **argv)
                 /* Remove from chain2 the first (end entity) certificate */
                 X509_free(sk_X509_shift(chain2));
                 /* Add the remaining certs (except for duplicates) */
-                add_certs = X509_add_certs(certs, chain2, X509_ADD_FLAG_UP_REF
-                                           | X509_ADD_FLAG_NO_DUP);
+                add_certs =
+                    X509_add_certs(certs, chain2, X509_ADD_FLAG_UP_REF | X509_ADD_FLAG_NO_DUP);
                 OSSL_STACK_OF_X509_free(chain2);
                 if (!add_certs)
                     goto export_end;
@@ -650,8 +671,7 @@ int pkcs12_main(int argc, char **argv)
 
         /* Add any extra certificates asked for */
         if (certfile != NULL) {
-            if (!load_certs(certfile, 0, &certs, passcerts,
-                            "extra certificates from -certfile"))
+            if (!load_certs(certfile, 0, &certs, passcerts, "extra certificates from -certfile"))
                 goto export_end;
         }
 
@@ -662,8 +682,7 @@ int pkcs12_main(int argc, char **argv)
         }
 
         if (csp_name != NULL && key != NULL)
-            EVP_PKEY_add1_attr_by_NID(key, NID_ms_csp_name,
-                                      MBSTRING_ASC, (unsigned char *)csp_name,
+            EVP_PKEY_add1_attr_by_NID(key, NID_ms_csp_name, MBSTRING_ASC, (unsigned char *)csp_name,
                                       -1);
 
         if (add_lmk && key != NULL)
@@ -673,8 +692,7 @@ int pkcs12_main(int argc, char **argv)
             /* To avoid bit rot */
             if (1) {
 #ifndef OPENSSL_NO_UI_CONSOLE
-                if (EVP_read_pw_string(pass, sizeof(pass),
-                                       "Enter Export Password:", 1)) {
+                if (EVP_read_pw_string(pass, sizeof(pass), "Enter Export Password:", 1)) {
                     BIO_printf(bio_err, "Can't read Password\n");
                     goto export_end;
                 }
@@ -692,14 +710,12 @@ int pkcs12_main(int argc, char **argv)
             obj = OBJ_txt2obj(jdktrust, 0);
         }
 
-        p12 = PKCS12_create_ex2(cpass, name, key, ee_cert, certs,
-                                key_pbe, cert_pbe, iter, -1, keytype,
-                                app_get0_libctx(), app_get0_propq(),
-                                jdk_trust, (void*)obj);
+        p12 =
+            PKCS12_create_ex2(cpass, name, key, ee_cert, certs, key_pbe, cert_pbe, iter, -1,
+                              keytype, app_get0_libctx(), app_get0_propq(), jdk_trust, (void *)obj);
 
         if (p12 == NULL) {
-            BIO_printf(bio_err, "Error creating PKCS12 structure for %s\n",
-                       outfile);
+            BIO_printf(bio_err, "Error creating PKCS12 structure for %s\n", outfile);
             goto export_end;
         }
 
@@ -710,9 +726,8 @@ int pkcs12_main(int argc, char **argv)
 
         if (maciter != -1) {
             if (pbmac1_pbkdf2 == 1) {
-                if (!PKCS12_set_pbmac1_pbkdf2(p12, mpass, -1, NULL,
-                                              macsaltlen, maciter,
-                                              macmd, pbmac1_pbkdf2_md)) {
+                if (!PKCS12_set_pbmac1_pbkdf2(p12, mpass, -1, NULL, macsaltlen, maciter, macmd,
+                                              pbmac1_pbkdf2_md)) {
                     BIO_printf(bio_err, "Error creating PBMAC1\n");
                     goto export_end;
                 }
@@ -735,7 +750,7 @@ int pkcs12_main(int argc, char **argv)
 
         ret = 0;
 
- export_end:
+    export_end:
 
         EVP_PKEY_free(key);
         EVP_MD_free(macmd);
@@ -745,7 +760,6 @@ int pkcs12_main(int argc, char **argv)
         ASN1_OBJECT_free(obj);
         ERR_print_errors(bio_err);
         goto end;
-
     }
 
     in = bio_open_default(infile, 'r', FORMAT_PKCS12);
@@ -765,8 +779,7 @@ int pkcs12_main(int argc, char **argv)
     if (!noprompt) {
         if (1) {
 #ifndef OPENSSL_NO_UI_CONSOLE
-            if (EVP_read_pw_string(pass, sizeof(pass), "Enter Import Password:",
-                                   0)) {
+            if (EVP_read_pw_string(pass, sizeof(pass), "Enter Import Password:", 0)) {
                 BIO_printf(bio_err, "Can't read Password\n");
                 goto end;
             }
@@ -841,8 +854,7 @@ int pkcs12_main(int argc, char **argv)
         if (OBJ_obj2nid(macobj) != NID_pbmac1) {
             EVP_KDF *pkcs12kdf;
 
-            pkcs12kdf = EVP_KDF_fetch(app_get0_libctx(), "PKCS12KDF",
-                                      app_get0_propq());
+            pkcs12kdf = EVP_KDF_fetch(app_get0_libctx(), "PKCS12KDF", app_get0_propq());
             if (pkcs12kdf == NULL) {
                 BIO_printf(bio_err, "Error verifying PKCS12 MAC; no PKCS12KDF support.\n");
                 BIO_printf(bio_err, "Use -nomacver if MAC verification is not required.\n");
@@ -866,8 +878,7 @@ int pkcs12_main(int argc, char **argv)
             int utmplen;
             unsigned long err = ERR_peek_error();
 
-            if (ERR_GET_LIB(err) == ERR_LIB_PKCS12
-                && ERR_GET_REASON(err) == PKCS12_R_MAC_ABSENT) {
+            if (ERR_GET_LIB(err) == ERR_LIB_PKCS12 && ERR_GET_REASON(err) == PKCS12_R_MAC_ABSENT) {
                 BIO_printf(bio_err, "Warning: MAC is absent!\n");
                 goto dump;
             }
@@ -889,7 +900,7 @@ int pkcs12_main(int argc, char **argv)
         }
     }
 
- dump:
+dump:
     assert(private);
 
     out = bio_open_owner(outfile, FORMAT_PEM, private);
@@ -902,7 +913,7 @@ int pkcs12_main(int argc, char **argv)
         goto end;
     }
     ret = 0;
- end:
+end:
     PKCS12_free(p12);
     release_engine(e);
     BIO_free(in);
@@ -915,7 +926,8 @@ int pkcs12_main(int argc, char **argv)
     return ret;
 }
 
-static int jdk_trust(PKCS12_SAFEBAG *bag, void *cbarg)
+static int
+jdk_trust(PKCS12_SAFEBAG *bag, void *cbarg)
 {
     STACK_OF(X509_ATTRIBUTE) *attrs = NULL;
     X509_ATTRIBUTE *attr = NULL;
@@ -925,10 +937,11 @@ static int jdk_trust(PKCS12_SAFEBAG *bag, void *cbarg)
         return 1;
 
     /* Get the current attrs */
-    attrs = (STACK_OF(X509_ATTRIBUTE)*)PKCS12_SAFEBAG_get0_attrs(bag);
+    attrs = (STACK_OF(X509_ATTRIBUTE) *)PKCS12_SAFEBAG_get0_attrs(bag);
 
     /* Create a new attr for the JDK Trusted Usage and add it */
-    attr = X509_ATTRIBUTE_create(NID_oracle_jdk_trustedkeyusage, V_ASN1_OBJECT, (ASN1_OBJECT*)cbarg);
+    attr =
+        X509_ATTRIBUTE_create(NID_oracle_jdk_trustedkeyusage, V_ASN1_OBJECT, (ASN1_OBJECT *)cbarg);
 
     /* Add the new attr, if attrs is NULL, it'll be initialised */
     X509at_add1_attr(&attrs, attr);
@@ -940,9 +953,9 @@ static int jdk_trust(PKCS12_SAFEBAG *bag, void *cbarg)
     return 1;
 }
 
-int dump_certs_keys_p12(BIO *out, const PKCS12 *p12, const char *pass,
-                        int passlen, int options, char *pempass,
-                        const EVP_CIPHER *enc)
+int
+dump_certs_keys_p12(BIO *out, const PKCS12 *p12, const char *pass, int passlen, int options,
+                    char *pempass, const EVP_CIPHER *enc)
 {
     STACK_OF(PKCS7) *asafes = NULL;
     int i, bagnid;
@@ -952,7 +965,7 @@ int dump_certs_keys_p12(BIO *out, const PKCS12 *p12, const char *pass,
     if ((asafes = PKCS12_unpack_authsafes(p12)) == NULL)
         return 0;
     for (i = 0; i < sk_PKCS7_num(asafes); i++) {
-        STACK_OF(PKCS12_SAFEBAG) *bags;
+        STACK_OF(PKCS12_SAFEBAG) * bags;
 
         p7 = sk_PKCS7_value(asafes, i);
         bagnid = OBJ_obj2nid(p7->type);
@@ -975,8 +988,7 @@ int dump_certs_keys_p12(BIO *out, const PKCS12 *p12, const char *pass,
         }
         if (bags == NULL)
             goto err;
-        if (!dump_certs_pkeys_bags(out, bags, pass, passlen,
-                                   options, pempass, enc)) {
+        if (!dump_certs_pkeys_bags(out, bags, pass, passlen, options, pempass, enc)) {
             sk_PKCS12_SAFEBAG_pop_free(bags, PKCS12_SAFEBAG_free);
             goto err;
         }
@@ -984,34 +996,33 @@ int dump_certs_keys_p12(BIO *out, const PKCS12 *p12, const char *pass,
     }
     ret = 1;
 
- err:
+err:
     sk_PKCS7_pop_free(asafes, PKCS7_free);
     return ret;
 }
 
-int dump_certs_pkeys_bags(BIO *out, const STACK_OF(PKCS12_SAFEBAG) *bags,
-                          const char *pass, int passlen, int options,
-                          char *pempass, const EVP_CIPHER *enc)
+int
+dump_certs_pkeys_bags(BIO *out, const STACK_OF(PKCS12_SAFEBAG) * bags, const char *pass,
+                      int passlen, int options, char *pempass, const EVP_CIPHER *enc)
 {
     int i;
     for (i = 0; i < sk_PKCS12_SAFEBAG_num(bags); i++) {
-        if (!dump_certs_pkeys_bag(out,
-                                  sk_PKCS12_SAFEBAG_value(bags, i),
-                                  pass, passlen, options, pempass, enc))
+        if (!dump_certs_pkeys_bag(out, sk_PKCS12_SAFEBAG_value(bags, i), pass, passlen, options,
+                                  pempass, enc))
             return 0;
     }
     return 1;
 }
 
-int dump_certs_pkeys_bag(BIO *out, const PKCS12_SAFEBAG *bag,
-                         const char *pass, int passlen, int options,
-                         char *pempass, const EVP_CIPHER *enc)
+int
+dump_certs_pkeys_bag(BIO *out, const PKCS12_SAFEBAG *bag, const char *pass, int passlen,
+                     int options, char *pempass, const EVP_CIPHER *enc)
 {
     EVP_PKEY *pkey;
     PKCS8_PRIV_KEY_INFO *p8;
     const PKCS8_PRIV_KEY_INFO *p8c;
     X509 *x509;
-    const STACK_OF(X509_ATTRIBUTE) *attrs;
+    const STACK_OF(X509_ATTRIBUTE) * attrs;
     int ret = 0;
 
     attrs = PKCS12_SAFEBAG_get0_attrs(bag);
@@ -1090,8 +1101,8 @@ int dump_certs_pkeys_bag(BIO *out, const PKCS12_SAFEBAG *bag,
         if (options & INFO)
             BIO_printf(bio_err, "Safe Contents bag\n");
         print_attribs(out, attrs, "Bag Attributes");
-        return dump_certs_pkeys_bags(out, PKCS12_SAFEBAG_get0_safes(bag),
-                                     pass, passlen, options, pempass, enc);
+        return dump_certs_pkeys_bags(out, PKCS12_SAFEBAG_get0_safes(bag), pass, passlen, options,
+                                     pempass, enc);
 
     default:
         BIO_printf(bio_err, "Warning unsupported bag type: ");
@@ -1104,9 +1115,9 @@ int dump_certs_pkeys_bag(BIO *out, const PKCS12_SAFEBAG *bag,
 
 /* Given a single certificate return a verified chain or NULL if error */
 
-static int get_cert_chain(X509 *cert, X509_STORE *store,
-                          STACK_OF(X509) *untrusted_certs,
-                          STACK_OF(X509) **chain)
+static int
+get_cert_chain(X509 *cert, X509_STORE *store, STACK_OF(X509) * untrusted_certs,
+               STACK_OF(X509) * *chain)
 {
     X509_STORE_CTX *store_ctx = NULL;
     STACK_OF(X509) *chn = NULL;
@@ -1114,14 +1125,13 @@ static int get_cert_chain(X509 *cert, X509_STORE *store,
 
     store_ctx = X509_STORE_CTX_new_ex(app_get0_libctx(), app_get0_propq());
     if (store_ctx == NULL) {
-        i =  X509_V_ERR_UNSPECIFIED;
+        i = X509_V_ERR_UNSPECIFIED;
         goto end;
     }
     if (!X509_STORE_CTX_init(store_ctx, store, cert, untrusted_certs)) {
-        i =  X509_V_ERR_UNSPECIFIED;
+        i = X509_V_ERR_UNSPECIFIED;
         goto end;
     }
-
 
     if (X509_verify_cert(store_ctx) > 0)
         chn = X509_STORE_CTX_get1_chain(store_ctx);
@@ -1134,7 +1144,8 @@ end:
     return i;
 }
 
-static int alg_print(const X509_ALGOR *alg)
+static int
+alg_print(const X509_ALGOR *alg)
 {
     int pbenid, aparamtype;
     const ASN1_OBJECT *aoid;
@@ -1164,8 +1175,7 @@ static int alg_print(const X509_ALGOR *alg)
         pbenid = OBJ_obj2nid(aoid);
         X509_ALGOR_get0(&aoid, NULL, NULL, pbe2->encryption);
         encnid = OBJ_obj2nid(aoid);
-        BIO_printf(bio_err, ", %s, %s", OBJ_nid2ln(pbenid),
-                   OBJ_nid2sn(encnid));
+        BIO_printf(bio_err, ", %s, %s", OBJ_nid2ln(pbenid), OBJ_nid2sn(encnid));
         /* If KDF is PBKDF2 decode parameters */
         if (pbenid == NID_id_pbkdf2) {
             PBKDF2PARAM *kdf = NULL;
@@ -1183,8 +1193,8 @@ static int alg_print(const X509_ALGOR *alg)
                 X509_ALGOR_get0(&aoid, NULL, NULL, kdf->prf);
                 prfnid = OBJ_obj2nid(aoid);
             }
-            BIO_printf(bio_err, ", Iteration %ld, PRF %s",
-                       ASN1_INTEGER_get(kdf->iter), OBJ_nid2sn(prfnid));
+            BIO_printf(bio_err, ", Iteration %ld, PRF %s", ASN1_INTEGER_get(kdf->iter),
+                       OBJ_nid2sn(prfnid));
             PBKDF2PARAM_free(kdf);
 #ifndef OPENSSL_NO_SCRYPT
         } else if (pbenid == NID_id_scrypt) {
@@ -1196,10 +1206,10 @@ static int alg_print(const X509_ALGOR *alg)
                 BIO_puts(bio_err, ", <unsupported parameters>");
                 goto done;
             }
-            BIO_printf(bio_err, ", Salt length: %d, Cost(N): %ld, "
+            BIO_printf(bio_err,
+                       ", Salt length: %d, Cost(N): %ld, "
                        "Block size(r): %ld, Parallelism(p): %ld",
-                       ASN1_STRING_length(kdf->salt),
-                       ASN1_INTEGER_get(kdf->costParameter),
+                       ASN1_STRING_length(kdf->salt), ASN1_INTEGER_get(kdf->costParameter),
                        ASN1_INTEGER_get(kdf->blockSize),
                        ASN1_INTEGER_get(kdf->parallelizationParameter));
             SCRYPT_PARAMS_free(kdf);
@@ -1216,14 +1226,15 @@ static int alg_print(const X509_ALGOR *alg)
         BIO_printf(bio_err, ", Iteration %ld", ASN1_INTEGER_get(pbe->iter));
         PBEPARAM_free(pbe);
     }
- done:
+done:
     BIO_puts(bio_err, "\n");
     return 1;
 }
 
 /* Load all certificates from a given file */
 
-int cert_load(BIO *in, STACK_OF(X509) *sk)
+int
+cert_load(BIO *in, STACK_OF(X509) * sk)
 {
     int ret = 0;
     X509 *cert;
@@ -1240,7 +1251,8 @@ int cert_load(BIO *in, STACK_OF(X509) *sk)
 
 /* Generalised x509 attribute value print */
 
-void print_attribute(BIO *out, const ASN1_TYPE *av)
+void
+print_attribute(BIO *out, const ASN1_TYPE *av)
 {
     char *value;
     const char *ln;
@@ -1248,26 +1260,22 @@ void print_attribute(BIO *out, const ASN1_TYPE *av)
 
     switch (av->type) {
     case V_ASN1_BMPSTRING:
-        value = OPENSSL_uni2asc(av->value.bmpstring->data,
-                                av->value.bmpstring->length);
+        value = OPENSSL_uni2asc(av->value.bmpstring->data, av->value.bmpstring->length);
         BIO_printf(out, "%s\n", value);
         OPENSSL_free(value);
         break;
 
     case V_ASN1_UTF8STRING:
-        BIO_printf(out, "%.*s\n", av->value.utf8string->length,
-                   av->value.utf8string->data);
+        BIO_printf(out, "%.*s\n", av->value.utf8string->length, av->value.utf8string->data);
         break;
 
     case V_ASN1_OCTET_STRING:
-        hex_prin(out, av->value.octet_string->data,
-                 av->value.octet_string->length);
+        hex_prin(out, av->value.octet_string->data, av->value.octet_string->length);
         BIO_printf(out, "\n");
         break;
 
     case V_ASN1_BIT_STRING:
-        hex_prin(out, av->value.bit_string->data,
-                 av->value.bit_string->length);
+        hex_prin(out, av->value.bit_string->data, av->value.bit_string->length);
         BIO_printf(out, "\n");
         break;
 
@@ -1288,8 +1296,8 @@ void print_attribute(BIO *out, const ASN1_TYPE *av)
 
 /* Generalised attribute print: handle PKCS#8 and bag attributes */
 
-int print_attribs(BIO *out, const STACK_OF(X509_ATTRIBUTE) *attrlst,
-                  const char *name)
+int
+print_attribs(BIO *out, const STACK_OF(X509_ATTRIBUTE) * attrlst, const char *name)
 {
     X509_ATTRIBUTE *attr;
     ASN1_TYPE *av;
@@ -1328,14 +1336,16 @@ int print_attribs(BIO *out, const STACK_OF(X509_ATTRIBUTE) *attrlst,
     return 1;
 }
 
-void hex_prin(BIO *out, unsigned char *buf, int len)
+void
+hex_prin(BIO *out, unsigned char *buf, int len)
 {
     int i;
     for (i = 0; i < len; i++)
         BIO_printf(out, "%02X ", buf[i]);
 }
 
-static int set_pbe(int *ppbe, const char *str)
+static int
+set_pbe(int *ppbe, const char *str)
 {
     if (!str)
         return 0;

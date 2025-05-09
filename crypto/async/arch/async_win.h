@@ -12,7 +12,7 @@
  * storage that we depend on, so just copy that
  */
 #if defined(_WIN32) && !defined(OPENSSL_NO_ASYNC)
-#include <openssl/async.h>
+# include <openssl/async.h>
 # define ASYNC_WIN
 # define ASYNC_ARCH
 
@@ -24,20 +24,17 @@ typedef struct async_fibre_st {
     int converted;
 } async_fibre;
 
-# define async_fibre_swapcontext(o,n,r) \
-        (SwitchToFiber((n)->fibre), 1)
+# define async_fibre_swapcontext(o, n, r) (SwitchToFiber((n)->fibre), 1)
 
 # if defined(_WIN32_WINNT) && _WIN32_WINNT >= 0x600
-#   define async_fibre_makecontext(c) \
-        ((c)->fibre = CreateFiberEx(0, 0, FIBER_FLAG_FLOAT_SWITCH, \
-                                    async_start_func_win, 0))
+#  define async_fibre_makecontext(c)                                                               \
+      ((c)->fibre = CreateFiberEx(0, 0, FIBER_FLAG_FLOAT_SWITCH, async_start_func_win, 0))
 # else
-#   define async_fibre_makecontext(c) \
-        ((c)->fibre = CreateFiber(0, async_start_func_win, 0))
+#  define async_fibre_makecontext(c) ((c)->fibre = CreateFiber(0, async_start_func_win, 0))
 # endif
 
-# define async_fibre_free(f)             (DeleteFiber((f)->fibre))
-# define async_local_init()              1
+# define async_fibre_free(f) (DeleteFiber((f)->fibre))
+# define async_local_init() 1
 # define async_local_deinit()
 
 int async_fibre_init_dispatcher(async_fibre *fibre);

@@ -80,9 +80,12 @@
 #define PROV_NAMES_AES_256_WRAP "AES-256-WRAP:id-aes256-wrap:AES256-WRAP:2.16.840.1.101.3.4.1.45"
 #define PROV_NAMES_AES_192_WRAP "AES-192-WRAP:id-aes192-wrap:AES192-WRAP:2.16.840.1.101.3.4.1.25"
 #define PROV_NAMES_AES_128_WRAP "AES-128-WRAP:id-aes128-wrap:AES128-WRAP:2.16.840.1.101.3.4.1.5"
-#define PROV_NAMES_AES_256_WRAP_PAD "AES-256-WRAP-PAD:id-aes256-wrap-pad:AES256-WRAP-PAD:2.16.840.1.101.3.4.1.48"
-#define PROV_NAMES_AES_192_WRAP_PAD "AES-192-WRAP-PAD:id-aes192-wrap-pad:AES192-WRAP-PAD:2.16.840.1.101.3.4.1.28"
-#define PROV_NAMES_AES_128_WRAP_PAD "AES-128-WRAP-PAD:id-aes128-wrap-pad:AES128-WRAP-PAD:2.16.840.1.101.3.4.1.8"
+#define PROV_NAMES_AES_256_WRAP_PAD                                                                \
+    "AES-256-WRAP-PAD:id-aes256-wrap-pad:AES256-WRAP-PAD:2.16.840.1.101.3.4.1.48"
+#define PROV_NAMES_AES_192_WRAP_PAD                                                                \
+    "AES-192-WRAP-PAD:id-aes192-wrap-pad:AES192-WRAP-PAD:2.16.840.1.101.3.4.1.28"
+#define PROV_NAMES_AES_128_WRAP_PAD                                                                \
+    "AES-128-WRAP-PAD:id-aes128-wrap-pad:AES128-WRAP-PAD:2.16.840.1.101.3.4.1.8"
 #define PROV_NAMES_AES_256_WRAP_INV "AES-256-WRAP-INV:AES256-WRAP-INV"
 #define PROV_NAMES_AES_192_WRAP_INV "AES-192-WRAP-INV:AES192-WRAP-INV"
 #define PROV_NAMES_AES_128_WRAP_INV "AES-128-WRAP-INV:AES128-WRAP-INV"
@@ -342,10 +345,14 @@
 #define PROV_NAMES_ECDSA_SHA256 "ECDSA-SHA2-256:ECDSA-SHA256:ecdsa-with-SHA256:1.2.840.10045.4.3.2"
 #define PROV_NAMES_ECDSA_SHA384 "ECDSA-SHA2-384:ECDSA-SHA384:ecdsa-with-SHA384:1.2.840.10045.4.3.3"
 #define PROV_NAMES_ECDSA_SHA512 "ECDSA-SHA2-512:ECDSA-SHA512:ecdsa-with-SHA512:1.2.840.10045.4.3.4"
-#define PROV_NAMES_ECDSA_SHA3_224 "ECDSA-SHA3-224:ecdsa_with_SHA3-224:id-ecdsa-with-sha3-224:2.16.840.1.101.3.4.3.9"
-#define PROV_NAMES_ECDSA_SHA3_256 "ECDSA-SHA3-256:ecdsa_with_SHA3-256:id-ecdsa-with-sha3-256:2.16.840.1.101.3.4.3.10"
-#define PROV_NAMES_ECDSA_SHA3_384 "ECDSA-SHA3-384:ecdsa_with_SHA3-384:id-ecdsa-with-sha3-384:2.16.840.1.101.3.4.3.11"
-#define PROV_NAMES_ECDSA_SHA3_512 "ECDSA-SHA3-512:ecdsa_with_SHA3-512:id-ecdsa-with-sha3-512:2.16.840.1.101.3.4.3.12"
+#define PROV_NAMES_ECDSA_SHA3_224                                                                  \
+    "ECDSA-SHA3-224:ecdsa_with_SHA3-224:id-ecdsa-with-sha3-224:2.16.840.1.101.3.4.3.9"
+#define PROV_NAMES_ECDSA_SHA3_256                                                                  \
+    "ECDSA-SHA3-256:ecdsa_with_SHA3-256:id-ecdsa-with-sha3-256:2.16.840.1.101.3.4.3.10"
+#define PROV_NAMES_ECDSA_SHA3_384                                                                  \
+    "ECDSA-SHA3-384:ecdsa_with_SHA3-384:id-ecdsa-with-sha3-384:2.16.840.1.101.3.4.3.11"
+#define PROV_NAMES_ECDSA_SHA3_512                                                                  \
+    "ECDSA-SHA3-512:ecdsa_with_SHA3-512:id-ecdsa-with-sha3-512:2.16.840.1.101.3.4.3.12"
 #define PROV_DESCS_ECDSA "OpenSSL ECDSA implementation"
 #define PROV_NAMES_X25519 "X25519:1.3.101.110"
 #define PROV_DESCS_X25519 "OpenSSL X25519 implementation"
@@ -369,12 +376,18 @@
 #define PROV_NAMES_DSA_SHA1 "DSA-SHA1:DSA-SHA-1:dsaWithSHA1:1.2.840.10040.4.3"
 #define PROV_NAMES_DSA_SHA224 "DSA-SHA2-224:DSA-SHA224:dsa_with_SHA224:2.16.840.1.101.3.4.3.1"
 #define PROV_NAMES_DSA_SHA256 "DSA-SHA2-256:DSA-SHA256:dsa_with_SHA256:2.16.840.1.101.3.4.3.2"
-#define PROV_NAMES_DSA_SHA384 "DSA-SHA2-384:DSA-SHA384:dsa_with_SHA384:id-dsa-with-sha384:1.2.840.1.101.3.4.3.3"
-#define PROV_NAMES_DSA_SHA512 "DSA-SHA2-512:DSA-SHA512:dsa_with_SHA512:id-dsa-with-sha512:1.2.840.1.101.3.4.3.4"
-#define PROV_NAMES_DSA_SHA3_224 "DSA-SHA3-224:dsa_with_SHA3-224:id-dsa-with-sha3-224:2.16.840.1.101.3.4.3.5"
-#define PROV_NAMES_DSA_SHA3_256 "DSA-SHA3-256:dsa_with_SHA3-256:id-dsa-with-sha3-256:2.16.840.1.101.3.4.3.6"
-#define PROV_NAMES_DSA_SHA3_384 "DSA-SHA3-384:dsa_with_SHA3-384:id-dsa-with-sha3-384:2.16.840.1.101.3.4.3.7"
-#define PROV_NAMES_DSA_SHA3_512 "DSA-SHA3-512:dsa_with_SHA3-512:id-dsa-with-sha3-512:2.16.840.1.101.3.4.3.8"
+#define PROV_NAMES_DSA_SHA384                                                                      \
+    "DSA-SHA2-384:DSA-SHA384:dsa_with_SHA384:id-dsa-with-sha384:1.2.840.1.101.3.4.3.3"
+#define PROV_NAMES_DSA_SHA512                                                                      \
+    "DSA-SHA2-512:DSA-SHA512:dsa_with_SHA512:id-dsa-with-sha512:1.2.840.1.101.3.4.3.4"
+#define PROV_NAMES_DSA_SHA3_224                                                                    \
+    "DSA-SHA3-224:dsa_with_SHA3-224:id-dsa-with-sha3-224:2.16.840.1.101.3.4.3.5"
+#define PROV_NAMES_DSA_SHA3_256                                                                    \
+    "DSA-SHA3-256:dsa_with_SHA3-256:id-dsa-with-sha3-256:2.16.840.1.101.3.4.3.6"
+#define PROV_NAMES_DSA_SHA3_384                                                                    \
+    "DSA-SHA3-384:dsa_with_SHA3-384:id-dsa-with-sha3-384:2.16.840.1.101.3.4.3.7"
+#define PROV_NAMES_DSA_SHA3_512                                                                    \
+    "DSA-SHA3-512:dsa_with_SHA3-512:id-dsa-with-sha3-512:2.16.840.1.101.3.4.3.8"
 #define PROV_DESCS_DSA "OpenSSL DSA implementation"
 #define PROV_NAMES_RSA "RSA:rsaEncryption:1.2.840.113549.1.1.1"
 #define PROV_NAMES_RSA_MD2 "RSA-MD2:md2WithRSAEncryption:1.2.840.113549.1.1.2"
@@ -382,17 +395,27 @@
 #define PROV_NAMES_RSA_MD5 "RSA-MD5:md5WithRSAEncryption:1.2.840.113549.1.1.4"
 #define PROV_NAMES_RSA_RIPEMD160 "RSA-RIPEMD160:ripemd160WithRSA:1.3.36.3.3.1.2"
 #define PROV_NAMES_RSA_SHA1 "RSA-SHA1:RSA-SHA-1:sha1WithRSAEncryption:1.2.840.113549.1.1.5"
-#define PROV_NAMES_RSA_SHA256 "RSA-SHA2-256:RSA-SHA256:sha256WithRSAEncryption:1.2.840.113549.1.1.11"
-#define PROV_NAMES_RSA_SHA384 "RSA-SHA2-384:RSA-SHA384:sha384WithRSAEncryption:1.2.840.113549.1.1.12"
-#define PROV_NAMES_RSA_SHA512 "RSA-SHA2-512:RSA-SHA512:sha512WithRSAEncryption:1.2.840.113549.1.1.13"
-#define PROV_NAMES_RSA_SHA224 "RSA-SHA2-224:RSA-SHA224:sha224WithRSAEncryption:1.2.840.113549.1.1.14"
-#define PROV_NAMES_RSA_SHA512_224 "RSA-SHA2-512/224:RSA-SHA512-224:sha512-224WithRSAEncryption:1.2.840.113549.1.1.15"
-#define PROV_NAMES_RSA_SHA512_256 "RSA-SHA2-512/256:RSA-SHA512-256:sha512-256WithRSAEncryption:1.2.840.113549.1.1.16"
+#define PROV_NAMES_RSA_SHA256                                                                      \
+    "RSA-SHA2-256:RSA-SHA256:sha256WithRSAEncryption:1.2.840.113549.1.1.11"
+#define PROV_NAMES_RSA_SHA384                                                                      \
+    "RSA-SHA2-384:RSA-SHA384:sha384WithRSAEncryption:1.2.840.113549.1.1.12"
+#define PROV_NAMES_RSA_SHA512                                                                      \
+    "RSA-SHA2-512:RSA-SHA512:sha512WithRSAEncryption:1.2.840.113549.1.1.13"
+#define PROV_NAMES_RSA_SHA224                                                                      \
+    "RSA-SHA2-224:RSA-SHA224:sha224WithRSAEncryption:1.2.840.113549.1.1.14"
+#define PROV_NAMES_RSA_SHA512_224                                                                  \
+    "RSA-SHA2-512/224:RSA-SHA512-224:sha512-224WithRSAEncryption:1.2.840.113549.1.1.15"
+#define PROV_NAMES_RSA_SHA512_256                                                                  \
+    "RSA-SHA2-512/256:RSA-SHA512-256:sha512-256WithRSAEncryption:1.2.840.113549.1.1.16"
 #define PROV_NAMES_RSA_SM3 "RSA-SM3:sm3WithRSAEncryption:1.2.156.10197.1.504"
-#define PROV_NAMES_RSA_SHA3_224 "RSA-SHA3-224:id-rsassa-pkcs1-v1_5-with-sha3-224:2.16.840.1.101.3.4.3.13"
-#define PROV_NAMES_RSA_SHA3_256 "RSA-SHA3-256:id-rsassa-pkcs1-v1_5-with-sha3-256:2.16.840.1.101.3.4.3.14"
-#define PROV_NAMES_RSA_SHA3_384 "RSA-SHA3-384:id-rsassa-pkcs1-v1_5-with-sha3-384:2.16.840.1.101.3.4.3.15"
-#define PROV_NAMES_RSA_SHA3_512 "RSA-SHA3-512:id-rsassa-pkcs1-v1_5-with-sha3-512:2.16.840.1.101.3.4.3.16"
+#define PROV_NAMES_RSA_SHA3_224                                                                    \
+    "RSA-SHA3-224:id-rsassa-pkcs1-v1_5-with-sha3-224:2.16.840.1.101.3.4.3.13"
+#define PROV_NAMES_RSA_SHA3_256                                                                    \
+    "RSA-SHA3-256:id-rsassa-pkcs1-v1_5-with-sha3-256:2.16.840.1.101.3.4.3.14"
+#define PROV_NAMES_RSA_SHA3_384                                                                    \
+    "RSA-SHA3-384:id-rsassa-pkcs1-v1_5-with-sha3-384:2.16.840.1.101.3.4.3.15"
+#define PROV_NAMES_RSA_SHA3_512                                                                    \
+    "RSA-SHA3-512:id-rsassa-pkcs1-v1_5-with-sha3-512:2.16.840.1.101.3.4.3.16"
 #define PROV_DESCS_RSA "OpenSSL RSA implementation"
 #define PROV_NAMES_RSA_PSS "RSA-PSS:RSASSA-PSS:1.2.840.113549.1.1.10"
 #define PROV_DESCS_RSA_PSS "OpenSSL RSA-PSS implementation"
@@ -418,18 +441,30 @@
 #define PROV_DESCS_SecP256r1MLKEM768 "P-256+ML-KEM-768 TLS hybrid implementation"
 #define PROV_NAMES_SecP384r1MLKEM1024 "SecP384r1MLKEM1024"
 #define PROV_DESCS_SecP384r1MLKEM1024 "P-384+ML-KEM-1024 TLS hybrid implementation"
-#define PROV_NAMES_SLH_DSA_SHA2_128S "SLH-DSA-SHA2-128s:id-slh-dsa-sha2-128s:2.16.840.1.101.3.4.3.20"
-#define PROV_NAMES_SLH_DSA_SHA2_128F "SLH-DSA-SHA2-128f:id-slh-dsa-sha2-128f:2.16.840.1.101.3.4.3.21"
-#define PROV_NAMES_SLH_DSA_SHA2_192S "SLH-DSA-SHA2-192s:id-slh-dsa-sha2-192s:2.16.840.1.101.3.4.3.22"
-#define PROV_NAMES_SLH_DSA_SHA2_192F "SLH-DSA-SHA2-192f:id-slh-dsa-sha2-192f:2.16.840.1.101.3.4.3.23"
-#define PROV_NAMES_SLH_DSA_SHA2_256S "SLH-DSA-SHA2-256s:id-slh-dsa-sha2-256s:2.16.840.1.101.3.4.3.24"
-#define PROV_NAMES_SLH_DSA_SHA2_256F "SLH-DSA-SHA2-256f:id-slh-dsa-sha2-256f:2.16.840.1.101.3.4.3.25"
-#define PROV_NAMES_SLH_DSA_SHAKE_128S "SLH-DSA-SHAKE-128s:id-slh-dsa-shake-128s:2.16.840.1.101.3.4.3.26"
-#define PROV_NAMES_SLH_DSA_SHAKE_128F "SLH-DSA-SHAKE-128f:id-slh-dsa-shake-128f:2.16.840.1.101.3.4.3.27"
-#define PROV_NAMES_SLH_DSA_SHAKE_192S "SLH-DSA-SHAKE-192s:id-slh-dsa-shake-192s:2.16.840.1.101.3.4.3.28"
-#define PROV_NAMES_SLH_DSA_SHAKE_192F "SLH-DSA-SHAKE-192f:id-slh-dsa-shake-192f:2.16.840.1.101.3.4.3.29"
-#define PROV_NAMES_SLH_DSA_SHAKE_256S "SLH-DSA-SHAKE-256s:id-slh-dsa-shake-256s:2.16.840.1.101.3.4.3.30"
-#define PROV_NAMES_SLH_DSA_SHAKE_256F "SLH-DSA-SHAKE-256f:id-slh-dsa-shake-256f:2.16.840.1.101.3.4.3.31"
+#define PROV_NAMES_SLH_DSA_SHA2_128S                                                               \
+    "SLH-DSA-SHA2-128s:id-slh-dsa-sha2-128s:2.16.840.1.101.3.4.3.20"
+#define PROV_NAMES_SLH_DSA_SHA2_128F                                                               \
+    "SLH-DSA-SHA2-128f:id-slh-dsa-sha2-128f:2.16.840.1.101.3.4.3.21"
+#define PROV_NAMES_SLH_DSA_SHA2_192S                                                               \
+    "SLH-DSA-SHA2-192s:id-slh-dsa-sha2-192s:2.16.840.1.101.3.4.3.22"
+#define PROV_NAMES_SLH_DSA_SHA2_192F                                                               \
+    "SLH-DSA-SHA2-192f:id-slh-dsa-sha2-192f:2.16.840.1.101.3.4.3.23"
+#define PROV_NAMES_SLH_DSA_SHA2_256S                                                               \
+    "SLH-DSA-SHA2-256s:id-slh-dsa-sha2-256s:2.16.840.1.101.3.4.3.24"
+#define PROV_NAMES_SLH_DSA_SHA2_256F                                                               \
+    "SLH-DSA-SHA2-256f:id-slh-dsa-sha2-256f:2.16.840.1.101.3.4.3.25"
+#define PROV_NAMES_SLH_DSA_SHAKE_128S                                                              \
+    "SLH-DSA-SHAKE-128s:id-slh-dsa-shake-128s:2.16.840.1.101.3.4.3.26"
+#define PROV_NAMES_SLH_DSA_SHAKE_128F                                                              \
+    "SLH-DSA-SHAKE-128f:id-slh-dsa-shake-128f:2.16.840.1.101.3.4.3.27"
+#define PROV_NAMES_SLH_DSA_SHAKE_192S                                                              \
+    "SLH-DSA-SHAKE-192s:id-slh-dsa-shake-192s:2.16.840.1.101.3.4.3.28"
+#define PROV_NAMES_SLH_DSA_SHAKE_192F                                                              \
+    "SLH-DSA-SHAKE-192f:id-slh-dsa-shake-192f:2.16.840.1.101.3.4.3.29"
+#define PROV_NAMES_SLH_DSA_SHAKE_256S                                                              \
+    "SLH-DSA-SHAKE-256s:id-slh-dsa-shake-256s:2.16.840.1.101.3.4.3.30"
+#define PROV_NAMES_SLH_DSA_SHAKE_256F                                                              \
+    "SLH-DSA-SHAKE-256f:id-slh-dsa-shake-256f:2.16.840.1.101.3.4.3.31"
 #define PROV_DESCS_SLH_DSA_SHA2_128S "OpenSSL SLH-DSA-SHA2-128s implementation"
 #define PROV_DESCS_SLH_DSA_SHA2_128F "OpenSSL SLH-DSA-SHA2-128f implementation"
 #define PROV_DESCS_SLH_DSA_SHA2_192S "OpenSSL SLH-DSA-SHA2-192s implementation"

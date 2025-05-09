@@ -23,22 +23,22 @@
 
 static X509_CERT_AUX *aux_get(X509 *x);
 
-ASN1_SEQUENCE(X509_CERT_AUX) = {
-        ASN1_SEQUENCE_OF_OPT(X509_CERT_AUX, trust, ASN1_OBJECT),
-        ASN1_IMP_SEQUENCE_OF_OPT(X509_CERT_AUX, reject, ASN1_OBJECT, 0),
-        ASN1_OPT(X509_CERT_AUX, alias, ASN1_UTF8STRING),
-        ASN1_OPT(X509_CERT_AUX, keyid, ASN1_OCTET_STRING),
-        ASN1_IMP_SEQUENCE_OF_OPT(X509_CERT_AUX, other, X509_ALGOR, 1)
-} ASN1_SEQUENCE_END(X509_CERT_AUX)
+ASN1_SEQUENCE(X509_CERT_AUX) = {ASN1_SEQUENCE_OF_OPT(X509_CERT_AUX, trust, ASN1_OBJECT),
+                                ASN1_IMP_SEQUENCE_OF_OPT(X509_CERT_AUX, reject, ASN1_OBJECT, 0),
+                                ASN1_OPT(X509_CERT_AUX, alias, ASN1_UTF8STRING),
+                                ASN1_OPT(X509_CERT_AUX, keyid, ASN1_OCTET_STRING),
+                                ASN1_IMP_SEQUENCE_OF_OPT(X509_CERT_AUX, other, X509_ALGOR,
+                                                         1)} ASN1_SEQUENCE_END(X509_CERT_AUX)
 
-IMPLEMENT_ASN1_FUNCTIONS(X509_CERT_AUX)
+    IMPLEMENT_ASN1_FUNCTIONS(X509_CERT_AUX)
 
-int X509_trusted(const X509 *x)
+        int X509_trusted(const X509 *x)
 {
     return x->aux ? 1 : 0;
 }
 
-static X509_CERT_AUX *aux_get(X509 *x)
+static X509_CERT_AUX *
+aux_get(X509 *x)
 {
     if (x == NULL)
         return NULL;
@@ -47,7 +47,8 @@ static X509_CERT_AUX *aux_get(X509 *x)
     return x->aux;
 }
 
-int X509_alias_set1(X509 *x, const unsigned char *name, int len)
+int
+X509_alias_set1(X509 *x, const unsigned char *name, int len)
 {
     X509_CERT_AUX *aux;
     if (!name) {
@@ -64,7 +65,8 @@ int X509_alias_set1(X509 *x, const unsigned char *name, int len)
     return ASN1_STRING_set(aux->alias, name, len);
 }
 
-int X509_keyid_set1(X509 *x, const unsigned char *id, int len)
+int
+X509_keyid_set1(X509 *x, const unsigned char *id, int len)
 {
     X509_CERT_AUX *aux;
     if (!id) {
@@ -76,13 +78,13 @@ int X509_keyid_set1(X509 *x, const unsigned char *id, int len)
     }
     if ((aux = aux_get(x)) == NULL)
         return 0;
-    if (aux->keyid == NULL
-        && (aux->keyid = ASN1_OCTET_STRING_new()) == NULL)
+    if (aux->keyid == NULL && (aux->keyid = ASN1_OCTET_STRING_new()) == NULL)
         return 0;
     return ASN1_STRING_set(aux->keyid, id, len);
 }
 
-unsigned char *X509_alias_get0(X509 *x, int *len)
+unsigned char *
+X509_alias_get0(X509 *x, int *len)
 {
     if (!x->aux || !x->aux->alias)
         return NULL;
@@ -91,7 +93,8 @@ unsigned char *X509_alias_get0(X509 *x, int *len)
     return x->aux->alias->data;
 }
 
-unsigned char *X509_keyid_get0(X509 *x, int *len)
+unsigned char *
+X509_keyid_get0(X509 *x, int *len)
 {
     if (!x->aux || !x->aux->keyid)
         return NULL;
@@ -100,7 +103,8 @@ unsigned char *X509_keyid_get0(X509 *x, int *len)
     return x->aux->keyid->data;
 }
 
-int X509_add1_trust_object(X509 *x, const ASN1_OBJECT *obj)
+int
+X509_add1_trust_object(X509 *x, const ASN1_OBJECT *obj)
 {
     X509_CERT_AUX *aux;
     ASN1_OBJECT *objtmp = NULL;
@@ -111,17 +115,17 @@ int X509_add1_trust_object(X509 *x, const ASN1_OBJECT *obj)
     }
     if ((aux = aux_get(x)) == NULL)
         goto err;
-    if (aux->trust == NULL
-        && (aux->trust = sk_ASN1_OBJECT_new_null()) == NULL)
+    if (aux->trust == NULL && (aux->trust = sk_ASN1_OBJECT_new_null()) == NULL)
         goto err;
     if (!objtmp || sk_ASN1_OBJECT_push(aux->trust, objtmp))
         return 1;
- err:
+err:
     ASN1_OBJECT_free(objtmp);
     return 0;
 }
 
-int X509_add1_reject_object(X509 *x, const ASN1_OBJECT *obj)
+int
+X509_add1_reject_object(X509 *x, const ASN1_OBJECT *obj)
 {
     X509_CERT_AUX *aux;
     ASN1_OBJECT *objtmp;
@@ -131,19 +135,19 @@ int X509_add1_reject_object(X509 *x, const ASN1_OBJECT *obj)
         return 0;
     if ((aux = aux_get(x)) == NULL)
         goto err;
-    if (aux->reject == NULL
-        && (aux->reject = sk_ASN1_OBJECT_new_null()) == NULL)
+    if (aux->reject == NULL && (aux->reject = sk_ASN1_OBJECT_new_null()) == NULL)
         goto err;
     if (sk_ASN1_OBJECT_push(aux->reject, objtmp) > 0)
         res = 1;
 
- err:
+err:
     if (!res)
         ASN1_OBJECT_free(objtmp);
     return res;
 }
 
-void X509_trust_clear(X509 *x)
+void
+X509_trust_clear(X509 *x)
 {
     if (x->aux) {
         sk_ASN1_OBJECT_pop_free(x->aux->trust, ASN1_OBJECT_free);
@@ -151,7 +155,8 @@ void X509_trust_clear(X509 *x)
     }
 }
 
-void X509_reject_clear(X509 *x)
+void
+X509_reject_clear(X509 *x)
 {
     if (x->aux) {
         sk_ASN1_OBJECT_pop_free(x->aux->reject, ASN1_OBJECT_free);
@@ -159,14 +164,14 @@ void X509_reject_clear(X509 *x)
     }
 }
 
-STACK_OF(ASN1_OBJECT) *X509_get0_trust_objects(X509 *x)
+STACK_OF(ASN1_OBJECT) * X509_get0_trust_objects(X509 *x)
 {
     if (x->aux != NULL)
         return x->aux->trust;
     return NULL;
 }
 
-STACK_OF(ASN1_OBJECT) *X509_get0_reject_objects(X509 *x)
+STACK_OF(ASN1_OBJECT) * X509_get0_reject_objects(X509 *x)
 {
     if (x->aux != NULL)
         return x->aux->reject;

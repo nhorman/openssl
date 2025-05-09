@@ -12,20 +12,23 @@
 #include <openssl/ts.h>
 #include "ts_local.h"
 
-TS_VERIFY_CTX *TS_VERIFY_CTX_new(void)
+TS_VERIFY_CTX *
+TS_VERIFY_CTX_new(void)
 {
     TS_VERIFY_CTX *ctx = OPENSSL_zalloc(sizeof(*ctx));
 
     return ctx;
 }
 
-void TS_VERIFY_CTX_init(TS_VERIFY_CTX *ctx)
+void
+TS_VERIFY_CTX_init(TS_VERIFY_CTX *ctx)
 {
     OPENSSL_assert(ctx != NULL);
     memset(ctx, 0, sizeof(*ctx));
 }
 
-void TS_VERIFY_CTX_free(TS_VERIFY_CTX *ctx)
+void
+TS_VERIFY_CTX_free(TS_VERIFY_CTX *ctx)
 {
     if (!ctx)
         return;
@@ -34,27 +37,31 @@ void TS_VERIFY_CTX_free(TS_VERIFY_CTX *ctx)
     OPENSSL_free(ctx);
 }
 
-int TS_VERIFY_CTX_add_flags(TS_VERIFY_CTX *ctx, int f)
+int
+TS_VERIFY_CTX_add_flags(TS_VERIFY_CTX *ctx, int f)
 {
     ctx->flags |= f;
     return ctx->flags;
 }
 
-int TS_VERIFY_CTX_set_flags(TS_VERIFY_CTX *ctx, int f)
+int
+TS_VERIFY_CTX_set_flags(TS_VERIFY_CTX *ctx, int f)
 {
     ctx->flags = f;
     return ctx->flags;
 }
 
 #ifndef OPENSSL_NO_DEPRECATED_3_4
-BIO *TS_VERIFY_CTX_set_data(TS_VERIFY_CTX *ctx, BIO *b)
+BIO *
+TS_VERIFY_CTX_set_data(TS_VERIFY_CTX *ctx, BIO *b)
 {
     ctx->data = b;
     return ctx->data;
 }
 #endif
 
-int TS_VERIFY_CTX_set0_data(TS_VERIFY_CTX *ctx, BIO *b)
+int
+TS_VERIFY_CTX_set0_data(TS_VERIFY_CTX *ctx, BIO *b)
 {
     BIO_free_all(ctx->data);
     ctx->data = b;
@@ -62,14 +69,16 @@ int TS_VERIFY_CTX_set0_data(TS_VERIFY_CTX *ctx, BIO *b)
 }
 
 #ifndef OPENSSL_NO_DEPRECATED_3_4
-X509_STORE *TS_VERIFY_CTX_set_store(TS_VERIFY_CTX *ctx, X509_STORE *s)
+X509_STORE *
+TS_VERIFY_CTX_set_store(TS_VERIFY_CTX *ctx, X509_STORE *s)
 {
     ctx->store = s;
     return ctx->store;
 }
 #endif
 
-int TS_VERIFY_CTX_set0_store(TS_VERIFY_CTX *ctx, X509_STORE *s)
+int
+TS_VERIFY_CTX_set0_store(TS_VERIFY_CTX *ctx, X509_STORE *s)
 {
     X509_STORE_free(ctx->store);
     ctx->store = s;
@@ -77,15 +86,15 @@ int TS_VERIFY_CTX_set0_store(TS_VERIFY_CTX *ctx, X509_STORE *s)
 }
 
 #ifndef OPENSSL_NO_DEPRECATED_3_4
-STACK_OF(X509) *TS_VERIFY_CTX_set_certs(TS_VERIFY_CTX *ctx,
-                                        STACK_OF(X509) *certs)
+STACK_OF(X509) * TS_VERIFY_CTX_set_certs(TS_VERIFY_CTX *ctx, STACK_OF(X509) * certs)
 {
     ctx->certs = certs;
     return ctx->certs;
 }
 #endif
 
-int TS_VERIFY_CTX_set0_certs(TS_VERIFY_CTX *ctx, STACK_OF(X509) *certs)
+int
+TS_VERIFY_CTX_set0_certs(TS_VERIFY_CTX *ctx, STACK_OF(X509) * certs)
 {
     OSSL_STACK_OF_X509_free(ctx->certs);
     ctx->certs = certs;
@@ -93,8 +102,8 @@ int TS_VERIFY_CTX_set0_certs(TS_VERIFY_CTX *ctx, STACK_OF(X509) *certs)
 }
 
 #ifndef OPENSSL_NO_DEPRECATED_3_4
-unsigned char *TS_VERIFY_CTX_set_imprint(TS_VERIFY_CTX *ctx,
-                                         unsigned char *hexstr, long len)
+unsigned char *
+TS_VERIFY_CTX_set_imprint(TS_VERIFY_CTX *ctx, unsigned char *hexstr, long len)
 {
     OPENSSL_free(ctx->imprint);
     ctx->imprint = hexstr;
@@ -103,8 +112,8 @@ unsigned char *TS_VERIFY_CTX_set_imprint(TS_VERIFY_CTX *ctx,
 }
 #endif
 
-int TS_VERIFY_CTX_set0_imprint(TS_VERIFY_CTX *ctx,
-                              unsigned char *hexstr, long len)
+int
+TS_VERIFY_CTX_set0_imprint(TS_VERIFY_CTX *ctx, unsigned char *hexstr, long len)
 {
     OPENSSL_free(ctx->imprint);
     ctx->imprint = hexstr;
@@ -112,7 +121,8 @@ int TS_VERIFY_CTX_set0_imprint(TS_VERIFY_CTX *ctx,
     return 1;
 }
 
-void TS_VERIFY_CTX_cleanup(TS_VERIFY_CTX *ctx)
+void
+TS_VERIFY_CTX_cleanup(TS_VERIFY_CTX *ctx)
 {
     if (!ctx)
         return;
@@ -134,7 +144,8 @@ void TS_VERIFY_CTX_cleanup(TS_VERIFY_CTX *ctx)
     TS_VERIFY_CTX_init(ctx);
 }
 
-TS_VERIFY_CTX *TS_REQ_to_TS_VERIFY_CTX(TS_REQ *req, TS_VERIFY_CTX *ctx)
+TS_VERIFY_CTX *
+TS_REQ_to_TS_VERIFY_CTX(TS_REQ *req, TS_VERIFY_CTX *ctx)
 {
     TS_VERIFY_CTX *ret = ctx;
     ASN1_OBJECT *policy;
@@ -176,7 +187,7 @@ TS_VERIFY_CTX *TS_REQ_to_TS_VERIFY_CTX(TS_REQ *req, TS_VERIFY_CTX *ctx)
         ret->flags &= ~TS_VFY_NONCE;
 
     return ret;
- err:
+err:
     if (ctx)
         TS_VERIFY_CTX_cleanup(ctx);
     else

@@ -27,7 +27,8 @@
 #include <openssl/err.h>
 
 /* Helper function to create a BIO connected to the server */
-static BIO *create_socket_bio(const char *hostname, const char *port, int family)
+static BIO *
+create_socket_bio(const char *hostname, const char *port, int family)
 {
     int sock = -1;
     BIO_ADDRINFO *res;
@@ -37,8 +38,7 @@ static BIO *create_socket_bio(const char *hostname, const char *port, int family
     /*
      * Lookup IP address info for the server.
      */
-    if (!BIO_lookup_ex(hostname, port, BIO_LOOKUP_CLIENT, family, SOCK_STREAM, 0,
-                       &res))
+    if (!BIO_lookup_ex(hostname, port, BIO_LOOKUP_CLIENT, family, SOCK_STREAM, 0, &res))
         return NULL;
 
     /*
@@ -100,7 +100,8 @@ static BIO *create_socket_bio(const char *hostname, const char *port, int family
     return bio;
 }
 
-static void wait_for_activity(SSL *ssl, int write)
+static void
+wait_for_activity(SSL *ssl, int write)
 {
     fd_set fds;
     int width, sock;
@@ -135,7 +136,8 @@ static void wait_for_activity(SSL *ssl, int write)
         select(width, &fds, NULL, NULL, NULL);
 }
 
-static int handle_io_failure(SSL *ssl, int res)
+static int
+handle_io_failure(SSL *ssl, int res)
 {
     switch (SSL_get_error(ssl, res)) {
     case SSL_ERROR_WANT_READ:
@@ -157,12 +159,11 @@ static int handle_io_failure(SSL *ssl, int res)
 
     case SSL_ERROR_SSL:
         /*
-        * If the failure is due to a verification error we can get more
-        * information about it from SSL_get_verify_result().
-        */
+         * If the failure is due to a verification error we can get more
+         * information about it from SSL_get_verify_result().
+         */
         if (SSL_get_verify_result(ssl) != X509_V_OK)
-            printf("Verify error: %s\n",
-                X509_verify_cert_error_string(SSL_get_verify_result(ssl)));
+            printf("Verify error: %s\n", X509_verify_cert_error_string(SSL_get_verify_result(ssl)));
         return -1;
 
     default:
@@ -174,7 +175,8 @@ static int handle_io_failure(SSL *ssl, int res)
  * Simple application to send a basic HTTP/1.0 request to a server and
  * print the response on the screen.
  */
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
     SSL_CTX *ctx = NULL;
     SSL *ssl = NULL;
@@ -356,7 +358,7 @@ int main(int argc, char *argv[])
 
     /* Success! */
     res = EXIT_SUCCESS;
- end:
+end:
     /*
      * If something bad happened then we will dump the contents of the
      * OpenSSL error stack to stderr. There might be some useful diagnostic

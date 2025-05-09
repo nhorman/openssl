@@ -16,7 +16,8 @@
 static char *cert = NULL;
 static char *privkey = NULL;
 
-static int test_fatalerr(void)
+static int
+test_fatalerr(void)
 {
     SSL_CTX *sctx = NULL, *cctx = NULL;
     SSL *sssl = NULL, *cssl = NULL;
@@ -24,27 +25,21 @@ static int test_fatalerr(void)
     BIO *wbio = NULL;
     int ret = 0, len;
     char buf[80];
-    unsigned char dummyrec[] = {
-        0x17, 0x03, 0x03, 0x00, 0x05, 'D', 'u', 'm', 'm', 'y'
-    };
+    unsigned char dummyrec[] = {0x17, 0x03, 0x03, 0x00, 0x05, 'D', 'u', 'm', 'm', 'y'};
 
-    if (!TEST_true(create_ssl_ctx_pair(NULL, TLS_method(), TLS_method(),
-                                       TLS1_VERSION, 0,
-                                       &sctx, &cctx, cert, privkey)))
+    if (!TEST_true(create_ssl_ctx_pair(NULL, TLS_method(), TLS_method(), TLS1_VERSION, 0, &sctx,
+                                       &cctx, cert, privkey)))
         goto err;
 
     /*
      * Deliberately set the cipher lists for client and server to be different
      * to force a handshake failure.
      */
-    if (!TEST_true(SSL_CTX_set_cipher_list(sctx, "AES128-SHA"))
-            || !TEST_true(SSL_CTX_set_cipher_list(cctx, "AES256-SHA"))
-            || !TEST_true(SSL_CTX_set_ciphersuites(sctx,
-                                                   "TLS_AES_128_GCM_SHA256"))
-            || !TEST_true(SSL_CTX_set_ciphersuites(cctx,
-                                                   "TLS_AES_256_GCM_SHA384"))
-            || !TEST_true(create_ssl_objects(sctx, cctx, &sssl, &cssl, NULL,
-                          NULL)))
+    if (!TEST_true(SSL_CTX_set_cipher_list(sctx, "AES128-SHA")) ||
+        !TEST_true(SSL_CTX_set_cipher_list(cctx, "AES256-SHA")) ||
+        !TEST_true(SSL_CTX_set_ciphersuites(sctx, "TLS_AES_128_GCM_SHA256")) ||
+        !TEST_true(SSL_CTX_set_ciphersuites(cctx, "TLS_AES_256_GCM_SHA384")) ||
+        !TEST_true(create_ssl_objects(sctx, cctx, &sssl, &cssl, NULL, NULL)))
         goto err;
 
     wbio = SSL_get_wbio(cssl);
@@ -73,7 +68,7 @@ static int test_fatalerr(void)
         goto err;
 
     ret = 1;
- err:
+err:
     SSL_free(sssl);
     SSL_free(cssl);
     SSL_CTX_free(sctx);
@@ -84,15 +79,15 @@ static int test_fatalerr(void)
 
 OPT_TEST_DECLARE_USAGE("certfile privkeyfile\n")
 
-int setup_tests(void)
+int
+setup_tests(void)
 {
     if (!test_skip_common_options()) {
         TEST_error("Error parsing test options\n");
         return 0;
     }
 
-    if (!TEST_ptr(cert = test_get_argument(0))
-            || !TEST_ptr(privkey = test_get_argument(1)))
+    if (!TEST_ptr(cert = test_get_argument(0)) || !TEST_ptr(privkey = test_get_argument(1)))
         return 0;
 
     ADD_TEST(test_fatalerr);

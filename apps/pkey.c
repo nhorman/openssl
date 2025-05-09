@@ -19,10 +19,24 @@
 
 typedef enum OPTION_choice {
     OPT_COMMON,
-    OPT_INFORM, OPT_OUTFORM, OPT_PASSIN, OPT_PASSOUT, OPT_ENGINE,
-    OPT_IN, OPT_OUT, OPT_PUBIN, OPT_PUBOUT, OPT_TEXT_PUB,
-    OPT_TEXT, OPT_NOOUT, OPT_CIPHER, OPT_TRADITIONAL, OPT_CHECK, OPT_PUB_CHECK,
-    OPT_EC_PARAM_ENC, OPT_EC_CONV_FORM,
+    OPT_INFORM,
+    OPT_OUTFORM,
+    OPT_PASSIN,
+    OPT_PASSOUT,
+    OPT_ENGINE,
+    OPT_IN,
+    OPT_OUT,
+    OPT_PUBIN,
+    OPT_PUBOUT,
+    OPT_TEXT_PUB,
+    OPT_TEXT,
+    OPT_NOOUT,
+    OPT_CIPHER,
+    OPT_TRADITIONAL,
+    OPT_CHECK,
+    OPT_PUB_CHECK,
+    OPT_EC_PARAM_ENC,
+    OPT_EC_CONV_FORM,
     OPT_PROV_ENUM
 } OPTION_CHOICE;
 
@@ -39,33 +53,28 @@ const OPTIONS pkey_options[] = {
 
     OPT_SECTION("Input"),
     {"in", OPT_IN, 's', "Input key"},
-    {"inform", OPT_INFORM, 'f',
-     "Key input format (ENGINE, other values ignored)"},
+    {"inform", OPT_INFORM, 'f', "Key input format (ENGINE, other values ignored)"},
     {"passin", OPT_PASSIN, 's', "Key input pass phrase source"},
-    {"pubin", OPT_PUBIN, '-',
-     "Read only public components from key input"},
+    {"pubin", OPT_PUBIN, '-', "Read only public components from key input"},
 
     OPT_SECTION("Output"),
     {"out", OPT_OUT, '>', "Output file for encoded and/or text output"},
     {"outform", OPT_OUTFORM, 'F', "Output encoding format (DER or PEM)"},
     {"", OPT_CIPHER, '-', "Any supported cipher to be used for encryption"},
     {"passout", OPT_PASSOUT, 's', "Output PEM file pass phrase source"},
-    {"traditional", OPT_TRADITIONAL, '-',
-     "Use traditional format for private key PEM output"},
+    {"traditional", OPT_TRADITIONAL, '-', "Use traditional format for private key PEM output"},
     {"pubout", OPT_PUBOUT, '-', "Restrict encoded output to public components"},
     {"noout", OPT_NOOUT, '-', "Do not output the key in encoded form"},
     {"text", OPT_TEXT, '-', "Output key components in plaintext"},
-    {"text_pub", OPT_TEXT_PUB, '-',
-     "Output only public key components in text form"},
+    {"text_pub", OPT_TEXT_PUB, '-', "Output only public key components in text form"},
     {"ec_conv_form", OPT_EC_CONV_FORM, 's',
      "Specifies the EC point conversion form in the encoding"},
-    {"ec_param_enc", OPT_EC_PARAM_ENC, 's',
-     "Specifies the way the EC parameters are encoded"},
+    {"ec_param_enc", OPT_EC_PARAM_ENC, 's', "Specifies the way the EC parameters are encoded"},
 
-    {NULL}
-};
+    {NULL}};
 
-int pkey_main(int argc, char **argv)
+int
+pkey_main(int argc, char **argv)
 {
     BIO *out = NULL;
     ENGINE *e = NULL;
@@ -89,7 +98,7 @@ int pkey_main(int argc, char **argv)
         switch (o) {
         case OPT_EOF:
         case OPT_ERR:
- opthelp:
+        opthelp:
             BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
             goto end;
         case OPT_HELP:
@@ -176,11 +185,9 @@ int pkey_main(int argc, char **argv)
         goto opthelp;
 
     if (text && text_pub)
-        BIO_printf(bio_err,
-                   "Warning: The -text option is ignored with -text_pub\n");
+        BIO_printf(bio_err, "Warning: The -text option is ignored with -text_pub\n");
     if (traditional && (noout || pubout))
-        BIO_printf(bio_err,
-                   "Warning: -traditional is ignored with no private key output\n");
+        BIO_printf(bio_err, "Warning: -traditional is ignored with no private key output\n");
 
     /* -pubout and -text is the same as -text_pub */
     if (!text_pub && pubout && text) {
@@ -198,8 +205,7 @@ int pkey_main(int argc, char **argv)
                        "Warning: The -passout option is ignored without a cipher option\n");
     } else {
         if (noout || outformat != FORMAT_PEM) {
-            BIO_printf(bio_err,
-                       "Error: Cipher options are supported only for PEM output\n");
+            BIO_printf(bio_err, "Error: Cipher options are supported only for PEM output\n");
             goto end;
         }
     }
@@ -227,12 +233,10 @@ int pkey_main(int argc, char **argv)
             goto end;
 
         if (asn1_encoding != NULL)
-            *p++ = OSSL_PARAM_construct_utf8_string(OSSL_PKEY_PARAM_EC_ENCODING,
-                                                    asn1_encoding, 0);
+            *p++ = OSSL_PARAM_construct_utf8_string(OSSL_PKEY_PARAM_EC_ENCODING, asn1_encoding, 0);
         if (point_format != NULL)
-            *p++ = OSSL_PARAM_construct_utf8_string(
-                       OSSL_PKEY_PARAM_EC_POINT_CONVERSION_FORMAT,
-                       point_format, 0);
+            *p++ = OSSL_PARAM_construct_utf8_string(OSSL_PKEY_PARAM_EC_POINT_CONVERSION_FORMAT,
+                                                    point_format, 0);
         *p = OSSL_PARAM_construct_end();
         if (EVP_PKEY_set_params(pkey, params) <= 0)
             goto end;
@@ -274,20 +278,17 @@ int pkey_main(int argc, char **argv)
             } else {
                 assert(private);
                 if (traditional) {
-                    if (!PEM_write_bio_PrivateKey_traditional(out, pkey, cipher,
-                                                              NULL, 0, NULL,
+                    if (!PEM_write_bio_PrivateKey_traditional(out, pkey, cipher, NULL, 0, NULL,
                                                               passout))
                         goto end;
                 } else {
-                    if (!PEM_write_bio_PrivateKey(out, pkey, cipher,
-                                                  NULL, 0, NULL, passout))
+                    if (!PEM_write_bio_PrivateKey(out, pkey, cipher, NULL, 0, NULL, passout))
                         goto end;
                 }
             }
         } else if (outformat == FORMAT_ASN1) {
             if (text || text_pub) {
-                BIO_printf(bio_err,
-                           "Error: Text output cannot be combined with DER output\n");
+                BIO_printf(bio_err, "Error: Text output cannot be combined with DER output\n");
                 goto end;
             }
             if (pubout) {
@@ -299,8 +300,7 @@ int pkey_main(int argc, char **argv)
                     if (!i2d_PrivateKey_bio(out, pkey))
                         goto end;
                 } else {
-                    if (!i2d_PKCS8PrivateKey_bio(out, pkey, NULL, NULL, 0,
-                                                 NULL, NULL))
+                    if (!i2d_PKCS8PrivateKey_bio(out, pkey, NULL, NULL, 0, NULL, NULL))
                         goto end;
                 }
             }
@@ -321,7 +321,7 @@ int pkey_main(int argc, char **argv)
 
     ret = 0;
 
- end:
+end:
     if (ret != 0)
         ERR_print_errors(bio_err);
     EVP_PKEY_CTX_free(ctx);

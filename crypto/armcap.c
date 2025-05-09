@@ -12,16 +12,16 @@
 #include <string.h>
 #include <openssl/crypto.h>
 #ifdef __APPLE__
-#include <sys/sysctl.h>
+# include <sys/sysctl.h>
 #else
-#include <setjmp.h>
-#include <signal.h>
+# include <setjmp.h>
+# include <signal.h>
 #endif
 #include "internal/cryptlib.h"
 #ifdef _WIN32
-#include <windows.h>
+# include <windows.h>
 #else
-#include <unistd.h>
+# include <unistd.h>
 #endif
 #include "arm_arch.h"
 
@@ -30,7 +30,8 @@ unsigned int OPENSSL_arm_midr = 0;
 unsigned int OPENSSL_armv8_rsa_neonized = 0;
 
 #ifdef _WIN32
-void OPENSSL_cpuid_setup(void)
+void
+OPENSSL_cpuid_setup(void)
 {
     OPENSSL_armcap_P |= ARMV7_NEON;
     OPENSSL_armv8_rsa_neonized = 1;
@@ -43,24 +44,27 @@ void OPENSSL_cpuid_setup(void)
     }
 }
 
-uint32_t OPENSSL_rdtsc(void)
+uint32_t
+OPENSSL_rdtsc(void)
 {
     return 0;
 }
 #elif __ARM_MAX_ARCH__ < 7
-void OPENSSL_cpuid_setup(void)
+void
+OPENSSL_cpuid_setup(void)
 {
 }
 
-uint32_t OPENSSL_rdtsc(void)
+uint32_t
+OPENSSL_rdtsc(void)
 {
     return 0;
 }
 #else /* !_WIN32 && __ARM_MAX_ARCH__ >= 7 */
 
- /* 3 ways of handling things here: __APPLE__,  getauxval() or SIGILL detect */
+/* 3 ways of handling things here: __APPLE__,  getauxval() or SIGILL detect */
 
- /* First determine if getauxval() is available (OSSL_IMPLEMENT_GETAUXVAL) */
+/* First determine if getauxval() is available (OSSL_IMPLEMENT_GETAUXVAL) */
 
 # if defined(__GLIBC__) && defined(__GLIBC_PREREQ)
 #  if __GLIBC_PREREQ(2, 16)
@@ -76,19 +80,20 @@ uint32_t OPENSSL_rdtsc(void)
 # endif
 # if defined(__FreeBSD__) || defined(__OpenBSD__)
 #  include <sys/param.h>
-#  if (defined(__FreeBSD__) && __FreeBSD_version >= 1200000) || \
-    (defined(__OpenBSD__) && OpenBSD >= 202409)
+#  if (defined(__FreeBSD__) && __FreeBSD_version >= 1200000) ||                                    \
+      (defined(__OpenBSD__) && OpenBSD >= 202409)
 #   include <sys/auxv.h>
 #   define OSSL_IMPLEMENT_GETAUXVAL
 
-static unsigned long getauxval(unsigned long key)
+static unsigned long
+getauxval(unsigned long key)
 {
-  unsigned long val = 0ul;
+    unsigned long val = 0ul;
 
-  if (elf_aux_info((int)key, &val, sizeof(val)) != 0)
-    return 0ul;
+    if (elf_aux_info((int)key, &val, sizeof(val)) != 0)
+        return 0ul;
 
-  return val;
+    return val;
 }
 #  endif
 # endif
@@ -107,44 +112,45 @@ static unsigned long getauxval(unsigned long key)
  * AArch64 used AT_HWCAP.
  */
 # ifndef AT_HWCAP
-#  define AT_HWCAP               16
+#  define AT_HWCAP 16
 # endif
 # ifndef AT_HWCAP2
-#  define AT_HWCAP2              26
+#  define AT_HWCAP2 26
 # endif
-# if defined(__arm__) || defined (__arm)
-#  define OSSL_HWCAP                  AT_HWCAP
-#  define OSSL_HWCAP_NEON             (1 << 12)
+# if defined(__arm__) || defined(__arm)
+#  define OSSL_HWCAP AT_HWCAP
+#  define OSSL_HWCAP_NEON (1 << 12)
 
-#  define OSSL_HWCAP_CE               AT_HWCAP2
-#  define OSSL_HWCAP_CE_AES           (1 << 0)
-#  define OSSL_HWCAP_CE_PMULL         (1 << 1)
-#  define OSSL_HWCAP_CE_SHA1          (1 << 2)
-#  define OSSL_HWCAP_CE_SHA256        (1 << 3)
+#  define OSSL_HWCAP_CE AT_HWCAP2
+#  define OSSL_HWCAP_CE_AES (1 << 0)
+#  define OSSL_HWCAP_CE_PMULL (1 << 1)
+#  define OSSL_HWCAP_CE_SHA1 (1 << 2)
+#  define OSSL_HWCAP_CE_SHA256 (1 << 3)
 # elif defined(__aarch64__)
-#  define OSSL_HWCAP                  AT_HWCAP
-#  define OSSL_HWCAP_NEON             (1 << 1)
+#  define OSSL_HWCAP AT_HWCAP
+#  define OSSL_HWCAP_NEON (1 << 1)
 
-#  define OSSL_HWCAP_CE               AT_HWCAP
-#  define OSSL_HWCAP_CE_AES           (1 << 3)
-#  define OSSL_HWCAP_CE_PMULL         (1 << 4)
-#  define OSSL_HWCAP_CE_SHA1          (1 << 5)
-#  define OSSL_HWCAP_CE_SHA256        (1 << 6)
-#  define OSSL_HWCAP_CPUID            (1 << 11)
-#  define OSSL_HWCAP_SHA3             (1 << 17)
-#  define OSSL_HWCAP_CE_SM3           (1 << 18)
-#  define OSSL_HWCAP_CE_SM4           (1 << 19)
-#  define OSSL_HWCAP_CE_SHA512        (1 << 21)
-#  define OSSL_HWCAP_SVE              (1 << 22)
-                                      /* AT_HWCAP2 */
-#  define OSSL_HWCAP2                 26
-#  define OSSL_HWCAP2_SVE2            (1 << 1)
-#  define OSSL_HWCAP2_RNG             (1 << 16)
+#  define OSSL_HWCAP_CE AT_HWCAP
+#  define OSSL_HWCAP_CE_AES (1 << 3)
+#  define OSSL_HWCAP_CE_PMULL (1 << 4)
+#  define OSSL_HWCAP_CE_SHA1 (1 << 5)
+#  define OSSL_HWCAP_CE_SHA256 (1 << 6)
+#  define OSSL_HWCAP_CPUID (1 << 11)
+#  define OSSL_HWCAP_SHA3 (1 << 17)
+#  define OSSL_HWCAP_CE_SM3 (1 << 18)
+#  define OSSL_HWCAP_CE_SM4 (1 << 19)
+#  define OSSL_HWCAP_CE_SHA512 (1 << 21)
+#  define OSSL_HWCAP_SVE (1 << 22)
+/* AT_HWCAP2 */
+#  define OSSL_HWCAP2 26
+#  define OSSL_HWCAP2_SVE2 (1 << 1)
+#  define OSSL_HWCAP2_RNG (1 << 16)
 # endif
 
 uint32_t _armv7_tick(void);
 
-uint32_t OPENSSL_rdtsc(void)
+uint32_t
+OPENSSL_rdtsc(void)
 {
     if (OPENSSL_armcap_P & ARMV7_TICK)
         return _armv7_tick();
@@ -159,7 +165,8 @@ size_t OPENSSL_rndrrs_asm(unsigned char *buf, size_t len);
 size_t OPENSSL_rndr_bytes(unsigned char *buf, size_t len);
 size_t OPENSSL_rndrrs_bytes(unsigned char *buf, size_t len);
 
-static size_t OPENSSL_rndr_wrapper(size_t (*func)(unsigned char *, size_t), unsigned char *buf, size_t len)
+static size_t
+OPENSSL_rndr_wrapper(size_t (*func)(unsigned char *, size_t), unsigned char *buf, size_t len)
 {
     size_t buffer_size = 0;
     int i;
@@ -168,17 +175,19 @@ static size_t OPENSSL_rndr_wrapper(size_t (*func)(unsigned char *, size_t), unsi
         buffer_size = func(buf, len);
         if (buffer_size == len)
             break;
-        usleep(5000);  /* 5000 microseconds (5 milliseconds) */
+        usleep(5000); /* 5000 microseconds (5 milliseconds) */
     }
     return buffer_size;
 }
 
-size_t OPENSSL_rndr_bytes(unsigned char *buf, size_t len)
+size_t
+OPENSSL_rndr_bytes(unsigned char *buf, size_t len)
 {
     return OPENSSL_rndr_wrapper(OPENSSL_rndr_asm, buf, len);
 }
 
-size_t OPENSSL_rndrrs_bytes(unsigned char *buf, size_t len)
+size_t
+OPENSSL_rndrrs_bytes(unsigned char *buf, size_t len)
 {
     return OPENSSL_rndr_wrapper(OPENSSL_rndrrs_asm, buf, len);
 }
@@ -188,7 +197,8 @@ size_t OPENSSL_rndrrs_bytes(unsigned char *buf, size_t len)
 static sigset_t all_masked;
 
 static sigjmp_buf ill_jmp;
-static void ill_handler(int sig)
+static void
+ill_handler(int sig)
 {
     siglongjmp(ill_jmp, sig);
 }
@@ -221,7 +231,8 @@ unsigned int _armv8_cpuid_probe(void);
 /*
  * Checks the specified integer sysctl, returning `value` if it's 1, otherwise returning 0.
  */
-static unsigned int sysctl_query(const char *name, unsigned int value)
+static unsigned int
+sysctl_query(const char *name, unsigned int value)
 {
     unsigned int sys_value = 0;
     size_t len = sizeof(sys_value);
@@ -230,9 +241,11 @@ static unsigned int sysctl_query(const char *name, unsigned int value)
 }
 # elif !defined(OSSL_IMPLEMENT_GETAUXVAL)
 /*
- * Calls a provided probe function, which may SIGILL. If it doesn't, return `value`, otherwise return 0.
+ * Calls a provided probe function, which may SIGILL. If it doesn't, return `value`, otherwise
+ * return 0.
  */
-static unsigned int arm_probe_for(void (*probe)(void), volatile unsigned int value)
+static unsigned int
+arm_probe_for(void (*probe)(void), volatile unsigned int value)
 {
     if (sigsetjmp(ill_jmp, 1) == 0) {
         probe();
@@ -244,7 +257,8 @@ static unsigned int arm_probe_for(void (*probe)(void), volatile unsigned int val
 }
 # endif
 
-void OPENSSL_cpuid_setup(void)
+void
+OPENSSL_cpuid_setup(void)
 {
     const char *e;
 # if !defined(__APPLE__) && !defined(OSSL_IMPLEMENT_GETAUXVAL)
@@ -294,16 +308,14 @@ void OPENSSL_cpuid_setup(void)
 
             size_t len = sizeof(uarch);
             if ((sysctlbyname("machdep.cpu.brand_string", uarch, &len, NULL, 0) == 0) &&
-               ((strncmp(uarch, "Apple M1", 8) == 0) ||
-                (strncmp(uarch, "Apple M2", 8) == 0) ||
-                (strncmp(uarch, "Apple M3", 8) == 0) ||
-                (strncmp(uarch, "Apple M4", 8) == 0))) {
+                ((strncmp(uarch, "Apple M1", 8) == 0) || (strncmp(uarch, "Apple M2", 8) == 0) ||
+                 (strncmp(uarch, "Apple M3", 8) == 0) || (strncmp(uarch, "Apple M4", 8) == 0))) {
                 OPENSSL_armcap_P |= ARMV8_UNROLL8_EOR3;
                 OPENSSL_armcap_P |= ARMV8_HAVE_SHA3_AND_WORTH_USING;
             }
         }
     }
-#  endif       /* __aarch64__ */
+#  endif /* __aarch64__ */
 
 # elif defined(OSSL_IMPLEMENT_GETAUXVAL)
 
@@ -341,14 +353,14 @@ void OPENSSL_cpuid_setup(void)
 #  endif
     }
 #  ifdef __aarch64__
-        if (getauxval(OSSL_HWCAP) & OSSL_HWCAP_SVE)
-            OPENSSL_armcap_P |= ARMV8_SVE;
+    if (getauxval(OSSL_HWCAP) & OSSL_HWCAP_SVE)
+        OPENSSL_armcap_P |= ARMV8_SVE;
 
-        if (getauxval(OSSL_HWCAP2) & OSSL_HWCAP2_SVE2)
-            OPENSSL_armcap_P |= ARMV8_SVE2;
+    if (getauxval(OSSL_HWCAP2) & OSSL_HWCAP2_SVE2)
+        OPENSSL_armcap_P |= ARMV8_SVE2;
 
-        if (getauxval(OSSL_HWCAP2) & OSSL_HWCAP2_RNG)
-            OPENSSL_armcap_P |= ARMV8_RNG;
+    if (getauxval(OSSL_HWCAP2) & OSSL_HWCAP2_RNG)
+        OPENSSL_armcap_P |= ARMV8_RNG;
 #  endif
 
 # else /* !__APPLE__ && !OSSL_IMPLEMENT_GETAUXVAL */
@@ -412,12 +424,13 @@ void OPENSSL_cpuid_setup(void)
     if ((MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_ARM, ARM_CPU_PART_CORTEX_A72) ||
          MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_ARM, ARM_CPU_PART_N1)) &&
         (OPENSSL_armcap_P & ARMV7_NEON)) {
-            OPENSSL_armv8_rsa_neonized = 1;
+        OPENSSL_armv8_rsa_neonized = 1;
     }
     if ((MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_ARM, ARM_CPU_PART_V1) ||
          MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_ARM, ARM_CPU_PART_N2) ||
          MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_QCOMM, QCOM_CPU_PART_ORYON_X1) ||
-         MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_MICROSOFT, MICROSOFT_CPU_PART_COBALT_100) ||
+         MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_MICROSOFT,
+                           MICROSOFT_CPU_PART_COBALT_100) ||
          MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_ARM, ARM_CPU_PART_V2) ||
          MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_ARM, ARM_CPU_PART_N3) ||
          MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_ARM, ARM_CPU_PART_V3) ||
@@ -430,18 +443,18 @@ void OPENSSL_cpuid_setup(void)
          MIDR_IMPLEMENTER(OPENSSL_arm_midr) == ARM_CPU_IMP_AMPERE) &&
         (OPENSSL_armcap_P & ARMV8_SHA3))
         OPENSSL_armcap_P |= ARMV8_UNROLL12_EOR3;
-    if ((MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_APPLE, APPLE_CPU_PART_M1_FIRESTORM)     ||
-         MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_APPLE, APPLE_CPU_PART_M1_ICESTORM)      ||
+    if ((MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_APPLE, APPLE_CPU_PART_M1_FIRESTORM) ||
+         MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_APPLE, APPLE_CPU_PART_M1_ICESTORM) ||
          MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_APPLE, APPLE_CPU_PART_M1_FIRESTORM_PRO) ||
-         MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_APPLE, APPLE_CPU_PART_M1_ICESTORM_PRO)  ||
+         MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_APPLE, APPLE_CPU_PART_M1_ICESTORM_PRO) ||
          MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_APPLE, APPLE_CPU_PART_M1_FIRESTORM_MAX) ||
-         MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_APPLE, APPLE_CPU_PART_M1_ICESTORM_MAX)  ||
-         MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_APPLE, APPLE_CPU_PART_M2_AVALANCHE)     ||
-         MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_APPLE, APPLE_CPU_PART_M2_BLIZZARD)      ||
+         MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_APPLE, APPLE_CPU_PART_M1_ICESTORM_MAX) ||
+         MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_APPLE, APPLE_CPU_PART_M2_AVALANCHE) ||
+         MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_APPLE, APPLE_CPU_PART_M2_BLIZZARD) ||
          MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_APPLE, APPLE_CPU_PART_M2_AVALANCHE_PRO) ||
-         MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_APPLE, APPLE_CPU_PART_M2_BLIZZARD_PRO)  ||
+         MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_APPLE, APPLE_CPU_PART_M2_BLIZZARD_PRO) ||
          MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_APPLE, APPLE_CPU_PART_M2_AVALANCHE_MAX) ||
-         MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_APPLE, APPLE_CPU_PART_M2_BLIZZARD_MAX)  ||
+         MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_APPLE, APPLE_CPU_PART_M2_BLIZZARD_MAX) ||
          MIDR_IS_CPU_MODEL(OPENSSL_arm_midr, ARM_CPU_IMP_QCOMM, QCOM_CPU_PART_ORYON_X1)) &&
         (OPENSSL_armcap_P & ARMV8_SHA3))
         OPENSSL_armcap_P |= ARMV8_HAVE_SHA3_AND_WORTH_USING;

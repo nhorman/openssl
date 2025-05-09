@@ -14,7 +14,8 @@
 #include <openssl/evp.h>
 #include "testutil.h"
 
-static int test_evp_get_digestbyname(void)
+static int
+test_evp_get_digestbyname(void)
 {
     const EVP_MD *md;
 
@@ -23,7 +24,8 @@ static int test_evp_get_digestbyname(void)
     return 1;
 }
 
-static int test_evp_get_cipherbyname(void)
+static int
+test_evp_get_cipherbyname(void)
 {
     const EVP_CIPHER *cipher;
 
@@ -32,7 +34,8 @@ static int test_evp_get_cipherbyname(void)
     return 1;
 }
 
-int setup_tests(void)
+int
+setup_tests(void)
 {
     ADD_TEST(test_evp_get_digestbyname);
     ADD_TEST(test_evp_get_cipherbyname);

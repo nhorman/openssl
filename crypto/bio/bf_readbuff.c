@@ -19,7 +19,7 @@
 #include "bio_local.h"
 #include "internal/cryptlib.h"
 
-#define DEFAULT_BUFFER_SIZE     4096
+#define DEFAULT_BUFFER_SIZE 4096
 
 static int readbuffer_write(BIO *h, const char *buf, int num);
 static int readbuffer_read(BIO *h, char *buf, int size);
@@ -31,26 +31,19 @@ static int readbuffer_free(BIO *data);
 static long readbuffer_callback_ctrl(BIO *h, int cmd, BIO_info_cb *fp);
 
 static const BIO_METHOD methods_readbuffer = {
-    BIO_TYPE_BUFFER,
-    "readbuffer",
-    bwrite_conv,
-    readbuffer_write,
-    bread_conv,
-    readbuffer_read,
-    readbuffer_puts,
-    readbuffer_gets,
-    readbuffer_ctrl,
-    readbuffer_new,
-    readbuffer_free,
-    readbuffer_callback_ctrl,
+    BIO_TYPE_BUFFER, "readbuffer",    bwrite_conv,     readbuffer_write,
+    bread_conv,      readbuffer_read, readbuffer_puts, readbuffer_gets,
+    readbuffer_ctrl, readbuffer_new,  readbuffer_free, readbuffer_callback_ctrl,
 };
 
-const BIO_METHOD *BIO_f_readbuffer(void)
+const BIO_METHOD *
+BIO_f_readbuffer(void)
 {
     return &methods_readbuffer;
 }
 
-static int readbuffer_new(BIO *bi)
+static int
+readbuffer_new(BIO *bi)
 {
     BIO_F_BUFFER_CTX *ctx = OPENSSL_zalloc(sizeof(*ctx));
 
@@ -69,7 +62,8 @@ static int readbuffer_new(BIO *bi)
     return 1;
 }
 
-static int readbuffer_free(BIO *a)
+static int
+readbuffer_free(BIO *a)
 {
     BIO_F_BUFFER_CTX *b;
 
@@ -84,7 +78,8 @@ static int readbuffer_free(BIO *a)
     return 1;
 }
 
-static int readbuffer_resize(BIO_F_BUFFER_CTX *ctx, int sz)
+static int
+readbuffer_resize(BIO_F_BUFFER_CTX *ctx, int sz)
 {
     char *tmp;
 
@@ -103,7 +98,8 @@ static int readbuffer_resize(BIO_F_BUFFER_CTX *ctx, int sz)
     return 1;
 }
 
-static int readbuffer_read(BIO *b, char *out, int outl)
+static int
+readbuffer_read(BIO *b, char *out, int outl)
 {
     int i, num = 0;
     BIO_F_BUFFER_CTX *ctx;
@@ -150,16 +146,19 @@ static int readbuffer_read(BIO *b, char *out, int outl)
     }
 }
 
-static int readbuffer_write(BIO *b, const char *in, int inl)
+static int
+readbuffer_write(BIO *b, const char *in, int inl)
 {
     return 0;
 }
-static int readbuffer_puts(BIO *b, const char *str)
+static int
+readbuffer_puts(BIO *b, const char *str)
 {
     return 0;
 }
 
-static long readbuffer_ctrl(BIO *b, int cmd, long num, void *ptr)
+static long
+readbuffer_ctrl(BIO *b, int cmd, long num, void *ptr)
 {
     BIO_F_BUFFER_CTX *ctx;
     long ret = 1, sz;
@@ -208,14 +207,16 @@ static long readbuffer_ctrl(BIO *b, int cmd, long num, void *ptr)
     return ret;
 }
 
-static long readbuffer_callback_ctrl(BIO *b, int cmd, BIO_info_cb *fp)
+static long
+readbuffer_callback_ctrl(BIO *b, int cmd, BIO_info_cb *fp)
 {
     if (b->next_bio == NULL)
         return 0;
     return BIO_callback_ctrl(b->next_bio, cmd, fp);
 }
 
-static int readbuffer_gets(BIO *b, char *buf, int size)
+static int
+readbuffer_gets(BIO *b, char *buf, int size)
 {
     BIO_F_BUFFER_CTX *ctx;
     int num = 0, num_chars, found_newline;
@@ -235,9 +236,7 @@ static int readbuffer_gets(BIO *b, char *buf, int size)
     if (ctx->ibuf_len > 0) {
         p = ctx->ibuf + ctx->ibuf_off;
         found_newline = 0;
-        for (num_chars = 0;
-             (num_chars < ctx->ibuf_len) && (num_chars < size);
-             num_chars++) {
+        for (num_chars = 0; (num_chars < ctx->ibuf_len) && (num_chars < size); num_chars++) {
             *buf++ = p[num_chars];
             if (p[num_chars] == '\n') {
                 found_newline = 1;
@@ -259,33 +258,33 @@ static int readbuffer_gets(BIO *b, char *buf, int size)
      * next bio.
      */
 
-     /* Resize if we have to */
-     if (!readbuffer_resize(ctx, 1 + size))
-         return 0;
-     /*
-      * Read more data from the next bio using BIO_read_ex:
-      * Note we cannot use BIO_gets() here as it does not work on a
-      * binary stream that contains 0x00. (Since strlen() will stop at
-      * any 0x00 not at the last read '\n' in a FILE bio).
-      * Also note that some applications open and close the file bio
-      * multiple times and need to read the next available block when using
-      * stdin - so we need to READ one byte at a time!
-      */
-     p = ctx->ibuf + ctx->ibuf_off;
-     for (i = 0; i < size; ++i) {
-         j = BIO_read(b->next_bio, p, 1);
-         if (j <= 0) {
-             BIO_copy_next_retry(b);
-             *buf = '\0';
-             return num > 0 ? num : j;
-         }
-         *buf++ = *p;
-         num++;
-         ctx->ibuf_off++;
-         if (*p == '\n')
-             break;
-         ++p;
-     }
-     *buf = '\0';
-     return num;
+    /* Resize if we have to */
+    if (!readbuffer_resize(ctx, 1 + size))
+        return 0;
+    /*
+     * Read more data from the next bio using BIO_read_ex:
+     * Note we cannot use BIO_gets() here as it does not work on a
+     * binary stream that contains 0x00. (Since strlen() will stop at
+     * any 0x00 not at the last read '\n' in a FILE bio).
+     * Also note that some applications open and close the file bio
+     * multiple times and need to read the next available block when using
+     * stdin - so we need to READ one byte at a time!
+     */
+    p = ctx->ibuf + ctx->ibuf_off;
+    for (i = 0; i < size; ++i) {
+        j = BIO_read(b->next_bio, p, 1);
+        if (j <= 0) {
+            BIO_copy_next_retry(b);
+            *buf = '\0';
+            return num > 0 ? num : j;
+        }
+        *buf++ = *p;
+        num++;
+        ctx->ibuf_off++;
+        if (*p == '\n')
+            break;
+        ++p;
+    }
+    *buf = '\0';
+    return num;
 }

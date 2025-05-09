@@ -32,7 +32,8 @@ static unsigned __stdcall thread_start_thunk(LPVOID vthread)
     return 0;
 }
 
-int ossl_crypto_thread_native_spawn(CRYPTO_THREAD *thread)
+int
+ossl_crypto_thread_native_spawn(CRYPTO_THREAD *thread)
 {
     HANDLE *handle;
 
@@ -53,7 +54,8 @@ fail:
     return 0;
 }
 
-int ossl_crypto_thread_native_perform_join(CRYPTO_THREAD *thread, CRYPTO_THREAD_RETVAL *retval)
+int
+ossl_crypto_thread_native_perform_join(CRYPTO_THREAD *thread, CRYPTO_THREAD_RETVAL *retval)
 {
     DWORD thread_retval;
     HANDLE *handle;
@@ -61,7 +63,7 @@ int ossl_crypto_thread_native_perform_join(CRYPTO_THREAD *thread, CRYPTO_THREAD_
     if (thread == NULL || thread->handle == NULL)
         return 0;
 
-    handle = (HANDLE *) thread->handle;
+    handle = (HANDLE *)thread->handle;
     if (WaitForSingleObject(*handle, INFINITE) != WAIT_OBJECT_0)
         return 0;
 
@@ -83,18 +85,21 @@ int ossl_crypto_thread_native_perform_join(CRYPTO_THREAD *thread, CRYPTO_THREAD_
     return 1;
 }
 
-int ossl_crypto_thread_native_exit(void)
+int
+ossl_crypto_thread_native_exit(void)
 {
     _endthreadex(0);
     return 1;
 }
 
-int ossl_crypto_thread_native_is_self(CRYPTO_THREAD *thread)
+int
+ossl_crypto_thread_native_is_self(CRYPTO_THREAD *thread)
 {
     return thread->thread_id == GetCurrentThreadId();
 }
 
-CRYPTO_MUTEX *ossl_crypto_mutex_new(void)
+CRYPTO_MUTEX *
+ossl_crypto_mutex_new(void)
 {
     CRITICAL_SECTION *mutex;
 
@@ -104,7 +109,8 @@ CRYPTO_MUTEX *ossl_crypto_mutex_new(void)
     return (CRYPTO_MUTEX *)mutex;
 }
 
-void ossl_crypto_mutex_lock(CRYPTO_MUTEX *mutex)
+void
+ossl_crypto_mutex_lock(CRYPTO_MUTEX *mutex)
 {
     CRITICAL_SECTION *mutex_p;
 
@@ -112,7 +118,8 @@ void ossl_crypto_mutex_lock(CRYPTO_MUTEX *mutex)
     EnterCriticalSection(mutex_p);
 }
 
-int ossl_crypto_mutex_try_lock(CRYPTO_MUTEX *mutex)
+int
+ossl_crypto_mutex_try_lock(CRYPTO_MUTEX *mutex)
 {
     CRITICAL_SECTION *mutex_p;
 
@@ -123,7 +130,8 @@ int ossl_crypto_mutex_try_lock(CRYPTO_MUTEX *mutex)
     return 0;
 }
 
-void ossl_crypto_mutex_unlock(CRYPTO_MUTEX *mutex)
+void
+ossl_crypto_mutex_unlock(CRYPTO_MUTEX *mutex)
 {
     CRITICAL_SECTION *mutex_p;
 
@@ -131,7 +139,8 @@ void ossl_crypto_mutex_unlock(CRYPTO_MUTEX *mutex)
     LeaveCriticalSection(mutex_p);
 }
 
-void ossl_crypto_mutex_free(CRYPTO_MUTEX **mutex)
+void
+ossl_crypto_mutex_free(CRYPTO_MUTEX **mutex)
 {
     CRITICAL_SECTION **mutex_p;
 
@@ -142,7 +151,8 @@ void ossl_crypto_mutex_free(CRYPTO_MUTEX **mutex)
     *mutex = NULL;
 }
 
-static int determine_timeout(OSSL_TIME deadline, DWORD *w_timeout_p)
+static int
+determine_timeout(OSSL_TIME deadline, DWORD *w_timeout_p)
 {
     OSSL_TIME now, delta;
     uint64_t ms;
@@ -280,9 +290,9 @@ static int determine_timeout(OSSL_TIME deadline, DWORD *w_timeout_p)
  *
  */
 typedef struct legacy_condvar_st {
-    CRYPTO_MUTEX    *int_m;       /* internal mutex */
-    HANDLE          sema;         /* main wait semaphore */
-    HANDLE          prewait_sema; /* prewait semaphore */
+    CRYPTO_MUTEX *int_m; /* internal mutex */
+    HANDLE sema;         /* main wait semaphore */
+    HANDLE prewait_sema; /* prewait semaphore */
     /*
      * All of the following fields are protected by int_m.
      *
@@ -290,14 +300,15 @@ typedef struct legacy_condvar_st {
      * num_wait. num_wait can decrease for other reasons (for example due to a
      * wait operation timing out).
      */
-    size_t          num_wait;     /* Num. threads currently blocked */
-    size_t          num_wake;     /* Num. threads due to wake up */
-    size_t          num_prewait;  /* Num. threads in prewait */
-    size_t          gen;          /* Prewait generation */
-    int             closed;       /* Is closed? */
+    size_t num_wait;    /* Num. threads currently blocked */
+    size_t num_wake;    /* Num. threads due to wake up */
+    size_t num_prewait; /* Num. threads in prewait */
+    size_t gen;         /* Prewait generation */
+    int closed;         /* Is closed? */
 } LEGACY_CONDVAR;
 
-CRYPTO_CONDVAR *ossl_crypto_condvar_new(void)
+CRYPTO_CONDVAR *
+ossl_crypto_condvar_new(void)
 {
     LEGACY_CONDVAR *cv;
 
@@ -322,15 +333,16 @@ CRYPTO_CONDVAR *ossl_crypto_condvar_new(void)
         return NULL;
     }
 
-    cv->num_wait      = 0;
-    cv->num_wake      = 0;
-    cv->num_prewait   = 0;
-    cv->closed        = 0;
+    cv->num_wait = 0;
+    cv->num_wake = 0;
+    cv->num_prewait = 0;
+    cv->closed = 0;
 
     return (CRYPTO_CONDVAR *)cv;
 }
 
-void ossl_crypto_condvar_free(CRYPTO_CONDVAR **cv_p)
+void
+ossl_crypto_condvar_free(CRYPTO_CONDVAR **cv_p)
 {
     if (*cv_p != NULL) {
         LEGACY_CONDVAR *cv = *(LEGACY_CONDVAR **)cv_p;
@@ -344,7 +356,8 @@ void ossl_crypto_condvar_free(CRYPTO_CONDVAR **cv_p)
     *cv_p = NULL;
 }
 
-static uint32_t obj_wait(HANDLE h, OSSL_TIME deadline)
+static uint32_t
+obj_wait(HANDLE h, OSSL_TIME deadline)
 {
     DWORD timeout;
 
@@ -354,8 +367,8 @@ static uint32_t obj_wait(HANDLE h, OSSL_TIME deadline)
     return WaitForSingleObject(h, timeout);
 }
 
-void ossl_crypto_condvar_wait_timeout(CRYPTO_CONDVAR *cv_, CRYPTO_MUTEX *ext_m,
-                                      OSSL_TIME deadline)
+void
+ossl_crypto_condvar_wait_timeout(CRYPTO_CONDVAR *cv_, CRYPTO_MUTEX *ext_m, OSSL_TIME deadline)
 {
     LEGACY_CONDVAR *cv = (LEGACY_CONDVAR *)cv_;
     int closed, set_prewait = 0, have_orig_gen = 0;
@@ -481,12 +494,14 @@ void ossl_crypto_condvar_wait_timeout(CRYPTO_CONDVAR *cv_, CRYPTO_MUTEX *ext_m,
     ossl_crypto_mutex_lock(ext_m);
 }
 
-void ossl_crypto_condvar_wait(CRYPTO_CONDVAR *cv, CRYPTO_MUTEX *ext_m)
+void
+ossl_crypto_condvar_wait(CRYPTO_CONDVAR *cv, CRYPTO_MUTEX *ext_m)
 {
     ossl_crypto_condvar_wait_timeout(cv, ext_m, ossl_time_infinite());
 }
 
-void ossl_crypto_condvar_broadcast(CRYPTO_CONDVAR *cv_)
+void
+ossl_crypto_condvar_broadcast(CRYPTO_CONDVAR *cv_)
 {
     LEGACY_CONDVAR *cv = (LEGACY_CONDVAR *)cv_;
     size_t num_wake;
@@ -499,15 +514,16 @@ void ossl_crypto_condvar_broadcast(CRYPTO_CONDVAR *cv_)
         return;
     }
 
-    cv->num_wake  += num_wake;
-    cv->num_wait  -= num_wake;
-    cv->closed     = 1;
+    cv->num_wake += num_wake;
+    cv->num_wait -= num_wake;
+    cv->closed = 1;
 
     ossl_crypto_mutex_unlock(cv->int_m);
     ReleaseSemaphore(cv->sema, num_wake, NULL);
 }
 
-void ossl_crypto_condvar_signal(CRYPTO_CONDVAR *cv_)
+void
+ossl_crypto_condvar_signal(CRYPTO_CONDVAR *cv_)
 {
     LEGACY_CONDVAR *cv = (LEGACY_CONDVAR *)cv_;
 
@@ -531,7 +547,8 @@ void ossl_crypto_condvar_signal(CRYPTO_CONDVAR *cv_)
 
 # else
 
-CRYPTO_CONDVAR *ossl_crypto_condvar_new(void)
+CRYPTO_CONDVAR *
+ossl_crypto_condvar_new(void)
 {
     CONDITION_VARIABLE *cv_p;
 
@@ -541,7 +558,8 @@ CRYPTO_CONDVAR *ossl_crypto_condvar_new(void)
     return (CRYPTO_CONDVAR *)cv_p;
 }
 
-void ossl_crypto_condvar_wait(CRYPTO_CONDVAR *cv, CRYPTO_MUTEX *mutex)
+void
+ossl_crypto_condvar_wait(CRYPTO_CONDVAR *cv, CRYPTO_MUTEX *mutex)
 {
     CONDITION_VARIABLE *cv_p;
     CRITICAL_SECTION *mutex_p;
@@ -551,8 +569,8 @@ void ossl_crypto_condvar_wait(CRYPTO_CONDVAR *cv, CRYPTO_MUTEX *mutex)
     SleepConditionVariableCS(cv_p, mutex_p, INFINITE);
 }
 
-void ossl_crypto_condvar_wait_timeout(CRYPTO_CONDVAR *cv, CRYPTO_MUTEX *mutex,
-                                      OSSL_TIME deadline)
+void
+ossl_crypto_condvar_wait_timeout(CRYPTO_CONDVAR *cv, CRYPTO_MUTEX *mutex, OSSL_TIME deadline)
 {
     DWORD timeout;
     CONDITION_VARIABLE *cv_p = (CONDITION_VARIABLE *)cv;
@@ -564,7 +582,8 @@ void ossl_crypto_condvar_wait_timeout(CRYPTO_CONDVAR *cv, CRYPTO_MUTEX *mutex,
     SleepConditionVariableCS(cv_p, mutex_p, timeout);
 }
 
-void ossl_crypto_condvar_broadcast(CRYPTO_CONDVAR *cv)
+void
+ossl_crypto_condvar_broadcast(CRYPTO_CONDVAR *cv)
 {
     CONDITION_VARIABLE *cv_p;
 
@@ -572,7 +591,8 @@ void ossl_crypto_condvar_broadcast(CRYPTO_CONDVAR *cv)
     WakeAllConditionVariable(cv_p);
 }
 
-void ossl_crypto_condvar_signal(CRYPTO_CONDVAR *cv)
+void
+ossl_crypto_condvar_signal(CRYPTO_CONDVAR *cv)
 {
     CONDITION_VARIABLE *cv_p;
 
@@ -580,7 +600,8 @@ void ossl_crypto_condvar_signal(CRYPTO_CONDVAR *cv)
     WakeConditionVariable(cv_p);
 }
 
-void ossl_crypto_condvar_free(CRYPTO_CONDVAR **cv)
+void
+ossl_crypto_condvar_free(CRYPTO_CONDVAR **cv)
 {
     CONDITION_VARIABLE **cv_p;
 
@@ -591,7 +612,8 @@ void ossl_crypto_condvar_free(CRYPTO_CONDVAR **cv)
 
 # endif
 
-void ossl_crypto_mem_barrier(void)
+void
+ossl_crypto_mem_barrier(void)
 {
     MemoryBarrier();
 }

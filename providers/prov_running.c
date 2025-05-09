@@ -11,12 +11,14 @@
 #include "prov/providercommon.h"
 
 /* By default, our providers don't have an error state */
-void ossl_set_error_state(const char *type)
+void
+ossl_set_error_state(const char *type)
 {
 }
 
 /* By default, our providers are always in a happy state */
-int ossl_prov_is_running(void)
+int
+ossl_prov_is_running(void)
 {
     return 1;
 }

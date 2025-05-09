@@ -25,27 +25,28 @@ typedef enum OPTION_choice {
     OPT_TEST_ENUM
 } OPTION_CHOICE;
 
-const OPTIONS *test_get_options(void)
+const OPTIONS *
+test_get_options(void)
 {
     static const OPTIONS test_options[] = {
         OPT_TEST_OPTIONS_WITH_EXTRA_USAGE("file\n"),
-        { "config", OPT_CONFIG_FILE, '<',
-          "The configuration file to use for the libctx" },
-        { "provider", OPT_PROVIDER_NAME, 's',
-          "The provider to load (The default value is 'default')" },
-        { OPT_HELP_STR, 1, '-', "file\tFile to decode.\n" },
-        { NULL }
-    };
+        {"config", OPT_CONFIG_FILE, '<', "The configuration file to use for the libctx"},
+        {"provider", OPT_PROVIDER_NAME, 's',
+         "The provider to load (The default value is 'default')"},
+        {OPT_HELP_STR, 1, '-', "file\tFile to decode.\n"},
+        {NULL}};
     return test_options;
 }
 
-static int passcb(char *buf, int size, int rwflag, void *userdata)
+static int
+passcb(char *buf, int size, int rwflag, void *userdata)
 {
     strcpy(buf, "pass");
     return strlen(buf);
 }
 
-static int test_decode_nonfipsalg(void)
+static int
+test_decode_nonfipsalg(void)
 {
     int ret = 0;
     EVP_PKEY *privkey = NULL;
@@ -71,7 +72,8 @@ static int test_decode_nonfipsalg(void)
      * Pass if we override the libctx global prop query to optionally use fips=true
      * This assumes that the libctx contains the default provider
      */
-    if (!TEST_ptr_null(PEM_read_bio_PrivateKey_ex(bio, &privkey, &passcb, NULL, libctx, "?fips=true")))
+    if (!TEST_ptr_null(
+            PEM_read_bio_PrivateKey_ex(bio, &privkey, &passcb, NULL, libctx, "?fips=true")))
         goto err;
 
     ret = 1;
@@ -81,7 +83,8 @@ err:
     return ret;
 }
 
-int setup_tests(void)
+int
+setup_tests(void)
 {
     const char *prov_name = "default";
     char *config_file = NULL;
@@ -96,7 +99,7 @@ int setup_tests(void)
             config_file = opt_arg();
             break;
         case OPT_TEST_CASES:
-           break;
+            break;
         default:
         case OPT_ERR:
             return 0;
@@ -111,7 +114,8 @@ int setup_tests(void)
     return 1;
 }
 
-void cleanup_tests(void)
+void
+cleanup_tests(void)
 {
     OSSL_PROVIDER_unload(libprov);
     OSSL_LIB_CTX_free(libctx);

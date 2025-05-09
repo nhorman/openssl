@@ -9,17 +9,19 @@
 
 #include <stdlib.h>
 #include <openssl/crypto.h>
-#include "platform.h"            /* for copy_argv() */
+#include "platform.h" /* for copy_argv() */
 
 char **newargv = NULL;
 
-static void cleanup_argv(void)
+static void
+cleanup_argv(void)
 {
     OPENSSL_free(newargv);
     newargv = NULL;
 }
 
-char **copy_argv(int *argc, char *argv[])
+char **
+copy_argv(int *argc, char *argv[])
 {
     /*-
      * The note below is for historical purpose.  On VMS now we always

@@ -45,7 +45,7 @@ struct TS_req_st {
     ASN1_OBJECT *policy_id;
     ASN1_INTEGER *nonce;
     ASN1_BOOLEAN cert_req;
-    STACK_OF(X509_EXTENSION) *extensions;
+    STACK_OF(X509_EXTENSION) * extensions;
 };
 
 /*-
@@ -89,12 +89,12 @@ struct TS_tst_info_st {
     ASN1_BOOLEAN ordering;
     ASN1_INTEGER *nonce;
     GENERAL_NAME *tsa;
-    STACK_OF(X509_EXTENSION) *extensions;
+    STACK_OF(X509_EXTENSION) * extensions;
 };
 
 struct TS_status_info_st {
     ASN1_INTEGER *status;
-    STACK_OF(ASN1_UTF8STRING) *text;
+    STACK_OF(ASN1_UTF8STRING) * text;
     ASN1_BIT_STRING *failure_info;
 };
 
@@ -103,23 +103,23 @@ struct TS_resp_ctx {
     EVP_PKEY *signer_key;
     const EVP_MD *signer_md;
     const EVP_MD *ess_cert_id_digest;
-    STACK_OF(X509) *certs;      /* Certs to include in signed data. */
-    STACK_OF(ASN1_OBJECT) *policies; /* Acceptable policies. */
-    ASN1_OBJECT *default_policy; /* It may appear in policies, too. */
-    STACK_OF(EVP_MD) *mds;      /* Acceptable message digests. */
-    ASN1_INTEGER *seconds;      /* accuracy, 0 means not specified. */
-    ASN1_INTEGER *millis;       /* accuracy, 0 means not specified. */
-    ASN1_INTEGER *micros;       /* accuracy, 0 means not specified. */
-    unsigned clock_precision_digits; /* fraction of seconds in timestamp
-                                      * token. */
-    unsigned flags;             /* Optional info, see values above. */
+    STACK_OF(X509) * certs;           /* Certs to include in signed data. */
+    STACK_OF(ASN1_OBJECT) * policies; /* Acceptable policies. */
+    ASN1_OBJECT *default_policy;      /* It may appear in policies, too. */
+    STACK_OF(EVP_MD) * mds;           /* Acceptable message digests. */
+    ASN1_INTEGER *seconds;            /* accuracy, 0 means not specified. */
+    ASN1_INTEGER *millis;             /* accuracy, 0 means not specified. */
+    ASN1_INTEGER *micros;             /* accuracy, 0 means not specified. */
+    unsigned clock_precision_digits;  /* fraction of seconds in timestamp
+                                       * token. */
+    unsigned flags;                   /* Optional info, see values above. */
     /* Callback functions. */
     TS_serial_cb serial_cb;
-    void *serial_cb_data;       /* User data for serial_cb. */
+    void *serial_cb_data; /* User data for serial_cb. */
     TS_time_cb time_cb;
-    void *time_cb_data;         /* User data for time_cb. */
+    void *time_cb_data; /* User data for time_cb. */
     TS_extension_cb extension_cb;
-    void *extension_cb_data;    /* User data for extension_cb. */
+    void *extension_cb_data; /* User data for extension_cb. */
     /* These members are used only while creating the response. */
     TS_REQ *request;
     TS_RESP *response;
@@ -133,7 +133,7 @@ struct TS_verify_ctx {
     unsigned flags;
     /* Must be set only with TS_VFY_SIGNATURE. certs is optional. */
     X509_STORE *store;
-    STACK_OF(X509) *certs;
+    STACK_OF(X509) * certs;
     /* Must be set only with TS_VFY_POLICY. */
     ASN1_OBJECT *policy;
     /*

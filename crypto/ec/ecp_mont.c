@@ -18,69 +18,71 @@
 
 #include "ec_local.h"
 
-const EC_METHOD *EC_GFp_mont_method(void)
+const EC_METHOD *
+EC_GFp_mont_method(void)
 {
-    static const EC_METHOD ret = {
-        EC_FLAGS_DEFAULT_OCT,
-        NID_X9_62_prime_field,
-        ossl_ec_GFp_mont_group_init,
-        ossl_ec_GFp_mont_group_finish,
-        ossl_ec_GFp_mont_group_clear_finish,
-        ossl_ec_GFp_mont_group_copy,
-        ossl_ec_GFp_mont_group_set_curve,
-        ossl_ec_GFp_simple_group_get_curve,
-        ossl_ec_GFp_simple_group_get_degree,
-        ossl_ec_group_simple_order_bits,
-        ossl_ec_GFp_simple_group_check_discriminant,
-        ossl_ec_GFp_simple_point_init,
-        ossl_ec_GFp_simple_point_finish,
-        ossl_ec_GFp_simple_point_clear_finish,
-        ossl_ec_GFp_simple_point_copy,
-        ossl_ec_GFp_simple_point_set_to_infinity,
-        ossl_ec_GFp_simple_point_set_affine_coordinates,
-        ossl_ec_GFp_simple_point_get_affine_coordinates,
-        0, 0, 0,
-        ossl_ec_GFp_simple_add,
-        ossl_ec_GFp_simple_dbl,
-        ossl_ec_GFp_simple_invert,
-        ossl_ec_GFp_simple_is_at_infinity,
-        ossl_ec_GFp_simple_is_on_curve,
-        ossl_ec_GFp_simple_cmp,
-        ossl_ec_GFp_simple_make_affine,
-        ossl_ec_GFp_simple_points_make_affine,
-        0 /* mul */ ,
-        0 /* precompute_mult */ ,
-        0 /* have_precompute_mult */ ,
-        ossl_ec_GFp_mont_field_mul,
-        ossl_ec_GFp_mont_field_sqr,
-        0 /* field_div */ ,
-        ossl_ec_GFp_mont_field_inv,
-        ossl_ec_GFp_mont_field_encode,
-        ossl_ec_GFp_mont_field_decode,
-        ossl_ec_GFp_mont_field_set_to_one,
-        ossl_ec_key_simple_priv2oct,
-        ossl_ec_key_simple_oct2priv,
-        0, /* set private */
-        ossl_ec_key_simple_generate_key,
-        ossl_ec_key_simple_check_key,
-        ossl_ec_key_simple_generate_public_key,
-        0, /* keycopy */
-        0, /* keyfinish */
-        ossl_ecdh_simple_compute_key,
-        ossl_ecdsa_simple_sign_setup,
-        ossl_ecdsa_simple_sign_sig,
-        ossl_ecdsa_simple_verify_sig,
-        0, /* field_inverse_mod_ord */
-        ossl_ec_GFp_simple_blind_coordinates,
-        ossl_ec_GFp_simple_ladder_pre,
-        ossl_ec_GFp_simple_ladder_step,
-        ossl_ec_GFp_simple_ladder_post
-    };
+    static const EC_METHOD ret = {EC_FLAGS_DEFAULT_OCT,
+                                  NID_X9_62_prime_field,
+                                  ossl_ec_GFp_mont_group_init,
+                                  ossl_ec_GFp_mont_group_finish,
+                                  ossl_ec_GFp_mont_group_clear_finish,
+                                  ossl_ec_GFp_mont_group_copy,
+                                  ossl_ec_GFp_mont_group_set_curve,
+                                  ossl_ec_GFp_simple_group_get_curve,
+                                  ossl_ec_GFp_simple_group_get_degree,
+                                  ossl_ec_group_simple_order_bits,
+                                  ossl_ec_GFp_simple_group_check_discriminant,
+                                  ossl_ec_GFp_simple_point_init,
+                                  ossl_ec_GFp_simple_point_finish,
+                                  ossl_ec_GFp_simple_point_clear_finish,
+                                  ossl_ec_GFp_simple_point_copy,
+                                  ossl_ec_GFp_simple_point_set_to_infinity,
+                                  ossl_ec_GFp_simple_point_set_affine_coordinates,
+                                  ossl_ec_GFp_simple_point_get_affine_coordinates,
+                                  0,
+                                  0,
+                                  0,
+                                  ossl_ec_GFp_simple_add,
+                                  ossl_ec_GFp_simple_dbl,
+                                  ossl_ec_GFp_simple_invert,
+                                  ossl_ec_GFp_simple_is_at_infinity,
+                                  ossl_ec_GFp_simple_is_on_curve,
+                                  ossl_ec_GFp_simple_cmp,
+                                  ossl_ec_GFp_simple_make_affine,
+                                  ossl_ec_GFp_simple_points_make_affine,
+                                  0 /* mul */,
+                                  0 /* precompute_mult */,
+                                  0 /* have_precompute_mult */,
+                                  ossl_ec_GFp_mont_field_mul,
+                                  ossl_ec_GFp_mont_field_sqr,
+                                  0 /* field_div */,
+                                  ossl_ec_GFp_mont_field_inv,
+                                  ossl_ec_GFp_mont_field_encode,
+                                  ossl_ec_GFp_mont_field_decode,
+                                  ossl_ec_GFp_mont_field_set_to_one,
+                                  ossl_ec_key_simple_priv2oct,
+                                  ossl_ec_key_simple_oct2priv,
+                                  0, /* set private */
+                                  ossl_ec_key_simple_generate_key,
+                                  ossl_ec_key_simple_check_key,
+                                  ossl_ec_key_simple_generate_public_key,
+                                  0, /* keycopy */
+                                  0, /* keyfinish */
+                                  ossl_ecdh_simple_compute_key,
+                                  ossl_ecdsa_simple_sign_setup,
+                                  ossl_ecdsa_simple_sign_sig,
+                                  ossl_ecdsa_simple_verify_sig,
+                                  0, /* field_inverse_mod_ord */
+                                  ossl_ec_GFp_simple_blind_coordinates,
+                                  ossl_ec_GFp_simple_ladder_pre,
+                                  ossl_ec_GFp_simple_ladder_step,
+                                  ossl_ec_GFp_simple_ladder_post};
 
     return &ret;
 }
 
-int ossl_ec_GFp_mont_group_init(EC_GROUP *group)
+int
+ossl_ec_GFp_mont_group_init(EC_GROUP *group)
 {
     int ok;
 
@@ -90,7 +92,8 @@ int ossl_ec_GFp_mont_group_init(EC_GROUP *group)
     return ok;
 }
 
-void ossl_ec_GFp_mont_group_finish(EC_GROUP *group)
+void
+ossl_ec_GFp_mont_group_finish(EC_GROUP *group)
 {
     BN_MONT_CTX_free(group->field_data1);
     group->field_data1 = NULL;
@@ -99,7 +102,8 @@ void ossl_ec_GFp_mont_group_finish(EC_GROUP *group)
     ossl_ec_GFp_simple_group_finish(group);
 }
 
-void ossl_ec_GFp_mont_group_clear_finish(EC_GROUP *group)
+void
+ossl_ec_GFp_mont_group_clear_finish(EC_GROUP *group)
 {
     BN_MONT_CTX_free(group->field_data1);
     group->field_data1 = NULL;
@@ -108,7 +112,8 @@ void ossl_ec_GFp_mont_group_clear_finish(EC_GROUP *group)
     ossl_ec_GFp_simple_group_clear_finish(group);
 }
 
-int ossl_ec_GFp_mont_group_copy(EC_GROUP *dest, const EC_GROUP *src)
+int
+ossl_ec_GFp_mont_group_copy(EC_GROUP *dest, const EC_GROUP *src)
 {
     BN_MONT_CTX_free(dest->field_data1);
     dest->field_data1 = NULL;
@@ -133,15 +138,15 @@ int ossl_ec_GFp_mont_group_copy(EC_GROUP *dest, const EC_GROUP *src)
 
     return 1;
 
- err:
+err:
     BN_MONT_CTX_free(dest->field_data1);
     dest->field_data1 = NULL;
     return 0;
 }
 
-int ossl_ec_GFp_mont_group_set_curve(EC_GROUP *group, const BIGNUM *p,
-                                     const BIGNUM *a, const BIGNUM *b,
-                                     BN_CTX *ctx)
+int
+ossl_ec_GFp_mont_group_set_curve(EC_GROUP *group, const BIGNUM *p, const BIGNUM *a, const BIGNUM *b,
+                                 BN_CTX *ctx)
 {
     BN_CTX *new_ctx = NULL;
     BN_MONT_CTX *mont = NULL;
@@ -186,15 +191,16 @@ int ossl_ec_GFp_mont_group_set_curve(EC_GROUP *group, const BIGNUM *p,
         group->field_data2 = NULL;
     }
 
- err:
+err:
     BN_free(one);
     BN_CTX_free(new_ctx);
     BN_MONT_CTX_free(mont);
     return ret;
 }
 
-int ossl_ec_GFp_mont_field_mul(const EC_GROUP *group, BIGNUM *r, const BIGNUM *a,
-                               const BIGNUM *b, BN_CTX *ctx)
+int
+ossl_ec_GFp_mont_field_mul(const EC_GROUP *group, BIGNUM *r, const BIGNUM *a, const BIGNUM *b,
+                           BN_CTX *ctx)
 {
     if (group->field_data1 == NULL) {
         ERR_raise(ERR_LIB_EC, EC_R_NOT_INITIALIZED);
@@ -204,8 +210,8 @@ int ossl_ec_GFp_mont_field_mul(const EC_GROUP *group, BIGNUM *r, const BIGNUM *a
     return BN_mod_mul_montgomery(r, a, b, group->field_data1, ctx);
 }
 
-int ossl_ec_GFp_mont_field_sqr(const EC_GROUP *group, BIGNUM *r, const BIGNUM *a,
-                               BN_CTX *ctx)
+int
+ossl_ec_GFp_mont_field_sqr(const EC_GROUP *group, BIGNUM *r, const BIGNUM *a, BN_CTX *ctx)
 {
     if (group->field_data1 == NULL) {
         ERR_raise(ERR_LIB_EC, EC_R_NOT_INITIALIZED);
@@ -220,8 +226,8 @@ int ossl_ec_GFp_mont_field_sqr(const EC_GROUP *group, BIGNUM *r, const BIGNUM *a
  * If a is zero (or equivalent), you'll get an EC_R_CANNOT_INVERT error.
  * We have a Mont structure, so SCA hardening is FLT inversion.
  */
-int ossl_ec_GFp_mont_field_inv(const EC_GROUP *group, BIGNUM *r, const BIGNUM *a,
-                               BN_CTX *ctx)
+int
+ossl_ec_GFp_mont_field_inv(const EC_GROUP *group, BIGNUM *r, const BIGNUM *a, BN_CTX *ctx)
 {
     BIGNUM *e = NULL;
     BN_CTX *new_ctx = NULL;
@@ -230,8 +236,7 @@ int ossl_ec_GFp_mont_field_inv(const EC_GROUP *group, BIGNUM *r, const BIGNUM *a
     if (group->field_data1 == NULL)
         return 0;
 
-    if (ctx == NULL
-            && (ctx = new_ctx = BN_CTX_secure_new_ex(group->libctx)) == NULL)
+    if (ctx == NULL && (ctx = new_ctx = BN_CTX_secure_new_ex(group->libctx)) == NULL)
         return 0;
 
     BN_CTX_start(ctx);
@@ -258,14 +263,14 @@ int ossl_ec_GFp_mont_field_inv(const EC_GROUP *group, BIGNUM *r, const BIGNUM *a
 
     ret = 1;
 
- err:
+err:
     BN_CTX_end(ctx);
     BN_CTX_free(new_ctx);
     return ret;
 }
 
-int ossl_ec_GFp_mont_field_encode(const EC_GROUP *group, BIGNUM *r,
-                                  const BIGNUM *a, BN_CTX *ctx)
+int
+ossl_ec_GFp_mont_field_encode(const EC_GROUP *group, BIGNUM *r, const BIGNUM *a, BN_CTX *ctx)
 {
     if (group->field_data1 == NULL) {
         ERR_raise(ERR_LIB_EC, EC_R_NOT_INITIALIZED);
@@ -275,8 +280,8 @@ int ossl_ec_GFp_mont_field_encode(const EC_GROUP *group, BIGNUM *r,
     return BN_to_montgomery(r, a, (BN_MONT_CTX *)group->field_data1, ctx);
 }
 
-int ossl_ec_GFp_mont_field_decode(const EC_GROUP *group, BIGNUM *r,
-                                  const BIGNUM *a, BN_CTX *ctx)
+int
+ossl_ec_GFp_mont_field_decode(const EC_GROUP *group, BIGNUM *r, const BIGNUM *a, BN_CTX *ctx)
 {
     if (group->field_data1 == NULL) {
         ERR_raise(ERR_LIB_EC, EC_R_NOT_INITIALIZED);
@@ -286,8 +291,8 @@ int ossl_ec_GFp_mont_field_decode(const EC_GROUP *group, BIGNUM *r,
     return BN_from_montgomery(r, a, group->field_data1, ctx);
 }
 
-int ossl_ec_GFp_mont_field_set_to_one(const EC_GROUP *group, BIGNUM *r,
-                                      BN_CTX *ctx)
+int
+ossl_ec_GFp_mont_field_set_to_one(const EC_GROUP *group, BIGNUM *r, BN_CTX *ctx)
 {
     if (group->field_data2 == NULL) {
         ERR_raise(ERR_LIB_EC, EC_R_NOT_INITIALIZED);

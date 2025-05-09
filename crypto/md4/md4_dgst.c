@@ -26,7 +26,8 @@
 #define INIT_DATA_C (unsigned long)0x98badcfeL
 #define INIT_DATA_D (unsigned long)0x10325476L
 
-int MD4_Init(MD4_CTX *c)
+int
+MD4_Init(MD4_CTX *c)
 {
     memset(c, 0, sizeof(*c));
     c->A = INIT_DATA_A;
@@ -40,18 +41,19 @@ int MD4_Init(MD4_CTX *c)
 # ifdef X
 #  undef X
 # endif
-void md4_block_data_order(MD4_CTX *c, const void *data_, size_t num)
+void
+md4_block_data_order(MD4_CTX *c, const void *data_, size_t num)
 {
     const unsigned char *data = data_;
     register unsigned MD32_REG_T A, B, C, D, l;
 # ifndef MD32_XARRAY
     /* See comment in crypto/sha/sha_local.h for details. */
-    unsigned MD32_REG_T XX0, XX1, XX2, XX3, XX4, XX5, XX6, XX7,
-        XX8, XX9, XX10, XX11, XX12, XX13, XX14, XX15;
-#  define X(i)   XX##i
+    unsigned MD32_REG_T XX0, XX1, XX2, XX3, XX4, XX5, XX6, XX7, XX8, XX9, XX10, XX11, XX12, XX13,
+        XX14, XX15;
+#  define X(i) XX##i
 # else
     MD4_LONG XX[MD4_LBLOCK];
-#  define X(i)   XX[i]
+#  define X(i) XX[i]
 # endif
 
     A = c->A;

@@ -27,7 +27,8 @@ static int get_key_values(EVP_PKEY *pkey);
  * pkey = EVP_EC_gen(curvename); OR
  * pkey = EVP_PKEY_Q_keygen(libctx, propq, "EC", curvename);
  */
-static EVP_PKEY *do_ec_keygen(void)
+static EVP_PKEY *
+do_ec_keygen(void)
 {
     /*
      * The libctx and propq can be set if required, they are included here
@@ -52,14 +53,12 @@ static EVP_PKEY *do_ec_keygen(void)
         goto cleanup;
     }
 
-    params[0] = OSSL_PARAM_construct_utf8_string(OSSL_PKEY_PARAM_GROUP_NAME,
-                                                 (char *)curvename, 0);
+    params[0] = OSSL_PARAM_construct_utf8_string(OSSL_PKEY_PARAM_GROUP_NAME, (char *)curvename, 0);
     /*
      * This is an optional parameter.
      * For many curves where the cofactor is 1, setting this has no effect.
      */
-    params[1] = OSSL_PARAM_construct_int(OSSL_PKEY_PARAM_USE_COFACTOR_ECDH,
-                                         &use_cofactordh);
+    params[1] = OSSL_PARAM_construct_int(OSSL_PKEY_PARAM_USE_COFACTOR_ECDH, &use_cofactordh);
     params[2] = OSSL_PARAM_construct_end();
     if (!EVP_PKEY_CTX_set_params(genctx, params)) {
         fprintf(stderr, "EVP_PKEY_CTX_set_params() failed\n");
@@ -82,7 +81,8 @@ cleanup:
  *
  * EVP_PKEY_print_private() could also be used to display the values.
  */
-static int get_key_values(EVP_PKEY *pkey)
+static int
+get_key_values(EVP_PKEY *pkey)
 {
     int ret = 0;
     char out_curvename[80];
@@ -91,16 +91,14 @@ static int get_key_values(EVP_PKEY *pkey)
     BIGNUM *out_priv = NULL;
     size_t out_pubkey_len, out_privkey_len = 0;
 
-    if (!EVP_PKEY_get_utf8_string_param(pkey, OSSL_PKEY_PARAM_GROUP_NAME,
-                                        out_curvename, sizeof(out_curvename),
-                                        NULL)) {
+    if (!EVP_PKEY_get_utf8_string_param(pkey, OSSL_PKEY_PARAM_GROUP_NAME, out_curvename,
+                                        sizeof(out_curvename), NULL)) {
         fprintf(stderr, "Failed to get curve name\n");
         goto cleanup;
     }
 
-    if (!EVP_PKEY_get_octet_string_param(pkey, OSSL_PKEY_PARAM_PUB_KEY,
-                                        out_pubkey, sizeof(out_pubkey),
-                                        &out_pubkey_len)) {
+    if (!EVP_PKEY_get_octet_string_param(pkey, OSSL_PKEY_PARAM_PUB_KEY, out_pubkey,
+                                         sizeof(out_pubkey), &out_pubkey_len)) {
         fprintf(stderr, "Failed to get public key\n");
         goto cleanup;
     }
@@ -129,7 +127,8 @@ cleanup:
     return ret;
 }
 
-int main(void)
+int
+main(void)
 {
     int ret = EXIT_FAILURE;
     EVP_PKEY *pkey;

@@ -7,8 +7,8 @@
  * https://www.openssl.org/source/license.html
  */
 
-#if defined( __VMS) && !defined( OPENSSL_NO_DECC_INIT) && \
- defined( __DECC) && !defined( __VAX) && (__CRTL_VER >= 70301000)
+#if defined(__VMS) && !defined(OPENSSL_NO_DECC_INIT) && defined(__DECC) && !defined(__VAX) &&      \
+    (__CRTL_VER >= 70301000)
 # define USE_DECC_INIT 1
 #endif
 
@@ -57,13 +57,12 @@ decc_feat_t decc_feat_array[] = {
     {"DECC$EFS_CHARSET", 1},
 
     /* List terminator. */
-    {(char *)NULL, 0}
-};
-
+    {(char *)NULL, 0}};
 
 /* LIB$INITIALIZE initialization function. */
 
-static void decc_init(void)
+static void
+decc_init(void)
 {
     char *openssl_debug_decc_init;
     int verbose = 0;
@@ -102,27 +101,21 @@ static void decc_init(void)
                 (decc_feat_array[i].value <= feat_value_max)) {
                 /* Valid value.  Set it if necessary. */
                 if (feat_value != decc_feat_array[i].value) {
-                    sts = decc$feature_set_value(feat_index,
-                                                 1, decc_feat_array[i].value);
+                    sts = decc$feature_set_value(feat_index, 1, decc_feat_array[i].value);
 
                     if (verbose > 1) {
-                        fprintf(stderr, " %s = %d, sts = %d.\n",
-                                decc_feat_array[i].name,
+                        fprintf(stderr, " %s = %d, sts = %d.\n", decc_feat_array[i].name,
                                 decc_feat_array[i].value, sts);
                     }
                 }
             } else {
                 /* Invalid DECC feature value. */
-                fprintf(stderr,
-                        " INVALID DECC$FEATURE VALUE, %d: %d <= %s <= %d.\n",
-                        feat_value,
-                        feat_value_min, decc_feat_array[i].name,
-                        feat_value_max);
+                fprintf(stderr, " INVALID DECC$FEATURE VALUE, %d: %d <= %s <= %d.\n", feat_value,
+                        feat_value_min, decc_feat_array[i].name, feat_value_max);
             }
         } else {
             /* Invalid DECC feature name. */
-            fprintf(stderr,
-                    " UNKNOWN DECC$FEATURE: %s.\n", decc_feat_array[i].name);
+            fprintf(stderr, " UNKNOWN DECC$FEATURE: %s.\n", decc_feat_array[i].name);
         }
     }
 
@@ -148,10 +141,10 @@ static void decc_init(void)
 # endif
 
 # pragma extern_model strict_refdef "LIB$INITIALIZ" PSECT_ALIGN, nopic, nowrt
-const int spare[8] = { 0 };
+const int spare[8] = {0};
 
 # pragma extern_model strict_refdef "LIB$INITIALIZE" PSECT_ALIGN, nopic, nowrt
-void (*const x_decc_init) () = decc_init;
+void (*const x_decc_init)() = decc_init;
 
 # pragma extern_model restore
 
@@ -168,9 +161,9 @@ int dmy_lib$initialize = (int)LIB$INITIALIZE;
 
 # pragma standard
 
-#else                           /* def USE_DECC_INIT */
+#else /* def USE_DECC_INIT */
 
 /* Dummy code to avoid a %CC-W-EMPTYFILE complaint. */
 int decc_init_dummy(void);
 
-#endif                          /* def USE_DECC_INIT */
+#endif /* def USE_DECC_INIT */

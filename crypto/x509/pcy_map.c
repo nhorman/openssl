@@ -19,7 +19,8 @@
  * POLICY_MAPPINGS structure
  */
 
-int ossl_policy_cache_set_mapping(X509 *x, POLICY_MAPPINGS *maps)
+int
+ossl_policy_cache_set_mapping(X509 *x, POLICY_MAPPINGS *maps)
 {
     POLICY_MAPPING *map;
     X509_POLICY_DATA *data;
@@ -33,8 +34,8 @@ int ossl_policy_cache_set_mapping(X509 *x, POLICY_MAPPINGS *maps)
     for (i = 0; i < sk_POLICY_MAPPING_num(maps); i++) {
         map = sk_POLICY_MAPPING_value(maps, i);
         /* Reject if map to or from anyPolicy */
-        if ((OBJ_obj2nid(map->subjectDomainPolicy) == NID_any_policy)
-            || (OBJ_obj2nid(map->issuerDomainPolicy) == NID_any_policy)) {
+        if ((OBJ_obj2nid(map->subjectDomainPolicy) == NID_any_policy) ||
+            (OBJ_obj2nid(map->issuerDomainPolicy) == NID_any_policy)) {
             ret = -1;
             goto bad_mapping;
         }
@@ -48,8 +49,7 @@ int ossl_policy_cache_set_mapping(X509 *x, POLICY_MAPPINGS *maps)
         /* Create a NODE from anyPolicy */
         if (data == NULL) {
             data = ossl_policy_data_new(NULL, map->issuerDomainPolicy,
-                                        cache->anyPolicy->flags
-                                        & POLICY_DATA_FLAG_CRITICAL);
+                                        cache->anyPolicy->flags & POLICY_DATA_FLAG_CRITICAL);
             if (data == NULL)
                 goto bad_mapping;
             data->qualifier_set = cache->anyPolicy->qualifier_set;
@@ -64,16 +64,13 @@ int ossl_policy_cache_set_mapping(X509 *x, POLICY_MAPPINGS *maps)
             }
         } else
             data->flags |= POLICY_DATA_FLAG_MAPPED;
-        if (!sk_ASN1_OBJECT_push(data->expected_policy_set,
-                                 map->subjectDomainPolicy))
+        if (!sk_ASN1_OBJECT_push(data->expected_policy_set, map->subjectDomainPolicy))
             goto bad_mapping;
         map->subjectDomainPolicy = NULL;
-
     }
 
     ret = 1;
- bad_mapping:
+bad_mapping:
     sk_POLICY_MAPPING_pop_free(maps, POLICY_MAPPING_free);
     return ret;
-
 }

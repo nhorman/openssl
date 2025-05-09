@@ -15,7 +15,8 @@
  * libctx. We assume that this test application has been executed such that the
  * null provider is loaded via the config file.
  */
-static int test_no_deflt_ctx_init(void)
+static int
+test_no_deflt_ctx_init(void)
 {
     int testresult = 0;
     EVP_MD *md = NULL;
@@ -47,13 +48,14 @@ static int test_no_deflt_ctx_init(void)
         goto err;
 
     testresult = 1;
- err:
+err:
     EVP_MD_free(md);
     OSSL_LIB_CTX_free(ctx);
     return testresult;
 }
 
-int setup_tests(void)
+int
+setup_tests(void)
 {
     ADD_TEST(test_no_deflt_ctx_init);
     return 1;

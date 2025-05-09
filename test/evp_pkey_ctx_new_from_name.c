@@ -3,7 +3,8 @@
 #include <openssl/evp.h>
 #include <openssl/err.h>
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
     EVP_PKEY_CTX *pctx = NULL;
 

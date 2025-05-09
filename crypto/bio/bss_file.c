@@ -40,23 +40,14 @@ static long file_ctrl(BIO *h, int cmd, long arg1, void *arg2);
 static int file_new(BIO *h);
 static int file_free(BIO *data);
 static const BIO_METHOD methods_filep = {
-    BIO_TYPE_FILE,
-    "FILE pointer",
-    bwrite_conv,
-    file_write,
-    bread_conv,
-    file_read,
-    file_puts,
-    file_gets,
-    file_ctrl,
-    file_new,
-    file_free,
-    NULL,                      /* file_callback_ctrl */
+    BIO_TYPE_FILE, "FILE pointer", bwrite_conv, file_write, bread_conv, file_read, file_puts,
+    file_gets,     file_ctrl,      file_new,    file_free,  NULL, /* file_callback_ctrl */
 };
 
-BIO *BIO_new_file(const char *filename, const char *mode)
+BIO *
+BIO_new_file(const char *filename, const char *mode)
 {
-    BIO  *ret;
+    BIO *ret;
     FILE *file = openssl_fopen(filename, mode);
     int fp_flags = BIO_CLOSE;
 
@@ -64,14 +55,12 @@ BIO *BIO_new_file(const char *filename, const char *mode)
         fp_flags |= BIO_FP_TEXT;
 
     if (file == NULL) {
-        ERR_raise_data(ERR_LIB_SYS, get_last_sys_error(),
-                       "calling fopen(%s, %s)",
-                       filename, mode);
+        ERR_raise_data(ERR_LIB_SYS, get_last_sys_error(), "calling fopen(%s, %s)", filename, mode);
         if (errno == ENOENT
-#ifdef ENXIO
+# ifdef ENXIO
             || errno == ENXIO
-#endif
-            )
+# endif
+        )
             ERR_raise(ERR_LIB_BIO, BIO_R_NO_SUCH_FILE);
         else
             ERR_raise(ERR_LIB_BIO, ERR_R_SYS_LIB);
@@ -88,7 +77,8 @@ BIO *BIO_new_file(const char *filename, const char *mode)
     return ret;
 }
 
-BIO *BIO_new_fp(FILE *stream, int close_flag)
+BIO *
+BIO_new_fp(FILE *stream, int close_flag)
 {
     BIO *ret;
 
@@ -101,12 +91,14 @@ BIO *BIO_new_fp(FILE *stream, int close_flag)
     return ret;
 }
 
-const BIO_METHOD *BIO_s_file(void)
+const BIO_METHOD *
+BIO_s_file(void)
 {
     return &methods_filep;
 }
 
-static int file_new(BIO *bi)
+static int
+file_new(BIO *bi)
 {
     bi->init = 0;
     bi->num = 0;
@@ -115,7 +107,8 @@ static int file_new(BIO *bi)
     return 1;
 }
 
-static int file_free(BIO *a)
+static int
+file_free(BIO *a)
 {
     if (a == NULL)
         return 0;
@@ -133,7 +126,8 @@ static int file_free(BIO *a)
     return 1;
 }
 
-static int file_read(BIO *b, char *out, int outl)
+static int
+file_read(BIO *b, char *out, int outl)
 {
     int ret = 0;
 
@@ -142,11 +136,9 @@ static int file_read(BIO *b, char *out, int outl)
             ret = UP_fread(out, 1, (int)outl, b->ptr);
         else
             ret = fread(out, 1, (int)outl, (FILE *)b->ptr);
-        if (ret == 0
-            && (b->flags & BIO_FLAGS_UPLINK_INTERNAL
-                ? UP_ferror((FILE *)b->ptr) : ferror((FILE *)b->ptr))) {
-            ERR_raise_data(ERR_LIB_SYS, get_last_sys_error(),
-                           "calling fread()");
+        if (ret == 0 && (b->flags & BIO_FLAGS_UPLINK_INTERNAL ? UP_ferror((FILE *)b->ptr)
+                                                              : ferror((FILE *)b->ptr))) {
+            ERR_raise_data(ERR_LIB_SYS, get_last_sys_error(), "calling fread()");
             ERR_raise(ERR_LIB_BIO, ERR_R_SYS_LIB);
             ret = -1;
         }
@@ -154,7 +146,8 @@ static int file_read(BIO *b, char *out, int outl)
     return ret;
 }
 
-static int file_write(BIO *b, const char *in, int inl)
+static int
+file_write(BIO *b, const char *in, int inl)
 {
     int ret = 0;
 
@@ -175,7 +168,8 @@ static int file_write(BIO *b, const char *in, int inl)
     return ret;
 }
 
-static long file_ctrl(BIO *b, int cmd, long num, void *ptr)
+static long
+file_ctrl(BIO *b, int cmd, long num, void *ptr)
 {
     long ret = 1;
     FILE *fp = (FILE *)b->ptr;
@@ -209,17 +203,16 @@ static long file_ctrl(BIO *b, int cmd, long num, void *ptr)
         b->shutdown = (int)num & BIO_CLOSE;
         b->ptr = ptr;
         b->init = 1;
-# if BIO_FLAGS_UPLINK_INTERNAL!=0
+# if BIO_FLAGS_UPLINK_INTERNAL != 0
 #  if defined(__MINGW32__) && defined(__MSVCRT__) && !defined(_IOB_ENTRIES)
 #   define _IOB_ENTRIES 20
 #  endif
         /* Safety net to catch purely internal BIO_set_fp calls */
-#  if (defined(_MSC_VER) && _MSC_VER>=1900) || defined(__BORLANDC__)
+#  if (defined(_MSC_VER) && _MSC_VER >= 1900) || defined(__BORLANDC__)
         if (ptr == stdin || ptr == stdout || ptr == stderr)
             BIO_clear_flags(b, BIO_FLAGS_UPLINK_INTERNAL);
 #  elif defined(_IOB_ENTRIES)
-        if ((size_t)ptr >= (size_t)stdin &&
-            (size_t)ptr < (size_t)(stdin + _IOB_ENTRIES))
+        if ((size_t)ptr >= (size_t)stdin && (size_t)ptr < (size_t)(stdin + _IOB_ENTRIES))
             BIO_clear_flags(b, BIO_FLAGS_UPLINK_INTERNAL);
 #  endif
 # endif
@@ -285,9 +278,7 @@ static long file_ctrl(BIO *b, int cmd, long num, void *ptr)
 # endif
         fp = openssl_fopen(ptr, p);
         if (fp == NULL) {
-            ERR_raise_data(ERR_LIB_SYS, get_last_sys_error(),
-                           "calling fopen(%s, %s)",
-                           ptr, p);
+            ERR_raise_data(ERR_LIB_SYS, get_last_sys_error(), "calling fopen(%s, %s)", ptr, p);
             ERR_raise(ERR_LIB_BIO, ERR_R_SYS_LIB);
             ret = 0;
             break;
@@ -311,11 +302,9 @@ static long file_ctrl(BIO *b, int cmd, long num, void *ptr)
         b->shutdown = (int)num;
         break;
     case BIO_CTRL_FLUSH:
-        st = b->flags & BIO_FLAGS_UPLINK_INTERNAL
-                ? UP_fflush(b->ptr) : fflush((FILE *)b->ptr);
+        st = b->flags & BIO_FLAGS_UPLINK_INTERNAL ? UP_fflush(b->ptr) : fflush((FILE *)b->ptr);
         if (st == EOF) {
-            ERR_raise_data(ERR_LIB_SYS, get_last_sys_error(),
-                           "calling fflush()");
+            ERR_raise_data(ERR_LIB_SYS, get_last_sys_error(), "calling fflush()");
             ERR_raise(ERR_LIB_BIO, ERR_R_SYS_LIB);
             ret = 0;
         }
@@ -335,7 +324,8 @@ static long file_ctrl(BIO *b, int cmd, long num, void *ptr)
     return ret;
 }
 
-static int file_gets(BIO *bp, char *buf, int size)
+static int
+file_gets(BIO *bp, char *buf, int size)
 {
     int ret = 0;
 
@@ -349,11 +339,12 @@ static int file_gets(BIO *bp, char *buf, int size)
     }
     if (buf[0] != '\0')
         ret = strlen(buf);
- err:
+err:
     return ret;
 }
 
-static int file_puts(BIO *bp, const char *str)
+static int
+file_puts(BIO *bp, const char *str)
 {
     int n, ret;
 
@@ -364,58 +355,57 @@ static int file_puts(BIO *bp, const char *str)
 
 #else
 
-static int file_write(BIO *b, const char *in, int inl)
+static int
+file_write(BIO *b, const char *in, int inl)
 {
     return -1;
 }
-static int file_read(BIO *b, char *out, int outl)
+static int
+file_read(BIO *b, char *out, int outl)
 {
     return -1;
 }
-static int file_puts(BIO *bp, const char *str)
+static int
+file_puts(BIO *bp, const char *str)
 {
     return -1;
 }
-static int file_gets(BIO *bp, char *buf, int size)
+static int
+file_gets(BIO *bp, char *buf, int size)
 {
     return 0;
 }
-static long file_ctrl(BIO *b, int cmd, long num, void *ptr)
+static long
+file_ctrl(BIO *b, int cmd, long num, void *ptr)
 {
     return 0;
 }
-static int file_new(BIO *bi)
+static int
+file_new(BIO *bi)
 {
     return 0;
 }
-static int file_free(BIO *a)
+static int
+file_free(BIO *a)
 {
     return 0;
 }
 
 static const BIO_METHOD methods_filep = {
-    BIO_TYPE_FILE,
-    "FILE pointer",
-    bwrite_conv,
-    file_write,
-    bread_conv,
-    file_read,
-    file_puts,
-    file_gets,
-    file_ctrl,
-    file_new,
-    file_free,
-    NULL,                      /* file_callback_ctrl */
+    BIO_TYPE_FILE, "FILE pointer", bwrite_conv, file_write, bread_conv, file_read, file_puts,
+    file_gets,     file_ctrl,      file_new,    file_free,  NULL, /* file_callback_ctrl */
 };
 
-const BIO_METHOD *BIO_s_file(void)
+const BIO_METHOD *
+BIO_s_file(void)
 {
     return &methods_filep;
 }
 
-BIO *BIO_new_file(const char *filename, const char *mode)
+BIO *
+BIO_new_file(const char *filename, const char *mode)
 {
     return NULL;
 }
 
-#endif                         /* OPENSSL_NO_STDIO */
+#endif /* OPENSSL_NO_STDIO */

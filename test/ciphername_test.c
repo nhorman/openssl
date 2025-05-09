@@ -367,7 +367,8 @@ static CIPHER_ID_NAME cipher_names[] = {
     {0xFEFF, "SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA"},
 };
 
-static const char *get_std_name_by_id(int id)
+static const char *
+get_std_name_by_id(int id)
 {
     size_t i;
 
@@ -378,7 +379,8 @@ static const char *get_std_name_by_id(int id)
     return NULL;
 }
 
-static int test_cipher_name(void)
+static int
+test_cipher_name(void)
 {
     SSL_CTX *ctx = NULL;
     SSL *ssl = NULL;
@@ -433,28 +435,25 @@ static int test_cipher_name(void)
     for (i = 0; i < sk_SSL_CIPHER_num(sk); i++) {
         c = sk_SSL_CIPHER_value(sk, i);
         id = SSL_CIPHER_get_id(c) & 0xFFFF;
-        if ((id == 0xC102) || (id == 0xFF85) ||(id == 0xFF87))
+        if ((id == 0xC102) || (id == 0xFF85) || (id == 0xFF87))
             /* skip GOST2012-GOST8912-GOST891 and GOST2012-NULL-GOST12 */
             continue;
         p = SSL_CIPHER_standard_name(c);
         q = get_std_name_by_id(id);
         if (!TEST_ptr(p)) {
-            TEST_info("test_cipher_name failed: expected %s, got NULL, cipher %x\n",
-                      q, id);
+            TEST_info("test_cipher_name failed: expected %s, got NULL, cipher %x\n", q, id);
             goto err;
         }
         /* check if p is a valid standard name */
         if (!TEST_str_eq(p, q)) {
-            TEST_info("test_cipher_name(std) failed: expected %s, got %s, cipher %x\n",
-                       q, p, id);
+            TEST_info("test_cipher_name(std) failed: expected %s, got %s, cipher %x\n", q, p, id);
             goto err;
         }
         /* test OPENSSL_cipher_name */
         q = SSL_CIPHER_get_name(c);
         r = OPENSSL_cipher_name(p);
         if (!TEST_str_eq(r, q)) {
-            TEST_info("test_cipher_name(ossl) failed: expected %s, got %s, cipher %x\n",
-                       q, r, id);
+            TEST_info("test_cipher_name(ossl) failed: expected %s, got %s, cipher %x\n", q, r, id);
             goto err;
         }
     }
@@ -465,7 +464,8 @@ err:
     return ret;
 }
 
-int setup_tests(void)
+int
+setup_tests(void)
 {
     ADD_TEST(test_cipher_name);
     return 1;

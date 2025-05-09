@@ -13,12 +13,14 @@
 #include "names.h"
 #include "internal/e_os.h"
 
-int name_cmp(const char * const *a, const char * const *b)
+int
+name_cmp(const char *const *a, const char *const *b)
 {
     return OPENSSL_strcasecmp(*a, *b);
 }
 
-void collect_names(const char *name, void *vdata)
+void
+collect_names(const char *name, void *vdata)
 {
     STACK_OF(OPENSSL_CSTRING) *names = vdata;
 
@@ -26,7 +28,8 @@ void collect_names(const char *name, void *vdata)
     (void)sk_OPENSSL_CSTRING_push(names, name);
 }
 
-void print_names(BIO *out, STACK_OF(OPENSSL_CSTRING) *names)
+void
+print_names(BIO *out, STACK_OF(OPENSSL_CSTRING) * names)
 {
     int i = sk_OPENSSL_CSTRING_num(names);
     int j;

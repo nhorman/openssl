@@ -26,9 +26,18 @@ static int verbose = 0;
 
 typedef enum OPTION_choice {
     OPT_COMMON,
-    OPT_INFORM, OPT_OUTFORM, OPT_IN, OPT_OUT, OPT_TEXT,
-    OPT_NOOUT, OPT_GENKEY, OPT_ENGINE, OPT_VERBOSE, OPT_QUIET,
-    OPT_R_ENUM, OPT_PROV_ENUM
+    OPT_INFORM,
+    OPT_OUTFORM,
+    OPT_IN,
+    OPT_OUT,
+    OPT_TEXT,
+    OPT_NOOUT,
+    OPT_GENKEY,
+    OPT_ENGINE,
+    OPT_VERBOSE,
+    OPT_QUIET,
+    OPT_R_ENUM,
+    OPT_PROV_ENUM
 } OPTION_CHOICE;
 
 const OPTIONS dsaparam_options[] = {
@@ -58,11 +67,12 @@ const OPTIONS dsaparam_options[] = {
 
     OPT_PARAMETERS(),
     {"numbits", 0, 0, "Number of bits if generating parameters or key (optional)"},
-    {"numqbits", 0, 0, "Number of bits in the subprime parameter q if generating parameters or key (optional)"},
-    {NULL}
-};
+    {"numqbits", 0, 0,
+     "Number of bits in the subprime parameter q if generating parameters or key (optional)"},
+    {NULL}};
 
-int dsaparam_main(int argc, char **argv)
+int
+dsaparam_main(int argc, char **argv)
 {
     ENGINE *e = NULL;
     BIO *out = NULL;
@@ -79,7 +89,7 @@ int dsaparam_main(int argc, char **argv)
         switch (o) {
         case OPT_EOF:
         case OPT_ERR:
- opthelp:
+        opthelp:
             BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
             goto end;
         case OPT_HELP:
@@ -152,38 +162,35 @@ int dsaparam_main(int argc, char **argv)
 
     ctx = EVP_PKEY_CTX_new_from_name(app_get0_libctx(), "DSA", app_get0_propq());
     if (ctx == NULL) {
-        BIO_printf(bio_err,
-                   "Error, DSA parameter generation context allocation failed\n");
+        BIO_printf(bio_err, "Error, DSA parameter generation context allocation failed\n");
         goto end;
     }
     if (numbits > 0) {
         if (numbits > OPENSSL_DSA_MAX_MODULUS_BITS)
-            BIO_printf(bio_err,
-                       "Warning: It is not recommended to use more than %d bit for DSA keys.\n"
-                       "         Your key size is %d! Larger key size may behave not as expected.\n",
-                       OPENSSL_DSA_MAX_MODULUS_BITS, numbits);
+            BIO_printf(
+                bio_err,
+                "Warning: It is not recommended to use more than %d bit for DSA keys.\n"
+                "         Your key size is %d! Larger key size may behave not as expected.\n",
+                OPENSSL_DSA_MAX_MODULUS_BITS, numbits);
 
         EVP_PKEY_CTX_set_app_data(ctx, bio_err);
         if (verbose) {
             EVP_PKEY_CTX_set_cb(ctx, progress_cb);
-            BIO_printf(bio_err, "Generating DSA parameters, %d bit long prime\n",
-                       num);
+            BIO_printf(bio_err, "Generating DSA parameters, %d bit long prime\n", num);
             BIO_printf(bio_err, "This could take some time\n");
         }
         if (EVP_PKEY_paramgen_init(ctx) <= 0) {
-            BIO_printf(bio_err,
-                       "Error, DSA key generation paramgen init failed\n");
+            BIO_printf(bio_err, "Error, DSA key generation paramgen init failed\n");
             goto end;
         }
         if (EVP_PKEY_CTX_set_dsa_paramgen_bits(ctx, num) <= 0) {
-            BIO_printf(bio_err,
-                       "Error, DSA key generation setting bit length failed\n");
+            BIO_printf(bio_err, "Error, DSA key generation setting bit length failed\n");
             goto end;
         }
         if (numqbits > 0) {
             if (EVP_PKEY_CTX_set_dsa_paramgen_q_bits(ctx, numqbits) <= 0) {
                 BIO_printf(bio_err,
-                        "Error, DSA key generation setting subprime bit length failed\n");
+                           "Error, DSA key generation setting subprime bit length failed\n");
                 goto end;
             }
         }
@@ -219,16 +226,13 @@ int dsaparam_main(int argc, char **argv)
     }
     if (genkey) {
         EVP_PKEY_CTX_free(ctx);
-        ctx = EVP_PKEY_CTX_new_from_pkey(app_get0_libctx(), params,
-                app_get0_propq());
+        ctx = EVP_PKEY_CTX_new_from_pkey(app_get0_libctx(), params, app_get0_propq());
         if (ctx == NULL) {
-            BIO_printf(bio_err,
-                       "Error, DSA key generation context allocation failed\n");
+            BIO_printf(bio_err, "Error, DSA key generation context allocation failed\n");
             goto end;
         }
         if (EVP_PKEY_keygen_init(ctx) <= 0) {
-            BIO_printf(bio_err,
-                       "Error, unable to initialise for key generation\n");
+            BIO_printf(bio_err, "Error, unable to initialise for key generation\n");
             goto end;
         }
         pkey = app_keygen(ctx, "DSA", numbits, verbose);
@@ -241,7 +245,7 @@ int dsaparam_main(int argc, char **argv)
             i = PEM_write_bio_PrivateKey(out, pkey, NULL, NULL, 0, NULL, NULL);
     }
     ret = 0;
- end:
+end:
     if (ret != 0)
         ERR_print_errors(bio_err);
     BIO_free_all(out);

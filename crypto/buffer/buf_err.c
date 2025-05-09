@@ -14,13 +14,12 @@
 
 #ifndef OPENSSL_NO_ERR
 
-static const ERR_STRING_DATA BUF_str_reasons[] = {
-    {0, NULL}
-};
+static const ERR_STRING_DATA BUF_str_reasons[] = {{0, NULL}};
 
 #endif
 
-int ossl_err_load_BUF_strings(void)
+int
+ossl_err_load_BUF_strings(void)
 {
 #ifndef OPENSSL_NO_ERR
     if (ERR_reason_error_string(BUF_str_reasons[0].error) == NULL)

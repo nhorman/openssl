@@ -102,50 +102,50 @@
 # endif
 
 # if defined(OPENSSL_SYS_MACOSX)
-#  define OSSL_TFO_SYSCTL               "net.inet.tcp.fastopen"
-#  define OSSL_TFO_SERVER_SOCKOPT       TCP_FASTOPEN
+#  define OSSL_TFO_SYSCTL "net.inet.tcp.fastopen"
+#  define OSSL_TFO_SERVER_SOCKOPT TCP_FASTOPEN
 #  define OSSL_TFO_SERVER_SOCKOPT_VALUE 1
-#  define OSSL_TFO_CONNECTX             1
-#  define OSSL_TFO_DO_NOT_CONNECT       1
-#  define OSSL_TFO_CLIENT_FLAG          1
-#  define OSSL_TFO_SERVER_FLAG          2
+#  define OSSL_TFO_CONNECTX 1
+#  define OSSL_TFO_DO_NOT_CONNECT 1
+#  define OSSL_TFO_CLIENT_FLAG 1
+#  define OSSL_TFO_SERVER_FLAG 2
 # endif
 
 # if defined(__FreeBSD__)
 #  if defined(TCP_FASTOPEN_PSK_LEN)
 /* As of 12.0 these are the SYSCTLs */
-#   define OSSL_TFO_SYSCTL_SERVER        "net.inet.tcp.fastopen.server_enable"
-#   define OSSL_TFO_SYSCTL_CLIENT        "net.inet.tcp.fastopen.client_enable"
-#   define OSSL_TFO_SERVER_SOCKOPT       TCP_FASTOPEN
+#   define OSSL_TFO_SYSCTL_SERVER "net.inet.tcp.fastopen.server_enable"
+#   define OSSL_TFO_SYSCTL_CLIENT "net.inet.tcp.fastopen.client_enable"
+#   define OSSL_TFO_SERVER_SOCKOPT TCP_FASTOPEN
 #   define OSSL_TFO_SERVER_SOCKOPT_VALUE MAX_LISTEN
-#   define OSSL_TFO_CLIENT_SOCKOPT       TCP_FASTOPEN
-#   define OSSL_TFO_DO_NOT_CONNECT       1
-#   define OSSL_TFO_SENDTO               0
+#   define OSSL_TFO_CLIENT_SOCKOPT TCP_FASTOPEN
+#   define OSSL_TFO_DO_NOT_CONNECT 1
+#   define OSSL_TFO_SENDTO 0
 /* These are the same because the sysctl are client/server-specific */
-#   define OSSL_TFO_CLIENT_FLAG          1
-#   define OSSL_TFO_SERVER_FLAG          1
+#   define OSSL_TFO_CLIENT_FLAG 1
+#   define OSSL_TFO_SERVER_FLAG 1
 #  else
 /* 10.3 through 11.4 SYSCTL - ONLY SERVER SUPPORT */
-#   define OSSL_TFO_SYSCTL               "net.inet.tcp.fastopen.enabled"
-#   define OSSL_TFO_SERVER_SOCKOPT       TCP_FASTOPEN
+#   define OSSL_TFO_SYSCTL "net.inet.tcp.fastopen.enabled"
+#   define OSSL_TFO_SERVER_SOCKOPT TCP_FASTOPEN
 #   define OSSL_TFO_SERVER_SOCKOPT_VALUE MAX_LISTEN
-#   define OSSL_TFO_SERVER_FLAG          1
+#   define OSSL_TFO_SERVER_FLAG 1
 #  endif
 # endif
 
 # if defined(OPENSSL_SYS_LINUX)
 /* OSSL_TFO_PROC not used, but of interest */
-#  define OSSL_TFO_PROC                 "/proc/sys/net/ipv4/tcp_fastopen"
-#  define OSSL_TFO_SERVER_SOCKOPT       TCP_FASTOPEN
+#  define OSSL_TFO_PROC "/proc/sys/net/ipv4/tcp_fastopen"
+#  define OSSL_TFO_SERVER_SOCKOPT TCP_FASTOPEN
 #  define OSSL_TFO_SERVER_SOCKOPT_VALUE MAX_LISTEN
 #  if defined(TCP_FASTOPEN_CONNECT)
-#   define OSSL_TFO_CLIENT_SOCKOPT      TCP_FASTOPEN_CONNECT
+#   define OSSL_TFO_CLIENT_SOCKOPT TCP_FASTOPEN_CONNECT
 #  else
-#   define OSSL_TFO_SENDTO              MSG_FASTOPEN
-#   define OSSL_TFO_DO_NOT_CONNECT      1
+#   define OSSL_TFO_SENDTO MSG_FASTOPEN
+#   define OSSL_TFO_DO_NOT_CONNECT 1
 #  endif
-#  define OSSL_TFO_CLIENT_FLAG          1
-#  define OSSL_TFO_SERVER_FLAG          2
+#  define OSSL_TFO_CLIENT_FLAG 1
+#  define OSSL_TFO_SERVER_FLAG 2
 # endif
 
 #endif

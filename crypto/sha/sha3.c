@@ -15,7 +15,8 @@
 
 void SHA3_squeeze(uint64_t A[5][5], unsigned char *out, size_t len, size_t r, int next);
 
-void ossl_sha3_reset(KECCAK1600_CTX *ctx)
+void
+ossl_sha3_reset(KECCAK1600_CTX *ctx)
 {
 #if defined(__s390x__) && defined(OPENSSL_CPUID_OBJ)
     if (!(OPENSSL_s390xcap_P.stfle[1] & S390X_CAPBIT(S390X_MSA12)))
@@ -25,7 +26,8 @@ void ossl_sha3_reset(KECCAK1600_CTX *ctx)
     ctx->xof_state = XOF_STATE_INIT;
 }
 
-int ossl_sha3_init(KECCAK1600_CTX *ctx, unsigned char pad, size_t bitlen)
+int
+ossl_sha3_init(KECCAK1600_CTX *ctx, unsigned char pad, size_t bitlen)
 {
     size_t bsz = SHA3_BLOCKSIZE(bitlen);
 
@@ -40,7 +42,8 @@ int ossl_sha3_init(KECCAK1600_CTX *ctx, unsigned char pad, size_t bitlen)
     return 0;
 }
 
-int ossl_keccak_init(KECCAK1600_CTX *ctx, unsigned char pad, size_t bitlen, size_t mdlen)
+int
+ossl_keccak_init(KECCAK1600_CTX *ctx, unsigned char pad, size_t bitlen, size_t mdlen)
 {
     int ret = ossl_sha3_init(ctx, pad, bitlen);
 
@@ -49,7 +52,8 @@ int ossl_keccak_init(KECCAK1600_CTX *ctx, unsigned char pad, size_t bitlen, size
     return ret;
 }
 
-int ossl_sha3_update(KECCAK1600_CTX *ctx, const void *_inp, size_t len)
+int
+ossl_sha3_update(KECCAK1600_CTX *ctx, const void *_inp, size_t len)
 {
     const unsigned char *inp = _inp;
     size_t bsz = ctx->block_size;
@@ -58,11 +62,10 @@ int ossl_sha3_update(KECCAK1600_CTX *ctx, const void *_inp, size_t len)
     if (len == 0)
         return 1;
 
-    if (ctx->xof_state == XOF_STATE_SQUEEZE
-        || ctx->xof_state == XOF_STATE_FINAL)
+    if (ctx->xof_state == XOF_STATE_SQUEEZE || ctx->xof_state == XOF_STATE_FINAL)
         return 0;
 
-    if ((num = ctx->bufsz) != 0) {      /* process intermediate buffer? */
+    if ((num = ctx->bufsz) != 0) { /* process intermediate buffer? */
         rem = bsz - num;
 
         if (len < rem) {
@@ -100,15 +103,15 @@ int ossl_sha3_update(KECCAK1600_CTX *ctx, const void *_inp, size_t len)
  * (Use ossl_sha3_squeeze for multiple calls).
  * outlen is the variable size output.
  */
-int ossl_sha3_final(KECCAK1600_CTX *ctx, unsigned char *out, size_t outlen)
+int
+ossl_sha3_final(KECCAK1600_CTX *ctx, unsigned char *out, size_t outlen)
 {
     size_t bsz = ctx->block_size;
     size_t num = ctx->bufsz;
 
     if (outlen == 0)
         return 1;
-    if (ctx->xof_state == XOF_STATE_SQUEEZE
-        || ctx->xof_state == XOF_STATE_FINAL)
+    if (ctx->xof_state == XOF_STATE_SQUEEZE || ctx->xof_state == XOF_STATE_FINAL)
         return 0;
 
     /*
@@ -137,7 +140,8 @@ int ossl_sha3_final(KECCAK1600_CTX *ctx, unsigned char *out, size_t outlen)
  * buffer the results. The next request will use the buffer first
  * to grab output bytes.
  */
-int ossl_sha3_squeeze(KECCAK1600_CTX *ctx, unsigned char *out, size_t outlen)
+int
+ossl_sha3_squeeze(KECCAK1600_CTX *ctx, unsigned char *out, size_t outlen)
 {
     size_t bsz = ctx->block_size;
     size_t num = ctx->bufsz;

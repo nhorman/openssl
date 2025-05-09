@@ -22,29 +22,29 @@
 #include <openssl/sha.h>
 #include "rsa_local.h"
 
-static const unsigned char zeroes[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+static const unsigned char zeroes[] = {0, 0, 0, 0, 0, 0, 0, 0};
 
 #if defined(_MSC_VER) && defined(_ARM_)
 # pragma optimize("g", off)
 #endif
 
-int RSA_verify_PKCS1_PSS(RSA *rsa, const unsigned char *mHash,
-                         const EVP_MD *Hash, const unsigned char *EM,
-                         int sLen)
+int
+RSA_verify_PKCS1_PSS(RSA *rsa, const unsigned char *mHash, const EVP_MD *Hash,
+                     const unsigned char *EM, int sLen)
 {
     return RSA_verify_PKCS1_PSS_mgf1(rsa, mHash, Hash, NULL, EM, sLen);
 }
 
-int RSA_verify_PKCS1_PSS_mgf1(RSA *rsa, const unsigned char *mHash,
-                              const EVP_MD *Hash, const EVP_MD *mgf1Hash,
-                              const unsigned char *EM, int sLen)
+int
+RSA_verify_PKCS1_PSS_mgf1(RSA *rsa, const unsigned char *mHash, const EVP_MD *Hash,
+                          const EVP_MD *mgf1Hash, const unsigned char *EM, int sLen)
 {
     return ossl_rsa_verify_PKCS1_PSS_mgf1(rsa, mHash, Hash, mgf1Hash, EM, &sLen);
 }
 
-int ossl_rsa_verify_PKCS1_PSS_mgf1(RSA *rsa, const unsigned char *mHash,
-                                   const EVP_MD *Hash, const EVP_MD *mgf1Hash,
-                                   const unsigned char *EM, int *sLenOut)
+int
+ossl_rsa_verify_PKCS1_PSS_mgf1(RSA *rsa, const unsigned char *mHash, const EVP_MD *Hash,
+                               const EVP_MD *mgf1Hash, const unsigned char *EM, int *sLenOut)
 {
     int i;
     int ret = 0;
@@ -114,24 +114,22 @@ int ossl_rsa_verify_PKCS1_PSS_mgf1(RSA *rsa, const unsigned char *mHash,
         DB[i] ^= EM[i];
     if (MSBits)
         DB[0] &= 0xFF >> (8 - MSBits);
-    for (i = 0; DB[i] == 0 && i < (maskedDBLen - 1); i++) ;
+    for (i = 0; DB[i] == 0 && i < (maskedDBLen - 1); i++)
+        ;
     if (DB[i++] != 0x1) {
         ERR_raise(ERR_LIB_RSA, RSA_R_SLEN_RECOVERY_FAILED);
         goto err;
     }
-    if (sLen != RSA_PSS_SALTLEN_AUTO
-            && sLen != RSA_PSS_SALTLEN_AUTO_DIGEST_MAX
-            && (maskedDBLen - i) != sLen) {
-        ERR_raise_data(ERR_LIB_RSA, RSA_R_SLEN_CHECK_FAILED,
-                       "expected: %d retrieved: %d", sLen,
+    if (sLen != RSA_PSS_SALTLEN_AUTO && sLen != RSA_PSS_SALTLEN_AUTO_DIGEST_MAX &&
+        (maskedDBLen - i) != sLen) {
+        ERR_raise_data(ERR_LIB_RSA, RSA_R_SLEN_CHECK_FAILED, "expected: %d retrieved: %d", sLen,
                        maskedDBLen - i);
         goto err;
     } else {
         sLen = maskedDBLen - i;
     }
-    if (!EVP_DigestInit_ex(ctx, Hash, NULL)
-        || !EVP_DigestUpdate(ctx, zeroes, sizeof(zeroes))
-        || !EVP_DigestUpdate(ctx, mHash, hLen))
+    if (!EVP_DigestInit_ex(ctx, Hash, NULL) || !EVP_DigestUpdate(ctx, zeroes, sizeof(zeroes)) ||
+        !EVP_DigestUpdate(ctx, mHash, hLen))
         goto err;
     if (sLen != 0) {
         if (!EVP_DigestUpdate(ctx, DB + i, sLen))
@@ -147,33 +145,30 @@ int ossl_rsa_verify_PKCS1_PSS_mgf1(RSA *rsa, const unsigned char *mHash,
     }
 
     *sLenOut = sLen;
- err:
+err:
     OPENSSL_free(DB);
     EVP_MD_CTX_free(ctx);
 
     return ret;
-
 }
 
-int RSA_padding_add_PKCS1_PSS(RSA *rsa, unsigned char *EM,
-                              const unsigned char *mHash,
-                              const EVP_MD *Hash, int sLen)
+int
+RSA_padding_add_PKCS1_PSS(RSA *rsa, unsigned char *EM, const unsigned char *mHash,
+                          const EVP_MD *Hash, int sLen)
 {
     return RSA_padding_add_PKCS1_PSS_mgf1(rsa, EM, mHash, Hash, NULL, sLen);
 }
 
-int RSA_padding_add_PKCS1_PSS_mgf1(RSA *rsa, unsigned char *EM,
-                                   const unsigned char *mHash,
-                                   const EVP_MD *Hash, const EVP_MD *mgf1Hash,
-                                   int sLen)
+int
+RSA_padding_add_PKCS1_PSS_mgf1(RSA *rsa, unsigned char *EM, const unsigned char *mHash,
+                               const EVP_MD *Hash, const EVP_MD *mgf1Hash, int sLen)
 {
     return ossl_rsa_padding_add_PKCS1_PSS_mgf1(rsa, EM, mHash, Hash, mgf1Hash, &sLen);
 }
 
-int ossl_rsa_padding_add_PKCS1_PSS_mgf1(RSA *rsa, unsigned char *EM,
-                                        const unsigned char *mHash,
-                                        const EVP_MD *Hash, const EVP_MD *mgf1Hash,
-                                        int *sLenOut)
+int
+ossl_rsa_padding_add_PKCS1_PSS_mgf1(RSA *rsa, unsigned char *EM, const unsigned char *mHash,
+                                    const EVP_MD *Hash, const EVP_MD *mgf1Hash, int *sLenOut)
 {
     int i;
     int ret = 0;
@@ -206,8 +201,7 @@ int ossl_rsa_padding_add_PKCS1_PSS_mgf1(RSA *rsa, unsigned char *EM,
      * not violate FIPS 186-4. */
     if (sLen == RSA_PSS_SALTLEN_DIGEST) {
         sLen = hLen;
-    } else if (sLen == RSA_PSS_SALTLEN_MAX_SIGN
-               || sLen == RSA_PSS_SALTLEN_AUTO) {
+    } else if (sLen == RSA_PSS_SALTLEN_MAX_SIGN || sLen == RSA_PSS_SALTLEN_AUTO) {
         sLen = RSA_PSS_SALTLEN_MAX;
     } else if (sLen == RSA_PSS_SALTLEN_AUTO_DIGEST_MAX) {
         sLen = RSA_PSS_SALTLEN_MAX;
@@ -247,9 +241,8 @@ int ossl_rsa_padding_add_PKCS1_PSS_mgf1(RSA *rsa, unsigned char *EM,
     ctx = EVP_MD_CTX_new();
     if (ctx == NULL)
         goto err;
-    if (!EVP_DigestInit_ex(ctx, Hash, NULL)
-        || !EVP_DigestUpdate(ctx, zeroes, sizeof(zeroes))
-        || !EVP_DigestUpdate(ctx, mHash, hLen))
+    if (!EVP_DigestInit_ex(ctx, Hash, NULL) || !EVP_DigestUpdate(ctx, zeroes, sizeof(zeroes)) ||
+        !EVP_DigestUpdate(ctx, mHash, hLen))
         goto err;
     if (sLen && !EVP_DigestUpdate(ctx, salt, sLen))
         goto err;
@@ -282,12 +275,11 @@ int ossl_rsa_padding_add_PKCS1_PSS_mgf1(RSA *rsa, unsigned char *EM,
     ret = 1;
 
     *sLenOut = sLen;
- err:
+err:
     EVP_MD_CTX_free(ctx);
     OPENSSL_clear_free(salt, (size_t)sLen); /* salt != NULL implies sLen > 0 */
 
     return ret;
-
 }
 
 /*
@@ -313,16 +305,17 @@ int ossl_rsa_padding_add_PKCS1_PSS_mgf1(RSA *rsa, unsigned char *EM,
  *     }
  */
 static const RSA_PSS_PARAMS_30 default_RSASSA_PSS_params = {
-    NID_sha1,                    /* default hashAlgorithm */
+    NID_sha1, /* default hashAlgorithm */
     {
-        NID_mgf1,                /* default maskGenAlgorithm */
-        NID_sha1                 /* default MGF1 hash */
+        NID_mgf1, /* default maskGenAlgorithm */
+        NID_sha1  /* default MGF1 hash */
     },
-    20,                          /* default saltLength */
-    1                            /* default trailerField (0xBC) */
+    20, /* default saltLength */
+    1   /* default trailerField (0xBC) */
 };
 
-int ossl_rsa_pss_params_30_set_defaults(RSA_PSS_PARAMS_30 *rsa_pss_params)
+int
+ossl_rsa_pss_params_30_set_defaults(RSA_PSS_PARAMS_30 *rsa_pss_params)
 {
     if (rsa_pss_params == NULL)
         return 0;
@@ -330,24 +323,26 @@ int ossl_rsa_pss_params_30_set_defaults(RSA_PSS_PARAMS_30 *rsa_pss_params)
     return 1;
 }
 
-int ossl_rsa_pss_params_30_is_unrestricted(const RSA_PSS_PARAMS_30 *rsa_pss_params)
+int
+ossl_rsa_pss_params_30_is_unrestricted(const RSA_PSS_PARAMS_30 *rsa_pss_params)
 {
-    static RSA_PSS_PARAMS_30 pss_params_cmp = { 0, };
+    static RSA_PSS_PARAMS_30 pss_params_cmp = {
+        0,
+    };
 
-    return rsa_pss_params == NULL
-        || memcmp(rsa_pss_params, &pss_params_cmp,
-                  sizeof(*rsa_pss_params)) == 0;
+    return rsa_pss_params == NULL ||
+           memcmp(rsa_pss_params, &pss_params_cmp, sizeof(*rsa_pss_params)) == 0;
 }
 
-int ossl_rsa_pss_params_30_copy(RSA_PSS_PARAMS_30 *to,
-                                const RSA_PSS_PARAMS_30 *from)
+int
+ossl_rsa_pss_params_30_copy(RSA_PSS_PARAMS_30 *to, const RSA_PSS_PARAMS_30 *from)
 {
     memcpy(to, from, sizeof(*to));
     return 1;
 }
 
-int ossl_rsa_pss_params_30_set_hashalg(RSA_PSS_PARAMS_30 *rsa_pss_params,
-                                       int hashalg_nid)
+int
+ossl_rsa_pss_params_30_set_hashalg(RSA_PSS_PARAMS_30 *rsa_pss_params, int hashalg_nid)
 {
     if (rsa_pss_params == NULL)
         return 0;
@@ -355,8 +350,8 @@ int ossl_rsa_pss_params_30_set_hashalg(RSA_PSS_PARAMS_30 *rsa_pss_params,
     return 1;
 }
 
-int ossl_rsa_pss_params_30_set_maskgenhashalg(RSA_PSS_PARAMS_30 *rsa_pss_params,
-                                              int maskgenhashalg_nid)
+int
+ossl_rsa_pss_params_30_set_maskgenhashalg(RSA_PSS_PARAMS_30 *rsa_pss_params, int maskgenhashalg_nid)
 {
     if (rsa_pss_params == NULL)
         return 0;
@@ -364,8 +359,8 @@ int ossl_rsa_pss_params_30_set_maskgenhashalg(RSA_PSS_PARAMS_30 *rsa_pss_params,
     return 1;
 }
 
-int ossl_rsa_pss_params_30_set_saltlen(RSA_PSS_PARAMS_30 *rsa_pss_params,
-                                       int saltlen)
+int
+ossl_rsa_pss_params_30_set_saltlen(RSA_PSS_PARAMS_30 *rsa_pss_params, int saltlen)
 {
     if (rsa_pss_params == NULL)
         return 0;
@@ -373,8 +368,8 @@ int ossl_rsa_pss_params_30_set_saltlen(RSA_PSS_PARAMS_30 *rsa_pss_params,
     return 1;
 }
 
-int ossl_rsa_pss_params_30_set_trailerfield(RSA_PSS_PARAMS_30 *rsa_pss_params,
-                                            int trailerfield)
+int
+ossl_rsa_pss_params_30_set_trailerfield(RSA_PSS_PARAMS_30 *rsa_pss_params, int trailerfield)
 {
     if (rsa_pss_params == NULL)
         return 0;
@@ -382,35 +377,40 @@ int ossl_rsa_pss_params_30_set_trailerfield(RSA_PSS_PARAMS_30 *rsa_pss_params,
     return 1;
 }
 
-int ossl_rsa_pss_params_30_hashalg(const RSA_PSS_PARAMS_30 *rsa_pss_params)
+int
+ossl_rsa_pss_params_30_hashalg(const RSA_PSS_PARAMS_30 *rsa_pss_params)
 {
     if (rsa_pss_params == NULL)
         return default_RSASSA_PSS_params.hash_algorithm_nid;
     return rsa_pss_params->hash_algorithm_nid;
 }
 
-int ossl_rsa_pss_params_30_maskgenalg(const RSA_PSS_PARAMS_30 *rsa_pss_params)
+int
+ossl_rsa_pss_params_30_maskgenalg(const RSA_PSS_PARAMS_30 *rsa_pss_params)
 {
     if (rsa_pss_params == NULL)
         return default_RSASSA_PSS_params.mask_gen.algorithm_nid;
     return rsa_pss_params->mask_gen.algorithm_nid;
 }
 
-int ossl_rsa_pss_params_30_maskgenhashalg(const RSA_PSS_PARAMS_30 *rsa_pss_params)
+int
+ossl_rsa_pss_params_30_maskgenhashalg(const RSA_PSS_PARAMS_30 *rsa_pss_params)
 {
     if (rsa_pss_params == NULL)
         return default_RSASSA_PSS_params.hash_algorithm_nid;
     return rsa_pss_params->mask_gen.hash_algorithm_nid;
 }
 
-int ossl_rsa_pss_params_30_saltlen(const RSA_PSS_PARAMS_30 *rsa_pss_params)
+int
+ossl_rsa_pss_params_30_saltlen(const RSA_PSS_PARAMS_30 *rsa_pss_params)
 {
     if (rsa_pss_params == NULL)
         return default_RSASSA_PSS_params.salt_len;
     return rsa_pss_params->salt_len;
 }
 
-int ossl_rsa_pss_params_30_trailerfield(const RSA_PSS_PARAMS_30 *rsa_pss_params)
+int
+ossl_rsa_pss_params_30_trailerfield(const RSA_PSS_PARAMS_30 *rsa_pss_params)
 {
     if (rsa_pss_params == NULL)
         return default_RSASSA_PSS_params.trailer_field;
@@ -418,5 +418,5 @@ int ossl_rsa_pss_params_30_trailerfield(const RSA_PSS_PARAMS_30 *rsa_pss_params)
 }
 
 #if defined(_MSC_VER)
-# pragma optimize("",on)
+# pragma optimize("", on)
 #endif

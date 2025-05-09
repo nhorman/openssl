@@ -18,12 +18,17 @@
 
 typedef enum OPTION_choice {
     OPT_COMMON,
-    OPT_HEX, OPT_GENERATE, OPT_BITS, OPT_SAFE, OPT_CHECKS,
+    OPT_HEX,
+    OPT_GENERATE,
+    OPT_BITS,
+    OPT_SAFE,
+    OPT_CHECKS,
     OPT_PROV_ENUM,
     OPT_IN_FILE
 } OPTION_CHOICE;
 
-static int check_num(const char *s, const int is_hex)
+static int
+check_num(const char *s, const int is_hex)
 {
     int i;
     /*
@@ -31,16 +36,19 @@ static int check_num(const char *s, const int is_hex)
      * but ossl_ctype_check is a local symbol in libcrypto.so.
      */
     if (is_hex) {
-        for (i = 0; ('0' <= s[i] && s[i] <= '9')
-                    || ('A' <= s[i] && s[i] <= 'F')
-                    || ('a' <= s[i] && s[i] <= 'f'); i++);
+        for (i = 0; ('0' <= s[i] && s[i] <= '9') || ('A' <= s[i] && s[i] <= 'F') ||
+                    ('a' <= s[i] && s[i] <= 'f');
+             i++)
+            ;
     } else {
-        for (i = 0;  '0' <= s[i] && s[i] <= '9'; i++);
+        for (i = 0; '0' <= s[i] && s[i] <= '9'; i++)
+            ;
     }
     return s[i] == 0;
 }
 
-static void process_num(const char *s, const int is_hex)
+static void
+process_num(const char *s, const int is_hex)
 {
     int r;
     BIGNUM *bn = NULL;
@@ -80,23 +88,22 @@ const OPTIONS prime_options[] = {
 
     OPT_SECTION("Output"),
     {"generate", OPT_GENERATE, '-', "Generate a prime"},
-    {"safe", OPT_SAFE, '-',
-     "When used with -generate, generate a safe prime"},
+    {"safe", OPT_SAFE, '-', "When used with -generate, generate a safe prime"},
 
     OPT_PROV_OPTIONS,
 
     OPT_PARAMETERS(),
     {"number", 0, 0, "Number(s) to check for primality if not generating"},
-    {NULL}
-};
+    {NULL}};
 
-int prime_main(int argc, char **argv)
+int
+prime_main(int argc, char **argv)
 {
     BIGNUM *bn = NULL;
     int hex = 0, generate = 0, bits = 0, safe = 0, ret = 1, in_file = 0;
     char *prog;
     OPTION_CHOICE o;
-    char file_read_buf[BUFSIZE] = { 0 };
+    char file_read_buf[BUFSIZE] = {0};
     BIO *in = NULL;
 
     prog = opt_init(argc, argv, prime_options);
@@ -104,7 +111,7 @@ int prime_main(int argc, char **argv)
         switch (o) {
         case OPT_EOF:
         case OPT_ERR:
-opthelp:
+        opthelp:
             BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
             goto end;
         case OPT_HELP:
@@ -171,7 +178,7 @@ opthelp:
         BIO_printf(bio_out, "%s\n", s);
         OPENSSL_free(s);
     } else {
-        for ( ; *argv; argv++) {
+        for (; *argv; argv++) {
             int bytes_read = 0;
             int valid_digits_length = 0;
 
@@ -189,7 +196,8 @@ opthelp:
                     if (bytes_read == BUFSIZE - 1 && file_read_buf[BUFSIZE - 2] != '\n') {
                         BIO_printf(bio_err, "Value in %s is over the maximum size (%d digits)\n",
                                    argv[0], BUFSIZE - 2);
-                        while (BIO_get_line(in, file_read_buf, BUFSIZE) == BUFSIZE - 1);
+                        while (BIO_get_line(in, file_read_buf, BUFSIZE) == BUFSIZE - 1)
+                            ;
                         continue;
                     }
 
@@ -210,7 +218,7 @@ opthelp:
     }
 
     ret = 0;
- end:
+end:
     BN_free(bn);
     return ret;
 }

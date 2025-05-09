@@ -17,22 +17,23 @@
 static OSSL_PROVIDER *prov_null = NULL;
 static OSSL_LIB_CTX *libctx = NULL;
 
-static int test_rsa_x931_keygen(void)
+static int
+test_rsa_x931_keygen(void)
 {
     int ret = 0;
     BIGNUM *e = NULL;
     RSA *rsa = NULL;
 
-    ret = TEST_ptr(rsa = ossl_rsa_new_with_ctx(libctx))
-          && TEST_ptr(e = BN_new())
-          && TEST_int_eq(BN_set_word(e, RSA_F4), 1)
-          && TEST_int_eq(RSA_X931_generate_key_ex(rsa, 1024, e, NULL), 1);
+    ret = TEST_ptr(rsa = ossl_rsa_new_with_ctx(libctx)) && TEST_ptr(e = BN_new()) &&
+          TEST_int_eq(BN_set_word(e, RSA_F4), 1) &&
+          TEST_int_eq(RSA_X931_generate_key_ex(rsa, 1024, e, NULL), 1);
     BN_free(e);
     RSA_free(rsa);
     return ret;
 }
 
-int setup_tests(void)
+int
+setup_tests(void)
 {
     if (!test_get_libctx(&libctx, &prov_null, NULL, NULL, NULL))
         return 0;
@@ -41,7 +42,8 @@ int setup_tests(void)
     return 1;
 }
 
-void cleanup_tests(void)
+void
+cleanup_tests(void)
 {
     OSSL_PROVIDER_unload(prov_null);
     OSSL_LIB_CTX_free(libctx);

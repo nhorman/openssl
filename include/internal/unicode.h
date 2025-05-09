@@ -8,8 +8,8 @@
  */
 
 #ifndef OSSL_INTERNAL_UNICODE_H
-# define OSSL_INTERNAL_UNICODE_H
-# pragma once
+#define OSSL_INTERNAL_UNICODE_H
+#pragma once
 
 typedef enum {
     SURROGATE_MIN = 0xd800UL,
@@ -18,12 +18,14 @@ typedef enum {
     UNICODE_LIMIT
 } UNICODE_CONSTANTS;
 
-static ossl_unused ossl_inline int is_unicode_surrogate(unsigned long value)
+static ossl_unused ossl_inline int
+is_unicode_surrogate(unsigned long value)
 {
     return value >= SURROGATE_MIN && value <= SURROGATE_MAX;
 }
 
-static ossl_unused ossl_inline int is_unicode_valid(unsigned long value)
+static ossl_unused ossl_inline int
+is_unicode_valid(unsigned long value)
 {
     return value <= UNICODE_MAX && !is_unicode_surrogate(value);
 }

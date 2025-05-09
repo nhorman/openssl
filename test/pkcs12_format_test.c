@@ -142,7 +142,6 @@ static const unsigned char KEY1[] = {
     0xb5,
 };
 
-
 static const unsigned char KEY2[] = {
     0x30, 0x82, 0x02, 0x5c, 0x02, 0x01, 0x00, 0x02, 0x81, 0x81, 0x00, 0xa8, 0x6e, 0x40, 0x86, 0x9f,
     0x98, 0x59, 0xfb, 0x57, 0xbf, 0xc1, 0x55, 0x12, 0x38, 0xeb, 0xb3, 0x46, 0x34, 0xc9, 0x35, 0x4d,
@@ -184,33 +183,23 @@ static const unsigned char KEY2[] = {
     0x5e, 0x45, 0x84, 0xf7, 0xd2, 0x61, 0x50, 0xc9, 0x50, 0xba, 0x8d, 0x08, 0xaa, 0xd0, 0x08, 0x1e,
 };
 
+static const PKCS12_ATTR ATTRS1[] = {{"friendlyName", "george"},
+                                     {"localKeyID", "1234567890"},
+                                     {"1.2.3.4.5", "MyCustomAttribute"},
+                                     {NULL, NULL}};
 
-static const PKCS12_ATTR ATTRS1[] = {
-    { "friendlyName", "george" },
-    { "localKeyID", "1234567890" },
-    { "1.2.3.4.5", "MyCustomAttribute" },
-    { NULL, NULL }
-};
+static const PKCS12_ATTR ATTRS2[] = {{"friendlyName", "janet"},
+                                     {"localKeyID", "987654321"},
+                                     {"1.2.3.5.8.13", "AnotherCustomAttribute"},
+                                     {NULL, NULL}};
 
-static const PKCS12_ATTR ATTRS2[] = {
-    { "friendlyName", "janet" },
-    { "localKeyID", "987654321" },
-    { "1.2.3.5.8.13", "AnotherCustomAttribute" },
-    { NULL, NULL }
-};
-
-static const PKCS12_ATTR ATTRS3[] = {
-    { "friendlyName", "wildduk" },
-    { "localKeyID", "1122334455" },
-    { "oracle-jdk-trustedkeyusage", "anyExtendedKeyUsage" },
-    { NULL, NULL }
-};
+static const PKCS12_ATTR ATTRS3[] = {{"friendlyName", "wildduk"},
+                                     {"localKeyID", "1122334455"},
+                                     {"oracle-jdk-trustedkeyusage", "anyExtendedKeyUsage"},
+                                     {NULL, NULL}};
 
 static const PKCS12_ATTR ATTRS4[] = {
-    { "friendlyName", "wildduk" },
-    { "localKeyID", "1122334455" },
-    { NULL, NULL }
-};
+    {"friendlyName", "wildduk"}, {"localKeyID", "1122334455"}, {NULL, NULL}};
 
 static const PKCS12_ENC enc_default = {
 #ifndef OPENSSL_NO_DES
@@ -218,15 +207,9 @@ static const PKCS12_ENC enc_default = {
 #else
     NID_aes_128_cbc,
 #endif
-    "Password1",
-    1000
-};
+    "Password1", 1000};
 
-static const PKCS12_ENC mac_default = {
-    NID_sha1,
-    "Password1",
-    1000
-};
+static const PKCS12_ENC mac_default = {NID_sha1, "Password1", 1000};
 
 static const int enc_nids_all[] = {
     /* NOTE: To use PBES2 we pass the desired cipher NID instead of NID_pbes2 */
@@ -292,19 +275,10 @@ static const int enc_nids_no_legacy[] = {
 #endif
 };
 
-static const int mac_nids[] = {
-    NID_sha1,
-    NID_md5,
-    NID_sha256,
-    NID_sha512,
-    NID_sha3_256,
-    NID_sha3_512
-};
+static const int mac_nids[] = {NID_sha1,   NID_md5,      NID_sha256,
+                               NID_sha512, NID_sha3_256, NID_sha3_512};
 
-static const int iters[] = {
-    1,
-    1000
-};
+static const int iters[] = {1, 1000};
 
 static const char *passwords[] = {
     "Password1",
@@ -315,7 +289,8 @@ static const char *passwords[] = {
  * Local functions
  */
 
-static int get_custom_oid(void)
+static int
+get_custom_oid(void)
 {
     static int sec_nid = -1;
 
@@ -326,76 +301,77 @@ static int get_custom_oid(void)
     return sec_nid = OBJ_txt2nid("CustomSecretOID");
 }
 
-
 /* --------------------------------------------------------------------------
  * PKCS12 format tests
  */
 
-static int test_single_cert_no_attrs(void)
+static int
+test_single_cert_no_attrs(void)
 {
     PKCS12_BUILDER *pb = new_pkcs12_builder("1cert.p12");
 
     /* Generate/encode */
     start_pkcs12(pb);
 
-        start_contentinfo(pb);
+    start_contentinfo(pb);
 
-            add_certbag(pb, CERT1, sizeof(CERT1), NULL);
+    add_certbag(pb, CERT1, sizeof(CERT1), NULL);
 
-        end_contentinfo(pb);
+    end_contentinfo(pb);
 
     end_pkcs12(pb);
 
     /* Read/decode */
     start_check_pkcs12(pb);
 
-        start_check_contentinfo(pb);
+    start_check_contentinfo(pb);
 
-            check_certbag(pb, CERT1, sizeof(CERT1), NULL);
+    check_certbag(pb, CERT1, sizeof(CERT1), NULL);
 
-        end_check_contentinfo(pb);
+    end_check_contentinfo(pb);
 
     end_check_pkcs12(pb);
 
     return end_pkcs12_builder(pb);
 }
 
-static int test_single_key(PKCS12_ENC *enc)
+static int
+test_single_key(PKCS12_ENC *enc)
 {
     char fname[80];
     PKCS12_BUILDER *pb;
 
-    BIO_snprintf(fname, sizeof(fname), "1key_ciph-%s_iter-%d.p12",
-                 OBJ_nid2sn(enc->nid), enc->iter);
+    BIO_snprintf(fname, sizeof(fname), "1key_ciph-%s_iter-%d.p12", OBJ_nid2sn(enc->nid), enc->iter);
 
     pb = new_pkcs12_builder(fname);
 
     /* Generate/encode */
     start_pkcs12(pb);
 
-        start_contentinfo(pb);
+    start_contentinfo(pb);
 
-            add_keybag(pb, KEY1, sizeof(KEY1), NULL, enc);
+    add_keybag(pb, KEY1, sizeof(KEY1), NULL, enc);
 
-        end_contentinfo(pb);
+    end_contentinfo(pb);
 
     end_pkcs12(pb);
 
     /* Read/decode */
     start_check_pkcs12(pb);
 
-        start_check_contentinfo(pb);
+    start_check_contentinfo(pb);
 
-            check_keybag(pb, KEY1, sizeof(KEY1), NULL, enc);
+    check_keybag(pb, KEY1, sizeof(KEY1), NULL, enc);
 
-        end_check_contentinfo(pb);
+    end_check_contentinfo(pb);
 
     end_check_pkcs12(pb);
 
     return end_pkcs12_builder(pb);
 }
 
-static int test_single_key_enc_alg(int z)
+static int
+test_single_key_enc_alg(int z)
 {
     PKCS12_ENC enc;
 
@@ -409,7 +385,8 @@ static int test_single_key_enc_alg(int z)
     return test_single_key(&enc);
 }
 
-static int test_single_key_enc_pass(int z)
+static int
+test_single_key_enc_pass(int z)
 {
     PKCS12_ENC enc;
 
@@ -420,7 +397,8 @@ static int test_single_key_enc_pass(int z)
     return test_single_key(&enc);
 }
 
-static int test_single_key_enc_iter(int z)
+static int
+test_single_key_enc_iter(int z)
 {
     PKCS12_ENC enc;
 
@@ -431,71 +409,73 @@ static int test_single_key_enc_iter(int z)
     return test_single_key(&enc);
 }
 
-static int test_single_key_with_attrs(void)
+static int
+test_single_key_with_attrs(void)
 {
     PKCS12_BUILDER *pb = new_pkcs12_builder("1keyattrs.p12");
 
     /* Generate/encode */
     start_pkcs12(pb);
 
-        start_contentinfo(pb);
+    start_contentinfo(pb);
 
-            add_keybag(pb, KEY1, sizeof(KEY1), ATTRS1, &enc_default);
+    add_keybag(pb, KEY1, sizeof(KEY1), ATTRS1, &enc_default);
 
-        end_contentinfo(pb);
+    end_contentinfo(pb);
 
     end_pkcs12(pb);
 
     /* Read/decode */
     start_check_pkcs12(pb);
 
-        start_check_contentinfo(pb);
+    start_check_contentinfo(pb);
 
-            check_keybag(pb, KEY1, sizeof(KEY1), ATTRS1, &enc_default);
+    check_keybag(pb, KEY1, sizeof(KEY1), ATTRS1, &enc_default);
 
-        end_check_contentinfo(pb);
+    end_check_contentinfo(pb);
 
     end_check_pkcs12(pb);
 
     return end_pkcs12_builder(pb);
 }
 
-static int test_single_cert_mac(PKCS12_ENC *mac)
+static int
+test_single_cert_mac(PKCS12_ENC *mac)
 {
     char fname[80];
     PKCS12_BUILDER *pb;
 
-    BIO_snprintf(fname, sizeof(fname), "1cert_mac-%s_iter-%d.p12",
-                 OBJ_nid2sn(mac->nid), mac->iter);
+    BIO_snprintf(fname, sizeof(fname), "1cert_mac-%s_iter-%d.p12", OBJ_nid2sn(mac->nid), mac->iter);
 
     pb = new_pkcs12_builder(fname);
 
     /* Generate/encode */
     start_pkcs12(pb);
 
-        start_contentinfo(pb);
+    start_contentinfo(pb);
 
-            add_certbag(pb, CERT1, sizeof(CERT1), NULL);
+    add_certbag(pb, CERT1, sizeof(CERT1), NULL);
 
-        end_contentinfo(pb);
+    end_contentinfo(pb);
 
     end_pkcs12_with_mac(pb, mac);
 
     /* Read/decode */
     start_check_pkcs12_with_mac(pb, mac);
 
-        start_check_contentinfo(pb);
+    start_check_contentinfo(pb);
 
-            check_certbag(pb, CERT1, sizeof(CERT1), NULL);
+    check_certbag(pb, CERT1, sizeof(CERT1), NULL);
 
-        end_check_contentinfo(pb);
+    end_check_contentinfo(pb);
 
     end_check_pkcs12(pb);
 
     return end_pkcs12_builder(pb);
 }
 
-static int test_single_cert_mac_alg(int z)
+static int
+test_single_cert_mac_alg(int z)
 {
     PKCS12_ENC mac;
 
@@ -506,7 +486,8 @@ static int test_single_cert_mac_alg(int z)
     return test_single_cert_mac(&mac);
 }
 
-static int test_single_cert_mac_pass(int z)
+static int
+test_single_cert_mac_pass(int z)
 {
     PKCS12_ENC mac;
 
@@ -517,7 +498,8 @@ static int test_single_cert_mac_pass(int z)
     return test_single_cert_mac(&mac);
 }
 
-static int test_single_cert_mac_iter(int z)
+static int
+test_single_cert_mac_iter(int z)
 {
     PKCS12_ENC mac;
 
@@ -528,69 +510,72 @@ static int test_single_cert_mac_iter(int z)
     return test_single_cert_mac(&mac);
 }
 
-static int test_cert_key_with_attrs_and_mac(void)
+static int
+test_cert_key_with_attrs_and_mac(void)
 {
     PKCS12_BUILDER *pb = new_pkcs12_builder("1cert1key.p12");
 
     /* Generate/encode */
     start_pkcs12(pb);
 
-        start_contentinfo(pb);
+    start_contentinfo(pb);
 
-            add_certbag(pb, CERT1, sizeof(CERT1), ATTRS1);
-            add_keybag(pb, KEY1, sizeof(KEY1), ATTRS1, &enc_default);
+    add_certbag(pb, CERT1, sizeof(CERT1), ATTRS1);
+    add_keybag(pb, KEY1, sizeof(KEY1), ATTRS1, &enc_default);
 
-        end_contentinfo(pb);
+    end_contentinfo(pb);
 
     end_pkcs12_with_mac(pb, &mac_default);
 
     /* Read/decode */
     start_check_pkcs12_with_mac(pb, &mac_default);
 
-        start_check_contentinfo(pb);
+    start_check_contentinfo(pb);
 
-            check_certbag(pb, CERT1, sizeof(CERT1), ATTRS1);
-            check_keybag(pb, KEY1, sizeof(KEY1), ATTRS1, &enc_default);
+    check_certbag(pb, CERT1, sizeof(CERT1), ATTRS1);
+    check_keybag(pb, KEY1, sizeof(KEY1), ATTRS1, &enc_default);
 
-        end_check_contentinfo(pb);
+    end_check_contentinfo(pb);
 
     end_check_pkcs12(pb);
 
     return end_pkcs12_builder(pb);
 }
 
-static int test_cert_key_encrypted_content(void)
+static int
+test_cert_key_encrypted_content(void)
 {
     PKCS12_BUILDER *pb = new_pkcs12_builder("1cert1key_enc.p12");
 
     /* Generate/encode */
     start_pkcs12(pb);
 
-        start_contentinfo(pb);
+    start_contentinfo(pb);
 
-            add_certbag(pb, CERT1, sizeof(CERT1), ATTRS1);
-            add_keybag(pb, KEY1, sizeof(KEY1), ATTRS1, &enc_default);
+    add_certbag(pb, CERT1, sizeof(CERT1), ATTRS1);
+    add_keybag(pb, KEY1, sizeof(KEY1), ATTRS1, &enc_default);
 
-        end_contentinfo_encrypted(pb, &enc_default);
+    end_contentinfo_encrypted(pb, &enc_default);
 
     end_pkcs12_with_mac(pb, &mac_default);
 
     /* Read/decode */
     start_check_pkcs12_with_mac(pb, &mac_default);
 
-        start_check_contentinfo_encrypted(pb, &enc_default);
+    start_check_contentinfo_encrypted(pb, &enc_default);
 
-            check_certbag(pb, CERT1, sizeof(CERT1), ATTRS1);
-            check_keybag(pb, KEY1, sizeof(KEY1), ATTRS1, &enc_default);
+    check_certbag(pb, CERT1, sizeof(CERT1), ATTRS1);
+    check_keybag(pb, KEY1, sizeof(KEY1), ATTRS1, &enc_default);
 
-        end_check_contentinfo(pb);
+    end_check_contentinfo(pb);
 
     end_check_pkcs12(pb);
 
     return end_pkcs12_builder(pb);
 }
 
-static int test_single_secret_encrypted_content(void)
+static int
+test_single_secret_encrypted_content(void)
 {
     PKCS12_BUILDER *pb = new_pkcs12_builder("1secret.p12");
     int custom_nid = get_custom_oid();
@@ -598,65 +583,67 @@ static int test_single_secret_encrypted_content(void)
     /* Generate/encode */
     start_pkcs12(pb);
 
-        start_contentinfo(pb);
+    start_contentinfo(pb);
 
-            add_secretbag(pb, custom_nid, "VerySecretMessage", ATTRS1);
+    add_secretbag(pb, custom_nid, "VerySecretMessage", ATTRS1);
 
-        end_contentinfo_encrypted(pb, &enc_default);
+    end_contentinfo_encrypted(pb, &enc_default);
 
     end_pkcs12_with_mac(pb, &mac_default);
 
     /* Read/decode */
     start_check_pkcs12_with_mac(pb, &mac_default);
 
-        start_check_contentinfo_encrypted(pb, &enc_default);
+    start_check_contentinfo_encrypted(pb, &enc_default);
 
-            check_secretbag(pb, custom_nid, "VerySecretMessage", ATTRS1);
+    check_secretbag(pb, custom_nid, "VerySecretMessage", ATTRS1);
 
-        end_check_contentinfo(pb);
+    end_check_contentinfo(pb);
 
     end_check_pkcs12(pb);
 
     return end_pkcs12_builder(pb);
 }
 
-static int test_single_secret(PKCS12_ENC *enc)
+static int
+test_single_secret(PKCS12_ENC *enc)
 {
     int custom_nid;
     char fname[80];
     PKCS12_BUILDER *pb;
 
-    BIO_snprintf(fname, sizeof(fname), "1secret_ciph-%s_iter-%d.p12",
-                 OBJ_nid2sn(enc->nid), enc->iter);
+    BIO_snprintf(fname, sizeof(fname), "1secret_ciph-%s_iter-%d.p12", OBJ_nid2sn(enc->nid),
+                 enc->iter);
     pb = new_pkcs12_builder(fname);
     custom_nid = get_custom_oid();
 
     /* Generate/encode */
     start_pkcs12(pb);
 
-        start_contentinfo(pb);
+    start_contentinfo(pb);
 
-            add_secretbag(pb, custom_nid, "VerySecretMessage", ATTRS1);
+    add_secretbag(pb, custom_nid, "VerySecretMessage", ATTRS1);
 
-        end_contentinfo_encrypted(pb, enc);
+    end_contentinfo_encrypted(pb, enc);
 
     end_pkcs12_with_mac(pb, &mac_default);
 
     /* Read/decode */
     start_check_pkcs12_with_mac(pb, &mac_default);
 
-        start_check_contentinfo_encrypted(pb, enc);
+    start_check_contentinfo_encrypted(pb, enc);
 
-            check_secretbag(pb, custom_nid, "VerySecretMessage", ATTRS1);
+    check_secretbag(pb, custom_nid, "VerySecretMessage", ATTRS1);
 
-        end_check_contentinfo(pb);
+    end_check_contentinfo(pb);
 
     end_check_pkcs12(pb);
 
     return end_pkcs12_builder(pb);
 }
 
-static int test_single_secret_enc_alg(int z)
+static int
+test_single_secret_enc_alg(int z)
 {
     PKCS12_ENC enc;
 
@@ -670,7 +657,8 @@ static int test_single_secret_enc_alg(int z)
     return test_single_secret(&enc);
 }
 
-static int test_multiple_contents(void)
+static int
+test_multiple_contents(void)
 {
     PKCS12_BUILDER *pb = new_pkcs12_builder("multi_contents.p12");
     int custom_nid = get_custom_oid();
@@ -678,76 +666,78 @@ static int test_multiple_contents(void)
     /* Generate/encode */
     start_pkcs12(pb);
 
-        start_contentinfo(pb);
+    start_contentinfo(pb);
 
-            add_certbag(pb, CERT1, sizeof(CERT1), ATTRS1);
-            add_certbag(pb, CERT2, sizeof(CERT2), ATTRS2);
-            add_keybag(pb, KEY1, sizeof(KEY1), ATTRS1, &enc_default);
-            add_keybag(pb, KEY2, sizeof(KEY2), ATTRS2, &enc_default);
+    add_certbag(pb, CERT1, sizeof(CERT1), ATTRS1);
+    add_certbag(pb, CERT2, sizeof(CERT2), ATTRS2);
+    add_keybag(pb, KEY1, sizeof(KEY1), ATTRS1, &enc_default);
+    add_keybag(pb, KEY2, sizeof(KEY2), ATTRS2, &enc_default);
 
-        end_contentinfo(pb);
+    end_contentinfo(pb);
 
-        start_contentinfo(pb);
+    start_contentinfo(pb);
 
-            add_secretbag(pb, custom_nid, "VeryVerySecretMessage", ATTRS1);
+    add_secretbag(pb, custom_nid, "VeryVerySecretMessage", ATTRS1);
 
-        end_contentinfo_encrypted(pb, &enc_default);
+    end_contentinfo_encrypted(pb, &enc_default);
 
     end_pkcs12_with_mac(pb, &mac_default);
 
     /* Read/decode */
     start_check_pkcs12_with_mac(pb, &mac_default);
 
-        start_check_contentinfo(pb);
+    start_check_contentinfo(pb);
 
-            check_certbag(pb, CERT1, sizeof(CERT1), ATTRS1);
-            check_certbag(pb, CERT2, sizeof(CERT2), ATTRS2);
-            check_keybag(pb, KEY1, sizeof(KEY1), ATTRS1, &enc_default);
-            check_keybag(pb, KEY2, sizeof(KEY2), ATTRS2, &enc_default);
+    check_certbag(pb, CERT1, sizeof(CERT1), ATTRS1);
+    check_certbag(pb, CERT2, sizeof(CERT2), ATTRS2);
+    check_keybag(pb, KEY1, sizeof(KEY1), ATTRS1, &enc_default);
+    check_keybag(pb, KEY2, sizeof(KEY2), ATTRS2, &enc_default);
 
-        end_check_contentinfo(pb);
+    end_check_contentinfo(pb);
 
-        start_check_contentinfo_encrypted(pb, &enc_default);
+    start_check_contentinfo_encrypted(pb, &enc_default);
 
-            check_secretbag(pb, custom_nid, "VeryVerySecretMessage", ATTRS1);
+    check_secretbag(pb, custom_nid, "VeryVerySecretMessage", ATTRS1);
 
-        end_check_contentinfo(pb);
+    end_check_contentinfo(pb);
 
     end_check_pkcs12(pb);
 
     return end_pkcs12_builder(pb);
 }
 
-static int test_jdk_trusted_attr(void)
+static int
+test_jdk_trusted_attr(void)
 {
     PKCS12_BUILDER *pb = new_pkcs12_builder("jdk_trusted.p12");
 
     /* Generate/encode */
     start_pkcs12(pb);
 
-        start_contentinfo(pb);
+    start_contentinfo(pb);
 
-            add_certbag(pb, CERT1, sizeof(CERT1), ATTRS3);
+    add_certbag(pb, CERT1, sizeof(CERT1), ATTRS3);
 
-        end_contentinfo(pb);
+    end_contentinfo(pb);
 
     end_pkcs12_with_mac(pb, &mac_default);
 
     /* Read/decode */
     start_check_pkcs12_with_mac(pb, &mac_default);
 
-        start_check_contentinfo(pb);
+    start_check_contentinfo(pb);
 
-            check_certbag(pb, CERT1, sizeof(CERT1), ATTRS3);
+    check_certbag(pb, CERT1, sizeof(CERT1), ATTRS3);
 
-        end_check_contentinfo(pb);
+    end_check_contentinfo(pb);
 
     end_check_pkcs12(pb);
 
     return end_pkcs12_builder(pb);
 }
 
-static int test_set0_attrs(void)
+static int
+test_set0_attrs(void)
 {
     PKCS12_BUILDER *pb = new_pkcs12_builder("attrs.p12");
     PKCS12_SAFEBAG *bag = NULL;
@@ -756,37 +746,38 @@ static int test_set0_attrs(void)
 
     start_pkcs12(pb);
 
-        start_contentinfo(pb);
+    start_contentinfo(pb);
 
-            /* Add cert and attrs (name/locakkey only) */
-            add_certbag(pb, CERT1, sizeof(CERT1), ATTRS4);
+    /* Add cert and attrs (name/locakkey only) */
+    add_certbag(pb, CERT1, sizeof(CERT1), ATTRS4);
 
-            bag = sk_PKCS12_SAFEBAG_value(pb->bags, 0);
-            attrs = (STACK_OF(X509_ATTRIBUTE)*)PKCS12_SAFEBAG_get0_attrs(bag);
+    bag = sk_PKCS12_SAFEBAG_value(pb->bags, 0);
+    attrs = (STACK_OF(X509_ATTRIBUTE) *)PKCS12_SAFEBAG_get0_attrs(bag);
 
-            /* Create new attr, add to list and confirm return attrs is not NULL */
-            attr = X509_ATTRIBUTE_create(NID_oracle_jdk_trustedkeyusage, V_ASN1_OBJECT, OBJ_txt2obj("anyExtendedKeyUsage", 0));
-            X509at_add1_attr(&attrs, attr);
-            PKCS12_SAFEBAG_set0_attrs(bag, attrs);
-            attrs = (STACK_OF(X509_ATTRIBUTE)*)PKCS12_SAFEBAG_get0_attrs(bag);
-            X509_ATTRIBUTE_free(attr);
-            if(!TEST_ptr(attrs)) {
-                goto err;
-            }
+    /* Create new attr, add to list and confirm return attrs is not NULL */
+    attr = X509_ATTRIBUTE_create(NID_oracle_jdk_trustedkeyusage, V_ASN1_OBJECT,
+                                 OBJ_txt2obj("anyExtendedKeyUsage", 0));
+    X509at_add1_attr(&attrs, attr);
+    PKCS12_SAFEBAG_set0_attrs(bag, attrs);
+    attrs = (STACK_OF(X509_ATTRIBUTE) *)PKCS12_SAFEBAG_get0_attrs(bag);
+    X509_ATTRIBUTE_free(attr);
+    if (!TEST_ptr(attrs)) {
+        goto err;
+    }
 
-        end_contentinfo(pb);
+    end_contentinfo(pb);
 
     end_pkcs12(pb);
 
     /* Read/decode */
     start_check_pkcs12(pb);
 
-        start_check_contentinfo(pb);
+    start_check_contentinfo(pb);
 
-            /* Use existing check functionality to confirm cert bag attrs identical to ATTRS3 */
-            check_certbag(pb, CERT1, sizeof(CERT1), ATTRS3);
+    /* Use existing check functionality to confirm cert bag attrs identical to ATTRS3 */
+    check_certbag(pb, CERT1, sizeof(CERT1), ATTRS3);
 
-        end_check_contentinfo(pb);
+    end_check_contentinfo(pb);
 
     end_check_pkcs12(pb);
 
@@ -798,7 +789,8 @@ err:
 }
 
 #ifndef OPENSSL_NO_DES
-static int pkcs12_create_test(void)
+static int
+pkcs12_create_test(void)
 {
     int ret = 0;
     EVP_PKEY *pkey = NULL;
@@ -806,67 +798,55 @@ static int pkcs12_create_test(void)
     const unsigned char *p;
 
     static const unsigned char rsa_key[] = {
-        0x30, 0x82, 0x02, 0x5d, 0x02, 0x01, 0x00, 0x02, 0x81, 0x81, 0x00, 0xbb,
-        0x24, 0x7a, 0x09, 0x7e, 0x0e, 0xb2, 0x37, 0x32, 0xcc, 0x39, 0x67, 0xad,
-        0xf1, 0x9e, 0x3d, 0x6b, 0x82, 0x83, 0xd1, 0xd0, 0xac, 0xa4, 0xc0, 0x18,
-        0xbe, 0x8d, 0x98, 0x00, 0xc0, 0x7b, 0xff, 0x07, 0x44, 0xc9, 0xca, 0x1c,
-        0xba, 0x36, 0xe1, 0x27, 0x69, 0xff, 0xb1, 0xe3, 0x8d, 0x8b, 0xee, 0x57,
-        0xa9, 0x3a, 0xaa, 0x16, 0x43, 0x39, 0x54, 0x19, 0x7c, 0xae, 0x69, 0x24,
-        0x14, 0xf6, 0x64, 0xff, 0xbc, 0x74, 0xc6, 0x67, 0x6c, 0x4c, 0xf1, 0x02,
-        0x49, 0x69, 0xc7, 0x2b, 0xe1, 0xe1, 0xa1, 0xa3, 0x43, 0x14, 0xf4, 0x77,
-        0x8f, 0xc8, 0xd0, 0x85, 0x5a, 0x35, 0x95, 0xac, 0x62, 0xa9, 0xc1, 0x21,
-        0x00, 0x77, 0xa0, 0x8b, 0x97, 0x30, 0xb4, 0x5a, 0x2c, 0xb8, 0x90, 0x2f,
-        0x48, 0xa0, 0x05, 0x28, 0x4b, 0xf2, 0x0f, 0x8d, 0xec, 0x8b, 0x4d, 0x03,
-        0x42, 0x75, 0xd6, 0xad, 0x81, 0xc0, 0x11, 0x02, 0x03, 0x01, 0x00, 0x01,
-        0x02, 0x81, 0x80, 0x00, 0xfc, 0xb9, 0x4a, 0x26, 0x07, 0x89, 0x51, 0x2b,
-        0x53, 0x72, 0x91, 0xe0, 0x18, 0x3e, 0xa6, 0x5e, 0x31, 0xef, 0x9c, 0x0c,
-        0x16, 0x24, 0x42, 0xd0, 0x28, 0x33, 0xf9, 0xfa, 0xd0, 0x3c, 0x54, 0x04,
-        0x06, 0xc0, 0x15, 0xf5, 0x1b, 0x9a, 0xb3, 0x24, 0x31, 0xab, 0x3c, 0x6b,
-        0x47, 0x43, 0xb0, 0xd2, 0xa9, 0xdc, 0x05, 0xe1, 0x81, 0x59, 0xb6, 0x04,
-        0xe9, 0x66, 0x61, 0xaa, 0xd7, 0x0b, 0x00, 0x8f, 0x3d, 0xe5, 0xbf, 0xa2,
-        0xf8, 0x5e, 0x25, 0x6c, 0x1e, 0x22, 0x0f, 0xb4, 0xfd, 0x41, 0xe2, 0x03,
-        0x31, 0x5f, 0xda, 0x20, 0xc5, 0xc0, 0xf3, 0x55, 0x0e, 0xe1, 0xc9, 0xec,
-        0xd7, 0x3e, 0x2a, 0x0c, 0x01, 0xca, 0x7b, 0x22, 0xcb, 0xac, 0xf4, 0x2b,
-        0x27, 0xf0, 0x78, 0x5f, 0xb5, 0xc2, 0xf9, 0xe8, 0x14, 0x5a, 0x6e, 0x7e,
-        0x86, 0xbd, 0x6a, 0x9b, 0x20, 0x0c, 0xba, 0xcc, 0x97, 0x20, 0x11, 0x02,
-        0x41, 0x00, 0xc9, 0x59, 0x9f, 0x29, 0x8a, 0x5b, 0x9f, 0xe3, 0x2a, 0xd8,
-        0x7e, 0xc2, 0x40, 0x9f, 0xa8, 0x45, 0xe5, 0x3e, 0x11, 0x8d, 0x3c, 0xed,
-        0x6e, 0xab, 0xce, 0xd0, 0x65, 0x46, 0xd8, 0xc7, 0x07, 0x63, 0xb5, 0x23,
-        0x34, 0xf4, 0x9f, 0x7e, 0x1c, 0xc7, 0xc7, 0xf9, 0x65, 0xd1, 0xf4, 0x04,
-        0x42, 0x38, 0xbe, 0x3a, 0x0c, 0x9d, 0x08, 0x25, 0xfc, 0xa3, 0x71, 0xd9,
-        0xae, 0x0c, 0x39, 0x61, 0xf4, 0x89, 0x02, 0x41, 0x00, 0xed, 0xef, 0xab,
-        0xa9, 0xd5, 0x39, 0x9c, 0xee, 0x59, 0x1b, 0xff, 0xcf, 0x48, 0x44, 0x1b,
-        0xb6, 0x32, 0xe7, 0x46, 0x24, 0xf3, 0x04, 0x7f, 0xde, 0x95, 0x08, 0x6d,
-        0x75, 0x9e, 0x67, 0x17, 0xba, 0x5c, 0xa4, 0xd4, 0xe2, 0xe2, 0x4d, 0x77,
-        0xce, 0xeb, 0x66, 0x29, 0xc5, 0x96, 0xe0, 0x62, 0xbb, 0xe5, 0xac, 0xdc,
-        0x44, 0x62, 0x54, 0x86, 0xed, 0x64, 0x0c, 0xce, 0xd0, 0x60, 0x03, 0x9d,
-        0x49, 0x02, 0x40, 0x54, 0xd9, 0x18, 0x72, 0x27, 0xe4, 0xbe, 0x76, 0xbb,
-        0x1a, 0x6a, 0x28, 0x2f, 0x95, 0x58, 0x12, 0xc4, 0x2c, 0xa8, 0xb6, 0xcc,
-        0xe2, 0xfd, 0x0d, 0x17, 0x64, 0xc8, 0x18, 0xd7, 0xc6, 0xdf, 0x3d, 0x4c,
-        0x1a, 0x9e, 0xf9, 0x2a, 0xb0, 0xb9, 0x2e, 0x12, 0xfd, 0xec, 0xc3, 0x51,
-        0xc1, 0xed, 0xa9, 0xfd, 0xb7, 0x76, 0x93, 0x41, 0xd8, 0xc8, 0x22, 0x94,
-        0x1a, 0x77, 0xf6, 0x9c, 0xc3, 0xc3, 0x89, 0x02, 0x41, 0x00, 0x8e, 0xf9,
-        0xa7, 0x08, 0xad, 0xb5, 0x2a, 0x04, 0xdb, 0x8d, 0x04, 0xa1, 0xb5, 0x06,
-        0x20, 0x34, 0xd2, 0xcf, 0xc0, 0x89, 0xb1, 0x72, 0x31, 0xb8, 0x39, 0x8b,
-        0xcf, 0xe2, 0x8e, 0xa5, 0xda, 0x4f, 0x45, 0x1e, 0x53, 0x42, 0x66, 0xc4,
-        0x30, 0x4b, 0x29, 0x8e, 0xc1, 0x69, 0x17, 0x29, 0x8c, 0x8a, 0xe6, 0x0f,
-        0x82, 0x68, 0xa1, 0x41, 0xb3, 0xb6, 0x70, 0x99, 0x75, 0xa9, 0x27, 0x18,
-        0xe4, 0xe9, 0x02, 0x41, 0x00, 0x89, 0xea, 0x6e, 0x6d, 0x70, 0xdf, 0x25,
-        0x5f, 0x18, 0x3f, 0x48, 0xda, 0x63, 0x10, 0x8b, 0xfe, 0xa8, 0x0c, 0x94,
-        0x0f, 0xde, 0x97, 0x56, 0x53, 0x89, 0x94, 0xe2, 0x1e, 0x2c, 0x74, 0x3c,
-        0x91, 0x81, 0x34, 0x0b, 0xa6, 0x40, 0xf8, 0xcb, 0x2a, 0x60, 0x8c, 0xe0,
-        0x02, 0xb7, 0x89, 0x93, 0xcf, 0x18, 0x9f, 0x49, 0x54, 0xfd, 0x7d, 0x3f,
+        0x30, 0x82, 0x02, 0x5d, 0x02, 0x01, 0x00, 0x02, 0x81, 0x81, 0x00, 0xbb, 0x24, 0x7a, 0x09,
+        0x7e, 0x0e, 0xb2, 0x37, 0x32, 0xcc, 0x39, 0x67, 0xad, 0xf1, 0x9e, 0x3d, 0x6b, 0x82, 0x83,
+        0xd1, 0xd0, 0xac, 0xa4, 0xc0, 0x18, 0xbe, 0x8d, 0x98, 0x00, 0xc0, 0x7b, 0xff, 0x07, 0x44,
+        0xc9, 0xca, 0x1c, 0xba, 0x36, 0xe1, 0x27, 0x69, 0xff, 0xb1, 0xe3, 0x8d, 0x8b, 0xee, 0x57,
+        0xa9, 0x3a, 0xaa, 0x16, 0x43, 0x39, 0x54, 0x19, 0x7c, 0xae, 0x69, 0x24, 0x14, 0xf6, 0x64,
+        0xff, 0xbc, 0x74, 0xc6, 0x67, 0x6c, 0x4c, 0xf1, 0x02, 0x49, 0x69, 0xc7, 0x2b, 0xe1, 0xe1,
+        0xa1, 0xa3, 0x43, 0x14, 0xf4, 0x77, 0x8f, 0xc8, 0xd0, 0x85, 0x5a, 0x35, 0x95, 0xac, 0x62,
+        0xa9, 0xc1, 0x21, 0x00, 0x77, 0xa0, 0x8b, 0x97, 0x30, 0xb4, 0x5a, 0x2c, 0xb8, 0x90, 0x2f,
+        0x48, 0xa0, 0x05, 0x28, 0x4b, 0xf2, 0x0f, 0x8d, 0xec, 0x8b, 0x4d, 0x03, 0x42, 0x75, 0xd6,
+        0xad, 0x81, 0xc0, 0x11, 0x02, 0x03, 0x01, 0x00, 0x01, 0x02, 0x81, 0x80, 0x00, 0xfc, 0xb9,
+        0x4a, 0x26, 0x07, 0x89, 0x51, 0x2b, 0x53, 0x72, 0x91, 0xe0, 0x18, 0x3e, 0xa6, 0x5e, 0x31,
+        0xef, 0x9c, 0x0c, 0x16, 0x24, 0x42, 0xd0, 0x28, 0x33, 0xf9, 0xfa, 0xd0, 0x3c, 0x54, 0x04,
+        0x06, 0xc0, 0x15, 0xf5, 0x1b, 0x9a, 0xb3, 0x24, 0x31, 0xab, 0x3c, 0x6b, 0x47, 0x43, 0xb0,
+        0xd2, 0xa9, 0xdc, 0x05, 0xe1, 0x81, 0x59, 0xb6, 0x04, 0xe9, 0x66, 0x61, 0xaa, 0xd7, 0x0b,
+        0x00, 0x8f, 0x3d, 0xe5, 0xbf, 0xa2, 0xf8, 0x5e, 0x25, 0x6c, 0x1e, 0x22, 0x0f, 0xb4, 0xfd,
+        0x41, 0xe2, 0x03, 0x31, 0x5f, 0xda, 0x20, 0xc5, 0xc0, 0xf3, 0x55, 0x0e, 0xe1, 0xc9, 0xec,
+        0xd7, 0x3e, 0x2a, 0x0c, 0x01, 0xca, 0x7b, 0x22, 0xcb, 0xac, 0xf4, 0x2b, 0x27, 0xf0, 0x78,
+        0x5f, 0xb5, 0xc2, 0xf9, 0xe8, 0x14, 0x5a, 0x6e, 0x7e, 0x86, 0xbd, 0x6a, 0x9b, 0x20, 0x0c,
+        0xba, 0xcc, 0x97, 0x20, 0x11, 0x02, 0x41, 0x00, 0xc9, 0x59, 0x9f, 0x29, 0x8a, 0x5b, 0x9f,
+        0xe3, 0x2a, 0xd8, 0x7e, 0xc2, 0x40, 0x9f, 0xa8, 0x45, 0xe5, 0x3e, 0x11, 0x8d, 0x3c, 0xed,
+        0x6e, 0xab, 0xce, 0xd0, 0x65, 0x46, 0xd8, 0xc7, 0x07, 0x63, 0xb5, 0x23, 0x34, 0xf4, 0x9f,
+        0x7e, 0x1c, 0xc7, 0xc7, 0xf9, 0x65, 0xd1, 0xf4, 0x04, 0x42, 0x38, 0xbe, 0x3a, 0x0c, 0x9d,
+        0x08, 0x25, 0xfc, 0xa3, 0x71, 0xd9, 0xae, 0x0c, 0x39, 0x61, 0xf4, 0x89, 0x02, 0x41, 0x00,
+        0xed, 0xef, 0xab, 0xa9, 0xd5, 0x39, 0x9c, 0xee, 0x59, 0x1b, 0xff, 0xcf, 0x48, 0x44, 0x1b,
+        0xb6, 0x32, 0xe7, 0x46, 0x24, 0xf3, 0x04, 0x7f, 0xde, 0x95, 0x08, 0x6d, 0x75, 0x9e, 0x67,
+        0x17, 0xba, 0x5c, 0xa4, 0xd4, 0xe2, 0xe2, 0x4d, 0x77, 0xce, 0xeb, 0x66, 0x29, 0xc5, 0x96,
+        0xe0, 0x62, 0xbb, 0xe5, 0xac, 0xdc, 0x44, 0x62, 0x54, 0x86, 0xed, 0x64, 0x0c, 0xce, 0xd0,
+        0x60, 0x03, 0x9d, 0x49, 0x02, 0x40, 0x54, 0xd9, 0x18, 0x72, 0x27, 0xe4, 0xbe, 0x76, 0xbb,
+        0x1a, 0x6a, 0x28, 0x2f, 0x95, 0x58, 0x12, 0xc4, 0x2c, 0xa8, 0xb6, 0xcc, 0xe2, 0xfd, 0x0d,
+        0x17, 0x64, 0xc8, 0x18, 0xd7, 0xc6, 0xdf, 0x3d, 0x4c, 0x1a, 0x9e, 0xf9, 0x2a, 0xb0, 0xb9,
+        0x2e, 0x12, 0xfd, 0xec, 0xc3, 0x51, 0xc1, 0xed, 0xa9, 0xfd, 0xb7, 0x76, 0x93, 0x41, 0xd8,
+        0xc8, 0x22, 0x94, 0x1a, 0x77, 0xf6, 0x9c, 0xc3, 0xc3, 0x89, 0x02, 0x41, 0x00, 0x8e, 0xf9,
+        0xa7, 0x08, 0xad, 0xb5, 0x2a, 0x04, 0xdb, 0x8d, 0x04, 0xa1, 0xb5, 0x06, 0x20, 0x34, 0xd2,
+        0xcf, 0xc0, 0x89, 0xb1, 0x72, 0x31, 0xb8, 0x39, 0x8b, 0xcf, 0xe2, 0x8e, 0xa5, 0xda, 0x4f,
+        0x45, 0x1e, 0x53, 0x42, 0x66, 0xc4, 0x30, 0x4b, 0x29, 0x8e, 0xc1, 0x69, 0x17, 0x29, 0x8c,
+        0x8a, 0xe6, 0x0f, 0x82, 0x68, 0xa1, 0x41, 0xb3, 0xb6, 0x70, 0x99, 0x75, 0xa9, 0x27, 0x18,
+        0xe4, 0xe9, 0x02, 0x41, 0x00, 0x89, 0xea, 0x6e, 0x6d, 0x70, 0xdf, 0x25, 0x5f, 0x18, 0x3f,
+        0x48, 0xda, 0x63, 0x10, 0x8b, 0xfe, 0xa8, 0x0c, 0x94, 0x0f, 0xde, 0x97, 0x56, 0x53, 0x89,
+        0x94, 0xe2, 0x1e, 0x2c, 0x74, 0x3c, 0x91, 0x81, 0x34, 0x0b, 0xa6, 0x40, 0xf8, 0xcb, 0x2a,
+        0x60, 0x8c, 0xe0, 0x02, 0xb7, 0x89, 0x93, 0xcf, 0x18, 0x9f, 0x49, 0x54, 0xfd, 0x7d, 0x3f,
         0x9a, 0xef, 0xd4, 0xa4, 0x4f, 0xc1, 0x45, 0x99, 0x91,
     };
 
     p = rsa_key;
-    if (!TEST_ptr(pkey = d2i_PrivateKey_ex(EVP_PKEY_RSA, NULL, &p,
-                                           sizeof(rsa_key), NULL, NULL)))
+    if (!TEST_ptr(pkey = d2i_PrivateKey_ex(EVP_PKEY_RSA, NULL, &p, sizeof(rsa_key), NULL, NULL)))
         goto err;
     if (!TEST_int_eq(ERR_peek_error(), 0))
         goto err;
-    p12 = PKCS12_create(NULL, NULL, pkey, NULL, NULL,
-                        NID_pbe_WithSHA1And3_Key_TripleDES_CBC,
+    p12 = PKCS12_create(NULL, NULL, pkey, NULL, NULL, NID_pbe_WithSHA1And3_Key_TripleDES_CBC,
                         NID_pbe_WithSHA1And3_Key_TripleDES_CBC, 2, 1, 0);
     if (!TEST_ptr(p12))
         goto err;
@@ -881,7 +861,8 @@ err:
 }
 #endif
 
-static int pkcs12_recreate_test(void)
+static int
+pkcs12_recreate_test(void)
 {
     int ret = 0;
     X509 *cert = NULL;
@@ -901,8 +882,7 @@ static int pkcs12_recreate_test(void)
     pkey = d2i_AutoPrivateKey(NULL, &key_bytes, sizeof(KEY1));
     if (!TEST_ptr(pkey))
         goto err;
-    p12 = PKCS12_create("pass", NULL, pkey, cert, NULL, NID_aes_256_cbc,
-                        NID_aes_256_cbc, 2, 1, 0);
+    p12 = PKCS12_create("pass", NULL, pkey, cert, NULL, NID_aes_256_cbc, NID_aes_256_cbc, 2, 1, 0);
     if (!TEST_ptr(p12))
         goto err;
     if (!TEST_int_eq(ERR_peek_error(), 0))
@@ -919,14 +899,12 @@ static int pkcs12_recreate_test(void)
     p12_parsed = d2i_PKCS12_bio(bio, &p12_parsed);
     if (!TEST_ptr(p12_parsed))
         goto err;
-    if (!TEST_int_eq(PKCS12_parse(p12_parsed, "pass", &pkey_parsed,
-                                  &cert_parsed, NULL), 1))
+    if (!TEST_int_eq(PKCS12_parse(p12_parsed, "pass", &pkey_parsed, &cert_parsed, NULL), 1))
         goto err;
 
     /* cert_parsed also contains auxiliary data */
-    p12_recreated = PKCS12_create("new_pass", NULL, pkey_parsed, cert_parsed,
-                                  NULL, NID_aes_256_cbc, NID_aes_256_cbc,
-                                  2, 1, 0);
+    p12_recreated = PKCS12_create("new_pass", NULL, pkey_parsed, cert_parsed, NULL, NID_aes_256_cbc,
+                                  NID_aes_256_cbc, 2, 1, 0);
     if (!TEST_ptr(p12_recreated))
         goto err;
     if (!TEST_int_eq(ERR_peek_error(), 0))
@@ -954,19 +932,20 @@ typedef enum OPTION_choice {
     OPT_TEST_ENUM
 } OPTION_CHOICE;
 
-const OPTIONS *test_get_options(void)
+const OPTIONS *
+test_get_options(void)
 {
     static const OPTIONS options[] = {
         OPT_TEST_OPTIONS_DEFAULT_USAGE,
-        { "write",   OPT_WRITE,   '-', "Write PKCS12 objects to file" },
-        { "legacy",  OPT_LEGACY,  '-', "Test the legacy APIs" },
-        { "context", OPT_CONTEXT, '-', "Explicitly use a non-default library context" },
-        { NULL }
-    };
+        {"write", OPT_WRITE, '-', "Write PKCS12 objects to file"},
+        {"legacy", OPT_LEGACY, '-', "Test the legacy APIs"},
+        {"context", OPT_CONTEXT, '-', "Explicitly use a non-default library context"},
+        {NULL}};
     return options;
 }
 
-int setup_tests(void)
+int
+setup_tests(void)
 {
     OPTION_CHOICE o;
 
@@ -1009,8 +988,8 @@ int setup_tests(void)
      * available if we are using a standalone context
      */
     if (!default_libctx) {
-        if (!TEST_false(OSSL_PROVIDER_available(NULL, "default"))
-                || !TEST_false(OSSL_PROVIDER_available(NULL, "fips")))
+        if (!TEST_false(OSSL_PROVIDER_available(NULL, "default")) ||
+            !TEST_false(OSSL_PROVIDER_available(NULL, "fips")))
             return 0;
     }
 
@@ -1043,7 +1022,8 @@ int setup_tests(void)
     return 1;
 }
 
-void cleanup_tests(void)
+void
+cleanup_tests(void)
 {
     OSSL_PROVIDER_unload(nullprov);
     OSSL_PROVIDER_unload(deflprov);

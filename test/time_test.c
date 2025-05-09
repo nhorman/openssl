@@ -10,7 +10,8 @@
 #include "testutil.h"
 #include "internal/time.h"
 
-static int test_time_to_timeval(void)
+static int
+test_time_to_timeval(void)
 {
     OSSL_TIME a;
     struct timeval tv;
@@ -71,7 +72,8 @@ static int test_time_to_timeval(void)
     return 1;
 }
 
-int setup_tests(void)
+int
+setup_tests(void)
 {
     ADD_TEST(test_time_to_timeval);
 

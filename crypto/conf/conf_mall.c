@@ -23,7 +23,8 @@
 
 /* Load all OpenSSL builtin modules */
 
-void OPENSSL_load_builtin_modules(void)
+void
+OPENSSL_load_builtin_modules(void)
 {
     /* Add builtin modules here */
     ASN1_add_oid_module();

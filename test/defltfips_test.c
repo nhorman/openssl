@@ -15,7 +15,8 @@
 static int is_fips;
 static int bad_fips;
 
-static int test_is_fips_enabled(void)
+static int
+test_is_fips_enabled(void)
 {
     int is_fips_enabled, is_fips_loaded;
     EVP_MD *sha256 = NULL;
@@ -34,8 +35,8 @@ static int test_is_fips_enabled(void)
      * on the default properties. However we only set those properties if also
      * loading the FIPS provider.
      */
-    if (!TEST_int_eq(is_fips || bad_fips, is_fips_enabled)
-            || !TEST_int_eq(is_fips && !bad_fips, is_fips_loaded))
+    if (!TEST_int_eq(is_fips || bad_fips, is_fips_enabled) ||
+        !TEST_int_eq(is_fips && !bad_fips, is_fips_loaded))
         return 0;
 
     /*
@@ -51,9 +52,8 @@ static int test_is_fips_enabled(void)
     } else {
         if (!TEST_ptr(sha256))
             return 0;
-        if (is_fips
-            && !TEST_str_eq(OSSL_PROVIDER_get0_name(EVP_MD_get0_provider(sha256)),
-                            "fips")) {
+        if (is_fips &&
+            !TEST_str_eq(OSSL_PROVIDER_get0_name(EVP_MD_get0_provider(sha256)), "fips")) {
             EVP_MD_free(sha256);
             return 0;
         }
@@ -68,7 +68,8 @@ static int test_is_fips_enabled(void)
     return 1;
 }
 
-int setup_tests(void)
+int
+setup_tests(void)
 {
     size_t argc;
     char *arg1;

@@ -16,12 +16,13 @@
 
 #if !defined(OPENSSL_NO_DGRAM) && !defined(OPENSSL_NO_SOCK)
 
-static int compare_addr(const BIO_ADDR *a, const BIO_ADDR *b)
+static int
+compare_addr(const BIO_ADDR *a, const BIO_ADDR *b)
 {
     struct in_addr xa, xb;
-#if OPENSSL_USE_IPV6
+# if OPENSSL_USE_IPV6
     struct in6_addr xa6, xb6;
-#endif
+# endif
     void *pa, *pb;
     size_t slen, tmplen;
 
@@ -33,13 +34,13 @@ static int compare_addr(const BIO_ADDR *a, const BIO_ADDR *b)
         pb = &xb;
         slen = sizeof(xa);
     }
-#if OPENSSL_USE_IPV6
+# if OPENSSL_USE_IPV6
     else if (BIO_ADDR_family(a) == AF_INET6) {
         pa = &xa6;
         pb = &xb6;
         slen = sizeof(xa6);
     }
-#endif
+# endif
     else {
         return 0;
     }
@@ -61,15 +62,13 @@ static int compare_addr(const BIO_ADDR *a, const BIO_ADDR *b)
     return 1;
 }
 
-static int do_sendmmsg(BIO *b, BIO_MSG *msg,
-                       size_t num_msg, uint64_t flags,
-                       size_t *num_processed)
+static int
+do_sendmmsg(BIO *b, BIO_MSG *msg, size_t num_msg, uint64_t flags, size_t *num_processed)
 {
     size_t done;
 
-    for (done = 0; done < num_msg; ) {
-        if (!BIO_sendmmsg(b, msg + done, sizeof(BIO_MSG),
-                          num_msg - done, flags, num_processed))
+    for (done = 0; done < num_msg;) {
+        if (!BIO_sendmmsg(b, msg + done, sizeof(BIO_MSG), num_msg - done, flags, num_processed))
             return 0;
 
         done += *num_processed;
@@ -79,15 +78,13 @@ static int do_sendmmsg(BIO *b, BIO_MSG *msg,
     return 1;
 }
 
-static int do_recvmmsg(BIO *b, BIO_MSG *msg,
-                       size_t num_msg, uint64_t flags,
-                       size_t *num_processed)
+static int
+do_recvmmsg(BIO *b, BIO_MSG *msg, size_t num_msg, uint64_t flags, size_t *num_processed)
 {
     size_t done;
 
-    for (done = 0; done < num_msg; ) {
-        if (!BIO_recvmmsg(b, msg + done, sizeof(BIO_MSG),
-                          num_msg - done, flags, num_processed))
+    for (done = 0; done < num_msg;) {
+        if (!BIO_recvmmsg(b, msg + done, sizeof(BIO_MSG), num_msg - done, flags, num_processed))
             return 0;
 
         done += *num_processed;
@@ -97,17 +94,18 @@ static int do_recvmmsg(BIO *b, BIO_MSG *msg,
     return 1;
 }
 
-static int test_bio_dgram_impl(int af, int use_local)
+static int
+test_bio_dgram_impl(int af, int use_local)
 {
     int testresult = 0;
     BIO *b1 = NULL, *b2 = NULL;
     int fd1 = -1, fd2 = -1;
-    BIO_ADDR *addr1 = NULL, *addr2 = NULL, *addr3 = NULL, *addr4 = NULL,
-             *addr5 = NULL, *addr6 = NULL;
+    BIO_ADDR *addr1 = NULL, *addr2 = NULL, *addr3 = NULL, *addr4 = NULL, *addr5 = NULL,
+             *addr6 = NULL;
     struct in_addr ina;
-#if OPENSSL_USE_IPV6
+# if OPENSSL_USE_IPV6
     struct in6_addr ina6;
-#endif
+# endif
     void *pina;
     size_t inal, i;
     union BIO_sock_info_u info1 = {0}, info2 = {0};
@@ -121,22 +119,22 @@ static int test_bio_dgram_impl(int af, int use_local)
         pina = &ina;
         inal = sizeof(ina);
     }
-#if OPENSSL_USE_IPV6
+# if OPENSSL_USE_IPV6
     else if (af == AF_INET6) {
         TEST_info("# Testing with AF_INET6, local=%d\n", use_local);
         pina = &ina6;
         inal = sizeof(ina6);
     }
-#endif
+# endif
     else {
         goto err;
     }
 
     memset(pina, 0, inal);
     ina.s_addr = htonl(0x7f000001UL);
-#if OPENSSL_USE_IPV6
+# if OPENSSL_USE_IPV6
     ina6.s6_addr[15] = 1;
-#endif
+# endif
 
     addr1 = BIO_ADDR_new();
     if (!TEST_ptr(addr1))
@@ -176,8 +174,7 @@ static int test_bio_dgram_impl(int af, int use_local)
     if (!TEST_int_ge(fd2, 0))
         goto err;
 
-    if (BIO_bind(fd1, addr1, 0) <= 0
-        || BIO_bind(fd2, addr2, 0) <= 0) {
+    if (BIO_bind(fd1, addr1, 0) <= 0 || BIO_bind(fd2, addr2, 0) <= 0) {
         testresult = TEST_skip("BIO_bind() failed - assuming it's an unavailable address family");
         goto err;
     }
@@ -234,33 +231,33 @@ static int test_bio_dgram_impl(int af, int use_local)
         goto err;
 
     /* Now test using sendmmsg/recvmmsg with no peer set */
-    tx_msg[0].data      = "apple";
-    tx_msg[0].data_len  = 5;
-    tx_msg[0].peer      = NULL;
-    tx_msg[0].local     = NULL;
-    tx_msg[0].flags     = 0;
+    tx_msg[0].data = "apple";
+    tx_msg[0].data_len = 5;
+    tx_msg[0].peer = NULL;
+    tx_msg[0].local = NULL;
+    tx_msg[0].flags = 0;
 
-    tx_msg[1].data      = "orange";
-    tx_msg[1].data_len  = 6;
-    tx_msg[1].peer      = NULL;
-    tx_msg[1].local     = NULL;
-    tx_msg[1].flags     = 0;
+    tx_msg[1].data = "orange";
+    tx_msg[1].data_len = 6;
+    tx_msg[1].peer = NULL;
+    tx_msg[1].local = NULL;
+    tx_msg[1].flags = 0;
 
     /* First effort should fail due to missing destination address */
-    if (!TEST_false(do_sendmmsg(b1, tx_msg, 2, 0, &num_processed))
-        || !TEST_size_t_eq(num_processed, 0))
+    if (!TEST_false(do_sendmmsg(b1, tx_msg, 2, 0, &num_processed)) ||
+        !TEST_size_t_eq(num_processed, 0))
         goto err;
 
     /*
      * Second effort should fail due to local being requested
      * when not enabled
      */
-    tx_msg[0].peer  = addr2;
+    tx_msg[0].peer = addr2;
     tx_msg[0].local = addr1;
-    tx_msg[1].peer  = addr2;
+    tx_msg[1].peer = addr2;
     tx_msg[1].local = addr1;
-    if (!TEST_false(do_sendmmsg(b1, tx_msg, 2, 0, &num_processed)
-        || !TEST_size_t_eq(num_processed, 0)))
+    if (!TEST_false(do_sendmmsg(b1, tx_msg, 2, 0, &num_processed) ||
+                    !TEST_size_t_eq(num_processed, 0)))
         goto err;
 
     /* Enable local if we are using it */
@@ -274,31 +271,31 @@ static int test_bio_dgram_impl(int af, int use_local)
     }
 
     /* Third effort should succeed */
-    if (!TEST_true(do_sendmmsg(b1, tx_msg, 2, 0, &num_processed))
-        || !TEST_size_t_eq(num_processed, 2))
+    if (!TEST_true(do_sendmmsg(b1, tx_msg, 2, 0, &num_processed)) ||
+        !TEST_size_t_eq(num_processed, 2))
         goto err;
 
     /* Now try receiving */
-    rx_msg[0].data      = rx_buf;
-    rx_msg[0].data_len  = sizeof(rx_buf);
-    rx_msg[0].peer      = addr3;
-    rx_msg[0].local     = addr4;
-    rx_msg[0].flags     = (1UL<<31); /* undefined flag, should be erased */
+    rx_msg[0].data = rx_buf;
+    rx_msg[0].data_len = sizeof(rx_buf);
+    rx_msg[0].peer = addr3;
+    rx_msg[0].local = addr4;
+    rx_msg[0].flags = (1UL << 31); /* undefined flag, should be erased */
     memset(rx_buf, 0, sizeof(rx_buf));
 
-    rx_msg[1].data      = rx_buf2;
-    rx_msg[1].data_len  = sizeof(rx_buf2);
-    rx_msg[1].peer      = addr5;
-    rx_msg[1].local     = addr6;
-    rx_msg[1].flags     = (1UL<<31); /* undefined flag, should be erased */
+    rx_msg[1].data = rx_buf2;
+    rx_msg[1].data_len = sizeof(rx_buf2);
+    rx_msg[1].peer = addr5;
+    rx_msg[1].local = addr6;
+    rx_msg[1].flags = (1UL << 31); /* undefined flag, should be erased */
     memset(rx_buf2, 0, sizeof(rx_buf2));
 
     /*
      * Should fail at first due to local being requested when not
      * enabled
      */
-    if (!TEST_false(do_recvmmsg(b2, rx_msg, 2, 0, &num_processed))
-        || !TEST_size_t_eq(num_processed, 0))
+    if (!TEST_false(do_recvmmsg(b2, rx_msg, 2, 0, &num_processed)) ||
+        !TEST_size_t_eq(num_processed, 0))
         goto err;
 
     /* Fields have not been modified */
@@ -308,10 +305,10 @@ static int test_bio_dgram_impl(int af, int use_local)
     if (!TEST_int_eq((int)rx_msg[1].data_len, sizeof(rx_buf2)))
         goto err;
 
-    if (!TEST_ulong_eq((unsigned long)rx_msg[0].flags, 1UL<<31))
+    if (!TEST_ulong_eq((unsigned long)rx_msg[0].flags, 1UL << 31))
         goto err;
 
-    if (!TEST_ulong_eq((unsigned long)rx_msg[1].flags, 1UL<<31))
+    if (!TEST_ulong_eq((unsigned long)rx_msg[1].flags, 1UL << 31))
         goto err;
 
     /* Enable local if we are using it */
@@ -325,8 +322,8 @@ static int test_bio_dgram_impl(int af, int use_local)
     }
 
     /* Do the receive. */
-    if (!TEST_true(do_recvmmsg(b2, rx_msg, 2, 0, &num_processed))
-        || !TEST_size_t_eq(num_processed, 2))
+    if (!TEST_true(do_recvmmsg(b2, rx_msg, 2, 0, &num_processed)) ||
+        !TEST_size_t_eq(num_processed, 2))
         goto err;
 
     /* data_len should have been updated correctly */
@@ -356,16 +353,16 @@ static int test_bio_dgram_impl(int af, int use_local)
      * was enabled. Instead, send some new messages and test they're received
      * with the correct local addresses.
      */
-    if (!TEST_true(do_sendmmsg(b1, tx_msg, 2, 0, &num_processed))
-        || !TEST_size_t_eq(num_processed, 2))
+    if (!TEST_true(do_sendmmsg(b1, tx_msg, 2, 0, &num_processed)) ||
+        !TEST_size_t_eq(num_processed, 2))
         goto err;
 
     /* Receive the messages. */
     rx_msg[0].data_len = sizeof(rx_buf);
     rx_msg[1].data_len = sizeof(rx_buf2);
 
-    if (!TEST_true(do_recvmmsg(b2, rx_msg, 2, 0, &num_processed))
-        || !TEST_size_t_eq(num_processed, 2))
+    if (!TEST_true(do_recvmmsg(b2, rx_msg, 2, 0, &num_processed)) ||
+        !TEST_size_t_eq(num_processed, 2))
         goto err;
 
     if (rx_msg[0].local != NULL) {
@@ -383,14 +380,14 @@ static int test_bio_dgram_impl(int af, int use_local)
      */
     for (i = 0; i < OSSL_NELEM(tx_msg); ++i) {
         tx_buf[i] = (char)i;
-        tx_msg[i].data      = tx_buf + i;
-        tx_msg[i].data_len  = 1;
-        tx_msg[i].peer      = addr2;
-        tx_msg[i].local     = use_local ? addr1 : NULL;
-        tx_msg[i].flags     = 0;
+        tx_msg[i].data = tx_buf + i;
+        tx_msg[i].data_len = 1;
+        tx_msg[i].peer = addr2;
+        tx_msg[i].local = use_local ? addr1 : NULL;
+        tx_msg[i].flags = 0;
     }
-    if (!TEST_true(do_sendmmsg(b1, tx_msg, OSSL_NELEM(tx_msg), 0, &num_processed))
-        || !TEST_size_t_eq(num_processed, OSSL_NELEM(tx_msg)))
+    if (!TEST_true(do_sendmmsg(b1, tx_msg, OSSL_NELEM(tx_msg), 0, &num_processed)) ||
+        !TEST_size_t_eq(num_processed, OSSL_NELEM(tx_msg)))
         goto err;
 
     /*
@@ -399,14 +396,14 @@ static int test_bio_dgram_impl(int af, int use_local)
      */
     for (i = 0; i < OSSL_NELEM(rx_msg); ++i) {
         rx_buf[i] = '\0';
-        rx_msg[i].data      = rx_buf + i;
-        rx_msg[i].data_len  = 1;
-        rx_msg[i].peer      = NULL;
-        rx_msg[i].local     = NULL;
-        rx_msg[i].flags     = 0;
+        rx_msg[i].data = rx_buf + i;
+        rx_msg[i].data_len = 1;
+        rx_msg[i].peer = NULL;
+        rx_msg[i].local = NULL;
+        rx_msg[i].flags = 0;
     }
-    if (!TEST_true(do_recvmmsg(b2, rx_msg, OSSL_NELEM(rx_msg), 0, &num_processed))
-        || !TEST_size_t_eq(num_processed, OSSL_NELEM(rx_msg)))
+    if (!TEST_true(do_recvmmsg(b2, rx_msg, OSSL_NELEM(rx_msg), 0, &num_processed)) ||
+        !TEST_size_t_eq(num_processed, OSSL_NELEM(rx_msg)))
         goto err;
 
     if (!TEST_mem_eq(tx_buf, OSSL_NELEM(tx_msg), rx_buf, OSSL_NELEM(tx_msg)))
@@ -435,25 +432,26 @@ struct bio_dgram_case {
 
 static const struct bio_dgram_case bio_dgram_cases[] = {
     /* Test without local */
-    { AF_INET,  0 },
-#if OPENSSL_USE_IPV6
-    { AF_INET6, 0 },
-#endif
+    {AF_INET, 0},
+# if OPENSSL_USE_IPV6
+    {AF_INET6, 0},
+# endif
     /* Test with local */
-    { AF_INET,  1 },
-#if OPENSSL_USE_IPV6
-    { AF_INET6, 1 }
-#endif
+    {AF_INET, 1},
+# if OPENSSL_USE_IPV6
+    {AF_INET6, 1}
+# endif
 };
 
-static int test_bio_dgram(int idx)
+static int
+test_bio_dgram(int idx)
 {
-    return test_bio_dgram_impl(bio_dgram_cases[idx].af,
-                               bio_dgram_cases[idx].local);
+    return test_bio_dgram_impl(bio_dgram_cases[idx].af, bio_dgram_cases[idx].local);
 }
 
 # if !defined(OPENSSL_NO_CHACHA)
-static int random_data(const uint32_t *key, uint8_t *data, size_t data_len, size_t offset)
+static int
+random_data(const uint32_t *key, uint8_t *data, size_t data_len, size_t offset)
 {
     int ret = 0, outl;
     EVP_CIPHER_CTX *ctx = NULL;
@@ -479,7 +477,7 @@ static int random_data(const uint32_t *key, uint8_t *data, size_t data_len, size
         if (EVP_EncryptUpdate(ctx, data, &outl, zeroes, outl) != 1)
             goto err;
 
-        data     += outl;
+        data += outl;
         data_len -= outl;
     }
 
@@ -490,7 +488,8 @@ err:
     return ret;
 }
 
-static int test_bio_dgram_pair(int idx)
+static int
+test_bio_dgram_pair(int idx)
 {
     int testresult = 0, blen, mtu1, mtu2, r;
     BIO *bio1 = NULL, *bio2 = NULL;
@@ -501,10 +500,8 @@ static int test_bio_dgram_pair(int idx)
     BIO_ADDR *addr1 = NULL, *addr2 = NULL, *addr3 = NULL, *addr4 = NULL;
     struct in_addr in_local;
     size_t total = 0;
-    const uint32_t ref_caps = BIO_DGRAM_CAP_HANDLES_SRC_ADDR
-                            | BIO_DGRAM_CAP_HANDLES_DST_ADDR
-                            | BIO_DGRAM_CAP_PROVIDES_SRC_ADDR
-                            | BIO_DGRAM_CAP_PROVIDES_DST_ADDR;
+    const uint32_t ref_caps = BIO_DGRAM_CAP_HANDLES_SRC_ADDR | BIO_DGRAM_CAP_HANDLES_DST_ADDR |
+                              BIO_DGRAM_CAP_PROVIDES_SRC_ADDR | BIO_DGRAM_CAP_PROVIDES_DST_ADDR;
 
     memset(msgs, 0, sizeof(msgs));
     memset(rmsgs, 0, sizeof(rmsgs));
@@ -552,7 +549,7 @@ static int test_bio_dgram_pair(int idx)
         if (!TEST_int_eq(random_data(key, scratch, sizeof(scratch), i), 1))
             goto err;
 
-        blen = ((*(uint32_t*)scratch) % mtu1) + 1;
+        blen = ((*(uint32_t *)scratch) % mtu1) + 1;
         r = BIO_write(bio1, scratch + 4, blen);
         if (r == -1)
             break;
@@ -585,7 +582,7 @@ static int test_bio_dgram_pair(int idx)
         if (!TEST_int_eq(random_data(key, scratch, sizeof(scratch), i), 1))
             goto err;
 
-        blen = ((*(uint32_t*)scratch) % mtu1) + 1;
+        blen = ((*(uint32_t *)scratch) % mtu1) + 1;
         r = BIO_read(bio2, scratch2, sizeof(scratch2));
         if (!TEST_int_eq(r, blen))
             goto err;
@@ -602,23 +599,23 @@ static int test_bio_dgram_pair(int idx)
     if (!TEST_int_eq(random_data(key, scratch, sizeof(scratch), 0), 1))
         goto err;
 
-    msgs[0].data     = scratch;
+    msgs[0].data = scratch;
     msgs[0].data_len = 19;
-    msgs[1].data     = scratch + 19;
+    msgs[1].data = scratch + 19;
     msgs[1].data_len = 46;
 
-    if (!TEST_true(BIO_sendmmsg(bio1, msgs, sizeof(BIO_MSG), OSSL_NELEM(msgs), 0,
-                                &num_processed))
-        || !TEST_size_t_eq(num_processed, 2))
+    if (!TEST_true(
+            BIO_sendmmsg(bio1, msgs, sizeof(BIO_MSG), OSSL_NELEM(msgs), 0, &num_processed)) ||
+        !TEST_size_t_eq(num_processed, 2))
         goto err;
 
-    rmsgs[0].data       = scratch2;
-    rmsgs[0].data_len   = 64;
-    rmsgs[1].data       = scratch2 + 64;
-    rmsgs[1].data_len   = 64;
-    if (!TEST_true(BIO_recvmmsg(bio2, rmsgs, sizeof(BIO_MSG), OSSL_NELEM(rmsgs), 0,
-                                &num_processed))
-        || !TEST_size_t_eq(num_processed, 2))
+    rmsgs[0].data = scratch2;
+    rmsgs[0].data_len = 64;
+    rmsgs[1].data = scratch2 + 64;
+    rmsgs[1].data_len = 64;
+    if (!TEST_true(
+            BIO_recvmmsg(bio2, rmsgs, sizeof(BIO_MSG), OSSL_NELEM(rmsgs), 0, &num_processed)) ||
+        !TEST_size_t_eq(num_processed, 2))
         goto err;
 
     if (!TEST_mem_eq(rmsgs[0].data, rmsgs[0].data_len, scratch, 19))
@@ -632,16 +629,14 @@ static int test_bio_dgram_pair(int idx)
     if (!TEST_ptr(addr1))
         goto err;
 
-    if (!TEST_int_eq(BIO_ADDR_rawmake(addr1, AF_INET, &in_local,
-                                      sizeof(in_local), 1234), 1))
+    if (!TEST_int_eq(BIO_ADDR_rawmake(addr1, AF_INET, &in_local, sizeof(in_local), 1234), 1))
         goto err;
 
     addr2 = BIO_ADDR_new();
     if (!TEST_ptr(addr2))
         goto err;
 
-    if (!TEST_int_eq(BIO_ADDR_rawmake(addr2, AF_INET, &in_local,
-                                      sizeof(in_local), 2345), 1))
+    if (!TEST_int_eq(BIO_ADDR_rawmake(addr2, AF_INET, &in_local, sizeof(in_local), 2345), 1))
         goto err;
 
     addr3 = BIO_ADDR_new();
@@ -655,9 +650,9 @@ static int test_bio_dgram_pair(int idx)
     msgs[0].peer = addr1;
 
     /* fails due to lack of caps on peer */
-    if (!TEST_false(BIO_sendmmsg(bio1, msgs, sizeof(BIO_MSG),
-                                 OSSL_NELEM(msgs), 0, &num_processed))
-        || !TEST_size_t_eq(num_processed, 0))
+    if (!TEST_false(
+            BIO_sendmmsg(bio1, msgs, sizeof(BIO_MSG), OSSL_NELEM(msgs), 0, &num_processed)) ||
+        !TEST_size_t_eq(num_processed, 0))
         goto err;
 
     if (!TEST_int_eq(BIO_dgram_set_caps(bio2, ref_caps), 1))
@@ -676,21 +671,21 @@ static int test_bio_dgram_pair(int idx)
         goto err;
 
     /* succeeds with cap now available */
-    if (!TEST_true(BIO_sendmmsg(bio1, msgs, sizeof(BIO_MSG), 1, 0, &num_processed))
-        || !TEST_size_t_eq(num_processed, 1))
+    if (!TEST_true(BIO_sendmmsg(bio1, msgs, sizeof(BIO_MSG), 1, 0, &num_processed)) ||
+        !TEST_size_t_eq(num_processed, 1))
         goto err;
 
     /* enable local addr support */
     if (!TEST_int_eq(BIO_dgram_set_local_addr_enable(bio2, 1), 1))
         goto err;
 
-    rmsgs[0].data       = scratch2;
-    rmsgs[0].data_len   = 64;
-    rmsgs[0].peer       = addr3;
-    rmsgs[0].local      = addr4;
-    if (!TEST_true(BIO_recvmmsg(bio2, rmsgs, sizeof(BIO_MSG), OSSL_NELEM(rmsgs), 0,
-                                &num_processed))
-        || !TEST_size_t_eq(num_processed, 1))
+    rmsgs[0].data = scratch2;
+    rmsgs[0].data_len = 64;
+    rmsgs[0].peer = addr3;
+    rmsgs[0].local = addr4;
+    if (!TEST_true(
+            BIO_recvmmsg(bio2, rmsgs, sizeof(BIO_MSG), OSSL_NELEM(rmsgs), 0, &num_processed)) ||
+        !TEST_size_t_eq(num_processed, 1))
         goto err;
 
     if (!TEST_mem_eq(rmsgs[0].data, rmsgs[0].data_len, msgs[0].data, 19))
@@ -712,18 +707,18 @@ static int test_bio_dgram_pair(int idx)
     if (!TEST_int_eq(BIO_dgram_set_local_addr_enable(bio1, 1), 1))
         goto err;
 
-    if (!TEST_true(BIO_sendmmsg(bio1, msgs, sizeof(BIO_MSG), 1, 0, &num_processed))
-        || !TEST_size_t_eq(num_processed, 1))
+    if (!TEST_true(BIO_sendmmsg(bio1, msgs, sizeof(BIO_MSG), 1, 0, &num_processed)) ||
+        !TEST_size_t_eq(num_processed, 1))
         goto err;
 
-    rmsgs[0].data       = scratch2;
-    rmsgs[0].data_len   = 64;
-    if (!TEST_true(BIO_recvmmsg(bio2, rmsgs, sizeof(BIO_MSG), OSSL_NELEM(rmsgs), 0, &num_processed))
-        || !TEST_size_t_eq(num_processed, 1))
+    rmsgs[0].data = scratch2;
+    rmsgs[0].data_len = 64;
+    if (!TEST_true(
+            BIO_recvmmsg(bio2, rmsgs, sizeof(BIO_MSG), OSSL_NELEM(rmsgs), 0, &num_processed)) ||
+        !TEST_size_t_eq(num_processed, 1))
         goto err;
 
-    if (!TEST_mem_eq(rmsgs[0].data, rmsgs[0].data_len,
-                     msgs[0].data, msgs[0].data_len))
+    if (!TEST_mem_eq(rmsgs[0].data, rmsgs[0].data_len, msgs[0].data, msgs[0].data_len))
         goto err;
 
     if (!TEST_int_eq(BIO_ADDR_family(addr3), AF_INET))
@@ -774,9 +769,10 @@ err:
     return testresult;
 }
 # endif /* !defined(OPENSSL_NO_CHACHA) */
-#endif /* !defined(OPENSSL_NO_DGRAM) && !defined(OPENSSL_NO_SOCK) */
+#endif  /* !defined(OPENSSL_NO_DGRAM) && !defined(OPENSSL_NO_SOCK) */
 
-int setup_tests(void)
+int
+setup_tests(void)
 {
     if (!test_skip_common_options()) {
         TEST_error("Error parsing test options\n");

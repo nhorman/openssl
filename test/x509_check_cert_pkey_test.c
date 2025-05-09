@@ -25,7 +25,8 @@ static const char *k;
 static const char *t;
 static const char *e;
 
-static int test_x509_check_cert_pkey(void)
+static int
+test_x509_check_cert_pkey(void)
 {
     BIO *bio = NULL;
     X509 *x509 = NULL;
@@ -109,10 +110,11 @@ failed:
 static const char *file; /* path of a cert/CRL/key file in PEM format */
 static int expected;     /* expected number of certs/CRLs/keys included */
 
-static int test_PEM_X509_INFO_read_bio(void)
+static int
+test_PEM_X509_INFO_read_bio(void)
 {
     BIO *in;
-    STACK_OF(X509_INFO) *sk;
+    STACK_OF(X509_INFO) * sk;
     X509_INFO *it;
     int i, count = 0;
 
@@ -133,24 +135,25 @@ static int test_PEM_X509_INFO_read_bio(void)
     return TEST_int_eq(count, expected);
 }
 
-const OPTIONS *test_get_options(void)
+const OPTIONS *
+test_get_options(void)
 {
     enum { OPT_TEST_ENUM };
     static const OPTIONS test_options[] = {
         OPT_TEST_OPTIONS_WITH_EXTRA_USAGE("cert key type expected\n"
                                           "     or [options] file num\n"),
-        { OPT_HELP_STR, 1, '-', "cert\tcertificate or CSR filename in PEM\n" },
-        { OPT_HELP_STR, 1, '-', "key\tprivate key filename in PEM\n" },
-        { OPT_HELP_STR, 1, '-', "type\t\tvalue must be 'cert' or 'req'\n" },
-        { OPT_HELP_STR, 1, '-', "expected\tthe expected return value, either 'ok' or 'failed'\n" },
-        { OPT_HELP_STR, 1, '-', "file\tPEM format file containing certs, keys, and/OR CRLs\n" },
-        { OPT_HELP_STR, 1, '-', "num\texpected number of credentials to be loaded from file\n" },
-        { NULL }
-    };
+        {OPT_HELP_STR, 1, '-', "cert\tcertificate or CSR filename in PEM\n"},
+        {OPT_HELP_STR, 1, '-', "key\tprivate key filename in PEM\n"},
+        {OPT_HELP_STR, 1, '-', "type\t\tvalue must be 'cert' or 'req'\n"},
+        {OPT_HELP_STR, 1, '-', "expected\tthe expected return value, either 'ok' or 'failed'\n"},
+        {OPT_HELP_STR, 1, '-', "file\tPEM format file containing certs, keys, and/OR CRLs\n"},
+        {OPT_HELP_STR, 1, '-', "num\texpected number of credentials to be loaded from file\n"},
+        {NULL}};
     return test_options;
 }
 
-int setup_tests(void)
+int
+setup_tests(void)
 {
     if (!test_skip_common_options()) {
         TEST_error("Error parsing test options\n");
@@ -158,10 +161,9 @@ int setup_tests(void)
     }
 
     if (test_get_argument_count() == 2) {
-        const char *num;  /* expected number of certs/CRLs/keys included */
+        const char *num; /* expected number of certs/CRLs/keys included */
 
-        if (!TEST_ptr(file = test_get_argument(0))
-                || !TEST_ptr(num = test_get_argument(1)))
+        if (!TEST_ptr(file = test_get_argument(0)) || !TEST_ptr(num = test_get_argument(1)))
             return 0;
         if (!TEST_int_eq(sscanf(num, "%d", &expected), 1))
             return 0;
@@ -169,10 +171,8 @@ int setup_tests(void)
         return 1;
     }
 
-    if (!TEST_ptr(c = test_get_argument(0))
-            || !TEST_ptr(k = test_get_argument(1))
-            || !TEST_ptr(t = test_get_argument(2))
-            || !TEST_ptr(e = test_get_argument(3))) {
+    if (!TEST_ptr(c = test_get_argument(0)) || !TEST_ptr(k = test_get_argument(1)) ||
+        !TEST_ptr(t = test_get_argument(2)) || !TEST_ptr(e = test_get_argument(3))) {
         return 0;
     }
 

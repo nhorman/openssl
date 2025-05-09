@@ -42,8 +42,8 @@ typedef struct {
     int state;
 } PROV_SEED_SRC;
 
-static void *seed_src_new(void *provctx, void *parent,
-                          const OSSL_DISPATCH *parent_dispatch)
+static void *
+seed_src_new(void *provctx, void *parent, const OSSL_DISPATCH *parent_dispatch)
 {
     PROV_SEED_SRC *s;
 
@@ -61,15 +61,16 @@ static void *seed_src_new(void *provctx, void *parent,
     return s;
 }
 
-static void seed_src_free(void *vseed)
+static void
+seed_src_free(void *vseed)
 {
     OPENSSL_free(vseed);
 }
 
-static int seed_src_instantiate(void *vseed, unsigned int strength,
-                                int prediction_resistance,
-                                const unsigned char *pstr, size_t pstr_len,
-                                ossl_unused const OSSL_PARAM params[])
+static int
+seed_src_instantiate(void *vseed, unsigned int strength, int prediction_resistance,
+                     const unsigned char *pstr, size_t pstr_len,
+                     ossl_unused const OSSL_PARAM params[])
 {
     PROV_SEED_SRC *s = (PROV_SEED_SRC *)vseed;
 
@@ -77,7 +78,8 @@ static int seed_src_instantiate(void *vseed, unsigned int strength,
     return 1;
 }
 
-static int seed_src_uninstantiate(void *vseed)
+static int
+seed_src_uninstantiate(void *vseed)
 {
     PROV_SEED_SRC *s = (PROV_SEED_SRC *)vseed;
 
@@ -85,20 +87,17 @@ static int seed_src_uninstantiate(void *vseed)
     return 1;
 }
 
-static int seed_src_generate(void *vseed, unsigned char *out, size_t outlen,
-                             unsigned int strength,
-                             ossl_unused int prediction_resistance,
-                             const unsigned char *adin,
-                             size_t adin_len)
+static int
+seed_src_generate(void *vseed, unsigned char *out, size_t outlen, unsigned int strength,
+                  ossl_unused int prediction_resistance, const unsigned char *adin, size_t adin_len)
 {
     PROV_SEED_SRC *s = (PROV_SEED_SRC *)vseed;
     size_t entropy_available;
     RAND_POOL *pool;
 
     if (s->state != EVP_RAND_STATE_READY) {
-        ERR_raise(ERR_LIB_PROV,
-                  s->state == EVP_RAND_STATE_ERROR ? PROV_R_IN_ERROR_STATE
-                                                   : PROV_R_NOT_INSTANTIATED);
+        ERR_raise(ERR_LIB_PROV, s->state == EVP_RAND_STATE_ERROR ? PROV_R_IN_ERROR_STATE
+                                                                 : PROV_R_NOT_INSTANTIATED);
         return 0;
     }
 
@@ -123,25 +122,23 @@ static int seed_src_generate(void *vseed, unsigned char *out, size_t outlen,
     return entropy_available > 0;
 }
 
-static int seed_src_reseed(void *vseed,
-                           ossl_unused int prediction_resistance,
-                           ossl_unused const unsigned char *ent,
-                           ossl_unused size_t ent_len,
-                           ossl_unused const unsigned char *adin,
-                           ossl_unused size_t adin_len)
+static int
+seed_src_reseed(void *vseed, ossl_unused int prediction_resistance,
+                ossl_unused const unsigned char *ent, ossl_unused size_t ent_len,
+                ossl_unused const unsigned char *adin, ossl_unused size_t adin_len)
 {
     PROV_SEED_SRC *s = (PROV_SEED_SRC *)vseed;
 
     if (s->state != EVP_RAND_STATE_READY) {
-        ERR_raise(ERR_LIB_PROV,
-                  s->state == EVP_RAND_STATE_ERROR ? PROV_R_IN_ERROR_STATE
-                                                   : PROV_R_NOT_INSTANTIATED);
+        ERR_raise(ERR_LIB_PROV, s->state == EVP_RAND_STATE_ERROR ? PROV_R_IN_ERROR_STATE
+                                                                 : PROV_R_NOT_INSTANTIATED);
         return 0;
     }
     return 1;
 }
 
-static int seed_src_get_ctx_params(void *vseed, OSSL_PARAM params[])
+static int
+seed_src_get_ctx_params(void *vseed, OSSL_PARAM params[])
 {
     PROV_SEED_SRC *s = (PROV_SEED_SRC *)vseed;
     OSSL_PARAM *p;
@@ -160,27 +157,25 @@ static int seed_src_get_ctx_params(void *vseed, OSSL_PARAM params[])
     return 1;
 }
 
-static const OSSL_PARAM *seed_src_gettable_ctx_params(ossl_unused void *vseed,
-                                                      ossl_unused void *provctx)
+static const OSSL_PARAM *
+seed_src_gettable_ctx_params(ossl_unused void *vseed, ossl_unused void *provctx)
 {
     static const OSSL_PARAM known_gettable_ctx_params[] = {
         OSSL_PARAM_int(OSSL_RAND_PARAM_STATE, NULL),
         OSSL_PARAM_uint(OSSL_RAND_PARAM_STRENGTH, NULL),
-        OSSL_PARAM_size_t(OSSL_RAND_PARAM_MAX_REQUEST, NULL),
-        OSSL_PARAM_END
-    };
+        OSSL_PARAM_size_t(OSSL_RAND_PARAM_MAX_REQUEST, NULL), OSSL_PARAM_END};
     return known_gettable_ctx_params;
 }
 
-static int seed_src_verify_zeroization(ossl_unused void *vseed)
+static int
+seed_src_verify_zeroization(ossl_unused void *vseed)
 {
     return 1;
 }
 
-static size_t seed_get_seed(void *vseed, unsigned char **pout,
-                            int entropy, size_t min_len, size_t max_len,
-                            int prediction_resistance,
-                            const unsigned char *adin, size_t adin_len)
+static size_t
+seed_get_seed(void *vseed, unsigned char **pout, int entropy, size_t min_len, size_t max_len,
+              int prediction_resistance, const unsigned char *adin, size_t adin_len)
 {
     size_t ret = 0;
     size_t entropy_available = 0;
@@ -195,8 +190,7 @@ static size_t seed_get_seed(void *vseed, unsigned char **pout,
     /* Get entropy by polling system entropy sources. */
     entropy_available = ossl_pool_acquire_entropy(pool);
 
-    if (entropy_available > 0
-        && ossl_rand_pool_adin_mix_in(pool, adin, adin_len)) {
+    if (entropy_available > 0 && ossl_rand_pool_adin_mix_in(pool, adin, adin_len)) {
         ret = ossl_rand_pool_length(pool);
         *pout = ossl_rand_pool_detach(pool);
     } else {
@@ -206,44 +200,42 @@ static size_t seed_get_seed(void *vseed, unsigned char **pout,
     return ret;
 }
 
-static void seed_clear_seed(ossl_unused void *vdrbg,
-                            unsigned char *out, size_t outlen)
+static void
+seed_clear_seed(ossl_unused void *vdrbg, unsigned char *out, size_t outlen)
 {
     OPENSSL_secure_clear_free(out, outlen);
 }
 
-static int seed_src_enable_locking(ossl_unused void *vseed)
+static int
+seed_src_enable_locking(ossl_unused void *vseed)
 {
     return 1;
 }
 
-int seed_src_lock(ossl_unused void *vctx)
+int
+seed_src_lock(ossl_unused void *vctx)
 {
     return 1;
 }
 
-void seed_src_unlock(ossl_unused void *vctx)
+void
+seed_src_unlock(ossl_unused void *vctx)
 {
 }
 
 const OSSL_DISPATCH ossl_seed_src_functions[] = {
-    { OSSL_FUNC_RAND_NEWCTX, (void(*)(void))seed_src_new },
-    { OSSL_FUNC_RAND_FREECTX, (void(*)(void))seed_src_free },
-    { OSSL_FUNC_RAND_INSTANTIATE,
-      (void(*)(void))seed_src_instantiate },
-    { OSSL_FUNC_RAND_UNINSTANTIATE,
-      (void(*)(void))seed_src_uninstantiate },
-    { OSSL_FUNC_RAND_GENERATE, (void(*)(void))seed_src_generate },
-    { OSSL_FUNC_RAND_RESEED, (void(*)(void))seed_src_reseed },
-    { OSSL_FUNC_RAND_ENABLE_LOCKING, (void(*)(void))seed_src_enable_locking },
-    { OSSL_FUNC_RAND_LOCK, (void(*)(void))seed_src_lock },
-    { OSSL_FUNC_RAND_UNLOCK, (void(*)(void))seed_src_unlock },
-    { OSSL_FUNC_RAND_GETTABLE_CTX_PARAMS,
-      (void(*)(void))seed_src_gettable_ctx_params },
-    { OSSL_FUNC_RAND_GET_CTX_PARAMS, (void(*)(void))seed_src_get_ctx_params },
-    { OSSL_FUNC_RAND_VERIFY_ZEROIZATION,
-      (void(*)(void))seed_src_verify_zeroization },
-    { OSSL_FUNC_RAND_GET_SEED, (void(*)(void))seed_get_seed },
-    { OSSL_FUNC_RAND_CLEAR_SEED, (void(*)(void))seed_clear_seed },
-    OSSL_DISPATCH_END
-};
+    {OSSL_FUNC_RAND_NEWCTX, (void (*)(void))seed_src_new},
+    {OSSL_FUNC_RAND_FREECTX, (void (*)(void))seed_src_free},
+    {OSSL_FUNC_RAND_INSTANTIATE, (void (*)(void))seed_src_instantiate},
+    {OSSL_FUNC_RAND_UNINSTANTIATE, (void (*)(void))seed_src_uninstantiate},
+    {OSSL_FUNC_RAND_GENERATE, (void (*)(void))seed_src_generate},
+    {OSSL_FUNC_RAND_RESEED, (void (*)(void))seed_src_reseed},
+    {OSSL_FUNC_RAND_ENABLE_LOCKING, (void (*)(void))seed_src_enable_locking},
+    {OSSL_FUNC_RAND_LOCK, (void (*)(void))seed_src_lock},
+    {OSSL_FUNC_RAND_UNLOCK, (void (*)(void))seed_src_unlock},
+    {OSSL_FUNC_RAND_GETTABLE_CTX_PARAMS, (void (*)(void))seed_src_gettable_ctx_params},
+    {OSSL_FUNC_RAND_GET_CTX_PARAMS, (void (*)(void))seed_src_get_ctx_params},
+    {OSSL_FUNC_RAND_VERIFY_ZEROIZATION, (void (*)(void))seed_src_verify_zeroization},
+    {OSSL_FUNC_RAND_GET_SEED, (void (*)(void))seed_get_seed},
+    {OSSL_FUNC_RAND_CLEAR_SEED, (void (*)(void))seed_clear_seed},
+    OSSL_DISPATCH_END};

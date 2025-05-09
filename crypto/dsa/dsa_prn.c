@@ -19,7 +19,8 @@
 #include <openssl/dsa.h>
 
 #ifndef OPENSSL_NO_STDIO
-int DSA_print_fp(FILE *fp, const DSA *x, int off)
+int
+DSA_print_fp(FILE *fp, const DSA *x, int off)
 {
     BIO *b;
     int ret;
@@ -34,7 +35,8 @@ int DSA_print_fp(FILE *fp, const DSA *x, int off)
     return ret;
 }
 
-int DSAparams_print_fp(FILE *fp, const DSA *x)
+int
+DSAparams_print_fp(FILE *fp, const DSA *x)
 {
     BIO *b;
     int ret;
@@ -50,7 +52,8 @@ int DSAparams_print_fp(FILE *fp, const DSA *x)
 }
 #endif
 
-int DSA_print(BIO *bp, const DSA *x, int off)
+int
+DSA_print(BIO *bp, const DSA *x, int off)
 {
     EVP_PKEY *pk;
     int ret;
@@ -64,7 +67,8 @@ int DSA_print(BIO *bp, const DSA *x, int off)
     return ret;
 }
 
-int DSAparams_print(BIO *bp, const DSA *x)
+int
+DSAparams_print(BIO *bp, const DSA *x)
 {
     EVP_PKEY *pk;
     int ret;

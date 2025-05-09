@@ -12,34 +12,36 @@
 #include <openssl/evp.h>
 #include "testutil.h"
 
-static int test_provider(OSSL_LIB_CTX *ctx)
+static int
+test_provider(OSSL_LIB_CTX *ctx)
 {
     EVP_KEYMGMT *rsameth = NULL;
     const OSSL_PROVIDER *prov = NULL;
     int ok;
 
-    ok = TEST_true(OSSL_PROVIDER_available(ctx, "default"))
-        && TEST_ptr(rsameth = EVP_KEYMGMT_fetch(ctx, "RSA", NULL))
-        && TEST_ptr(prov = EVP_KEYMGMT_get0_provider(rsameth))
-        && TEST_str_eq(OSSL_PROVIDER_get0_name(prov), "default");
+    ok = TEST_true(OSSL_PROVIDER_available(ctx, "default")) &&
+         TEST_ptr(rsameth = EVP_KEYMGMT_fetch(ctx, "RSA", NULL)) &&
+         TEST_ptr(prov = EVP_KEYMGMT_get0_provider(rsameth)) &&
+         TEST_str_eq(OSSL_PROVIDER_get0_name(prov), "default");
 
     EVP_KEYMGMT_free(rsameth);
     return ok;
 }
 
-static int test_fallback_provider(void)
+static int
+test_fallback_provider(void)
 {
     return test_provider(NULL);
 }
 
-static int test_explicit_provider(void)
+static int
+test_explicit_provider(void)
 {
     OSSL_LIB_CTX *ctx = NULL;
     OSSL_PROVIDER *prov = NULL;
     int ok;
 
-    ok = TEST_ptr(ctx = OSSL_LIB_CTX_new())
-        && TEST_ptr(prov = OSSL_PROVIDER_load(ctx, "default"));
+    ok = TEST_ptr(ctx = OSSL_LIB_CTX_new()) && TEST_ptr(prov = OSSL_PROVIDER_load(ctx, "default"));
 
     if (ok) {
         ok = test_provider(ctx);
@@ -53,11 +55,10 @@ static int test_explicit_provider(void)
     return ok;
 }
 
-
-int setup_tests(void)
+int
+setup_tests(void)
 {
     ADD_TEST(test_fallback_provider);
     ADD_TEST(test_explicit_provider);
     return 1;
 }
-

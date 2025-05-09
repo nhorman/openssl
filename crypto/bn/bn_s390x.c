@@ -20,8 +20,8 @@
 # include <unistd.h>
 # include <errno.h>
 
-static int s390x_mod_exp_hw(BIGNUM *r, const BIGNUM *a, const BIGNUM *p,
-                            const BIGNUM *m)
+static int
+s390x_mod_exp_hw(BIGNUM *r, const BIGNUM *a, const BIGNUM *p, const BIGNUM *m)
 {
     struct ica_rsa_modexpo me;
     unsigned char *buffer;
@@ -40,9 +40,8 @@ static int s390x_mod_exp_hw(BIGNUM *r, const BIGNUM *a, const BIGNUM *p,
     me.outputdatalength = size;
     me.b_key = buffer + 2 * size;
     me.n_modulus = buffer + 3 * size;
-    if (BN_bn2binpad(a, me.inputdata, size) == -1
-        || BN_bn2binpad(p, me.b_key, size) == -1
-        || BN_bn2binpad(m, me.n_modulus, size) == -1)
+    if (BN_bn2binpad(a, me.inputdata, size) == -1 || BN_bn2binpad(p, me.b_key, size) == -1 ||
+        BN_bn2binpad(m, me.n_modulus, size) == -1)
         goto dealloc;
     if (ioctl(OPENSSL_s390xcex, ICARSAMODEXPO, &me) != -1) {
         if (BN_bin2bn(me.outputdata, size, r) != NULL)
@@ -63,21 +62,23 @@ static int s390x_mod_exp_hw(BIGNUM *r, const BIGNUM *a, const BIGNUM *p,
          */
         OPENSSL_s390xcex_nodev = 1;
     }
- dealloc:
+dealloc:
     OPENSSL_clear_free(buffer, 4 * size);
     return res;
 }
 
-int s390x_mod_exp(BIGNUM *r, const BIGNUM *a, const BIGNUM *p,
-                  const BIGNUM *m, BN_CTX *ctx, BN_MONT_CTX *m_ctx)
+int
+s390x_mod_exp(BIGNUM *r, const BIGNUM *a, const BIGNUM *p, const BIGNUM *m, BN_CTX *ctx,
+              BN_MONT_CTX *m_ctx)
 {
     if (s390x_mod_exp_hw(r, a, p, m) == 1)
         return 1;
     return BN_mod_exp_mont(r, a, p, m, ctx, m_ctx);
 }
 
-int s390x_crt(BIGNUM *r, const BIGNUM *i, const BIGNUM *p, const BIGNUM *q,
-              const BIGNUM *dmp, const BIGNUM *dmq, const BIGNUM *iqmp)
+int
+s390x_crt(BIGNUM *r, const BIGNUM *i, const BIGNUM *p, const BIGNUM *q, const BIGNUM *dmp,
+          const BIGNUM *dmq, const BIGNUM *iqmp)
 {
     struct ica_rsa_modexpo_crt crt;
     unsigned char *buffer, *part;
@@ -114,12 +115,12 @@ int s390x_crt(BIGNUM *r, const BIGNUM *i, const BIGNUM *p, const BIGNUM *q,
     crt.nq_prime = part;
     part += size;
     crt.u_mult_inv = part;
-    if (BN_bn2binpad(i, crt.inputdata, crt.inputdatalength) == -1
-        || BN_bn2binpad(p, crt.np_prime, size + 8) == -1
-        || BN_bn2binpad(q, crt.nq_prime, size) == -1
-        || BN_bn2binpad(dmp, crt.bp_key, size + 8) == -1
-        || BN_bn2binpad(dmq, crt.bq_key, size) == -1
-        || BN_bn2binpad(iqmp, crt.u_mult_inv, size + 8) == -1)
+    if (BN_bn2binpad(i, crt.inputdata, crt.inputdatalength) == -1 ||
+        BN_bn2binpad(p, crt.np_prime, size + 8) == -1 ||
+        BN_bn2binpad(q, crt.nq_prime, size) == -1 ||
+        BN_bn2binpad(dmp, crt.bp_key, size + 8) == -1 ||
+        BN_bn2binpad(dmq, crt.bq_key, size) == -1 ||
+        BN_bn2binpad(iqmp, crt.u_mult_inv, size + 8) == -1)
         goto dealloc;
     if (ioctl(OPENSSL_s390xcex, ICARSACRT, &crt) != -1) {
         if (BN_bin2bn(crt.outputdata, crt.outputdatalength, r) != NULL)
@@ -140,20 +141,22 @@ int s390x_crt(BIGNUM *r, const BIGNUM *i, const BIGNUM *p, const BIGNUM *q,
          */
         OPENSSL_s390xcex_nodev = 1;
     }
- dealloc:
+dealloc:
     OPENSSL_clear_free(buffer, 9 * size + 24);
     return res;
 }
 
 #else
-int s390x_mod_exp(BIGNUM *r, const BIGNUM *a, const BIGNUM *p,
-                  const BIGNUM *m, BN_CTX *ctx, BN_MONT_CTX *m_ctx)
+int
+s390x_mod_exp(BIGNUM *r, const BIGNUM *a, const BIGNUM *p, const BIGNUM *m, BN_CTX *ctx,
+              BN_MONT_CTX *m_ctx)
 {
     return BN_mod_exp_mont(r, a, p, m, ctx, m_ctx);
 }
 
-int s390x_crt(BIGNUM *r, const BIGNUM *i, const BIGNUM *p, const BIGNUM *q,
-              const BIGNUM *dmp, const BIGNUM *dmq, const BIGNUM *iqmp)
+int
+s390x_crt(BIGNUM *r, const BIGNUM *i, const BIGNUM *p, const BIGNUM *q, const BIGNUM *dmp,
+          const BIGNUM *dmq, const BIGNUM *iqmp)
 {
     return 0;
 }

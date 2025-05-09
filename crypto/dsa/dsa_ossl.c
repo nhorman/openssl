@@ -22,60 +22,57 @@
 #include <openssl/asn1.h>
 #include "internal/deterministic_nonce.h"
 
-#define MIN_DSA_SIGN_QBITS   128
+#define MIN_DSA_SIGN_QBITS 128
 #define MAX_DSA_SIGN_RETRIES 8
 
 static DSA_SIG *dsa_do_sign(const unsigned char *dgst, int dlen, DSA *dsa);
-static int dsa_sign_setup_no_digest(DSA *dsa, BN_CTX *ctx_in, BIGNUM **kinvp,
-                                    BIGNUM **rp);
-static int dsa_sign_setup(DSA *dsa, BN_CTX *ctx_in, BIGNUM **kinvp,
-                          BIGNUM **rp, const unsigned char *dgst, int dlen,
-                          unsigned int nonce_type, const char *digestname,
-                          OSSL_LIB_CTX *libctx, const char *propq);
-static int dsa_do_verify(const unsigned char *dgst, int dgst_len,
-                         DSA_SIG *sig, DSA *dsa);
+static int dsa_sign_setup_no_digest(DSA *dsa, BN_CTX *ctx_in, BIGNUM **kinvp, BIGNUM **rp);
+static int dsa_sign_setup(DSA *dsa, BN_CTX *ctx_in, BIGNUM **kinvp, BIGNUM **rp,
+                          const unsigned char *dgst, int dlen, unsigned int nonce_type,
+                          const char *digestname, OSSL_LIB_CTX *libctx, const char *propq);
+static int dsa_do_verify(const unsigned char *dgst, int dgst_len, DSA_SIG *sig, DSA *dsa);
 static int dsa_init(DSA *dsa);
 static int dsa_finish(DSA *dsa);
-static BIGNUM *dsa_mod_inverse_fermat(const BIGNUM *k, const BIGNUM *q,
-                                      BN_CTX *ctx);
+static BIGNUM *dsa_mod_inverse_fermat(const BIGNUM *k, const BIGNUM *q, BN_CTX *ctx);
 
-static DSA_METHOD openssl_dsa_meth = {
-    "OpenSSL DSA method",
-    dsa_do_sign,
-    dsa_sign_setup_no_digest,
-    dsa_do_verify,
-    NULL,                       /* dsa_mod_exp, */
-    NULL,                       /* dsa_bn_mod_exp, */
-    dsa_init,
-    dsa_finish,
-    DSA_FLAG_FIPS_METHOD,
-    NULL,
-    NULL,
-    NULL
-};
+static DSA_METHOD openssl_dsa_meth = {"OpenSSL DSA method",
+                                      dsa_do_sign,
+                                      dsa_sign_setup_no_digest,
+                                      dsa_do_verify,
+                                      NULL, /* dsa_mod_exp, */
+                                      NULL, /* dsa_bn_mod_exp, */
+                                      dsa_init,
+                                      dsa_finish,
+                                      DSA_FLAG_FIPS_METHOD,
+                                      NULL,
+                                      NULL,
+                                      NULL};
 
 static const DSA_METHOD *default_DSA_method = &openssl_dsa_meth;
 
 #ifndef FIPS_MODULE
-void DSA_set_default_method(const DSA_METHOD *meth)
+void
+DSA_set_default_method(const DSA_METHOD *meth)
 {
     default_DSA_method = meth;
 }
 #endif /* FIPS_MODULE */
 
-const DSA_METHOD *DSA_get_default_method(void)
+const DSA_METHOD *
+DSA_get_default_method(void)
 {
     return default_DSA_method;
 }
 
-const DSA_METHOD *DSA_OpenSSL(void)
+const DSA_METHOD *
+DSA_OpenSSL(void)
 {
     return &openssl_dsa_meth;
 }
 
-DSA_SIG *ossl_dsa_do_sign_int(const unsigned char *dgst, int dlen, DSA *dsa,
-                              unsigned int nonce_type, const char *digestname,
-                              OSSL_LIB_CTX *libctx, const char *propq)
+DSA_SIG *
+ossl_dsa_do_sign_int(const unsigned char *dgst, int dlen, DSA *dsa, unsigned int nonce_type,
+                     const char *digestname, OSSL_LIB_CTX *libctx, const char *propq)
 {
     BIGNUM *kinv = NULL;
     BIGNUM *m, *blind, *blindm, *tmp;
@@ -85,9 +82,7 @@ DSA_SIG *ossl_dsa_do_sign_int(const unsigned char *dgst, int dlen, DSA *dsa,
     int rv = 0;
     int retries = 0;
 
-    if (dsa->params.p == NULL
-        || dsa->params.q == NULL
-        || dsa->params.g == NULL) {
+    if (dsa->params.p == NULL || dsa->params.q == NULL || dsa->params.g == NULL) {
         reason = DSA_R_MISSING_PARAMETERS;
         goto err;
     }
@@ -114,9 +109,9 @@ DSA_SIG *ossl_dsa_do_sign_int(const unsigned char *dgst, int dlen, DSA *dsa,
     if (tmp == NULL)
         goto err;
 
- redo:
-    if (!dsa_sign_setup(dsa, ctx, &kinv, &ret->r, dgst, dlen,
-                        nonce_type, digestname, libctx, propq))
+redo:
+    if (!dsa_sign_setup(dsa, ctx, &kinv, &ret->r, dgst, dlen, nonce_type, digestname, libctx,
+                        propq))
         goto err;
 
     if (dlen > BN_num_bytes(dsa->params.q))
@@ -144,8 +139,8 @@ DSA_SIG *ossl_dsa_do_sign_int(const unsigned char *dgst, int dlen, DSA *dsa,
      * The size of q is tested in dsa_sign_setup() so there should not be an infinite loop here.
      */
     do {
-        if (!BN_priv_rand_ex(blind, BN_num_bits(dsa->params.q) - 1,
-                             BN_RAND_TOP_ANY, BN_RAND_BOTTOM_ANY, 0, ctx))
+        if (!BN_priv_rand_ex(blind, BN_num_bits(dsa->params.q) - 1, BN_RAND_TOP_ANY,
+                             BN_RAND_BOTTOM_ANY, 0, ctx))
             goto err;
     } while (BN_is_zero(blind));
     BN_set_flags(blind, BN_FLG_CONSTTIME);
@@ -190,7 +185,7 @@ DSA_SIG *ossl_dsa_do_sign_int(const unsigned char *dgst, int dlen, DSA *dsa,
         goto redo;
     }
     rv = 1;
- err:
+err:
     if (rv == 0) {
         ERR_raise(ERR_LIB_DSA, reason);
         DSA_SIG_free(ret);
@@ -201,24 +196,22 @@ DSA_SIG *ossl_dsa_do_sign_int(const unsigned char *dgst, int dlen, DSA *dsa,
     return ret;
 }
 
-static DSA_SIG *dsa_do_sign(const unsigned char *dgst, int dlen, DSA *dsa)
+static DSA_SIG *
+dsa_do_sign(const unsigned char *dgst, int dlen, DSA *dsa)
 {
-    return ossl_dsa_do_sign_int(dgst, dlen, dsa,
-                                0, NULL, NULL, NULL);
+    return ossl_dsa_do_sign_int(dgst, dlen, dsa, 0, NULL, NULL, NULL);
 }
 
-static int dsa_sign_setup_no_digest(DSA *dsa, BN_CTX *ctx_in,
-                                    BIGNUM **kinvp, BIGNUM **rp)
+static int
+dsa_sign_setup_no_digest(DSA *dsa, BN_CTX *ctx_in, BIGNUM **kinvp, BIGNUM **rp)
 {
-    return dsa_sign_setup(dsa, ctx_in, kinvp, rp, NULL, 0,
-                          0, NULL, NULL, NULL);
+    return dsa_sign_setup(dsa, ctx_in, kinvp, rp, NULL, 0, 0, NULL, NULL, NULL);
 }
 
-static int dsa_sign_setup(DSA *dsa, BN_CTX *ctx_in,
-                          BIGNUM **kinvp, BIGNUM **rp,
-                          const unsigned char *dgst, int dlen,
-                          unsigned int nonce_type, const char *digestname,
-                          OSSL_LIB_CTX *libctx, const char *propq)
+static int
+dsa_sign_setup(DSA *dsa, BN_CTX *ctx_in, BIGNUM **kinvp, BIGNUM **rp, const unsigned char *dgst,
+               int dlen, unsigned int nonce_type, const char *digestname, OSSL_LIB_CTX *libctx,
+               const char *propq)
 {
     BN_CTX *ctx = NULL;
     BIGNUM *k, *kinv = NULL, *r = *rp;
@@ -232,12 +225,9 @@ static int dsa_sign_setup(DSA *dsa, BN_CTX *ctx_in,
     }
 
     /* Reject obviously invalid parameters */
-    if (BN_is_zero(dsa->params.p)
-        || BN_is_zero(dsa->params.q)
-        || BN_is_zero(dsa->params.g)
-        || BN_is_negative(dsa->params.p)
-        || BN_is_negative(dsa->params.q)
-        || BN_is_negative(dsa->params.g)) {
+    if (BN_is_zero(dsa->params.p) || BN_is_zero(dsa->params.q) || BN_is_zero(dsa->params.g) ||
+        BN_is_negative(dsa->params.p) || BN_is_negative(dsa->params.q) ||
+        BN_is_negative(dsa->params.g)) {
         ERR_raise(ERR_LIB_DSA, DSA_R_INVALID_PARAMETERS);
         return 0;
     }
@@ -260,9 +250,7 @@ static int dsa_sign_setup(DSA *dsa, BN_CTX *ctx_in,
     /* Preallocate space */
     q_bits = BN_num_bits(dsa->params.q);
     q_words = bn_get_top(dsa->params.q);
-    if (q_bits < MIN_DSA_SIGN_QBITS
-        || !bn_wexpand(k, q_words + 2)
-        || !bn_wexpand(l, q_words + 2))
+    if (q_bits < MIN_DSA_SIGN_QBITS || !bn_wexpand(k, q_words + 2) || !bn_wexpand(l, q_words + 2))
         goto err;
 
     /* Get random k */
@@ -270,11 +258,8 @@ static int dsa_sign_setup(DSA *dsa, BN_CTX *ctx_in,
         if (dgst != NULL) {
             if (nonce_type == 1) {
 #ifndef FIPS_MODULE
-                if (!ossl_gen_deterministic_nonce_rfc6979(k, dsa->params.q,
-                                                          dsa->priv_key,
-                                                          dgst, dlen,
-                                                          digestname,
-                                                          libctx, propq))
+                if (!ossl_gen_deterministic_nonce_rfc6979(k, dsa->params.q, dsa->priv_key, dgst,
+                                                          dlen, digestname, libctx, propq))
 #endif
                     goto err;
             } else {
@@ -282,9 +267,8 @@ static int dsa_sign_setup(DSA *dsa, BN_CTX *ctx_in,
                  * We calculate k from SHA512(private_key + H(message) + random).
                  * This protects the private key from a weak PRNG.
                  */
-                if (!ossl_bn_gen_dsa_nonce_fixed_top(k, dsa->params.q,
-                                                     dsa->priv_key, dgst,
-                                                     dlen, ctx))
+                if (!ossl_bn_gen_dsa_nonce_fixed_top(k, dsa->params.q, dsa->priv_key, dgst, dlen,
+                                                     ctx))
                     goto err;
             }
         } else if (!ossl_bn_priv_rand_range_fixed_top(k, dsa->params.q, 0, ctx))
@@ -295,8 +279,7 @@ static int dsa_sign_setup(DSA *dsa, BN_CTX *ctx_in,
     BN_set_flags(l, BN_FLG_CONSTTIME);
 
     if (dsa->flags & DSA_FLAG_CACHE_MONT_P) {
-        if (!BN_MONT_CTX_set_locked(&dsa->method_mont_p,
-                                    dsa->lock, dsa->params.p, ctx))
+        if (!BN_MONT_CTX_set_locked(&dsa->method_mont_p, dsa->lock, dsa->params.p, ctx))
             goto err;
     }
 
@@ -315,20 +298,18 @@ static int dsa_sign_setup(DSA *dsa, BN_CTX *ctx_in,
      *     https://github.com/openssl/openssl/pull/7486#discussion_r228323705
      * The fix is to rework BN so these gymnastics aren't required.
      */
-    if (!BN_add(l, k, dsa->params.q)
-        || !BN_add(k, l, dsa->params.q))
+    if (!BN_add(l, k, dsa->params.q) || !BN_add(k, l, dsa->params.q))
         goto err;
 
     BN_consttime_swap(BN_is_bit_set(l, q_bits), k, l, q_words + 2);
 
     if ((dsa)->meth->bn_mod_exp != NULL) {
-            if (!dsa->meth->bn_mod_exp(dsa, r, dsa->params.g, k, dsa->params.p,
-                                       ctx, dsa->method_mont_p))
-                goto err;
+        if (!dsa->meth->bn_mod_exp(dsa, r, dsa->params.g, k, dsa->params.p, ctx,
+                                   dsa->method_mont_p))
+            goto err;
     } else {
-            if (!BN_mod_exp_mont(r, dsa->params.g, k, dsa->params.p, ctx,
-                                 dsa->method_mont_p))
-                goto err;
+        if (!BN_mod_exp_mont(r, dsa->params.g, k, dsa->params.p, ctx, dsa->method_mont_p))
+            goto err;
     }
 
     if (!BN_mod(r, r, dsa->params.q, ctx))
@@ -342,7 +323,7 @@ static int dsa_sign_setup(DSA *dsa, BN_CTX *ctx_in,
     *kinvp = kinv;
     kinv = NULL;
     ret = 1;
- err:
+err:
     if (!ret)
         ERR_raise(ERR_LIB_DSA, ERR_R_BN_LIB);
     if (ctx != ctx_in)
@@ -352,8 +333,8 @@ static int dsa_sign_setup(DSA *dsa, BN_CTX *ctx_in,
     return ret;
 }
 
-static int dsa_do_verify(const unsigned char *dgst, int dgst_len,
-                         DSA_SIG *sig, DSA *dsa)
+static int
+dsa_do_verify(const unsigned char *dgst, int dgst_len, DSA_SIG *sig, DSA *dsa)
 {
     BN_CTX *ctx;
     BIGNUM *u1, *u2, *t1;
@@ -361,9 +342,7 @@ static int dsa_do_verify(const unsigned char *dgst, int dgst_len,
     const BIGNUM *r, *s;
     int ret = -1, i;
 
-    if (dsa->params.p == NULL
-        || dsa->params.q == NULL
-        || dsa->params.g == NULL) {
+    if (dsa->params.p == NULL || dsa->params.q == NULL || dsa->params.g == NULL) {
         ERR_raise(ERR_LIB_DSA, DSA_R_MISSING_PARAMETERS);
         return -1;
     }
@@ -388,13 +367,11 @@ static int dsa_do_verify(const unsigned char *dgst, int dgst_len,
 
     DSA_SIG_get0(sig, &r, &s);
 
-    if (BN_is_zero(r) || BN_is_negative(r) ||
-        BN_ucmp(r, dsa->params.q) >= 0) {
+    if (BN_is_zero(r) || BN_is_negative(r) || BN_ucmp(r, dsa->params.q) >= 0) {
         ret = 0;
         goto err;
     }
-    if (BN_is_zero(s) || BN_is_negative(s) ||
-        BN_ucmp(s, dsa->params.q) >= 0) {
+    if (BN_is_zero(s) || BN_is_negative(s) || BN_ucmp(s, dsa->params.q) >= 0) {
         ret = 0;
         goto err;
     }
@@ -425,19 +402,17 @@ static int dsa_do_verify(const unsigned char *dgst, int dgst_len,
         goto err;
 
     if (dsa->flags & DSA_FLAG_CACHE_MONT_P) {
-        mont = BN_MONT_CTX_set_locked(&dsa->method_mont_p,
-                                      dsa->lock, dsa->params.p, ctx);
+        mont = BN_MONT_CTX_set_locked(&dsa->method_mont_p, dsa->lock, dsa->params.p, ctx);
         if (!mont)
             goto err;
     }
 
     if (dsa->meth->dsa_mod_exp != NULL) {
-        if (!dsa->meth->dsa_mod_exp(dsa, t1, dsa->params.g, u1, dsa->pub_key, u2,
-                                    dsa->params.p, ctx, mont))
+        if (!dsa->meth->dsa_mod_exp(dsa, t1, dsa->params.g, u1, dsa->pub_key, u2, dsa->params.p,
+                                    ctx, mont))
             goto err;
     } else {
-        if (!BN_mod_exp2_mont(t1, dsa->params.g, u1, dsa->pub_key, u2,
-                              dsa->params.p, ctx, mont))
+        if (!BN_mod_exp2_mont(t1, dsa->params.g, u1, dsa->pub_key, u2, dsa->params.p, ctx, mont))
             goto err;
     }
 
@@ -450,7 +425,7 @@ static int dsa_do_verify(const unsigned char *dgst, int dgst_len,
      */
     ret = (BN_ucmp(u1, r) == 0);
 
- err:
+err:
     if (ret < 0)
         ERR_raise(ERR_LIB_DSA, ERR_R_BN_LIB);
     BN_CTX_free(ctx);
@@ -460,14 +435,16 @@ static int dsa_do_verify(const unsigned char *dgst, int dgst_len,
     return ret;
 }
 
-static int dsa_init(DSA *dsa)
+static int
+dsa_init(DSA *dsa)
 {
     dsa->flags |= DSA_FLAG_CACHE_MONT_P;
     dsa->dirty_cnt++;
     return 1;
 }
 
-static int dsa_finish(DSA *dsa)
+static int
+dsa_finish(DSA *dsa)
 {
     BN_MONT_CTX_free(dsa->method_mont_p);
     return 1;
@@ -480,8 +457,8 @@ static int dsa_finish(DSA *dsa)
  * so a mod-exp that doesn't leak the base is sufficient.  A newly allocated
  * BIGNUM is returned which the caller must free.
  */
-static BIGNUM *dsa_mod_inverse_fermat(const BIGNUM *k, const BIGNUM *q,
-                                      BN_CTX *ctx)
+static BIGNUM *
+dsa_mod_inverse_fermat(const BIGNUM *k, const BIGNUM *q, BN_CTX *ctx)
 {
     BIGNUM *res = NULL;
     BIGNUM *r, *e;
@@ -490,10 +467,8 @@ static BIGNUM *dsa_mod_inverse_fermat(const BIGNUM *k, const BIGNUM *q,
         return NULL;
 
     BN_CTX_start(ctx);
-    if ((e = BN_CTX_get(ctx)) != NULL
-            && BN_set_word(r, 2)
-            && BN_sub(e, q, r)
-            && BN_mod_exp_mont(r, k, e, q, ctx, NULL))
+    if ((e = BN_CTX_get(ctx)) != NULL && BN_set_word(r, 2) && BN_sub(e, q, r) &&
+        BN_mod_exp_mont(r, k, e, q, ctx, NULL))
         res = r;
     else
         BN_free(r);

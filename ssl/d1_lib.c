@@ -8,7 +8,7 @@
  */
 
 #include "internal/e_os.h"
-#include "internal/e_winsock.h"          /* struct timeval for DTLS_CTRL_GET_TIMEOUT */
+#include "internal/e_winsock.h" /* struct timeval for DTLS_CTRL_GET_TIMEOUT */
 #include <stdio.h>
 #include <openssl/objects.h>
 #include <openssl/rand.h>
@@ -20,40 +20,42 @@ static int dtls1_handshake_write(SSL_CONNECTION *s);
 static size_t dtls1_link_min_mtu(void);
 
 /* XDTLS:  figure out the right values */
-static const size_t g_probable_mtu[] = { 1500, 512, 256 };
+static const size_t g_probable_mtu[] = {1500, 512, 256};
 
-const SSL3_ENC_METHOD DTLSv1_enc_data = {
-    tls1_setup_key_block,
-    tls1_generate_master_secret,
-    tls1_change_cipher_state,
-    tls1_final_finish_mac,
-    TLS_MD_CLIENT_FINISH_CONST, TLS_MD_CLIENT_FINISH_CONST_SIZE,
-    TLS_MD_SERVER_FINISH_CONST, TLS_MD_SERVER_FINISH_CONST_SIZE,
-    tls1_alert_code,
-    tls1_export_keying_material,
-    SSL_ENC_FLAG_DTLS,
-    dtls1_set_handshake_header,
-    dtls1_close_construct_packet,
-    dtls1_handshake_write
-};
+const SSL3_ENC_METHOD DTLSv1_enc_data = {tls1_setup_key_block,
+                                         tls1_generate_master_secret,
+                                         tls1_change_cipher_state,
+                                         tls1_final_finish_mac,
+                                         TLS_MD_CLIENT_FINISH_CONST,
+                                         TLS_MD_CLIENT_FINISH_CONST_SIZE,
+                                         TLS_MD_SERVER_FINISH_CONST,
+                                         TLS_MD_SERVER_FINISH_CONST_SIZE,
+                                         tls1_alert_code,
+                                         tls1_export_keying_material,
+                                         SSL_ENC_FLAG_DTLS,
+                                         dtls1_set_handshake_header,
+                                         dtls1_close_construct_packet,
+                                         dtls1_handshake_write};
 
-const SSL3_ENC_METHOD DTLSv1_2_enc_data = {
-    tls1_setup_key_block,
-    tls1_generate_master_secret,
-    tls1_change_cipher_state,
-    tls1_final_finish_mac,
-    TLS_MD_CLIENT_FINISH_CONST, TLS_MD_CLIENT_FINISH_CONST_SIZE,
-    TLS_MD_SERVER_FINISH_CONST, TLS_MD_SERVER_FINISH_CONST_SIZE,
-    tls1_alert_code,
-    tls1_export_keying_material,
-    SSL_ENC_FLAG_DTLS | SSL_ENC_FLAG_SIGALGS
-        | SSL_ENC_FLAG_SHA256_PRF | SSL_ENC_FLAG_TLS1_2_CIPHERS,
-    dtls1_set_handshake_header,
-    dtls1_close_construct_packet,
-    dtls1_handshake_write
-};
+const SSL3_ENC_METHOD DTLSv1_2_enc_data = {tls1_setup_key_block,
+                                           tls1_generate_master_secret,
+                                           tls1_change_cipher_state,
+                                           tls1_final_finish_mac,
+                                           TLS_MD_CLIENT_FINISH_CONST,
+                                           TLS_MD_CLIENT_FINISH_CONST_SIZE,
+                                           TLS_MD_SERVER_FINISH_CONST,
+                                           TLS_MD_SERVER_FINISH_CONST_SIZE,
+                                           tls1_alert_code,
+                                           tls1_export_keying_material,
+                                           SSL_ENC_FLAG_DTLS | SSL_ENC_FLAG_SIGALGS |
+                                               SSL_ENC_FLAG_SHA256_PRF |
+                                               SSL_ENC_FLAG_TLS1_2_CIPHERS,
+                                           dtls1_set_handshake_header,
+                                           dtls1_close_construct_packet,
+                                           dtls1_handshake_write};
 
-OSSL_TIME dtls1_default_timeout(void)
+OSSL_TIME
+dtls1_default_timeout(void)
 {
     /*
      * 2 hours, the 24 hours mentioned in the DTLSv1 spec is way too long for
@@ -62,7 +64,8 @@ OSSL_TIME dtls1_default_timeout(void)
     return ossl_seconds2time(60 * 60 * 2);
 }
 
-int dtls1_new(SSL *ssl)
+int
+dtls1_new(SSL *ssl)
 {
     DTLS1_STATE *d1;
     SSL_CONNECTION *s = SSL_CONNECTION_FROM_SSL_ONLY(ssl);
@@ -107,13 +110,15 @@ int dtls1_new(SSL *ssl)
     return 1;
 }
 
-static void dtls1_clear_queues(SSL_CONNECTION *s)
+static void
+dtls1_clear_queues(SSL_CONNECTION *s)
 {
     dtls1_clear_received_buffer(s);
     dtls1_clear_sent_buffer(s);
 }
 
-void dtls1_clear_received_buffer(SSL_CONNECTION *s)
+void
+dtls1_clear_received_buffer(SSL_CONNECTION *s)
 {
     pitem *item = NULL;
     hm_fragment *frag = NULL;
@@ -125,7 +130,8 @@ void dtls1_clear_received_buffer(SSL_CONNECTION *s)
     }
 }
 
-void dtls1_clear_sent_buffer(SSL_CONNECTION *s)
+void
+dtls1_clear_sent_buffer(SSL_CONNECTION *s)
 {
     pitem *item = NULL;
     hm_fragment *frag = NULL;
@@ -133,14 +139,14 @@ void dtls1_clear_sent_buffer(SSL_CONNECTION *s)
     while ((item = pqueue_pop(s->d1->sent_messages)) != NULL) {
         frag = (hm_fragment *)item->data;
 
-        if (frag->msg_header.is_ccs
-                && frag->msg_header.saved_retransmit_state.wrlmethod != NULL
-                && s->rlayer.wrl != frag->msg_header.saved_retransmit_state.wrl) {
+        if (frag->msg_header.is_ccs && frag->msg_header.saved_retransmit_state.wrlmethod != NULL &&
+            s->rlayer.wrl != frag->msg_header.saved_retransmit_state.wrl) {
             /*
              * If we're freeing the CCS then we're done with the old wrl and it
              * can bee freed
              */
-            frag->msg_header.saved_retransmit_state.wrlmethod->free(frag->msg_header.saved_retransmit_state.wrl);
+            frag->msg_header.saved_retransmit_state.wrlmethod->free(
+                frag->msg_header.saved_retransmit_state.wrl);
         }
 
         dtls1_hm_fragment_free(frag);
@@ -148,8 +154,8 @@ void dtls1_clear_sent_buffer(SSL_CONNECTION *s)
     }
 }
 
-
-void dtls1_free(SSL *ssl)
+void
+dtls1_free(SSL *ssl)
 {
     SSL_CONNECTION *s = SSL_CONNECTION_FROM_SSL_ONLY(ssl);
 
@@ -170,7 +176,8 @@ void dtls1_free(SSL *ssl)
     s->d1 = NULL;
 }
 
-int dtls1_clear(SSL *ssl)
+int
+dtls1_clear(SSL *ssl)
 {
     pqueue *buffered_messages;
     pqueue *sent_messages;
@@ -227,7 +234,8 @@ int dtls1_clear(SSL *ssl)
     return 1;
 }
 
-long dtls1_ctrl(SSL *ssl, int cmd, long larg, void *parg)
+long
+dtls1_ctrl(SSL *ssl, int cmd, long larg, void *parg)
 {
     int ret = 0;
     OSSL_TIME t;
@@ -269,14 +277,16 @@ long dtls1_ctrl(SSL *ssl, int cmd, long larg, void *parg)
     return ret;
 }
 
-static void dtls1_bio_set_next_timeout(BIO *bio, const DTLS1_STATE *d1)
+static void
+dtls1_bio_set_next_timeout(BIO *bio, const DTLS1_STATE *d1)
 {
     struct timeval tv = ossl_time_to_timeval(d1->next_timeout);
 
     BIO_ctrl(bio, BIO_CTRL_DGRAM_SET_NEXT_TIMEOUT, 0, &tv);
 }
 
-void dtls1_start_timer(SSL_CONNECTION *s)
+void
+dtls1_start_timer(SSL_CONNECTION *s)
 {
     OSSL_TIME duration;
     SSL *ssl = SSL_CONNECTION_GET_SSL(s);
@@ -308,7 +318,8 @@ void dtls1_start_timer(SSL_CONNECTION *s)
     dtls1_bio_set_next_timeout(SSL_get_rbio(ssl), s->d1);
 }
 
-int dtls1_get_timeout(const SSL_CONNECTION *s, OSSL_TIME *timeleft)
+int
+dtls1_get_timeout(const SSL_CONNECTION *s, OSSL_TIME *timeleft)
 {
     OSSL_TIME timenow;
 
@@ -330,7 +341,8 @@ int dtls1_get_timeout(const SSL_CONNECTION *s, OSSL_TIME *timeleft)
     return 1;
 }
 
-int dtls1_is_timer_expired(SSL_CONNECTION *s)
+int
+dtls1_is_timer_expired(SSL_CONNECTION *s)
 {
     OSSL_TIME timeleft;
 
@@ -346,14 +358,16 @@ int dtls1_is_timer_expired(SSL_CONNECTION *s)
     return 1;
 }
 
-static void dtls1_double_timeout(SSL_CONNECTION *s)
+static void
+dtls1_double_timeout(SSL_CONNECTION *s)
 {
     s->d1->timeout_duration_us *= 2;
     if (s->d1->timeout_duration_us > 60000000)
         s->d1->timeout_duration_us = 60000000;
 }
 
-void dtls1_stop_timer(SSL_CONNECTION *s)
+void
+dtls1_stop_timer(SSL_CONNECTION *s)
 {
     /* Reset everything */
     s->d1->timeout_num_alerts = 0;
@@ -364,7 +378,8 @@ void dtls1_stop_timer(SSL_CONNECTION *s)
     dtls1_clear_sent_buffer(s);
 }
 
-int dtls1_check_timeout_num(SSL_CONNECTION *s)
+int
+dtls1_check_timeout_num(SSL_CONNECTION *s)
 {
     size_t mtu;
     SSL *ssl = SSL_CONNECTION_GET_SSL(s);
@@ -372,10 +387,8 @@ int dtls1_check_timeout_num(SSL_CONNECTION *s)
     s->d1->timeout_num_alerts++;
 
     /* Reduce MTU after 2 unsuccessful retransmissions */
-    if (s->d1->timeout_num_alerts > 2
-        && !(SSL_get_options(ssl) & SSL_OP_NO_QUERY_MTU)) {
-        mtu =
-            BIO_ctrl(SSL_get_wbio(ssl), BIO_CTRL_DGRAM_GET_FALLBACK_MTU, 0, NULL);
+    if (s->d1->timeout_num_alerts > 2 && !(SSL_get_options(ssl) & SSL_OP_NO_QUERY_MTU)) {
+        mtu = BIO_ctrl(SSL_get_wbio(ssl), BIO_CTRL_DGRAM_GET_FALLBACK_MTU, 0, NULL);
         if (mtu < s->d1->mtu)
             s->d1->mtu = mtu;
     }
@@ -389,7 +402,8 @@ int dtls1_check_timeout_num(SSL_CONNECTION *s)
     return 0;
 }
 
-int dtls1_handle_timeout(SSL_CONNECTION *s)
+int
+dtls1_handle_timeout(SSL_CONNECTION *s)
 {
     /* if no timer is expired, don't do anything */
     if (!dtls1_is_timer_expired(s)) {
@@ -397,8 +411,8 @@ int dtls1_handle_timeout(SSL_CONNECTION *s)
     }
 
     if (s->d1->timer_cb != NULL)
-        s->d1->timeout_duration_us = s->d1->timer_cb(SSL_CONNECTION_GET_USER_SSL(s),
-                                                     s->d1->timeout_duration_us);
+        s->d1->timeout_duration_us =
+            s->d1->timer_cb(SSL_CONNECTION_GET_USER_SSL(s), s->d1->timeout_duration_us);
     else
         dtls1_double_timeout(s);
 
@@ -412,11 +426,12 @@ int dtls1_handle_timeout(SSL_CONNECTION *s)
     return dtls1_retransmit_buffered_messages(s);
 }
 
-#define LISTEN_SUCCESS              2
-#define LISTEN_SEND_VERIFY_REQUEST  1
+#define LISTEN_SUCCESS 2
+#define LISTEN_SEND_VERIFY_REQUEST 1
 
 #ifndef OPENSSL_NO_SOCK
-int DTLSv1_listen(SSL *ssl, BIO_ADDR *client)
+int
+DTLSv1_listen(SSL *ssl, BIO_ADDR *client)
 {
     int next, n, ret = 0;
     unsigned char cookie[DTLS1_COOKIE_LENGTH];
@@ -477,8 +492,7 @@ int DTLSv1_listen(SSL *ssl, BIO_ADDR *client)
         /* Get a packet */
 
         clear_sys_error();
-        n = BIO_read(rbio, buf, SSL3_RT_MAX_PLAIN_LENGTH
-                                + DTLS1_RT_HEADER_LENGTH);
+        n = BIO_read(rbio, buf, SSL3_RT_MAX_PLAIN_LENGTH + DTLS1_RT_HEADER_LENGTH);
         if (n <= 0) {
             if (BIO_should_retry(rbio)) {
                 /* Non-blocking IO */
@@ -510,9 +524,8 @@ int DTLSv1_listen(SSL *ssl, BIO_ADDR *client)
         }
 
         /* Get the record header */
-        if (!PACKET_get_1(&pkt, &rectype)
-            || !PACKET_get_1(&pkt, &versmajor)
-            || !PACKET_get_1(&pkt, &versminor)) {
+        if (!PACKET_get_1(&pkt, &rectype) || !PACKET_get_1(&pkt, &versmajor) ||
+            !PACKET_get_1(&pkt, &versminor)) {
             ERR_raise(ERR_LIB_SSL, SSL_R_LENGTH_MISMATCH);
             goto end;
         }
@@ -536,8 +549,8 @@ int DTLSv1_listen(SSL *ssl, BIO_ADDR *client)
         }
 
         /* Save the sequence number: 64 bits, with top 2 bytes = epoch */
-        if (!PACKET_copy_bytes(&pkt, seq, SEQ_NUM_SIZE)
-            || !PACKET_get_length_prefixed_2(&pkt, &msgpkt)) {
+        if (!PACKET_copy_bytes(&pkt, seq, SEQ_NUM_SIZE) ||
+            !PACKET_get_length_prefixed_2(&pkt, &msgpkt)) {
             ERR_raise(ERR_LIB_SSL, SSL_R_LENGTH_MISMATCH);
             goto end;
         }
@@ -556,13 +569,11 @@ int DTLSv1_listen(SSL *ssl, BIO_ADDR *client)
         data = PACKET_data(&msgpkt);
 
         /* Finished processing the record header, now process the message */
-        if (!PACKET_get_1(&msgpkt, &msgtype)
-            || !PACKET_get_net_3_len(&msgpkt, &msglen)
-            || !PACKET_get_net_2(&msgpkt, &msgseq)
-            || !PACKET_get_net_3_len(&msgpkt, &fragoff)
-            || !PACKET_get_net_3_len(&msgpkt, &fraglen)
-            || !PACKET_get_sub_packet(&msgpkt, &msgpayload, fraglen)
-            || PACKET_remaining(&msgpkt) != 0) {
+        if (!PACKET_get_1(&msgpkt, &msgtype) || !PACKET_get_net_3_len(&msgpkt, &msglen) ||
+            !PACKET_get_net_2(&msgpkt, &msgseq) || !PACKET_get_net_3_len(&msgpkt, &fragoff) ||
+            !PACKET_get_net_3_len(&msgpkt, &fraglen) ||
+            !PACKET_get_sub_packet(&msgpkt, &msgpayload, fraglen) ||
+            PACKET_remaining(&msgpkt) != 0) {
             ERR_raise(ERR_LIB_SSL, SSL_R_LENGTH_MISMATCH);
             goto end;
         }
@@ -593,8 +604,7 @@ int DTLSv1_listen(SSL *ssl, BIO_ADDR *client)
 
         if (s->msg_callback)
             s->msg_callback(0, s->version, SSL3_RT_HANDSHAKE, data,
-                            fraglen + DTLS1_HM_HEADER_LENGTH, ssl,
-                            s->msg_callback_arg);
+                            fraglen + DTLS1_HM_HEADER_LENGTH, ssl, s->msg_callback_arg);
 
         if (!PACKET_get_net_2(&msgpayload, &clientvers)) {
             ERR_raise(ERR_LIB_SSL, SSL_R_LENGTH_MISMATCH);
@@ -610,9 +620,9 @@ int DTLSv1_listen(SSL *ssl, BIO_ADDR *client)
             goto end;
         }
 
-        if (!PACKET_forward(&msgpayload, SSL3_RANDOM_SIZE)
-            || !PACKET_get_length_prefixed_1(&msgpayload, &session)
-            || !PACKET_get_length_prefixed_1(&msgpayload, &cookiepkt)) {
+        if (!PACKET_forward(&msgpayload, SSL3_RANDOM_SIZE) ||
+            !PACKET_get_length_prefixed_1(&msgpayload, &session) ||
+            !PACKET_get_length_prefixed_1(&msgpayload, &cookiepkt)) {
             /*
              * Could be malformed or the cookie does not fit within the initial
              * ClientHello fragment. Either way we can't handle it.
@@ -638,7 +648,7 @@ int DTLSv1_listen(SSL *ssl, BIO_ADDR *client)
                 goto end;
             }
             if (ssl->ctx->app_verify_cookie_cb(ssl, PACKET_data(&cookiepkt),
-                    (unsigned int)PACKET_remaining(&cookiepkt)) == 0) {
+                                               (unsigned int)PACKET_remaining(&cookiepkt)) == 0) {
                 /*
                  * We treat invalid cookies in the same was as no cookie as
                  * per RFC6347
@@ -663,8 +673,7 @@ int DTLSv1_listen(SSL *ssl, BIO_ADDR *client)
 
             /* Generate the cookie */
             if (ssl->ctx->app_gen_cookie_cb == NULL ||
-                ssl->ctx->app_gen_cookie_cb(ssl, cookie, &cookielen) == 0 ||
-                cookielen > 255) {
+                ssl->ctx->app_gen_cookie_cb(ssl, cookie, &cookielen) == 0 || cookielen > 255) {
                 ERR_raise(ERR_LIB_SSL, SSL_R_COOKIE_GEN_CALLBACK_FAILURE);
                 /* This is fatal */
                 ret = -1;
@@ -676,59 +685,53 @@ int DTLSv1_listen(SSL *ssl, BIO_ADDR *client)
              * haven't decided which version to use yet send back using version
              * 1.0 header: otherwise some clients will ignore it.
              */
-            version = (ssl->method->version == DTLS_ANY_VERSION) ? DTLS1_VERSION
-                                                                 : s->version;
+            version = (ssl->method->version == DTLS_ANY_VERSION) ? DTLS1_VERSION : s->version;
 
             /* Construct the record and message headers */
-            if (!WPACKET_init_static_len(&wpkt,
-                                         wbuf,
-                                         ssl_get_max_send_fragment(s)
-                                         + DTLS1_RT_HEADER_LENGTH,
-                                         0)
-                    || !WPACKET_put_bytes_u8(&wpkt, SSL3_RT_HANDSHAKE)
-                    || !WPACKET_put_bytes_u16(&wpkt, version)
-                       /*
-                        * Record sequence number is always the same as in the
-                        * received ClientHello
-                        */
-                    || !WPACKET_memcpy(&wpkt, seq, SEQ_NUM_SIZE)
-                       /* End of record, start sub packet for message */
-                    || !WPACKET_start_sub_packet_u16(&wpkt)
-                       /* Message type */
-                    || !WPACKET_put_bytes_u8(&wpkt,
-                                             DTLS1_MT_HELLO_VERIFY_REQUEST)
-                       /*
-                        * Message length - doesn't follow normal TLS convention:
-                        * the length isn't the last thing in the message header.
-                        * We'll need to fill this in later when we know the
-                        * length. Set it to zero for now
-                        */
-                    || !WPACKET_put_bytes_u24(&wpkt, 0)
-                       /*
-                        * Message sequence number is always 0 for a
-                        * HelloVerifyRequest
-                        */
-                    || !WPACKET_put_bytes_u16(&wpkt, 0)
-                       /*
-                        * We never fragment a HelloVerifyRequest, so fragment
-                        * offset is 0
-                        */
-                    || !WPACKET_put_bytes_u24(&wpkt, 0)
-                       /*
-                        * Fragment length is the same as message length, but
-                        * this *is* the last thing in the message header so we
-                        * can just start a sub-packet. No need to come back
-                        * later for this one.
-                        */
-                    || !WPACKET_start_sub_packet_u24(&wpkt)
-                       /* Create the actual HelloVerifyRequest body */
-                    || !dtls_raw_hello_verify_request(&wpkt, cookie, cookielen)
-                       /* Close message body */
-                    || !WPACKET_close(&wpkt)
-                       /* Close record body */
-                    || !WPACKET_close(&wpkt)
-                    || !WPACKET_get_total_written(&wpkt, &wreclen)
-                    || !WPACKET_finish(&wpkt)) {
+            if (!WPACKET_init_static_len(
+                    &wpkt, wbuf, ssl_get_max_send_fragment(s) + DTLS1_RT_HEADER_LENGTH, 0) ||
+                !WPACKET_put_bytes_u8(&wpkt, SSL3_RT_HANDSHAKE) ||
+                !WPACKET_put_bytes_u16(&wpkt, version)
+                /*
+                 * Record sequence number is always the same as in the
+                 * received ClientHello
+                 */
+                || !WPACKET_memcpy(&wpkt, seq, SEQ_NUM_SIZE)
+                /* End of record, start sub packet for message */
+                || !WPACKET_start_sub_packet_u16(&wpkt)
+                /* Message type */
+                || !WPACKET_put_bytes_u8(&wpkt, DTLS1_MT_HELLO_VERIFY_REQUEST)
+                /*
+                 * Message length - doesn't follow normal TLS convention:
+                 * the length isn't the last thing in the message header.
+                 * We'll need to fill this in later when we know the
+                 * length. Set it to zero for now
+                 */
+                || !WPACKET_put_bytes_u24(&wpkt, 0)
+                /*
+                 * Message sequence number is always 0 for a
+                 * HelloVerifyRequest
+                 */
+                || !WPACKET_put_bytes_u16(&wpkt, 0)
+                /*
+                 * We never fragment a HelloVerifyRequest, so fragment
+                 * offset is 0
+                 */
+                || !WPACKET_put_bytes_u24(&wpkt, 0)
+                /*
+                 * Fragment length is the same as message length, but
+                 * this *is* the last thing in the message header so we
+                 * can just start a sub-packet. No need to come back
+                 * later for this one.
+                 */
+                || !WPACKET_start_sub_packet_u24(&wpkt)
+                /* Create the actual HelloVerifyRequest body */
+                || !dtls_raw_hello_verify_request(&wpkt, cookie, cookielen)
+                /* Close message body */
+                || !WPACKET_close(&wpkt)
+                /* Close record body */
+                || !WPACKET_close(&wpkt) || !WPACKET_get_total_written(&wpkt, &wreclen) ||
+                !WPACKET_finish(&wpkt)) {
                 ERR_raise(ERR_LIB_SSL, ERR_R_INTERNAL_ERROR);
                 WPACKET_cleanup(&wpkt);
                 /* This is fatal */
@@ -744,12 +747,10 @@ int DTLSv1_listen(SSL *ssl, BIO_ADDR *client)
              * last 3 bytes of the message header
              */
             memcpy(&wbuf[DTLS1_RT_HEADER_LENGTH + 1],
-                   &wbuf[DTLS1_RT_HEADER_LENGTH + DTLS1_HM_HEADER_LENGTH - 3],
-                   3);
+                   &wbuf[DTLS1_RT_HEADER_LENGTH + DTLS1_HM_HEADER_LENGTH - 3], 3);
 
             if (s->msg_callback)
-                s->msg_callback(1, 0, SSL3_RT_HEADER, buf,
-                                DTLS1_RT_HEADER_LENGTH, ssl,
+                s->msg_callback(1, 0, SSL3_RT_HEADER, buf, DTLS1_RT_HEADER_LENGTH, ssl,
                                 s->msg_callback_arg);
 
             if ((tmpclient = BIO_ADDR_new()) == NULL) {
@@ -831,19 +832,16 @@ int DTLSv1_listen(SSL *ssl, BIO_ADDR *client)
      * Reset the record layer - but this time we can use the record we just
      * buffered in s->rlayer.rrlnext
      */
-    if (!ssl_set_new_record_layer(s,
-                                  DTLS_ANY_VERSION,
-                                  OSSL_RECORD_DIRECTION_READ,
-                                  OSSL_RECORD_PROTECTION_LEVEL_NONE, NULL, 0,
-                                  NULL, 0, NULL, 0, NULL,  0, NULL, 0,
-                                  NID_undef, NULL, NULL, NULL)) {
+    if (!ssl_set_new_record_layer(s, DTLS_ANY_VERSION, OSSL_RECORD_DIRECTION_READ,
+                                  OSSL_RECORD_PROTECTION_LEVEL_NONE, NULL, 0, NULL, 0, NULL, 0,
+                                  NULL, 0, NULL, 0, NID_undef, NULL, NULL, NULL)) {
         /* SSLfatal already called */
         ret = -1;
         goto end;
     }
 
     ret = 1;
- end:
+end:
     BIO_ADDR_free(tmpclient);
     OPENSSL_free(buf);
     OPENSSL_free(wbuf);
@@ -851,12 +849,14 @@ int DTLSv1_listen(SSL *ssl, BIO_ADDR *client)
 }
 #endif
 
-static int dtls1_handshake_write(SSL_CONNECTION *s)
+static int
+dtls1_handshake_write(SSL_CONNECTION *s)
 {
     return dtls1_do_write(s, SSL3_RT_HANDSHAKE);
 }
 
-int dtls1_shutdown(SSL *s)
+int
+dtls1_shutdown(SSL *s)
 {
     int ret;
 #ifndef OPENSSL_NO_SCTP
@@ -867,15 +867,13 @@ int dtls1_shutdown(SSL *s)
         return -1;
 
     wbio = SSL_get_wbio(s);
-    if (wbio != NULL && BIO_dgram_is_sctp(wbio) &&
-        !(sc->shutdown & SSL_SENT_SHUTDOWN)) {
+    if (wbio != NULL && BIO_dgram_is_sctp(wbio) && !(sc->shutdown & SSL_SENT_SHUTDOWN)) {
         ret = BIO_dgram_sctp_wait_for_dry(wbio);
         if (ret < 0)
             return -1;
 
         if (ret == 0)
-            BIO_ctrl(SSL_get_wbio(s), BIO_CTRL_DGRAM_SCTP_SAVE_SHUTDOWN, 1,
-                     NULL);
+            BIO_ctrl(SSL_get_wbio(s), BIO_CTRL_DGRAM_SCTP_SAVE_SHUTDOWN, 1, NULL);
     }
 #endif
     ret = ssl3_shutdown(s);
@@ -885,21 +883,20 @@ int dtls1_shutdown(SSL *s)
     return ret;
 }
 
-int dtls1_query_mtu(SSL_CONNECTION *s)
+int
+dtls1_query_mtu(SSL_CONNECTION *s)
 {
     SSL *ssl = SSL_CONNECTION_GET_SSL(s);
 
     if (s->d1->link_mtu) {
-        s->d1->mtu =
-            s->d1->link_mtu - BIO_dgram_get_mtu_overhead(SSL_get_wbio(ssl));
+        s->d1->mtu = s->d1->link_mtu - BIO_dgram_get_mtu_overhead(SSL_get_wbio(ssl));
         s->d1->link_mtu = 0;
     }
 
     /* AHA!  Figure out the MTU, and stick to the right size */
     if (s->d1->mtu < dtls1_min_mtu(s)) {
         if (!(SSL_get_options(ssl) & SSL_OP_NO_QUERY_MTU)) {
-            s->d1->mtu =
-                BIO_ctrl(SSL_get_wbio(ssl), BIO_CTRL_DGRAM_QUERY_MTU, 0, NULL);
+            s->d1->mtu = BIO_ctrl(SSL_get_wbio(ssl), BIO_CTRL_DGRAM_QUERY_MTU, 0, NULL);
 
             /*
              * I've seen the kernel return bogus numbers when it doesn't know
@@ -908,8 +905,7 @@ int dtls1_query_mtu(SSL_CONNECTION *s)
             if (s->d1->mtu < dtls1_min_mtu(s)) {
                 /* Set to min mtu */
                 s->d1->mtu = dtls1_min_mtu(s);
-                BIO_ctrl(SSL_get_wbio(ssl), BIO_CTRL_DGRAM_SET_MTU,
-                         (long)s->d1->mtu, NULL);
+                BIO_ctrl(SSL_get_wbio(ssl), BIO_CTRL_DGRAM_SET_MTU, (long)s->d1->mtu, NULL);
             }
         } else
             return 0;
@@ -917,20 +913,22 @@ int dtls1_query_mtu(SSL_CONNECTION *s)
     return 1;
 }
 
-static size_t dtls1_link_min_mtu(void)
+static size_t
+dtls1_link_min_mtu(void)
 {
-    return (g_probable_mtu[(sizeof(g_probable_mtu) /
-                            sizeof(g_probable_mtu[0])) - 1]);
+    return (g_probable_mtu[(sizeof(g_probable_mtu) / sizeof(g_probable_mtu[0])) - 1]);
 }
 
-size_t dtls1_min_mtu(SSL_CONNECTION *s)
+size_t
+dtls1_min_mtu(SSL_CONNECTION *s)
 {
     SSL *ssl = SSL_CONNECTION_GET_SSL(s);
 
     return dtls1_link_min_mtu() - BIO_dgram_get_mtu_overhead(SSL_get_wbio(ssl));
 }
 
-size_t DTLS_get_data_mtu(const SSL *ssl)
+size_t
+DTLS_get_data_mtu(const SSL *ssl)
 {
     size_t mac_overhead, int_overhead, blocksize, ext_overhead;
     const SSL_CIPHER *ciph = SSL_get_current_cipher(ssl);
@@ -945,8 +943,7 @@ size_t DTLS_get_data_mtu(const SSL *ssl)
     if (ciph == NULL)
         return 0;
 
-    if (!ssl_cipher_get_overhead(ciph, &mac_overhead, &int_overhead,
-                                 &blocksize, &ext_overhead))
+    if (!ssl_cipher_get_overhead(ciph, &mac_overhead, &int_overhead, &blocksize, &ext_overhead))
         return 0;
 
     if (SSL_READ_ETM(s))
@@ -972,7 +969,8 @@ size_t DTLS_get_data_mtu(const SSL *ssl)
     return mtu;
 }
 
-void DTLS_set_timer_cb(SSL *ssl, DTLS_timer_cb cb)
+void
+DTLS_set_timer_cb(SSL *ssl, DTLS_timer_cb cb)
 {
     SSL_CONNECTION *s = SSL_CONNECTION_FROM_SSL_ONLY(ssl);
 

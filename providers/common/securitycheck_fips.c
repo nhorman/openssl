@@ -19,7 +19,8 @@
 #include <openssl/obj_mac.h>
 #include "prov/securitycheck.h"
 
-int ossl_fips_config_securitycheck_enabled(OSSL_LIB_CTX *libctx)
+int
+ossl_fips_config_securitycheck_enabled(OSSL_LIB_CTX *libctx)
 {
 #if !defined(OPENSSL_NO_FIPS_SECURITYCHECKS)
     return ossl_fips_config_security_checks(libctx);
@@ -28,33 +29,32 @@ int ossl_fips_config_securitycheck_enabled(OSSL_LIB_CTX *libctx)
 #endif /* OPENSSL_NO_FIPS_SECURITYCHECKS */
 }
 
-int ossl_digest_rsa_sign_get_md_nid(const EVP_MD *md)
+int
+ossl_digest_rsa_sign_get_md_nid(const EVP_MD *md)
 {
     return ossl_digest_get_approved_nid(md);
 }
 
-int ossl_fips_ind_rsa_key_check(OSSL_FIPS_IND *ind, int id,
-                                OSSL_LIB_CTX *libctx,
-                                const RSA *rsa, const char *desc, int protect)
+int
+ossl_fips_ind_rsa_key_check(OSSL_FIPS_IND *ind, int id, OSSL_LIB_CTX *libctx, const RSA *rsa,
+                            const char *desc, int protect)
 {
     int key_approved = ossl_rsa_check_key_size(rsa, protect);
 
     if (!key_approved) {
         if (!ossl_FIPS_IND_on_unapproved(ind, id, libctx, desc, "Key size",
                                          ossl_fips_config_securitycheck_enabled)) {
-                ERR_raise_data(ERR_LIB_PROV, PROV_R_INVALID_KEY_LENGTH,
-                               "operation: %s", desc);
+            ERR_raise_data(ERR_LIB_PROV, PROV_R_INVALID_KEY_LENGTH, "operation: %s", desc);
             return 0;
         }
     }
     return 1;
 }
 
-# ifndef OPENSSL_NO_EC
-int ossl_fips_ind_ec_key_check(OSSL_FIPS_IND *ind, int id,
-                               OSSL_LIB_CTX *libctx,
-                               const EC_GROUP *group, const char *desc,
-                               int protect)
+#ifndef OPENSSL_NO_EC
+int
+ossl_fips_ind_ec_key_check(OSSL_FIPS_IND *ind, int id, OSSL_LIB_CTX *libctx, const EC_GROUP *group,
+                           const char *desc, int protect)
 {
     int curve_allowed, strength_allowed;
 
@@ -78,9 +78,9 @@ int ossl_fips_ind_ec_key_check(OSSL_FIPS_IND *ind, int id,
 }
 #endif
 
-int ossl_fips_ind_digest_exch_check(OSSL_FIPS_IND *ind, int id,
-                                    OSSL_LIB_CTX *libctx,
-                                    const EVP_MD *md, const char *desc)
+int
+ossl_fips_ind_digest_exch_check(OSSL_FIPS_IND *ind, int id, OSSL_LIB_CTX *libctx, const EVP_MD *md,
+                                const char *desc)
 {
     int nid = ossl_digest_get_approved_nid(md);
     int approved = (nid != NID_undef && nid != NID_sha1);
@@ -95,11 +95,10 @@ int ossl_fips_ind_digest_exch_check(OSSL_FIPS_IND *ind, int id,
     return 1;
 }
 
-int ossl_fips_ind_digest_sign_check(OSSL_FIPS_IND *ind, int id,
-                                    OSSL_LIB_CTX *libctx,
-                                    int nid, int sha1_allowed,
-                                    const char *desc,
-                                    OSSL_FIPS_IND_CHECK_CB *config_check_f)
+int
+ossl_fips_ind_digest_sign_check(OSSL_FIPS_IND *ind, int id, OSSL_LIB_CTX *libctx, int nid,
+                                int sha1_allowed, const char *desc,
+                                OSSL_FIPS_IND_CHECK_CB *config_check_f)
 {
     int approved;
 
@@ -109,8 +108,7 @@ int ossl_fips_ind_digest_sign_check(OSSL_FIPS_IND *ind, int id,
         approved = sha1_allowed || nid != NID_sha1;
 
     if (!approved) {
-        if (!ossl_FIPS_IND_on_unapproved(ind, id, libctx, desc, "Digest SHA1",
-                                         config_check_f)) {
+        if (!ossl_FIPS_IND_on_unapproved(ind, id, libctx, desc, "Digest SHA1", config_check_f)) {
             ERR_raise(ERR_LIB_PROV, PROV_R_INVALID_DIGEST);
             return 0;
         }

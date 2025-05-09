@@ -15,9 +15,9 @@
 
 #include "des_local.h"
 
-DES_LONG DES_cbc_cksum(const unsigned char *in, DES_cblock *output,
-                       long length, DES_key_schedule *schedule,
-                       const_DES_cblock *ivec)
+DES_LONG
+DES_cbc_cksum(const unsigned char *in, DES_cblock *output, long length, DES_key_schedule *schedule,
+              const_DES_cblock *ivec)
 {
     register DES_LONG tout0, tout1, tin0, tin1;
     register long l = length;
@@ -51,9 +51,7 @@ DES_LONG DES_cbc_cksum(const unsigned char *in, DES_cblock *output,
      * Transform the data in tout1 so that it will match the return value
      * that the MIT Kerberos mit_des_cbc_cksum API returns.
      */
-    tout1 = ((tout1 >> 24L) & 0x000000FF)
-        | ((tout1 >> 8L) & 0x0000FF00)
-        | ((tout1 << 8L) & 0x00FF0000)
-        | ((tout1 << 24L) & 0xFF000000);
+    tout1 = ((tout1 >> 24L) & 0x000000FF) | ((tout1 >> 8L) & 0x0000FF00) |
+            ((tout1 << 8L) & 0x00FF0000) | ((tout1 << 24L) & 0xFF000000);
     return tout1;
 }

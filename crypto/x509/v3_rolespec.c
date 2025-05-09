@@ -12,25 +12,25 @@
 #include <crypto/x509.h>
 #include "ext_dat.h"
 
-ASN1_SEQUENCE(OSSL_ROLE_SPEC_CERT_ID) = {
-    ASN1_EXP(OSSL_ROLE_SPEC_CERT_ID, roleName, GENERAL_NAME, 0),
-    ASN1_EXP(OSSL_ROLE_SPEC_CERT_ID, roleCertIssuer, GENERAL_NAME, 1),
-    ASN1_IMP_OPT(OSSL_ROLE_SPEC_CERT_ID, roleCertSerialNumber, ASN1_INTEGER, 2),
-    ASN1_IMP_SEQUENCE_OF_OPT(OSSL_ROLE_SPEC_CERT_ID, roleCertLocator, GENERAL_NAME, 3),
+ASN1_SEQUENCE(OSSL_ROLE_SPEC_CERT_ID) =
+    {
+        ASN1_EXP(OSSL_ROLE_SPEC_CERT_ID, roleName, GENERAL_NAME, 0),
+        ASN1_EXP(OSSL_ROLE_SPEC_CERT_ID, roleCertIssuer, GENERAL_NAME, 1),
+        ASN1_IMP_OPT(OSSL_ROLE_SPEC_CERT_ID, roleCertSerialNumber, ASN1_INTEGER, 2),
+        ASN1_IMP_SEQUENCE_OF_OPT(OSSL_ROLE_SPEC_CERT_ID, roleCertLocator, GENERAL_NAME, 3),
 } ASN1_SEQUENCE_END(OSSL_ROLE_SPEC_CERT_ID)
 
-IMPLEMENT_ASN1_FUNCTIONS(OSSL_ROLE_SPEC_CERT_ID)
+        IMPLEMENT_ASN1_FUNCTIONS(OSSL_ROLE_SPEC_CERT_ID)
 
-ASN1_ITEM_TEMPLATE(OSSL_ROLE_SPEC_CERT_ID_SYNTAX) =
-    ASN1_EX_TEMPLATE_TYPE(ASN1_TFLG_SEQUENCE_OF,
-                          0, OSSL_ROLE_SPEC_CERT_ID_SYNTAX, OSSL_ROLE_SPEC_CERT_ID)
-ASN1_ITEM_TEMPLATE_END(OSSL_ROLE_SPEC_CERT_ID_SYNTAX)
+            ASN1_ITEM_TEMPLATE(OSSL_ROLE_SPEC_CERT_ID_SYNTAX) = ASN1_EX_TEMPLATE_TYPE(
+                ASN1_TFLG_SEQUENCE_OF, 0, OSSL_ROLE_SPEC_CERT_ID_SYNTAX, OSSL_ROLE_SPEC_CERT_ID)
+                ASN1_ITEM_TEMPLATE_END(OSSL_ROLE_SPEC_CERT_ID_SYNTAX)
 
-IMPLEMENT_ASN1_FUNCTIONS(OSSL_ROLE_SPEC_CERT_ID_SYNTAX)
+                    IMPLEMENT_ASN1_FUNCTIONS(OSSL_ROLE_SPEC_CERT_ID_SYNTAX)
 
-static int i2r_OSSL_ROLE_SPEC_CERT_ID(X509V3_EXT_METHOD *method,
-                                      OSSL_ROLE_SPEC_CERT_ID *rscid,
-                                      BIO *out, int indent)
+                        static int i2r_OSSL_ROLE_SPEC_CERT_ID(X509V3_EXT_METHOD * method,
+                                                              OSSL_ROLE_SPEC_CERT_ID *rscid,
+                                                              BIO *out, int indent)
 {
     if (BIO_printf(out, "%*sRole Name: ", indent, "") <= 0)
         return 0;
@@ -61,9 +61,9 @@ static int i2r_OSSL_ROLE_SPEC_CERT_ID(X509V3_EXT_METHOD *method,
     return BIO_puts(out, "\n");
 }
 
-static int i2r_OSSL_ROLE_SPEC_CERT_ID_SYNTAX(X509V3_EXT_METHOD *method,
-                                             OSSL_ROLE_SPEC_CERT_ID_SYNTAX *rscids,
-                                             BIO *out, int indent)
+static int
+i2r_OSSL_ROLE_SPEC_CERT_ID_SYNTAX(X509V3_EXT_METHOD *method, OSSL_ROLE_SPEC_CERT_ID_SYNTAX *rscids,
+                                  BIO *out, int indent)
 {
     OSSL_ROLE_SPEC_CERT_ID *rscid;
     int i;
@@ -71,9 +71,8 @@ static int i2r_OSSL_ROLE_SPEC_CERT_ID_SYNTAX(X509V3_EXT_METHOD *method,
     for (i = 0; i < sk_OSSL_ROLE_SPEC_CERT_ID_num(rscids); i++) {
         if (i > 0 && BIO_puts(out, "\n") <= 0)
             return 0;
-        if (BIO_printf(out,
-                       "%*sRole Specification Certificate Identifier #%d:\n",
-                       indent, "", i + 1) <= 0)
+        if (BIO_printf(out, "%*sRole Specification Certificate Identifier #%d:\n", indent, "",
+                       i + 1) <= 0)
             return 0;
         rscid = sk_OSSL_ROLE_SPEC_CERT_ID_value(rscids, i);
         if (i2r_OSSL_ROLE_SPEC_CERT_ID(method, rscid, out, indent + 4) != 1)
@@ -83,13 +82,17 @@ static int i2r_OSSL_ROLE_SPEC_CERT_ID_SYNTAX(X509V3_EXT_METHOD *method,
 }
 
 const X509V3_EXT_METHOD ossl_v3_role_spec_cert_identifier = {
-    NID_role_spec_cert_identifier, X509V3_EXT_MULTILINE,
+    NID_role_spec_cert_identifier,
+    X509V3_EXT_MULTILINE,
     ASN1_ITEM_ref(OSSL_ROLE_SPEC_CERT_ID_SYNTAX),
-    0, 0, 0, 0,
-    0, 0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
     0,
     0,
     (X509V3_EXT_I2R)i2r_OSSL_ROLE_SPEC_CERT_ID_SYNTAX,
     NULL,
-    NULL
-};
+    NULL};

@@ -24,9 +24,9 @@
 
 #if defined(OPENSSL_RAND_SEED_OS)
 # if _WRS_VXWORKS_MAJOR >= 7
-#   define RAND_SEED_VXRANDLIB
+#  define RAND_SEED_VXRANDLIB
 # else
-#   error "VxWorks <7 only support RAND_SEED_NONE"
+#  error "VxWorks <7 only support RAND_SEED_NONE"
 # endif
 #endif
 
@@ -37,7 +37,8 @@
 /* Macro to convert two thirty two bit values into a sixty four bit one */
 #define TWO32TO64(a, b) ((((uint64_t)(a)) << 32) + (b))
 
-static uint64_t get_time_stamp(void)
+static uint64_t
+get_time_stamp(void)
 {
     struct timespec ts;
 
@@ -46,7 +47,8 @@ static uint64_t get_time_stamp(void)
     return time(NULL);
 }
 
-static uint64_t get_timer_bits(void)
+static uint64_t
+get_timer_bits(void)
 {
     uint64_t res = OPENSSL_rdtsc();
     struct timespec ts;
@@ -63,20 +65,24 @@ static uint64_t get_timer_bits(void)
  * empty implementation
  * vxworks does not need to init/cleanup or keep open the random lib
  */
-int ossl_rand_pool_init(void)
+int
+ossl_rand_pool_init(void)
 {
     return 1;
 }
 
-void ossl_rand_pool_cleanup(void)
+void
+ossl_rand_pool_cleanup(void)
 {
 }
 
-void ossl_rand_pool_keep_random_devices_open(int keep)
+void
+ossl_rand_pool_keep_random_devices_open(int keep)
 {
 }
 
-int ossl_pool_add_nonce_data(RAND_POOL *pool)
+int
+ossl_pool_add_nonce_data(RAND_POOL *pool)
 {
     struct {
         pid_t pid;
@@ -98,7 +104,8 @@ int ossl_pool_add_nonce_data(RAND_POOL *pool)
     return ossl_rand_pool_add(pool, (unsigned char *)&data, sizeof(data), 0);
 }
 
-size_t ossl_pool_acquire_entropy(RAND_POOL *pool)
+size_t
+ossl_pool_acquire_entropy(RAND_POOL *pool)
 {
 #if defined(RAND_SEED_VXRANDLIB)
     /* vxRandLib based entropy method */
@@ -114,8 +121,8 @@ size_t ossl_pool_acquire_entropy(RAND_POOL *pool)
         while ((result != OK) && (retryCount < 10)) {
             RANDOM_NUM_GEN_STATUS status = randStatus();
 
-            if ((status == RANDOM_NUM_GEN_ENOUGH_ENTROPY)
-                    || (status == RANDOM_NUM_GEN_MAX_ENTROPY)) {
+            if ((status == RANDOM_NUM_GEN_ENOUGH_ENTROPY) ||
+                (status == RANDOM_NUM_GEN_MAX_ENTROPY)) {
                 result = randBytes(buffer, bytes_needed);
                 if (result == OK)
                     ossl_rand_pool_add_end(pool, bytes_needed, 8 * bytes_needed);

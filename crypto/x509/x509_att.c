@@ -18,13 +18,14 @@
 #include "crypto/x509.h"
 #include "x509_local.h"
 
-int X509at_get_attr_count(const STACK_OF(X509_ATTRIBUTE) *x)
+int
+X509at_get_attr_count(const STACK_OF(X509_ATTRIBUTE) * x)
 {
     return sk_X509_ATTRIBUTE_num(x);
 }
 
-int X509at_get_attr_by_NID(const STACK_OF(X509_ATTRIBUTE) *x, int nid,
-                           int lastpos)
+int
+X509at_get_attr_by_NID(const STACK_OF(X509_ATTRIBUTE) * x, int nid, int lastpos)
 {
     const ASN1_OBJECT *obj = OBJ_nid2obj(nid);
 
@@ -33,8 +34,8 @@ int X509at_get_attr_by_NID(const STACK_OF(X509_ATTRIBUTE) *x, int nid,
     return X509at_get_attr_by_OBJ(x, obj, lastpos);
 }
 
-int X509at_get_attr_by_OBJ(const STACK_OF(X509_ATTRIBUTE) *sk,
-                           const ASN1_OBJECT *obj, int lastpos)
+int
+X509at_get_attr_by_OBJ(const STACK_OF(X509_ATTRIBUTE) * sk, const ASN1_OBJECT *obj, int lastpos)
 {
     int n;
     X509_ATTRIBUTE *ex;
@@ -53,7 +54,8 @@ int X509at_get_attr_by_OBJ(const STACK_OF(X509_ATTRIBUTE) *sk,
     return -1;
 }
 
-X509_ATTRIBUTE *X509at_get_attr(const STACK_OF(X509_ATTRIBUTE) *x, int loc)
+X509_ATTRIBUTE *
+X509at_get_attr(const STACK_OF(X509_ATTRIBUTE) * x, int loc)
 {
     if (x == NULL) {
         ERR_raise(ERR_LIB_X509, ERR_R_PASSED_NULL_PARAMETER);
@@ -66,7 +68,8 @@ X509_ATTRIBUTE *X509at_get_attr(const STACK_OF(X509_ATTRIBUTE) *x, int loc)
     return sk_X509_ATTRIBUTE_value(x, loc);
 }
 
-X509_ATTRIBUTE *X509at_delete_attr(STACK_OF(X509_ATTRIBUTE) *x, int loc)
+X509_ATTRIBUTE *
+X509at_delete_attr(STACK_OF(X509_ATTRIBUTE) * x, int loc)
 {
     if (x == NULL) {
         ERR_raise(ERR_LIB_X509, ERR_R_PASSED_NULL_PARAMETER);
@@ -79,8 +82,8 @@ X509_ATTRIBUTE *X509at_delete_attr(STACK_OF(X509_ATTRIBUTE) *x, int loc)
     return sk_X509_ATTRIBUTE_delete(x, loc);
 }
 
-STACK_OF(X509_ATTRIBUTE) *ossl_x509at_add1_attr(STACK_OF(X509_ATTRIBUTE) **x,
-                                                const X509_ATTRIBUTE *attr)
+STACK_OF(X509_ATTRIBUTE) *
+    ossl_x509at_add1_attr(STACK_OF(X509_ATTRIBUTE) * *x, const X509_ATTRIBUTE *attr)
 {
     X509_ATTRIBUTE *new_attr = NULL;
     STACK_OF(X509_ATTRIBUTE) *sk = NULL;
@@ -108,37 +111,34 @@ STACK_OF(X509_ATTRIBUTE) *ossl_x509at_add1_attr(STACK_OF(X509_ATTRIBUTE) **x,
     if (*x == NULL)
         *x = sk;
     return sk;
- err:
+err:
     X509_ATTRIBUTE_free(new_attr);
     if (*x == NULL)
         sk_X509_ATTRIBUTE_free(sk);
     return NULL;
 }
 
-STACK_OF(X509_ATTRIBUTE) *X509at_add1_attr(STACK_OF(X509_ATTRIBUTE) **x,
-                                           X509_ATTRIBUTE *attr)
+STACK_OF(X509_ATTRIBUTE) * X509at_add1_attr(STACK_OF(X509_ATTRIBUTE) * *x, X509_ATTRIBUTE *attr)
 {
     if (x == NULL || attr == NULL) {
         ERR_raise(ERR_LIB_X509, ERR_R_PASSED_NULL_PARAMETER);
         return NULL;
     }
     if (*x != NULL && X509at_get_attr_by_OBJ(*x, attr->object, -1) != -1) {
-        ERR_raise_data(ERR_LIB_X509, X509_R_DUPLICATE_ATTRIBUTE,
-                       "name=%s", OBJ_nid2sn(OBJ_obj2nid(attr->object)));
+        ERR_raise_data(ERR_LIB_X509, X509_R_DUPLICATE_ATTRIBUTE, "name=%s",
+                       OBJ_nid2sn(OBJ_obj2nid(attr->object)));
         return NULL;
     }
 
     return ossl_x509at_add1_attr(x, attr);
 }
 
-STACK_OF(X509_ATTRIBUTE) *ossl_x509at_add1_attr_by_OBJ(STACK_OF(X509_ATTRIBUTE) **x,
-                                                       const ASN1_OBJECT *obj,
-                                                       int type,
-                                                       const unsigned char *bytes,
-                                                       int len)
+STACK_OF(X509_ATTRIBUTE) * ossl_x509at_add1_attr_by_OBJ(STACK_OF(X509_ATTRIBUTE) * *x,
+                                                        const ASN1_OBJECT *obj, int type,
+                                                        const unsigned char *bytes, int len)
 {
     X509_ATTRIBUTE *attr;
-    STACK_OF(X509_ATTRIBUTE) *ret;
+    STACK_OF(X509_ATTRIBUTE) * ret;
 
     attr = X509_ATTRIBUTE_create_by_OBJ(NULL, obj, type, bytes, len);
     if (attr == NULL)
@@ -148,32 +148,29 @@ STACK_OF(X509_ATTRIBUTE) *ossl_x509at_add1_attr_by_OBJ(STACK_OF(X509_ATTRIBUTE) 
     return ret;
 }
 
-STACK_OF(X509_ATTRIBUTE) *X509at_add1_attr_by_OBJ(STACK_OF(X509_ATTRIBUTE)
-                                                  **x, const ASN1_OBJECT *obj,
-                                                  int type,
-                                                  const unsigned char *bytes,
-                                                  int len)
+STACK_OF(X509_ATTRIBUTE) * X509at_add1_attr_by_OBJ(STACK_OF(X509_ATTRIBUTE) * *x,
+                                                   const ASN1_OBJECT *obj, int type,
+                                                   const unsigned char *bytes, int len)
 {
     if (x == NULL || obj == NULL) {
         ERR_raise(ERR_LIB_X509, ERR_R_PASSED_NULL_PARAMETER);
         return NULL;
     }
     if (*x != NULL && X509at_get_attr_by_OBJ(*x, obj, -1) != -1) {
-        ERR_raise_data(ERR_LIB_X509, X509_R_DUPLICATE_ATTRIBUTE,
-                       "name=%s", OBJ_nid2sn(OBJ_obj2nid(obj)));
+        ERR_raise_data(ERR_LIB_X509, X509_R_DUPLICATE_ATTRIBUTE, "name=%s",
+                       OBJ_nid2sn(OBJ_obj2nid(obj)));
         return NULL;
     }
 
     return ossl_x509at_add1_attr_by_OBJ(x, obj, type, bytes, len);
 }
 
-STACK_OF(X509_ATTRIBUTE) *ossl_x509at_add1_attr_by_NID(STACK_OF(X509_ATTRIBUTE) **x,
-                                                       int nid, int type,
-                                                       const unsigned char *bytes,
-                                                       int len)
+STACK_OF(X509_ATTRIBUTE) * ossl_x509at_add1_attr_by_NID(STACK_OF(X509_ATTRIBUTE) * *x, int nid,
+                                                        int type, const unsigned char *bytes,
+                                                        int len)
 {
     X509_ATTRIBUTE *attr;
-    STACK_OF(X509_ATTRIBUTE) *ret;
+    STACK_OF(X509_ATTRIBUTE) * ret;
 
     attr = X509_ATTRIBUTE_create_by_NID(NULL, nid, type, bytes, len);
     if (attr == NULL)
@@ -183,32 +180,27 @@ STACK_OF(X509_ATTRIBUTE) *ossl_x509at_add1_attr_by_NID(STACK_OF(X509_ATTRIBUTE) 
     return ret;
 }
 
-STACK_OF(X509_ATTRIBUTE) *X509at_add1_attr_by_NID(STACK_OF(X509_ATTRIBUTE)
-                                                  **x, int nid, int type,
-                                                  const unsigned char *bytes,
-                                                  int len)
+STACK_OF(X509_ATTRIBUTE) * X509at_add1_attr_by_NID(STACK_OF(X509_ATTRIBUTE) * *x, int nid, int type,
+                                                   const unsigned char *bytes, int len)
 {
     if (x == NULL) {
         ERR_raise(ERR_LIB_X509, ERR_R_PASSED_NULL_PARAMETER);
         return NULL;
     }
     if (*x != NULL && X509at_get_attr_by_NID(*x, nid, -1) != -1) {
-        ERR_raise_data(ERR_LIB_X509, X509_R_DUPLICATE_ATTRIBUTE,
-                       "name=%s", OBJ_nid2sn(nid));
+        ERR_raise_data(ERR_LIB_X509, X509_R_DUPLICATE_ATTRIBUTE, "name=%s", OBJ_nid2sn(nid));
         return NULL;
     }
 
     return ossl_x509at_add1_attr_by_NID(x, nid, type, bytes, len);
 }
 
-STACK_OF(X509_ATTRIBUTE) *ossl_x509at_add1_attr_by_txt(STACK_OF(X509_ATTRIBUTE) **x,
-                                                       const char *attrname,
-                                                       int type,
-                                                       const unsigned char *bytes,
-                                                       int len)
+STACK_OF(X509_ATTRIBUTE) * ossl_x509at_add1_attr_by_txt(STACK_OF(X509_ATTRIBUTE) * *x,
+                                                        const char *attrname, int type,
+                                                        const unsigned char *bytes, int len)
 {
     X509_ATTRIBUTE *attr;
-    STACK_OF(X509_ATTRIBUTE) *ret;
+    STACK_OF(X509_ATTRIBUTE) * ret;
 
     attr = X509_ATTRIBUTE_create_by_txt(NULL, attrname, type, bytes, len);
     if (attr == NULL)
@@ -218,14 +210,12 @@ STACK_OF(X509_ATTRIBUTE) *ossl_x509at_add1_attr_by_txt(STACK_OF(X509_ATTRIBUTE) 
     return ret;
 }
 
-STACK_OF(X509_ATTRIBUTE) *X509at_add1_attr_by_txt(STACK_OF(X509_ATTRIBUTE)
-                                                  **x, const char *attrname,
-                                                  int type,
-                                                  const unsigned char *bytes,
-                                                  int len)
+STACK_OF(X509_ATTRIBUTE) * X509at_add1_attr_by_txt(STACK_OF(X509_ATTRIBUTE) * *x,
+                                                   const char *attrname, int type,
+                                                   const unsigned char *bytes, int len)
 {
     X509_ATTRIBUTE *attr;
-    STACK_OF(X509_ATTRIBUTE) *ret;
+    STACK_OF(X509_ATTRIBUTE) * ret;
 
     attr = X509_ATTRIBUTE_create_by_txt(NULL, attrname, type, bytes, len);
     if (attr == NULL)
@@ -235,8 +225,9 @@ STACK_OF(X509_ATTRIBUTE) *X509at_add1_attr_by_txt(STACK_OF(X509_ATTRIBUTE)
     return ret;
 }
 
-void *X509at_get0_data_by_OBJ(const STACK_OF(X509_ATTRIBUTE) *x,
-                              const ASN1_OBJECT *obj, int lastpos, int type)
+void *
+X509at_get0_data_by_OBJ(const STACK_OF(X509_ATTRIBUTE) * x, const ASN1_OBJECT *obj, int lastpos,
+                        int type)
 {
     int i = X509at_get_attr_by_OBJ(x, obj, lastpos);
     X509_ATTRIBUTE *at;
@@ -251,7 +242,7 @@ void *X509at_get0_data_by_OBJ(const STACK_OF(X509_ATTRIBUTE) *x,
     return X509_ATTRIBUTE_get0_data(at, 0, type, NULL);
 }
 
-STACK_OF(X509_ATTRIBUTE) *ossl_x509at_dup(const STACK_OF(X509_ATTRIBUTE) *x)
+STACK_OF(X509_ATTRIBUTE) * ossl_x509at_dup(const STACK_OF(X509_ATTRIBUTE) * x)
 {
     int i, n = sk_X509_ATTRIBUTE_num(x);
     STACK_OF(X509_ATTRIBUTE) *sk = NULL;
@@ -265,9 +256,8 @@ STACK_OF(X509_ATTRIBUTE) *ossl_x509at_dup(const STACK_OF(X509_ATTRIBUTE) *x)
     return sk;
 }
 
-X509_ATTRIBUTE *X509_ATTRIBUTE_create_by_NID(X509_ATTRIBUTE **attr, int nid,
-                                             int atrtype, const void *data,
-                                             int len)
+X509_ATTRIBUTE *
+X509_ATTRIBUTE_create_by_NID(X509_ATTRIBUTE **attr, int nid, int atrtype, const void *data, int len)
 {
     ASN1_OBJECT *obj = OBJ_nid2obj(nid);
     X509_ATTRIBUTE *ret;
@@ -282,10 +272,9 @@ X509_ATTRIBUTE *X509_ATTRIBUTE_create_by_NID(X509_ATTRIBUTE **attr, int nid,
     return ret;
 }
 
-X509_ATTRIBUTE *X509_ATTRIBUTE_create_by_OBJ(X509_ATTRIBUTE **attr,
-                                             const ASN1_OBJECT *obj,
-                                             int atrtype, const void *data,
-                                             int len)
+X509_ATTRIBUTE *
+X509_ATTRIBUTE_create_by_OBJ(X509_ATTRIBUTE **attr, const ASN1_OBJECT *obj, int atrtype,
+                             const void *data, int len)
 {
     X509_ATTRIBUTE *ret;
 
@@ -306,23 +295,21 @@ X509_ATTRIBUTE *X509_ATTRIBUTE_create_by_OBJ(X509_ATTRIBUTE **attr,
     if (attr != NULL && *attr == NULL)
         *attr = ret;
     return ret;
- err:
+err:
     if (attr == NULL || ret != *attr)
         X509_ATTRIBUTE_free(ret);
     return NULL;
 }
 
-X509_ATTRIBUTE *X509_ATTRIBUTE_create_by_txt(X509_ATTRIBUTE **attr,
-                                             const char *atrname, int type,
-                                             const unsigned char *bytes,
-                                             int len)
+X509_ATTRIBUTE *
+X509_ATTRIBUTE_create_by_txt(X509_ATTRIBUTE **attr, const char *atrname, int type,
+                             const unsigned char *bytes, int len)
 {
     ASN1_OBJECT *obj = OBJ_txt2obj(atrname, 0);
     X509_ATTRIBUTE *nattr;
 
     if (obj == NULL) {
-        ERR_raise_data(ERR_LIB_X509, X509_R_INVALID_FIELD_NAME,
-                       "name=%s", atrname);
+        ERR_raise_data(ERR_LIB_X509, X509_R_INVALID_FIELD_NAME, "name=%s", atrname);
         return NULL;
     }
     nattr = X509_ATTRIBUTE_create_by_OBJ(attr, obj, type, bytes, len);
@@ -330,7 +317,8 @@ X509_ATTRIBUTE *X509_ATTRIBUTE_create_by_txt(X509_ATTRIBUTE **attr,
     return nattr;
 }
 
-int X509_ATTRIBUTE_set1_object(X509_ATTRIBUTE *attr, const ASN1_OBJECT *obj)
+int
+X509_ATTRIBUTE_set1_object(X509_ATTRIBUTE *attr, const ASN1_OBJECT *obj)
 {
     if (attr == NULL || obj == NULL) {
         ERR_raise(ERR_LIB_X509, ERR_R_PASSED_NULL_PARAMETER);
@@ -341,8 +329,8 @@ int X509_ATTRIBUTE_set1_object(X509_ATTRIBUTE *attr, const ASN1_OBJECT *obj)
     return attr->object != NULL;
 }
 
-int X509_ATTRIBUTE_set1_data(X509_ATTRIBUTE *attr, int attrtype,
-                             const void *data, int len)
+int
+X509_ATTRIBUTE_set1_data(X509_ATTRIBUTE *attr, int attrtype, const void *data, int len)
 {
     ASN1_TYPE *ttmp = NULL;
     ASN1_STRING *stmp = NULL;
@@ -353,16 +341,14 @@ int X509_ATTRIBUTE_set1_data(X509_ATTRIBUTE *attr, int attrtype,
         return 0;
     }
     if ((attrtype & MBSTRING_FLAG) != 0) {
-        stmp = ASN1_STRING_set_by_NID(NULL, data, len, attrtype,
-                                      OBJ_obj2nid(attr->object));
+        stmp = ASN1_STRING_set_by_NID(NULL, data, len, attrtype, OBJ_obj2nid(attr->object));
         if (stmp == NULL) {
             ERR_raise(ERR_LIB_X509, ERR_R_ASN1_LIB);
             return 0;
         }
         atype = stmp->type;
     } else if (len != -1) {
-        if ((stmp = ASN1_STRING_type_new(attrtype)) == NULL
-            || !ASN1_STRING_set(stmp, data, len)) {
+        if ((stmp = ASN1_STRING_type_new(attrtype)) == NULL || !ASN1_STRING_set(stmp, data, len)) {
             ERR_raise(ERR_LIB_X509, ERR_R_ASN1_LIB);
             goto err;
         }
@@ -395,20 +381,22 @@ int X509_ATTRIBUTE_set1_data(X509_ATTRIBUTE *attr, int attrtype,
         goto err;
     }
     return 1;
- err:
+err:
     ASN1_TYPE_free(ttmp);
     ASN1_STRING_free(stmp);
     return 0;
 }
 
-int X509_ATTRIBUTE_count(const X509_ATTRIBUTE *attr)
+int
+X509_ATTRIBUTE_count(const X509_ATTRIBUTE *attr)
 {
     if (attr == NULL)
         return 0;
     return sk_ASN1_TYPE_num(attr->set);
 }
 
-ASN1_OBJECT *X509_ATTRIBUTE_get0_object(X509_ATTRIBUTE *attr)
+ASN1_OBJECT *
+X509_ATTRIBUTE_get0_object(X509_ATTRIBUTE *attr)
 {
     if (attr == NULL) {
         ERR_raise(ERR_LIB_X509, ERR_R_PASSED_NULL_PARAMETER);
@@ -417,23 +405,22 @@ ASN1_OBJECT *X509_ATTRIBUTE_get0_object(X509_ATTRIBUTE *attr)
     return attr->object;
 }
 
-void *X509_ATTRIBUTE_get0_data(X509_ATTRIBUTE *attr, int idx,
-                               int atrtype, void *data)
+void *
+X509_ATTRIBUTE_get0_data(X509_ATTRIBUTE *attr, int idx, int atrtype, void *data)
 {
     ASN1_TYPE *ttmp = X509_ATTRIBUTE_get0_type(attr, idx);
 
     if (ttmp == NULL)
         return NULL;
-    if (atrtype == V_ASN1_BOOLEAN
-            || atrtype == V_ASN1_NULL
-            || atrtype != ASN1_TYPE_get(ttmp)) {
+    if (atrtype == V_ASN1_BOOLEAN || atrtype == V_ASN1_NULL || atrtype != ASN1_TYPE_get(ttmp)) {
         ERR_raise(ERR_LIB_X509, X509_R_WRONG_TYPE);
         return NULL;
     }
     return ttmp->value.ptr;
 }
 
-ASN1_TYPE *X509_ATTRIBUTE_get0_type(X509_ATTRIBUTE *attr, int idx)
+ASN1_TYPE *
+X509_ATTRIBUTE_get0_type(X509_ATTRIBUTE *attr, int idx)
 {
     if (attr == NULL) {
         ERR_raise(ERR_LIB_X509, ERR_R_PASSED_NULL_PARAMETER);

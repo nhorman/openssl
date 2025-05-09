@@ -21,19 +21,19 @@
 #include <openssl/mdc2.h>
 
 #undef c2l
-#define c2l(c,l)        (l =((DES_LONG)(*((c)++)))    , \
-                         l|=((DES_LONG)(*((c)++)))<< 8L, \
-                         l|=((DES_LONG)(*((c)++)))<<16L, \
-                         l|=((DES_LONG)(*((c)++)))<<24L)
+#define c2l(c, l)                                                                                  \
+    (l = ((DES_LONG)(*((c)++))), l |= ((DES_LONG)(*((c)++))) << 8L,                                \
+     l |= ((DES_LONG)(*((c)++))) << 16L, l |= ((DES_LONG)(*((c)++))) << 24L)
 
 #undef l2c
-#define l2c(l,c)        (*((c)++)=(unsigned char)(((l)     )&0xff), \
-                        *((c)++)=(unsigned char)(((l)>> 8L)&0xff), \
-                        *((c)++)=(unsigned char)(((l)>>16L)&0xff), \
-                        *((c)++)=(unsigned char)(((l)>>24L)&0xff))
+#define l2c(l, c)                                                                                  \
+    (*((c)++) = (unsigned char)(((l)) & 0xff), *((c)++) = (unsigned char)(((l) >> 8L) & 0xff),     \
+     *((c)++) = (unsigned char)(((l) >> 16L) & 0xff),                                              \
+     *((c)++) = (unsigned char)(((l) >> 24L) & 0xff))
 
 static void mdc2_body(MDC2_CTX *c, const unsigned char *in, size_t len);
-int MDC2_Init(MDC2_CTX *c)
+int
+MDC2_Init(MDC2_CTX *c)
 {
     c->num = 0;
     c->pad_type = 1;
@@ -42,7 +42,8 @@ int MDC2_Init(MDC2_CTX *c)
     return 1;
 }
 
-int MDC2_Update(MDC2_CTX *c, const unsigned char *in, size_t len)
+int
+MDC2_Update(MDC2_CTX *c, const unsigned char *in, size_t len)
 {
     size_t i, j;
 
@@ -74,7 +75,8 @@ int MDC2_Update(MDC2_CTX *c, const unsigned char *in, size_t len)
     return 1;
 }
 
-static void mdc2_body(MDC2_CTX *c, const unsigned char *in, size_t len)
+static void
+mdc2_body(MDC2_CTX *c, const unsigned char *in, size_t len)
 {
     register DES_LONG tin0, tin1;
     register DES_LONG ttin0, ttin1;
@@ -113,7 +115,8 @@ static void mdc2_body(MDC2_CTX *c, const unsigned char *in, size_t len)
     }
 }
 
-int MDC2_Final(unsigned char *md, MDC2_CTX *c)
+int
+MDC2_Final(unsigned char *md, MDC2_CTX *c)
 {
     unsigned int i;
     int j;

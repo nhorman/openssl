@@ -23,16 +23,16 @@ static const OSSL_PARAM null_param_types[] = {
     OSSL_PARAM_DEFN(OSSL_PROV_PARAM_NAME, OSSL_PARAM_UTF8_PTR, NULL, 0),
     OSSL_PARAM_DEFN(OSSL_PROV_PARAM_VERSION, OSSL_PARAM_UTF8_PTR, NULL, 0),
     OSSL_PARAM_DEFN(OSSL_PROV_PARAM_BUILDINFO, OSSL_PARAM_UTF8_PTR, NULL, 0),
-    OSSL_PARAM_DEFN(OSSL_PROV_PARAM_STATUS, OSSL_PARAM_INTEGER, NULL, 0),
-    OSSL_PARAM_END
-};
+    OSSL_PARAM_DEFN(OSSL_PROV_PARAM_STATUS, OSSL_PARAM_INTEGER, NULL, 0), OSSL_PARAM_END};
 
-static const OSSL_PARAM *null_gettable_params(const OSSL_PROVIDER *prov)
+static const OSSL_PARAM *
+null_gettable_params(const OSSL_PROVIDER *prov)
 {
     return null_param_types;
 }
 
-static int null_get_params(const OSSL_PROVIDER *provctx, OSSL_PARAM params[])
+static int
+null_get_params(const OSSL_PROVIDER *provctx, OSSL_PARAM params[])
 {
     OSSL_PARAM *p;
 
@@ -51,9 +51,8 @@ static int null_get_params(const OSSL_PROVIDER *provctx, OSSL_PARAM params[])
     return 1;
 }
 
-static const OSSL_ALGORITHM *null_query(OSSL_PROVIDER *prov,
-                                          int operation_id,
-                                          int *no_cache)
+static const OSSL_ALGORITHM *
+null_query(OSSL_PROVIDER *prov, int operation_id, int *no_cache)
 {
     *no_cache = 0;
     return NULL;
@@ -61,16 +60,14 @@ static const OSSL_ALGORITHM *null_query(OSSL_PROVIDER *prov,
 
 /* Functions we provide to the core */
 static const OSSL_DISPATCH null_dispatch_table[] = {
-    { OSSL_FUNC_PROVIDER_GETTABLE_PARAMS, (void (*)(void))null_gettable_params },
-    { OSSL_FUNC_PROVIDER_GET_PARAMS, (void (*)(void))null_get_params },
-    { OSSL_FUNC_PROVIDER_QUERY_OPERATION, (void (*)(void))null_query },
-    OSSL_DISPATCH_END
-};
+    {OSSL_FUNC_PROVIDER_GETTABLE_PARAMS, (void (*)(void))null_gettable_params},
+    {OSSL_FUNC_PROVIDER_GET_PARAMS, (void (*)(void))null_get_params},
+    {OSSL_FUNC_PROVIDER_QUERY_OPERATION, (void (*)(void))null_query},
+    OSSL_DISPATCH_END};
 
-int ossl_null_provider_init(const OSSL_CORE_HANDLE *handle,
-                            const OSSL_DISPATCH *in,
-                            const OSSL_DISPATCH **out,
-                            void **provctx)
+int
+ossl_null_provider_init(const OSSL_CORE_HANDLE *handle, const OSSL_DISPATCH *in,
+                        const OSSL_DISPATCH **out, void **provctx)
 {
     *out = null_dispatch_table;
 

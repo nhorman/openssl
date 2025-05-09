@@ -19,23 +19,22 @@ typedef enum OPTION_choice {
     OPT_TEST_ENUM
 } OPTION_CHOICE;
 
-const OPTIONS *test_get_options(void)
+const OPTIONS *
+test_get_options(void)
 {
     static const OPTIONS options[] = {
         OPT_TEST_OPTIONS_DEFAULT_USAGE,
-        { "config", OPT_CONFIG_FILE, '<',
-          "The configuration file to use for the libctx" },
-        { NULL }
-    };
+        {"config", OPT_CONFIG_FILE, '<', "The configuration file to use for the libctx"},
+        {NULL}};
     return options;
 }
-
 
 /*
  * Test that parsing a config file with incorrect stable settings aren't parsed
  * and appropriate errors are raised
  */
-static int test_asn1_stable_parse(void)
+static int
+test_asn1_stable_parse(void)
 {
     int testret = 0;
     unsigned long errcode;
@@ -62,7 +61,8 @@ out:
     return testret;
 }
 
-int setup_tests(void)
+int
+setup_tests(void)
 {
     OPTION_CHOICE o;
 

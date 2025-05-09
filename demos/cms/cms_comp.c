@@ -12,7 +12,8 @@
 #include <openssl/cms.h>
 #include <openssl/err.h>
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
     BIO *in = NULL, *out = NULL;
     CMS_ContentInfo *cms = NULL;
@@ -50,7 +51,7 @@ int main(int argc, char **argv)
 
     ret = EXIT_SUCCESS;
 
- err:
+err:
 
     if (ret != EXIT_SUCCESS) {
         fprintf(stderr, "Error Compressing Data\n");

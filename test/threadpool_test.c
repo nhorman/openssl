@@ -14,7 +14,8 @@
 #include <openssl/thread.h>
 #include "testutil.h"
 
-static int test_thread_reported_flags(void)
+static int
+test_thread_reported_flags(void)
 {
     uint32_t flags = OSSL_get_thread_support_flags();
 
@@ -47,15 +48,17 @@ static int test_thread_reported_flags(void)
 #ifndef OPENSSL_NO_THREAD_POOL
 
 # define TEST_THREAD_NATIVE_FN_SET_VALUE 1
-static uint32_t test_thread_native_fn(void *data)
+static uint32_t
+test_thread_native_fn(void *data)
 {
-    uint32_t *ldata = (uint32_t*) data;
+    uint32_t *ldata = (uint32_t *)data;
     *ldata = *ldata + 1;
     return *ldata - 1;
 }
 /* Tests of native threads */
 
-static int test_thread_native(void)
+static int
+test_thread_native(void)
 {
     uint32_t retval;
     uint32_t local;
@@ -93,10 +96,11 @@ static int test_thread_native(void)
 }
 
 # if !defined(OPENSSL_NO_DEFAULT_THREAD_POOL)
-static int test_thread_internal(void)
+static int
+test_thread_internal(void)
 {
     uint32_t retval[3];
-    uint32_t local[3] = { 0 };
+    uint32_t local[3] = {0};
     uint32_t threads_supported;
     size_t i;
     void *t[3];
@@ -245,24 +249,28 @@ cleanup:
 }
 # endif
 
-static uint32_t test_thread_native_multiple_joins_fn1(void *data)
+static uint32_t
+test_thread_native_multiple_joins_fn1(void *data)
 {
     return 0;
 }
 
-static uint32_t test_thread_native_multiple_joins_fn2(void *data)
-{
-    ossl_crypto_thread_native_join((CRYPTO_THREAD *)data, NULL);
-    return 0;
-}
-
-static uint32_t test_thread_native_multiple_joins_fn3(void *data)
+static uint32_t
+test_thread_native_multiple_joins_fn2(void *data)
 {
     ossl_crypto_thread_native_join((CRYPTO_THREAD *)data, NULL);
     return 0;
 }
 
-static int test_thread_native_multiple_joins(void)
+static uint32_t
+test_thread_native_multiple_joins_fn3(void *data)
+{
+    ossl_crypto_thread_native_join((CRYPTO_THREAD *)data, NULL);
+    return 0;
+}
+
+static int
+test_thread_native_multiple_joins(void)
 {
     CRYPTO_THREAD *t, *t1, *t2;
 
@@ -292,7 +300,8 @@ static int test_thread_native_multiple_joins(void)
 
 #endif
 
-int setup_tests(void)
+int
+setup_tests(void)
 {
     ADD_TEST(test_thread_reported_flags);
 #if !defined(OPENSSL_NO_THREAD_POOL)

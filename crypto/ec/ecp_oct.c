@@ -19,10 +19,9 @@
 
 #include "ec_local.h"
 
-int ossl_ec_GFp_simple_set_compressed_coordinates(const EC_GROUP *group,
-                                                  EC_POINT *point,
-                                                  const BIGNUM *x_, int y_bit,
-                                                  BN_CTX *ctx)
+int
+ossl_ec_GFp_simple_set_compressed_coordinates(const EC_GROUP *group, EC_POINT *point,
+                                              const BIGNUM *x_, int y_bit, BN_CTX *ctx)
 {
     BN_CTX *new_ctx = NULL;
     BIGNUM *tmp1, *tmp2, *x, *y;
@@ -106,8 +105,7 @@ int ossl_ec_GFp_simple_set_compressed_coordinates(const EC_GROUP *group,
 #ifndef FIPS_MODULE
         unsigned long err = ERR_peek_last_error();
 
-        if (ERR_GET_LIB(err) == ERR_LIB_BN
-            && ERR_GET_REASON(err) == BN_R_NOT_A_SQUARE) {
+        if (ERR_GET_LIB(err) == ERR_LIB_BN && ERR_GET_REASON(err) == BN_R_NOT_A_SQUARE) {
             ERR_pop_to_mark();
             ERR_raise(ERR_LIB_EC, EC_R_INVALID_COMPRESSED_POINT);
         } else
@@ -150,15 +148,16 @@ int ossl_ec_GFp_simple_set_compressed_coordinates(const EC_GROUP *group,
 
     ret = 1;
 
- err:
+err:
     BN_CTX_end(ctx);
     BN_CTX_free(new_ctx);
     return ret;
 }
 
-size_t ossl_ec_GFp_simple_point2oct(const EC_GROUP *group, const EC_POINT *point,
-                                    point_conversion_form_t form,
-                                    unsigned char *buf, size_t len, BN_CTX *ctx)
+size_t
+ossl_ec_GFp_simple_point2oct(const EC_GROUP *group, const EC_POINT *point,
+                             point_conversion_form_t form, unsigned char *buf, size_t len,
+                             BN_CTX *ctx)
 {
     size_t ret;
     BN_CTX *new_ctx = NULL;
@@ -166,9 +165,8 @@ size_t ossl_ec_GFp_simple_point2oct(const EC_GROUP *group, const EC_POINT *point
     BIGNUM *x, *y;
     size_t field_len, i, skip;
 
-    if ((form != POINT_CONVERSION_COMPRESSED)
-        && (form != POINT_CONVERSION_UNCOMPRESSED)
-        && (form != POINT_CONVERSION_HYBRID)) {
+    if ((form != POINT_CONVERSION_COMPRESSED) && (form != POINT_CONVERSION_UNCOMPRESSED) &&
+        (form != POINT_CONVERSION_HYBRID)) {
         ERR_raise(ERR_LIB_EC, EC_R_INVALID_FORM);
         goto err;
     }
@@ -187,9 +185,7 @@ size_t ossl_ec_GFp_simple_point2oct(const EC_GROUP *group, const EC_POINT *point
 
     /* ret := required output buffer length */
     field_len = BN_num_bytes(group->field);
-    ret =
-        (form ==
-         POINT_CONVERSION_COMPRESSED) ? 1 + field_len : 1 + 2 * field_len;
+    ret = (form == POINT_CONVERSION_COMPRESSED) ? 1 + field_len : 1 + 2 * field_len;
 
     /* if 'buf' is NULL, just return required length */
     if (buf != NULL) {
@@ -214,8 +210,8 @@ size_t ossl_ec_GFp_simple_point2oct(const EC_GROUP *group, const EC_POINT *point
         if (!EC_POINT_get_affine_coordinates(group, point, x, y, ctx))
             goto err;
 
-        if ((form == POINT_CONVERSION_COMPRESSED
-             || form == POINT_CONVERSION_HYBRID) && BN_is_odd(y))
+        if ((form == POINT_CONVERSION_COMPRESSED || form == POINT_CONVERSION_HYBRID) &&
+            BN_is_odd(y))
             buf[0] = form + 1;
         else
             buf[0] = form;
@@ -238,8 +234,7 @@ size_t ossl_ec_GFp_simple_point2oct(const EC_GROUP *group, const EC_POINT *point
             goto err;
         }
 
-        if (form == POINT_CONVERSION_UNCOMPRESSED
-            || form == POINT_CONVERSION_HYBRID) {
+        if (form == POINT_CONVERSION_UNCOMPRESSED || form == POINT_CONVERSION_HYBRID) {
             skip = field_len - BN_num_bytes(y);
             if (skip > field_len) {
                 ERR_raise(ERR_LIB_EC, ERR_R_INTERNAL_ERROR);
@@ -264,16 +259,16 @@ size_t ossl_ec_GFp_simple_point2oct(const EC_GROUP *group, const EC_POINT *point
     BN_CTX_free(new_ctx);
     return ret;
 
- err:
+err:
     if (used_ctx)
         BN_CTX_end(ctx);
     BN_CTX_free(new_ctx);
     return 0;
 }
 
-int ossl_ec_GFp_simple_oct2point(const EC_GROUP *group, EC_POINT *point,
-                                 const unsigned char *buf, size_t len,
-                                 BN_CTX *ctx)
+int
+ossl_ec_GFp_simple_oct2point(const EC_GROUP *group, EC_POINT *point, const unsigned char *buf,
+                             size_t len, BN_CTX *ctx)
 {
     point_conversion_form_t form;
     int y_bit;
@@ -289,9 +284,8 @@ int ossl_ec_GFp_simple_oct2point(const EC_GROUP *group, EC_POINT *point,
     form = buf[0];
     y_bit = form & 1;
     form = form & ~1U;
-    if ((form != 0) && (form != POINT_CONVERSION_COMPRESSED)
-        && (form != POINT_CONVERSION_UNCOMPRESSED)
-        && (form != POINT_CONVERSION_HYBRID)) {
+    if ((form != 0) && (form != POINT_CONVERSION_COMPRESSED) &&
+        (form != POINT_CONVERSION_UNCOMPRESSED) && (form != POINT_CONVERSION_HYBRID)) {
         ERR_raise(ERR_LIB_EC, EC_R_INVALID_ENCODING);
         return 0;
     }
@@ -310,9 +304,7 @@ int ossl_ec_GFp_simple_oct2point(const EC_GROUP *group, EC_POINT *point,
     }
 
     field_len = BN_num_bytes(group->field);
-    enc_len =
-        (form ==
-         POINT_CONVERSION_COMPRESSED) ? 1 + field_len : 1 + 2 * field_len;
+    enc_len = (form == POINT_CONVERSION_COMPRESSED) ? 1 + field_len : 1 + 2 * field_len;
 
     if (len != enc_len) {
         ERR_raise(ERR_LIB_EC, EC_R_INVALID_ENCODING);
@@ -365,7 +357,7 @@ int ossl_ec_GFp_simple_oct2point(const EC_GROUP *group, EC_POINT *point,
 
     ret = 1;
 
- err:
+err:
     BN_CTX_end(ctx);
     BN_CTX_free(new_ctx);
     return ret;

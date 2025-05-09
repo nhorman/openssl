@@ -15,7 +15,8 @@
  * nothing.
  */
 
-void OPENSSL_init(void)
+void
+OPENSSL_init(void)
 {
     return;
 }

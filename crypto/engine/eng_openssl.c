@@ -64,24 +64,20 @@
 static int openssl_destroy(ENGINE *e);
 
 #ifdef TEST_ENG_OPENSSL_RC4
-static int openssl_ciphers(ENGINE *e, const EVP_CIPHER **cipher,
-                           const int **nids, int nid);
+static int openssl_ciphers(ENGINE *e, const EVP_CIPHER **cipher, const int **nids, int nid);
 #endif
 #ifdef TEST_ENG_OPENSSL_SHA
-static int openssl_digests(ENGINE *e, const EVP_MD **digest,
-                           const int **nids, int nid);
+static int openssl_digests(ENGINE *e, const EVP_MD **digest, const int **nids, int nid);
 #endif
 
 #ifdef TEST_ENG_OPENSSL_PKEY
-static EVP_PKEY *openssl_load_privkey(ENGINE *eng, const char *key_id,
-                                      UI_METHOD *ui_method,
+static EVP_PKEY *openssl_load_privkey(ENGINE *eng, const char *key_id, UI_METHOD *ui_method,
                                       void *callback_data);
 #endif
 
 #ifdef TEST_ENG_OPENSSL_HMAC
 static int ossl_register_hmac_meth(void);
-static int ossl_pkey_meths(ENGINE *e, EVP_PKEY_METHOD **pmeth,
-                           const int **nids, int nid);
+static int ossl_pkey_meths(ENGINE *e, EVP_PKEY_METHOD **pmeth, const int **nids, int nid);
 #endif
 
 /* The constants used when creating the ENGINE */
@@ -92,11 +88,11 @@ static const char *engine_openssl_name = "Software engine support";
  * This internal function is used by ENGINE_openssl() and possibly by the
  * "dynamic" ENGINE support too
  */
-static int bind_helper(ENGINE *e)
+static int
+bind_helper(ENGINE *e)
 {
-    if (!ENGINE_set_id(e, engine_openssl_id)
-        || !ENGINE_set_name(e, engine_openssl_name)
-        || !ENGINE_set_destroy_function(e, openssl_destroy)
+    if (!ENGINE_set_id(e, engine_openssl_id) || !ENGINE_set_name(e, engine_openssl_name) ||
+        !ENGINE_set_destroy_function(e, openssl_destroy)
 #ifndef TEST_ENG_OPENSSL_NO_ALGORITHMS
         || !ENGINE_set_RSA(e, RSA_get_default_method())
 # ifndef OPENSSL_NO_DSA
@@ -120,10 +116,9 @@ static int bind_helper(ENGINE *e)
         || !ENGINE_set_load_privkey_function(e, openssl_load_privkey)
 #endif
 #ifdef TEST_ENG_OPENSSL_HMAC
-        || !ossl_register_hmac_meth()
-        || !ENGINE_set_pkey_meths(e, ossl_pkey_meths)
+        || !ossl_register_hmac_meth() || !ENGINE_set_pkey_meths(e, ossl_pkey_meths)
 #endif
-        )
+    )
         return 0;
     /*
      * If we add errors to this ENGINE, ensure the error handling is setup
@@ -133,7 +128,8 @@ static int bind_helper(ENGINE *e)
     return 1;
 }
 
-static ENGINE *engine_openssl(void)
+static ENGINE *
+engine_openssl(void)
 {
     ENGINE *ret = ENGINE_new();
     if (ret == NULL)
@@ -145,7 +141,8 @@ static ENGINE *engine_openssl(void)
     return ret;
 }
 
-void engine_load_openssl_int(void)
+void
+engine_load_openssl_int(void)
 {
     ENGINE *toadd = engine_openssl();
     if (!toadd)
@@ -171,7 +168,8 @@ void engine_load_openssl_int(void)
  * self-contained shared-library.
  */
 #ifdef ENGINE_DYNAMIC_SUPPORT
-static int bind_fn(ENGINE *e, const char *id)
+static int
+bind_fn(ENGINE *e, const char *id)
 {
     if (id && (strcmp(id, engine_openssl_id) != 0))
         return 0;
@@ -181,8 +179,8 @@ static int bind_fn(ENGINE *e, const char *id)
 }
 
 IMPLEMENT_DYNAMIC_CHECK_FN()
-    IMPLEMENT_DYNAMIC_BIND_FN(bind_fn)
-#endif                          /* ENGINE_DYNAMIC_SUPPORT */
+IMPLEMENT_DYNAMIC_BIND_FN(bind_fn)
+#endif /* ENGINE_DYNAMIC_SUPPORT */
 #ifdef TEST_ENG_OPENSSL_RC4
 /*-
  * This section of code compiles an "alternative implementation" of two modes of
@@ -196,14 +194,14 @@ IMPLEMENT_DYNAMIC_CHECK_FN()
  *    TEST_ENG_OPENSSL_RC4_P_CIPHER - ditto for the "cipher" handler.
  */
 # include <openssl/rc4.h>
-# define TEST_RC4_KEY_SIZE               16
+# define TEST_RC4_KEY_SIZE 16
 typedef struct {
     unsigned char key[TEST_RC4_KEY_SIZE];
     RC4_KEY ks;
 } TEST_RC4_KEY;
 # define test(ctx) ((TEST_RC4_KEY *)EVP_CIPHER_CTX_get_cipher_data(ctx))
-static int test_rc4_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
-                             const unsigned char *iv, int enc)
+static int
+test_rc4_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key, const unsigned char *iv, int enc)
 {
     const int n = EVP_CIPHER_CTX_get_key_length(ctx);
 
@@ -217,8 +215,8 @@ static int test_rc4_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
     return 1;
 }
 
-static int test_rc4_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
-                           const unsigned char *in, size_t inl)
+static int
+test_rc4_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out, const unsigned char *in, size_t inl)
 {
 # ifdef TEST_ENG_OPENSSL_RC4_P_CIPHER
     fprintf(stderr, "(TEST_ENG_OPENSSL_RC4) test_cipher() called\n");
@@ -228,17 +226,18 @@ static int test_rc4_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
 }
 
 static EVP_CIPHER *r4_cipher = NULL;
-static const EVP_CIPHER *test_r4_cipher(void)
+static const EVP_CIPHER *
+test_r4_cipher(void)
 {
     if (r4_cipher == NULL) {
         EVP_CIPHER *cipher;
 
-        if ((cipher = EVP_CIPHER_meth_new(NID_rc4, 1, TEST_RC4_KEY_SIZE)) == NULL
-            || !EVP_CIPHER_meth_set_iv_length(cipher, 0)
-            || !EVP_CIPHER_meth_set_flags(cipher, EVP_CIPH_VARIABLE_LENGTH)
-            || !EVP_CIPHER_meth_set_init(cipher, test_rc4_init_key)
-            || !EVP_CIPHER_meth_set_do_cipher(cipher, test_rc4_cipher)
-            || !EVP_CIPHER_meth_set_impl_ctx_size(cipher, sizeof(TEST_RC4_KEY))) {
+        if ((cipher = EVP_CIPHER_meth_new(NID_rc4, 1, TEST_RC4_KEY_SIZE)) == NULL ||
+            !EVP_CIPHER_meth_set_iv_length(cipher, 0) ||
+            !EVP_CIPHER_meth_set_flags(cipher, EVP_CIPH_VARIABLE_LENGTH) ||
+            !EVP_CIPHER_meth_set_init(cipher, test_rc4_init_key) ||
+            !EVP_CIPHER_meth_set_do_cipher(cipher, test_rc4_cipher) ||
+            !EVP_CIPHER_meth_set_impl_ctx_size(cipher, sizeof(TEST_RC4_KEY))) {
             EVP_CIPHER_meth_free(cipher);
             cipher = NULL;
         }
@@ -246,24 +245,26 @@ static const EVP_CIPHER *test_r4_cipher(void)
     }
     return r4_cipher;
 }
-static void test_r4_cipher_destroy(void)
+static void
+test_r4_cipher_destroy(void)
 {
     EVP_CIPHER_meth_free(r4_cipher);
     r4_cipher = NULL;
 }
 
 static EVP_CIPHER *r4_40_cipher = NULL;
-static const EVP_CIPHER *test_r4_40_cipher(void)
+static const EVP_CIPHER *
+test_r4_40_cipher(void)
 {
     if (r4_40_cipher == NULL) {
         EVP_CIPHER *cipher;
 
-        if ((cipher = EVP_CIPHER_meth_new(NID_rc4, 1, 5 /* 40 bits */)) == NULL
-            || !EVP_CIPHER_meth_set_iv_length(cipher, 0)
-            || !EVP_CIPHER_meth_set_flags(cipher, EVP_CIPH_VARIABLE_LENGTH)
-            || !EVP_CIPHER_meth_set_init(cipher, test_rc4_init_key)
-            || !EVP_CIPHER_meth_set_do_cipher(cipher, test_rc4_cipher)
-            || !EVP_CIPHER_meth_set_impl_ctx_size(cipher, sizeof(TEST_RC4_KEY))) {
+        if ((cipher = EVP_CIPHER_meth_new(NID_rc4, 1, 5 /* 40 bits */)) == NULL ||
+            !EVP_CIPHER_meth_set_iv_length(cipher, 0) ||
+            !EVP_CIPHER_meth_set_flags(cipher, EVP_CIPH_VARIABLE_LENGTH) ||
+            !EVP_CIPHER_meth_set_init(cipher, test_rc4_init_key) ||
+            !EVP_CIPHER_meth_set_do_cipher(cipher, test_rc4_cipher) ||
+            !EVP_CIPHER_meth_set_impl_ctx_size(cipher, sizeof(TEST_RC4_KEY))) {
             EVP_CIPHER_meth_free(cipher);
             cipher = NULL;
         }
@@ -271,14 +272,16 @@ static const EVP_CIPHER *test_r4_40_cipher(void)
     }
     return r4_40_cipher;
 }
-static void test_r4_40_cipher_destroy(void)
+static void
+test_r4_40_cipher_destroy(void)
 {
     EVP_CIPHER_meth_free(r4_40_cipher);
     r4_40_cipher = NULL;
 }
-static int test_cipher_nids(const int **nids)
+static int
+test_cipher_nids(const int **nids)
 {
-    static int cipher_nids[4] = { 0, 0, 0, 0 };
+    static int cipher_nids[4] = {0, 0, 0, 0};
     static int pos = 0;
     static int init = 0;
 
@@ -295,8 +298,8 @@ static int test_cipher_nids(const int **nids)
     return pos;
 }
 
-static int openssl_ciphers(ENGINE *e, const EVP_CIPHER **cipher,
-                           const int **nids, int nid)
+static int
+openssl_ciphers(ENGINE *e, const EVP_CIPHER **cipher, const int **nids, int nid)
 {
     if (!cipher) {
         /* We are returning a list of supported nids */
@@ -309,8 +312,10 @@ static int openssl_ciphers(ENGINE *e, const EVP_CIPHER **cipher,
         *cipher = test_r4_40_cipher();
     else {
 # ifdef TEST_ENG_OPENSSL_RC4_OTHERS
-        fprintf(stderr, "(TEST_ENG_OPENSSL_RC4) returning NULL for "
-                "nid %d\n", nid);
+        fprintf(stderr,
+                "(TEST_ENG_OPENSSL_RC4) returning NULL for "
+                "nid %d\n",
+                nid);
 # endif
         *cipher = NULL;
         return 0;
@@ -323,7 +328,8 @@ static int openssl_ciphers(ENGINE *e, const EVP_CIPHER **cipher,
 /* Much the same sort of comment as for TEST_ENG_OPENSSL_RC4 */
 # include <openssl/sha.h>
 
-static int test_sha1_init(EVP_MD_CTX *ctx)
+static int
+test_sha1_init(EVP_MD_CTX *ctx)
 {
 # ifdef TEST_ENG_OPENSSL_SHA_P_INIT
     fprintf(stderr, "(TEST_ENG_OPENSSL_SHA) test_sha1_init() called\n");
@@ -331,7 +337,8 @@ static int test_sha1_init(EVP_MD_CTX *ctx)
     return SHA1_Init(EVP_MD_CTX_get0_md_data(ctx));
 }
 
-static int test_sha1_update(EVP_MD_CTX *ctx, const void *data, size_t count)
+static int
+test_sha1_update(EVP_MD_CTX *ctx, const void *data, size_t count)
 {
 # ifdef TEST_ENG_OPENSSL_SHA_P_UPDATE
     fprintf(stderr, "(TEST_ENG_OPENSSL_SHA) test_sha1_update() called\n");
@@ -339,7 +346,8 @@ static int test_sha1_update(EVP_MD_CTX *ctx, const void *data, size_t count)
     return SHA1_Update(EVP_MD_CTX_get0_md_data(ctx), data, count);
 }
 
-static int test_sha1_final(EVP_MD_CTX *ctx, unsigned char *md)
+static int
+test_sha1_final(EVP_MD_CTX *ctx, unsigned char *md)
 {
 # ifdef TEST_ENG_OPENSSL_SHA_P_FINAL
     fprintf(stderr, "(TEST_ENG_OPENSSL_SHA) test_sha1_final() called\n");
@@ -348,20 +356,19 @@ static int test_sha1_final(EVP_MD_CTX *ctx, unsigned char *md)
 }
 
 static EVP_MD *sha1_md = NULL;
-static const EVP_MD *test_sha_md(void)
+static const EVP_MD *
+test_sha_md(void)
 {
     if (sha1_md == NULL) {
         EVP_MD *md;
 
-        if ((md = EVP_MD_meth_new(NID_sha1, NID_sha1WithRSAEncryption)) == NULL
-            || !EVP_MD_meth_set_result_size(md, SHA_DIGEST_LENGTH)
-            || !EVP_MD_meth_set_input_blocksize(md, SHA_CBLOCK)
-            || !EVP_MD_meth_set_app_datasize(md,
-                                             sizeof(EVP_MD *) + sizeof(SHA_CTX))
-            || !EVP_MD_meth_set_flags(md, 0)
-            || !EVP_MD_meth_set_init(md, test_sha1_init)
-            || !EVP_MD_meth_set_update(md, test_sha1_update)
-            || !EVP_MD_meth_set_final(md, test_sha1_final)) {
+        if ((md = EVP_MD_meth_new(NID_sha1, NID_sha1WithRSAEncryption)) == NULL ||
+            !EVP_MD_meth_set_result_size(md, SHA_DIGEST_LENGTH) ||
+            !EVP_MD_meth_set_input_blocksize(md, SHA_CBLOCK) ||
+            !EVP_MD_meth_set_app_datasize(md, sizeof(EVP_MD *) + sizeof(SHA_CTX)) ||
+            !EVP_MD_meth_set_flags(md, 0) || !EVP_MD_meth_set_init(md, test_sha1_init) ||
+            !EVP_MD_meth_set_update(md, test_sha1_update) ||
+            !EVP_MD_meth_set_final(md, test_sha1_final)) {
             EVP_MD_meth_free(md);
             md = NULL;
         }
@@ -369,14 +376,16 @@ static const EVP_MD *test_sha_md(void)
     }
     return sha1_md;
 }
-static void test_sha_md_destroy(void)
+static void
+test_sha_md_destroy(void)
 {
     EVP_MD_meth_free(sha1_md);
     sha1_md = NULL;
 }
-static int test_digest_nids(const int **nids)
+static int
+test_digest_nids(const int **nids)
 {
-    static int digest_nids[2] = { 0, 0 };
+    static int digest_nids[2] = {0, 0};
     static int pos = 0;
     static int init = 0;
 
@@ -391,8 +400,8 @@ static int test_digest_nids(const int **nids)
     return pos;
 }
 
-static int openssl_digests(ENGINE *e, const EVP_MD **digest,
-                           const int **nids, int nid)
+static int
+openssl_digests(ENGINE *e, const EVP_MD **digest, const int **nids, int nid)
 {
     if (!digest) {
         /* We are returning a list of supported nids */
@@ -403,8 +412,10 @@ static int openssl_digests(ENGINE *e, const EVP_MD **digest,
         *digest = test_sha_md();
     else {
 # ifdef TEST_ENG_OPENSSL_SHA_OTHERS
-        fprintf(stderr, "(TEST_ENG_OPENSSL_SHA) returning NULL for "
-                "nid %d\n", nid);
+        fprintf(stderr,
+                "(TEST_ENG_OPENSSL_SHA) returning NULL for "
+                "nid %d\n",
+                nid);
 # endif
         *digest = NULL;
         return 0;
@@ -414,14 +425,12 @@ static int openssl_digests(ENGINE *e, const EVP_MD **digest,
 #endif
 
 #ifdef TEST_ENG_OPENSSL_PKEY
-static EVP_PKEY *openssl_load_privkey(ENGINE *eng, const char *key_id,
-                                      UI_METHOD *ui_method,
-                                      void *callback_data)
+static EVP_PKEY *
+openssl_load_privkey(ENGINE *eng, const char *key_id, UI_METHOD *ui_method, void *callback_data)
 {
     BIO *in;
     EVP_PKEY *key;
-    fprintf(stderr, "(TEST_ENG_OPENSSL_PKEY)Loading Private key %s\n",
-            key_id);
+    fprintf(stderr, "(TEST_ENG_OPENSSL_PKEY)Loading Private key %s\n", key_id);
 # if defined(OPENSSL_SYS_WINDOWS)
     in = BIO_new_file(key_id, "rb");
 # else
@@ -445,12 +454,13 @@ static EVP_PKEY *openssl_load_privkey(ENGINE *eng, const char *key_id,
 /* HMAC pkey context structure */
 
 typedef struct {
-    const EVP_MD *md;           /* MD for HMAC use */
-    ASN1_OCTET_STRING ktmp;     /* Temp storage for key */
+    const EVP_MD *md;       /* MD for HMAC use */
+    ASN1_OCTET_STRING ktmp; /* Temp storage for key */
     HMAC_CTX *ctx;
 } OSSL_HMAC_PKEY_CTX;
 
-static int ossl_hmac_init(EVP_PKEY_CTX *ctx)
+static int
+ossl_hmac_init(EVP_PKEY_CTX *ctx)
 {
     OSSL_HMAC_PKEY_CTX *hctx;
 
@@ -472,7 +482,8 @@ static int ossl_hmac_init(EVP_PKEY_CTX *ctx)
 
 static void ossl_hmac_cleanup(EVP_PKEY_CTX *ctx);
 
-static int ossl_hmac_copy(EVP_PKEY_CTX *dst, EVP_PKEY_CTX *src)
+static int
+ossl_hmac_copy(EVP_PKEY_CTX *dst, EVP_PKEY_CTX *src)
 {
     OSSL_HMAC_PKEY_CTX *sctx, *dctx;
 
@@ -485,8 +496,7 @@ static int ossl_hmac_copy(EVP_PKEY_CTX *dst, EVP_PKEY_CTX *src)
     if (!HMAC_CTX_copy(dctx->ctx, sctx->ctx))
         goto err;
     if (sctx->ktmp.data) {
-        if (!ASN1_OCTET_STRING_set(&dctx->ktmp,
-                                   sctx->ktmp.data, sctx->ktmp.length))
+        if (!ASN1_OCTET_STRING_set(&dctx->ktmp, sctx->ktmp.data, sctx->ktmp.length))
             goto err;
     }
     return 1;
@@ -496,7 +506,8 @@ err:
     return 0;
 }
 
-static void ossl_hmac_cleanup(EVP_PKEY_CTX *ctx)
+static void
+ossl_hmac_cleanup(EVP_PKEY_CTX *ctx)
 {
     OSSL_HMAC_PKEY_CTX *hctx = EVP_PKEY_CTX_get_data(ctx);
 
@@ -508,7 +519,8 @@ static void ossl_hmac_cleanup(EVP_PKEY_CTX *ctx)
     }
 }
 
-static int ossl_hmac_keygen(EVP_PKEY_CTX *ctx, EVP_PKEY *pkey)
+static int
+ossl_hmac_keygen(EVP_PKEY_CTX *ctx, EVP_PKEY *pkey)
 {
     ASN1_OCTET_STRING *hkey = NULL;
     OSSL_HMAC_PKEY_CTX *hctx = EVP_PKEY_CTX_get_data(ctx);
@@ -522,7 +534,8 @@ static int ossl_hmac_keygen(EVP_PKEY_CTX *ctx, EVP_PKEY *pkey)
     return 1;
 }
 
-static int ossl_int_update(EVP_MD_CTX *ctx, const void *data, size_t count)
+static int
+ossl_int_update(EVP_MD_CTX *ctx, const void *data, size_t count)
 {
     OSSL_HMAC_PKEY_CTX *hctx = EVP_PKEY_CTX_get_data(EVP_MD_CTX_get_pkey_ctx(ctx));
     if (!HMAC_Update(hctx->ctx, data, count))
@@ -530,15 +543,16 @@ static int ossl_int_update(EVP_MD_CTX *ctx, const void *data, size_t count)
     return 1;
 }
 
-static int ossl_hmac_signctx_init(EVP_PKEY_CTX *ctx, EVP_MD_CTX *mctx)
+static int
+ossl_hmac_signctx_init(EVP_PKEY_CTX *ctx, EVP_MD_CTX *mctx)
 {
     EVP_MD_CTX_set_flags(mctx, EVP_MD_CTX_FLAG_NO_INIT);
     EVP_MD_CTX_set_update_fn(mctx, ossl_int_update);
     return 1;
 }
 
-static int ossl_hmac_signctx(EVP_PKEY_CTX *ctx, unsigned char *sig,
-                             size_t *siglen, EVP_MD_CTX *mctx)
+static int
+ossl_hmac_signctx(EVP_PKEY_CTX *ctx, unsigned char *sig, size_t *siglen, EVP_MD_CTX *mctx)
 {
     unsigned int hlen;
     OSSL_HMAC_PKEY_CTX *hctx = EVP_PKEY_CTX_get_data(ctx);
@@ -556,7 +570,8 @@ static int ossl_hmac_signctx(EVP_PKEY_CTX *ctx, unsigned char *sig,
     return 1;
 }
 
-static int ossl_hmac_ctrl(EVP_PKEY_CTX *ctx, int type, int p1, void *p2)
+static int
+ossl_hmac_ctrl(EVP_PKEY_CTX *ctx, int type, int p1, void *p2)
 {
     OSSL_HMAC_PKEY_CTX *hctx = EVP_PKEY_CTX_get_data(ctx);
     EVP_PKEY *pk;
@@ -583,13 +598,12 @@ static int ossl_hmac_ctrl(EVP_PKEY_CTX *ctx, int type, int p1, void *p2)
 
     default:
         return -2;
-
     }
     return 1;
 }
 
-static int ossl_hmac_ctrl_str(EVP_PKEY_CTX *ctx,
-                              const char *type, const char *value)
+static int
+ossl_hmac_ctrl_str(EVP_PKEY_CTX *ctx, const char *type, const char *value)
 {
     if (!value) {
         return 0;
@@ -614,7 +628,8 @@ static int ossl_hmac_ctrl_str(EVP_PKEY_CTX *ctx,
 
 static EVP_PKEY_METHOD *ossl_hmac_meth;
 
-static int ossl_register_hmac_meth(void)
+static int
+ossl_register_hmac_meth(void)
 {
     EVP_PKEY_METHOD *meth;
     meth = EVP_PKEY_meth_new(EVP_PKEY_HMAC, 0);
@@ -626,21 +641,17 @@ static int ossl_register_hmac_meth(void)
 
     EVP_PKEY_meth_set_keygen(meth, 0, ossl_hmac_keygen);
 
-    EVP_PKEY_meth_set_signctx(meth, ossl_hmac_signctx_init,
-                              ossl_hmac_signctx);
+    EVP_PKEY_meth_set_signctx(meth, ossl_hmac_signctx_init, ossl_hmac_signctx);
 
     EVP_PKEY_meth_set_ctrl(meth, ossl_hmac_ctrl, ossl_hmac_ctrl_str);
     ossl_hmac_meth = meth;
     return 1;
 }
 
-static int ossl_pkey_meths(ENGINE *e, EVP_PKEY_METHOD **pmeth,
-                           const int **nids, int nid)
+static int
+ossl_pkey_meths(ENGINE *e, EVP_PKEY_METHOD **pmeth, const int **nids, int nid)
 {
-    static int ossl_pkey_nids[] = {
-        EVP_PKEY_HMAC,
-        0
-    };
+    static int ossl_pkey_nids[] = {EVP_PKEY_HMAC, 0};
 
     if (pmeth == NULL) {
         *nids = ossl_pkey_nids;
@@ -658,7 +669,8 @@ static int ossl_pkey_meths(ENGINE *e, EVP_PKEY_METHOD **pmeth,
 
 #endif
 
-int openssl_destroy(ENGINE *e)
+int
+openssl_destroy(ENGINE *e)
 {
     test_sha_md_destroy();
 #ifdef TEST_ENG_OPENSSL_RC4
@@ -667,4 +679,3 @@ int openssl_destroy(ENGINE *e)
 #endif
     return 1;
 }
-

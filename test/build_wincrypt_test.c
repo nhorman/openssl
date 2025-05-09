@@ -22,11 +22,11 @@
 # include <wincrypt.h>
 # ifndef X509_NAME
 #  ifndef PEDANTIC
-#    ifdef _MSC_VER
-#      pragma message("wincrypt.h no longer defining X509_NAME before OpenSSL headers")
-#    else
-#      warning "wincrypt.h no longer defining X509_NAME before OpenSSL headers"
-#    endif
+#   ifdef _MSC_VER
+#    pragma message("wincrypt.h no longer defining X509_NAME before OpenSSL headers")
+#   else
+#    warning "wincrypt.h no longer defining X509_NAME before OpenSSL headers"
+#   endif
 #  endif
 # endif
 #endif
@@ -40,7 +40,8 @@
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
 
-int main(void)
+int
+main(void)
 {
     return 0;
 }

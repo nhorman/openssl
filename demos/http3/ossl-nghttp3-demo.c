@@ -11,27 +11,25 @@
 
 static int done;
 
-static void make_nv(nghttp3_nv *nv, const char *name, const char *value)
+static void
+make_nv(nghttp3_nv *nv, const char *name, const char *value)
 {
-    nv->name        = (uint8_t *)name;
-    nv->value       = (uint8_t *)value;
-    nv->namelen     = strlen(name);
-    nv->valuelen    = strlen(value);
-    nv->flags       = NGHTTP3_NV_FLAG_NONE;
+    nv->name = (uint8_t *)name;
+    nv->value = (uint8_t *)value;
+    nv->namelen = strlen(name);
+    nv->valuelen = strlen(value);
+    nv->flags = NGHTTP3_NV_FLAG_NONE;
 }
 
-static int on_recv_header(nghttp3_conn *h3conn, int64_t stream_id,
-                          int32_t token,
-                          nghttp3_rcbuf *name, nghttp3_rcbuf *value,
-                          uint8_t flags,
-                          void *conn_user_data,
-                          void *stream_user_data)
+static int
+on_recv_header(nghttp3_conn *h3conn, int64_t stream_id, int32_t token, nghttp3_rcbuf *name,
+               nghttp3_rcbuf *value, uint8_t flags, void *conn_user_data, void *stream_user_data)
 {
     nghttp3_vec vname, vvalue;
 
     /* Received a single HTTP header. */
-    vname   = nghttp3_rcbuf_get_buf(name);
-    vvalue  = nghttp3_rcbuf_get_buf(value);
+    vname = nghttp3_rcbuf_get_buf(name);
+    vvalue = nghttp3_rcbuf_get_buf(value);
 
     fwrite(vname.base, vname.len, 1, stderr);
     fprintf(stderr, ": ");
@@ -41,17 +39,17 @@ static int on_recv_header(nghttp3_conn *h3conn, int64_t stream_id,
     return 0;
 }
 
-static int on_end_headers(nghttp3_conn *h3conn, int64_t stream_id,
-                          int fin,
-                          void *conn_user_data, void *stream_user_data)
+static int
+on_end_headers(nghttp3_conn *h3conn, int64_t stream_id, int fin, void *conn_user_data,
+               void *stream_user_data)
 {
     fprintf(stderr, "\n");
     return 0;
 }
 
-static int on_recv_data(nghttp3_conn *h3conn, int64_t stream_id,
-                        const uint8_t *data, size_t datalen,
-                        void *conn_user_data, void *stream_user_data)
+static int
+on_recv_data(nghttp3_conn *h3conn, int64_t stream_id, const uint8_t *data, size_t datalen,
+             void *conn_user_data, void *stream_user_data)
 {
     size_t wr;
 
@@ -61,22 +59,23 @@ static int on_recv_data(nghttp3_conn *h3conn, int64_t stream_id,
         if (ferror(stdout))
             return 1;
 
-        data    += wr;
+        data += wr;
         datalen -= wr;
     }
 
     return 0;
 }
 
-static int on_end_stream(nghttp3_conn *h3conn, int64_t stream_id,
-                         void *conn_user_data, void *stream_user_data)
+static int
+on_end_stream(nghttp3_conn *h3conn, int64_t stream_id, void *conn_user_data, void *stream_user_data)
 {
     /* HTTP transaction is done - set done flag so that we stop looping. */
     done = 1;
     return 0;
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
     int ret = 1;
     SSL_CTX *ctx = NULL;
@@ -104,16 +103,14 @@ int main(int argc, char **argv)
         goto err;
 
     /* Setup callbacks. */
-    callbacks.recv_header   = on_recv_header;
-    callbacks.end_headers   = on_end_headers;
-    callbacks.recv_data     = on_recv_data;
-    callbacks.end_stream    = on_end_stream;
+    callbacks.recv_header = on_recv_header;
+    callbacks.end_headers = on_end_headers;
+    callbacks.recv_data = on_recv_data;
+    callbacks.end_stream = on_end_stream;
 
     /* Create connection. */
-    if ((conn = OSSL_DEMO_H3_CONN_new_for_addr(ctx, addr, &callbacks,
-                                               NULL, NULL)) == NULL) {
-        ERR_raise_data(ERR_LIB_USER, ERR_R_OPERATION_FAIL,
-                       "cannot create HTTP/3 connection");
+    if ((conn = OSSL_DEMO_H3_CONN_new_for_addr(ctx, addr, &callbacks, NULL, NULL)) == NULL) {
+        ERR_raise_data(ERR_LIB_USER, ERR_R_OPERATION_FAIL, "cannot create HTTP/3 connection");
         goto err;
     }
 
@@ -126,16 +123,14 @@ int main(int argc, char **argv)
 
     /* Submit request. */
     if (!OSSL_DEMO_H3_CONN_submit_request(conn, nva, num_nv, NULL, NULL)) {
-        ERR_raise_data(ERR_LIB_USER, ERR_R_OPERATION_FAIL,
-                       "cannot submit HTTP/3 request");
+        ERR_raise_data(ERR_LIB_USER, ERR_R_OPERATION_FAIL, "cannot submit HTTP/3 request");
         goto err;
     }
 
     /* Wait for request to complete. */
     while (!done)
         if (!OSSL_DEMO_H3_CONN_handle_events(conn)) {
-            ERR_raise_data(ERR_LIB_USER, ERR_R_OPERATION_FAIL,
-                           "cannot handle events");
+            ERR_raise_data(ERR_LIB_USER, ERR_R_OPERATION_FAIL, "cannot handle events");
             goto err;
         }
 

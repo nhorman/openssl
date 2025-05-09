@@ -26,7 +26,8 @@ typedef struct prov_cipher_fake_ctx_st {
     unsigned char key[FAKE_KEY_LEN];
 } PROV_CIPHER_FAKE_CTX;
 
-static int ctx_from_key_params(PROV_CIPHER_FAKE_CTX *pctx, const OSSL_PARAM *params)
+static int
+ctx_from_key_params(PROV_CIPHER_FAKE_CTX *pctx, const OSSL_PARAM *params)
 {
     const OSSL_PARAM *p;
     char key_name[MAX_KEYNAME];
@@ -56,12 +57,14 @@ static int ctx_from_key_params(PROV_CIPHER_FAKE_CTX *pctx, const OSSL_PARAM *par
     return 1;
 }
 
-static void fake_skeymgmt_free(void *keydata)
+static void
+fake_skeymgmt_free(void *keydata)
 {
     OPENSSL_free(keydata);
 }
 
-static void *fake_skeymgmt_import(void *provctx, int selection, const OSSL_PARAM *p)
+static void *
+fake_skeymgmt_import(void *provctx, int selection, const OSSL_PARAM *p)
 {
     PROV_CIPHER_FAKE_CTX *ctx = NULL;
 
@@ -76,23 +79,21 @@ static void *fake_skeymgmt_import(void *provctx, int selection, const OSSL_PARAM
     return ctx;
 }
 
-static int fake_skeymgmt_export(void *keydata, int selection,
-                                OSSL_CALLBACK *param_callback, void *cbarg)
+static int
+fake_skeymgmt_export(void *keydata, int selection, OSSL_CALLBACK *param_callback, void *cbarg)
 {
     OSSL_PARAM params[3];
     PROV_CIPHER_FAKE_CTX *ctx = (PROV_CIPHER_FAKE_CTX *)keydata;
     OSSL_PARAM *p = params;
 
     if (selection & OSSL_SKEYMGMT_SELECT_PARAMETERS) {
-        *p = OSSL_PARAM_construct_utf8_string(FAKE_CIPHER_PARAM_KEY_NAME,
-                                              ctx->key_name,
+        *p = OSSL_PARAM_construct_utf8_string(FAKE_CIPHER_PARAM_KEY_NAME, ctx->key_name,
                                               strlen(ctx->key_name));
         p++;
     }
 
     if (selection & OSSL_SKEYMGMT_SELECT_SECRET_KEY) {
-        *p = OSSL_PARAM_construct_octet_string(OSSL_SKEY_PARAM_RAW_BYTES,
-                                               ctx->key,
+        *p = OSSL_PARAM_construct_octet_string(OSSL_SKEY_PARAM_RAW_BYTES, ctx->key,
                                                sizeof(ctx->key));
         p++;
     }
@@ -102,32 +103,32 @@ static int fake_skeymgmt_export(void *keydata, int selection,
 }
 
 static const OSSL_DISPATCH fake_skeymgmt_funcs[] = {
-    { OSSL_FUNC_SKEYMGMT_FREE, (void (*)(void))fake_skeymgmt_free },
-    { OSSL_FUNC_SKEYMGMT_IMPORT, (void (*)(void))fake_skeymgmt_import },
-    { OSSL_FUNC_SKEYMGMT_EXPORT, (void (*)(void))fake_skeymgmt_export },
-    OSSL_DISPATCH_END
-};
+    {OSSL_FUNC_SKEYMGMT_FREE, (void (*)(void))fake_skeymgmt_free},
+    {OSSL_FUNC_SKEYMGMT_IMPORT, (void (*)(void))fake_skeymgmt_import},
+    {OSSL_FUNC_SKEYMGMT_EXPORT, (void (*)(void))fake_skeymgmt_export},
+    OSSL_DISPATCH_END};
 
 static const OSSL_ALGORITHM fake_skeymgmt_algs[] = {
-    { "fake_cipher", FAKE_CIPHER_FETCH_PROPS, fake_skeymgmt_funcs, "Fake Cipher Key Management" },
-    { NULL, NULL, NULL, NULL }
-};
+    {"fake_cipher", FAKE_CIPHER_FETCH_PROPS, fake_skeymgmt_funcs, "Fake Cipher Key Management"},
+    {NULL, NULL, NULL, NULL}};
 static OSSL_FUNC_cipher_newctx_fn fake_newctx;
 
-static void *fake_newctx(void *provctx)
+static void *
+fake_newctx(void *provctx)
 {
     return OPENSSL_zalloc(sizeof(PROV_CIPHER_FAKE_CTX));
 }
 
 static OSSL_FUNC_cipher_freectx_fn fake_freectx;
-static void fake_freectx(void *vctx)
+static void
+fake_freectx(void *vctx)
 {
     OPENSSL_free(vctx);
 }
 
-static int fake_skey_init(PROV_CIPHER_FAKE_CTX *ctx, void *pkeyparam,
-                          const unsigned char *iv, size_t ivlen,
-                          const OSSL_PARAM params[])
+static int
+fake_skey_init(PROV_CIPHER_FAKE_CTX *ctx, void *pkeyparam, const unsigned char *iv, size_t ivlen,
+               const OSSL_PARAM params[])
 {
     if (pkeyparam != NULL)
         memcpy(ctx, pkeyparam, sizeof(PROV_CIPHER_FAKE_CTX));
@@ -136,9 +137,9 @@ static int fake_skey_init(PROV_CIPHER_FAKE_CTX *ctx, void *pkeyparam,
 }
 
 static OSSL_FUNC_cipher_encrypt_skey_init_fn fake_skey_einit;
-static int fake_skey_einit(void *vctx, void *pkeyparam,
-                           const unsigned char *iv, size_t ivlen,
-                           const OSSL_PARAM params[])
+static int
+fake_skey_einit(void *vctx, void *pkeyparam, const unsigned char *iv, size_t ivlen,
+                const OSSL_PARAM params[])
 {
     PROV_CIPHER_FAKE_CTX *ctx = (PROV_CIPHER_FAKE_CTX *)vctx;
 
@@ -149,9 +150,9 @@ static int fake_skey_einit(void *vctx, void *pkeyparam,
 }
 
 static OSSL_FUNC_cipher_decrypt_skey_init_fn fake_skey_dinit;
-static int fake_skey_dinit(void *vctx, void *pkeyparam,
-                           const unsigned char *iv, size_t ivlen,
-                           const OSSL_PARAM params[])
+static int
+fake_skey_dinit(void *vctx, void *pkeyparam, const unsigned char *iv, size_t ivlen,
+                const OSSL_PARAM params[])
 {
     PROV_CIPHER_FAKE_CTX *ctx = (PROV_CIPHER_FAKE_CTX *)vctx;
 
@@ -162,8 +163,9 @@ static int fake_skey_dinit(void *vctx, void *pkeyparam,
 }
 
 static OSSL_FUNC_cipher_cipher_fn fake_cipher;
-static int fake_cipher(void *vctx, unsigned char *out, size_t *outl,
-                       size_t outsize, const unsigned char *in, size_t inl)
+static int
+fake_cipher(void *vctx, unsigned char *out, size_t *outl, size_t outsize, const unsigned char *in,
+            size_t inl)
 {
     PROV_CIPHER_FAKE_CTX *ctx = (PROV_CIPHER_FAKE_CTX *)vctx;
     size_t i;
@@ -179,15 +181,16 @@ static int fake_cipher(void *vctx, unsigned char *out, size_t *outl,
 }
 
 static OSSL_FUNC_cipher_final_fn fake_final;
-static int fake_final(void *vctx, unsigned char *out, size_t *outl,
-                      size_t outsize)
+static int
+fake_final(void *vctx, unsigned char *out, size_t *outl, size_t outsize)
 {
     *outl = 0;
     return 1;
 }
 
 static OSSL_FUNC_cipher_get_params_fn fake_get_params;
-static int fake_get_params(OSSL_PARAM params[])
+static int
+fake_get_params(OSSL_PARAM params[])
 {
     /* FIXME copy of ossl_cipher_generic_get_params */
     OSSL_PARAM *p;
@@ -207,19 +210,18 @@ static int fake_get_params(OSSL_PARAM params[])
 
 static const OSSL_PARAM fake_known_gettable_ctx_params[] = {
     OSSL_PARAM_size_t(OSSL_CIPHER_PARAM_KEYLEN, NULL),
-    OSSL_PARAM_size_t(OSSL_CIPHER_PARAM_BLOCK_SIZE, NULL),
-    OSSL_PARAM_END
-};
+    OSSL_PARAM_size_t(OSSL_CIPHER_PARAM_BLOCK_SIZE, NULL), OSSL_PARAM_END};
 
 static OSSL_FUNC_cipher_gettable_ctx_params_fn fake_gettable_ctx_params;
-static const OSSL_PARAM *fake_gettable_ctx_params(ossl_unused void *cctx,
-                                                  ossl_unused void *provctx)
+static const OSSL_PARAM *
+fake_gettable_ctx_params(ossl_unused void *cctx, ossl_unused void *provctx)
 {
     return fake_known_gettable_ctx_params;
 }
 
 static OSSL_FUNC_cipher_get_ctx_params_fn fake_get_ctx_params;
-static int fake_get_ctx_params(void *vctx, OSSL_PARAM params[])
+static int
+fake_get_ctx_params(void *vctx, OSSL_PARAM params[])
 {
     OSSL_PARAM *p;
 
@@ -237,44 +239,35 @@ static int fake_get_ctx_params(void *vctx, OSSL_PARAM params[])
 }
 
 static const OSSL_PARAM fake_known_settable_ctx_params[] = {
-    OSSL_PARAM_utf8_string(FAKE_CIPHER_PARAM_KEY_NAME, NULL, 0),
-    OSSL_PARAM_END
-};
+    OSSL_PARAM_utf8_string(FAKE_CIPHER_PARAM_KEY_NAME, NULL, 0), OSSL_PARAM_END};
 
 static OSSL_FUNC_cipher_settable_ctx_params_fn fake_settable_ctx_params;
-static const OSSL_PARAM *fake_settable_ctx_params(ossl_unused void *cctx,
-                                                  ossl_unused void *provctx)
+static const OSSL_PARAM *
+fake_settable_ctx_params(ossl_unused void *cctx, ossl_unused void *provctx)
 {
     return fake_known_settable_ctx_params;
 }
 
 static const OSSL_DISPATCH ossl_fake_functions[] = {
-    { OSSL_FUNC_CIPHER_NEWCTX,
-      (void (*)(void)) fake_newctx },
-    { OSSL_FUNC_CIPHER_FREECTX, (void (*)(void)) fake_freectx },
-    { OSSL_FUNC_CIPHER_DUPCTX, (void (*)(void)) fake_newctx },
-    { OSSL_FUNC_CIPHER_UPDATE, (void (*)(void)) fake_cipher },
-    { OSSL_FUNC_CIPHER_FINAL, (void (*)(void)) fake_final },
-    { OSSL_FUNC_CIPHER_CIPHER, (void (*)(void)) fake_cipher },
-    { OSSL_FUNC_CIPHER_GET_PARAMS, (void (*)(void)) fake_get_params },
-    { OSSL_FUNC_CIPHER_GET_CTX_PARAMS, (void (*)(void)) fake_get_ctx_params },
-    { OSSL_FUNC_CIPHER_GETTABLE_CTX_PARAMS,
-      (void (*)(void)) fake_gettable_ctx_params },
-    { OSSL_FUNC_CIPHER_SETTABLE_CTX_PARAMS,
-      (void (*)(void)) fake_settable_ctx_params },
-    { OSSL_FUNC_CIPHER_ENCRYPT_SKEY_INIT, (void (*)(void)) fake_skey_einit },
-    { OSSL_FUNC_CIPHER_DECRYPT_SKEY_INIT, (void (*)(void)) fake_skey_dinit },
-    OSSL_DISPATCH_END
-};
+    {OSSL_FUNC_CIPHER_NEWCTX, (void (*)(void))fake_newctx},
+    {OSSL_FUNC_CIPHER_FREECTX, (void (*)(void))fake_freectx},
+    {OSSL_FUNC_CIPHER_DUPCTX, (void (*)(void))fake_newctx},
+    {OSSL_FUNC_CIPHER_UPDATE, (void (*)(void))fake_cipher},
+    {OSSL_FUNC_CIPHER_FINAL, (void (*)(void))fake_final},
+    {OSSL_FUNC_CIPHER_CIPHER, (void (*)(void))fake_cipher},
+    {OSSL_FUNC_CIPHER_GET_PARAMS, (void (*)(void))fake_get_params},
+    {OSSL_FUNC_CIPHER_GET_CTX_PARAMS, (void (*)(void))fake_get_ctx_params},
+    {OSSL_FUNC_CIPHER_GETTABLE_CTX_PARAMS, (void (*)(void))fake_gettable_ctx_params},
+    {OSSL_FUNC_CIPHER_SETTABLE_CTX_PARAMS, (void (*)(void))fake_settable_ctx_params},
+    {OSSL_FUNC_CIPHER_ENCRYPT_SKEY_INIT, (void (*)(void))fake_skey_einit},
+    {OSSL_FUNC_CIPHER_DECRYPT_SKEY_INIT, (void (*)(void))fake_skey_dinit},
+    OSSL_DISPATCH_END};
 
 static const OSSL_ALGORITHM fake_cipher_algs[] = {
-    { "fake_cipher", FAKE_CIPHER_FETCH_PROPS, ossl_fake_functions},
-    { NULL, NULL, NULL }
-};
+    {"fake_cipher", FAKE_CIPHER_FETCH_PROPS, ossl_fake_functions}, {NULL, NULL, NULL}};
 
-static const OSSL_ALGORITHM *fake_cipher_query(void *provctx,
-                                               int operation_id,
-                                               int *no_cache)
+static const OSSL_ALGORITHM *
+fake_cipher_query(void *provctx, int operation_id, int *no_cache)
 {
     *no_cache = 0;
     switch (operation_id) {
@@ -288,14 +281,13 @@ static const OSSL_ALGORITHM *fake_cipher_query(void *provctx,
 
 /* Functions we provide to the core */
 static const OSSL_DISPATCH fake_cipher_method[] = {
-    { OSSL_FUNC_PROVIDER_TEARDOWN, (void (*)(void))OSSL_LIB_CTX_free },
-    { OSSL_FUNC_PROVIDER_QUERY_OPERATION, (void (*)(void))fake_cipher_query },
-    OSSL_DISPATCH_END
-};
+    {OSSL_FUNC_PROVIDER_TEARDOWN, (void (*)(void))OSSL_LIB_CTX_free},
+    {OSSL_FUNC_PROVIDER_QUERY_OPERATION, (void (*)(void))fake_cipher_query},
+    OSSL_DISPATCH_END};
 
-static int fake_cipher_provider_init(const OSSL_CORE_HANDLE *handle,
-                                     const OSSL_DISPATCH *in,
-                                     const OSSL_DISPATCH **out, void **provctx)
+static int
+fake_cipher_provider_init(const OSSL_CORE_HANDLE *handle, const OSSL_DISPATCH *in,
+                          const OSSL_DISPATCH **out, void **provctx)
 {
     if (!TEST_ptr(*provctx = OSSL_LIB_CTX_new()))
         return 0;
@@ -303,19 +295,20 @@ static int fake_cipher_provider_init(const OSSL_CORE_HANDLE *handle,
     return 1;
 }
 
-OSSL_PROVIDER *fake_cipher_start(OSSL_LIB_CTX *libctx)
+OSSL_PROVIDER *
+fake_cipher_start(OSSL_LIB_CTX *libctx)
 {
     OSSL_PROVIDER *p;
 
-    if (!TEST_true(OSSL_PROVIDER_add_builtin(libctx, FAKE_PROV_NAME,
-                                             fake_cipher_provider_init))
-            || !TEST_ptr(p = OSSL_PROVIDER_try_load(libctx, FAKE_PROV_NAME, 1)))
+    if (!TEST_true(OSSL_PROVIDER_add_builtin(libctx, FAKE_PROV_NAME, fake_cipher_provider_init)) ||
+        !TEST_ptr(p = OSSL_PROVIDER_try_load(libctx, FAKE_PROV_NAME, 1)))
         return NULL;
 
     return p;
 }
 
-void fake_cipher_finish(OSSL_PROVIDER *p)
+void
+fake_cipher_finish(OSSL_PROVIDER *p)
 {
     OSSL_PROVIDER_unload(p);
 }

@@ -24,7 +24,8 @@
 #include "internal/nelem.h"
 #include "crypto/dh.h"
 
-static DH *dh_param_init(OSSL_LIB_CTX *libctx, const DH_NAMED_GROUP *group)
+static DH *
+dh_param_init(OSSL_LIB_CTX *libctx, const DH_NAMED_GROUP *group)
 {
     DH *dh = ossl_dh_new_ex(libctx);
 
@@ -37,7 +38,8 @@ static DH *dh_param_init(OSSL_LIB_CTX *libctx, const DH_NAMED_GROUP *group)
     return dh;
 }
 
-DH *ossl_dh_new_by_nid_ex(OSSL_LIB_CTX *libctx, int nid)
+DH *
+ossl_dh_new_by_nid_ex(OSSL_LIB_CTX *libctx, int nid)
 {
     const DH_NAMED_GROUP *group;
 
@@ -48,12 +50,14 @@ DH *ossl_dh_new_by_nid_ex(OSSL_LIB_CTX *libctx, int nid)
     return NULL;
 }
 
-DH *DH_new_by_nid(int nid)
+DH *
+DH_new_by_nid(int nid)
 {
     return ossl_dh_new_by_nid_ex(NULL, nid);
 }
 
-void ossl_dh_cache_named_group(DH *dh)
+void
+ossl_dh_cache_named_group(DH *dh)
 {
     const DH_NAMED_GROUP *group;
 
@@ -63,13 +67,11 @@ void ossl_dh_cache_named_group(DH *dh)
     dh->params.nid = NID_undef; /* flush cached value */
 
     /* Exit if p or g is not set */
-    if (dh->params.p == NULL
-        || dh->params.g == NULL)
+    if (dh->params.p == NULL || dh->params.g == NULL)
         return;
 
-    if ((group = ossl_ffc_numbers_to_dh_named_group(dh->params.p,
-                                                    dh->params.q,
-                                                    dh->params.g)) != NULL) {
+    if ((group = ossl_ffc_numbers_to_dh_named_group(dh->params.p, dh->params.q, dh->params.g)) !=
+        NULL) {
         if (dh->params.q == NULL)
             dh->params.q = (BIGNUM *)ossl_ffc_named_group_get_q(group);
         /* cache the nid and default key length */
@@ -79,7 +81,8 @@ void ossl_dh_cache_named_group(DH *dh)
     }
 }
 
-int ossl_dh_is_named_safe_prime_group(const DH *dh)
+int
+ossl_dh_is_named_safe_prime_group(const DH *dh)
 {
     int id = DH_get_nid(dh);
 
@@ -90,7 +93,8 @@ int ossl_dh_is_named_safe_prime_group(const DH *dh)
     return (id > 3);
 }
 
-int DH_get_nid(const DH *dh)
+int
+DH_get_nid(const DH *dh)
 {
     if (dh == NULL)
         return NID_undef;

@@ -18,7 +18,8 @@
 #include "crypto/asn1.h"
 #include "asn1_local.h"
 
-int i2d_ASN1_OBJECT(const ASN1_OBJECT *a, unsigned char **pp)
+int
+i2d_ASN1_OBJECT(const ASN1_OBJECT *a, unsigned char **pp)
 {
     unsigned char *p, *allocated = NULL;
     int objsize;
@@ -48,7 +49,8 @@ int i2d_ASN1_OBJECT(const ASN1_OBJECT *a, unsigned char **pp)
     return objsize;
 }
 
-int a2d_ASN1_OBJECT(unsigned char *out, int olen, const char *buf, int num)
+int
+a2d_ASN1_OBJECT(unsigned char *out, int olen, const char *buf, int num)
 {
     int i, first, len = 0, c, use_bn;
     char ftmp[24], *tmp = ftmp;
@@ -106,8 +108,7 @@ int a2d_ASN1_OBJECT(unsigned char *out, int olen, const char *buf, int num)
                     goto err;
             }
             if (use_bn) {
-                if (!BN_mul_word(bl, 10L)
-                    || !BN_add_word(bl, c - '0'))
+                if (!BN_mul_word(bl, 10L) || !BN_add_word(bl, c - '0'))
                     goto err;
             } else
                 l = l * 10L + (long)(c - '0');
@@ -121,7 +122,7 @@ int a2d_ASN1_OBJECT(unsigned char *out, int olen, const char *buf, int num)
                 if (!BN_add_word(bl, first * 40))
                     goto err;
             } else
-                l += (long)first *40;
+                l += (long)first * 40;
         }
         i = 0;
         if (use_bn) {
@@ -150,7 +151,6 @@ int a2d_ASN1_OBJECT(unsigned char *out, int olen, const char *buf, int num)
                 if (l == 0L)
                     break;
             }
-
         }
         if (out != NULL) {
             if (len + i > olen) {
@@ -167,19 +167,21 @@ int a2d_ASN1_OBJECT(unsigned char *out, int olen, const char *buf, int num)
         OPENSSL_free(tmp);
     BN_free(bl);
     return len;
- err:
+err:
     if (tmp != ftmp)
         OPENSSL_free(tmp);
     BN_free(bl);
     return 0;
 }
 
-int i2t_ASN1_OBJECT(char *buf, int buf_len, const ASN1_OBJECT *a)
+int
+i2t_ASN1_OBJECT(char *buf, int buf_len, const ASN1_OBJECT *a)
 {
     return OBJ_obj2txt(buf, buf_len, a, 0);
 }
 
-int i2a_ASN1_OBJECT(BIO *bp, const ASN1_OBJECT *a)
+int
+i2a_ASN1_OBJECT(BIO *bp, const ASN1_OBJECT *a)
 {
     char buf[80], *p = buf;
     int i;
@@ -188,7 +190,7 @@ int i2a_ASN1_OBJECT(BIO *bp, const ASN1_OBJECT *a)
         return BIO_write(bp, "NULL", 4);
     i = i2t_ASN1_OBJECT(buf, sizeof(buf), a);
     if (i > (int)(sizeof(buf) - 1)) {
-        if (i > INT_MAX - 1) {  /* catch an integer overflow */
+        if (i > INT_MAX - 1) { /* catch an integer overflow */
             ERR_raise(ERR_LIB_ASN1, ASN1_R_LENGTH_TOO_LONG);
             return -1;
         }
@@ -208,8 +210,8 @@ int i2a_ASN1_OBJECT(BIO *bp, const ASN1_OBJECT *a)
     return i;
 }
 
-ASN1_OBJECT *d2i_ASN1_OBJECT(ASN1_OBJECT **a, const unsigned char **pp,
-                             long length)
+ASN1_OBJECT *
+d2i_ASN1_OBJECT(ASN1_OBJECT **a, const unsigned char **pp, long length)
 {
     const unsigned char *p;
     long len;
@@ -231,13 +233,13 @@ ASN1_OBJECT *d2i_ASN1_OBJECT(ASN1_OBJECT **a, const unsigned char **pp,
     if (ret)
         *pp = p;
     return ret;
- err:
+err:
     ERR_raise(ERR_LIB_ASN1, i);
     return NULL;
 }
 
-ASN1_OBJECT *ossl_c2i_ASN1_OBJECT(ASN1_OBJECT **a, const unsigned char **pp,
-                                  long len)
+ASN1_OBJECT *
+ossl_c2i_ASN1_OBJECT(ASN1_OBJECT **a, const unsigned char **pp, long len)
 {
     ASN1_OBJECT *ret = NULL, tobj;
     const unsigned char *p;
@@ -249,8 +251,7 @@ ASN1_OBJECT *ossl_c2i_ASN1_OBJECT(ASN1_OBJECT **a, const unsigned char **pp,
      * be clear in the last octet. can't have leading 0x80 in subidentifiers,
      * see: X.690 8.19.2
      */
-    if (len <= 0 || len > INT_MAX || pp == NULL || (p = *pp) == NULL ||
-        p[len - 1] & 0x80) {
+    if (len <= 0 || len > INT_MAX || pp == NULL || (p = *pp) == NULL || p[len - 1] & 0x80) {
         ERR_raise(ERR_LIB_ASN1, ASN1_R_INVALID_OBJECT_ENCODING);
         return NULL;
     }
@@ -286,8 +287,7 @@ ASN1_OBJECT *ossl_c2i_ASN1_OBJECT(ASN1_OBJECT **a, const unsigned char **pp,
         }
     }
 
-    if ((a == NULL) || ((*a) == NULL) ||
-        !((*a)->flags & ASN1_OBJECT_FLAG_DYNAMIC)) {
+    if ((a == NULL) || ((*a) == NULL) || !((*a)->flags & ASN1_OBJECT_FLAG_DYNAMIC)) {
         if ((ret = ASN1_OBJECT_new()) == NULL)
             return NULL;
     } else {
@@ -326,14 +326,15 @@ ASN1_OBJECT *ossl_c2i_ASN1_OBJECT(ASN1_OBJECT **a, const unsigned char **pp,
         (*a) = ret;
     *pp = p;
     return ret;
- err:
+err:
     ERR_raise(ERR_LIB_ASN1, i);
     if ((a == NULL) || (*a != ret))
         ASN1_OBJECT_free(ret);
     return NULL;
 }
 
-ASN1_OBJECT *ASN1_OBJECT_new(void)
+ASN1_OBJECT *
+ASN1_OBJECT_new(void)
 {
     ASN1_OBJECT *ret;
 
@@ -344,7 +345,8 @@ ASN1_OBJECT *ASN1_OBJECT_new(void)
     return ret;
 }
 
-void ASN1_OBJECT_free(ASN1_OBJECT *a)
+void
+ASN1_OBJECT_free(ASN1_OBJECT *a)
 {
     if (a == NULL)
         return;
@@ -354,13 +356,13 @@ void ASN1_OBJECT_free(ASN1_OBJECT *a)
          * Disable purely for compile-time strict const checking.  Doing this
          * on a "real" compile will cause memory leaks
          */
-        OPENSSL_free((void*)a->sn);
-        OPENSSL_free((void*)a->ln);
+        OPENSSL_free((void *)a->sn);
+        OPENSSL_free((void *)a->ln);
 #endif
         a->sn = a->ln = NULL;
     }
     if (a->flags & ASN1_OBJECT_FLAG_DYNAMIC_DATA) {
-        OPENSSL_free((void*)a->data);
+        OPENSSL_free((void *)a->data);
         a->data = NULL;
         a->length = 0;
     }
@@ -368,8 +370,8 @@ void ASN1_OBJECT_free(ASN1_OBJECT *a)
         OPENSSL_free(a);
 }
 
-ASN1_OBJECT *ASN1_OBJECT_create(int nid, unsigned char *data, int len,
-                                const char *sn, const char *ln)
+ASN1_OBJECT *
+ASN1_OBJECT_create(int nid, unsigned char *data, int len, const char *sn, const char *ln)
 {
     ASN1_OBJECT o;
 
@@ -378,7 +380,7 @@ ASN1_OBJECT *ASN1_OBJECT_create(int nid, unsigned char *data, int len,
     o.data = data;
     o.nid = nid;
     o.length = len;
-    o.flags = ASN1_OBJECT_FLAG_DYNAMIC | ASN1_OBJECT_FLAG_DYNAMIC_STRINGS |
-        ASN1_OBJECT_FLAG_DYNAMIC_DATA;
+    o.flags =
+        ASN1_OBJECT_FLAG_DYNAMIC | ASN1_OBJECT_FLAG_DYNAMIC_STRINGS | ASN1_OBJECT_FLAG_DYNAMIC_DATA;
     return OBJ_dup(&o);
 }

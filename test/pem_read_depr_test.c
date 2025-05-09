@@ -23,7 +23,8 @@
 
 static const char *datadir;
 
-static BIO *getfile(const char *filename)
+static BIO *
+getfile(const char *filename)
 {
     char *paramsfile = test_mk_file_path(datadir, filename);
     BIO *infile = NULL;
@@ -32,13 +33,14 @@ static BIO *getfile(const char *filename)
         goto err;
     infile = BIO_new_file(paramsfile, "r");
 
- err:
+err:
     OPENSSL_free(paramsfile);
     return infile;
 }
 
 #ifndef OPENSSL_NO_DH
-static int test_read_dh_params(void)
+static int
+test_read_dh_params(void)
 {
     int testresult = 0;
     BIO *infile = getfile("dhparams.pem");
@@ -53,13 +55,14 @@ static int test_read_dh_params(void)
 
     testresult = 1;
 
- err:
+err:
     BIO_free(infile);
     DH_free(dh);
     return testresult;
 }
 
-static int test_read_dh_x942_params(void)
+static int
+test_read_dh_x942_params(void)
 {
     int testresult = 0;
     BIO *infile = getfile("x942params.pem");
@@ -74,7 +77,7 @@ static int test_read_dh_x942_params(void)
 
     testresult = 1;
 
- err:
+err:
     BIO_free(infile);
     DH_free(dh);
     return testresult;
@@ -82,7 +85,8 @@ static int test_read_dh_x942_params(void)
 #endif
 
 #ifndef OPENSSL_NO_DSA
-static int test_read_dsa_params(void)
+static int
+test_read_dsa_params(void)
 {
     int testresult = 0;
     BIO *infile = getfile("dsaparams.pem");
@@ -97,13 +101,14 @@ static int test_read_dsa_params(void)
 
     testresult = 1;
 
- err:
+err:
     BIO_free(infile);
     DSA_free(dsa);
     return testresult;
 }
 
-static int test_read_dsa_private(void)
+static int
+test_read_dsa_private(void)
 {
     int testresult = 0;
     BIO *infile = getfile("dsaprivatekey.pem");
@@ -118,13 +123,14 @@ static int test_read_dsa_private(void)
 
     testresult = 1;
 
- err:
+err:
     BIO_free(infile);
     DSA_free(dsa);
     return testresult;
 }
 
-static int test_read_dsa_public(void)
+static int
+test_read_dsa_public(void)
 {
     int testresult = 0;
     BIO *infile = getfile("dsapublickey.pem");
@@ -139,14 +145,15 @@ static int test_read_dsa_public(void)
 
     testresult = 1;
 
- err:
+err:
     BIO_free(infile);
     DSA_free(dsa);
     return testresult;
 }
 #endif
 
-static int test_read_rsa_private(void)
+static int
+test_read_rsa_private(void)
 {
     int testresult = 0;
     BIO *infile = getfile("rsaprivatekey.pem");
@@ -161,13 +168,14 @@ static int test_read_rsa_private(void)
 
     testresult = 1;
 
- err:
+err:
     BIO_free(infile);
     RSA_free(rsa);
     return testresult;
 }
 
-static int test_read_rsa_public(void)
+static int
+test_read_rsa_public(void)
 {
     int testresult = 0;
     BIO *infile = getfile("rsapublickey.pem");
@@ -182,13 +190,14 @@ static int test_read_rsa_public(void)
 
     testresult = 1;
 
- err:
+err:
     BIO_free(infile);
     RSA_free(rsa);
     return testresult;
 }
 
-int setup_tests(void)
+int
+setup_tests(void)
 {
     if (!test_skip_common_options()) {
         TEST_error("Error parsing test options\n");

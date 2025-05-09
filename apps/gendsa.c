@@ -24,8 +24,14 @@
 
 typedef enum OPTION_choice {
     OPT_COMMON,
-    OPT_OUT, OPT_PASSOUT, OPT_ENGINE, OPT_CIPHER, OPT_VERBOSE, OPT_QUIET,
-    OPT_R_ENUM, OPT_PROV_ENUM
+    OPT_OUT,
+    OPT_PASSOUT,
+    OPT_ENGINE,
+    OPT_CIPHER,
+    OPT_VERBOSE,
+    OPT_QUIET,
+    OPT_R_ENUM,
+    OPT_PROV_ENUM
 } OPTION_CHOICE;
 
 const OPTIONS gendsa_options[] = {
@@ -48,10 +54,10 @@ const OPTIONS gendsa_options[] = {
 
     OPT_PARAMETERS(),
     {"dsaparam-file", 0, 0, "File containing DSA parameters"},
-    {NULL}
-};
+    {NULL}};
 
-int gendsa_main(int argc, char **argv)
+int
+gendsa_main(int argc, char **argv)
 {
     ENGINE *e = NULL;
     BIO *out = NULL, *in = NULL;
@@ -69,7 +75,7 @@ int gendsa_main(int argc, char **argv)
         switch (o) {
         case OPT_EOF:
         case OPT_ERR:
- opthelp:
+        opthelp:
             BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
             goto end;
         case OPT_HELP:
@@ -157,10 +163,10 @@ int gendsa_main(int argc, char **argv)
         goto end;
     }
     ret = 0;
- end:
+end:
     if (ret != 0)
         ERR_print_errors(bio_err);
- end2:
+end2:
     BIO_free(in);
     BIO_free_all(out);
     EVP_PKEY_free(pkey);

@@ -22,9 +22,9 @@
  * used is contained in *num;
  */
 
-void CAST_cfb64_encrypt(const unsigned char *in, unsigned char *out,
-                        long length, const CAST_KEY *schedule,
-                        unsigned char *ivec, int *num, int enc)
+void
+CAST_cfb64_encrypt(const unsigned char *in, unsigned char *out, long length,
+                   const CAST_KEY *schedule, unsigned char *ivec, int *num, int enc)
 {
     register CAST_LONG v0, v1, t;
     register int n = *num;

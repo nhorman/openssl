@@ -15,7 +15,8 @@
  * For example, contains these lines:
     Len = 80
     Msg = 1ca984dcc913344370cf
-    MD = 6915ea0eeffb99b9b246a0e34daf3947852684c3d618260119a22835659e4f23d4eb66a15d0affb8e93771578f5e8f25b7a5f2a55f511fb8b96325ba2cd14816
+    MD =
+ 6915ea0eeffb99b9b246a0e34daf3947852684c3d618260119a22835659e4f23d4eb66a15d0affb8e93771578f5e8f25b7a5f2a55f511fb8b96325ba2cd14816
  * use xxd convert the hex message string to binary input for EVP_MD_stdin:
  * echo "1ca984dcc913344370cf" | xxd -r -p | ./EVP_MD_stdin
  * and then verify the output matches MD above.
@@ -31,7 +32,8 @@
  * a BIO created to read from stdin
  */
 
-static int demonstrate_digest(BIO *input)
+static int
+demonstrate_digest(BIO *input)
 {
     OSSL_LIB_CTX *library_context = NULL;
     int ret = 0;
@@ -54,8 +56,7 @@ static int demonstrate_digest(BIO *input)
      * The algorithm name is case insensitive.
      * See providers(7) for details about algorithm fetching
      */
-    message_digest = EVP_MD_fetch(library_context,
-                                  "SHA3-512", option_properties);
+    message_digest = EVP_MD_fetch(library_context, "SHA3-512", option_properties);
     if (message_digest == NULL) {
         fprintf(stderr, "EVP_MD_fetch could not find SHA3-512.");
         ERR_print_errors_fp(stderr);
@@ -104,7 +105,7 @@ static int demonstrate_digest(BIO *input)
         goto cleanup;
     }
     ret = 1;
-    for (ii=0; ii<digest_length; ii++) {
+    for (ii = 0; ii < digest_length; ii++) {
         fprintf(stdout, "%02x", digest_value[ii]);
     }
     fprintf(stdout, "\n");
@@ -121,7 +122,8 @@ cleanup:
     return ret;
 }
 
-int main(void)
+int
+main(void)
 {
     int ret = EXIT_FAILURE;
     BIO *input = BIO_new_fd(fileno(stdin), 1);

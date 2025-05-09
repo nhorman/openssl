@@ -19,7 +19,8 @@ OPT_TEST_DECLARE_USAGE("cert_file key_file\n")
  *   int bindings_adjust_terp_config(TERP_CONFIG *cfg);
  *
  */
-static int test_script(int idx)
+static int
+test_script(int idx)
 {
     SCRIPT_INFO *script_info = scripts[idx];
     int testresult;
@@ -41,7 +42,8 @@ static int test_script(int idx)
     return testresult;
 }
 
-int setup_tests(void)
+int
+setup_tests(void)
 {
     if (!test_skip_common_options()) {
         TEST_error("Error parsing test options\n");

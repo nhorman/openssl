@@ -14,7 +14,8 @@
 #include <openssl/safestack.h>
 #include <openssl/err.h>
 
-static void dump_section(const char *name, const CONF *cnf)
+static void
+dump_section(const char *name, const CONF *cnf)
 {
     STACK_OF(CONF_VALUE) *sect = NCONF_get_section(cnf, name);
     int i;
@@ -27,7 +28,8 @@ static void dump_section(const char *name, const CONF *cnf)
     }
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
     long eline;
     CONF *conf = NCONF_new(NCONF_default());

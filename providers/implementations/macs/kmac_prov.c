@@ -109,14 +109,12 @@ static OSSL_FUNC_mac_final_fn kmac_final;
 #define KMAC_MAX_KEY_ENCODED (KMAC_MAX_BLOCKSIZE * 4)
 
 /* Fixed value of encode_string("KMAC") */
-static const unsigned char kmac_string[] = {
-    0x01, 0x20, 0x4B, 0x4D, 0x41, 0x43
-};
+static const unsigned char kmac_string[] = {0x01, 0x20, 0x4B, 0x4D, 0x41, 0x43};
 
-#define KMAC_FLAG_XOF_MODE          1
+#define KMAC_FLAG_XOF_MODE 1
 
 struct kmac_data_st {
-    void  *provctx;
+    void *provctx;
     EVP_MD_CTX *ctx;
     PROV_DIGEST digest;
     size_t out_len;
@@ -140,18 +138,14 @@ struct kmac_data_st {
 
 static int encode_string(unsigned char *out, size_t out_max_len, size_t *out_len,
                          const unsigned char *in, size_t in_len);
-static int right_encode(unsigned char *out, size_t out_max_len, size_t *out_len,
-                        size_t bits);
-static int bytepad(unsigned char *out, size_t *out_len,
-                   const unsigned char *in1, size_t in1_len,
-                   const unsigned char *in2, size_t in2_len,
-                   size_t w);
-static int kmac_bytepad_encode_key(unsigned char *out, size_t out_max_len,
-                                   size_t *out_len,
-                                   const unsigned char *in, size_t in_len,
-                                   size_t w);
+static int right_encode(unsigned char *out, size_t out_max_len, size_t *out_len, size_t bits);
+static int bytepad(unsigned char *out, size_t *out_len, const unsigned char *in1, size_t in1_len,
+                   const unsigned char *in2, size_t in2_len, size_t w);
+static int kmac_bytepad_encode_key(unsigned char *out, size_t out_max_len, size_t *out_len,
+                                   const unsigned char *in, size_t in_len, size_t w);
 
-static void kmac_free(void *vmacctx)
+static void
+kmac_free(void *vmacctx)
 {
     struct kmac_data_st *kctx = vmacctx;
 
@@ -169,15 +163,15 @@ static void kmac_free(void *vmacctx)
  * reimplementing the EVP functionality with direct use of
  * keccak_mac_init() and friends.
  */
-static struct kmac_data_st *kmac_new(void *provctx)
+static struct kmac_data_st *
+kmac_new(void *provctx)
 {
     struct kmac_data_st *kctx;
 
     if (!ossl_prov_is_running())
         return NULL;
 
-    if ((kctx = OPENSSL_zalloc(sizeof(*kctx))) == NULL
-            || (kctx->ctx = EVP_MD_CTX_new()) == NULL) {
+    if ((kctx = OPENSSL_zalloc(sizeof(*kctx))) == NULL || (kctx->ctx = EVP_MD_CTX_new()) == NULL) {
         kmac_free(kctx);
         return NULL;
     }
@@ -186,15 +180,15 @@ static struct kmac_data_st *kmac_new(void *provctx)
     return kctx;
 }
 
-static void *kmac_fetch_new(void *provctx, const OSSL_PARAM *params)
+static void *
+kmac_fetch_new(void *provctx, const OSSL_PARAM *params)
 {
     struct kmac_data_st *kctx = kmac_new(provctx);
     int md_size;
 
     if (kctx == NULL)
         return 0;
-    if (!ossl_prov_digest_load_from_params(&kctx->digest, params,
-                                      PROV_LIBCTX_OF(provctx))) {
+    if (!ossl_prov_digest_load_from_params(&kctx->digest, params, PROV_LIBCTX_OF(provctx))) {
         kmac_free(kctx);
         return 0;
     }
@@ -208,27 +202,28 @@ static void *kmac_fetch_new(void *provctx, const OSSL_PARAM *params)
     return kctx;
 }
 
-static void *kmac128_new(void *provctx)
+static void *
+kmac128_new(void *provctx)
 {
     static const OSSL_PARAM kmac128_params[] = {
         OSSL_PARAM_utf8_string("digest", OSSL_DIGEST_NAME_KECCAK_KMAC128,
                                sizeof(OSSL_DIGEST_NAME_KECCAK_KMAC128)),
-        OSSL_PARAM_END
-    };
+        OSSL_PARAM_END};
     return kmac_fetch_new(provctx, kmac128_params);
 }
 
-static void *kmac256_new(void *provctx)
+static void *
+kmac256_new(void *provctx)
 {
     static const OSSL_PARAM kmac256_params[] = {
         OSSL_PARAM_utf8_string("digest", OSSL_DIGEST_NAME_KECCAK_KMAC256,
                                sizeof(OSSL_DIGEST_NAME_KECCAK_KMAC256)),
-        OSSL_PARAM_END
-    };
+        OSSL_PARAM_END};
     return kmac_fetch_new(provctx, kmac256_params);
 }
 
-static void *kmac_dup(void *vsrc)
+static void *
+kmac_dup(void *vsrc)
 {
     struct kmac_data_st *src = vsrc;
     struct kmac_data_st *dst;
@@ -240,8 +235,8 @@ static void *kmac_dup(void *vsrc)
     if (dst == NULL)
         return NULL;
 
-    if (!EVP_MD_CTX_copy(dst->ctx, src->ctx)
-        || !ossl_prov_digest_copy(&dst->digest, &src->digest)) {
+    if (!EVP_MD_CTX_copy(dst->ctx, src->ctx) ||
+        !ossl_prov_digest_copy(&dst->digest, &src->digest)) {
         kmac_free(dst);
         return NULL;
     }
@@ -259,8 +254,8 @@ static void *kmac_dup(void *vsrc)
     return dst;
 }
 
-static int kmac_setkey(struct kmac_data_st *kctx, const unsigned char *key,
-                       size_t keylen)
+static int
+kmac_setkey(struct kmac_data_st *kctx, const unsigned char *key, size_t keylen)
 {
     const EVP_MD *digest = ossl_prov_digest_md(&kctx->digest);
     int w = EVP_MD_get_block_size(digest);
@@ -279,8 +274,7 @@ static int kmac_setkey(struct kmac_data_st *kctx, const unsigned char *key,
 
         if (!approved) {
             if (!OSSL_FIPS_IND_ON_UNAPPROVED(kctx, OSSL_FIPS_IND_SETTABLE1,
-                                             PROV_LIBCTX_OF(kctx->provctx),
-                                             "KMAC", "Key size",
+                                             PROV_LIBCTX_OF(kctx->provctx), "KMAC", "Key size",
                                              ossl_fips_config_kmac_key_check)) {
                 ERR_raise(ERR_LIB_PROV, PROV_R_INVALID_KEY_LENGTH);
                 return 0;
@@ -292,8 +286,8 @@ static int kmac_setkey(struct kmac_data_st *kctx, const unsigned char *key,
         ERR_raise(ERR_LIB_PROV, PROV_R_INVALID_DIGEST_LENGTH);
         return 0;
     }
-    if (!kmac_bytepad_encode_key(kctx->key, sizeof(kctx->key), &kctx->key_len,
-                                 key, keylen, (size_t)w))
+    if (!kmac_bytepad_encode_key(kctx->key, sizeof(kctx->key), &kctx->key_len, key, keylen,
+                                 (size_t)w))
         return 0;
     return 1;
 }
@@ -303,8 +297,8 @@ static int kmac_setkey(struct kmac_data_st *kctx, const unsigned char *key,
  * md, key and custom. Setting the fields afterwards will have no
  * effect on the output mac.
  */
-static int kmac_init(void *vmacctx, const unsigned char *key,
-                     size_t keylen, const OSSL_PARAM params[])
+static int
+kmac_init(void *vmacctx, const unsigned char *key, size_t keylen, const OSSL_PARAM params[])
 {
     struct kmac_data_st *kctx = vmacctx;
     EVP_MD_CTX *ctx = kctx->ctx;
@@ -323,8 +317,7 @@ static int kmac_init(void *vmacctx, const unsigned char *key,
         ERR_raise(ERR_LIB_PROV, PROV_R_NO_KEY_SET);
         return 0;
     }
-    if (!EVP_DigestInit_ex(kctx->ctx, ossl_prov_digest_md(&kctx->digest),
-                           NULL))
+    if (!EVP_DigestInit_ex(kctx->ctx, ossl_prov_digest_md(&kctx->digest), NULL))
         return 0;
 
     t = EVP_MD_get_block_size(ossl_prov_digest_md(&kctx->digest));
@@ -336,39 +329,36 @@ static int kmac_init(void *vmacctx, const unsigned char *key,
 
     /* Set default custom string if it is not already set */
     if (kctx->custom_len == 0) {
-        const OSSL_PARAM cparams[] = {
-            OSSL_PARAM_octet_string(OSSL_MAC_PARAM_CUSTOM, "", 0),
-            OSSL_PARAM_END
-        };
+        const OSSL_PARAM cparams[] = {OSSL_PARAM_octet_string(OSSL_MAC_PARAM_CUSTOM, "", 0),
+                                      OSSL_PARAM_END};
         (void)kmac_set_ctx_params(kctx, cparams);
     }
 
-    if (!bytepad(NULL, &out_len, kmac_string, sizeof(kmac_string),
-                 kctx->custom, kctx->custom_len, block_len)) {
+    if (!bytepad(NULL, &out_len, kmac_string, sizeof(kmac_string), kctx->custom, kctx->custom_len,
+                 block_len)) {
         ERR_raise(ERR_LIB_PROV, ERR_R_INTERNAL_ERROR);
         return 0;
     }
     out = OPENSSL_malloc(out_len);
     if (out == NULL)
         return 0;
-    res = bytepad(out, NULL, kmac_string, sizeof(kmac_string),
-                  kctx->custom, kctx->custom_len, block_len)
-          && EVP_DigestUpdate(ctx, out, out_len)
-          && EVP_DigestUpdate(ctx, kctx->key, kctx->key_len);
+    res = bytepad(out, NULL, kmac_string, sizeof(kmac_string), kctx->custom, kctx->custom_len,
+                  block_len) &&
+          EVP_DigestUpdate(ctx, out, out_len) && EVP_DigestUpdate(ctx, kctx->key, kctx->key_len);
     OPENSSL_free(out);
     return res;
 }
 
-static int kmac_update(void *vmacctx, const unsigned char *data,
-                       size_t datalen)
+static int
+kmac_update(void *vmacctx, const unsigned char *data, size_t datalen)
 {
     struct kmac_data_st *kctx = vmacctx;
 
     return EVP_DigestUpdate(kctx->ctx, data, datalen);
 }
 
-static int kmac_final(void *vmacctx, unsigned char *out, size_t *outl,
-                      size_t outsize)
+static int
+kmac_final(void *vmacctx, unsigned char *out, size_t *outl, size_t outsize)
 {
     struct kmac_data_st *kctx = vmacctx;
     EVP_MD_CTX *ctx = kctx->ctx;
@@ -382,9 +372,8 @@ static int kmac_final(void *vmacctx, unsigned char *out, size_t *outl,
     /* KMAC XOF mode sets the encoded length to 0 */
     lbits = (kctx->xof_mode ? 0 : (kctx->out_len * 8));
 
-    ok = right_encode(encoded_outlen, sizeof(encoded_outlen), &len, lbits)
-        && EVP_DigestUpdate(ctx, encoded_outlen, len)
-        && EVP_DigestFinalXOF(ctx, out, kctx->out_len);
+    ok = right_encode(encoded_outlen, sizeof(encoded_outlen), &len, lbits) &&
+         EVP_DigestUpdate(ctx, encoded_outlen, len) && EVP_DigestFinalXOF(ctx, out, kctx->out_len);
     *outl = kctx->out_len;
     return ok;
 }
@@ -392,23 +381,22 @@ static int kmac_final(void *vmacctx, unsigned char *out, size_t *outl,
 static const OSSL_PARAM known_gettable_ctx_params[] = {
     OSSL_PARAM_size_t(OSSL_MAC_PARAM_SIZE, NULL),
     OSSL_PARAM_size_t(OSSL_MAC_PARAM_BLOCK_SIZE, NULL),
-    OSSL_FIPS_IND_GETTABLE_CTX_PARAM()
-    OSSL_PARAM_END
-};
-static const OSSL_PARAM *kmac_gettable_ctx_params(ossl_unused void *ctx,
-                                                  ossl_unused void *provctx)
+    OSSL_FIPS_IND_GETTABLE_CTX_PARAM() OSSL_PARAM_END};
+static const OSSL_PARAM *
+kmac_gettable_ctx_params(ossl_unused void *ctx, ossl_unused void *provctx)
 {
     return known_gettable_ctx_params;
 }
 
-static int kmac_get_ctx_params(void *vmacctx, OSSL_PARAM params[])
+static int
+kmac_get_ctx_params(void *vmacctx, OSSL_PARAM params[])
 {
     struct kmac_data_st *kctx = vmacctx;
     OSSL_PARAM *p;
     int sz;
 
-    if ((p = OSSL_PARAM_locate(params, OSSL_MAC_PARAM_SIZE)) != NULL
-            && !OSSL_PARAM_set_size_t(p, kctx->out_len))
+    if ((p = OSSL_PARAM_locate(params, OSSL_MAC_PARAM_SIZE)) != NULL &&
+        !OSSL_PARAM_set_size_t(p, kctx->out_len))
         return 0;
 
     if ((p = OSSL_PARAM_locate(params, OSSL_MAC_PARAM_BLOCK_SIZE)) != NULL) {
@@ -424,16 +412,13 @@ static int kmac_get_ctx_params(void *vmacctx, OSSL_PARAM params[])
 }
 
 static const OSSL_PARAM known_settable_ctx_params[] = {
-    OSSL_PARAM_int(OSSL_MAC_PARAM_XOF, NULL),
-    OSSL_PARAM_size_t(OSSL_MAC_PARAM_SIZE, NULL),
+    OSSL_PARAM_int(OSSL_MAC_PARAM_XOF, NULL), OSSL_PARAM_size_t(OSSL_MAC_PARAM_SIZE, NULL),
     OSSL_PARAM_octet_string(OSSL_MAC_PARAM_KEY, NULL, 0),
     OSSL_PARAM_octet_string(OSSL_MAC_PARAM_CUSTOM, NULL, 0),
     OSSL_FIPS_IND_SETTABLE_CTX_PARAM(OSSL_MAC_PARAM_FIPS_NO_SHORT_MAC)
-    OSSL_FIPS_IND_SETTABLE_CTX_PARAM(OSSL_MAC_PARAM_FIPS_KEY_CHECK)
-    OSSL_PARAM_END
-};
-static const OSSL_PARAM *kmac_settable_ctx_params(ossl_unused void *ctx,
-                                                  ossl_unused void *provctx)
+        OSSL_FIPS_IND_SETTABLE_CTX_PARAM(OSSL_MAC_PARAM_FIPS_KEY_CHECK) OSSL_PARAM_END};
+static const OSSL_PARAM *
+kmac_settable_ctx_params(ossl_unused void *ctx, ossl_unused void *provctx)
 {
     return known_settable_ctx_params;
 }
@@ -447,7 +432,8 @@ static const OSSL_PARAM *kmac_settable_ctx_params(ossl_unused void *ctx,
  *
  * All other params should be set before init().
  */
-static int kmac_set_ctx_params(void *vmacctx, const OSSL_PARAM *params)
+static int
+kmac_set_ctx_params(void *vmacctx, const OSSL_PARAM *params)
 {
     struct kmac_data_st *kctx = vmacctx;
     const OSSL_PARAM *p;
@@ -462,8 +448,8 @@ static int kmac_set_ctx_params(void *vmacctx, const OSSL_PARAM *params)
                                      OSSL_MAC_PARAM_FIPS_KEY_CHECK))
         return 0;
 
-    if ((p = OSSL_PARAM_locate_const(params, OSSL_MAC_PARAM_XOF)) != NULL
-        && !OSSL_PARAM_get_int(p, &kctx->xof_mode))
+    if ((p = OSSL_PARAM_locate_const(params, OSSL_MAC_PARAM_XOF)) != NULL &&
+        !OSSL_PARAM_get_int(p, &kctx->xof_mode))
         return 0;
     if ((p = OSSL_PARAM_locate_const(params, OSSL_MAC_PARAM_SIZE)) != NULL) {
         size_t sz = 0;
@@ -478,8 +464,7 @@ static int kmac_set_ctx_params(void *vmacctx, const OSSL_PARAM *params)
         /* SP 800-185 8.4.2 mandates a minimum of 32 bits of output */
         if (sz < 32 / 8) {
             if (!OSSL_FIPS_IND_ON_UNAPPROVED(kctx, OSSL_FIPS_IND_SETTABLE0,
-                                             PROV_LIBCTX_OF(kctx->provctx),
-                                             "KMAC", "length",
+                                             PROV_LIBCTX_OF(kctx->provctx), "KMAC", "length",
                                              ossl_fips_config_no_short_mac)) {
                 ERR_raise(ERR_LIB_PROV, PROV_R_INVALID_OUTPUT_LENGTH);
                 return 0;
@@ -488,17 +473,16 @@ static int kmac_set_ctx_params(void *vmacctx, const OSSL_PARAM *params)
 #endif
         kctx->out_len = sz;
     }
-    if ((p = OSSL_PARAM_locate_const(params, OSSL_MAC_PARAM_KEY)) != NULL
-            && !kmac_setkey(kctx, p->data, p->data_size))
+    if ((p = OSSL_PARAM_locate_const(params, OSSL_MAC_PARAM_KEY)) != NULL &&
+        !kmac_setkey(kctx, p->data, p->data_size))
         return 0;
-    if ((p = OSSL_PARAM_locate_const(params, OSSL_MAC_PARAM_CUSTOM))
-        != NULL) {
+    if ((p = OSSL_PARAM_locate_const(params, OSSL_MAC_PARAM_CUSTOM)) != NULL) {
         if (p->data_size > KMAC_MAX_CUSTOM) {
             ERR_raise(ERR_LIB_PROV, PROV_R_INVALID_CUSTOM_LENGTH);
             return 0;
         }
-        if (!encode_string(kctx->custom, sizeof(kctx->custom), &kctx->custom_len,
-                           p->data, p->data_size))
+        if (!encode_string(kctx->custom, sizeof(kctx->custom), &kctx->custom_len, p->data,
+                           p->data_size))
             return 0;
     }
     return 1;
@@ -507,7 +491,8 @@ static int kmac_set_ctx_params(void *vmacctx, const OSSL_PARAM *params)
 /* Encoding/Padding Methods. */
 
 /* Returns the number of bytes required to store 'bits' into a byte array */
-static unsigned int get_encode_size(size_t bits)
+static unsigned int
+get_encode_size(size_t bits)
 {
     unsigned int cnt = 0, sz = sizeof(size_t);
 
@@ -528,8 +513,8 @@ static unsigned int get_encode_size(size_t bits)
  *
  * e.g if bits = 32, out[2] = { 0x20, 0x01 }
  */
-static int right_encode(unsigned char *out, size_t out_max_len, size_t *out_len,
-                        size_t bits)
+static int
+right_encode(unsigned char *out, size_t out_max_len, size_t *out_len, size_t bits)
 {
     unsigned int len = get_encode_size(bits);
     int i;
@@ -559,8 +544,9 @@ static int right_encode(unsigned char *out, size_t out_max_len, size_t *out_len,
  * e.g- in="KMAC" gives out[6] = { 0x01, 0x20, 0x4B, 0x4D, 0x41, 0x43 }
  *                                 len   bits    K     M     A     C
  */
-static int encode_string(unsigned char *out, size_t out_max_len, size_t *out_len,
-                         const unsigned char *in, size_t in_len)
+static int
+encode_string(unsigned char *out, size_t out_max_len, size_t *out_len, const unsigned char *in,
+              size_t in_len)
 {
     if (in == NULL) {
         *out_len = 0;
@@ -595,9 +581,9 @@ static int encode_string(unsigned char *out, size_t out_max_len, size_t *out_len
  * The returned output is:
  *    zero_padded(multiple of w, (left_encode(w) || in1 [|| in2])
  */
-static int bytepad(unsigned char *out, size_t *out_len,
-                   const unsigned char *in1, size_t in1_len,
-                   const unsigned char *in2, size_t in2_len, size_t w)
+static int
+bytepad(unsigned char *out, size_t *out_len, const unsigned char *in1, size_t in1_len,
+        const unsigned char *in2, size_t in2_len, size_t w)
 {
     int len;
     unsigned char *p = out;
@@ -639,10 +625,9 @@ static int bytepad(unsigned char *out, size_t *out_len,
 }
 
 /* Returns out = bytepad(encode_string(in), w) */
-static int kmac_bytepad_encode_key(unsigned char *out, size_t out_max_len,
-                                   size_t *out_len,
-                                   const unsigned char *in, size_t in_len,
-                                   size_t w)
+static int
+kmac_bytepad_encode_key(unsigned char *out, size_t out_max_len, size_t *out_len,
+                        const unsigned char *in, size_t in_len, size_t w)
 {
     unsigned char tmp[KMAC_MAX_KEY + KMAC_MAX_ENCODED_HEADER_LEN];
     size_t tmp_len;
@@ -656,23 +641,19 @@ static int kmac_bytepad_encode_key(unsigned char *out, size_t out_max_len,
     return bytepad(out, NULL, tmp, tmp_len, NULL, 0, w);
 }
 
-#define IMPLEMENT_KMAC_TABLE(size, funcname, newname)                          \
-const OSSL_DISPATCH ossl_kmac##size##_##funcname[] =                           \
-{                                                                              \
-    { OSSL_FUNC_MAC_NEWCTX, (void (*)(void))kmac##size##_##newname },          \
-    { OSSL_FUNC_MAC_DUPCTX, (void (*)(void))kmac_dup },                        \
-    { OSSL_FUNC_MAC_FREECTX, (void (*)(void))kmac_free },                      \
-    { OSSL_FUNC_MAC_INIT, (void (*)(void))kmac_init },                         \
-    { OSSL_FUNC_MAC_UPDATE, (void (*)(void))kmac_update },                     \
-    { OSSL_FUNC_MAC_FINAL, (void (*)(void))kmac_final },                       \
-    { OSSL_FUNC_MAC_GETTABLE_CTX_PARAMS,                                       \
-      (void (*)(void))kmac_gettable_ctx_params },                              \
-    { OSSL_FUNC_MAC_GET_CTX_PARAMS, (void (*)(void))kmac_get_ctx_params },     \
-    { OSSL_FUNC_MAC_SETTABLE_CTX_PARAMS,                                       \
-      (void (*)(void))kmac_settable_ctx_params },                              \
-    { OSSL_FUNC_MAC_SET_CTX_PARAMS, (void (*)(void))kmac_set_ctx_params },     \
-    OSSL_DISPATCH_END                                                          \
-}
+#define IMPLEMENT_KMAC_TABLE(size, funcname, newname)                                              \
+    const OSSL_DISPATCH ossl_kmac##size##_##funcname[] = {                                         \
+        {OSSL_FUNC_MAC_NEWCTX, (void (*)(void))kmac##size##_##newname},                            \
+        {OSSL_FUNC_MAC_DUPCTX, (void (*)(void))kmac_dup},                                          \
+        {OSSL_FUNC_MAC_FREECTX, (void (*)(void))kmac_free},                                        \
+        {OSSL_FUNC_MAC_INIT, (void (*)(void))kmac_init},                                           \
+        {OSSL_FUNC_MAC_UPDATE, (void (*)(void))kmac_update},                                       \
+        {OSSL_FUNC_MAC_FINAL, (void (*)(void))kmac_final},                                         \
+        {OSSL_FUNC_MAC_GETTABLE_CTX_PARAMS, (void (*)(void))kmac_gettable_ctx_params},             \
+        {OSSL_FUNC_MAC_GET_CTX_PARAMS, (void (*)(void))kmac_get_ctx_params},                       \
+        {OSSL_FUNC_MAC_SETTABLE_CTX_PARAMS, (void (*)(void))kmac_settable_ctx_params},             \
+        {OSSL_FUNC_MAC_SET_CTX_PARAMS, (void (*)(void))kmac_set_ctx_params},                       \
+        OSSL_DISPATCH_END}
 
 #define KMAC_TABLE(size) IMPLEMENT_KMAC_TABLE(size, functions, new)
 
@@ -680,17 +661,17 @@ KMAC_TABLE(128);
 KMAC_TABLE(256);
 
 #ifdef FIPS_MODULE
-# define KMAC_INTERNAL_TABLE(size)                                             \
-static OSSL_FUNC_mac_newctx_fn kmac##size##_internal_new;                      \
-static void *kmac##size##_internal_new(void *provctx)                          \
-{                                                                              \
-    struct kmac_data_st *macctx = kmac##size##_new(provctx);                   \
-                                                                               \
-    if (macctx != NULL)                                                        \
-        macctx->internal = 1;                                                  \
-    return macctx;                                                             \
-}                                                                              \
-IMPLEMENT_KMAC_TABLE(size, internal_functions, internal_new)
+# define KMAC_INTERNAL_TABLE(size)                                                                 \
+     static OSSL_FUNC_mac_newctx_fn kmac##size##_internal_new;                                     \
+     static void *kmac##size##_internal_new(void *provctx)                                         \
+     {                                                                                             \
+         struct kmac_data_st *macctx = kmac##size##_new(provctx);                                  \
+                                                                                                   \
+         if (macctx != NULL)                                                                       \
+             macctx->internal = 1;                                                                 \
+         return macctx;                                                                            \
+     }                                                                                             \
+     IMPLEMENT_KMAC_TABLE(size, internal_functions, internal_new)
 
 KMAC_INTERNAL_TABLE(128);
 KMAC_INTERNAL_TABLE(256);

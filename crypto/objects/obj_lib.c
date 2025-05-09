@@ -13,7 +13,8 @@
 #include <openssl/buffer.h>
 #include "crypto/asn1.h"
 
-ASN1_OBJECT *OBJ_dup(const ASN1_OBJECT *o)
+ASN1_OBJECT *
+OBJ_dup(const ASN1_OBJECT *o)
 {
     ASN1_OBJECT *r;
 
@@ -31,8 +32,7 @@ ASN1_OBJECT *OBJ_dup(const ASN1_OBJECT *o)
 
     /* Set dynamic flags so everything gets freed up on error */
 
-    r->flags = o->flags | (ASN1_OBJECT_FLAG_DYNAMIC |
-                           ASN1_OBJECT_FLAG_DYNAMIC_STRINGS |
+    r->flags = o->flags | (ASN1_OBJECT_FLAG_DYNAMIC | ASN1_OBJECT_FLAG_DYNAMIC_STRINGS |
                            ASN1_OBJECT_FLAG_DYNAMIC_DATA);
 
     if (o->length > 0 && (r->data = OPENSSL_memdup(o->data, o->length)) == NULL)
@@ -48,12 +48,13 @@ ASN1_OBJECT *OBJ_dup(const ASN1_OBJECT *o)
         goto err;
 
     return r;
- err:
+err:
     ASN1_OBJECT_free(r);
     return NULL;
 }
 
-int OBJ_cmp(const ASN1_OBJECT *a, const ASN1_OBJECT *b)
+int
+OBJ_cmp(const ASN1_OBJECT *a, const ASN1_OBJECT *b)
 {
     int ret;
 

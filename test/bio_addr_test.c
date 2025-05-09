@@ -12,17 +12,17 @@
 #include "internal/sockets.h"
 #include "testutil.h"
 
-static int families[] = {
-    AF_INET,
+static int families[] = {AF_INET,
 #if OPENSSL_USE_IPV6
-    AF_INET6,
+                         AF_INET6,
 #endif
 #ifndef OPENSSL_NO_UNIX_SOCK
-    AF_UNIX
+                         AF_UNIX
 #endif
 };
 
-static BIO_ADDR *make_dummy_addr(int family)
+static BIO_ADDR *
+make_dummy_addr(int family)
 {
     BIO_ADDR *addr;
     union {
@@ -38,7 +38,7 @@ static BIO_ADDR *make_dummy_addr(int family)
     size_t wherelen;
 
     /* Fill with a dummy address */
-    switch(family) {
+    switch (family) {
     case AF_INET:
         where = &(sa.sin.sin_addr);
         wherelen = sizeof(sa.sin.sin_addr);
@@ -78,7 +78,8 @@ static BIO_ADDR *make_dummy_addr(int family)
     return addr;
 }
 
-static int bio_addr_is_eq(const BIO_ADDR *a, const BIO_ADDR *b)
+static int
+bio_addr_is_eq(const BIO_ADDR *a, const BIO_ADDR *b)
 {
     unsigned char *adata = NULL, *bdata = NULL;
     size_t alen, blen;
@@ -112,24 +113,23 @@ static int bio_addr_is_eq(const BIO_ADDR *a, const BIO_ADDR *b)
         return 1;
 
     adata = OPENSSL_malloc(alen);
-    if (!TEST_ptr(adata)
-            || !BIO_ADDR_rawaddress(a, adata, &alen))
+    if (!TEST_ptr(adata) || !BIO_ADDR_rawaddress(a, adata, &alen))
         goto err;
 
     bdata = OPENSSL_malloc(blen);
-    if (!TEST_ptr(bdata)
-            || !BIO_ADDR_rawaddress(b, bdata, &blen))
+    if (!TEST_ptr(bdata) || !BIO_ADDR_rawaddress(b, bdata, &blen))
         goto err;
 
     ret = (memcmp(adata, bdata, alen) == 0);
 
- err:
+err:
     OPENSSL_free(adata);
     OPENSSL_free(bdata);
     return ret;
 }
 
-static int test_bio_addr_copy_dup(int idx)
+static int
+test_bio_addr_copy_dup(int idx)
 {
     BIO_ADDR *src = NULL, *dst = NULL;
     int ret = 0;
@@ -158,13 +158,14 @@ static int test_bio_addr_copy_dup(int idx)
         goto err;
 
     ret = 1;
- err:
+err:
     BIO_ADDR_free(src);
     BIO_ADDR_free(dst);
     return ret;
 }
 
-int setup_tests(void)
+int
+setup_tests(void)
 {
     if (!test_skip_common_options()) {
         TEST_error("Error parsing test options\n");

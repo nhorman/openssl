@@ -11,7 +11,8 @@
 #include "internal/quic_txpim.h"
 #include "testutil.h"
 
-static int test_txpim(void)
+static int
+test_txpim(void)
 {
     int testresult = 0;
     QUIC_TXPIM *txpim;
@@ -32,21 +33,20 @@ static int test_txpim(void)
 
         for (j = 0; j < OSSL_NELEM(chunks); ++j) {
             chunks[j].stream_id = 100 - j;
-            chunks[j].start     = 1000 * i + j * 10;
-            chunks[j].end       = chunks[j].start + 5;
+            chunks[j].start = 1000 * i + j * 10;
+            chunks[j].end = chunks[j].start + 5;
 
             if (!TEST_true(ossl_quic_txpim_pkt_append_chunk(pkts[i], chunks + j)))
                 goto err;
         }
 
-        if (!TEST_size_t_eq(ossl_quic_txpim_pkt_get_num_chunks(pkts[i]),
-                            OSSL_NELEM(chunks)))
+        if (!TEST_size_t_eq(ossl_quic_txpim_pkt_get_num_chunks(pkts[i]), OSSL_NELEM(chunks)))
             goto err;
 
         rchunks = ossl_quic_txpim_pkt_get_chunks(pkts[i]);
-        if (!TEST_uint64_t_eq(rchunks[0].stream_id, 98)
-            || !TEST_uint64_t_eq(rchunks[1].stream_id, 99)
-            || !TEST_uint64_t_eq(rchunks[2].stream_id, 100))
+        if (!TEST_uint64_t_eq(rchunks[0].stream_id, 98) ||
+            !TEST_uint64_t_eq(rchunks[1].stream_id, 99) ||
+            !TEST_uint64_t_eq(rchunks[2].stream_id, 100))
             goto err;
     }
 
@@ -60,7 +60,8 @@ err:
     return testresult;
 }
 
-int setup_tests(void)
+int
+setup_tests(void)
 {
     ADD_TEST(test_txpim);
     return 1;

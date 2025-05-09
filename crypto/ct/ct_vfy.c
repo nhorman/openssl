@@ -26,7 +26,8 @@ typedef enum sct_signature_type_t {
  * Update encoding for SCT signature verification/generation to supplied
  * EVP_MD_CTX.
  */
-static int sct_ctx_update(EVP_MD_CTX *ctx, const SCT_CTX *sctx, const SCT *sct)
+static int
+sct_ctx_update(EVP_MD_CTX *ctx, const SCT_CTX *sctx, const SCT *sct)
 {
     unsigned char tmpbuf[12];
     unsigned char *p, *der;
@@ -93,7 +94,8 @@ static int sct_ctx_update(EVP_MD_CTX *ctx, const SCT_CTX *sctx, const SCT *sct)
     return 1;
 }
 
-int SCT_CTX_verify(const SCT_CTX *sctx, const SCT *sct)
+int
+SCT_CTX_verify(const SCT_CTX *sctx, const SCT *sct)
 {
     EVP_MD_CTX *ctx = NULL;
     int ret = 0;
@@ -122,8 +124,8 @@ int SCT_CTX_verify(const SCT_CTX *sctx, const SCT *sct)
     if (ctx == NULL)
         goto end;
 
-    if (!EVP_DigestVerifyInit_ex(ctx, NULL, "SHA2-256", sctx->libctx,
-                                 sctx->propq, sctx->pkey, NULL))
+    if (!EVP_DigestVerifyInit_ex(ctx, NULL, "SHA2-256", sctx->libctx, sctx->propq, sctx->pkey,
+                                 NULL))
         goto end;
 
     if (!sct_ctx_update(ctx, sctx, sct))

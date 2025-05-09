@@ -15,7 +15,8 @@
  * Attempt to look up all supported algorithms.
  */
 
-static int test_pbelu(void)
+static int
+test_pbelu(void)
 {
     int i, failed = 0;
     int pbe_type, pbe_nid, last_type = -1, last_nid = -1;
@@ -33,17 +34,17 @@ static int test_pbelu(void)
 
     /* Error: print out whole table */
     for (i = 0; EVP_PBE_get(&pbe_type, &pbe_nid, i) != 0; i++) {
-        failed = pbe_type < last_type
-                 || (pbe_type == last_type && pbe_nid < last_nid);
-        TEST_note("PBE type=%d %d (%s): %s\n", pbe_type, pbe_nid,
-                  OBJ_nid2sn(pbe_nid), failed ? "ERROR" : "OK");
+        failed = pbe_type < last_type || (pbe_type == last_type && pbe_nid < last_nid);
+        TEST_note("PBE type=%d %d (%s): %s\n", pbe_type, pbe_nid, OBJ_nid2sn(pbe_nid),
+                  failed ? "ERROR" : "OK");
         last_type = pbe_type;
         last_nid = pbe_nid;
     }
     return 0;
 }
 
-int setup_tests(void)
+int
+setup_tests(void)
 {
     ADD_TEST(test_pbelu);
     return 1;

@@ -26,7 +26,8 @@
 #include <openssl/param_build.h>
 #include "ec_local.h"
 
-static int eckey_param2type(int *pptype, void **ppval, const EC_KEY *ec_key)
+static int
+eckey_param2type(int *pptype, void **ppval, const EC_KEY *ec_key)
 {
     const EC_GROUP *group;
     int nid;
@@ -35,9 +36,8 @@ static int eckey_param2type(int *pptype, void **ppval, const EC_KEY *ec_key)
         ERR_raise(ERR_LIB_EC, EC_R_MISSING_PARAMETERS);
         return 0;
     }
-    if (EC_GROUP_get_asn1_flag(group)
-        && (nid = EC_GROUP_get_curve_name(group)))
-        /* we have a 'named curve' => just set the OID */
+    if (EC_GROUP_get_asn1_flag(group) && (nid = EC_GROUP_get_curve_name(group)))
+    /* we have a 'named curve' => just set the OID */
     {
         ASN1_OBJECT *asn1obj = OBJ_nid2obj(nid);
 
@@ -47,7 +47,7 @@ static int eckey_param2type(int *pptype, void **ppval, const EC_KEY *ec_key)
         }
         *ppval = asn1obj;
         *pptype = V_ASN1_OBJECT;
-    } else {                    /* explicit parameters */
+    } else { /* explicit parameters */
 
         ASN1_STRING *pstr = NULL;
         pstr = ASN1_STRING_new();
@@ -65,7 +65,8 @@ static int eckey_param2type(int *pptype, void **ppval, const EC_KEY *ec_key)
     return 1;
 }
 
-static int eckey_pub_encode(X509_PUBKEY *pk, const EVP_PKEY *pkey)
+static int
+eckey_pub_encode(X509_PUBKEY *pk, const EVP_PKEY *pkey)
 {
     const EC_KEY *ec_key = pkey->pkey.ec;
     void *pval = NULL;
@@ -87,17 +88,17 @@ static int eckey_pub_encode(X509_PUBKEY *pk, const EVP_PKEY *pkey)
     penclen = i2o_ECPublicKey(ec_key, &p);
     if (penclen <= 0)
         goto err;
-    if (X509_PUBKEY_set0_param(pk, OBJ_nid2obj(EVP_PKEY_EC),
-                               ptype, pval, penc, penclen))
+    if (X509_PUBKEY_set0_param(pk, OBJ_nid2obj(EVP_PKEY_EC), ptype, pval, penc, penclen))
         return 1;
- err:
+err:
     if (ptype == V_ASN1_SEQUENCE)
         ASN1_STRING_free(pval);
     OPENSSL_free(penc);
     return 0;
 }
 
-static int eckey_pub_decode(EVP_PKEY *pkey, const X509_PUBKEY *pubkey)
+static int
+eckey_pub_decode(EVP_PKEY *pkey, const X509_PUBKEY *pubkey)
 {
     const unsigned char *p = NULL;
     int pklen;
@@ -106,8 +107,8 @@ static int eckey_pub_decode(EVP_PKEY *pkey, const X509_PUBKEY *pubkey)
     OSSL_LIB_CTX *libctx = NULL;
     const char *propq = NULL;
 
-    if (!ossl_x509_PUBKEY_get0_libctx(&libctx, &propq, pubkey)
-        || !X509_PUBKEY_get0_param(NULL, &p, &pklen, &palg, pubkey))
+    if (!ossl_x509_PUBKEY_get0_libctx(&libctx, &propq, pubkey) ||
+        !X509_PUBKEY_get0_param(NULL, &p, &pklen, &palg, pubkey))
         return 0;
     eckey = ossl_ec_key_param_from_x509_algor(palg, libctx, propq);
 
@@ -123,17 +124,18 @@ static int eckey_pub_decode(EVP_PKEY *pkey, const X509_PUBKEY *pubkey)
     EVP_PKEY_assign_EC_KEY(pkey, eckey);
     return 1;
 
- ecerr:
+ecerr:
     EC_KEY_free(eckey);
     return 0;
 }
 
-static int eckey_pub_cmp(const EVP_PKEY *a, const EVP_PKEY *b)
+static int
+eckey_pub_cmp(const EVP_PKEY *a, const EVP_PKEY *b)
 {
     int r;
     const EC_GROUP *group = EC_KEY_get0_group(b->pkey.ec);
     const EC_POINT *pa = EC_KEY_get0_public_key(a->pkey.ec),
-        *pb = EC_KEY_get0_public_key(b->pkey.ec);
+                   *pb = EC_KEY_get0_public_key(b->pkey.ec);
 
     if (group == NULL || pa == NULL || pb == NULL)
         return -2;
@@ -145,8 +147,9 @@ static int eckey_pub_cmp(const EVP_PKEY *a, const EVP_PKEY *b)
     return -2;
 }
 
-static int eckey_priv_decode_ex(EVP_PKEY *pkey, const PKCS8_PRIV_KEY_INFO *p8,
-                                OSSL_LIB_CTX *libctx, const char *propq)
+static int
+eckey_priv_decode_ex(EVP_PKEY *pkey, const PKCS8_PRIV_KEY_INFO *p8, OSSL_LIB_CTX *libctx,
+                     const char *propq)
 {
     int ret = 0;
     EC_KEY *eckey = ossl_ec_key_from_pkcs8(p8, libctx, propq);
@@ -159,7 +162,8 @@ static int eckey_priv_decode_ex(EVP_PKEY *pkey, const PKCS8_PRIV_KEY_INFO *p8,
     return ret;
 }
 
-static int eckey_priv_encode(PKCS8_PRIV_KEY_INFO *p8, const EVP_PKEY *pkey)
+static int
+eckey_priv_encode(PKCS8_PRIV_KEY_INFO *p8, const EVP_PKEY *pkey)
 {
     EC_KEY ec_key = *(pkey->pkey.ec);
     unsigned char *ep = NULL;
@@ -187,8 +191,7 @@ static int eckey_priv_encode(PKCS8_PRIV_KEY_INFO *p8, const EVP_PKEY *pkey)
         goto err;
     }
 
-    if (!PKCS8_pkey_set0(p8, OBJ_nid2obj(NID_X9_62_id_ecPublicKey), 0,
-                         ptype, pval, ep, eplen)) {
+    if (!PKCS8_pkey_set0(p8, OBJ_nid2obj(NID_X9_62_id_ecPublicKey), 0, ptype, pval, ep, eplen)) {
         ERR_raise(ERR_LIB_EC, ERR_R_ASN1_LIB);
         OPENSSL_clear_free(ep, eplen);
         goto err;
@@ -196,23 +199,26 @@ static int eckey_priv_encode(PKCS8_PRIV_KEY_INFO *p8, const EVP_PKEY *pkey)
 
     return 1;
 
- err:
+err:
     if (ptype == V_ASN1_SEQUENCE)
         ASN1_STRING_free(pval);
     return 0;
 }
 
-static int int_ec_size(const EVP_PKEY *pkey)
+static int
+int_ec_size(const EVP_PKEY *pkey)
 {
     return ECDSA_size(pkey->pkey.ec);
 }
 
-static int ec_bits(const EVP_PKEY *pkey)
+static int
+ec_bits(const EVP_PKEY *pkey)
 {
     return EC_GROUP_order_bits(EC_KEY_get0_group(pkey->pkey.ec));
 }
 
-static int ec_security_bits(const EVP_PKEY *pkey)
+static int
+ec_security_bits(const EVP_PKEY *pkey)
 {
     int ecbits = ec_bits(pkey);
 
@@ -229,14 +235,16 @@ static int ec_security_bits(const EVP_PKEY *pkey)
     return ecbits / 2;
 }
 
-static int ec_missing_parameters(const EVP_PKEY *pkey)
+static int
+ec_missing_parameters(const EVP_PKEY *pkey)
 {
     if (pkey->pkey.ec == NULL || EC_KEY_get0_group(pkey->pkey.ec) == NULL)
         return 1;
     return 0;
 }
 
-static int ec_copy_parameters(EVP_PKEY *to, const EVP_PKEY *from)
+static int
+ec_copy_parameters(EVP_PKEY *to, const EVP_PKEY *from)
 {
     EC_GROUP *group = EC_GROUP_dup(EC_KEY_get0_group(from->pkey.ec));
 
@@ -251,15 +259,16 @@ static int ec_copy_parameters(EVP_PKEY *to, const EVP_PKEY *from)
         goto err;
     EC_GROUP_free(group);
     return 1;
- err:
+err:
     EC_GROUP_free(group);
     return 0;
 }
 
-static int ec_cmp_parameters(const EVP_PKEY *a, const EVP_PKEY *b)
+static int
+ec_cmp_parameters(const EVP_PKEY *a, const EVP_PKEY *b)
 {
     const EC_GROUP *group_a = EC_KEY_get0_group(a->pkey.ec),
-        *group_b = EC_KEY_get0_group(b->pkey.ec);
+                   *group_b = EC_KEY_get0_group(b->pkey.ec);
 
     if (group_a == NULL || group_b == NULL)
         return -2;
@@ -269,18 +278,16 @@ static int ec_cmp_parameters(const EVP_PKEY *a, const EVP_PKEY *b)
         return 1;
 }
 
-static void int_ec_free(EVP_PKEY *pkey)
+static void
+int_ec_free(EVP_PKEY *pkey)
 {
     EC_KEY_free(pkey->pkey.ec);
 }
 
-typedef enum {
-    EC_KEY_PRINT_PRIVATE,
-    EC_KEY_PRINT_PUBLIC,
-    EC_KEY_PRINT_PARAM
-} ec_print_t;
+typedef enum { EC_KEY_PRINT_PRIVATE, EC_KEY_PRINT_PUBLIC, EC_KEY_PRINT_PARAM } ec_print_t;
 
-static int do_EC_KEY_print(BIO *bp, const EC_KEY *x, int off, ec_print_t ktype)
+static int
+do_EC_KEY_print(BIO *bp, const EC_KEY *x, int off, ec_print_t ktype)
 {
     const char *ecstr;
     unsigned char *priv = NULL, *pub = NULL;
@@ -314,8 +321,7 @@ static int do_EC_KEY_print(BIO *bp, const EC_KEY *x, int off, ec_print_t ktype)
 
     if (!BIO_indent(bp, off, 128))
         goto err;
-    if (BIO_printf(bp, "%s: (%d bit)\n", ecstr,
-                   EC_GROUP_order_bits(group)) <= 0)
+    if (BIO_printf(bp, "%s: (%d bit)\n", ecstr, EC_GROUP_order_bits(group)) <= 0)
         goto err;
 
     if (privlen != 0) {
@@ -335,7 +341,7 @@ static int do_EC_KEY_print(BIO *bp, const EC_KEY *x, int off, ec_print_t ktype)
     if (!ECPKParameters_print(bp, group, off))
         goto err;
     ret = 1;
- err:
+err:
     if (!ret)
         ERR_raise(ERR_LIB_EC, ERR_R_EC_LIB);
     OPENSSL_clear_free(priv, privlen);
@@ -343,8 +349,8 @@ static int do_EC_KEY_print(BIO *bp, const EC_KEY *x, int off, ec_print_t ktype)
     return ret;
 }
 
-static int eckey_param_decode(EVP_PKEY *pkey,
-                              const unsigned char **pder, int derlen)
+static int
+eckey_param_decode(EVP_PKEY *pkey, const unsigned char **pder, int derlen)
 {
     EC_KEY *eckey;
 
@@ -354,31 +360,32 @@ static int eckey_param_decode(EVP_PKEY *pkey,
     return 1;
 }
 
-static int eckey_param_encode(const EVP_PKEY *pkey, unsigned char **pder)
+static int
+eckey_param_encode(const EVP_PKEY *pkey, unsigned char **pder)
 {
     return i2d_ECParameters(pkey->pkey.ec, pder);
 }
 
-static int eckey_param_print(BIO *bp, const EVP_PKEY *pkey, int indent,
-                             ASN1_PCTX *ctx)
+static int
+eckey_param_print(BIO *bp, const EVP_PKEY *pkey, int indent, ASN1_PCTX *ctx)
 {
     return do_EC_KEY_print(bp, pkey->pkey.ec, indent, EC_KEY_PRINT_PARAM);
 }
 
-static int eckey_pub_print(BIO *bp, const EVP_PKEY *pkey, int indent,
-                           ASN1_PCTX *ctx)
+static int
+eckey_pub_print(BIO *bp, const EVP_PKEY *pkey, int indent, ASN1_PCTX *ctx)
 {
     return do_EC_KEY_print(bp, pkey->pkey.ec, indent, EC_KEY_PRINT_PUBLIC);
 }
 
-static int eckey_priv_print(BIO *bp, const EVP_PKEY *pkey, int indent,
-                            ASN1_PCTX *ctx)
+static int
+eckey_priv_print(BIO *bp, const EVP_PKEY *pkey, int indent, ASN1_PCTX *ctx)
 {
     return do_EC_KEY_print(bp, pkey->pkey.ec, indent, EC_KEY_PRINT_PRIVATE);
 }
 
-static int old_ec_priv_decode(EVP_PKEY *pkey,
-                              const unsigned char **pder, int derlen)
+static int
+old_ec_priv_decode(EVP_PKEY *pkey, const unsigned char **pder, int derlen)
 {
     EC_KEY *ec;
 
@@ -388,19 +395,21 @@ static int old_ec_priv_decode(EVP_PKEY *pkey,
     return 1;
 }
 
-static int old_ec_priv_encode(const EVP_PKEY *pkey, unsigned char **pder)
+static int
+old_ec_priv_encode(const EVP_PKEY *pkey, unsigned char **pder)
 {
     return i2d_ECPrivateKey(pkey->pkey.ec, pder);
 }
 
-static int ec_pkey_ctrl(EVP_PKEY *pkey, int op, long arg1, void *arg2)
+static int
+ec_pkey_ctrl(EVP_PKEY *pkey, int op, long arg1, void *arg2)
 {
     switch (op) {
     case ASN1_PKEY_CTRL_DEFAULT_MD_NID:
         if (EVP_PKEY_get_id(pkey) == EVP_PKEY_SM2) {
             /* For SM2, the only valid digest-alg is SM3 */
             *(int *)arg2 = NID_sm3;
-            return 2;            /* Make it mandatory */
+            return 2; /* Make it mandatory */
         }
         *(int *)arg2 = NID_sha256;
         return 1;
@@ -412,15 +421,16 @@ static int ec_pkey_ctrl(EVP_PKEY *pkey, int op, long arg1, void *arg2)
         return EC_KEY_oct2key(evp_pkey_get0_EC_KEY_int(pkey), arg2, arg1, NULL);
 
     case ASN1_PKEY_CTRL_GET1_TLS_ENCPT:
-        return EC_KEY_key2buf(EVP_PKEY_get0_EC_KEY(pkey),
-                              POINT_CONVERSION_UNCOMPRESSED, arg2, NULL);
+        return EC_KEY_key2buf(EVP_PKEY_get0_EC_KEY(pkey), POINT_CONVERSION_UNCOMPRESSED, arg2,
+                              NULL);
 
     default:
         return -2;
     }
 }
 
-static int ec_pkey_check(const EVP_PKEY *pkey)
+static int
+ec_pkey_check(const EVP_PKEY *pkey)
 {
     EC_KEY *eckey = pkey->pkey.ec;
 
@@ -433,7 +443,8 @@ static int ec_pkey_check(const EVP_PKEY *pkey)
     return EC_KEY_check_key(eckey);
 }
 
-static int ec_pkey_public_check(const EVP_PKEY *pkey)
+static int
+ec_pkey_public_check(const EVP_PKEY *pkey)
 {
     EC_KEY *eckey = pkey->pkey.ec;
 
@@ -449,7 +460,8 @@ static int ec_pkey_public_check(const EVP_PKEY *pkey)
     return EC_KEY_check_key(eckey);
 }
 
-static int ec_pkey_param_check(const EVP_PKEY *pkey)
+static int
+ec_pkey_param_check(const EVP_PKEY *pkey)
 {
     EC_KEY *eckey = pkey->pkey.ec;
 
@@ -462,16 +474,15 @@ static int ec_pkey_param_check(const EVP_PKEY *pkey)
     return EC_GROUP_check(eckey->group, NULL);
 }
 
-static
-size_t ec_pkey_dirty_cnt(const EVP_PKEY *pkey)
+static size_t
+ec_pkey_dirty_cnt(const EVP_PKEY *pkey)
 {
     return pkey->pkey.ec->dirty_cnt;
 }
 
-static
-int ec_pkey_export_to(const EVP_PKEY *from, void *to_keydata,
-                      OSSL_FUNC_keymgmt_import_fn *importer,
-                      OSSL_LIB_CTX *libctx, const char *propq)
+static int
+ec_pkey_export_to(const EVP_PKEY *from, void *to_keydata, OSSL_FUNC_keymgmt_import_fn *importer,
+                  OSSL_LIB_CTX *libctx, const char *propq)
 {
     const EC_KEY *eckey = NULL;
     const EC_GROUP *ecg = NULL;
@@ -485,9 +496,7 @@ int ec_pkey_export_to(const EVP_PKEY *from, void *to_keydata,
     int rv = 0;
     BN_CTX *bnctx = NULL;
 
-    if (from == NULL
-            || (eckey = from->pkey.ec) == NULL
-            || (ecg = EC_KEY_get0_group(eckey)) == NULL)
+    if (from == NULL || (eckey = from->pkey.ec) == NULL || (ecg = EC_KEY_get0_group(eckey)) == NULL)
         return 0;
 
     tmpl = OSSL_PARAM_BLD_new();
@@ -515,13 +524,10 @@ int ec_pkey_export_to(const EVP_PKEY *from, void *to_keydata,
         /* convert pub_point to a octet string according to the SECG standard */
         point_conversion_form_t format = EC_KEY_get_conv_form(eckey);
 
-        if ((pub_key_buflen = EC_POINT_point2buf(ecg, pub_point,
-                                                 format,
-                                                 &pub_key_buf, bnctx)) == 0
-            || !OSSL_PARAM_BLD_push_octet_string(tmpl,
-                                                 OSSL_PKEY_PARAM_PUB_KEY,
-                                                 pub_key_buf,
-                                                 pub_key_buflen))
+        if ((pub_key_buflen = EC_POINT_point2buf(ecg, pub_point, format, &pub_key_buf, bnctx)) ==
+                0 ||
+            !OSSL_PARAM_BLD_push_octet_string(tmpl, OSSL_PKEY_PARAM_PUB_KEY, pub_key_buf,
+                                              pub_key_buflen))
             goto err;
         selection |= OSSL_KEYMGMT_SELECT_PUBLIC_KEY;
     }
@@ -569,9 +575,7 @@ int ec_pkey_export_to(const EVP_PKEY *from, void *to_keydata,
             goto err;
 
         sz = (ecbits + 7) / 8;
-        if (!OSSL_PARAM_BLD_push_BN_pad(tmpl,
-                                        OSSL_PKEY_PARAM_PRIV_KEY,
-                                        priv_key, sz))
+        if (!OSSL_PARAM_BLD_push_BN_pad(tmpl, OSSL_PKEY_PARAM_PRIV_KEY, priv_key, sz))
             goto err;
         selection |= OSSL_KEYMGMT_SELECT_PRIVATE_KEY;
 
@@ -580,13 +584,10 @@ int ec_pkey_export_to(const EVP_PKEY *from, void *to_keydata,
          * contains a private key, so we check for the flag and export it only
          * in this case.
          */
-        ecdh_cofactor_mode =
-            (EC_KEY_get_flags(eckey) & EC_FLAG_COFACTOR_ECDH) ? 1 : 0;
+        ecdh_cofactor_mode = (EC_KEY_get_flags(eckey) & EC_FLAG_COFACTOR_ECDH) ? 1 : 0;
 
         /* Export the ECDH_COFACTOR_MODE parameter */
-        if (!OSSL_PARAM_BLD_push_int(tmpl,
-                                     OSSL_PKEY_PARAM_USE_COFACTOR_ECDH,
-                                     ecdh_cofactor_mode))
+        if (!OSSL_PARAM_BLD_push_int(tmpl, OSSL_PKEY_PARAM_USE_COFACTOR_ECDH, ecdh_cofactor_mode))
             goto err;
         selection |= OSSL_KEYMGMT_SELECT_OTHER_PARAMETERS;
     }
@@ -596,7 +597,7 @@ int ec_pkey_export_to(const EVP_PKEY *from, void *to_keydata,
     /* We export, the provider imports */
     rv = importer(to_keydata, selection, params);
 
- err:
+err:
     OSSL_PARAM_BLD_free(tmpl);
     OSSL_PARAM_free(params);
     OPENSSL_free(pub_key_buf);
@@ -606,7 +607,8 @@ int ec_pkey_export_to(const EVP_PKEY *from, void *to_keydata,
     return rv;
 }
 
-static int ec_pkey_import_from(const OSSL_PARAM params[], void *vpctx)
+static int
+ec_pkey_import_from(const OSSL_PARAM params[], void *vpctx)
 {
     EVP_PKEY_CTX *pctx = vpctx;
     EVP_PKEY *pkey = EVP_PKEY_CTX_get0_pkey(pctx);
@@ -617,17 +619,16 @@ static int ec_pkey_import_from(const OSSL_PARAM params[], void *vpctx)
         return 0;
     }
 
-    if (!ossl_ec_group_fromdata(ec, params)
-        || !ossl_ec_key_otherparams_fromdata(ec, params)
-        || !ossl_ec_key_fromdata(ec, params, 1)
-        || !EVP_PKEY_assign_EC_KEY(pkey, ec)) {
+    if (!ossl_ec_group_fromdata(ec, params) || !ossl_ec_key_otherparams_fromdata(ec, params) ||
+        !ossl_ec_key_fromdata(ec, params, 1) || !EVP_PKEY_assign_EC_KEY(pkey, ec)) {
         EC_KEY_free(ec);
         return 0;
     }
     return 1;
 }
 
-static int ec_pkey_copy(EVP_PKEY *to, EVP_PKEY *from)
+static int
+ec_pkey_copy(EVP_PKEY *to, EVP_PKEY *from)
 {
     EC_KEY *eckey = from->pkey.ec;
     EC_KEY *dupkey = NULL;
@@ -648,74 +649,71 @@ static int ec_pkey_copy(EVP_PKEY *to, EVP_PKEY *from)
     return ret;
 }
 
-const EVP_PKEY_ASN1_METHOD ossl_eckey_asn1_meth = {
-    EVP_PKEY_EC,
-    EVP_PKEY_EC,
-    0,
-    "EC",
-    "OpenSSL EC algorithm",
+const EVP_PKEY_ASN1_METHOD ossl_eckey_asn1_meth = {EVP_PKEY_EC,
+                                                   EVP_PKEY_EC,
+                                                   0,
+                                                   "EC",
+                                                   "OpenSSL EC algorithm",
 
-    eckey_pub_decode,
-    eckey_pub_encode,
-    eckey_pub_cmp,
-    eckey_pub_print,
+                                                   eckey_pub_decode,
+                                                   eckey_pub_encode,
+                                                   eckey_pub_cmp,
+                                                   eckey_pub_print,
 
-    NULL,
-    eckey_priv_encode,
-    eckey_priv_print,
+                                                   NULL,
+                                                   eckey_priv_encode,
+                                                   eckey_priv_print,
 
-    int_ec_size,
-    ec_bits,
-    ec_security_bits,
+                                                   int_ec_size,
+                                                   ec_bits,
+                                                   ec_security_bits,
 
-    eckey_param_decode,
-    eckey_param_encode,
-    ec_missing_parameters,
-    ec_copy_parameters,
-    ec_cmp_parameters,
-    eckey_param_print,
-    0,
+                                                   eckey_param_decode,
+                                                   eckey_param_encode,
+                                                   ec_missing_parameters,
+                                                   ec_copy_parameters,
+                                                   ec_cmp_parameters,
+                                                   eckey_param_print,
+                                                   0,
 
-    int_ec_free,
-    ec_pkey_ctrl,
-    old_ec_priv_decode,
-    old_ec_priv_encode,
+                                                   int_ec_free,
+                                                   ec_pkey_ctrl,
+                                                   old_ec_priv_decode,
+                                                   old_ec_priv_encode,
 
-    0, 0, 0,
+                                                   0,
+                                                   0,
+                                                   0,
 
-    ec_pkey_check,
-    ec_pkey_public_check,
-    ec_pkey_param_check,
+                                                   ec_pkey_check,
+                                                   ec_pkey_public_check,
+                                                   ec_pkey_param_check,
 
-    0, /* set_priv_key */
-    0, /* set_pub_key */
-    0, /* get_priv_key */
-    0, /* get_pub_key */
+                                                   0, /* set_priv_key */
+                                                   0, /* set_pub_key */
+                                                   0, /* get_priv_key */
+                                                   0, /* get_pub_key */
 
-    ec_pkey_dirty_cnt,
-    ec_pkey_export_to,
-    ec_pkey_import_from,
-    ec_pkey_copy,
-    eckey_priv_decode_ex
-};
+                                                   ec_pkey_dirty_cnt,
+                                                   ec_pkey_export_to,
+                                                   ec_pkey_import_from,
+                                                   ec_pkey_copy,
+                                                   eckey_priv_decode_ex};
 
 #if !defined(OPENSSL_NO_SM2)
-const EVP_PKEY_ASN1_METHOD ossl_sm2_asn1_meth = {
-   EVP_PKEY_SM2,
-   EVP_PKEY_EC,
-   ASN1_PKEY_ALIAS
-};
+const EVP_PKEY_ASN1_METHOD ossl_sm2_asn1_meth = {EVP_PKEY_SM2, EVP_PKEY_EC, ASN1_PKEY_ALIAS};
 #endif
 
-int EC_KEY_print(BIO *bp, const EC_KEY *x, int off)
+int
+EC_KEY_print(BIO *bp, const EC_KEY *x, int off)
 {
     int private = EC_KEY_get0_private_key(x) != NULL;
 
-    return do_EC_KEY_print(bp, x, off,
-                private ? EC_KEY_PRINT_PRIVATE : EC_KEY_PRINT_PUBLIC);
+    return do_EC_KEY_print(bp, x, off, private ? EC_KEY_PRINT_PRIVATE : EC_KEY_PRINT_PUBLIC);
 }
 
-int ECParameters_print(BIO *bp, const EC_KEY *x)
+int
+ECParameters_print(BIO *bp, const EC_KEY *x)
 {
     return do_EC_KEY_print(bp, x, 4, EC_KEY_PRINT_PARAM);
 }

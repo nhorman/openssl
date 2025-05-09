@@ -24,11 +24,13 @@
 
 #if defined(__SANITIZE_THREAD__)
 # include <sanitizer/tsan_interface.h>
-# define TSAN_FAKE_UNLOCK(x)   __tsan_mutex_pre_unlock((x), 0); \
-__tsan_mutex_post_unlock((x), 0)
+# define TSAN_FAKE_UNLOCK(x)                                                                       \
+     __tsan_mutex_pre_unlock((x), 0);                                                              \
+     __tsan_mutex_post_unlock((x), 0)
 
-# define TSAN_FAKE_LOCK(x)  __tsan_mutex_pre_lock((x), 0); \
-__tsan_mutex_post_lock((x), 0, 0)
+# define TSAN_FAKE_LOCK(x)                                                                         \
+     __tsan_mutex_pre_lock((x), 0);                                                                \
+     __tsan_mutex_post_lock((x), 0, 0)
 #else
 # define TSAN_FAKE_UNLOCK(x)
 # define TSAN_FAKE_LOCK(x)
@@ -91,8 +93,8 @@ __tsan_mutex_post_lock((x), 0, 0)
  */
 typedef void *pvoid;
 
-# if defined(__GNUC__) && defined(__ATOMIC_ACQUIRE) && !defined(BROKEN_CLANG_ATOMICS) \
-    && !defined(USE_ATOMIC_FALLBACKS)
+# if defined(__GNUC__) && defined(__ATOMIC_ACQUIRE) && !defined(BROKEN_CLANG_ATOMICS) &&           \
+     !defined(USE_ATOMIC_FALLBACKS)
 #  define ATOMIC_LOAD_N(t, p, o) __atomic_load_n(p, o)
 #  define ATOMIC_STORE_N(t, p, v, o) __atomic_store_n(p, v, o)
 #  define ATOMIC_STORE(t, p, v, o) __atomic_store(p, v, o)
@@ -101,56 +103,55 @@ typedef void *pvoid;
 # else
 static pthread_mutex_t atomic_sim_lock = PTHREAD_MUTEX_INITIALIZER;
 
-#  define IMPL_fallback_atomic_load_n(t)                        \
-    static ossl_inline t fallback_atomic_load_n_##t(t *p)            \
-    {                                                           \
-        t ret;                                                  \
-                                                                \
-        pthread_mutex_lock(&atomic_sim_lock);                   \
-        ret = *p;                                               \
-        pthread_mutex_unlock(&atomic_sim_lock);                 \
-        return ret;                                             \
-    }
-IMPL_fallback_atomic_load_n(uint32_t)
-IMPL_fallback_atomic_load_n(uint64_t)
-IMPL_fallback_atomic_load_n(pvoid)
+#  define IMPL_fallback_atomic_load_n(t)                                                           \
+      static ossl_inline t fallback_atomic_load_n_##t(t *p)                                        \
+      {                                                                                            \
+          t ret;                                                                                   \
+                                                                                                   \
+          pthread_mutex_lock(&atomic_sim_lock);                                                    \
+          ret = *p;                                                                                \
+          pthread_mutex_unlock(&atomic_sim_lock);                                                  \
+          return ret;                                                                              \
+      }
+IMPL_fallback_atomic_load_n(uint32_t) IMPL_fallback_atomic_load_n(uint64_t)
+    IMPL_fallback_atomic_load_n(pvoid)
 
 #  define ATOMIC_LOAD_N(t, p, o) fallback_atomic_load_n_##t(p)
 
-#  define IMPL_fallback_atomic_store_n(t)                       \
-    static ossl_inline t fallback_atomic_store_n_##t(t *p, t v)      \
-    {                                                           \
-        t ret;                                                  \
-                                                                \
-        pthread_mutex_lock(&atomic_sim_lock);                   \
-        ret = *p;                                               \
-        *p = v;                                                 \
-        pthread_mutex_unlock(&atomic_sim_lock);                 \
-        return ret;                                             \
-    }
-IMPL_fallback_atomic_store_n(uint32_t)
+#  define IMPL_fallback_atomic_store_n(t)                                                          \
+      static ossl_inline t fallback_atomic_store_n_##t(t *p, t v)                                  \
+      {                                                                                            \
+          t ret;                                                                                   \
+                                                                                                   \
+          pthread_mutex_lock(&atomic_sim_lock);                                                    \
+          ret = *p;                                                                                \
+          *p = v;                                                                                  \
+          pthread_mutex_unlock(&atomic_sim_lock);                                                  \
+          return ret;                                                                              \
+      }
+        IMPL_fallback_atomic_store_n(uint32_t)
 
 #  define ATOMIC_STORE_N(t, p, v, o) fallback_atomic_store_n_##t(p, v)
 
-#  define IMPL_fallback_atomic_store(t)                         \
-    static ossl_inline void fallback_atomic_store_##t(t *p, t *v)    \
-    {                                                           \
-        pthread_mutex_lock(&atomic_sim_lock);                   \
-        *p = *v;                                                \
-        pthread_mutex_unlock(&atomic_sim_lock);                 \
-    }
-IMPL_fallback_atomic_store(pvoid)
+#  define IMPL_fallback_atomic_store(t)                                                            \
+      static ossl_inline void fallback_atomic_store_##t(t *p, t *v)                                \
+      {                                                                                            \
+          pthread_mutex_lock(&atomic_sim_lock);                                                    \
+          *p = *v;                                                                                 \
+          pthread_mutex_unlock(&atomic_sim_lock);                                                  \
+      }
+            IMPL_fallback_atomic_store(pvoid)
 
 #  define ATOMIC_STORE(t, p, v, o) fallback_atomic_store_##t(p, v)
 
-/*
- * The fallbacks that follow don't need any per type implementation, as
- * they are designed for uint64_t only.  If there comes a time when multiple
- * types need to be covered, it's relatively easy to refactor them the same
- * way as the fallbacks above.
- */
+    /*
+     * The fallbacks that follow don't need any per type implementation, as
+     * they are designed for uint64_t only.  If there comes a time when multiple
+     * types need to be covered, it's relatively easy to refactor them the same
+     * way as the fallbacks above.
+     */
 
-static ossl_inline uint64_t fallback_atomic_add_fetch(uint64_t *p, uint64_t v)
+    static ossl_inline uint64_t fallback_atomic_add_fetch(uint64_t *p, uint64_t v)
 {
     uint64_t ret;
 
@@ -163,7 +164,8 @@ static ossl_inline uint64_t fallback_atomic_add_fetch(uint64_t *p, uint64_t v)
 
 #  define ATOMIC_ADD_FETCH(p, v, o) fallback_atomic_add_fetch(p, v)
 
-static ossl_inline uint64_t fallback_atomic_sub_fetch(uint64_t *p, uint64_t v)
+static ossl_inline uint64_t
+fallback_atomic_sub_fetch(uint64_t *p, uint64_t v)
 {
     uint64_t ret;
 
@@ -255,7 +257,8 @@ struct rcu_lock_st {
 };
 
 /* Read side acquisition of the current qp */
-static struct rcu_qp *get_hold_current_qp(struct rcu_lock_st *lock)
+static struct rcu_qp *
+get_hold_current_qp(struct rcu_lock_st *lock)
 {
     uint32_t qp_idx;
 
@@ -274,22 +277,20 @@ static struct rcu_qp *get_hold_current_qp(struct rcu_lock_st *lock)
          * updates prior to the load.  This is a non-issue on cache coherent
          * systems like x86, but is relevant on other arches
          */
-        ATOMIC_ADD_FETCH(&lock->qp_group[qp_idx].users, (uint64_t)1,
-                         __ATOMIC_ACQUIRE);
+        ATOMIC_ADD_FETCH(&lock->qp_group[qp_idx].users, (uint64_t)1, __ATOMIC_ACQUIRE);
 
         /* if the idx hasn't changed, we're good, else try again */
-        if (qp_idx == ATOMIC_LOAD_N(uint32_t, &lock->reader_idx,
-                                    __ATOMIC_RELAXED))
+        if (qp_idx == ATOMIC_LOAD_N(uint32_t, &lock->reader_idx, __ATOMIC_RELAXED))
             break;
 
-        ATOMIC_SUB_FETCH(&lock->qp_group[qp_idx].users, (uint64_t)1,
-                         __ATOMIC_RELAXED);
+        ATOMIC_SUB_FETCH(&lock->qp_group[qp_idx].users, (uint64_t)1, __ATOMIC_RELAXED);
     }
 
     return &lock->qp_group[qp_idx];
 }
 
-static void ossl_rcu_free_local_data(void *arg)
+static void
+ossl_rcu_free_local_data(void *arg)
 {
     OSSL_LIB_CTX *ctx = arg;
     CRYPTO_THREAD_LOCAL *lkey = ossl_lib_ctx_get_rcukey(ctx);
@@ -299,7 +300,8 @@ static void ossl_rcu_free_local_data(void *arg)
     CRYPTO_THREAD_set_local(lkey, NULL);
 }
 
-void ossl_rcu_read_lock(CRYPTO_RCU_LOCK *lock)
+void
+ossl_rcu_read_lock(CRYPTO_RCU_LOCK *lock)
 {
     struct rcu_thr_data *data;
     int i, available_qp = -1;
@@ -338,7 +340,8 @@ void ossl_rcu_read_lock(CRYPTO_RCU_LOCK *lock)
     data->thread_qps[available_qp].lock = lock;
 }
 
-void ossl_rcu_read_unlock(CRYPTO_RCU_LOCK *lock)
+void
+ossl_rcu_read_unlock(CRYPTO_RCU_LOCK *lock)
 {
     int i;
     CRYPTO_THREAD_LOCAL *lkey = ossl_lib_ctx_get_rcukey(lock->ctx);
@@ -356,8 +359,8 @@ void ossl_rcu_read_unlock(CRYPTO_RCU_LOCK *lock)
              */
             data->thread_qps[i].depth--;
             if (data->thread_qps[i].depth == 0) {
-                ret = ATOMIC_SUB_FETCH(&data->thread_qps[i].qp->users,
-                                       (uint64_t)1, __ATOMIC_RELEASE);
+                ret =
+                    ATOMIC_SUB_FETCH(&data->thread_qps[i].qp->users, (uint64_t)1, __ATOMIC_RELEASE);
                 OPENSSL_assert(ret != UINT64_MAX);
                 data->thread_qps[i].qp = NULL;
                 data->thread_qps[i].lock = NULL;
@@ -376,7 +379,8 @@ void ossl_rcu_read_unlock(CRYPTO_RCU_LOCK *lock)
  * Write side allocation routine to get the current qp
  * and replace it with a new one
  */
-static struct rcu_qp *update_qp(CRYPTO_RCU_LOCK *lock, uint32_t *curr_id)
+static struct rcu_qp *
+update_qp(CRYPTO_RCU_LOCK *lock, uint32_t *curr_id)
 {
     uint32_t current_idx;
 
@@ -397,21 +401,18 @@ static struct rcu_qp *update_qp(CRYPTO_RCU_LOCK *lock, uint32_t *curr_id)
     lock->writers_alloced++;
 
     /* increment the allocation index */
-    lock->current_alloc_idx =
-        (lock->current_alloc_idx + 1) % lock->group_count;
+    lock->current_alloc_idx = (lock->current_alloc_idx + 1) % lock->group_count;
 
     *curr_id = lock->id_ctr;
     lock->id_ctr++;
 
-    ATOMIC_STORE_N(uint32_t, &lock->reader_idx, lock->current_alloc_idx,
-                   __ATOMIC_RELAXED);
+    ATOMIC_STORE_N(uint32_t, &lock->reader_idx, lock->current_alloc_idx, __ATOMIC_RELAXED);
 
     /*
      * this should make sure that the new value of reader_idx is visible in
      * get_hold_current_qp, directly after incrementing the users count
      */
-    ATOMIC_ADD_FETCH(&lock->qp_group[current_idx].users, (uint64_t)0,
-                     __ATOMIC_RELEASE);
+    ATOMIC_ADD_FETCH(&lock->qp_group[current_idx].users, (uint64_t)0, __ATOMIC_RELEASE);
 
     /* wake up any waiters */
     pthread_cond_signal(&lock->alloc_signal);
@@ -419,7 +420,8 @@ static struct rcu_qp *update_qp(CRYPTO_RCU_LOCK *lock, uint32_t *curr_id)
     return &lock->qp_group[current_idx];
 }
 
-static void retire_qp(CRYPTO_RCU_LOCK *lock, struct rcu_qp *qp)
+static void
+retire_qp(CRYPTO_RCU_LOCK *lock, struct rcu_qp *qp)
 {
     pthread_mutex_lock(&lock->alloc_lock);
     lock->writers_alloced--;
@@ -427,29 +429,31 @@ static void retire_qp(CRYPTO_RCU_LOCK *lock, struct rcu_qp *qp)
     pthread_mutex_unlock(&lock->alloc_lock);
 }
 
-static struct rcu_qp *allocate_new_qp_group(CRYPTO_RCU_LOCK *lock,
-                                            uint32_t count)
+static struct rcu_qp *
+allocate_new_qp_group(CRYPTO_RCU_LOCK *lock, uint32_t count)
 {
-    struct rcu_qp *new =
-        OPENSSL_zalloc(sizeof(*new) * count);
+    struct rcu_qp *new = OPENSSL_zalloc(sizeof(*new) * count);
 
     lock->group_count = count;
     return new;
 }
 
-void ossl_rcu_write_lock(CRYPTO_RCU_LOCK *lock)
+void
+ossl_rcu_write_lock(CRYPTO_RCU_LOCK *lock)
 {
     pthread_mutex_lock(&lock->write_lock);
     TSAN_FAKE_UNLOCK(&lock->write_lock);
 }
 
-void ossl_rcu_write_unlock(CRYPTO_RCU_LOCK *lock)
+void
+ossl_rcu_write_unlock(CRYPTO_RCU_LOCK *lock)
 {
     TSAN_FAKE_LOCK(&lock->write_lock);
     pthread_mutex_unlock(&lock->write_lock);
 }
 
-void ossl_synchronize_rcu(CRYPTO_RCU_LOCK *lock)
+void
+ossl_synchronize_rcu(CRYPTO_RCU_LOCK *lock)
 {
     struct rcu_qp *qp;
     uint64_t count;
@@ -500,10 +504,10 @@ void ossl_synchronize_rcu(CRYPTO_RCU_LOCK *lock)
  * Note: This call assumes its made under the protection of
  * ossl_rcu_write_lock
  */
-int ossl_rcu_call(CRYPTO_RCU_LOCK *lock, rcu_cb_fn cb, void *data)
+int
+ossl_rcu_call(CRYPTO_RCU_LOCK *lock, rcu_cb_fn cb, void *data)
 {
-    struct rcu_cb_item *new =
-        OPENSSL_zalloc(sizeof(*new));
+    struct rcu_cb_item *new = OPENSSL_zalloc(sizeof(*new));
 
     if (new == NULL)
         return 0;
@@ -517,17 +521,20 @@ int ossl_rcu_call(CRYPTO_RCU_LOCK *lock, rcu_cb_fn cb, void *data)
     return 1;
 }
 
-void *ossl_rcu_uptr_deref(void **p)
+void *
+ossl_rcu_uptr_deref(void **p)
 {
     return ATOMIC_LOAD_N(pvoid, p, __ATOMIC_ACQUIRE);
 }
 
-void ossl_rcu_assign_uptr(void **p, void **v)
+void
+ossl_rcu_assign_uptr(void **p, void **v)
 {
     ATOMIC_STORE(pvoid, p, v, __ATOMIC_RELEASE);
 }
 
-CRYPTO_RCU_LOCK *ossl_rcu_lock_new(int num_writers, OSSL_LIB_CTX *ctx)
+CRYPTO_RCU_LOCK *
+ossl_rcu_lock_new(int num_writers, OSSL_LIB_CTX *ctx)
 {
     struct rcu_lock_st *new;
 
@@ -561,7 +568,8 @@ CRYPTO_RCU_LOCK *ossl_rcu_lock_new(int num_writers, OSSL_LIB_CTX *ctx)
     return new;
 }
 
-void ossl_rcu_lock_free(CRYPTO_RCU_LOCK *lock)
+void
+ossl_rcu_lock_free(CRYPTO_RCU_LOCK *lock)
 {
     struct rcu_lock_st *rlock = (struct rcu_lock_st *)lock;
 
@@ -576,7 +584,8 @@ void ossl_rcu_lock_free(CRYPTO_RCU_LOCK *lock)
     OPENSSL_free(rlock);
 }
 
-CRYPTO_RWLOCK *CRYPTO_THREAD_lock_new(void)
+CRYPTO_RWLOCK *
+CRYPTO_THREAD_lock_new(void)
 {
 # ifdef USE_RWLOCK
     CRYPTO_RWLOCK *lock;
@@ -601,7 +610,7 @@ CRYPTO_RWLOCK *CRYPTO_THREAD_lock_new(void)
      * We don't use recursive mutexes, but try to catch errors if we do.
      */
     pthread_mutexattr_init(&attr);
-#  if !defined (__TANDEM) && !defined (_SPT_MODEL_)
+#  if !defined(__TANDEM) && !defined(_SPT_MODEL_)
 #   if !defined(NDEBUG) && !defined(OPENSSL_NO_MUTEX_ERRORCHECK)
     pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK);
 #   endif
@@ -621,7 +630,8 @@ CRYPTO_RWLOCK *CRYPTO_THREAD_lock_new(void)
     return lock;
 }
 
-__owur int CRYPTO_THREAD_read_lock(CRYPTO_RWLOCK *lock)
+__owur int
+CRYPTO_THREAD_read_lock(CRYPTO_RWLOCK *lock)
 {
 # ifdef USE_RWLOCK
     if (!ossl_assert(pthread_rwlock_rdlock(lock) == 0))
@@ -636,7 +646,8 @@ __owur int CRYPTO_THREAD_read_lock(CRYPTO_RWLOCK *lock)
     return 1;
 }
 
-__owur int CRYPTO_THREAD_write_lock(CRYPTO_RWLOCK *lock)
+__owur int
+CRYPTO_THREAD_write_lock(CRYPTO_RWLOCK *lock)
 {
 # ifdef USE_RWLOCK
     if (!ossl_assert(pthread_rwlock_wrlock(lock) == 0))
@@ -651,7 +662,8 @@ __owur int CRYPTO_THREAD_write_lock(CRYPTO_RWLOCK *lock)
     return 1;
 }
 
-int CRYPTO_THREAD_unlock(CRYPTO_RWLOCK *lock)
+int
+CRYPTO_THREAD_unlock(CRYPTO_RWLOCK *lock)
 {
 # ifdef USE_RWLOCK
     if (pthread_rwlock_unlock(lock) != 0)
@@ -666,7 +678,8 @@ int CRYPTO_THREAD_unlock(CRYPTO_RWLOCK *lock)
     return 1;
 }
 
-void CRYPTO_THREAD_lock_free(CRYPTO_RWLOCK *lock)
+void
+CRYPTO_THREAD_lock_free(CRYPTO_RWLOCK *lock)
 {
     if (lock == NULL)
         return;
@@ -681,7 +694,8 @@ void CRYPTO_THREAD_lock_free(CRYPTO_RWLOCK *lock)
     return;
 }
 
-int CRYPTO_THREAD_run_once(CRYPTO_ONCE *once, void (*init)(void))
+int
+CRYPTO_THREAD_run_once(CRYPTO_ONCE *once, void (*init)(void))
 {
     if (pthread_once(once, init) != 0)
         return 0;
@@ -689,7 +703,8 @@ int CRYPTO_THREAD_run_once(CRYPTO_ONCE *once, void (*init)(void))
     return 1;
 }
 
-int CRYPTO_THREAD_init_local(CRYPTO_THREAD_LOCAL *key, void (*cleanup)(void *))
+int
+CRYPTO_THREAD_init_local(CRYPTO_THREAD_LOCAL *key, void (*cleanup)(void *))
 {
     if (pthread_key_create(key, cleanup) != 0)
         return 0;
@@ -697,12 +712,14 @@ int CRYPTO_THREAD_init_local(CRYPTO_THREAD_LOCAL *key, void (*cleanup)(void *))
     return 1;
 }
 
-void *CRYPTO_THREAD_get_local(CRYPTO_THREAD_LOCAL *key)
+void *
+CRYPTO_THREAD_get_local(CRYPTO_THREAD_LOCAL *key)
 {
     return pthread_getspecific(*key);
 }
 
-int CRYPTO_THREAD_set_local(CRYPTO_THREAD_LOCAL *key, void *val)
+int
+CRYPTO_THREAD_set_local(CRYPTO_THREAD_LOCAL *key, void *val)
 {
     if (pthread_setspecific(*key, val) != 0)
         return 0;
@@ -710,7 +727,8 @@ int CRYPTO_THREAD_set_local(CRYPTO_THREAD_LOCAL *key, void *val)
     return 1;
 }
 
-int CRYPTO_THREAD_cleanup_local(CRYPTO_THREAD_LOCAL *key)
+int
+CRYPTO_THREAD_cleanup_local(CRYPTO_THREAD_LOCAL *key)
 {
     if (pthread_key_delete(*key) != 0)
         return 0;
@@ -718,17 +736,17 @@ int CRYPTO_THREAD_cleanup_local(CRYPTO_THREAD_LOCAL *key)
     return 1;
 }
 
-CRYPTO_THREAD_ID CRYPTO_THREAD_get_current_id(void)
-{
-    return pthread_self();
-}
+CRYPTO_THREAD_ID
+CRYPTO_THREAD_get_current_id(void) { return pthread_self(); }
 
-int CRYPTO_THREAD_compare_id(CRYPTO_THREAD_ID a, CRYPTO_THREAD_ID b)
+int
+CRYPTO_THREAD_compare_id(CRYPTO_THREAD_ID a, CRYPTO_THREAD_ID b)
 {
     return pthread_equal(a, b);
 }
 
-int CRYPTO_atomic_add(int *val, int amount, int *ret, CRYPTO_RWLOCK *lock)
+int
+CRYPTO_atomic_add(int *val, int amount, int *ret, CRYPTO_RWLOCK *lock)
 {
 # if defined(__GNUC__) && defined(__ATOMIC_ACQ_REL) && !defined(BROKEN_CLANG_ATOMICS)
     if (__atomic_is_lock_free(sizeof(*val), val)) {
@@ -746,7 +764,7 @@ int CRYPTO_atomic_add(int *val, int amount, int *ret, CRYPTO_RWLOCK *lock)
         return 0;
 
     *val += amount;
-    *ret  = *val;
+    *ret = *val;
 
     if (!CRYPTO_THREAD_unlock(lock))
         return 0;
@@ -754,8 +772,8 @@ int CRYPTO_atomic_add(int *val, int amount, int *ret, CRYPTO_RWLOCK *lock)
     return 1;
 }
 
-int CRYPTO_atomic_add64(uint64_t *val, uint64_t op, uint64_t *ret,
-                        CRYPTO_RWLOCK *lock)
+int
+CRYPTO_atomic_add64(uint64_t *val, uint64_t op, uint64_t *ret, CRYPTO_RWLOCK *lock)
 {
 # if defined(__GNUC__) && defined(__ATOMIC_ACQ_REL) && !defined(BROKEN_CLANG_ATOMICS)
     if (__atomic_is_lock_free(sizeof(*val), val)) {
@@ -772,7 +790,7 @@ int CRYPTO_atomic_add64(uint64_t *val, uint64_t op, uint64_t *ret,
     if (lock == NULL || !CRYPTO_THREAD_write_lock(lock))
         return 0;
     *val += op;
-    *ret  = *val;
+    *ret = *val;
 
     if (!CRYPTO_THREAD_unlock(lock))
         return 0;
@@ -780,8 +798,8 @@ int CRYPTO_atomic_add64(uint64_t *val, uint64_t op, uint64_t *ret,
     return 1;
 }
 
-int CRYPTO_atomic_and(uint64_t *val, uint64_t op, uint64_t *ret,
-                      CRYPTO_RWLOCK *lock)
+int
+CRYPTO_atomic_and(uint64_t *val, uint64_t op, uint64_t *ret, CRYPTO_RWLOCK *lock)
 {
 # if defined(__GNUC__) && defined(__ATOMIC_ACQ_REL) && !defined(BROKEN_CLANG_ATOMICS)
     if (__atomic_is_lock_free(sizeof(*val), val)) {
@@ -798,7 +816,7 @@ int CRYPTO_atomic_and(uint64_t *val, uint64_t op, uint64_t *ret,
     if (lock == NULL || !CRYPTO_THREAD_write_lock(lock))
         return 0;
     *val &= op;
-    *ret  = *val;
+    *ret = *val;
 
     if (!CRYPTO_THREAD_unlock(lock))
         return 0;
@@ -806,8 +824,8 @@ int CRYPTO_atomic_and(uint64_t *val, uint64_t op, uint64_t *ret,
     return 1;
 }
 
-int CRYPTO_atomic_or(uint64_t *val, uint64_t op, uint64_t *ret,
-                     CRYPTO_RWLOCK *lock)
+int
+CRYPTO_atomic_or(uint64_t *val, uint64_t op, uint64_t *ret, CRYPTO_RWLOCK *lock)
 {
 # if defined(__GNUC__) && defined(__ATOMIC_ACQ_REL) && !defined(BROKEN_CLANG_ATOMICS)
     if (__atomic_is_lock_free(sizeof(*val), val)) {
@@ -824,7 +842,7 @@ int CRYPTO_atomic_or(uint64_t *val, uint64_t op, uint64_t *ret,
     if (lock == NULL || !CRYPTO_THREAD_write_lock(lock))
         return 0;
     *val |= op;
-    *ret  = *val;
+    *ret = *val;
 
     if (!CRYPTO_THREAD_unlock(lock))
         return 0;
@@ -832,7 +850,8 @@ int CRYPTO_atomic_or(uint64_t *val, uint64_t op, uint64_t *ret,
     return 1;
 }
 
-int CRYPTO_atomic_load(uint64_t *val, uint64_t *ret, CRYPTO_RWLOCK *lock)
+int
+CRYPTO_atomic_load(uint64_t *val, uint64_t *ret, CRYPTO_RWLOCK *lock)
 {
 # if defined(__GNUC__) && defined(__ATOMIC_ACQ_REL) && !defined(BROKEN_CLANG_ATOMICS)
     if (__atomic_is_lock_free(sizeof(*val), val)) {
@@ -848,14 +867,15 @@ int CRYPTO_atomic_load(uint64_t *val, uint64_t *ret, CRYPTO_RWLOCK *lock)
 # endif
     if (lock == NULL || !CRYPTO_THREAD_read_lock(lock))
         return 0;
-    *ret  = *val;
+    *ret = *val;
     if (!CRYPTO_THREAD_unlock(lock))
         return 0;
 
     return 1;
 }
 
-int CRYPTO_atomic_store(uint64_t *dst, uint64_t val, CRYPTO_RWLOCK *lock)
+int
+CRYPTO_atomic_store(uint64_t *dst, uint64_t val, CRYPTO_RWLOCK *lock)
 {
 # if defined(__GNUC__) && defined(__ATOMIC_ACQ_REL) && !defined(BROKEN_CLANG_ATOMICS)
     if (__atomic_is_lock_free(sizeof(*dst), dst)) {
@@ -871,14 +891,15 @@ int CRYPTO_atomic_store(uint64_t *dst, uint64_t val, CRYPTO_RWLOCK *lock)
 # endif
     if (lock == NULL || !CRYPTO_THREAD_write_lock(lock))
         return 0;
-    *dst  = val;
+    *dst = val;
     if (!CRYPTO_THREAD_unlock(lock))
         return 0;
 
     return 1;
 }
 
-int CRYPTO_atomic_load_int(int *val, int *ret, CRYPTO_RWLOCK *lock)
+int
+CRYPTO_atomic_load_int(int *val, int *ret, CRYPTO_RWLOCK *lock)
 {
 # if defined(__GNUC__) && defined(__ATOMIC_ACQ_REL) && !defined(BROKEN_CLANG_ATOMICS)
     if (__atomic_is_lock_free(sizeof(*val), val)) {
@@ -894,7 +915,7 @@ int CRYPTO_atomic_load_int(int *val, int *ret, CRYPTO_RWLOCK *lock)
 # endif
     if (lock == NULL || !CRYPTO_THREAD_read_lock(lock))
         return 0;
-    *ret  = *val;
+    *ret = *val;
     if (!CRYPTO_THREAD_unlock(lock))
         return 0;
 
@@ -902,13 +923,15 @@ int CRYPTO_atomic_load_int(int *val, int *ret, CRYPTO_RWLOCK *lock)
 }
 
 # ifndef FIPS_MODULE
-int openssl_init_fork_handlers(void)
+int
+openssl_init_fork_handlers(void)
 {
     return 1;
 }
 # endif /* FIPS_MODULE */
 
-int openssl_get_fork_id(void)
+int
+openssl_get_fork_id(void)
 {
     return getpid();
 }

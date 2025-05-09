@@ -23,26 +23,18 @@ static int nullf_gets(BIO *h, char *str, int size);
 static long nullf_ctrl(BIO *h, int cmd, long arg1, void *arg2);
 static long nullf_callback_ctrl(BIO *h, int cmd, BIO_info_cb *fp);
 static const BIO_METHOD methods_nullf = {
-    BIO_TYPE_NULL_FILTER,
-    "NULL filter",
-    bwrite_conv,
-    nullf_write,
-    bread_conv,
-    nullf_read,
-    nullf_puts,
-    nullf_gets,
-    nullf_ctrl,
-    NULL,
-    NULL,
-    nullf_callback_ctrl,
+    BIO_TYPE_NULL_FILTER, "NULL filter", bwrite_conv, nullf_write, bread_conv, nullf_read,
+    nullf_puts,           nullf_gets,    nullf_ctrl,  NULL,        NULL,       nullf_callback_ctrl,
 };
 
-const BIO_METHOD *BIO_f_null(void)
+const BIO_METHOD *
+BIO_f_null(void)
 {
     return &methods_nullf;
 }
 
-static int nullf_read(BIO *b, char *out, int outl)
+static int
+nullf_read(BIO *b, char *out, int outl)
 {
     int ret = 0;
 
@@ -56,7 +48,8 @@ static int nullf_read(BIO *b, char *out, int outl)
     return ret;
 }
 
-static int nullf_write(BIO *b, const char *in, int inl)
+static int
+nullf_write(BIO *b, const char *in, int inl)
 {
     int ret = 0;
 
@@ -70,7 +63,8 @@ static int nullf_write(BIO *b, const char *in, int inl)
     return ret;
 }
 
-static long nullf_ctrl(BIO *b, int cmd, long num, void *ptr)
+static long
+nullf_ctrl(BIO *b, int cmd, long num, void *ptr)
 {
     long ret;
 
@@ -91,21 +85,24 @@ static long nullf_ctrl(BIO *b, int cmd, long num, void *ptr)
     return ret;
 }
 
-static long nullf_callback_ctrl(BIO *b, int cmd, BIO_info_cb *fp)
+static long
+nullf_callback_ctrl(BIO *b, int cmd, BIO_info_cb *fp)
 {
     if (b->next_bio == NULL)
         return 0;
     return BIO_callback_ctrl(b->next_bio, cmd, fp);
 }
 
-static int nullf_gets(BIO *bp, char *buf, int size)
+static int
+nullf_gets(BIO *bp, char *buf, int size)
 {
     if (bp->next_bio == NULL)
         return 0;
     return BIO_gets(bp->next_bio, buf, size);
 }
 
-static int nullf_puts(BIO *bp, const char *str)
+static int
+nullf_puts(BIO *bp, const char *str)
 {
     if (bp->next_bio == NULL)
         return 0;

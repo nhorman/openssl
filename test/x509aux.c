@@ -18,7 +18,8 @@
 #include <openssl/err.h>
 #include "testutil.h"
 
-static int test_certs(int num)
+static int
+test_certs(int num)
 {
     int c;
     char *name = 0;
@@ -44,9 +45,8 @@ static int test_certs(int num)
         unsigned char *bufp;
         long enclen;
 
-        if (!trusted
-            && strcmp(name, PEM_STRING_X509) != 0
-            && strcmp(name, PEM_STRING_X509_OLD) != 0) {
+        if (!trusted && strcmp(name, PEM_STRING_X509) != 0 &&
+            strcmp(name, PEM_STRING_X509_OLD) != 0) {
             TEST_error("unexpected PEM object: %s", name);
             err = 1;
             goto next;
@@ -62,8 +62,7 @@ static int test_certs(int num)
         /* Test traditional 2-pass encoding into caller allocated buffer */
         enclen = i2d(cert, NULL);
         if (len != enclen) {
-            TEST_error("encoded length %ld of %s != input length %ld",
-                       enclen, name, len);
+            TEST_error("encoded length %ld of %s != input length %ld", enclen, name, len);
             err = 1;
             goto next;
         }
@@ -74,12 +73,11 @@ static int test_certs(int num)
         }
         enclen = i2d(cert, &bufp);
         if (len != enclen) {
-            TEST_error("encoded length %ld of %s != input length %ld",
-                       enclen, name, len);
+            TEST_error("encoded length %ld of %s != input length %ld", enclen, name, len);
             err = 1;
             goto next;
         }
-        enclen = (long) (bufp - buf);
+        enclen = (long)(bufp - buf);
         if (enclen != len) {
             TEST_error("unexpected buffer position after encoding %s", name);
             err = 1;
@@ -109,8 +107,7 @@ static int test_certs(int num)
         /* Test 1-pass encoding into library allocated buffer */
         enclen = i2d(cert, &buf);
         if (len != enclen) {
-            TEST_error("encoded length %ld of %s != input length %ld",
-                       enclen, name, len);
+            TEST_error("encoded length %ld of %s != input length %ld", enclen, name, len);
             err = 1;
             goto next;
         }
@@ -128,8 +125,7 @@ static int test_certs(int num)
             /* Test 1-pass encoding into library allocated buffer */
             enclen = i2d(cert, &buf);
             if (enclen > len) {
-                TEST_error("encoded length %ld of %s > input length %ld",
-                           enclen, name, len);
+                TEST_error("encoded length %ld of %s > input length %ld", enclen, name, len);
                 err = 1;
                 goto next;
             }
@@ -167,7 +163,8 @@ static int test_certs(int num)
 
 OPT_TEST_DECLARE_USAGE("certfile...\n")
 
-int setup_tests(void)
+int
+setup_tests(void)
 {
     size_t n;
 

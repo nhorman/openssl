@@ -23,10 +23,8 @@
  * Hard coding the key into an application is very bad.
  * It is done here solely for educational purposes.
  */
-static unsigned char key[] = {
-    0x77, 0xbe, 0x63, 0x70, 0x89, 0x71, 0xc4, 0xe2,
-    0x40, 0xd1, 0xcb, 0x79, 0xe8, 0xd7, 0x7f, 0xeb
-};
+static unsigned char key[] = {0x77, 0xbe, 0x63, 0x70, 0x89, 0x71, 0xc4, 0xe2,
+                              0x40, 0xd1, 0xcb, 0x79, 0xe8, 0xd7, 0x7f, 0xeb};
 
 /*
  * The initialisation vector (IV) is better not being hard coded too.
@@ -34,20 +32,14 @@ static unsigned char key[] = {
  * The IV is not considered secret information and is safe to store with
  * an encrypted password.
  */
-static unsigned char iv[] = {
-    0xe0, 0xe0, 0x0f, 0x19, 0xfe, 0xd7, 0xba,
-    0x01, 0x36, 0xa7, 0x97, 0xf3
-};
+static unsigned char iv[] = {0xe0, 0xe0, 0x0f, 0x19, 0xfe, 0xd7,
+                             0xba, 0x01, 0x36, 0xa7, 0x97, 0xf3};
 
-static unsigned char data[] = {
-    0x7a, 0x43, 0xec, 0x1d, 0x9c, 0x0a, 0x5a, 0x78,
-    0xa0, 0xb1, 0x65, 0x33, 0xa6, 0x21, 0x3c, 0xab
-};
+static unsigned char data[] = {0x7a, 0x43, 0xec, 0x1d, 0x9c, 0x0a, 0x5a, 0x78,
+                               0xa0, 0xb1, 0x65, 0x33, 0xa6, 0x21, 0x3c, 0xab};
 
-static const unsigned char expected_output[] = {
-    0x20, 0x9f, 0xcc, 0x8d, 0x36, 0x75, 0xed, 0x93,
-    0x8e, 0x9c, 0x71, 0x66, 0x70, 0x9d, 0xd9, 0x46
-};
+static const unsigned char expected_output[] = {0x20, 0x9f, 0xcc, 0x8d, 0x36, 0x75, 0xed, 0x93,
+                                                0x8e, 0x9c, 0x71, 0x66, 0x70, 0x9d, 0xd9, 0x46};
 
 /*
  * A property query used for selecting the GMAC implementation and the
@@ -55,7 +47,8 @@ static const unsigned char expected_output[] = {
  */
 static char *propq = NULL;
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
     int ret = EXIT_FAILURE;
     EVP_MAC *mac = NULL;
@@ -86,20 +79,17 @@ int main(int argc, char **argv)
     }
 
     /* GMAC requires a GCM mode cipher to be specified */
-    *p++ = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_CIPHER,
-                                            "AES-128-GCM", 0);
+    *p++ = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_CIPHER, "AES-128-GCM", 0);
 
     /*
      * If a non-default property query is required when fetching the GCM mode
      * cipher, it needs to be specified too.
      */
     if (propq != NULL)
-        *p++ = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_PROPERTIES,
-                                                propq, 0);
+        *p++ = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_PROPERTIES, propq, 0);
 
     /* Set the initialisation vector (IV) */
-    *p++ = OSSL_PARAM_construct_octet_string(OSSL_CIPHER_PARAM_IV,
-                                             iv, sizeof(iv));
+    *p++ = OSSL_PARAM_construct_octet_string(OSSL_CIPHER_PARAM_IV, iv, sizeof(iv));
     *p = OSSL_PARAM_construct_end();
 
     /* Initialise the GMAC operation */

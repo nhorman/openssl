@@ -17,8 +17,8 @@
 #include "crypto/evp.h"
 #include "cms_local.h"
 
-static EVP_PKEY *pkey_type2param(int ptype, const void *pval,
-                                 OSSL_LIB_CTX *libctx, const char *propq)
+static EVP_PKEY *
+pkey_type2param(int ptype, const void *pval, OSSL_LIB_CTX *libctx, const char *propq)
 {
     EVP_PKEY *pkey = NULL;
     EVP_PKEY_CTX *pctx = NULL;
@@ -30,8 +30,7 @@ static EVP_PKEY *pkey_type2param(int ptype, const void *pval,
         size_t pmlen = (size_t)pstr->length;
         int selection = OSSL_KEYMGMT_SELECT_ALL_PARAMETERS;
 
-        ctx = OSSL_DECODER_CTX_new_for_pkey(&pkey, "DER", NULL, "EC",
-                                            selection, libctx, propq);
+        ctx = OSSL_DECODER_CTX_new_for_pkey(&pkey, "DER", NULL, "EC", selection, libctx, propq);
         if (ctx == NULL)
             goto err;
 
@@ -49,8 +48,8 @@ static EVP_PKEY *pkey_type2param(int ptype, const void *pval,
         pctx = EVP_PKEY_CTX_new_from_name(libctx, "EC", propq);
         if (pctx == NULL || EVP_PKEY_paramgen_init(pctx) <= 0)
             goto err;
-        if (OBJ_obj2txt(groupname, sizeof(groupname), poid, 0) <= 0
-                || EVP_PKEY_CTX_set_group_name(pctx, groupname) <= 0) {
+        if (OBJ_obj2txt(groupname, sizeof(groupname), poid, 0) <= 0 ||
+            EVP_PKEY_CTX_set_group_name(pctx, groupname) <= 0) {
             ERR_raise(ERR_LIB_CMS, CMS_R_DECODE_ERROR);
             goto err;
         }
@@ -63,15 +62,15 @@ static EVP_PKEY *pkey_type2param(int ptype, const void *pval,
     ERR_raise(ERR_LIB_CMS, CMS_R_DECODE_ERROR);
     return NULL;
 
- err:
+err:
     EVP_PKEY_free(pkey);
     EVP_PKEY_CTX_free(pctx);
     OSSL_DECODER_CTX_free(ctx);
     return NULL;
 }
 
-static int ecdh_cms_set_peerkey(EVP_PKEY_CTX *pctx,
-                                X509_ALGOR *alg, ASN1_BIT_STRING *pubkey)
+static int
+ecdh_cms_set_peerkey(EVP_PKEY_CTX *pctx, X509_ALGOR *alg, ASN1_BIT_STRING *pubkey)
 {
     const ASN1_OBJECT *aoid;
     int atype;
@@ -99,8 +98,7 @@ static int ecdh_cms_set_peerkey(EVP_PKEY_CTX *pctx,
         if (!EVP_PKEY_copy_parameters(pkpeer, pk))
             goto err;
     } else {
-        pkpeer = pkey_type2param(atype, aval,
-                                 EVP_PKEY_CTX_get0_libctx(pctx),
+        pkpeer = pkey_type2param(atype, aval, EVP_PKEY_CTX_get0_libctx(pctx),
                                  EVP_PKEY_CTX_get0_propq(pctx));
         if (pkpeer == NULL)
             goto err;
@@ -116,13 +114,14 @@ static int ecdh_cms_set_peerkey(EVP_PKEY_CTX *pctx,
 
     if (EVP_PKEY_derive_set_peer(pctx, pkpeer) > 0)
         rv = 1;
- err:
+err:
     EVP_PKEY_free(pkpeer);
     return rv;
 }
 
 /* Set KDF parameters based on KDF NID */
-static int ecdh_cms_set_kdf_param(EVP_PKEY_CTX *pctx, int eckdf_nid)
+static int
+ecdh_cms_set_kdf_param(EVP_PKEY_CTX *pctx, int eckdf_nid)
 {
     int kdf_nid, kdfmd_nid, cofactor;
     const EVP_MD *kdf_md;
@@ -156,7 +155,8 @@ static int ecdh_cms_set_kdf_param(EVP_PKEY_CTX *pctx, int eckdf_nid)
     return 1;
 }
 
-static int ecdh_cms_set_shared_info(EVP_PKEY_CTX *pctx, CMS_RecipientInfo *ri)
+static int
+ecdh_cms_set_shared_info(EVP_PKEY_CTX *pctx, CMS_RecipientInfo *ri)
 {
     int rv = 0;
     X509_ALGOR *alg, *kekalg = NULL;
@@ -210,14 +210,15 @@ static int ecdh_cms_set_shared_info(EVP_PKEY_CTX *pctx, CMS_RecipientInfo *ri)
     der = NULL;
 
     rv = 1;
- err:
+err:
     EVP_CIPHER_free(kekcipher);
     X509_ALGOR_free(kekalg);
     OPENSSL_free(der);
     return rv;
 }
 
-static int ecdh_cms_decrypt(CMS_RecipientInfo *ri)
+static int
+ecdh_cms_decrypt(CMS_RecipientInfo *ri)
 {
     EVP_PKEY_CTX *pctx;
 
@@ -229,8 +230,7 @@ static int ecdh_cms_decrypt(CMS_RecipientInfo *ri)
         X509_ALGOR *alg;
         ASN1_BIT_STRING *pubkey;
 
-        if (!CMS_RecipientInfo_kari_get0_orig_id(ri, &alg, &pubkey,
-                                                 NULL, NULL, NULL))
+        if (!CMS_RecipientInfo_kari_get0_orig_id(ri, &alg, &pubkey, NULL, NULL, NULL))
             return 0;
         if (alg == NULL || pubkey == NULL)
             return 0;
@@ -247,7 +247,8 @@ static int ecdh_cms_decrypt(CMS_RecipientInfo *ri)
     return 1;
 }
 
-static int ecdh_cms_encrypt(CMS_RecipientInfo *ri)
+static int
+ecdh_cms_encrypt(CMS_RecipientInfo *ri)
 {
     EVP_PKEY_CTX *pctx;
     EVP_PKEY *pkey;
@@ -269,8 +270,7 @@ static int ecdh_cms_encrypt(CMS_RecipientInfo *ri)
         return 0;
     /* Get ephemeral key */
     pkey = EVP_PKEY_CTX_get0_pkey(pctx);
-    if (!CMS_RecipientInfo_kari_get0_orig_id(ri, &talg, &pubkey,
-                                             NULL, NULL, NULL))
+    if (!CMS_RecipientInfo_kari_get0_orig_id(ri, &talg, &pubkey, NULL, NULL, NULL))
         goto err;
     X509_ALGOR_get0(&aoid, NULL, NULL, talg);
     /* Is everything uninitialised? */
@@ -285,8 +285,8 @@ static int ecdh_cms_encrypt(CMS_RecipientInfo *ri)
         ossl_asn1_string_set_bits_left(pubkey, 0);
 
         penc = NULL;
-        (void)X509_ALGOR_set0(talg, OBJ_nid2obj(NID_X9_62_id_ecPublicKey),
-                              V_ASN1_UNDEF, NULL); /* cannot fail */
+        (void)X509_ALGOR_set0(talg, OBJ_nid2obj(NID_X9_62_id_ecPublicKey), V_ASN1_UNDEF,
+                              NULL); /* cannot fail */
     }
 
     /* See if custom parameters set */
@@ -373,13 +373,14 @@ static int ecdh_cms_encrypt(CMS_RecipientInfo *ri)
     if (!rv)
         ASN1_STRING_free(wrap_str);
 
- err:
+err:
     OPENSSL_free(penc);
     X509_ALGOR_free(wrap_alg);
     return rv;
 }
 
-int ossl_cms_ecdh_envelope(CMS_RecipientInfo *ri, int decrypt)
+int
+ossl_cms_ecdh_envelope(CMS_RecipientInfo *ri, int decrypt)
 {
     assert(decrypt == 0 || decrypt == 1);
 

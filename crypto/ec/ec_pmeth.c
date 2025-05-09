@@ -44,7 +44,8 @@ typedef struct {
     size_t kdf_outlen;
 } EC_PKEY_CTX;
 
-static int pkey_ec_init(EVP_PKEY_CTX *ctx)
+static int
+pkey_ec_init(EVP_PKEY_CTX *ctx)
 {
     EC_PKEY_CTX *dctx;
 
@@ -57,7 +58,8 @@ static int pkey_ec_init(EVP_PKEY_CTX *ctx)
     return 1;
 }
 
-static int pkey_ec_copy(EVP_PKEY_CTX *dst, const EVP_PKEY_CTX *src)
+static int
+pkey_ec_copy(EVP_PKEY_CTX *dst, const EVP_PKEY_CTX *src)
 {
     EC_PKEY_CTX *dctx, *sctx;
     if (!pkey_ec_init(dst))
@@ -89,7 +91,8 @@ static int pkey_ec_copy(EVP_PKEY_CTX *dst, const EVP_PKEY_CTX *src)
     return 1;
 }
 
-static void pkey_ec_cleanup(EVP_PKEY_CTX *ctx)
+static void
+pkey_ec_cleanup(EVP_PKEY_CTX *ctx)
 {
     EC_PKEY_CTX *dctx = ctx->data;
     if (dctx != NULL) {
@@ -101,8 +104,9 @@ static void pkey_ec_cleanup(EVP_PKEY_CTX *ctx)
     }
 }
 
-static int pkey_ec_sign(EVP_PKEY_CTX *ctx, unsigned char *sig, size_t *siglen,
-                        const unsigned char *tbs, size_t tbslen)
+static int
+pkey_ec_sign(EVP_PKEY_CTX *ctx, unsigned char *sig, size_t *siglen, const unsigned char *tbs,
+             size_t tbslen)
 {
     int ret, type;
     unsigned int sltmp;
@@ -139,9 +143,9 @@ static int pkey_ec_sign(EVP_PKEY_CTX *ctx, unsigned char *sig, size_t *siglen,
     return 1;
 }
 
-static int pkey_ec_verify(EVP_PKEY_CTX *ctx,
-                          const unsigned char *sig, size_t siglen,
-                          const unsigned char *tbs, size_t tbslen)
+static int
+pkey_ec_verify(EVP_PKEY_CTX *ctx, const unsigned char *sig, size_t siglen, const unsigned char *tbs,
+               size_t tbslen)
 {
     int ret, type;
     EC_PKEY_CTX *dctx = ctx->data;
@@ -163,7 +167,8 @@ static int pkey_ec_verify(EVP_PKEY_CTX *ctx,
 }
 
 #ifndef OPENSSL_NO_EC
-static int pkey_ec_derive(EVP_PKEY_CTX *ctx, unsigned char *key, size_t *keylen)
+static int
+pkey_ec_derive(EVP_PKEY_CTX *ctx, unsigned char *key, size_t *keylen)
 {
     int ret;
     size_t outlen;
@@ -182,8 +187,7 @@ static int pkey_ec_derive(EVP_PKEY_CTX *ctx, unsigned char *key, size_t *keylen)
         return 0;
     }
 
-    eckey = dctx->co_key ? dctx->co_key
-                         : (EC_KEY *)EVP_PKEY_get0_EC_KEY(ctx->pkey);
+    eckey = dctx->co_key ? dctx->co_key : (EC_KEY *)EVP_PKEY_get0_EC_KEY(ctx->pkey);
 
     if (!key) {
         const EC_GROUP *group;
@@ -210,8 +214,8 @@ static int pkey_ec_derive(EVP_PKEY_CTX *ctx, unsigned char *key, size_t *keylen)
     return 1;
 }
 
-static int pkey_ec_kdf_derive(EVP_PKEY_CTX *ctx,
-                              unsigned char *key, size_t *keylen)
+static int
+pkey_ec_kdf_derive(EVP_PKEY_CTX *ctx, unsigned char *key, size_t *keylen)
 {
     EC_PKEY_CTX *dctx = ctx->data;
     unsigned char *ktmp = NULL;
@@ -232,19 +236,19 @@ static int pkey_ec_kdf_derive(EVP_PKEY_CTX *ctx,
     if (!pkey_ec_derive(ctx, ktmp, &ktmplen))
         goto err;
     /* Do KDF stuff */
-    if (!ossl_ecdh_kdf_X9_63(key, *keylen, ktmp, ktmplen,
-                             dctx->kdf_ukm, dctx->kdf_ukmlen, dctx->kdf_md,
-                             ctx->libctx, ctx->propquery))
+    if (!ossl_ecdh_kdf_X9_63(key, *keylen, ktmp, ktmplen, dctx->kdf_ukm, dctx->kdf_ukmlen,
+                             dctx->kdf_md, ctx->libctx, ctx->propquery))
         goto err;
     rv = 1;
 
- err:
+err:
     OPENSSL_clear_free(ktmp, ktmplen);
     return rv;
 }
 #endif
 
-static int pkey_ec_ctrl(EVP_PKEY_CTX *ctx, int type, int p1, void *p2)
+static int
+pkey_ec_ctrl(EVP_PKEY_CTX *ctx, int type, int p1, void *p2)
 {
     EC_PKEY_CTX *dctx = ctx->data;
     EC_GROUP *group;
@@ -381,12 +385,11 @@ static int pkey_ec_ctrl(EVP_PKEY_CTX *ctx, int type, int p1, void *p2)
 
     default:
         return -2;
-
     }
 }
 
-static int pkey_ec_ctrl_str(EVP_PKEY_CTX *ctx,
-                            const char *type, const char *value)
+static int
+pkey_ec_ctrl_str(EVP_PKEY_CTX *ctx, const char *type, const char *value)
 {
     if (strcmp(type, "ec_paramgen_curve") == 0) {
         int nid;
@@ -425,7 +428,8 @@ static int pkey_ec_ctrl_str(EVP_PKEY_CTX *ctx,
     return -2;
 }
 
-static int pkey_ec_paramgen(EVP_PKEY_CTX *ctx, EVP_PKEY *pkey)
+static int
+pkey_ec_paramgen(EVP_PKEY_CTX *ctx, EVP_PKEY *pkey)
 {
     EC_KEY *ec = NULL;
     EC_PKEY_CTX *dctx = ctx->data;
@@ -438,13 +442,14 @@ static int pkey_ec_paramgen(EVP_PKEY_CTX *ctx, EVP_PKEY *pkey)
     ec = EC_KEY_new();
     if (ec == NULL)
         return 0;
-    if (!(ret = EC_KEY_set_group(ec, dctx->gen_group))
-        || !ossl_assert(ret = EVP_PKEY_assign_EC_KEY(pkey, ec)))
+    if (!(ret = EC_KEY_set_group(ec, dctx->gen_group)) ||
+        !ossl_assert(ret = EVP_PKEY_assign_EC_KEY(pkey, ec)))
         EC_KEY_free(ec);
     return ret;
 }
 
-static int pkey_ec_keygen(EVP_PKEY_CTX *ctx, EVP_PKEY *pkey)
+static int
+pkey_ec_keygen(EVP_PKEY_CTX *ctx, EVP_PKEY *pkey)
 {
     EC_KEY *ec = NULL;
     EC_PKEY_CTX *dctx = ctx->data;
@@ -470,46 +475,49 @@ static int pkey_ec_keygen(EVP_PKEY_CTX *ctx, EVP_PKEY *pkey)
     return ret ? EC_KEY_generate_key(ec) : 0;
 }
 
-static const EVP_PKEY_METHOD ec_pkey_meth = {
-    EVP_PKEY_EC,
-    0,
-    pkey_ec_init,
-    pkey_ec_copy,
-    pkey_ec_cleanup,
+static const EVP_PKEY_METHOD ec_pkey_meth = {EVP_PKEY_EC,
+                                             0,
+                                             pkey_ec_init,
+                                             pkey_ec_copy,
+                                             pkey_ec_cleanup,
 
-    0,
-    pkey_ec_paramgen,
+                                             0,
+                                             pkey_ec_paramgen,
 
-    0,
-    pkey_ec_keygen,
+                                             0,
+                                             pkey_ec_keygen,
 
-    0,
-    pkey_ec_sign,
+                                             0,
+                                             pkey_ec_sign,
 
-    0,
-    pkey_ec_verify,
+                                             0,
+                                             pkey_ec_verify,
 
-    0, 0,
+                                             0,
+                                             0,
 
-    0, 0, 0, 0,
+                                             0,
+                                             0,
+                                             0,
+                                             0,
 
-    0,
-    0,
+                                             0,
+                                             0,
 
-    0,
-    0,
+                                             0,
+                                             0,
 
-    0,
+                                             0,
 #ifndef OPENSSL_NO_EC
-    pkey_ec_kdf_derive,
+                                             pkey_ec_kdf_derive,
 #else
-    0,
+                                             0,
 #endif
-    pkey_ec_ctrl,
-    pkey_ec_ctrl_str
-};
+                                             pkey_ec_ctrl,
+                                             pkey_ec_ctrl_str};
 
-const EVP_PKEY_METHOD *ossl_ec_pkey_method(void)
+const EVP_PKEY_METHOD *
+ossl_ec_pkey_method(void)
 {
     return &ec_pkey_meth;
 }

@@ -23,16 +23,18 @@
 #include <openssl/err.h>
 #include <openssl/ssl.h>
 
-#define CERT_FILE       "server.pem"
+#define CERT_FILE "server.pem"
 
 static volatile int done = 0;
 
-static void interrupt(int sig)
+static void
+interrupt(int sig)
 {
     done = 1;
 }
 
-static void sigsetup(void)
+static void
+sigsetup(void)
 {
 #if defined(OPENSSL_SYS_WINDOWS)
     signal(SIGINT, interrupt);
@@ -49,7 +51,8 @@ static void sigsetup(void)
 #endif
 }
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
     char *port = NULL;
     BIO *in = NULL;
@@ -87,7 +90,7 @@ int main(int argc, char *argv[])
     /* Arrange to leave server loop on interrupt */
     sigsetup();
 
- again:
+again:
     /*
      * The first call will setup the accept socket, and the second will get a
      * socket.  In this loop, the first actual accept will occur in the
@@ -117,7 +120,7 @@ int main(int argc, char *argv[])
     }
 
     ret = EXIT_SUCCESS;
- err:
+err:
     if (ret != EXIT_SUCCESS)
         ERR_print_errors_fp(stderr);
     BIO_free(in);

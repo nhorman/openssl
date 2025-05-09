@@ -17,13 +17,11 @@ typedef struct prov_cipher_hw_aes_hmac_sha_ctx_st {
     PROV_CIPHER_HW base; /* must be first */
     void (*init_mac_key)(void *ctx, const unsigned char *inkey, size_t inlen);
     int (*set_tls1_aad)(void *ctx, unsigned char *aad_rec, int aad_len);
-# if !defined(OPENSSL_NO_MULTIBLOCK)
+#if !defined(OPENSSL_NO_MULTIBLOCK)
     int (*tls1_multiblock_max_bufsize)(void *ctx);
-    int (*tls1_multiblock_aad)(
-        void *vctx, EVP_CTRL_TLS1_1_MULTIBLOCK_PARAM *param);
-    int (*tls1_multiblock_encrypt)(
-        void *ctx, EVP_CTRL_TLS1_1_MULTIBLOCK_PARAM *param);
-# endif /* OPENSSL_NO_MULTIBLOCK) */
+    int (*tls1_multiblock_aad)(void *vctx, EVP_CTRL_TLS1_1_MULTIBLOCK_PARAM *param);
+    int (*tls1_multiblock_encrypt)(void *ctx, EVP_CTRL_TLS1_1_MULTIBLOCK_PARAM *param);
+#endif /* OPENSSL_NO_MULTIBLOCK) */
 } PROV_CIPHER_HW_AES_HMAC_SHA;
 
 const PROV_CIPHER_HW_AES_HMAC_SHA *ossl_prov_cipher_hw_aes_cbc_hmac_sha1(void);
@@ -36,7 +34,7 @@ const PROV_CIPHER_HW_AES_HMAC_SHA *ossl_prov_cipher_hw_aes_cbc_hmac_sha256(void)
 typedef struct prov_aes_hmac_sha_ctx_st {
     PROV_CIPHER_CTX base;
     AES_KEY ks;
-    size_t payload_length;      /* AAD length in decrypt case */
+    size_t payload_length; /* AAD length in decrypt case */
     union {
         unsigned int tls_ver;
         unsigned char tls_aad[16]; /* 13 used */

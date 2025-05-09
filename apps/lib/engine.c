@@ -25,13 +25,14 @@
 
 #ifndef OPENSSL_NO_ENGINE
 /* Try to load an engine in a shareable library */
-static ENGINE *try_load_engine(const char *engine)
+static ENGINE *
+try_load_engine(const char *engine)
 {
     ENGINE *e = NULL;
 
     if ((e = ENGINE_by_id("dynamic")) != NULL) {
-        if (!ENGINE_ctrl_cmd_string(e, "SO_PATH", engine, 0)
-            || !ENGINE_ctrl_cmd_string(e, "LOAD", NULL, 0)) {
+        if (!ENGINE_ctrl_cmd_string(e, "SO_PATH", engine, 0) ||
+            !ENGINE_ctrl_cmd_string(e, "LOAD", NULL, 0)) {
             ENGINE_free(e);
             e = NULL;
         }
@@ -40,7 +41,8 @@ static ENGINE *try_load_engine(const char *engine)
 }
 #endif
 
-ENGINE *setup_engine_methods(const char *id, unsigned int methods, int debug)
+ENGINE *
+setup_engine_methods(const char *id, unsigned int methods, int debug)
 {
     ENGINE *e = NULL;
 
@@ -51,17 +53,15 @@ ENGINE *setup_engine_methods(const char *id, unsigned int methods, int debug)
             ENGINE_register_all_complete();
             return NULL;
         }
-        if ((e = ENGINE_by_id(id)) == NULL
-            && (e = try_load_engine(id)) == NULL) {
+        if ((e = ENGINE_by_id(id)) == NULL && (e = try_load_engine(id)) == NULL) {
             BIO_printf(bio_err, "Invalid engine \"%s\"\n", id);
             ERR_print_errors(bio_err);
             return NULL;
         }
         if (debug)
             (void)ENGINE_ctrl(e, ENGINE_CTRL_SET_LOGSTREAM, 0, bio_err, 0);
-        if (!ENGINE_ctrl_cmd(e, "SET_USER_INTERFACE", 0,
-                             (void *)get_ui_method(), 0, 1)
-                || !ENGINE_set_default(e, methods)) {
+        if (!ENGINE_ctrl_cmd(e, "SET_USER_INTERFACE", 0, (void *)get_ui_method(), 0, 1) ||
+            !ENGINE_set_default(e, methods)) {
             BIO_printf(bio_err, "Cannot use engine \"%s\"\n", ENGINE_get_id(e));
             ERR_print_errors(bio_err);
             ENGINE_free(e);
@@ -74,7 +74,8 @@ ENGINE *setup_engine_methods(const char *id, unsigned int methods, int debug)
     return e;
 }
 
-void release_engine(ENGINE *e)
+void
+release_engine(ENGINE *e)
 {
 #ifndef OPENSSL_NO_ENGINE
     /* Free our "structural" reference. */
@@ -82,7 +83,8 @@ void release_engine(ENGINE *e)
 #endif
 }
 
-int init_engine(ENGINE *e)
+int
+init_engine(ENGINE *e)
 {
     int rv = 1;
 
@@ -92,7 +94,8 @@ int init_engine(ENGINE *e)
     return rv;
 }
 
-int finish_engine(ENGINE *e)
+int
+finish_engine(ENGINE *e)
 {
     int rv = 1;
 
@@ -102,7 +105,8 @@ int finish_engine(ENGINE *e)
     return rv;
 }
 
-char *make_engine_uri(ENGINE *e, const char *key_id, const char *desc)
+char *
+make_engine_uri(ENGINE *e, const char *key_id, const char *desc)
 {
     char *new_uri = NULL;
 
@@ -113,12 +117,8 @@ char *make_engine_uri(ENGINE *e, const char *key_id, const char *desc)
         BIO_printf(bio_err, "No engine key id specified for loading %s\n", desc);
     } else {
         const char *engineid = ENGINE_get_id(e);
-        size_t uri_sz =
-            sizeof(ENGINE_SCHEME_COLON) - 1
-            + strlen(engineid)
-            + 1 /* : */
-            + strlen(key_id)
-            + 1 /* \0 */
+        size_t uri_sz = sizeof(ENGINE_SCHEME_COLON) - 1 + strlen(engineid) + 1 /* : */
+                        + strlen(key_id) + 1                                   /* \0 */
             ;
 
         new_uri = OPENSSL_malloc(uri_sz);
@@ -135,7 +135,8 @@ char *make_engine_uri(ENGINE *e, const char *key_id, const char *desc)
     return new_uri;
 }
 
-int get_legacy_pkey_id(OSSL_LIB_CTX *libctx, const char *algname, ENGINE *e)
+int
+get_legacy_pkey_id(OSSL_LIB_CTX *libctx, const char *algname, ENGINE *e)
 {
     const EVP_PKEY_ASN1_METHOD *ameth;
     ENGINE *tmpeng = NULL;
@@ -151,9 +152,9 @@ int get_legacy_pkey_id(OSSL_LIB_CTX *libctx, const char *algname, ENGINE *e)
         ameth = ENGINE_get_pkey_asn1_meth_str(e, algname, -1);
     else
 #endif
-    /* We're only interested if it comes from an ENGINE */
-    if (tmpeng == NULL)
-        ameth = NULL;
+        /* We're only interested if it comes from an ENGINE */
+        if (tmpeng == NULL)
+            ameth = NULL;
 
     ERR_pop_to_mark();
     if (ameth == NULL)
@@ -164,7 +165,8 @@ int get_legacy_pkey_id(OSSL_LIB_CTX *libctx, const char *algname, ENGINE *e)
     return pkey_id;
 }
 
-const EVP_MD *get_digest_from_engine(const char *name)
+const EVP_MD *
+get_digest_from_engine(const char *name)
 {
 #ifndef OPENSSL_NO_ENGINE
     ENGINE *eng;
@@ -178,7 +180,8 @@ const EVP_MD *get_digest_from_engine(const char *name)
     return NULL;
 }
 
-const EVP_CIPHER *get_cipher_from_engine(const char *name)
+const EVP_CIPHER *
+get_cipher_from_engine(const char *name)
 {
 #ifndef OPENSSL_NO_ENGINE
     ENGINE *eng;

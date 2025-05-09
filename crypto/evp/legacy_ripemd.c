@@ -25,11 +25,11 @@ static const EVP_MD ripemd160_md = {
     RIPEMD160_DIGEST_LENGTH,
     0,
     EVP_ORIG_GLOBAL,
-    LEGACY_EVP_MD_METH_TABLE(ripe_init, ripe_update, ripe_final, NULL,
-                             RIPEMD160_CBLOCK),
+    LEGACY_EVP_MD_METH_TABLE(ripe_init, ripe_update, ripe_final, NULL, RIPEMD160_CBLOCK),
 };
 
-const EVP_MD *EVP_ripemd160(void)
+const EVP_MD *
+EVP_ripemd160(void)
 {
     return &ripemd160_md;
 }

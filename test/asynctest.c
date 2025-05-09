@@ -21,14 +21,16 @@ static ASYNC_JOB *currjob = NULL;
 static int custom_alloc_used = 0;
 static int custom_free_used = 0;
 
-static int only_pause(void *args)
+static int
+only_pause(void *args)
 {
     ASYNC_pause_job();
 
     return 1;
 }
 
-static int add_two(void *args)
+static int
+add_two(void *args)
 {
     ctr++;
     ASYNC_pause_job();
@@ -37,7 +39,8 @@ static int add_two(void *args)
     return 2;
 }
 
-static int save_current(void *args)
+static int
+save_current(void *args)
 {
     currjob = ASYNC_get_current_job();
     ASYNC_pause_job();
@@ -45,7 +48,8 @@ static int save_current(void *args)
     return 1;
 }
 
-static int change_deflt_libctx(void *args)
+static int
+change_deflt_libctx(void *args)
 {
     OSSL_LIB_CTX *libctx = OSSL_LIB_CTX_new();
     OSSL_LIB_CTX *oldctx, *tmpctx;
@@ -72,14 +76,14 @@ static int change_deflt_libctx(void *args)
         goto err;
 
     ret = 1;
- err:
+err:
     OSSL_LIB_CTX_free(libctx);
     return ret;
 }
 
-
-#define MAGIC_WAIT_FD   ((OSSL_ASYNC_FD)99)
-static int waitfd(void *args)
+#define MAGIC_WAIT_FD ((OSSL_ASYNC_FD)99)
+static int
+waitfd(void *args)
 {
     ASYNC_JOB *job;
     ASYNC_WAIT_CTX *waitctx;
@@ -112,7 +116,8 @@ static int waitfd(void *args)
     return 1;
 }
 
-static int blockpause(void *args)
+static int
+blockpause(void *args)
 {
     ASYNC_block_pause();
     ASYNC_pause_job();
@@ -122,31 +127,22 @@ static int blockpause(void *args)
     return 1;
 }
 
-static int test_ASYNC_init_thread(void)
+static int
+test_ASYNC_init_thread(void)
 {
     ASYNC_JOB *job1 = NULL, *job2 = NULL, *job3 = NULL;
     int funcret1, funcret2, funcret3;
     ASYNC_WAIT_CTX *waitctx = NULL;
 
-    if (       !ASYNC_init_thread(2, 0)
-            || (waitctx = ASYNC_WAIT_CTX_new()) == NULL
-            || ASYNC_start_job(&job1, waitctx, &funcret1, only_pause, NULL, 0)
-                != ASYNC_PAUSE
-            || ASYNC_start_job(&job2, waitctx, &funcret2, only_pause, NULL, 0)
-                != ASYNC_PAUSE
-            || ASYNC_start_job(&job3, waitctx, &funcret3, only_pause, NULL, 0)
-                != ASYNC_NO_JOBS
-            || ASYNC_start_job(&job1, waitctx, &funcret1, only_pause, NULL, 0)
-                != ASYNC_FINISH
-            || ASYNC_start_job(&job3, waitctx, &funcret3, only_pause, NULL, 0)
-                != ASYNC_PAUSE
-            || ASYNC_start_job(&job2, waitctx, &funcret2, only_pause, NULL, 0)
-                != ASYNC_FINISH
-            || ASYNC_start_job(&job3, waitctx, &funcret3, only_pause, NULL, 0)
-                != ASYNC_FINISH
-            || funcret1 != 1
-            || funcret2 != 1
-            || funcret3 != 1) {
+    if (!ASYNC_init_thread(2, 0) || (waitctx = ASYNC_WAIT_CTX_new()) == NULL ||
+        ASYNC_start_job(&job1, waitctx, &funcret1, only_pause, NULL, 0) != ASYNC_PAUSE ||
+        ASYNC_start_job(&job2, waitctx, &funcret2, only_pause, NULL, 0) != ASYNC_PAUSE ||
+        ASYNC_start_job(&job3, waitctx, &funcret3, only_pause, NULL, 0) != ASYNC_NO_JOBS ||
+        ASYNC_start_job(&job1, waitctx, &funcret1, only_pause, NULL, 0) != ASYNC_FINISH ||
+        ASYNC_start_job(&job3, waitctx, &funcret3, only_pause, NULL, 0) != ASYNC_PAUSE ||
+        ASYNC_start_job(&job2, waitctx, &funcret2, only_pause, NULL, 0) != ASYNC_FINISH ||
+        ASYNC_start_job(&job3, waitctx, &funcret3, only_pause, NULL, 0) != ASYNC_FINISH ||
+        funcret1 != 1 || funcret2 != 1 || funcret3 != 1) {
         fprintf(stderr, "test_ASYNC_init_thread() failed\n");
         ASYNC_WAIT_CTX_free(waitctx);
         ASYNC_cleanup_thread();
@@ -158,13 +154,15 @@ static int test_ASYNC_init_thread(void)
     return 1;
 }
 
-static int test_callback(void *arg)
+static int
+test_callback(void *arg)
 {
     printf("callback test pass\n");
     return 1;
 }
 
-static int test_ASYNC_callback_status(void)
+static int
+test_ASYNC_callback_status(void)
 {
     ASYNC_WAIT_CTX *waitctx = NULL;
     int set_arg = 100;
@@ -172,17 +170,12 @@ static int test_ASYNC_callback_status(void)
     void *get_arg;
     int set_status = 1;
 
-    if (       !ASYNC_init_thread(1, 0)
-            || (waitctx = ASYNC_WAIT_CTX_new()) == NULL
-            || ASYNC_WAIT_CTX_set_callback(waitctx, test_callback, (void*)&set_arg)
-               != 1
-            || ASYNC_WAIT_CTX_get_callback(waitctx, &get_callback, &get_arg)
-               != 1
-            || test_callback != get_callback
-            || get_arg != (void*)&set_arg
-            || (*get_callback)(get_arg) != 1
-            || ASYNC_WAIT_CTX_set_status(waitctx, set_status) != 1
-            || set_status != ASYNC_WAIT_CTX_get_status(waitctx)) {
+    if (!ASYNC_init_thread(1, 0) || (waitctx = ASYNC_WAIT_CTX_new()) == NULL ||
+        ASYNC_WAIT_CTX_set_callback(waitctx, test_callback, (void *)&set_arg) != 1 ||
+        ASYNC_WAIT_CTX_get_callback(waitctx, &get_callback, &get_arg) != 1 ||
+        test_callback != get_callback || get_arg != (void *)&set_arg ||
+        (*get_callback)(get_arg) != 1 || ASYNC_WAIT_CTX_set_status(waitctx, set_status) != 1 ||
+        set_status != ASYNC_WAIT_CTX_get_status(waitctx)) {
         fprintf(stderr, "test_ASYNC_callback_status() failed\n");
         ASYNC_WAIT_CTX_free(waitctx);
         ASYNC_cleanup_thread();
@@ -192,10 +185,10 @@ static int test_ASYNC_callback_status(void)
     ASYNC_WAIT_CTX_free(waitctx);
     ASYNC_cleanup_thread();
     return 1;
-
 }
 
-static int test_ASYNC_start_job(void)
+static int
+test_ASYNC_start_job(void)
 {
     ASYNC_JOB *job = NULL;
     int funcret;
@@ -203,15 +196,10 @@ static int test_ASYNC_start_job(void)
 
     ctr = 0;
 
-    if (       !ASYNC_init_thread(1, 0)
-            || (waitctx = ASYNC_WAIT_CTX_new()) == NULL
-            || ASYNC_start_job(&job, waitctx, &funcret, add_two, NULL, 0)
-               != ASYNC_PAUSE
-            || ctr != 1
-            || ASYNC_start_job(&job, waitctx, &funcret, add_two, NULL, 0)
-               != ASYNC_FINISH
-            || ctr != 2
-            || funcret != 2) {
+    if (!ASYNC_init_thread(1, 0) || (waitctx = ASYNC_WAIT_CTX_new()) == NULL ||
+        ASYNC_start_job(&job, waitctx, &funcret, add_two, NULL, 0) != ASYNC_PAUSE || ctr != 1 ||
+        ASYNC_start_job(&job, waitctx, &funcret, add_two, NULL, 0) != ASYNC_FINISH || ctr != 2 ||
+        funcret != 2) {
         fprintf(stderr, "test_ASYNC_start_job() failed\n");
         ASYNC_WAIT_CTX_free(waitctx);
         ASYNC_cleanup_thread();
@@ -223,7 +211,8 @@ static int test_ASYNC_start_job(void)
     return 1;
 }
 
-static int test_ASYNC_get_current_job(void)
+static int
+test_ASYNC_get_current_job(void)
 {
     ASYNC_JOB *job = NULL;
     int funcret;
@@ -231,14 +220,11 @@ static int test_ASYNC_get_current_job(void)
 
     currjob = NULL;
 
-    if (       !ASYNC_init_thread(1, 0)
-            || (waitctx = ASYNC_WAIT_CTX_new()) == NULL
-            || ASYNC_start_job(&job, waitctx, &funcret, save_current, NULL, 0)
-                != ASYNC_PAUSE
-            || currjob != job
-            || ASYNC_start_job(&job, waitctx, &funcret, save_current, NULL, 0)
-                != ASYNC_FINISH
-            || funcret != 1) {
+    if (!ASYNC_init_thread(1, 0) || (waitctx = ASYNC_WAIT_CTX_new()) == NULL ||
+        ASYNC_start_job(&job, waitctx, &funcret, save_current, NULL, 0) != ASYNC_PAUSE ||
+        currjob != job ||
+        ASYNC_start_job(&job, waitctx, &funcret, save_current, NULL, 0) != ASYNC_FINISH ||
+        funcret != 1) {
         fprintf(stderr, "test_ASYNC_get_current_job() failed\n");
         ASYNC_WAIT_CTX_free(waitctx);
         ASYNC_cleanup_thread();
@@ -250,7 +236,8 @@ static int test_ASYNC_get_current_job(void)
     return 1;
 }
 
-static int test_ASYNC_WAIT_CTX_get_all_fds(void)
+static int
+test_ASYNC_WAIT_CTX_get_all_fds(void)
 {
     ASYNC_JOB *job = NULL;
     int funcret;
@@ -258,54 +245,34 @@ static int test_ASYNC_WAIT_CTX_get_all_fds(void)
     OSSL_ASYNC_FD fd = OSSL_BAD_ASYNC_FD, delfd = OSSL_BAD_ASYNC_FD;
     size_t numfds, numdelfds;
 
-    if (       !ASYNC_init_thread(1, 0)
-            || (waitctx = ASYNC_WAIT_CTX_new()) == NULL
-               /* On first run we're not expecting any wait fds */
-            || ASYNC_start_job(&job, waitctx, &funcret, waitfd, NULL, 0)
-                != ASYNC_PAUSE
-            || !ASYNC_WAIT_CTX_get_all_fds(waitctx, NULL, &numfds)
-            || numfds != 0
-            || !ASYNC_WAIT_CTX_get_changed_fds(waitctx, NULL, &numfds, NULL,
-                                               &numdelfds)
-            || numfds != 0
-            || numdelfds != 0
-               /* On second run we're expecting one added fd */
-            || ASYNC_start_job(&job, waitctx, &funcret, waitfd, NULL, 0)
-                != ASYNC_PAUSE
-            || !ASYNC_WAIT_CTX_get_all_fds(waitctx, NULL, &numfds)
-            || numfds != 1
-            || !ASYNC_WAIT_CTX_get_all_fds(waitctx, &fd, &numfds)
-            || fd != MAGIC_WAIT_FD
-            || (fd = OSSL_BAD_ASYNC_FD, 0) /* Assign to something else */
-            || !ASYNC_WAIT_CTX_get_changed_fds(waitctx, NULL, &numfds, NULL,
-                                               &numdelfds)
-            || numfds != 1
-            || numdelfds != 0
-            || !ASYNC_WAIT_CTX_get_changed_fds(waitctx, &fd, &numfds, NULL,
-                                               &numdelfds)
-            || fd != MAGIC_WAIT_FD
-               /* On third run we expect one deleted fd */
-            || ASYNC_start_job(&job, waitctx, &funcret, waitfd, NULL, 0)
-                != ASYNC_PAUSE
-            || !ASYNC_WAIT_CTX_get_all_fds(waitctx, NULL, &numfds)
-            || numfds != 0
-            || !ASYNC_WAIT_CTX_get_changed_fds(waitctx, NULL, &numfds, NULL,
-                                               &numdelfds)
-            || numfds != 0
-            || numdelfds != 1
-            || !ASYNC_WAIT_CTX_get_changed_fds(waitctx, NULL, &numfds, &delfd,
-                                               &numdelfds)
-            || delfd != MAGIC_WAIT_FD
-            /* On last run we are not expecting any wait fd */
-            || ASYNC_start_job(&job, waitctx, &funcret, waitfd, NULL, 0)
-                != ASYNC_FINISH
-            || !ASYNC_WAIT_CTX_get_all_fds(waitctx, NULL, &numfds)
-            || numfds != 0
-            || !ASYNC_WAIT_CTX_get_changed_fds(waitctx, NULL, &numfds, NULL,
-                                               &numdelfds)
-            || numfds != 0
-            || numdelfds != 0
-            || funcret != 1) {
+    if (!ASYNC_init_thread(1, 0) ||
+        (waitctx = ASYNC_WAIT_CTX_new()) == NULL
+        /* On first run we're not expecting any wait fds */
+        || ASYNC_start_job(&job, waitctx, &funcret, waitfd, NULL, 0) != ASYNC_PAUSE ||
+        !ASYNC_WAIT_CTX_get_all_fds(waitctx, NULL, &numfds) || numfds != 0 ||
+        !ASYNC_WAIT_CTX_get_changed_fds(waitctx, NULL, &numfds, NULL, &numdelfds) || numfds != 0 ||
+        numdelfds != 0
+        /* On second run we're expecting one added fd */
+        || ASYNC_start_job(&job, waitctx, &funcret, waitfd, NULL, 0) != ASYNC_PAUSE ||
+        !ASYNC_WAIT_CTX_get_all_fds(waitctx, NULL, &numfds) || numfds != 1 ||
+        !ASYNC_WAIT_CTX_get_all_fds(waitctx, &fd, &numfds) || fd != MAGIC_WAIT_FD ||
+        (fd = OSSL_BAD_ASYNC_FD, 0) /* Assign to something else */
+        || !ASYNC_WAIT_CTX_get_changed_fds(waitctx, NULL, &numfds, NULL, &numdelfds) ||
+        numfds != 1 || numdelfds != 0 ||
+        !ASYNC_WAIT_CTX_get_changed_fds(waitctx, &fd, &numfds, NULL, &numdelfds) ||
+        fd != MAGIC_WAIT_FD
+        /* On third run we expect one deleted fd */
+        || ASYNC_start_job(&job, waitctx, &funcret, waitfd, NULL, 0) != ASYNC_PAUSE ||
+        !ASYNC_WAIT_CTX_get_all_fds(waitctx, NULL, &numfds) || numfds != 0 ||
+        !ASYNC_WAIT_CTX_get_changed_fds(waitctx, NULL, &numfds, NULL, &numdelfds) || numfds != 0 ||
+        numdelfds != 1 ||
+        !ASYNC_WAIT_CTX_get_changed_fds(waitctx, NULL, &numfds, &delfd, &numdelfds) ||
+        delfd != MAGIC_WAIT_FD
+        /* On last run we are not expecting any wait fd */
+        || ASYNC_start_job(&job, waitctx, &funcret, waitfd, NULL, 0) != ASYNC_FINISH ||
+        !ASYNC_WAIT_CTX_get_all_fds(waitctx, NULL, &numfds) || numfds != 0 ||
+        !ASYNC_WAIT_CTX_get_changed_fds(waitctx, NULL, &numfds, NULL, &numdelfds) || numfds != 0 ||
+        numdelfds != 0 || funcret != 1) {
         fprintf(stderr, "test_ASYNC_get_wait_fd() failed\n");
         ASYNC_WAIT_CTX_free(waitctx);
         ASYNC_cleanup_thread();
@@ -317,19 +284,17 @@ static int test_ASYNC_WAIT_CTX_get_all_fds(void)
     return 1;
 }
 
-static int test_ASYNC_block_pause(void)
+static int
+test_ASYNC_block_pause(void)
 {
     ASYNC_JOB *job = NULL;
     int funcret;
     ASYNC_WAIT_CTX *waitctx = NULL;
 
-    if (       !ASYNC_init_thread(1, 0)
-            || (waitctx = ASYNC_WAIT_CTX_new()) == NULL
-            || ASYNC_start_job(&job, waitctx, &funcret, blockpause, NULL, 0)
-                != ASYNC_PAUSE
-            || ASYNC_start_job(&job, waitctx, &funcret, blockpause, NULL, 0)
-                != ASYNC_FINISH
-            || funcret != 1) {
+    if (!ASYNC_init_thread(1, 0) || (waitctx = ASYNC_WAIT_CTX_new()) == NULL ||
+        ASYNC_start_job(&job, waitctx, &funcret, blockpause, NULL, 0) != ASYNC_PAUSE ||
+        ASYNC_start_job(&job, waitctx, &funcret, blockpause, NULL, 0) != ASYNC_FINISH ||
+        funcret != 1) {
         fprintf(stderr, "test_ASYNC_block_pause() failed\n");
         ASYNC_WAIT_CTX_free(waitctx);
         ASYNC_cleanup_thread();
@@ -341,7 +306,8 @@ static int test_ASYNC_block_pause(void)
     return 1;
 }
 
-static int test_ASYNC_start_job_ex(void)
+static int
+test_ASYNC_start_job_ex(void)
 {
     ASYNC_JOB *job = NULL;
     int funcret;
@@ -351,19 +317,15 @@ static int test_ASYNC_start_job_ex(void)
     int ret = 0;
 
     if (libctx == NULL) {
-        fprintf(stderr,
-                "test_ASYNC_start_job_ex() failed to create libctx\n");
+        fprintf(stderr, "test_ASYNC_start_job_ex() failed to create libctx\n");
         goto err;
     }
 
     globalctx = oldctx = OSSL_LIB_CTX_set0_default(libctx);
 
-    if ((waitctx = ASYNC_WAIT_CTX_new()) == NULL
-            || ASYNC_start_job(&job, waitctx, &funcret, change_deflt_libctx,
-                               NULL, 0)
-               != ASYNC_PAUSE) {
-        fprintf(stderr,
-                "test_ASYNC_start_job_ex() failed to start job\n");
+    if ((waitctx = ASYNC_WAIT_CTX_new()) == NULL ||
+        ASYNC_start_job(&job, waitctx, &funcret, change_deflt_libctx, NULL, 0) != ASYNC_PAUSE) {
+        fprintf(stderr, "test_ASYNC_start_job_ex() failed to start job\n");
         goto err;
     }
 
@@ -371,31 +333,25 @@ static int test_ASYNC_start_job_ex(void)
     tmpctx = OSSL_LIB_CTX_set0_default(oldctx);
     oldctx = OSSL_LIB_CTX_set0_default(tmpctx);
     if (tmpctx != libctx) {
-        fprintf(stderr,
-                "test_ASYNC_start_job_ex() failed - unexpected libctx\n");
+        fprintf(stderr, "test_ASYNC_start_job_ex() failed - unexpected libctx\n");
         goto err;
     }
 
-    if (ASYNC_start_job(&job, waitctx, &funcret, change_deflt_libctx, NULL, 0)
-               != ASYNC_PAUSE) {
-        fprintf(stderr,
-                "test_ASYNC_start_job_ex() - restarting job failed\n");
+    if (ASYNC_start_job(&job, waitctx, &funcret, change_deflt_libctx, NULL, 0) != ASYNC_PAUSE) {
+        fprintf(stderr, "test_ASYNC_start_job_ex() - restarting job failed\n");
         goto err;
     }
 
     /* Reset the libctx and continue with the global default libctx */
     tmpctx = OSSL_LIB_CTX_set0_default(oldctx);
     if (tmpctx != libctx) {
-        fprintf(stderr,
-                "test_ASYNC_start_job_ex() failed - unexpected libctx\n");
+        fprintf(stderr, "test_ASYNC_start_job_ex() failed - unexpected libctx\n");
         goto err;
     }
 
-    if (ASYNC_start_job(&job, waitctx, &funcret, change_deflt_libctx, NULL, 0)
-               != ASYNC_FINISH
-                || funcret != 1) {
-        fprintf(stderr,
-                "test_ASYNC_start_job_ex() - finishing job failed\n");
+    if (ASYNC_start_job(&job, waitctx, &funcret, change_deflt_libctx, NULL, 0) != ASYNC_FINISH ||
+        funcret != 1) {
+        fprintf(stderr, "test_ASYNC_start_job_ex() - finishing job failed\n");
         goto err;
     }
 
@@ -403,57 +359,59 @@ static int test_ASYNC_start_job_ex(void)
     tmpctx = OSSL_LIB_CTX_set0_default(libctx);
     OSSL_LIB_CTX_set0_default(tmpctx);
     if (tmpctx != globalctx) {
-        fprintf(stderr,
-                "test_ASYNC_start_job_ex() failed - global libctx check failed\n");
+        fprintf(stderr, "test_ASYNC_start_job_ex() failed - global libctx check failed\n");
         goto err;
     }
 
     ret = 1;
- err:
+err:
     ASYNC_WAIT_CTX_free(waitctx);
     ASYNC_cleanup_thread();
     OSSL_LIB_CTX_free(libctx);
     return ret;
 }
 
-static void *test_alloc_stack(size_t *num)
+static void *
+test_alloc_stack(size_t *num)
 {
     custom_alloc_used = 1;
     return OPENSSL_malloc(*num);
 }
 
-static void test_free_stack(void *addr)
+static void
+test_free_stack(void *addr)
 {
     custom_free_used = 1;
     OPENSSL_free(addr);
 }
 
-static int test_ASYNC_set_mem_functions(void)
+static int
+test_ASYNC_set_mem_functions(void)
 {
     ASYNC_stack_alloc_fn alloc_fn;
     ASYNC_stack_free_fn free_fn;
 
     /* Not all platforms support this */
-    if (ASYNC_set_mem_functions(test_alloc_stack, test_free_stack) == 0) return 1;
+    if (ASYNC_set_mem_functions(test_alloc_stack, test_free_stack) == 0)
+        return 1;
 
     ASYNC_get_mem_functions(&alloc_fn, &free_fn);
 
     if ((alloc_fn != test_alloc_stack) || (free_fn != test_free_stack)) {
-        fprintf(stderr,
-                "test_ASYNC_set_mem_functions() - setting and retrieving custom allocators failed\n");
+        fprintf(
+            stderr,
+            "test_ASYNC_set_mem_functions() - setting and retrieving custom allocators failed\n");
         return 0;
     }
 
     if (!ASYNC_init_thread(1, 1)) {
-        fprintf(stderr,
-                "test_ASYNC_set_mem_functions() - failed initialising ctx pool\n");
+        fprintf(stderr, "test_ASYNC_set_mem_functions() - failed initialising ctx pool\n");
         return 0;
     }
     ASYNC_cleanup_thread();
 
     if (!custom_alloc_used || !custom_free_used) {
-         fprintf(stderr,
-                "test_ASYNC_set_mem_functions() - custom allocation functions not used\n");
+        fprintf(stderr, "test_ASYNC_set_mem_functions() - custom allocation functions not used\n");
 
         return 0;
     }
@@ -461,20 +419,16 @@ static int test_ASYNC_set_mem_functions(void)
     return 1;
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
     if (!ASYNC_is_capable()) {
-        fprintf(stderr,
-                "OpenSSL build is not ASYNC capable - skipping async tests\n");
+        fprintf(stderr, "OpenSSL build is not ASYNC capable - skipping async tests\n");
     } else {
-        if (!test_ASYNC_init_thread()
-                || !test_ASYNC_callback_status()
-                || !test_ASYNC_start_job()
-                || !test_ASYNC_get_current_job()
-                || !test_ASYNC_WAIT_CTX_get_all_fds()
-                || !test_ASYNC_block_pause()
-                || !test_ASYNC_start_job_ex()
-                || !test_ASYNC_set_mem_functions()) {
+        if (!test_ASYNC_init_thread() || !test_ASYNC_callback_status() || !test_ASYNC_start_job() ||
+            !test_ASYNC_get_current_job() || !test_ASYNC_WAIT_CTX_get_all_fds() ||
+            !test_ASYNC_block_pause() || !test_ASYNC_start_job_ex() ||
+            !test_ASYNC_set_mem_functions()) {
             return 1;
         }
     }

@@ -21,7 +21,7 @@
 
 # include <windows.h>
 /* On Windows Vista or higher use BCrypt instead of the legacy CryptoAPI */
-# if defined(_MSC_VER) && _MSC_VER > 1500 /* 1500 = Visual Studio 2008 */ \
+# if defined(_MSC_VER) && _MSC_VER > 1500 /* 1500 = Visual Studio 2008 */                          \
      && defined(_WIN32_WINNT) && _WIN32_WINNT >= 0x0600
 #  define USE_BCRYPTGENRANDOM
 # endif
@@ -44,7 +44,8 @@
 #  define INTEL_DEF_PROV L"Intel Hardware Cryptographic Service Provider"
 # endif
 
-size_t ossl_pool_acquire_entropy(RAND_POOL *pool)
+size_t
+ossl_pool_acquire_entropy(RAND_POOL *pool)
 {
 # ifndef USE_BCRYPTGENRANDOM
     HCRYPTPROV hProvider;
@@ -52,7 +53,6 @@ size_t ossl_pool_acquire_entropy(RAND_POOL *pool)
     unsigned char *buffer;
     size_t bytes_needed;
     size_t entropy_available = 0;
-
 
 # ifdef OPENSSL_RAND_SEED_RDTSC
     entropy_available = ossl_prov_acquire_entropy_from_tsc(pool);
@@ -71,8 +71,8 @@ size_t ossl_pool_acquire_entropy(RAND_POOL *pool)
     buffer = ossl_rand_pool_add_begin(pool, bytes_needed);
     if (buffer != NULL) {
         size_t bytes = 0;
-        if (BCryptGenRandom(NULL, buffer, bytes_needed,
-                            BCRYPT_USE_SYSTEM_PREFERRED_RNG) == STATUS_SUCCESS)
+        if (BCryptGenRandom(NULL, buffer, bytes_needed, BCRYPT_USE_SYSTEM_PREFERRED_RNG) ==
+            STATUS_SUCCESS)
             bytes = bytes_needed;
 
         ossl_rand_pool_add_end(pool, bytes, 8 * bytes);
@@ -105,8 +105,7 @@ size_t ossl_pool_acquire_entropy(RAND_POOL *pool)
     if (buffer != NULL) {
         size_t bytes = 0;
         /* poll the Pentium PRG with CryptoAPI */
-        if (CryptAcquireContextW(&hProvider, NULL,
-                                 INTEL_DEF_PROV, PROV_INTEL_SEC,
+        if (CryptAcquireContextW(&hProvider, NULL, INTEL_DEF_PROV, PROV_INTEL_SEC,
                                  CRYPT_VERIFYCONTEXT | CRYPT_SILENT) != 0) {
             if (CryptGenRandom(hProvider, bytes_needed, buffer) != 0)
                 bytes = bytes_needed;
@@ -123,8 +122,8 @@ size_t ossl_pool_acquire_entropy(RAND_POOL *pool)
     return ossl_rand_pool_entropy_available(pool);
 }
 
-
-int ossl_pool_add_nonce_data(RAND_POOL *pool)
+int
+ossl_pool_add_nonce_data(RAND_POOL *pool)
 {
     struct {
         DWORD pid;
@@ -147,16 +146,19 @@ int ossl_pool_add_nonce_data(RAND_POOL *pool)
     return ossl_rand_pool_add(pool, (unsigned char *)&data, sizeof(data), 0);
 }
 
-int ossl_rand_pool_init(void)
+int
+ossl_rand_pool_init(void)
 {
     return 1;
 }
 
-void ossl_rand_pool_cleanup(void)
+void
+ossl_rand_pool_cleanup(void)
 {
 }
 
-void ossl_rand_pool_keep_random_devices_open(int keep)
+void
+ossl_rand_pool_keep_random_devices_open(int keep)
 {
 }
 

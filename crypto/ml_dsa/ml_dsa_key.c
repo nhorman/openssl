@@ -18,47 +18,45 @@
 #include "ml_dsa_hash.h"
 #include "internal/encoder.h"
 
-const ML_DSA_PARAMS *ossl_ml_dsa_key_params(const ML_DSA_KEY *key)
+const ML_DSA_PARAMS *
+ossl_ml_dsa_key_params(const ML_DSA_KEY *key)
 {
     return key->params;
 }
 
 /* Returns the seed data or NULL if there is no seed */
-const uint8_t *ossl_ml_dsa_key_get_seed(const ML_DSA_KEY *key)
+const uint8_t *
+ossl_ml_dsa_key_get_seed(const ML_DSA_KEY *key)
 {
     return key->seed;
 }
 
-int ossl_ml_dsa_key_get_prov_flags(const ML_DSA_KEY *key)
+int
+ossl_ml_dsa_key_get_prov_flags(const ML_DSA_KEY *key)
 {
     return key->prov_flags;
 }
 
-int ossl_ml_dsa_set_prekey(ML_DSA_KEY *key, int flags_set, int flags_clr,
-                           const uint8_t *seed, size_t seed_len,
-                           const uint8_t *sk, size_t sk_len)
+int
+ossl_ml_dsa_set_prekey(ML_DSA_KEY *key, int flags_set, int flags_clr, const uint8_t *seed,
+                       size_t seed_len, const uint8_t *sk, size_t sk_len)
 {
     int ret = 0;
 
-    if (key == NULL
-        || key->pub_encoding != NULL
-        || key->priv_encoding != NULL
-        || (sk != NULL && sk_len != key->params->sk_len)
-        || (seed != NULL && seed_len != ML_DSA_SEED_BYTES)
-        || key->seed != NULL)
+    if (key == NULL || key->pub_encoding != NULL || key->priv_encoding != NULL ||
+        (sk != NULL && sk_len != key->params->sk_len) ||
+        (seed != NULL && seed_len != ML_DSA_SEED_BYTES) || key->seed != NULL)
         return 0;
 
-    if (sk != NULL
-        && (key->priv_encoding = OPENSSL_memdup(sk, sk_len)) == NULL)
+    if (sk != NULL && (key->priv_encoding = OPENSSL_memdup(sk, sk_len)) == NULL)
         goto end;
-    if (seed != NULL
-        && (key->seed = OPENSSL_memdup(seed, seed_len)) == NULL)
+    if (seed != NULL && (key->seed = OPENSSL_memdup(seed, seed_len)) == NULL)
         goto end;
     key->prov_flags |= flags_set;
     key->prov_flags &= ~flags_clr;
     ret = 1;
 
- end:
+end:
     if (!ret) {
         OPENSSL_free(key->priv_encoding);
         OPENSSL_free(key->seed);
@@ -75,8 +73,8 @@ int ossl_ml_dsa_set_prekey(ML_DSA_KEY *key, int flags_set, int flags_clr,
  * @param alg The algorithm name associated with the key type
  * @returns The new ML_DSA_KEY object on success, or NULL on malloc failure
  */
-ML_DSA_KEY *ossl_ml_dsa_key_new(OSSL_LIB_CTX *libctx, const char *propq,
-                                int evp_type)
+ML_DSA_KEY *
+ossl_ml_dsa_key_new(OSSL_LIB_CTX *libctx, const char *propq, int evp_type)
 {
     ML_DSA_KEY *ret;
     const ML_DSA_PARAMS *params = ossl_ml_dsa_params_get(evp_type);
@@ -100,14 +98,16 @@ err:
     return NULL;
 }
 
-int ossl_ml_dsa_key_pub_alloc(ML_DSA_KEY *key)
+int
+ossl_ml_dsa_key_pub_alloc(ML_DSA_KEY *key)
 {
     if (key->t1.poly != NULL)
         return 0;
     return vector_alloc(&key->t1, key->params->k);
 }
 
-int ossl_ml_dsa_key_priv_alloc(ML_DSA_KEY *key)
+int
+ossl_ml_dsa_key_priv_alloc(ML_DSA_KEY *key)
 {
     size_t k = key->params->k, l = key->params->l;
     POLY *poly;
@@ -127,7 +127,8 @@ int ossl_ml_dsa_key_priv_alloc(ML_DSA_KEY *key)
 /**
  * @brief Destroy an ML_DSA_KEY object
  */
-void ossl_ml_dsa_key_free(ML_DSA_KEY *key)
+void
+ossl_ml_dsa_key_free(ML_DSA_KEY *key)
 {
     if (key == NULL)
         return;
@@ -141,7 +142,8 @@ void ossl_ml_dsa_key_free(ML_DSA_KEY *key)
 /**
  * @brief Factory reset an ML_DSA_KEY object
  */
-void ossl_ml_dsa_key_reset(ML_DSA_KEY *key)
+void
+ossl_ml_dsa_key_reset(ML_DSA_KEY *key)
 {
     /*
      * The allocation for |s1.poly| subsumes those for |s2| and |t0|, which we
@@ -176,7 +178,8 @@ void ossl_ml_dsa_key_reset(ML_DSA_KEY *key)
  *                  private key will also select the public key
  * @returns The duplicated key, or NULL on failure.
  */
-ML_DSA_KEY *ossl_ml_dsa_key_dup(const ML_DSA_KEY *src, int selection)
+ML_DSA_KEY *
+ossl_ml_dsa_key_dup(const ML_DSA_KEY *src, int selection)
 {
     ML_DSA_KEY *ret = NULL;
 
@@ -184,8 +187,7 @@ ML_DSA_KEY *ossl_ml_dsa_key_dup(const ML_DSA_KEY *src, int selection)
         return NULL;
 
     /* Prekeys with just a seed or private key are not dupable */
-    if (src->pub_encoding == NULL
-        && (src->priv_encoding != NULL || src->seed != NULL))
+    if (src->pub_encoding == NULL && (src->priv_encoding != NULL || src->seed != NULL))
         return NULL;
 
     ret = OPENSSL_zalloc(sizeof(*ret));
@@ -203,8 +205,8 @@ ML_DSA_KEY *ossl_ml_dsa_key_dup(const ML_DSA_KEY *src, int selection)
                         goto err;
                     vector_copy(&ret->t1, &src->t1);
                 }
-                if ((ret->pub_encoding = OPENSSL_memdup(src->pub_encoding,
-                                                        src->params->pk_len)) == NULL)
+                if ((ret->pub_encoding = OPENSSL_memdup(src->pub_encoding, src->params->pk_len)) ==
+                    NULL)
                     goto err;
             }
             if ((selection & OSSL_KEYMGMT_SELECT_PRIVATE_KEY) != 0) {
@@ -218,13 +220,11 @@ ML_DSA_KEY *ossl_ml_dsa_key_dup(const ML_DSA_KEY *src, int selection)
                         vector_copy(&ret->t0, &src->t0);
                     }
                     if ((ret->priv_encoding =
-                            OPENSSL_memdup(src->priv_encoding,
-                                           src->params->sk_len)) == NULL)
+                             OPENSSL_memdup(src->priv_encoding, src->params->sk_len)) == NULL)
                         goto err;
                 }
-                if (src->seed != NULL
-                    && (ret->seed = OPENSSL_memdup(src->seed,
-                                                   ML_DSA_SEED_BYTES)) == NULL)
+                if (src->seed != NULL &&
+                    (ret->seed = OPENSSL_memdup(src->seed, ML_DSA_SEED_BYTES)) == NULL)
                     goto err;
             }
         }
@@ -234,7 +234,7 @@ ML_DSA_KEY *ossl_ml_dsa_key_dup(const ML_DSA_KEY *src, int selection)
         ret->shake256_md = src->shake256_md;
     }
     return ret;
- err:
+err:
     ossl_ml_dsa_key_free(ret);
     return NULL;
 }
@@ -251,8 +251,8 @@ ML_DSA_KEY *ossl_ml_dsa_key_dup(const ML_DSA_KEY *src, int selection)
  * @param selection to select public and/or private component comparison.
  * @returns 1 if the keys are equal otherwise it returns 0.
  */
-int ossl_ml_dsa_key_equal(const ML_DSA_KEY *key1, const ML_DSA_KEY *key2,
-                          int selection)
+int
+ossl_ml_dsa_key_equal(const ML_DSA_KEY *key1, const ML_DSA_KEY *key2, int selection)
 {
     int key_checked = 0;
 
@@ -262,17 +262,14 @@ int ossl_ml_dsa_key_equal(const ML_DSA_KEY *key1, const ML_DSA_KEY *key2,
     if ((selection & OSSL_KEYMGMT_SELECT_KEYPAIR) != 0) {
         if ((selection & OSSL_KEYMGMT_SELECT_PUBLIC_KEY) != 0) {
             if (key1->pub_encoding != NULL && key2->pub_encoding != NULL) {
-                if (memcmp(key1->pub_encoding, key2->pub_encoding,
-                                  key1->params->pk_len) != 0)
+                if (memcmp(key1->pub_encoding, key2->pub_encoding, key1->params->pk_len) != 0)
                     return 0;
                 key_checked = 1;
             }
         }
-        if (!key_checked
-                && (selection & OSSL_KEYMGMT_SELECT_PRIVATE_KEY) != 0) {
+        if (!key_checked && (selection & OSSL_KEYMGMT_SELECT_PRIVATE_KEY) != 0) {
             if (key1->priv_encoding != NULL && key2->priv_encoding != NULL) {
-                if (memcmp(key1->priv_encoding, key2->priv_encoding,
-                           key1->params->sk_len) != 0)
+                if (memcmp(key1->priv_encoding, key2->priv_encoding, key1->params->sk_len) != 0)
                     return 0;
                 key_checked = 1;
             }
@@ -282,14 +279,15 @@ int ossl_ml_dsa_key_equal(const ML_DSA_KEY *key1, const ML_DSA_KEY *key2,
     return 1;
 }
 
-int ossl_ml_dsa_key_has(const ML_DSA_KEY *key, int selection)
+int
+ossl_ml_dsa_key_has(const ML_DSA_KEY *key, int selection)
 {
     if ((selection & OSSL_KEYMGMT_SELECT_KEYPAIR) != 0) {
         /* Note that the public key always exists if there is a private key */
         if (ossl_ml_dsa_key_get_pub(key) == NULL)
             return 0; /* No public key */
-        if ((selection & OSSL_KEYMGMT_SELECT_PRIVATE_KEY) != 0
-                && ossl_ml_dsa_key_get_priv(key) == NULL)
+        if ((selection & OSSL_KEYMGMT_SELECT_PRIVATE_KEY) != 0 &&
+            ossl_ml_dsa_key_get_priv(key) == NULL)
             return 0; /* No private key */
         return 1;
     }
@@ -308,8 +306,8 @@ int ossl_ml_dsa_key_has(const ML_DSA_KEY *key, int selection)
  *        of the uncompressed public key polynomial t.
  * @returns 1 on success, or 0 on failure.
  */
-static int public_from_private(const ML_DSA_KEY *key, EVP_MD_CTX *md_ctx,
-                               VECTOR *t1, VECTOR *t0)
+static int
+public_from_private(const ML_DSA_KEY *key, EVP_MD_CTX *md_ctx, VECTOR *t1, VECTOR *t0)
 {
     const ML_DSA_PARAMS *params = key->params;
     uint32_t k = params->k, l = params->l;
@@ -348,7 +346,8 @@ err:
     return 1;
 }
 
-int ossl_ml_dsa_key_public_from_private(ML_DSA_KEY *key)
+int
+ossl_ml_dsa_key_public_from_private(ML_DSA_KEY *key)
 {
     int ret = 0;
     VECTOR t0;
@@ -356,20 +355,20 @@ int ossl_ml_dsa_key_public_from_private(ML_DSA_KEY *key)
 
     if (!vector_alloc(&t0, key->params->k)) /* t0 is already in the private key */
         return 0;
-    ret = ((md_ctx = EVP_MD_CTX_new())!= NULL)
-        && ossl_ml_dsa_key_pub_alloc(key)  /* allocate space for t1 */
-        && public_from_private(key, md_ctx, &key->t1, &t0)
-        && vector_equal(&t0, &key->t0) /* compare the generated t0 to the expected */
-        && ossl_ml_dsa_pk_encode(key)
-        && shake_xof(md_ctx, key->shake256_md,
-                     key->pub_encoding, key->params->pk_len,
-                     key->tr, sizeof(key->tr));
+    ret = ((md_ctx = EVP_MD_CTX_new()) != NULL) &&
+          ossl_ml_dsa_key_pub_alloc(key) /* allocate space for t1 */
+          && public_from_private(key, md_ctx, &key->t1, &t0) &&
+          vector_equal(&t0, &key->t0) /* compare the generated t0 to the expected */
+          && ossl_ml_dsa_pk_encode(key) &&
+          shake_xof(md_ctx, key->shake256_md, key->pub_encoding, key->params->pk_len, key->tr,
+                    sizeof(key->tr));
     vector_free(&t0);
     EVP_MD_CTX_free(md_ctx);
     return ret;
 }
 
-int ossl_ml_dsa_key_pairwise_check(const ML_DSA_KEY *key)
+int
+ossl_ml_dsa_key_pairwise_check(const ML_DSA_KEY *key)
 {
     int ret = 0;
     VECTOR t1, t0;
@@ -407,7 +406,8 @@ err:
  *
  * @returns 1 on success or 0 on failure.
  */
-static int keygen_internal(ML_DSA_KEY *out)
+static int
+keygen_internal(ML_DSA_KEY *out)
 {
     int ret = 0;
     uint8_t augmented_seed[ML_DSA_SEED_BYTES + 2];
@@ -418,10 +418,8 @@ static int keygen_internal(ML_DSA_KEY *out)
     const ML_DSA_PARAMS *params = out->params;
     EVP_MD_CTX *md_ctx = NULL;
 
-    if (out->seed == NULL
-        || (md_ctx = EVP_MD_CTX_new()) == NULL
-        || !ossl_ml_dsa_key_pub_alloc(out)
-        || !ossl_ml_dsa_key_priv_alloc(out))
+    if (out->seed == NULL || (md_ctx = EVP_MD_CTX_new()) == NULL ||
+        !ossl_ml_dsa_key_pub_alloc(out) || !ossl_ml_dsa_key_priv_alloc(out))
         goto err;
 
     /* augmented_seed = seed || k || l */
@@ -429,19 +427,18 @@ static int keygen_internal(ML_DSA_KEY *out)
     augmented_seed[ML_DSA_SEED_BYTES] = (uint8_t)params->k;
     augmented_seed[ML_DSA_SEED_BYTES + 1] = (uint8_t)params->l;
     /* Expand the seed into p[32], p'[64], K[32] */
-    if (!shake_xof(md_ctx, out->shake256_md, augmented_seed, sizeof(augmented_seed),
-                   expanded_seed, sizeof(expanded_seed)))
+    if (!shake_xof(md_ctx, out->shake256_md, augmented_seed, sizeof(augmented_seed), expanded_seed,
+                   sizeof(expanded_seed)))
         goto err;
 
     memcpy(out->rho, rho, sizeof(out->rho));
     memcpy(out->K, K, sizeof(out->K));
 
-    ret = vector_expand_S(md_ctx, out->shake256_md, params->eta, priv_seed, &out->s1, &out->s2)
-        && public_from_private(out, md_ctx, &out->t1, &out->t0)
-        && ossl_ml_dsa_pk_encode(out)
-        && shake_xof(md_ctx, out->shake256_md, out->pub_encoding, out->params->pk_len,
-                     out->tr, sizeof(out->tr))
-        && ossl_ml_dsa_sk_encode(out);
+    ret = vector_expand_S(md_ctx, out->shake256_md, params->eta, priv_seed, &out->s1, &out->s2) &&
+          public_from_private(out, md_ctx, &out->t1, &out->t0) && ossl_ml_dsa_pk_encode(out) &&
+          shake_xof(md_ctx, out->shake256_md, out->pub_encoding, out->params->pk_len, out->tr,
+                    sizeof(out->tr)) &&
+          ossl_ml_dsa_sk_encode(out);
 
 err:
     if (out->seed != NULL && (out->prov_flags & ML_DSA_KEY_RETAIN_SEED) == 0) {
@@ -454,7 +451,8 @@ err:
     return ret;
 }
 
-int ossl_ml_dsa_generate_key(ML_DSA_KEY *out)
+int
+ossl_ml_dsa_generate_key(ML_DSA_KEY *out)
 {
     size_t seed_len = ML_DSA_SEED_BYTES;
     uint8_t *sk;
@@ -475,13 +473,12 @@ int ossl_ml_dsa_generate_key(ML_DSA_KEY *out)
     if (sk == NULL) {
         ret = keygen_internal(out);
     } else {
-        if ((ret = keygen_internal(out)) != 0
-            && memcmp(out->priv_encoding, sk, out->params->sk_len) != 0) {
+        if ((ret = keygen_internal(out)) != 0 &&
+            memcmp(out->priv_encoding, sk, out->params->sk_len) != 0) {
             ret = 0;
             ossl_ml_dsa_key_reset(out);
             ERR_raise_data(ERR_LIB_PROV, PROV_R_INVALID_KEY,
-                           "explicit %s private key does not match seed",
-                           out->params->alg);
+                           "explicit %s private key does not match seed", out->params->alg);
         }
         OPENSSL_free(sk);
     }
@@ -498,50 +495,59 @@ int ossl_ml_dsa_generate_key(ML_DSA_KEY *out)
  * @returns 1 if the algorithm matches, or 0 otherwise.
  */
 
-int ossl_ml_dsa_key_matches(const ML_DSA_KEY *key, int evp_type)
+int
+ossl_ml_dsa_key_matches(const ML_DSA_KEY *key, int evp_type)
 {
     return (key->params->evp_type == evp_type);
 }
 
 /* Returns the public key data or NULL if there is no public key */
-const uint8_t *ossl_ml_dsa_key_get_pub(const ML_DSA_KEY *key)
+const uint8_t *
+ossl_ml_dsa_key_get_pub(const ML_DSA_KEY *key)
 {
     return key->pub_encoding;
 }
 
 /* Returns the encoded public key size */
-size_t ossl_ml_dsa_key_get_pub_len(const ML_DSA_KEY *key)
+size_t
+ossl_ml_dsa_key_get_pub_len(const ML_DSA_KEY *key)
 {
     return key->params->pk_len;
 }
 
-size_t ossl_ml_dsa_key_get_collision_strength_bits(const ML_DSA_KEY *key)
+size_t
+ossl_ml_dsa_key_get_collision_strength_bits(const ML_DSA_KEY *key)
 {
     return key->params->bit_strength;
 }
 
 /* Returns the private key data or NULL if there is no private key */
-const uint8_t *ossl_ml_dsa_key_get_priv(const ML_DSA_KEY *key)
+const uint8_t *
+ossl_ml_dsa_key_get_priv(const ML_DSA_KEY *key)
 {
     return key->priv_encoding;
 }
 
-size_t ossl_ml_dsa_key_get_priv_len(const ML_DSA_KEY *key)
+size_t
+ossl_ml_dsa_key_get_priv_len(const ML_DSA_KEY *key)
 {
     return key->params->sk_len;
 }
 
-size_t ossl_ml_dsa_key_get_sig_len(const ML_DSA_KEY *key)
+size_t
+ossl_ml_dsa_key_get_sig_len(const ML_DSA_KEY *key)
 {
     return key->params->sig_len;
 }
 
-OSSL_LIB_CTX *ossl_ml_dsa_key_get0_libctx(const ML_DSA_KEY *key)
+OSSL_LIB_CTX *
+ossl_ml_dsa_key_get0_libctx(const ML_DSA_KEY *key)
 {
     return key != NULL ? key->libctx : NULL;
 }
 
-const char *ossl_ml_dsa_key_get_name(const ML_DSA_KEY *key)
+const char *
+ossl_ml_dsa_key_get_name(const ML_DSA_KEY *key)
 {
     return key->params->alg;
 }

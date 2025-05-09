@@ -12,7 +12,8 @@
 #include <openssl/pkcs7.h>
 #include <openssl/err.h>
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
     BIO *in = NULL, *out = NULL, *tbio = NULL, *cont = NULL;
     X509_STORE *st = NULL;
@@ -69,7 +70,7 @@ int main(int argc, char **argv)
     printf("Verification Successful\n");
 
     ret = EXIT_SUCCESS;
- err:
+err:
     if (ret != EXIT_SUCCESS) {
         fprintf(stderr, "Error Verifying Data\n");
         ERR_print_errors_fp(stderr);

@@ -17,7 +17,8 @@
  * new_conn. The application may also call this function multiple times to
  * create multiple SSL_CTX.
  */
-SSL_CTX *create_ssl_ctx(void)
+SSL_CTX *
+create_ssl_ctx(void)
 {
     SSL_CTX *ctx;
 
@@ -47,7 +48,8 @@ SSL_CTX *create_ssl_ctx(void)
  *
  * hostname is a string like "openssl.org" used for certificate validation.
  */
-SSL *new_conn(SSL_CTX *ctx, int fd, const char *bare_hostname)
+SSL *
+new_conn(SSL_CTX *ctx, int fd, const char *bare_hostname)
 {
     SSL *ssl;
 #ifdef USE_QUIC
@@ -91,7 +93,8 @@ SSL *new_conn(SSL_CTX *ctx, int fd, const char *bare_hostname)
  * The application wants to send some block of data to the peer.
  * This is a blocking call.
  */
-int tx(SSL *ssl, const void *buf, int buf_len)
+int
+tx(SSL *ssl, const void *buf, int buf_len)
 {
     return SSL_write(ssl, buf, buf_len);
 }
@@ -100,7 +103,8 @@ int tx(SSL *ssl, const void *buf, int buf_len)
  * The application wants to receive some block of data from
  * the peer. This is a blocking call.
  */
-int rx(SSL *ssl, void *buf, int buf_len)
+int
+rx(SSL *ssl, void *buf, int buf_len)
 {
     return SSL_read(ssl, buf, buf_len);
 }
@@ -109,7 +113,8 @@ int rx(SSL *ssl, void *buf, int buf_len)
  * The application wants to close the connection and free bookkeeping
  * structures.
  */
-void teardown(SSL *ssl)
+void
+teardown(SSL *ssl)
 {
     SSL_free(ssl);
 }
@@ -118,7 +123,8 @@ void teardown(SSL *ssl)
  * The application is shutting down and wants to free a previously
  * created SSL_CTX.
  */
-void teardown_ctx(SSL_CTX *ctx)
+void
+teardown_ctx(SSL_CTX *ctx)
 {
     SSL_CTX_free(ctx);
 }
@@ -134,7 +140,8 @@ void teardown_ctx(SSL_CTX *ctx)
 #include <netdb.h>
 #include <unistd.h>
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
     int rc, fd = -1, l, mlen, res = 1;
     static char msg[300];
@@ -148,8 +155,7 @@ int main(int argc, char **argv)
         goto fail;
     }
 
-    mlen = snprintf(msg, sizeof(msg),
-                    "GET / HTTP/1.0\r\nHost: %s\r\n\r\n", argv[1]);
+    mlen = snprintf(msg, sizeof(msg), "GET / HTTP/1.0\r\nHost: %s\r\n\r\n", argv[1]);
 
     ctx = create_ssl_ctx();
     if (ctx == NULL) {
@@ -157,9 +163,9 @@ int main(int argc, char **argv)
         goto fail;
     }
 
-    hints.ai_family     = AF_INET;
-    hints.ai_socktype   = SOCK_STREAM;
-    hints.ai_flags      = AI_PASSIVE;
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_flags = AI_PASSIVE;
     rc = getaddrinfo(argv[1], argv[2], &hints, &result);
     if (rc < 0) {
         fprintf(stderr, "cannot resolve\n");

@@ -37,19 +37,20 @@
  * required type of "FUNCTION*"). This removes the necessity for
  * macro-generated wrapper functions.
  */
-static LHASH_OF(FUNCTION) *prog_init(void);
-static int do_cmd(LHASH_OF(FUNCTION) *prog, int argc, char *argv[]);
+static LHASH_OF(FUNCTION) * prog_init(void);
+static int do_cmd(LHASH_OF(FUNCTION) * prog, int argc, char *argv[]);
 char *default_config_file = NULL;
 
 BIO *bio_in = NULL;
 BIO *bio_out = NULL;
 BIO *bio_err = NULL;
 
-static void warn_deprecated(const FUNCTION *fp)
+static void
+warn_deprecated(const FUNCTION *fp)
 {
     if (fp->deprecated_version != NULL)
-        BIO_printf(bio_err, "The command %s was deprecated in version %s.",
-                   fp->name, fp->deprecated_version);
+        BIO_printf(bio_err, "The command %s was deprecated in version %s.", fp->name,
+                   fp->deprecated_version);
     else
         BIO_printf(bio_err, "The command %s is deprecated.", fp->name);
     if (strcmp(fp->deprecated_alternative, DEPRECATED_NO_ALTERNATIVE) != 0)
@@ -57,7 +58,8 @@ static void warn_deprecated(const FUNCTION *fp)
     BIO_printf(bio_err, "\n");
 }
 
-static int apps_startup(void)
+static int
+apps_startup(void)
 {
     const char *use_libctx = NULL;
 #ifdef SIGPIPE
@@ -65,8 +67,7 @@ static int apps_startup(void)
 #endif
 
     /* Set non-default library initialisation settings */
-    if (!OPENSSL_init_ssl(OPENSSL_INIT_ENGINE_ALL_BUILTIN
-                          | OPENSSL_INIT_LOAD_CONFIG, NULL))
+    if (!OPENSSL_init_ssl(OPENSSL_INIT_ENGINE_ALL_BUILTIN | OPENSSL_INIT_LOAD_CONFIG, NULL))
         return 0;
 
     (void)setup_ui_method();
@@ -88,7 +89,8 @@ static int apps_startup(void)
     return 1;
 }
 
-static void apps_shutdown(void)
+static void
+apps_shutdown(void)
 {
     app_providers_cleanup();
     OSSL_LIB_CTX_free(app_get0_libctx());
@@ -96,15 +98,14 @@ static void apps_shutdown(void)
     destroy_ui_method();
 }
 
-
 #ifndef OPENSSL_NO_TRACE
 typedef struct tracedata_st {
     BIO *bio;
-    unsigned int ingroup:1;
+    unsigned int ingroup : 1;
 } tracedata;
 
-static size_t internal_trace_cb(const char *buf, size_t cnt,
-                                int category, int cmd, void *vdata)
+static size_t
+internal_trace_cb(const char *buf, size_t cnt, int category, int cmd, void *vdata)
 {
     int ret = 0;
     tracedata *trace_data = vdata;
@@ -121,8 +122,7 @@ static size_t internal_trace_cb(const char *buf, size_t cnt,
 
         tid = CRYPTO_THREAD_get_current_id();
         hex = OPENSSL_buf2hexstr((const unsigned char *)&tid, sizeof(tid));
-        BIO_snprintf(buffer, sizeof(buffer), "TRACE[%s]:%s: ",
-                     hex == NULL ? "<null>" : hex,
+        BIO_snprintf(buffer, sizeof(buffer), "TRACE[%s]:%s: ", hex == NULL ? "<null>" : hex,
                      OSSL_trace_get_category_name(category));
         OPENSSL_free(hex);
         BIO_set_prefix(trace_data->bio, buffer);
@@ -151,20 +151,23 @@ static size_t internal_trace_cb(const char *buf, size_t cnt,
 }
 
 DEFINE_STACK_OF(tracedata)
-static STACK_OF(tracedata) *trace_data_stack;
+static STACK_OF(tracedata) * trace_data_stack;
 
-static void tracedata_free(tracedata *data)
+static void
+tracedata_free(tracedata *data)
 {
     BIO_free_all(data->bio);
     OPENSSL_free(data);
 }
 
-static void cleanup_trace(void)
+static void
+cleanup_trace(void)
 {
     sk_tracedata_pop_free(trace_data_stack, tracedata_free);
 }
 
-static void setup_trace_category(int category)
+static void
+setup_trace_category(int category)
 {
     BIO *channel;
     tracedata *trace_data;
@@ -177,15 +180,11 @@ static void setup_trace_category(int category)
     channel = BIO_push(bio, dup_bio_err(FORMAT_TEXT));
     trace_data = OPENSSL_zalloc(sizeof(*trace_data));
 
-    if (trace_data == NULL
-        || bio == NULL
-        || (trace_data->bio = channel) == NULL
-        || OSSL_trace_set_callback(category, internal_trace_cb,
-                                   trace_data) == 0
-        || sk_tracedata_push(trace_data_stack, trace_data) == 0) {
+    if (trace_data == NULL || bio == NULL || (trace_data->bio = channel) == NULL ||
+        OSSL_trace_set_callback(category, internal_trace_cb, trace_data) == 0 ||
+        sk_tracedata_push(trace_data_stack, trace_data) == 0) {
 
-        fprintf(stderr,
-                "warning: unable to setup trace callback for category '%s'.\n",
+        fprintf(stderr, "warning: unable to setup trace callback for category '%s'.\n",
                 OSSL_trace_get_category_name(category));
 
         OSSL_trace_set_callback(category, NULL, NULL);
@@ -193,7 +192,8 @@ static void setup_trace_category(int category)
     }
 }
 
-static void setup_trace(const char *str)
+static void
+setup_trace(const char *str)
 {
     char *val;
 
@@ -221,8 +221,7 @@ static void setup_trace(const char *str)
             } else if (category > 0) {
                 setup_trace_category(category);
             } else {
-                fprintf(stderr,
-                        "warning: unknown trace category: '%s'.\n", item);
+                fprintf(stderr, "warning: unknown trace category: '%s'.\n", item);
             }
         }
     }
@@ -231,10 +230,11 @@ static void setup_trace(const char *str)
 }
 #endif /* OPENSSL_NO_TRACE */
 
-static char *help_argv[] = { "help", NULL };
-static char *version_argv[] = { "version", NULL };
+static char *help_argv[] = {"help", NULL};
+static char *version_argv[] = {"version", NULL};
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
     FUNCTION f, *fp;
     LHASH_OF(FUNCTION) *prog = NULL;
@@ -264,11 +264,9 @@ int main(int argc, char *argv[])
     setup_trace(getenv("OPENSSL_TRACE"));
 #endif
 
-    if ((fname = "apps_startup", !apps_startup())
-            || (fname = "prog_init", (prog = prog_init()) == NULL)) {
-        BIO_printf(bio_err,
-                   "FATAL: Startup failure (dev note: %s()) for %s\n",
-                   fname, argv[0]);
+    if ((fname = "apps_startup", !apps_startup()) ||
+        (fname = "prog_init", (prog = prog_init()) == NULL)) {
+        BIO_printf(bio_err, "FATAL: Startup failure (dev note: %s()) for %s\n", fname, argv[0]);
         ERR_print_errors(bio_err);
         ret = 1;
         goto end;
@@ -284,12 +282,12 @@ int main(int argc, char *argv[])
     fp = lh_FUNCTION_retrieve(prog, &f);
     if (fp == NULL) {
         /* We assume we've been called as 'openssl ...' */
-        global_help = argc > 1
-            && (strcmp(argv[1], "-help") == 0 || strcmp(argv[1], "--help") == 0
-                || strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--h") == 0);
-        global_version = argc > 1
-            && (strcmp(argv[1], "-version") == 0 || strcmp(argv[1], "--version") == 0
-                || strcmp(argv[1], "-v") == 0 || strcmp(argv[1], "--v") == 0);
+        global_help =
+            argc > 1 && (strcmp(argv[1], "-help") == 0 || strcmp(argv[1], "--help") == 0 ||
+                         strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--h") == 0);
+        global_version =
+            argc > 1 && (strcmp(argv[1], "-version") == 0 || strcmp(argv[1], "--version") == 0 ||
+                         strcmp(argv[1], "-v") == 0 || strcmp(argv[1], "--v") == 0);
 
         argc--;
         argv++;
@@ -302,13 +300,11 @@ int main(int argc, char *argv[])
      * If there's no command, assume "help". If there's an override for help
      * or version run those, otherwise run the command given.
      */
-    ret =  (argc == 0) || global_help
-            ? do_cmd(prog, 1, help_argv)
-            : global_version
-                ? do_cmd(prog, 1, version_argv)
-                : do_cmd(prog, argc, argv);
+    ret = (argc == 0) || global_help ? do_cmd(prog, 1, help_argv)
+          : global_version           ? do_cmd(prog, 1, version_argv)
+                                     : do_cmd(prog, argc, argv);
 
- end:
+end:
     OPENSSL_free(default_config_file);
     lh_FUNCTION_free(prog);
     OPENSSL_free(arg.argv);
@@ -322,22 +318,19 @@ int main(int argc, char *argv[])
     EXIT(ret);
 }
 
-typedef enum HELP_CHOICE {
-    OPT_hERR = -1, OPT_hEOF = 0, OPT_hHELP
-} HELP_CHOICE;
+typedef enum HELP_CHOICE { OPT_hERR = -1, OPT_hEOF = 0, OPT_hHELP } HELP_CHOICE;
 
-const OPTIONS help_options[] = {
-    {OPT_HELP_STR, 1, '-', "Usage: help [options] [command]\n"},
+const OPTIONS help_options[] = {{OPT_HELP_STR, 1, '-', "Usage: help [options] [command]\n"},
 
-    OPT_SECTION("General"),
-    {"help", OPT_hHELP, '-', "Display this summary"},
+                                OPT_SECTION("General"),
+                                {"help", OPT_hHELP, '-', "Display this summary"},
 
-    OPT_PARAMETERS(),
-    {"command", 0, 0, "Name of command to display help (optional)"},
-    {NULL}
-};
+                                OPT_PARAMETERS(),
+                                {"command", 0, 0, "Name of command to display help (optional)"},
+                                {NULL}};
 
-int help_main(int argc, char **argv)
+int
+help_main(int argc, char **argv)
 {
     FUNCTION *fp;
     int i, nl;
@@ -392,8 +385,7 @@ int help_main(int argc, char **argv)
                            "\nMessage Digest commands (see the `dgst' command for more details)\n");
             } else if (tp == FT_cipher) {
                 i = 1;
-                BIO_printf(bio_err,
-                           "\nCipher commands (see the `enc' command for more details)\n");
+                BIO_printf(bio_err, "\nCipher commands (see the `enc' command for more details)\n");
             }
         }
         BIO_printf(bio_err, "%-*s", dc.width, fp->name);
@@ -402,7 +394,8 @@ int help_main(int argc, char **argv)
     return 0;
 }
 
-static int do_cmd(LHASH_OF(FUNCTION) *prog, int argc, char *argv[])
+static int
+do_cmd(LHASH_OF(FUNCTION) * prog, int argc, char *argv[])
 {
     FUNCTION f, *fp;
 
@@ -441,22 +434,24 @@ static int do_cmd(LHASH_OF(FUNCTION) *prog, int argc, char *argv[])
         return 1;
     }
 
-    BIO_printf(bio_err, "Invalid command '%s'; type \"help\" for a list.\n",
-               argv[0]);
+    BIO_printf(bio_err, "Invalid command '%s'; type \"help\" for a list.\n", argv[0]);
     return 1;
 }
 
-static int function_cmp(const FUNCTION *a, const FUNCTION *b)
+static int
+function_cmp(const FUNCTION *a, const FUNCTION *b)
 {
     return strncmp(a->name, b->name, 8);
 }
 
-static unsigned long function_hash(const FUNCTION *a)
+static unsigned long
+function_hash(const FUNCTION *a)
 {
     return OPENSSL_LH_strhash(a->name);
 }
 
-static int SortFnByName(const void *_f1, const void *_f2)
+static int
+SortFnByName(const void *_f1, const void *_f2)
 {
     const FUNCTION *f1 = _f1;
     const FUNCTION *f2 = _f2;
@@ -466,7 +461,7 @@ static int SortFnByName(const void *_f1, const void *_f2)
     return strcmp(f1->name, f2->name);
 }
 
-static LHASH_OF(FUNCTION) *prog_init(void)
+static LHASH_OF(FUNCTION) * prog_init(void)
 {
     static LHASH_OF(FUNCTION) *ret = NULL;
     static int prog_inited = 0;

@@ -11,15 +11,18 @@
 #ifdef OPENSSL_SYS_UNIX
 # ifndef OPENSSL_NO_DEPRECATED_3_0
 
-void OPENSSL_fork_prepare(void)
+void
+OPENSSL_fork_prepare(void)
 {
 }
 
-void OPENSSL_fork_parent(void)
+void
+OPENSSL_fork_parent(void)
 {
 }
 
-void OPENSSL_fork_child(void)
+void
+OPENSSL_fork_child(void)
 {
 }
 

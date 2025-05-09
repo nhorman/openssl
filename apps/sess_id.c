@@ -20,8 +20,14 @@
 
 typedef enum OPTION_choice {
     OPT_COMMON,
-    OPT_INFORM, OPT_OUTFORM, OPT_IN, OPT_OUT,
-    OPT_TEXT, OPT_CERT, OPT_NOOUT, OPT_CONTEXT
+    OPT_INFORM,
+    OPT_OUTFORM,
+    OPT_IN,
+    OPT_OUT,
+    OPT_TEXT,
+    OPT_CERT,
+    OPT_NOOUT,
+    OPT_CONTEXT
 } OPTION_CHOICE;
 
 const OPTIONS sess_id_options[] = {
@@ -35,17 +41,16 @@ const OPTIONS sess_id_options[] = {
 
     OPT_SECTION("Output"),
     {"out", OPT_OUT, '>', "Output file - default stdout"},
-    {"outform", OPT_OUTFORM, 'f',
-     "Output format - default PEM (PEM, DER or NSS)"},
+    {"outform", OPT_OUTFORM, 'f', "Output format - default PEM (PEM, DER or NSS)"},
     {"text", OPT_TEXT, '-', "Print ssl session id details"},
     {"cert", OPT_CERT, '-', "Output certificate "},
     {"noout", OPT_NOOUT, '-', "Don't output the encoded session info"},
-    {NULL}
-};
+    {NULL}};
 
 static SSL_SESSION *load_sess_id(char *file, int format);
 
-int sess_id_main(int argc, char **argv)
+int
+sess_id_main(int argc, char **argv)
 {
     SSL_SESSION *x = NULL;
     X509 *peer = NULL;
@@ -60,7 +65,7 @@ int sess_id_main(int argc, char **argv)
         switch (o) {
         case OPT_EOF:
         case OPT_ERR:
- opthelp:
+        opthelp:
             BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
             goto end;
         case OPT_HELP:
@@ -72,8 +77,7 @@ int sess_id_main(int argc, char **argv)
                 goto opthelp;
             break;
         case OPT_OUTFORM:
-            if (!opt_format(opt_arg(), OPT_FMT_PEMDER | OPT_FMT_NSS,
-                            &outformat))
+            if (!opt_format(opt_arg(), OPT_FMT_PEMDER | OPT_FMT_NSS, &outformat))
                 goto opthelp;
             break;
         case OPT_IN:
@@ -113,8 +117,7 @@ int sess_id_main(int argc, char **argv)
             BIO_printf(bio_err, "Context too long\n");
             goto end;
         }
-        if (!SSL_SESSION_set1_id_context(x, (unsigned char *)context,
-                                         ctx_len)) {
+        if (!SSL_SESSION_set1_id_context(x, (unsigned char *)context, ctx_len)) {
             BIO_printf(bio_err, "Error setting id context\n");
             goto end;
         }
@@ -167,13 +170,14 @@ int sess_id_main(int argc, char **argv)
         }
     }
     ret = 0;
- end:
+end:
     BIO_free_all(out);
     SSL_SESSION_free(x);
     return ret;
 }
 
-static SSL_SESSION *load_sess_id(char *infile, int format)
+static SSL_SESSION *
+load_sess_id(char *infile, int format)
 {
     SSL_SESSION *x = NULL;
     BIO *in = NULL;
@@ -191,7 +195,7 @@ static SSL_SESSION *load_sess_id(char *infile, int format)
         goto end;
     }
 
- end:
+end:
     BIO_free(in);
     return x;
 }

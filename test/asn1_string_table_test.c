@@ -15,7 +15,8 @@
 #include <openssl/asn1.h>
 #include "testutil.h"
 
-static int test_string_tbl(void)
+static int
+test_string_tbl(void)
 {
     const ASN1_STRING_TABLE *tmp = NULL;
     int nid = 12345678, nid2 = 87654321, rv = 0, ret = 0;
@@ -66,11 +67,12 @@ static int test_string_tbl(void)
     }
 
     rv = 1;
- out:
+out:
     return rv;
 }
 
-int setup_tests(void)
+int
+setup_tests(void)
 {
     ADD_TEST(test_string_tbl);
     return 1;

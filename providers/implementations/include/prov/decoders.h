@@ -11,8 +11,8 @@
 
 int ossl_epki2pki_der_decode(unsigned char *der, long der_len, int selection,
                              OSSL_CALLBACK *data_cb, void *data_cbarg,
-                             OSSL_PASSPHRASE_CALLBACK *pw_cb, void *pw_cbarg,
-                             OSSL_LIB_CTX *libctx, const char *propq);
+                             OSSL_PASSPHRASE_CALLBACK *pw_cb, void *pw_cbarg, OSSL_LIB_CTX *libctx,
+                             const char *propq);
 
 int ossl_spki2typespki_der_decode(unsigned char *der, long len, int selection,
                                   OSSL_CALLBACK *data_cb, void *data_cbarg,

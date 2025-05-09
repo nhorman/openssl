@@ -9,6 +9,7 @@
 
 #include "../testutil.h"
 
-void cleanup_tests(void)
+void
+cleanup_tests(void)
 {
 }

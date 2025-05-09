@@ -29,7 +29,8 @@
 static DH *dh_new_intern(ENGINE *engine, OSSL_LIB_CTX *libctx);
 
 #ifndef FIPS_MODULE
-int DH_set_method(DH *dh, const DH_METHOD *meth)
+int
+DH_set_method(DH *dh, const DH_METHOD *meth)
 {
     /*
      * NB: The caller is specifically setting a method, so it's not up to us
@@ -39,39 +40,44 @@ int DH_set_method(DH *dh, const DH_METHOD *meth)
     mtmp = dh->meth;
     if (mtmp->finish)
         mtmp->finish(dh);
-#ifndef OPENSSL_NO_ENGINE
+# ifndef OPENSSL_NO_ENGINE
     ENGINE_finish(dh->engine);
     dh->engine = NULL;
-#endif
+# endif
     dh->meth = meth;
     if (meth->init)
         meth->init(dh);
     return 1;
 }
 
-const DH_METHOD *ossl_dh_get_method(const DH *dh)
+const DH_METHOD *
+ossl_dh_get_method(const DH *dh)
 {
     return dh->meth;
 }
 # ifndef OPENSSL_NO_DEPRECATED_3_0
-DH *DH_new(void)
+DH *
+DH_new(void)
 {
     return dh_new_intern(NULL, NULL);
 }
 # endif
 
-DH *DH_new_method(ENGINE *engine)
+DH *
+DH_new_method(ENGINE *engine)
 {
     return dh_new_intern(engine, NULL);
 }
 #endif /* !FIPS_MODULE */
 
-DH *ossl_dh_new_ex(OSSL_LIB_CTX *libctx)
+DH *
+ossl_dh_new_ex(OSSL_LIB_CTX *libctx)
 {
     return dh_new_intern(NULL, libctx);
 }
 
-static DH *dh_new_intern(ENGINE *engine, OSSL_LIB_CTX *libctx)
+static DH *
+dh_new_intern(ENGINE *engine, OSSL_LIB_CTX *libctx)
 {
     DH *ret = OPENSSL_zalloc(sizeof(*ret));
 
@@ -94,7 +100,7 @@ static DH *dh_new_intern(ENGINE *engine, OSSL_LIB_CTX *libctx)
     ret->libctx = libctx;
     ret->meth = DH_get_default_method();
 #if !defined(FIPS_MODULE) && !defined(OPENSSL_NO_ENGINE)
-    ret->flags = ret->meth->flags;  /* early default init */
+    ret->flags = ret->meth->flags; /* early default init */
     if (engine) {
         if (!ENGINE_init(engine)) {
             ERR_raise(ERR_LIB_DH, ERR_R_ENGINE_LIB);
@@ -128,12 +134,13 @@ static DH *dh_new_intern(ENGINE *engine, OSSL_LIB_CTX *libctx)
 
     return ret;
 
- err:
+err:
     DH_free(ret);
     return NULL;
 }
 
-void DH_free(DH *r)
+void
+DH_free(DH *r)
 {
     int i;
 
@@ -164,7 +171,8 @@ void DH_free(DH *r)
     OPENSSL_free(r);
 }
 
-int DH_up_ref(DH *r)
+int
+DH_up_ref(DH *r)
 {
     int i;
 
@@ -176,38 +184,44 @@ int DH_up_ref(DH *r)
     return ((i > 1) ? 1 : 0);
 }
 
-void ossl_dh_set0_libctx(DH *d, OSSL_LIB_CTX *libctx)
+void
+ossl_dh_set0_libctx(DH *d, OSSL_LIB_CTX *libctx)
 {
     d->libctx = libctx;
 }
 
 #ifndef FIPS_MODULE
-int DH_set_ex_data(DH *d, int idx, void *arg)
+int
+DH_set_ex_data(DH *d, int idx, void *arg)
 {
     return CRYPTO_set_ex_data(&d->ex_data, idx, arg);
 }
 
-void *DH_get_ex_data(const DH *d, int idx)
+void *
+DH_get_ex_data(const DH *d, int idx)
 {
     return CRYPTO_get_ex_data(&d->ex_data, idx);
 }
 #endif
 
-int DH_bits(const DH *dh)
+int
+DH_bits(const DH *dh)
 {
     if (dh->params.p != NULL)
         return BN_num_bits(dh->params.p);
     return -1;
 }
 
-int DH_size(const DH *dh)
+int
+DH_size(const DH *dh)
 {
     if (dh->params.p != NULL)
         return BN_num_bytes(dh->params.p);
     return -1;
 }
 
-int DH_security_bits(const DH *dh)
+int
+DH_security_bits(const DH *dh)
 {
     int N;
 
@@ -222,20 +236,20 @@ int DH_security_bits(const DH *dh)
     return -1;
 }
 
-void DH_get0_pqg(const DH *dh,
-                 const BIGNUM **p, const BIGNUM **q, const BIGNUM **g)
+void
+DH_get0_pqg(const DH *dh, const BIGNUM **p, const BIGNUM **q, const BIGNUM **g)
 {
     ossl_ffc_params_get0_pqg(&dh->params, p, q, g);
 }
 
-int DH_set0_pqg(DH *dh, BIGNUM *p, BIGNUM *q, BIGNUM *g)
+int
+DH_set0_pqg(DH *dh, BIGNUM *p, BIGNUM *q, BIGNUM *g)
 {
     /*
      * If the fields p and g in dh are NULL, the corresponding input
      * parameters MUST be non-NULL.  q may remain NULL.
      */
-    if ((dh->params.p == NULL && p == NULL)
-        || (dh->params.g == NULL && g == NULL))
+    if ((dh->params.p == NULL && p == NULL) || (dh->params.g == NULL && g == NULL))
         return 0;
 
     ossl_ffc_params_set0_pqg(&dh->params, p, q, g);
@@ -244,19 +258,22 @@ int DH_set0_pqg(DH *dh, BIGNUM *p, BIGNUM *q, BIGNUM *g)
     return 1;
 }
 
-long DH_get_length(const DH *dh)
+long
+DH_get_length(const DH *dh)
 {
     return dh->length;
 }
 
-int DH_set_length(DH *dh, long length)
+int
+DH_set_length(DH *dh, long length)
 {
     dh->length = length;
     dh->dirty_cnt++;
     return 1;
 }
 
-void DH_get0_key(const DH *dh, const BIGNUM **pub_key, const BIGNUM **priv_key)
+void
+DH_get0_key(const DH *dh, const BIGNUM **pub_key, const BIGNUM **priv_key)
 {
     if (pub_key != NULL)
         *pub_key = dh->pub_key;
@@ -264,7 +281,8 @@ void DH_get0_key(const DH *dh, const BIGNUM **pub_key, const BIGNUM **priv_key)
         *priv_key = dh->priv_key;
 }
 
-int DH_set0_key(DH *dh, BIGNUM *pub_key, BIGNUM *priv_key)
+int
+DH_set0_key(DH *dh, BIGNUM *pub_key, BIGNUM *priv_key)
 {
     if (pub_key != NULL) {
         BN_clear_free(dh->pub_key);
@@ -279,58 +297,69 @@ int DH_set0_key(DH *dh, BIGNUM *pub_key, BIGNUM *priv_key)
     return 1;
 }
 
-const BIGNUM *DH_get0_p(const DH *dh)
+const BIGNUM *
+DH_get0_p(const DH *dh)
 {
     return dh->params.p;
 }
 
-const BIGNUM *DH_get0_q(const DH *dh)
+const BIGNUM *
+DH_get0_q(const DH *dh)
 {
     return dh->params.q;
 }
 
-const BIGNUM *DH_get0_g(const DH *dh)
+const BIGNUM *
+DH_get0_g(const DH *dh)
 {
     return dh->params.g;
 }
 
-const BIGNUM *DH_get0_priv_key(const DH *dh)
+const BIGNUM *
+DH_get0_priv_key(const DH *dh)
 {
     return dh->priv_key;
 }
 
-const BIGNUM *DH_get0_pub_key(const DH *dh)
+const BIGNUM *
+DH_get0_pub_key(const DH *dh)
 {
     return dh->pub_key;
 }
 
-void DH_clear_flags(DH *dh, int flags)
+void
+DH_clear_flags(DH *dh, int flags)
 {
     dh->flags &= ~flags;
 }
 
-int DH_test_flags(const DH *dh, int flags)
+int
+DH_test_flags(const DH *dh, int flags)
 {
     return dh->flags & flags;
 }
 
-void DH_set_flags(DH *dh, int flags)
+void
+DH_set_flags(DH *dh, int flags)
 {
     dh->flags |= flags;
 }
 
 #ifndef FIPS_MODULE
-ENGINE *DH_get0_engine(DH *dh)
+ENGINE *
+DH_get0_engine(DH *dh)
 {
     return dh->engine;
 }
 #endif /*FIPS_MODULE */
 
-FFC_PARAMS *ossl_dh_get0_params(DH *dh)
+FFC_PARAMS *
+ossl_dh_get0_params(DH *dh)
 {
     return &dh->params;
 }
-int ossl_dh_get0_nid(const DH *dh)
+int
+ossl_dh_get0_nid(const DH *dh)
 {
     return dh->params.nid;
 }

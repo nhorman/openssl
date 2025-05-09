@@ -18,21 +18,24 @@
 int LLVMFuzzerInitialize(int *argc, char ***argv);
 int LLVMFuzzerTestOneInput(const uint8_t *buf, size_t len);
 
-int LLVMFuzzerInitialize(int *argc, char ***argv)
+int
+LLVMFuzzerInitialize(int *argc, char ***argv)
 {
     return FuzzerInitialize(argc, argv);
 }
 
-int LLVMFuzzerTestOneInput(const uint8_t *buf, size_t len)
+int
+LLVMFuzzerTestOneInput(const uint8_t *buf, size_t len)
 {
     return FuzzerTestOneInput(buf, len);
 }
 
 #elif !defined(OPENSSL_NO_FUZZ_AFL)
 
-#define BUF_SIZE 65536
+# define BUF_SIZE 65536
 
-int main(int argc, char** argv)
+int
+main(int argc, char **argv)
 {
     FuzzerInitialize(&argc, &argv);
 
@@ -50,6 +53,6 @@ int main(int argc, char** argv)
 
 #else
 
-#error "Unsupported fuzzer"
+# error "Unsupported fuzzer"
 
 #endif

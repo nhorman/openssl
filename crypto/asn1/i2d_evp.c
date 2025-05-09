@@ -19,9 +19,9 @@
 #include <openssl/encoder.h>
 #include <openssl/buffer.h>
 #include <openssl/x509.h>
-#include <openssl/rsa.h>         /* For i2d_RSAPublicKey */
-#include <openssl/dsa.h>         /* For i2d_DSAPublicKey */
-#include <openssl/ec.h>          /* For i2o_ECPublicKey */
+#include <openssl/rsa.h> /* For i2d_RSAPublicKey */
+#include <openssl/dsa.h> /* For i2d_DSAPublicKey */
+#include <openssl/ec.h>  /* For i2o_ECPublicKey */
 #include "crypto/asn1.h"
 #include "crypto/evp.h"
 
@@ -30,15 +30,13 @@ struct type_and_structure_st {
     const char *output_structure;
 };
 
-static int i2d_provided(const EVP_PKEY *a, int selection,
-                        const struct type_and_structure_st *output_info,
-                        unsigned char **pp)
+static int
+i2d_provided(const EVP_PKEY *a, int selection, const struct type_and_structure_st *output_info,
+             unsigned char **pp)
 {
     int ret;
 
-    for (ret = -1;
-         ret == -1 && output_info->output_type != NULL;
-         output_info++) {
+    for (ret = -1; ret == -1 && output_info->output_type != NULL; output_info++) {
         /*
          * The i2d_ calls don't take a boundary length for *pp.  However,
          * OSSL_ENCODER_to_data() needs one, so we make one up.  Because
@@ -50,10 +48,8 @@ static int i2d_provided(const EVP_PKEY *a, int selection,
         int pp_was_NULL = (pp == NULL || *pp == NULL);
         OSSL_ENCODER_CTX *ctx;
 
-        ctx = OSSL_ENCODER_CTX_new_for_pkey(a, selection,
-                                            output_info->output_type,
-                                            output_info->output_structure,
-                                            NULL);
+        ctx = OSSL_ENCODER_CTX_new_for_pkey(a, selection, output_info->output_type,
+                                            output_info->output_structure, NULL);
         if (ctx == NULL)
             return -1;
         if (OSSL_ENCODER_to_data(ctx, pp, &len)) {
@@ -70,13 +66,14 @@ static int i2d_provided(const EVP_PKEY *a, int selection,
     return ret;
 }
 
-int i2d_KeyParams(const EVP_PKEY *a, unsigned char **pp)
+int
+i2d_KeyParams(const EVP_PKEY *a, unsigned char **pp)
 {
     if (evp_pkey_is_provided(a)) {
-        static const struct type_and_structure_st output_info[] = {
-            { "DER", "type-specific" },
-            { NULL, }
-        };
+        static const struct type_and_structure_st output_info[] = {{"DER", "type-specific"},
+                                                                   {
+                                                                       NULL,
+                                                                   }};
 
         return i2d_provided(a, EVP_PKEY_KEY_PARAMETERS, output_info, pp);
     }
@@ -86,7 +83,8 @@ int i2d_KeyParams(const EVP_PKEY *a, unsigned char **pp)
     return -1;
 }
 
-int i2d_KeyParams_bio(BIO *bp, const EVP_PKEY *pkey)
+int
+i2d_KeyParams_bio(BIO *bp, const EVP_PKEY *pkey)
 {
     return ASN1_i2d_bio_of(EVP_PKEY, i2d_KeyParams, bp, pkey);
 }
@@ -95,11 +93,11 @@ static int
 i2d_PrivateKey_impl(const EVP_PKEY *a, unsigned char **pp, int traditional)
 {
     if (evp_pkey_is_provided(a)) {
-        static const struct type_and_structure_st trad_output_info[] = {
-            { "DER", "type-specific" },
-            { "DER", "PrivateKeyInfo" },
-            { NULL, }
-        };
+        static const struct type_and_structure_st trad_output_info[] = {{"DER", "type-specific"},
+                                                                        {"DER", "PrivateKeyInfo"},
+                                                                        {
+                                                                            NULL,
+                                                                        }};
         const struct type_and_structure_st *oi = trad_output_info;
 
         if (!traditional)
@@ -124,24 +122,27 @@ i2d_PrivateKey_impl(const EVP_PKEY *a, unsigned char **pp, int traditional)
     return -1;
 }
 
-int i2d_PrivateKey(const EVP_PKEY *a, unsigned char **pp)
+int
+i2d_PrivateKey(const EVP_PKEY *a, unsigned char **pp)
 {
     return i2d_PrivateKey_impl(a, pp, 1);
 }
 
-int i2d_PKCS8PrivateKey(const EVP_PKEY *a, unsigned char **pp)
+int
+i2d_PKCS8PrivateKey(const EVP_PKEY *a, unsigned char **pp)
 {
     return i2d_PrivateKey_impl(a, pp, 0);
 }
 
-int i2d_PublicKey(const EVP_PKEY *a, unsigned char **pp)
+int
+i2d_PublicKey(const EVP_PKEY *a, unsigned char **pp)
 {
     if (evp_pkey_is_provided(a)) {
-        static const struct type_and_structure_st output_info[] = {
-            { "DER", "type-specific" },
-            { "blob", NULL },    /* for EC */
-            { NULL, }
-        };
+        static const struct type_and_structure_st output_info[] = {{"DER", "type-specific"},
+                                                                   {"blob", NULL}, /* for EC */
+                                                                   {
+                                                                       NULL,
+                                                                   }};
 
         return i2d_provided(a, EVP_PKEY_PUBLIC_KEY, output_info, pp);
     }

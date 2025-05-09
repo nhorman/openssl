@@ -33,7 +33,8 @@ static const char cache_id[] = "OpenSSL Demo Server";
 #ifdef _WIN32
 static const char *progname;
 
-static void vwarnx(const char *fmt, va_list ap)
+static void
+vwarnx(const char *fmt, va_list ap)
 {
     if (progname != NULL)
         fprintf(stderr, "%s: ", progname);
@@ -41,7 +42,8 @@ static void vwarnx(const char *fmt, va_list ap)
     putc('\n', stderr);
 }
 
-static void errx(int status, const char *fmt, ...)
+static void
+errx(int status, const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
@@ -50,7 +52,8 @@ static void errx(int status, const char *fmt, ...)
     exit(status);
 }
 
-static void warnx(const char *fmt, ...)
+static void
+warnx(const char *fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
@@ -60,7 +63,8 @@ static void warnx(const char *fmt, ...)
 #endif
 
 /* Minimal TLS echo server. */
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
     int res = EXIT_FAILURE;
     long opts;
@@ -264,8 +268,7 @@ int main(int argc, char *argv[])
         }
 
         while (SSL_read_ex(ssl, buf, sizeof(buf), &nread) > 0) {
-            if (SSL_write_ex(ssl, buf, nread, &nwritten) > 0 &&
-                nwritten == nread) {
+            if (SSL_write_ex(ssl, buf, nread, &nwritten) > 0 && nwritten == nread) {
                 total += nwritten;
                 continue;
             }

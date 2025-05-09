@@ -13,25 +13,26 @@
 typedef struct quic_txpim_pkt_ex_st QUIC_TXPIM_PKT_EX;
 
 struct quic_txpim_pkt_ex_st {
-    QUIC_TXPIM_PKT              public;
-    QUIC_TXPIM_PKT_EX          *prev, *next;
-    QUIC_TXPIM_CHUNK           *chunks;
-    size_t                      num_chunks, alloc_chunks;
-    unsigned int                chunks_need_sort : 1;
+    QUIC_TXPIM_PKT public;
+    QUIC_TXPIM_PKT_EX *prev, *next;
+    QUIC_TXPIM_CHUNK *chunks;
+    size_t num_chunks, alloc_chunks;
+    unsigned int chunks_need_sort : 1;
 };
 
 typedef struct quic_txpim_pkt_ex_list {
-    QUIC_TXPIM_PKT_EX          *head, *tail;
+    QUIC_TXPIM_PKT_EX *head, *tail;
 } QUIC_TXPIM_PKT_EX_LIST;
 
 struct quic_txpim_st {
-    QUIC_TXPIM_PKT_EX_LIST  free_list;
-    size_t                  in_use;
+    QUIC_TXPIM_PKT_EX_LIST free_list;
+    size_t in_use;
 };
 
 #define MAX_ALLOC_CHUNKS 512
 
-QUIC_TXPIM *ossl_quic_txpim_new(void)
+QUIC_TXPIM *
+ossl_quic_txpim_new(void)
 {
     QUIC_TXPIM *txpim = OPENSSL_zalloc(sizeof(*txpim));
 
@@ -41,7 +42,8 @@ QUIC_TXPIM *ossl_quic_txpim_new(void)
     return txpim;
 }
 
-static void free_list(QUIC_TXPIM_PKT_EX_LIST *l)
+static void
+free_list(QUIC_TXPIM_PKT_EX_LIST *l)
 {
     QUIC_TXPIM_PKT_EX *n, *nnext;
 
@@ -55,7 +57,8 @@ static void free_list(QUIC_TXPIM_PKT_EX_LIST *l)
     l->head = l->tail = NULL;
 }
 
-void ossl_quic_txpim_free(QUIC_TXPIM *txpim)
+void
+ossl_quic_txpim_free(QUIC_TXPIM *txpim)
 {
     if (txpim == NULL)
         return;
@@ -65,7 +68,8 @@ void ossl_quic_txpim_free(QUIC_TXPIM *txpim)
     OPENSSL_free(txpim);
 }
 
-static void list_remove(QUIC_TXPIM_PKT_EX_LIST *l, QUIC_TXPIM_PKT_EX *n)
+static void
+list_remove(QUIC_TXPIM_PKT_EX_LIST *l, QUIC_TXPIM_PKT_EX *n)
 {
     if (l->head == n)
         l->head = n->next;
@@ -78,7 +82,8 @@ static void list_remove(QUIC_TXPIM_PKT_EX_LIST *l, QUIC_TXPIM_PKT_EX *n)
     n->prev = n->next = NULL;
 }
 
-static void list_insert_tail(QUIC_TXPIM_PKT_EX_LIST *l, QUIC_TXPIM_PKT_EX *n)
+static void
+list_insert_tail(QUIC_TXPIM_PKT_EX_LIST *l, QUIC_TXPIM_PKT_EX *n)
 {
     n->prev = l->tail;
     n->next = NULL;
@@ -89,7 +94,8 @@ static void list_insert_tail(QUIC_TXPIM_PKT_EX_LIST *l, QUIC_TXPIM_PKT_EX *n)
         l->head = n;
 }
 
-static QUIC_TXPIM_PKT_EX *txpim_get_free(QUIC_TXPIM *txpim)
+static QUIC_TXPIM_PKT_EX *
+txpim_get_free(QUIC_TXPIM *txpim)
 {
     QUIC_TXPIM_PKT_EX *ex = txpim->free_list.head;
 
@@ -104,21 +110,23 @@ static QUIC_TXPIM_PKT_EX *txpim_get_free(QUIC_TXPIM *txpim)
     return ex;
 }
 
-static void txpim_clear(QUIC_TXPIM_PKT_EX *ex)
+static void
+txpim_clear(QUIC_TXPIM_PKT_EX *ex)
 {
     memset(&ex->public.ackm_pkt, 0, sizeof(ex->public.ackm_pkt));
     ossl_quic_txpim_pkt_clear_chunks(&ex->public);
-    ex->public.retx_head                   = NULL;
-    ex->public.fifd                        = NULL;
-    ex->public.had_handshake_done_frame    = 0;
-    ex->public.had_max_data_frame          = 0;
-    ex->public.had_max_streams_bidi_frame  = 0;
-    ex->public.had_max_streams_uni_frame   = 0;
-    ex->public.had_ack_frame               = 0;
-    ex->public.had_conn_close              = 0;
+    ex->public.retx_head = NULL;
+    ex->public.fifd = NULL;
+    ex->public.had_handshake_done_frame = 0;
+    ex->public.had_max_data_frame = 0;
+    ex->public.had_max_streams_bidi_frame = 0;
+    ex->public.had_max_streams_uni_frame = 0;
+    ex->public.had_ack_frame = 0;
+    ex->public.had_conn_close = 0;
 }
 
-QUIC_TXPIM_PKT *ossl_quic_txpim_pkt_alloc(QUIC_TXPIM *txpim)
+QUIC_TXPIM_PKT *
+ossl_quic_txpim_pkt_alloc(QUIC_TXPIM *txpim)
 {
     QUIC_TXPIM_PKT_EX *ex = txpim_get_free(txpim);
 
@@ -131,7 +139,8 @@ QUIC_TXPIM_PKT *ossl_quic_txpim_pkt_alloc(QUIC_TXPIM *txpim)
     return &ex->public;
 }
 
-void ossl_quic_txpim_pkt_release(QUIC_TXPIM *txpim, QUIC_TXPIM_PKT *fpkt)
+void
+ossl_quic_txpim_pkt_release(QUIC_TXPIM *txpim, QUIC_TXPIM_PKT *fpkt)
 {
     QUIC_TXPIM_PKT_EX *ex = (QUIC_TXPIM_PKT_EX *)fpkt;
 
@@ -140,23 +149,24 @@ void ossl_quic_txpim_pkt_release(QUIC_TXPIM *txpim, QUIC_TXPIM_PKT *fpkt)
     list_insert_tail(&txpim->free_list, ex);
 }
 
-void ossl_quic_txpim_pkt_add_cfq_item(QUIC_TXPIM_PKT *fpkt,
-                                      QUIC_CFQ_ITEM *item)
+void
+ossl_quic_txpim_pkt_add_cfq_item(QUIC_TXPIM_PKT *fpkt, QUIC_CFQ_ITEM *item)
 {
     item->pkt_next = fpkt->retx_head;
     item->pkt_prev = NULL;
     fpkt->retx_head = item;
 }
 
-void ossl_quic_txpim_pkt_clear_chunks(QUIC_TXPIM_PKT *fpkt)
+void
+ossl_quic_txpim_pkt_clear_chunks(QUIC_TXPIM_PKT *fpkt)
 {
     QUIC_TXPIM_PKT_EX *ex = (QUIC_TXPIM_PKT_EX *)fpkt;
 
     ex->num_chunks = 0;
 }
 
-int ossl_quic_txpim_pkt_append_chunk(QUIC_TXPIM_PKT *fpkt,
-                                     const QUIC_TXPIM_CHUNK *chunk)
+int
+ossl_quic_txpim_pkt_append_chunk(QUIC_TXPIM_PKT *fpkt, const QUIC_TXPIM_CHUNK *chunk)
 {
     QUIC_TXPIM_PKT_EX *ex = (QUIC_TXPIM_PKT_EX *)fpkt;
     QUIC_TXPIM_CHUNK *new_chunk;
@@ -169,21 +179,21 @@ int ossl_quic_txpim_pkt_append_chunk(QUIC_TXPIM_PKT *fpkt,
         if (ex->num_chunks == new_alloc_chunks)
             return 0;
 
-        new_chunk = OPENSSL_realloc(ex->chunks,
-                                    new_alloc_chunks * sizeof(QUIC_TXPIM_CHUNK));
+        new_chunk = OPENSSL_realloc(ex->chunks, new_alloc_chunks * sizeof(QUIC_TXPIM_CHUNK));
         if (new_chunk == NULL)
             return 0;
 
-        ex->chunks          = new_chunk;
-        ex->alloc_chunks    = new_alloc_chunks;
+        ex->chunks = new_chunk;
+        ex->alloc_chunks = new_alloc_chunks;
     }
 
-    ex->chunks[ex->num_chunks++]    = *chunk;
-    ex->chunks_need_sort            = 1;
+    ex->chunks[ex->num_chunks++] = *chunk;
+    ex->chunks_need_sort = 1;
     return 1;
 }
 
-static int compare(const void *a, const void *b)
+static int
+compare(const void *a, const void *b)
 {
     const QUIC_TXPIM_CHUNK *ac = a, *bc = b;
 
@@ -200,7 +210,8 @@ static int compare(const void *a, const void *b)
     return 0;
 }
 
-const QUIC_TXPIM_CHUNK *ossl_quic_txpim_pkt_get_chunks(const QUIC_TXPIM_PKT *fpkt)
+const QUIC_TXPIM_CHUNK *
+ossl_quic_txpim_pkt_get_chunks(const QUIC_TXPIM_PKT *fpkt)
 {
     QUIC_TXPIM_PKT_EX *ex = (QUIC_TXPIM_PKT_EX *)fpkt;
 
@@ -216,14 +227,16 @@ const QUIC_TXPIM_CHUNK *ossl_quic_txpim_pkt_get_chunks(const QUIC_TXPIM_PKT *fpk
     return ex->chunks;
 }
 
-size_t ossl_quic_txpim_pkt_get_num_chunks(const QUIC_TXPIM_PKT *fpkt)
+size_t
+ossl_quic_txpim_pkt_get_num_chunks(const QUIC_TXPIM_PKT *fpkt)
 {
     QUIC_TXPIM_PKT_EX *ex = (QUIC_TXPIM_PKT_EX *)fpkt;
 
     return ex->num_chunks;
 }
 
-size_t ossl_quic_txpim_get_in_use(const QUIC_TXPIM *txpim)
+size_t
+ossl_quic_txpim_get_in_use(const QUIC_TXPIM *txpim)
 {
     return txpim->in_use;
 }

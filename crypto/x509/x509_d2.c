@@ -12,8 +12,8 @@
 #include <openssl/crypto.h>
 #include <openssl/x509.h>
 
-int X509_STORE_set_default_paths_ex(X509_STORE *ctx, OSSL_LIB_CTX *libctx,
-                                    const char *propq)
+int
+X509_STORE_set_default_paths_ex(X509_STORE *ctx, OSSL_LIB_CTX *libctx, const char *propq)
 {
     X509_LOOKUP *lookup;
 
@@ -42,63 +42,63 @@ int X509_STORE_set_default_paths_ex(X509_STORE *ctx, OSSL_LIB_CTX *libctx,
 
     return 1;
 }
-int X509_STORE_set_default_paths(X509_STORE *ctx)
+int
+X509_STORE_set_default_paths(X509_STORE *ctx)
 {
     return X509_STORE_set_default_paths_ex(ctx, NULL, NULL);
 }
 
-int X509_STORE_load_file_ex(X509_STORE *ctx, const char *file,
-                            OSSL_LIB_CTX *libctx, const char *propq)
+int
+X509_STORE_load_file_ex(X509_STORE *ctx, const char *file, OSSL_LIB_CTX *libctx, const char *propq)
 {
     X509_LOOKUP *lookup;
 
-    if (file == NULL
-        || (lookup = X509_STORE_add_lookup(ctx, X509_LOOKUP_file())) == NULL
-        || X509_LOOKUP_load_file_ex(lookup, file, X509_FILETYPE_PEM, libctx,
-                                    propq) <= 0)
+    if (file == NULL || (lookup = X509_STORE_add_lookup(ctx, X509_LOOKUP_file())) == NULL ||
+        X509_LOOKUP_load_file_ex(lookup, file, X509_FILETYPE_PEM, libctx, propq) <= 0)
         return 0;
 
     return 1;
 }
 
-int X509_STORE_load_file(X509_STORE *ctx, const char *file)
+int
+X509_STORE_load_file(X509_STORE *ctx, const char *file)
 {
     return X509_STORE_load_file_ex(ctx, file, NULL, NULL);
 }
 
-int X509_STORE_load_path(X509_STORE *ctx, const char *path)
+int
+X509_STORE_load_path(X509_STORE *ctx, const char *path)
 {
     X509_LOOKUP *lookup;
 
-    if (path == NULL
-        || (lookup = X509_STORE_add_lookup(ctx, X509_LOOKUP_hash_dir())) == NULL
-        || X509_LOOKUP_add_dir(lookup, path, X509_FILETYPE_PEM) <= 0)
+    if (path == NULL || (lookup = X509_STORE_add_lookup(ctx, X509_LOOKUP_hash_dir())) == NULL ||
+        X509_LOOKUP_add_dir(lookup, path, X509_FILETYPE_PEM) <= 0)
         return 0;
 
     return 1;
 }
 
-int X509_STORE_load_store_ex(X509_STORE *ctx, const char *uri,
-                             OSSL_LIB_CTX *libctx, const char *propq)
+int
+X509_STORE_load_store_ex(X509_STORE *ctx, const char *uri, OSSL_LIB_CTX *libctx, const char *propq)
 {
     X509_LOOKUP *lookup;
 
-    if (uri == NULL
-        || (lookup = X509_STORE_add_lookup(ctx, X509_LOOKUP_store())) == NULL
-        || X509_LOOKUP_add_store_ex(lookup, uri, libctx, propq) == 0)
+    if (uri == NULL || (lookup = X509_STORE_add_lookup(ctx, X509_LOOKUP_store())) == NULL ||
+        X509_LOOKUP_add_store_ex(lookup, uri, libctx, propq) == 0)
         return 0;
 
     return 1;
 }
 
-int X509_STORE_load_store(X509_STORE *ctx, const char *uri)
+int
+X509_STORE_load_store(X509_STORE *ctx, const char *uri)
 {
     return X509_STORE_load_store_ex(ctx, uri, NULL, NULL);
 }
 
-int X509_STORE_load_locations_ex(X509_STORE *ctx, const char *file,
-                                 const char *path, OSSL_LIB_CTX *libctx,
-                                 const char *propq)
+int
+X509_STORE_load_locations_ex(X509_STORE *ctx, const char *file, const char *path,
+                             OSSL_LIB_CTX *libctx, const char *propq)
 {
     if (file == NULL && path == NULL)
         return 0;
@@ -109,8 +109,8 @@ int X509_STORE_load_locations_ex(X509_STORE *ctx, const char *file,
     return 1;
 }
 
-int X509_STORE_load_locations(X509_STORE *ctx, const char *file,
-                              const char *path)
+int
+X509_STORE_load_locations(X509_STORE *ctx, const char *file, const char *path)
 {
     return X509_STORE_load_locations_ex(ctx, file, path, NULL, NULL);
 }

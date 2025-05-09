@@ -23,8 +23,7 @@
 #include "../ssl/ssl_local.h"
 
 #undef OSSL_NO_USABLE_TLS1_3
-#if defined(OPENSSL_NO_TLS1_3) \
-    || (defined(OPENSSL_NO_EC) && defined(OPENSSL_NO_DH))
+#if defined(OPENSSL_NO_TLS1_3) || (defined(OPENSSL_NO_EC) && defined(OPENSSL_NO_DH))
 /*
  * If we don't have ec or dh then there are no built-in groups that are usable
  * with TLSv1.3
@@ -38,7 +37,8 @@ static char *certsdir = NULL;
 static char *cert = NULL;
 static char *privkey = NULL;
 
-static int client_cert_cb(SSL *ssl, X509 **x509, EVP_PKEY **pkey)
+static int
+client_cert_cb(SSL *ssl, X509 **x509, EVP_PKEY **pkey)
 {
     X509 *xcert;
     EVP_PKEY *privpkey;
@@ -53,12 +53,10 @@ static int client_cert_cb(SSL *ssl, X509 **x509, EVP_PKEY **pkey)
     if (!TEST_ptr(in))
         return 0;
 
-    if (!TEST_ptr(xcert = X509_new_ex(NULL, NULL))
-            || !TEST_ptr(PEM_read_bio_X509(in, &xcert, NULL, NULL))
-            || !TEST_ptr(priv_in = BIO_new_file(privkey, "r"))
-            || !TEST_ptr(privpkey = PEM_read_bio_PrivateKey_ex(priv_in, NULL,
-                                                               NULL, NULL,
-                                                               NULL, NULL)))
+    if (!TEST_ptr(xcert = X509_new_ex(NULL, NULL)) ||
+        !TEST_ptr(PEM_read_bio_X509(in, &xcert, NULL, NULL)) ||
+        !TEST_ptr(priv_in = BIO_new_file(privkey, "r")) ||
+        !TEST_ptr(privpkey = PEM_read_bio_PrivateKey_ex(priv_in, NULL, NULL, NULL, NULL, NULL)))
         goto err;
 
     *x509 = xcert;
@@ -74,7 +72,8 @@ err:
     return 0;
 }
 
-static int verify_cb(int preverify_ok, X509_STORE_CTX *x509_ctx)
+static int
+verify_cb(int preverify_ok, X509_STORE_CTX *x509_ctx)
 {
     return 1;
 }
@@ -86,7 +85,8 @@ static int verify_cb(int preverify_ok, X509_STORE_CTX *x509_ctx)
  * Test 3 = app pre-compresses certificate in SSL_CTX, but it's unused due to prefs
  */
 /* Compression helper */
-static int ssl_comp_cert(SSL *ssl, int alg)
+static int
+ssl_comp_cert(SSL *ssl, int alg)
 {
     unsigned char *comp_data = NULL;
     size_t comp_len = 0;
@@ -100,14 +100,15 @@ static int ssl_comp_cert(SSL *ssl, int alg)
         goto err;
     retval = alg;
 
- err:
+err:
     OPENSSL_free(comp_data);
     return retval;
 }
 
-static void cert_comp_info_cb(const SSL *s, int where, int ret)
+static void
+cert_comp_info_cb(const SSL *s, int where, int ret)
 {
-    int *seen = (int*)SSL_get_app_data(s);
+    int *seen = (int *)SSL_get_app_data(s);
 
     if (SSL_is_server(s)) {
         /* TLS_ST_SR_COMP_CERT */
@@ -120,7 +121,8 @@ static void cert_comp_info_cb(const SSL *s, int where, int ret)
     }
 }
 
-static int test_ssl_cert_comp(int test)
+static int
+test_ssl_cert_comp(int test)
 {
     SSL_CTX *cctx = NULL, *sctx = NULL;
     SSL *clientssl = NULL, *serverssl = NULL;
@@ -130,25 +132,25 @@ static int test_ssl_cert_comp(int test)
     int client_seen = 0;
     int server_seen = 0;
     /* reverse default order */
-    int server_pref[] = { TLSEXT_comp_cert_zstd, TLSEXT_comp_cert_zlib, TLSEXT_comp_cert_brotli };
+    int server_pref[] = {TLSEXT_comp_cert_zstd, TLSEXT_comp_cert_zlib, TLSEXT_comp_cert_brotli};
     /* default order */
-    int client_pref[] = { TLSEXT_comp_cert_brotli, TLSEXT_comp_cert_zlib, TLSEXT_comp_cert_zstd };
+    int client_pref[] = {TLSEXT_comp_cert_brotli, TLSEXT_comp_cert_zlib, TLSEXT_comp_cert_zstd};
 
     /* one of these *must* be defined! */
-#ifndef OPENSSL_NO_BROTLI
+# ifndef OPENSSL_NO_BROTLI
     expected_server = TLSEXT_comp_cert_brotli;
     expected_client = TLSEXT_comp_cert_brotli;
-#endif
-#ifndef OPENSSL_NO_ZLIB
+# endif
+# ifndef OPENSSL_NO_ZLIB
     expected_server = TLSEXT_comp_cert_zlib;
     if (expected_client == TLSEXT_comp_cert_none)
         expected_client = TLSEXT_comp_cert_zlib;
-#endif
-#ifndef OPENSSL_NO_ZSTD
+# endif
+# ifndef OPENSSL_NO_ZSTD
     expected_server = TLSEXT_comp_cert_zstd;
     if (expected_client == TLSEXT_comp_cert_none)
         expected_client = TLSEXT_comp_cert_zstd;
-#endif
+# endif
     /*
      * If there's only one comp algorithm, pref won't do much
      * Coverity can get confused in this case, and consider test == 3
@@ -159,10 +161,8 @@ static int test_ssl_cert_comp(int test)
         return 1;
     }
 
-    if (!TEST_true(create_ssl_ctx_pair(NULL, TLS_server_method(),
-                                       TLS_client_method(),
-                                       TLS1_3_VERSION, 0,
-                                       &sctx, &cctx, cert, privkey)))
+    if (!TEST_true(create_ssl_ctx_pair(NULL, TLS_server_method(), TLS_client_method(),
+                                       TLS1_3_VERSION, 0, &sctx, &cctx, cert, privkey)))
         goto end;
     if (test == 3) {
         /* coverity[deadcode] */
@@ -174,9 +174,11 @@ static int test_ssl_cert_comp(int test)
         if (!TEST_true(SSL_CTX_set1_cert_comp_preference(cctx, client_pref, 1)))
             goto end;
     } else {
-        if (!TEST_true(SSL_CTX_set1_cert_comp_preference(sctx, server_pref, OSSL_NELEM(server_pref))))
+        if (!TEST_true(
+                SSL_CTX_set1_cert_comp_preference(sctx, server_pref, OSSL_NELEM(server_pref))))
             goto end;
-        if (!TEST_true(SSL_CTX_set1_cert_comp_preference(cctx, client_pref, OSSL_NELEM(client_pref))))
+        if (!TEST_true(
+                SSL_CTX_set1_cert_comp_preference(cctx, client_pref, OSSL_NELEM(client_pref))))
             goto end;
     }
     if (test == 2) {
@@ -185,13 +187,12 @@ static int test_ssl_cert_comp(int test)
         SSL_CTX_set_verify(sctx, SSL_VERIFY_PEER | SSL_VERIFY_FAIL_IF_NO_PEER_CERT, verify_cb);
     }
 
-    if (test == 1 || test== 2 || test == 3) {
+    if (test == 1 || test == 2 || test == 3) {
         if (!TEST_true(SSL_CTX_compress_certs(sctx, expected_server)))
             goto end;
     }
 
-    if (!TEST_true(create_ssl_objects(sctx, cctx, &serverssl, &clientssl,
-                                      NULL, NULL)))
+    if (!TEST_true(create_ssl_objects(sctx, cctx, &serverssl, &clientssl, NULL, NULL)))
         goto end;
 
     if (!TEST_true(SSL_set_app_data(clientssl, &client_seen)))
@@ -216,7 +217,7 @@ static int test_ssl_cert_comp(int test)
         if (!TEST_int_eq(sc->cert->key->cert_comp_used, 0))
             goto end;
 
-        if (!TEST_false(*(int*)SSL_get_app_data(clientssl)))
+        if (!TEST_false(*(int *)SSL_get_app_data(clientssl)))
             goto end;
     } else {
         SSL_CONNECTION *sc = SSL_CONNECTION_FROM_SSL(serverssl);
@@ -224,19 +225,19 @@ static int test_ssl_cert_comp(int test)
         if (!TEST_int_gt(sc->cert->key->cert_comp_used, 0))
             goto end;
 
-        if (!TEST_true(*(int*)SSL_get_app_data(clientssl)))
+        if (!TEST_true(*(int *)SSL_get_app_data(clientssl)))
             goto end;
     }
 
     if (test == 2) {
         /* Only for client auth */
-        if (!TEST_true(*(int*)SSL_get_app_data(serverssl)))
+        if (!TEST_true(*(int *)SSL_get_app_data(serverssl)))
             goto end;
     }
 
     testresult = 1;
 
- end:
+end:
     SSL_free(serverssl);
     SSL_free(clientssl);
     SSL_CTX_free(sctx);
@@ -248,7 +249,8 @@ static int test_ssl_cert_comp(int test)
 
 OPT_TEST_DECLARE_USAGE("certdir\n")
 
-int setup_tests(void)
+int
+setup_tests(void)
 {
 #if !defined(OSSL_NO_USEABLE_TLS1_3)
     if (!test_skip_common_options()) {
@@ -270,7 +272,7 @@ int setup_tests(void)
     ADD_ALL_TESTS(test_ssl_cert_comp, 4);
     return 1;
 
- err:
+err:
     OPENSSL_free(cert);
     OPENSSL_free(privkey);
     return 0;
@@ -279,7 +281,8 @@ int setup_tests(void)
 #endif
 }
 
-void cleanup_tests(void)
+void
+cleanup_tests(void)
 {
 #if !defined(OSSL_NO_USEABLE_TLS1_3)
     OPENSSL_free(cert);

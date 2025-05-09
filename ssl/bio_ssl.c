@@ -26,7 +26,7 @@ static int ssl_new(BIO *h);
 static int ssl_free(BIO *data);
 static long ssl_callback_ctrl(BIO *h, int cmd, BIO_info_cb *fp);
 typedef struct bio_ssl_st {
-    SSL *ssl;                   /* The ssl handle :-) */
+    SSL *ssl; /* The ssl handle :-) */
     /*
      * Re-negotiate every time the total number of bytes is this size
      * or when timeout expires.
@@ -40,26 +40,20 @@ typedef struct bio_ssl_st {
 } BIO_SSL;
 
 static const BIO_METHOD methods_sslp = {
-    BIO_TYPE_SSL,
-    "ssl",
-    ssl_write,
-    NULL,                       /* ssl_write_old, */
-    ssl_read,
-    NULL,                       /* ssl_read_old,  */
-    ssl_puts,
-    NULL,                       /* ssl_gets,      */
-    ssl_ctrl,
-    ssl_new,
-    ssl_free,
-    ssl_callback_ctrl,
+    BIO_TYPE_SSL, "ssl",   ssl_write, NULL, /* ssl_write_old, */
+    ssl_read,     NULL,                     /* ssl_read_old,  */
+    ssl_puts,     NULL,                     /* ssl_gets,      */
+    ssl_ctrl,     ssl_new, ssl_free,  ssl_callback_ctrl,
 };
 
-const BIO_METHOD *BIO_f_ssl(void)
+const BIO_METHOD *
+BIO_f_ssl(void)
 {
     return &methods_sslp;
 }
 
-static int ssl_new(BIO *bi)
+static int
+ssl_new(BIO *bi)
 {
     BIO_SSL *bs = OPENSSL_zalloc(sizeof(*bs));
 
@@ -73,7 +67,8 @@ static int ssl_new(BIO *bi)
     return 1;
 }
 
-static int ssl_free(BIO *a)
+static int
+ssl_free(BIO *a)
 {
     BIO_SSL *bs;
 
@@ -92,7 +87,8 @@ static int ssl_free(BIO *a)
     return 1;
 }
 
-static int ssl_read(BIO *b, char *buf, size_t size, size_t *readbytes)
+static int
+ssl_read(BIO *b, char *buf, size_t size, size_t *readbytes)
 {
     int ret = 1;
     BIO_SSL *sb;
@@ -162,7 +158,8 @@ static int ssl_read(BIO *b, char *buf, size_t size, size_t *readbytes)
     return ret;
 }
 
-static int ssl_write(BIO *b, const char *buf, size_t size, size_t *written)
+static int
+ssl_write(BIO *b, const char *buf, size_t size, size_t *written)
 {
     int ret, r = 0;
     int retry_reason = 0;
@@ -224,7 +221,8 @@ static int ssl_write(BIO *b, const char *buf, size_t size, size_t *written)
     return ret;
 }
 
-static long ssl_ctrl(BIO *b, int cmd, long num, void *ptr)
+static long
+ssl_ctrl(BIO *b, int cmd, long num, void *ptr)
 {
     SSL **sslp, *ssl;
     BIO_SSL *bs, *dbs;
@@ -267,7 +265,7 @@ static long ssl_ctrl(BIO *b, int cmd, long num, void *ptr)
         ret = 0;
         break;
     case BIO_C_SSL_MODE:
-        if (num)                /* client mode */
+        if (num) /* client mode */
             SSL_set_connect_state(ssl);
         else
             SSL_set_accept_state(ssl);
@@ -412,7 +410,8 @@ static long ssl_ctrl(BIO *b, int cmd, long num, void *ptr)
     return ret;
 }
 
-static long ssl_callback_ctrl(BIO *b, int cmd, BIO_info_cb *fp)
+static long
+ssl_callback_ctrl(BIO *b, int cmd, BIO_info_cb *fp)
 {
     SSL *ssl;
     BIO_SSL *bs;
@@ -431,7 +430,8 @@ static long ssl_callback_ctrl(BIO *b, int cmd, BIO_info_cb *fp)
     return ret;
 }
 
-static int ssl_puts(BIO *bp, const char *str)
+static int
+ssl_puts(BIO *bp, const char *str)
 {
     int n, ret;
 
@@ -440,7 +440,8 @@ static int ssl_puts(BIO *bp, const char *str)
     return ret;
 }
 
-BIO *BIO_new_buffer_ssl_connect(SSL_CTX *ctx)
+BIO *
+BIO_new_buffer_ssl_connect(SSL_CTX *ctx)
 {
 #ifndef OPENSSL_NO_SOCK
     BIO *ret = NULL, *buf = NULL, *ssl = NULL;
@@ -458,14 +459,15 @@ BIO *BIO_new_buffer_ssl_connect(SSL_CTX *ctx)
     if ((ret = BIO_push(buf, ssl)) == NULL)
         goto err;
     return ret;
- err:
+err:
     BIO_free(buf);
     BIO_free(ssl);
 #endif
     return NULL;
 }
 
-BIO *BIO_new_ssl_connect(SSL_CTX *ctx)
+BIO *
+BIO_new_ssl_connect(SSL_CTX *ctx)
 {
 #ifndef OPENSSL_NO_SOCK
     BIO *ret = NULL, *con = NULL, *ssl = NULL;
@@ -477,21 +479,22 @@ BIO *BIO_new_ssl_connect(SSL_CTX *ctx)
     if (ctx != NULL && IS_QUIC_CTX(ctx))
         if (!BIO_set_sock_type(con, SOCK_DGRAM))
             goto err;
-#endif
+# endif
 
     if ((ssl = BIO_new_ssl(ctx, 1)) == NULL)
         goto err;
     if ((ret = BIO_push(ssl, con)) == NULL)
         goto err;
     return ret;
- err:
+err:
     BIO_free(ssl);
     BIO_free(con);
 #endif
     return NULL;
 }
 
-BIO *BIO_new_ssl(SSL_CTX *ctx, int client)
+BIO *
+BIO_new_ssl(SSL_CTX *ctx, int client)
 {
     BIO *ret;
     SSL *ssl;
@@ -511,7 +514,8 @@ BIO *BIO_new_ssl(SSL_CTX *ctx, int client)
     return ret;
 }
 
-int BIO_ssl_copy_session_id(BIO *t, BIO *f)
+int
+BIO_ssl_copy_session_id(BIO *t, BIO *f)
 {
     BIO_SSL *tdata, *fdata;
     t = BIO_find_type(t, BIO_TYPE_SSL);
@@ -527,7 +531,8 @@ int BIO_ssl_copy_session_id(BIO *t, BIO *f)
     return 1;
 }
 
-void BIO_ssl_shutdown(BIO *b)
+void
+BIO_ssl_shutdown(BIO *b)
 {
     BIO_SSL *bdata;
 

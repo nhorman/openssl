@@ -16,7 +16,8 @@
 #include <openssl/x509v3.h>
 
 #ifndef OPENSSL_NO_STDIO
-int X509_CRL_print_fp(FILE *fp, X509_CRL *x)
+int
+X509_CRL_print_fp(FILE *fp, X509_CRL *x)
 {
     BIO *b;
     int ret;
@@ -32,14 +33,16 @@ int X509_CRL_print_fp(FILE *fp, X509_CRL *x)
 }
 #endif
 
-int X509_CRL_print(BIO *out, X509_CRL *x)
+int
+X509_CRL_print(BIO *out, X509_CRL *x)
 {
-  return X509_CRL_print_ex(out, x, XN_FLAG_COMPAT);
+    return X509_CRL_print_ex(out, x, XN_FLAG_COMPAT);
 }
 
-int X509_CRL_print_ex(BIO *out, X509_CRL *x, unsigned long nmflag)
+int
+X509_CRL_print_ex(BIO *out, X509_CRL *x, unsigned long nmflag)
 {
-    STACK_OF(X509_REVOKED) *rev;
+    STACK_OF(X509_REVOKED) * rev;
     X509_REVOKED *r;
     const X509_ALGOR *sig_alg;
     const ASN1_BIT_STRING *sig;
@@ -73,8 +76,7 @@ int X509_CRL_print_ex(BIO *out, X509_CRL *x, unsigned long nmflag)
         BIO_printf(out, "NONE");
     BIO_printf(out, "\n");
 
-    X509V3_extensions_print(out, "CRL extensions",
-                            X509_CRL_get0_extensions(x), 0, 4);
+    X509V3_extensions_print(out, "CRL extensions", X509_CRL_get0_extensions(x), 0, 4);
 
     rev = X509_CRL_get_REVOKED(x);
 
@@ -90,11 +92,9 @@ int X509_CRL_print_ex(BIO *out, X509_CRL *x, unsigned long nmflag)
         BIO_printf(out, "\n        Revocation Date: ");
         ASN1_TIME_print(out, X509_REVOKED_get0_revocationDate(r));
         BIO_printf(out, "\n");
-        X509V3_extensions_print(out, "CRL entry extensions",
-                                X509_REVOKED_get0_extensions(r), 0, 8);
+        X509V3_extensions_print(out, "CRL entry extensions", X509_REVOKED_get0_extensions(r), 0, 8);
     }
     X509_signature_print(out, sig_alg, sig);
 
     return 1;
-
 }

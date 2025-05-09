@@ -18,7 +18,8 @@
  */
 #define LIMIT_BEFORE_EXPANSION 0x5ffffffc
 
-BUF_MEM *BUF_MEM_new_ex(unsigned long flags)
+BUF_MEM *
+BUF_MEM_new_ex(unsigned long flags)
 {
     BUF_MEM *ret;
 
@@ -28,7 +29,8 @@ BUF_MEM *BUF_MEM_new_ex(unsigned long flags)
     return ret;
 }
 
-BUF_MEM *BUF_MEM_new(void)
+BUF_MEM *
+BUF_MEM_new(void)
 {
     BUF_MEM *ret;
 
@@ -38,7 +40,8 @@ BUF_MEM *BUF_MEM_new(void)
     return ret;
 }
 
-void BUF_MEM_free(BUF_MEM *a)
+void
+BUF_MEM_free(BUF_MEM *a)
 {
     if (a == NULL)
         return;
@@ -53,7 +56,8 @@ void BUF_MEM_free(BUF_MEM *a)
 
 /* Allocate a block of secure memory; copy over old data if there
  * was any, and then free it. */
-static char *sec_alloc_realloc(BUF_MEM *str, size_t len)
+static char *
+sec_alloc_realloc(BUF_MEM *str, size_t len)
 {
     char *ret;
 
@@ -68,7 +72,8 @@ static char *sec_alloc_realloc(BUF_MEM *str, size_t len)
     return ret;
 }
 
-size_t BUF_MEM_grow(BUF_MEM *str, size_t len)
+size_t
+BUF_MEM_grow(BUF_MEM *str, size_t len)
 {
     char *ret;
     size_t n;
@@ -104,7 +109,8 @@ size_t BUF_MEM_grow(BUF_MEM *str, size_t len)
     return len;
 }
 
-size_t BUF_MEM_grow_clean(BUF_MEM *str, size_t len)
+size_t
+BUF_MEM_grow_clean(BUF_MEM *str, size_t len)
 {
     char *ret;
     size_t n;
@@ -141,7 +147,8 @@ size_t BUF_MEM_grow_clean(BUF_MEM *str, size_t len)
     return len;
 }
 
-void BUF_reverse(unsigned char *out, const unsigned char *in, size_t size)
+void
+BUF_reverse(unsigned char *out, const unsigned char *in, size_t size)
 {
     size_t i;
     if (in) {

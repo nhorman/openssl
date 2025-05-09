@@ -48,12 +48,12 @@
 #  endif
 
 #  define bio_addrinfo_st addrinfo
-#  define bai_family      ai_family
-#  define bai_socktype    ai_socktype
-#  define bai_protocol    ai_protocol
-#  define bai_addrlen     ai_addrlen
-#  define bai_addr        ai_addr
-#  define bai_next        ai_next
+#  define bai_family ai_family
+#  define bai_socktype ai_socktype
+#  define bai_protocol ai_protocol
+#  define bai_addrlen ai_addrlen
+#  define bai_addr ai_addr
+#  define bai_next ai_next
 # else
 struct bio_addrinfo_st {
     int bai_family;
@@ -82,17 +82,17 @@ typedef struct bio_f_buffer_ctx_struct {
      * +---------------------------------------------------+
      * <-- off --><------- len ------->
      */
-    /*- BIO *bio; *//*
-     * this is now in the BIO struct
-     */
-    int ibuf_size;              /* how big is the input buffer */
-    int obuf_size;              /* how big is the output buffer */
-    char *ibuf;                 /* the char array */
-    int ibuf_len;               /* how many bytes are in it */
-    int ibuf_off;               /* write/read offset */
-    char *obuf;                 /* the char array */
-    int obuf_len;               /* how many bytes are in it */
-    int obuf_off;               /* write/read offset */
+    /*- BIO *bio; */ /*
+                      * this is now in the BIO struct
+                      */
+    int ibuf_size;   /* how big is the input buffer */
+    int obuf_size;   /* how big is the output buffer */
+    char *ibuf;      /* the char array */
+    int ibuf_len;    /* how many bytes are in it */
+    int ibuf_off;    /* write/read offset */
+    char *obuf;      /* the char array */
+    int obuf_len;    /* how many bytes are in it */
+    int obuf_off;    /* write/read offset */
 } BIO_F_BUFFER_CTX;
 
 struct bio_st {
@@ -103,15 +103,15 @@ struct bio_st {
     BIO_callback_fn callback;
 #endif
     BIO_callback_fn_ex callback_ex;
-    char *cb_arg;               /* first argument for the callback */
+    char *cb_arg; /* first argument for the callback */
     int init;
     int shutdown;
-    int flags;                  /* extra storage */
+    int flags; /* extra storage */
     int retry_reason;
     int num;
     void *ptr;
-    struct bio_st *next_bio;    /* used by filter BIOs */
-    struct bio_st *prev_bio;    /* used by filter BIOs */
+    struct bio_st *next_bio; /* used by filter BIOs */
+    struct bio_st *prev_bio; /* used by filter BIOs */
     CRYPTO_REF_COUNT references;
     uint64_t num_read;
     uint64_t num_write;
@@ -143,39 +143,38 @@ extern CRYPTO_REF_COUNT bio_type_count;
 
 void bio_sock_cleanup_int(void);
 
-#if BIO_FLAGS_UPLINK_INTERNAL==0
+#if BIO_FLAGS_UPLINK_INTERNAL == 0
 /* Shortcut UPLINK calls on most platforms... */
-# define UP_stdin        stdin
-# define UP_stdout       stdout
-# define UP_stderr       stderr
-# define UP_fprintf      fprintf
-# define UP_fgets        fgets
-# define UP_fread        fread
-# define UP_fwrite       fwrite
-# undef  UP_fsetmod
-# define UP_feof         feof
-# define UP_fclose       fclose
+# define UP_stdin stdin
+# define UP_stdout stdout
+# define UP_stderr stderr
+# define UP_fprintf fprintf
+# define UP_fgets fgets
+# define UP_fread fread
+# define UP_fwrite fwrite
+# undef UP_fsetmod
+# define UP_feof feof
+# define UP_fclose fclose
 
-# define UP_fopen        fopen
-# define UP_fseek        fseek
-# define UP_ftell        ftell
-# define UP_fflush       fflush
-# define UP_ferror       ferror
+# define UP_fopen fopen
+# define UP_fseek fseek
+# define UP_ftell ftell
+# define UP_fflush fflush
+# define UP_ferror ferror
 # ifdef _WIN32
-#  define UP_fileno       _fileno
-#  define UP_open         _open
-#  define UP_read         _read
-#  define UP_write        _write
-#  define UP_lseek        _lseek
-#  define UP_close        _close
+#  define UP_fileno _fileno
+#  define UP_open _open
+#  define UP_read _read
+#  define UP_write _write
+#  define UP_lseek _lseek
+#  define UP_close _close
 # else
-#  define UP_fileno       fileno
-#  define UP_open         open
-#  define UP_read         read
-#  define UP_write        write
-#  define UP_lseek        lseek
-#  define UP_close        close
+#  define UP_fileno fileno
+#  define UP_open open
+#  define UP_read read
+#  define UP_write write
+#  define UP_lseek lseek
+#  define UP_close close
 # endif
 
 #endif
-

@@ -17,15 +17,14 @@
 
 #include "cipher_aes_ccm.h"
 
-#define AES_HW_CCM_SET_KEY_FN(fn_set_enc_key, fn_blk, fn_ccm_enc, fn_ccm_dec)  \
-    fn_set_enc_key(key, keylen * 8, &actx->ccm.ks.ks);                         \
-    CRYPTO_ccm128_init(&ctx->ccm_ctx, ctx->m, ctx->l, &actx->ccm.ks.ks,        \
-                       (block128_f)fn_blk);                                    \
-    ctx->str = ctx->enc ? (ccm128_f)fn_ccm_enc : (ccm128_f)fn_ccm_dec;         \
+#define AES_HW_CCM_SET_KEY_FN(fn_set_enc_key, fn_blk, fn_ccm_enc, fn_ccm_dec)                      \
+    fn_set_enc_key(key, keylen * 8, &actx->ccm.ks.ks);                                             \
+    CRYPTO_ccm128_init(&ctx->ccm_ctx, ctx->m, ctx->l, &actx->ccm.ks.ks, (block128_f)fn_blk);       \
+    ctx->str = ctx->enc ? (ccm128_f)fn_ccm_enc : (ccm128_f)fn_ccm_dec;                             \
     ctx->key_set = 1;
 
-static int ccm_generic_aes_initkey(PROV_CCM_CTX *ctx, const unsigned char *key,
-                                   size_t keylen)
+static int
+ccm_generic_aes_initkey(PROV_CCM_CTX *ctx, const unsigned char *key, size_t keylen)
 {
     PROV_AES_CCM_CTX *actx = (PROV_AES_CCM_CTX *)ctx;
 
@@ -36,7 +35,7 @@ static int ccm_generic_aes_initkey(PROV_CCM_CTX *ctx, const unsigned char *key,
 #endif /* HWAES_CAPABLE */
 
 #ifdef VPAES_CAPABLE
-    if (VPAES_CAPABLE) {
+        if (VPAES_CAPABLE) {
         AES_HW_CCM_SET_KEY_FN(vpaes_set_encrypt_key, vpaes_encrypt, NULL, NULL);
     } else
 #endif
@@ -46,14 +45,9 @@ static int ccm_generic_aes_initkey(PROV_CCM_CTX *ctx, const unsigned char *key,
     return 1;
 }
 
-static const PROV_CCM_HW aes_ccm = {
-    ccm_generic_aes_initkey,
-    ossl_ccm_generic_setiv,
-    ossl_ccm_generic_setaad,
-    ossl_ccm_generic_auth_encrypt,
-    ossl_ccm_generic_auth_decrypt,
-    ossl_ccm_generic_gettag
-};
+static const PROV_CCM_HW aes_ccm = {ccm_generic_aes_initkey,       ossl_ccm_generic_setiv,
+                                    ossl_ccm_generic_setaad,       ossl_ccm_generic_auth_encrypt,
+                                    ossl_ccm_generic_auth_decrypt, ossl_ccm_generic_gettag};
 
 #if defined(S390X_aes_128_CAPABLE)
 # include "cipher_aes_ccm_hw_s390x.inc"
@@ -66,7 +60,8 @@ static const PROV_CCM_HW aes_ccm = {
 #elif defined(OPENSSL_CPUID_OBJ) && defined(__riscv) && __riscv_xlen == 32
 # include "cipher_aes_ccm_hw_rv32i.inc"
 #else
-const PROV_CCM_HW *ossl_prov_aes_hw_ccm(size_t keybits)
+const PROV_CCM_HW *
+ossl_prov_aes_hw_ccm(size_t keybits)
 {
     return &aes_ccm;
 }

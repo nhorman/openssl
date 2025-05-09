@@ -22,7 +22,8 @@
  * passing details to a callback.
  */
 
-ASN1_SCTX *ASN1_SCTX_new(int (*scan_cb) (ASN1_SCTX *ctx))
+ASN1_SCTX *
+ASN1_SCTX_new(int (*scan_cb)(ASN1_SCTX *ctx))
 {
     ASN1_SCTX *ret = OPENSSL_zalloc(sizeof(*ret));
 
@@ -32,32 +33,38 @@ ASN1_SCTX *ASN1_SCTX_new(int (*scan_cb) (ASN1_SCTX *ctx))
     return ret;
 }
 
-void ASN1_SCTX_free(ASN1_SCTX *p)
+void
+ASN1_SCTX_free(ASN1_SCTX *p)
 {
     OPENSSL_free(p);
 }
 
-const ASN1_ITEM *ASN1_SCTX_get_item(ASN1_SCTX *p)
+const ASN1_ITEM *
+ASN1_SCTX_get_item(ASN1_SCTX *p)
 {
     return p->it;
 }
 
-const ASN1_TEMPLATE *ASN1_SCTX_get_template(ASN1_SCTX *p)
+const ASN1_TEMPLATE *
+ASN1_SCTX_get_template(ASN1_SCTX *p)
 {
     return p->tt;
 }
 
-unsigned long ASN1_SCTX_get_flags(ASN1_SCTX *p)
+unsigned long
+ASN1_SCTX_get_flags(ASN1_SCTX *p)
 {
     return p->flags;
 }
 
-void ASN1_SCTX_set_app_data(ASN1_SCTX *p, void *data)
+void
+ASN1_SCTX_set_app_data(ASN1_SCTX *p, void *data)
 {
     p->app_data = data;
 }
 
-void *ASN1_SCTX_get_app_data(ASN1_SCTX *p)
+void *
+ASN1_SCTX_get_app_data(ASN1_SCTX *p)
 {
     return p->app_data;
 }

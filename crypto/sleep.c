@@ -13,9 +13,7 @@
 /* system-specific variants defining OSSL_sleep() */
 #if defined(OPENSSL_SYS_UNIX) || defined(__DJGPP__)
 
-# if defined(OPENSSL_USE_USLEEP)                        \
-    || defined(__DJGPP__)                               \
-    || (defined(__TANDEM) && defined(_REENTRANT))
+# if defined(OPENSSL_USE_USLEEP) || defined(__DJGPP__) || (defined(__TANDEM) && defined(_REENTRANT))
 
 /*
  * usleep() was made obsolete by POSIX.1-2008, and nanosleep()
@@ -26,7 +24,8 @@
  */
 
 #  include <unistd.h>
-void OSSL_sleep(uint64_t millis)
+void
+OSSL_sleep(uint64_t millis)
 {
     unsigned int s = (unsigned int)(millis / 1000);
     unsigned int us = (unsigned int)((millis % 1000) * 1000);
@@ -45,7 +44,8 @@ void OSSL_sleep(uint64_t millis)
 # elif defined(__TANDEM) && !defined(_REENTRANT)
 
 #  include <cextdecs.h(PROCESS_DELAY_)>
-void OSSL_sleep(uint64_t millis)
+void
+OSSL_sleep(uint64_t millis)
 {
     /* HPNS does not support usleep for non threaded apps */
     PROCESS_DELAY_(millis * 1000);
@@ -55,12 +55,13 @@ void OSSL_sleep(uint64_t millis)
 
 /* nanosleep is defined by POSIX.1-2001 */
 #  include <time.h>
-void OSSL_sleep(uint64_t millis)
+void
+OSSL_sleep(uint64_t millis)
 {
     struct timespec ts;
 
-    ts.tv_sec = (long int) (millis / 1000);
-    ts.tv_nsec = (long int) (millis % 1000) * 1000000ul;
+    ts.tv_sec = (long int)(millis / 1000);
+    ts.tv_nsec = (long int)(millis % 1000) * 1000000ul;
     nanosleep(&ts, NULL);
 }
 
@@ -68,7 +69,8 @@ void OSSL_sleep(uint64_t millis)
 #elif defined(_WIN32) && !defined(OPENSSL_SYS_UEFI)
 # include <windows.h>
 
-void OSSL_sleep(uint64_t millis)
+void
+OSSL_sleep(uint64_t millis)
 {
     /*
      * Windows' Sleep() takes a DWORD argument, which is smaller than
@@ -85,7 +87,8 @@ void OSSL_sleep(uint64_t millis)
 /* Fallback to a busy wait */
 # include "internal/time.h"
 
-static void ossl_sleep_secs(uint64_t secs)
+static void
+ossl_sleep_secs(uint64_t secs)
 {
     /*
      * sleep() takes an unsigned int argument, which is smaller than
@@ -99,16 +102,17 @@ static void ossl_sleep_secs(uint64_t secs)
     sleep(limited_secs);
 }
 
-static void ossl_sleep_millis(uint64_t millis)
+static void
+ossl_sleep_millis(uint64_t millis)
 {
-    const OSSL_TIME finish
-        = ossl_time_add(ossl_time_now(), ossl_ms2time(millis));
+    const OSSL_TIME finish = ossl_time_add(ossl_time_now(), ossl_ms2time(millis));
 
     while (ossl_time_compare(ossl_time_now(), finish) < 0)
-        /* busy wait */ ;
+        /* busy wait */;
 }
 
-void OSSL_sleep(uint64_t millis)
+void
+OSSL_sleep(uint64_t millis)
 {
     ossl_sleep_secs(millis / 1000);
     ossl_sleep_millis(millis % 1000);

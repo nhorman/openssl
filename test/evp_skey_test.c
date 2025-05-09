@@ -22,7 +22,8 @@ static OSSL_PROVIDER *deflprov = NULL;
 
 static OSSL_CALLBACK ossl_pkey_todata_cb;
 
-static int ossl_pkey_todata_cb(const OSSL_PARAM params[], void *arg)
+static int
+ossl_pkey_todata_cb(const OSSL_PARAM params[], void *arg)
 {
     OSSL_PARAM **ret = arg;
 
@@ -30,7 +31,8 @@ static int ossl_pkey_todata_cb(const OSSL_PARAM params[], void *arg)
     return 1;
 }
 
-static int test_skey_cipher(void)
+static int
+test_skey_cipher(void)
 {
     int ret = 0;
     OSSL_PROVIDER *fake_prov = NULL;
@@ -55,29 +57,29 @@ static int test_skey_cipher(void)
         goto end;
 
     /* Create EVP_SKEY */
-    params[0] = OSSL_PARAM_construct_utf8_string(FAKE_CIPHER_PARAM_KEY_NAME,
-                                                 "fake key name", 0);
-    params[1] = OSSL_PARAM_construct_octet_string(OSSL_SKEY_PARAM_RAW_BYTES,
-                                                  (void *)import_key, KEY_SIZE);
+    params[0] = OSSL_PARAM_construct_utf8_string(FAKE_CIPHER_PARAM_KEY_NAME, "fake key name", 0);
+    params[1] =
+        OSSL_PARAM_construct_octet_string(OSSL_SKEY_PARAM_RAW_BYTES, (void *)import_key, KEY_SIZE);
     params[2] = OSSL_PARAM_construct_end();
-    key = EVP_SKEY_import(libctx, "fake_cipher", FAKE_CIPHER_FETCH_PROPS,
-                          OSSL_SKEYMGMT_SELECT_ALL, params);
+    key = EVP_SKEY_import(libctx, "fake_cipher", FAKE_CIPHER_FETCH_PROPS, OSSL_SKEYMGMT_SELECT_ALL,
+                          params);
     if (!TEST_ptr(key))
         goto end;
 
     /* Init cipher */
-    if (!TEST_ptr(ctx = EVP_CIPHER_CTX_new())
-        || !TEST_int_gt(EVP_CipherInit_SKEY(ctx, fake_cipher, key, NULL, 0, 1, NULL), 0))
+    if (!TEST_ptr(ctx = EVP_CIPHER_CTX_new()) ||
+        !TEST_int_gt(EVP_CipherInit_SKEY(ctx, fake_cipher, key, NULL, 0, 1, NULL), 0))
         goto end;
 
     /* Export params */
-    if (!TEST_int_gt(EVP_SKEY_export(key, OSSL_SKEYMGMT_SELECT_SECRET_KEY,
-                                     ossl_pkey_todata_cb, &export_params), 0))
+    if (!TEST_int_gt(EVP_SKEY_export(key, OSSL_SKEYMGMT_SELECT_SECRET_KEY, ossl_pkey_todata_cb,
+                                     &export_params),
+                     0))
         goto end;
 
     /* Export raw key */
-    if (!TEST_int_gt(EVP_SKEY_get0_raw_key(key, &export, &export_len), 0)
-        || !TEST_mem_eq(export, export_len, import_key, sizeof(import_key)))
+    if (!TEST_int_gt(EVP_SKEY_get0_raw_key(key, &export, &export_len), 0) ||
+        !TEST_mem_eq(export, export_len, import_key, sizeof(import_key)))
         goto end;
 
     ret = 1;
@@ -92,7 +94,8 @@ end:
     return ret;
 }
 
-static int test_skey_skeymgmt(void)
+static int
+test_skey_skeymgmt(void)
 {
     int ret = 0;
     EVP_SKEYMGMT *skeymgmt = NULL;
@@ -113,34 +116,30 @@ static int test_skey_skeymgmt(void)
         return 0;
 
     /* Fetch our SKYMGMT for Generic Secrets */
-    if (!TEST_ptr(skeymgmt = EVP_SKEYMGMT_fetch(libctx, OSSL_SKEY_TYPE_GENERIC,
-                                                NULL)))
+    if (!TEST_ptr(skeymgmt = EVP_SKEYMGMT_fetch(libctx, OSSL_SKEY_TYPE_GENERIC, NULL)))
         goto end;
 
     /* Check the parameter we need is available */
-    if (!TEST_ptr(imp_params = EVP_SKEYMGMT_get0_imp_settable_params(skeymgmt))
-        || !TEST_ptr(p = OSSL_PARAM_locate_const(imp_params,
-                                                 OSSL_SKEY_PARAM_RAW_BYTES)))
+    if (!TEST_ptr(imp_params = EVP_SKEYMGMT_get0_imp_settable_params(skeymgmt)) ||
+        !TEST_ptr(p = OSSL_PARAM_locate_const(imp_params, OSSL_SKEY_PARAM_RAW_BYTES)))
         goto end;
 
     /* Import EVP_SKEY */
-    params[0] = OSSL_PARAM_construct_octet_string(OSSL_SKEY_PARAM_RAW_BYTES,
-                                                  (void *)import_key, KEY_SIZE);
+    params[0] =
+        OSSL_PARAM_construct_octet_string(OSSL_SKEY_PARAM_RAW_BYTES, (void *)import_key, KEY_SIZE);
     params[1] = OSSL_PARAM_construct_end();
 
-    if (!TEST_ptr(key = EVP_SKEY_import(libctx,
-                                        EVP_SKEYMGMT_get0_name(skeymgmt), NULL,
+    if (!TEST_ptr(key = EVP_SKEY_import(libctx, EVP_SKEYMGMT_get0_name(skeymgmt), NULL,
                                         OSSL_SKEYMGMT_SELECT_ALL, params)))
         goto end;
 
     /* Export EVP_SKEY */
-    if (!TEST_int_gt(EVP_SKEY_export(key, OSSL_SKEYMGMT_SELECT_SECRET_KEY,
-                                     ossl_pkey_todata_cb, &exp_params), 0)
-        || !TEST_ptr(p = OSSL_PARAM_locate_const(exp_params,
-                                                 OSSL_SKEY_PARAM_RAW_BYTES))
-        || !TEST_int_gt(OSSL_PARAM_get_octet_string_ptr(p, &export_key,
-                                                        &export_len), 0)
-        || !TEST_mem_eq(import_key, KEY_SIZE, export_key, export_len))
+    if (!TEST_int_gt(
+            EVP_SKEY_export(key, OSSL_SKEYMGMT_SELECT_SECRET_KEY, ossl_pkey_todata_cb, &exp_params),
+            0) ||
+        !TEST_ptr(p = OSSL_PARAM_locate_const(exp_params, OSSL_SKEY_PARAM_RAW_BYTES)) ||
+        !TEST_int_gt(OSSL_PARAM_get_octet_string_ptr(p, &export_key, &export_len), 0) ||
+        !TEST_mem_eq(import_key, KEY_SIZE, export_key, export_len))
         goto end;
 
     ret = 1;
@@ -154,14 +153,12 @@ end:
 
 #define IV_SIZE 16
 #define DATA_SIZE 32
-static int test_aes_raw_skey(void)
+static int
+test_aes_raw_skey(void)
 {
-    const unsigned char data[DATA_SIZE] = {
-        0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2,
-        0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2,
-        0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2,
-        0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2
-    };
+    const unsigned char data[DATA_SIZE] = {0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2,
+                                           0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2,
+                                           0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2};
     unsigned char aes_key[KEY_SIZE], aes_iv[IV_SIZE];
     unsigned char encrypted_skey[DATA_SIZE + IV_SIZE];
     unsigned char encrypted_raw[DATA_SIZE + IV_SIZE];
@@ -180,7 +177,7 @@ static int test_aes_raw_skey(void)
         return 0;
 
     memset(encrypted_skey, 0, sizeof(encrypted_skey));
-    memset(encrypted_raw,  0, sizeof(encrypted_raw));
+    memset(encrypted_raw, 0, sizeof(encrypted_raw));
     memset(aes_key, 1, KEY_SIZE);
     memset(aes_iv, 2, IV_SIZE);
 
@@ -194,16 +191,16 @@ static int test_aes_raw_skey(void)
     if (!TEST_ptr(skey))
         goto end;
 
-    if (!TEST_int_gt(EVP_SKEY_get0_raw_key(skey, &export_key, &export_length), 0)
-        || !TEST_mem_eq(aes_key, KEY_SIZE, export_key, export_length))
+    if (!TEST_int_gt(EVP_SKEY_get0_raw_key(skey, &export_key, &export_length), 0) ||
+        !TEST_mem_eq(aes_key, KEY_SIZE, export_key, export_length))
         goto end;
 
     enc_len = sizeof(encrypted_skey);
     fin_len = 0;
-    if (!TEST_ptr(ctx = EVP_CIPHER_CTX_new())
-        || !TEST_int_gt(EVP_CipherInit_SKEY(ctx, aes_cbc, skey, aes_iv, IV_SIZE, 1, NULL), 0)
-        || !TEST_int_gt(EVP_CipherUpdate(ctx, encrypted_skey, &enc_len, data, DATA_SIZE), 0)
-        || !TEST_int_gt(EVP_CipherFinal(ctx, encrypted_skey + enc_len, &fin_len), 0))
+    if (!TEST_ptr(ctx = EVP_CIPHER_CTX_new()) ||
+        !TEST_int_gt(EVP_CipherInit_SKEY(ctx, aes_cbc, skey, aes_iv, IV_SIZE, 1, NULL), 0) ||
+        !TEST_int_gt(EVP_CipherUpdate(ctx, encrypted_skey, &enc_len, data, DATA_SIZE), 0) ||
+        !TEST_int_gt(EVP_CipherFinal(ctx, encrypted_skey + enc_len, &fin_len), 0))
         goto end;
 
     EVP_CIPHER_CTX_free(ctx);
@@ -211,10 +208,10 @@ static int test_aes_raw_skey(void)
 
     enc_len = sizeof(encrypted_raw);
     fin_len = 0;
-    if (!TEST_int_gt(EVP_CipherInit_ex2(ctx, aes_cbc, aes_key, aes_iv, 1, NULL), 0)
-        || !TEST_int_gt(EVP_CipherUpdate(ctx, encrypted_raw, &enc_len, data, DATA_SIZE), 0)
-        || !TEST_int_gt(EVP_CipherFinal(ctx, encrypted_raw + enc_len, &fin_len), 0)
-        || !TEST_mem_eq(encrypted_skey, DATA_SIZE + IV_SIZE, encrypted_raw, DATA_SIZE + IV_SIZE))
+    if (!TEST_int_gt(EVP_CipherInit_ex2(ctx, aes_cbc, aes_key, aes_iv, 1, NULL), 0) ||
+        !TEST_int_gt(EVP_CipherUpdate(ctx, encrypted_raw, &enc_len, data, DATA_SIZE), 0) ||
+        !TEST_int_gt(EVP_CipherFinal(ctx, encrypted_raw + enc_len, &fin_len), 0) ||
+        !TEST_mem_eq(encrypted_skey, DATA_SIZE + IV_SIZE, encrypted_raw, DATA_SIZE + IV_SIZE))
         goto end;
 
     ret = 1;
@@ -232,14 +229,12 @@ end:
 /* DES is used to test a "skey-unware" cipher provider */
 # define DES_KEY_SIZE 24
 # define DES_IV_SIZE 8
-static int test_des_raw_skey(void)
+static int
+test_des_raw_skey(void)
 {
-    const unsigned char data[DATA_SIZE] = {
-        0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2,
-        0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2,
-        0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2,
-        0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2
-    };
+    const unsigned char data[DATA_SIZE] = {0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2,
+                                           0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2,
+                                           0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2, 0x2};
     unsigned char des_key[DES_KEY_SIZE], des_iv[DES_IV_SIZE];
     unsigned char encrypted_skey[DATA_SIZE + DES_IV_SIZE];
     unsigned char encrypted_raw[DATA_SIZE + DES_IV_SIZE];
@@ -256,7 +251,7 @@ static int test_des_raw_skey(void)
         return 0;
 
     memset(encrypted_skey, 0, sizeof(encrypted_skey));
-    memset(encrypted_raw,  0, sizeof(encrypted_raw));
+    memset(encrypted_raw, 0, sizeof(encrypted_raw));
     memset(des_key, 1, DES_KEY_SIZE);
     memset(des_iv, 2, DES_IV_SIZE);
 
@@ -266,21 +261,20 @@ static int test_des_raw_skey(void)
         goto end;
 
     /* Create EVP_SKEY */
-    skey = EVP_SKEY_import_raw_key(libctx, "DES", des_key, sizeof(des_key),
-                                   NULL);
+    skey = EVP_SKEY_import_raw_key(libctx, "DES", des_key, sizeof(des_key), NULL);
     if (!TEST_ptr(skey))
         goto end;
 
-    if (!TEST_int_gt(EVP_SKEY_get0_raw_key(skey, &export_key, &export_length), 0)
-        || !TEST_mem_eq(des_key, DES_KEY_SIZE, export_key, export_length))
+    if (!TEST_int_gt(EVP_SKEY_get0_raw_key(skey, &export_key, &export_length), 0) ||
+        !TEST_mem_eq(des_key, DES_KEY_SIZE, export_key, export_length))
         goto end;
 
     enc_len = sizeof(encrypted_skey);
     fin_len = 0;
-    if (!TEST_ptr(ctx = EVP_CIPHER_CTX_new())
-        || !TEST_int_gt(EVP_CipherInit_SKEY(ctx, des_cbc, skey, des_iv, DES_IV_SIZE, 1, NULL), 0)
-        || !TEST_int_gt(EVP_CipherUpdate(ctx, encrypted_skey, &enc_len, data, DATA_SIZE), 0)
-        || !TEST_int_gt(EVP_CipherFinal(ctx, encrypted_skey + enc_len, &fin_len), 0))
+    if (!TEST_ptr(ctx = EVP_CIPHER_CTX_new()) ||
+        !TEST_int_gt(EVP_CipherInit_SKEY(ctx, des_cbc, skey, des_iv, DES_IV_SIZE, 1, NULL), 0) ||
+        !TEST_int_gt(EVP_CipherUpdate(ctx, encrypted_skey, &enc_len, data, DATA_SIZE), 0) ||
+        !TEST_int_gt(EVP_CipherFinal(ctx, encrypted_skey + enc_len, &fin_len), 0))
         goto end;
 
     EVP_CIPHER_CTX_free(ctx);
@@ -288,11 +282,11 @@ static int test_des_raw_skey(void)
 
     enc_len = sizeof(encrypted_raw);
     fin_len = 0;
-    if (!TEST_int_gt(EVP_CipherInit_ex2(ctx, des_cbc, des_key, des_iv, 1, NULL), 0)
-        || !TEST_int_gt(EVP_CipherUpdate(ctx, encrypted_raw, &enc_len, data, DATA_SIZE), 0)
-        || !TEST_int_gt(EVP_CipherFinal(ctx, encrypted_raw + enc_len, &fin_len), 0)
-        || !TEST_mem_eq(encrypted_skey, DATA_SIZE + DES_IV_SIZE, encrypted_raw,
-                        DATA_SIZE + DES_IV_SIZE))
+    if (!TEST_int_gt(EVP_CipherInit_ex2(ctx, des_cbc, des_key, des_iv, 1, NULL), 0) ||
+        !TEST_int_gt(EVP_CipherUpdate(ctx, encrypted_raw, &enc_len, data, DATA_SIZE), 0) ||
+        !TEST_int_gt(EVP_CipherFinal(ctx, encrypted_raw + enc_len, &fin_len), 0) ||
+        !TEST_mem_eq(encrypted_skey, DATA_SIZE + DES_IV_SIZE, encrypted_raw,
+                     DATA_SIZE + DES_IV_SIZE))
         goto end;
 
     ret = 1;
@@ -305,7 +299,8 @@ end:
 }
 #endif
 
-int setup_tests(void)
+int
+setup_tests(void)
 {
     libctx = OSSL_LIB_CTX_new();
     if (libctx == NULL)
@@ -322,7 +317,8 @@ int setup_tests(void)
     return 1;
 }
 
-void cleanup_tests(void)
+void
+cleanup_tests(void)
 {
     OSSL_LIB_CTX_free(libctx);
 }

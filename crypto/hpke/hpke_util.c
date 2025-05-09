@@ -62,22 +62,20 @@ static const char LABEL_HPKEV1[] = "\x48\x50\x4B\x45\x2D\x76\x31";
  */
 static const OSSL_HPKE_KEM_INFO hpke_kem_tab[] = {
 #ifndef OPENSSL_NO_EC
-    { OSSL_HPKE_KEM_ID_P256, "EC", OSSL_HPKE_KEMSTR_P256,
-      LN_sha256, SHA256_DIGEST_LENGTH, 65, 65, 32, 0xFF },
-    { OSSL_HPKE_KEM_ID_P384, "EC", OSSL_HPKE_KEMSTR_P384,
-      LN_sha384, SHA384_DIGEST_LENGTH, 97, 97, 48, 0xFF },
-    { OSSL_HPKE_KEM_ID_P521, "EC", OSSL_HPKE_KEMSTR_P521,
-      LN_sha512, SHA512_DIGEST_LENGTH, 133, 133, 66, 0x01 },
+    {OSSL_HPKE_KEM_ID_P256, "EC", OSSL_HPKE_KEMSTR_P256, LN_sha256, SHA256_DIGEST_LENGTH, 65, 65,
+     32, 0xFF},
+    {OSSL_HPKE_KEM_ID_P384, "EC", OSSL_HPKE_KEMSTR_P384, LN_sha384, SHA384_DIGEST_LENGTH, 97, 97,
+     48, 0xFF},
+    {OSSL_HPKE_KEM_ID_P521, "EC", OSSL_HPKE_KEMSTR_P521, LN_sha512, SHA512_DIGEST_LENGTH, 133, 133,
+     66, 0x01},
 # ifndef OPENSSL_NO_ECX
-    { OSSL_HPKE_KEM_ID_X25519, OSSL_HPKE_KEMSTR_X25519, NULL,
-      LN_sha256, SHA256_DIGEST_LENGTH,
-      X25519_KEYLEN, X25519_KEYLEN, X25519_KEYLEN, 0x00 },
-    { OSSL_HPKE_KEM_ID_X448, OSSL_HPKE_KEMSTR_X448, NULL,
-      LN_sha512, SHA512_DIGEST_LENGTH,
-      X448_KEYLEN, X448_KEYLEN, X448_KEYLEN, 0x00 }
+    {OSSL_HPKE_KEM_ID_X25519, OSSL_HPKE_KEMSTR_X25519, NULL, LN_sha256, SHA256_DIGEST_LENGTH,
+     X25519_KEYLEN, X25519_KEYLEN, X25519_KEYLEN, 0x00},
+    {OSSL_HPKE_KEM_ID_X448, OSSL_HPKE_KEMSTR_X448, NULL, LN_sha512, SHA512_DIGEST_LENGTH,
+     X448_KEYLEN, X448_KEYLEN, X448_KEYLEN, 0x00}
 # endif
 #else
-    { OSSL_HPKE_KEM_ID_RESERVED, NULL, NULL, NULL, 0, 0, 0, 0, 0x00 }
+    {OSSL_HPKE_KEM_ID_RESERVED, NULL, NULL, NULL, 0, 0, 0, 0, 0x00}
 #endif
 };
 
@@ -86,26 +84,21 @@ static const OSSL_HPKE_KEM_INFO hpke_kem_tab[] = {
  * See RFC9180 Section 7.2 "Table 3 KDF IDs"
  */
 static const OSSL_HPKE_AEAD_INFO hpke_aead_tab[] = {
-    { OSSL_HPKE_AEAD_ID_AES_GCM_128, LN_aes_128_gcm, 16, 16,
-      OSSL_HPKE_MAX_NONCELEN },
-    { OSSL_HPKE_AEAD_ID_AES_GCM_256, LN_aes_256_gcm, 16, 32,
-      OSSL_HPKE_MAX_NONCELEN },
+    {OSSL_HPKE_AEAD_ID_AES_GCM_128, LN_aes_128_gcm, 16, 16, OSSL_HPKE_MAX_NONCELEN},
+    {OSSL_HPKE_AEAD_ID_AES_GCM_256, LN_aes_256_gcm, 16, 32, OSSL_HPKE_MAX_NONCELEN},
 #if !defined(OPENSSL_NO_CHACHA) && !defined(OPENSSL_NO_POLY1305)
-    { OSSL_HPKE_AEAD_ID_CHACHA_POLY1305, LN_chacha20_poly1305, 16, 32,
-      OSSL_HPKE_MAX_NONCELEN },
+    {OSSL_HPKE_AEAD_ID_CHACHA_POLY1305, LN_chacha20_poly1305, 16, 32, OSSL_HPKE_MAX_NONCELEN},
 #endif
-    { OSSL_HPKE_AEAD_ID_EXPORTONLY, NULL, 0, 0, 0 }
-};
+    {OSSL_HPKE_AEAD_ID_EXPORTONLY, NULL, 0, 0, 0}};
 
 /*
  * @brief table of KDFs
  * See RFC9180 Section 7.3 "Table 5 AEAD IDs"
  */
 static const OSSL_HPKE_KDF_INFO hpke_kdf_tab[] = {
-    { OSSL_HPKE_KDF_ID_HKDF_SHA256, LN_sha256, SHA256_DIGEST_LENGTH },
-    { OSSL_HPKE_KDF_ID_HKDF_SHA384, LN_sha384, SHA384_DIGEST_LENGTH },
-    { OSSL_HPKE_KDF_ID_HKDF_SHA512, LN_sha512, SHA512_DIGEST_LENGTH }
-};
+    {OSSL_HPKE_KDF_ID_HKDF_SHA256, LN_sha256, SHA256_DIGEST_LENGTH},
+    {OSSL_HPKE_KDF_ID_HKDF_SHA384, LN_sha384, SHA384_DIGEST_LENGTH},
+    {OSSL_HPKE_KDF_ID_HKDF_SHA512, LN_sha512, SHA512_DIGEST_LENGTH}};
 
 /**
  * Synonym tables for KEMs, KDFs and AEADs: idea is to allow
@@ -120,40 +113,27 @@ static const OSSL_HPKE_KDF_INFO hpke_kdf_tab[] = {
  * sizes (i.e. allow exactly 4 synonyms) don't change.
  */
 static const synonymttab_t kemstrtab[] = {
-    {OSSL_HPKE_KEM_ID_P256,
-     {OSSL_HPKE_KEMSTR_P256, "0x10", "0x10", "16" }},
-    {OSSL_HPKE_KEM_ID_P384,
-     {OSSL_HPKE_KEMSTR_P384, "0x11", "0x11", "17" }},
-    {OSSL_HPKE_KEM_ID_P521,
-     {OSSL_HPKE_KEMSTR_P521, "0x12", "0x12", "18" }},
-# ifndef OPENSSL_NO_ECX
-    {OSSL_HPKE_KEM_ID_X25519,
-     {OSSL_HPKE_KEMSTR_X25519, "0x20", "0x20", "32" }},
-    {OSSL_HPKE_KEM_ID_X448,
-     {OSSL_HPKE_KEMSTR_X448, "0x21", "0x21", "33" }}
-# endif
+    {OSSL_HPKE_KEM_ID_P256, {OSSL_HPKE_KEMSTR_P256, "0x10", "0x10", "16"}},
+    {OSSL_HPKE_KEM_ID_P384, {OSSL_HPKE_KEMSTR_P384, "0x11", "0x11", "17"}},
+    {OSSL_HPKE_KEM_ID_P521, {OSSL_HPKE_KEMSTR_P521, "0x12", "0x12", "18"}},
+#ifndef OPENSSL_NO_ECX
+    {OSSL_HPKE_KEM_ID_X25519, {OSSL_HPKE_KEMSTR_X25519, "0x20", "0x20", "32"}},
+    {OSSL_HPKE_KEM_ID_X448, {OSSL_HPKE_KEMSTR_X448, "0x21", "0x21", "33"}}
+#endif
 };
 static const synonymttab_t kdfstrtab[] = {
-    {OSSL_HPKE_KDF_ID_HKDF_SHA256,
-     {OSSL_HPKE_KDFSTR_256, "0x1", "0x01", "1"}},
-    {OSSL_HPKE_KDF_ID_HKDF_SHA384,
-     {OSSL_HPKE_KDFSTR_384, "0x2", "0x02", "2"}},
-    {OSSL_HPKE_KDF_ID_HKDF_SHA512,
-     {OSSL_HPKE_KDFSTR_512, "0x3", "0x03", "3"}}
-};
+    {OSSL_HPKE_KDF_ID_HKDF_SHA256, {OSSL_HPKE_KDFSTR_256, "0x1", "0x01", "1"}},
+    {OSSL_HPKE_KDF_ID_HKDF_SHA384, {OSSL_HPKE_KDFSTR_384, "0x2", "0x02", "2"}},
+    {OSSL_HPKE_KDF_ID_HKDF_SHA512, {OSSL_HPKE_KDFSTR_512, "0x3", "0x03", "3"}}};
 static const synonymttab_t aeadstrtab[] = {
-    {OSSL_HPKE_AEAD_ID_AES_GCM_128,
-     {OSSL_HPKE_AEADSTR_AES128GCM, "0x1", "0x01", "1"}},
-    {OSSL_HPKE_AEAD_ID_AES_GCM_256,
-     {OSSL_HPKE_AEADSTR_AES256GCM, "0x2", "0x02", "2"}},
-    {OSSL_HPKE_AEAD_ID_CHACHA_POLY1305,
-     {OSSL_HPKE_AEADSTR_CP, "0x3", "0x03", "3"}},
-    {OSSL_HPKE_AEAD_ID_EXPORTONLY,
-     {OSSL_HPKE_AEADSTR_EXP, "ff", "0xff", "255"}}
-};
+    {OSSL_HPKE_AEAD_ID_AES_GCM_128, {OSSL_HPKE_AEADSTR_AES128GCM, "0x1", "0x01", "1"}},
+    {OSSL_HPKE_AEAD_ID_AES_GCM_256, {OSSL_HPKE_AEADSTR_AES256GCM, "0x2", "0x02", "2"}},
+    {OSSL_HPKE_AEAD_ID_CHACHA_POLY1305, {OSSL_HPKE_AEADSTR_CP, "0x3", "0x03", "3"}},
+    {OSSL_HPKE_AEAD_ID_EXPORTONLY, {OSSL_HPKE_AEADSTR_EXP, "ff", "0xff", "255"}}};
 
 /* Return an object containing KEM constants associated with a EC curve name */
-const OSSL_HPKE_KEM_INFO *ossl_HPKE_KEM_INFO_find_curve(const char *curve)
+const OSSL_HPKE_KEM_INFO *
+ossl_HPKE_KEM_INFO_find_curve(const char *curve)
 {
     int i, sz = OSSL_NELEM(hpke_kem_tab);
 
@@ -169,7 +149,8 @@ const OSSL_HPKE_KEM_INFO *ossl_HPKE_KEM_INFO_find_curve(const char *curve)
     return NULL;
 }
 
-const OSSL_HPKE_KEM_INFO *ossl_HPKE_KEM_INFO_find_id(uint16_t kemid)
+const OSSL_HPKE_KEM_INFO *
+ossl_HPKE_KEM_INFO_find_id(uint16_t kemid)
 {
     int i, sz = OSSL_NELEM(hpke_kem_tab);
 
@@ -189,7 +170,8 @@ const OSSL_HPKE_KEM_INFO *ossl_HPKE_KEM_INFO_find_id(uint16_t kemid)
     return NULL;
 }
 
-const OSSL_HPKE_KEM_INFO *ossl_HPKE_KEM_INFO_find_random(OSSL_LIB_CTX *ctx)
+const OSSL_HPKE_KEM_INFO *
+ossl_HPKE_KEM_INFO_find_random(OSSL_LIB_CTX *ctx)
 {
     uint32_t rval = 0;
     int err = 0;
@@ -199,7 +181,8 @@ const OSSL_HPKE_KEM_INFO *ossl_HPKE_KEM_INFO_find_random(OSSL_LIB_CTX *ctx)
     return (err == 1 ? NULL : &hpke_kem_tab[rval]);
 }
 
-const OSSL_HPKE_KDF_INFO *ossl_HPKE_KDF_INFO_find_id(uint16_t kdfid)
+const OSSL_HPKE_KDF_INFO *
+ossl_HPKE_KDF_INFO_find_id(uint16_t kdfid)
 {
     int i, sz = OSSL_NELEM(hpke_kdf_tab);
 
@@ -211,7 +194,8 @@ const OSSL_HPKE_KDF_INFO *ossl_HPKE_KDF_INFO_find_id(uint16_t kdfid)
     return NULL;
 }
 
-const OSSL_HPKE_KDF_INFO *ossl_HPKE_KDF_INFO_find_random(OSSL_LIB_CTX *ctx)
+const OSSL_HPKE_KDF_INFO *
+ossl_HPKE_KDF_INFO_find_random(OSSL_LIB_CTX *ctx)
 {
     uint32_t rval = 0;
     int err = 0;
@@ -221,7 +205,8 @@ const OSSL_HPKE_KDF_INFO *ossl_HPKE_KDF_INFO_find_random(OSSL_LIB_CTX *ctx)
     return (err == 1 ? NULL : &hpke_kdf_tab[rval]);
 }
 
-const OSSL_HPKE_AEAD_INFO *ossl_HPKE_AEAD_INFO_find_id(uint16_t aeadid)
+const OSSL_HPKE_AEAD_INFO *
+ossl_HPKE_AEAD_INFO_find_id(uint16_t aeadid)
 {
     int i, sz = OSSL_NELEM(hpke_aead_tab);
 
@@ -233,7 +218,8 @@ const OSSL_HPKE_AEAD_INFO *ossl_HPKE_AEAD_INFO_find_id(uint16_t aeadid)
     return NULL;
 }
 
-const OSSL_HPKE_AEAD_INFO *ossl_HPKE_AEAD_INFO_find_random(OSSL_LIB_CTX *ctx)
+const OSSL_HPKE_AEAD_INFO *
+ossl_HPKE_AEAD_INFO_find_random(OSSL_LIB_CTX *ctx)
 {
     uint32_t rval = 0;
     int err = 0;
@@ -244,25 +230,21 @@ const OSSL_HPKE_AEAD_INFO *ossl_HPKE_AEAD_INFO_find_random(OSSL_LIB_CTX *ctx)
     return (err == 1 ? NULL : &hpke_aead_tab[rval]);
 }
 
-static int kdf_derive(EVP_KDF_CTX *kctx,
-                      unsigned char *out, size_t outlen, int mode,
-                      const unsigned char *salt, size_t saltlen,
-                      const unsigned char *ikm, size_t ikmlen,
-                      const unsigned char *info, size_t infolen)
+static int
+kdf_derive(EVP_KDF_CTX *kctx, unsigned char *out, size_t outlen, int mode,
+           const unsigned char *salt, size_t saltlen, const unsigned char *ikm, size_t ikmlen,
+           const unsigned char *info, size_t infolen)
 {
     int ret;
     OSSL_PARAM params[5], *p = params;
 
     *p++ = OSSL_PARAM_construct_int(OSSL_KDF_PARAM_MODE, &mode);
     if (salt != NULL)
-        *p++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_SALT,
-                                                 (char *)salt, saltlen);
+        *p++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_SALT, (char *)salt, saltlen);
     if (ikm != NULL)
-        *p++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_KEY,
-                                                 (char *)ikm, ikmlen);
+        *p++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_KEY, (char *)ikm, ikmlen);
     if (info != NULL)
-        *p++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_INFO,
-                                                 (char *)info, infolen);
+        *p++ = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_INFO, (char *)info, infolen);
     *p = OSSL_PARAM_construct_end();
     ret = EVP_KDF_derive(kctx, out, outlen, params) > 0;
     if (!ret)
@@ -270,35 +252,32 @@ static int kdf_derive(EVP_KDF_CTX *kctx,
     return ret;
 }
 
-int ossl_hpke_kdf_extract(EVP_KDF_CTX *kctx,
-                          unsigned char *prk, size_t prklen,
-                          const unsigned char *salt, size_t saltlen,
-                          const unsigned char *ikm, size_t ikmlen)
+int
+ossl_hpke_kdf_extract(EVP_KDF_CTX *kctx, unsigned char *prk, size_t prklen,
+                      const unsigned char *salt, size_t saltlen, const unsigned char *ikm,
+                      size_t ikmlen)
 {
-    return kdf_derive(kctx, prk, prklen, EVP_KDF_HKDF_MODE_EXTRACT_ONLY,
-                      salt, saltlen, ikm, ikmlen, NULL, 0);
+    return kdf_derive(kctx, prk, prklen, EVP_KDF_HKDF_MODE_EXTRACT_ONLY, salt, saltlen, ikm, ikmlen,
+                      NULL, 0);
 }
 
 /* Common code to perform a HKDF expand */
-int ossl_hpke_kdf_expand(EVP_KDF_CTX *kctx,
-                         unsigned char *okm, size_t okmlen,
-                         const unsigned char *prk, size_t prklen,
-                         const unsigned char *info, size_t infolen)
+int
+ossl_hpke_kdf_expand(EVP_KDF_CTX *kctx, unsigned char *okm, size_t okmlen, const unsigned char *prk,
+                     size_t prklen, const unsigned char *info, size_t infolen)
 {
-    return kdf_derive(kctx, okm, okmlen, EVP_KDF_HKDF_MODE_EXPAND_ONLY,
-                      NULL, 0, prk, prklen, info, infolen);
+    return kdf_derive(kctx, okm, okmlen, EVP_KDF_HKDF_MODE_EXPAND_ONLY, NULL, 0, prk, prklen, info,
+                      infolen);
 }
 
 /*
  * See RFC 9180 Section 4 LabelExtract()
  */
-int ossl_hpke_labeled_extract(EVP_KDF_CTX *kctx,
-                              unsigned char *prk, size_t prklen,
-                              const unsigned char *salt, size_t saltlen,
-                              const char *protocol_label,
-                              const unsigned char *suiteid, size_t suiteidlen,
-                              const char *label,
-                              const unsigned char *ikm, size_t ikmlen)
+int
+ossl_hpke_labeled_extract(EVP_KDF_CTX *kctx, unsigned char *prk, size_t prklen,
+                          const unsigned char *salt, size_t saltlen, const char *protocol_label,
+                          const unsigned char *suiteid, size_t suiteidlen, const char *label,
+                          const unsigned char *ikm, size_t ikmlen)
 {
     int ret = 0;
     size_t label_hpkev1len = 0;
@@ -311,27 +290,23 @@ int ossl_hpke_labeled_extract(EVP_KDF_CTX *kctx,
     label_hpkev1len = strlen(LABEL_HPKEV1);
     protocol_labellen = strlen(protocol_label);
     labellen = strlen(label);
-    labeled_ikmlen = label_hpkev1len + protocol_labellen
-        + suiteidlen + labellen + ikmlen;
+    labeled_ikmlen = label_hpkev1len + protocol_labellen + suiteidlen + labellen + ikmlen;
     labeled_ikm = OPENSSL_malloc(labeled_ikmlen);
     if (labeled_ikm == NULL)
         return 0;
 
     /* labeled_ikm = concat("HPKE-v1", suiteid, label, ikm) */
-    if (!WPACKET_init_static_len(&pkt, labeled_ikm, labeled_ikmlen, 0)
-            || !WPACKET_memcpy(&pkt, LABEL_HPKEV1, label_hpkev1len)
-            || !WPACKET_memcpy(&pkt, protocol_label, protocol_labellen)
-            || !WPACKET_memcpy(&pkt, suiteid, suiteidlen)
-            || !WPACKET_memcpy(&pkt, label, labellen)
-            || !WPACKET_memcpy(&pkt, ikm, ikmlen)
-            || !WPACKET_get_total_written(&pkt, &labeled_ikmlen)
-            || !WPACKET_finish(&pkt)) {
+    if (!WPACKET_init_static_len(&pkt, labeled_ikm, labeled_ikmlen, 0) ||
+        !WPACKET_memcpy(&pkt, LABEL_HPKEV1, label_hpkev1len) ||
+        !WPACKET_memcpy(&pkt, protocol_label, protocol_labellen) ||
+        !WPACKET_memcpy(&pkt, suiteid, suiteidlen) || !WPACKET_memcpy(&pkt, label, labellen) ||
+        !WPACKET_memcpy(&pkt, ikm, ikmlen) || !WPACKET_get_total_written(&pkt, &labeled_ikmlen) ||
+        !WPACKET_finish(&pkt)) {
         ERR_raise(ERR_LIB_PROV, PROV_R_OUTPUT_BUFFER_TOO_SMALL);
         goto end;
     }
 
-    ret = ossl_hpke_kdf_extract(kctx, prk, prklen, salt, saltlen,
-                                labeled_ikm, labeled_ikmlen);
+    ret = ossl_hpke_kdf_extract(kctx, prk, prklen, salt, saltlen, labeled_ikm, labeled_ikmlen);
 end:
     WPACKET_cleanup(&pkt);
     OPENSSL_cleanse(labeled_ikm, labeled_ikmlen);
@@ -342,13 +317,11 @@ end:
 /*
  * See RFC 9180 Section 4 LabelExpand()
  */
-int ossl_hpke_labeled_expand(EVP_KDF_CTX *kctx,
-                             unsigned char *okm, size_t okmlen,
-                             const unsigned char *prk, size_t prklen,
-                             const char *protocol_label,
-                             const unsigned char *suiteid, size_t suiteidlen,
-                             const char *label,
-                             const unsigned char *info, size_t infolen)
+int
+ossl_hpke_labeled_expand(EVP_KDF_CTX *kctx, unsigned char *okm, size_t okmlen,
+                         const unsigned char *prk, size_t prklen, const char *protocol_label,
+                         const unsigned char *suiteid, size_t suiteidlen, const char *label,
+                         const unsigned char *info, size_t infolen)
 {
     int ret = 0;
     size_t label_hpkev1len = 0;
@@ -361,28 +334,25 @@ int ossl_hpke_labeled_expand(EVP_KDF_CTX *kctx,
     label_hpkev1len = strlen(LABEL_HPKEV1);
     protocol_labellen = strlen(protocol_label);
     labellen = strlen(label);
-    labeled_infolen = 2 + okmlen + prklen + label_hpkev1len
-        + protocol_labellen + suiteidlen + labellen + infolen;
+    labeled_infolen =
+        2 + okmlen + prklen + label_hpkev1len + protocol_labellen + suiteidlen + labellen + infolen;
     labeled_info = OPENSSL_malloc(labeled_infolen);
     if (labeled_info == NULL)
         return 0;
 
     /* labeled_info = concat(okmlen, "HPKE-v1", suiteid, label, info) */
-    if (!WPACKET_init_static_len(&pkt, labeled_info, labeled_infolen, 0)
-            || !WPACKET_put_bytes_u16(&pkt, okmlen)
-            || !WPACKET_memcpy(&pkt, LABEL_HPKEV1, label_hpkev1len)
-            || !WPACKET_memcpy(&pkt, protocol_label, protocol_labellen)
-            || !WPACKET_memcpy(&pkt, suiteid, suiteidlen)
-            || !WPACKET_memcpy(&pkt, label, labellen)
-            || !WPACKET_memcpy(&pkt, info, infolen)
-            || !WPACKET_get_total_written(&pkt, &labeled_infolen)
-            || !WPACKET_finish(&pkt)) {
+    if (!WPACKET_init_static_len(&pkt, labeled_info, labeled_infolen, 0) ||
+        !WPACKET_put_bytes_u16(&pkt, okmlen) ||
+        !WPACKET_memcpy(&pkt, LABEL_HPKEV1, label_hpkev1len) ||
+        !WPACKET_memcpy(&pkt, protocol_label, protocol_labellen) ||
+        !WPACKET_memcpy(&pkt, suiteid, suiteidlen) || !WPACKET_memcpy(&pkt, label, labellen) ||
+        !WPACKET_memcpy(&pkt, info, infolen) ||
+        !WPACKET_get_total_written(&pkt, &labeled_infolen) || !WPACKET_finish(&pkt)) {
         ERR_raise(ERR_LIB_PROV, PROV_R_OUTPUT_BUFFER_TOO_SMALL);
         goto end;
     }
 
-    ret = ossl_hpke_kdf_expand(kctx, okm, okmlen,
-                               prk, prklen, labeled_info, labeled_infolen);
+    ret = ossl_hpke_kdf_expand(kctx, okm, okmlen, prk, prklen, labeled_info, labeled_infolen);
 end:
     WPACKET_cleanup(&pkt);
     OPENSSL_free(labeled_info);
@@ -390,8 +360,9 @@ end:
 }
 
 /* Common code to create a HKDF ctx */
-EVP_KDF_CTX *ossl_kdf_ctx_create(const char *kdfname, const char *mdname,
-                                 OSSL_LIB_CTX *libctx, const char *propq)
+EVP_KDF_CTX *
+ossl_kdf_ctx_create(const char *kdfname, const char *mdname, OSSL_LIB_CTX *libctx,
+                    const char *propq)
 {
     EVP_KDF *kdf;
     EVP_KDF_CTX *kctx = NULL;
@@ -407,11 +378,9 @@ EVP_KDF_CTX *ossl_kdf_ctx_create(const char *kdfname, const char *mdname,
         OSSL_PARAM params[3], *p = params;
 
         if (mdname != NULL)
-            *p++ = OSSL_PARAM_construct_utf8_string(OSSL_KDF_PARAM_DIGEST,
-                                                    (char *)mdname, 0);
+            *p++ = OSSL_PARAM_construct_utf8_string(OSSL_KDF_PARAM_DIGEST, (char *)mdname, 0);
         if (propq != NULL)
-            *p++ = OSSL_PARAM_construct_utf8_string(OSSL_KDF_PARAM_PROPERTIES,
-                                                    (char *)propq, 0);
+            *p++ = OSSL_PARAM_construct_utf8_string(OSSL_KDF_PARAM_PROPERTIES, (char *)propq, 0);
         *p = OSSL_PARAM_construct_end();
         if (EVP_KDF_CTX_set_params(kctx, params) <= 0) {
             EVP_KDF_CTX_free(kctx);
@@ -428,8 +397,8 @@ EVP_KDF_CTX *ossl_kdf_ctx_create(const char *kdfname, const char *mdname,
  * @param arrsize is the previous array size
  * @return 0 when not found, else the matching item id.
  */
-static uint16_t synonyms_name2id(const char *st, const synonymttab_t *synp,
-                                 size_t arrsize)
+static uint16_t
+synonyms_name2id(const char *st, const synonymttab_t *synp, size_t arrsize)
 {
     size_t i, j;
 
@@ -448,7 +417,8 @@ static uint16_t synonyms_name2id(const char *st, const synonymttab_t *synp,
  * @param suite is the resulting suite
  * @return 1 for success, otherwise failure
  */
-int ossl_hpke_str2suite(const char *suitestr, OSSL_HPKE_SUITE *suite)
+int
+ossl_hpke_str2suite(const char *suitestr, OSSL_HPKE_SUITE *suite)
 {
     uint16_t kem = 0, kdf = 0, aead = 0;
     char *st = NULL, *instrcp = NULL;
@@ -496,17 +466,12 @@ int ossl_hpke_str2suite(const char *suitestr, OSSL_HPKE_SUITE *suite)
             *cp = '\0';
 
         /* check if string is known or number and if so handle appropriately */
-        if (labels == 0
-            && (kem = synonyms_name2id(st, kemstrtab,
-                                       OSSL_NELEM(kemstrtab))) == 0)
+        if (labels == 0 && (kem = synonyms_name2id(st, kemstrtab, OSSL_NELEM(kemstrtab))) == 0)
             goto fail;
-        else if (labels == 1
-                 && (kdf = synonyms_name2id(st, kdfstrtab,
-                                            OSSL_NELEM(kdfstrtab))) == 0)
+        else if (labels == 1 && (kdf = synonyms_name2id(st, kdfstrtab, OSSL_NELEM(kdfstrtab))) == 0)
             goto fail;
-        else if (labels == 2
-                 && (aead = synonyms_name2id(st, aeadstrtab,
-                                             OSSL_NELEM(aeadstrtab))) == 0)
+        else if (labels == 2 &&
+                 (aead = synonyms_name2id(st, aeadstrtab, OSSL_NELEM(aeadstrtab))) == 0)
             goto fail;
 
         if (cp == NULL)

@@ -25,18 +25,20 @@ void OPENSSL_showfatal(const char *, ...);
 
 static TCHAR msg[128];
 
-static void unimplemented(void)
+static void
+unimplemented(void)
 {
     OPENSSL_showfatal(sizeof(TCHAR) == sizeof(char) ? "%s\n" : "%S\n", msg);
     TerminateProcess(GetCurrentProcess(), 1);
 }
 
-void OPENSSL_Uplink(volatile void **table, int index)
+void
+OPENSSL_Uplink(volatile void **table, int index)
 {
     static HMODULE volatile apphandle = NULL;
     static void **volatile applinktable = NULL;
     int len;
-    void (*func) (void) = unimplemented;
+    void (*func)(void) = unimplemented;
     HANDLE h;
     void **p;
 
@@ -55,33 +57,33 @@ void OPENSSL_Uplink(volatile void **table, int index)
      * instructions].
      */
     do {
-        len = _sntprintf(msg, sizeof(msg) / sizeof(TCHAR),
-                         _T("OPENSSL_Uplink(%p,%02X): "), table, index);
+        len = _sntprintf(msg, sizeof(msg) / sizeof(TCHAR), _T("OPENSSL_Uplink(%p,%02X): "), table,
+                         index);
         _tcscpy(msg + len, _T("unimplemented function"));
 
         if ((h = apphandle) == NULL) {
             if ((h = GetModuleHandle(NULL)) == NULL) {
-                apphandle = (HMODULE) - 1;
+                apphandle = (HMODULE)-1;
                 _tcscpy(msg + len, _T("no host application"));
                 break;
             }
             apphandle = h;
         }
-        if ((h = apphandle) == (HMODULE) - 1) /* revalidate */
+        if ((h = apphandle) == (HMODULE)-1) /* revalidate */
             break;
 
         if (applinktable == NULL) {
-            void **(*applink) ();
+            void **(*applink)();
 
             applink = (void **(*)())GetProcAddress(h, "OPENSSL_Applink");
             if (applink == NULL) {
-                apphandle = (HMODULE) - 1;
+                apphandle = (HMODULE)-1;
                 _tcscpy(msg + len, _T("no OPENSSL_Applink"));
                 break;
             }
-            p = (*applink) ();
+            p = (*applink)();
             if (p == NULL) {
-                apphandle = (HMODULE) - 1;
+                apphandle = (HMODULE)-1;
                 _tcscpy(msg + len, _T("no ApplinkTable"));
                 break;
             }
@@ -101,29 +103,28 @@ void OPENSSL_Uplink(volatile void **table, int index)
 
 #if (defined(_MSC_VER) || defined(__BORLANDC__)) && defined(_M_IX86)
 # if defined(_MSC_VER)
-#  define LAZY(i)         \
-__declspec(naked) static void lazy##i (void) {  \
-        _asm    push i                          \
-        _asm    push OFFSET OPENSSL_UplinkTable \
-        _asm    call OPENSSL_Uplink             \
-        _asm    add  esp,8                      \
-        _asm    jmp  OPENSSL_UplinkTable+4*i    }
+#  define LAZY(i)                                                                                  \
+      __declspec(naked) static void lazy##i(void)                                                  \
+      {                                                                                            \
+          _asm push i _asm push OFFSET OPENSSL_UplinkTable _asm call OPENSSL_Uplink _asm add esp,  \
+              8 _asm jmp OPENSSL_UplinkTable + 4 * i                                               \
+      }
 # elif defined(__BORLANDC__) && defined(__clang__)
 void *OPENSSL_UplinkTable[26]; /* C++Builder requires declaration before use */
-#  define LAZY(i)         \
-__declspec(naked) static void lazy##i (void) { \
-    __asm__("pushl $" #i "; "                  \
-            "pushl %0; "                       \
-            "call  %P1; "                      \
-            "addl  $8, %%esp; "                \
-            "jmp   *%2 "                       \
-            : /* no outputs */                 \
-            : "i" (OPENSSL_UplinkTable),       \
-              "i" (OPENSSL_Uplink),            \
-              "m" (OPENSSL_UplinkTable[i]));   }
+#  define LAZY(i)                                                                                  \
+      __declspec(naked) static void lazy##i(void)                                                  \
+      {                                                                                            \
+          __asm__("pushl $" #i "; "                                                                \
+                  "pushl %0; "                                                                     \
+                  "call  %P1; "                                                                    \
+                  "addl  $8, %%esp; "                                                              \
+                  "jmp   *%2 "                                                                     \
+                  : /* no outputs */                                                               \
+                  : "i"(OPENSSL_UplinkTable), "i"(OPENSSL_Uplink), "m"(OPENSSL_UplinkTable[i]));   \
+      }
 # endif
 
-# if APPLINK_MAX>25
+# if APPLINK_MAX > 25
 #  error "Add more stubs..."
 # endif
 /* make some in advance... */
@@ -155,17 +156,34 @@ LAZY(25)
 
 void *OPENSSL_UplinkTable[] = {
     (void *)APPLINK_MAX,
-    lazy1, lazy2, lazy3, lazy4, lazy5,
-    lazy6, lazy7, lazy8, lazy9, lazy10,
-    lazy11, lazy12, lazy13, lazy14, lazy15,
-    lazy16, lazy17, lazy18, lazy19, lazy20,
-    lazy21, lazy22, lazy23, lazy24, lazy25,
+    lazy1,
+    lazy2,
+    lazy3,
+    lazy4,
+    lazy5,
+    lazy6,
+    lazy7,
+    lazy8,
+    lazy9,
+    lazy10,
+    lazy11,
+    lazy12,
+    lazy13,
+    lazy14,
+    lazy15,
+    lazy16,
+    lazy17,
+    lazy18,
+    lazy19,
+    lazy20,
+    lazy21,
+    lazy22,
+    lazy23,
+    lazy24,
+    lazy25,
 };
 #endif
 
 #ifdef SELFTEST
-main()
-{
-    UP_fprintf(UP_stdout, "hello, world!\n");
-}
+main() { UP_fprintf(UP_stdout, "hello, world!\n"); }
 #endif

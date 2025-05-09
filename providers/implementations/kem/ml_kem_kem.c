@@ -37,7 +37,8 @@ typedef struct {
     int op;
 } PROV_ML_KEM_CTX;
 
-static void *ml_kem_newctx(void *provctx)
+static void *
+ml_kem_newctx(void *provctx)
 {
     PROV_ML_KEM_CTX *ctx;
 
@@ -50,7 +51,8 @@ static void *ml_kem_newctx(void *provctx)
     return ctx;
 }
 
-static void ml_kem_freectx(void *vctx)
+static void
+ml_kem_freectx(void *vctx)
 {
     PROV_ML_KEM_CTX *ctx = vctx;
 
@@ -59,8 +61,8 @@ static void ml_kem_freectx(void *vctx)
     OPENSSL_free(ctx);
 }
 
-static int ml_kem_init(void *vctx, int op, void *key,
-                       const OSSL_PARAM params[])
+static int
+ml_kem_init(void *vctx, int op, void *key, const OSSL_PARAM params[])
 {
     PROV_ML_KEM_CTX *ctx = vctx;
 
@@ -71,8 +73,8 @@ static int ml_kem_init(void *vctx, int op, void *key,
     return ml_kem_set_ctx_params(vctx, params);
 }
 
-static int ml_kem_encapsulate_init(void *vctx, void *vkey,
-                                   const OSSL_PARAM params[])
+static int
+ml_kem_encapsulate_init(void *vctx, void *vkey, const OSSL_PARAM params[])
 {
     ML_KEM_KEY *key = vkey;
 
@@ -83,8 +85,8 @@ static int ml_kem_encapsulate_init(void *vctx, void *vkey,
     return ml_kem_init(vctx, EVP_PKEY_OP_ENCAPSULATE, key, params);
 }
 
-static int ml_kem_decapsulate_init(void *vctx, void *vkey,
-                                   const OSSL_PARAM params[])
+static int
+ml_kem_decapsulate_init(void *vctx, void *vkey, const OSSL_PARAM params[])
 {
     ML_KEM_KEY *key = vkey;
 
@@ -95,7 +97,8 @@ static int ml_kem_decapsulate_init(void *vctx, void *vkey,
     return ml_kem_init(vctx, EVP_PKEY_OP_DECAPSULATE, key, params);
 }
 
-static int ml_kem_set_ctx_params(void *vctx, const OSSL_PARAM params[])
+static int
+ml_kem_set_ctx_params(void *vctx, const OSSL_PARAM params[])
 {
     PROV_ML_KEM_CTX *ctx = vctx;
     const OSSL_PARAM *p;
@@ -113,14 +116,13 @@ static int ml_kem_set_ctx_params(void *vctx, const OSSL_PARAM params[])
         return 1;
 
     /* Encapsulation ephemeral input key material "ikmE" */
-    if (ctx->op == EVP_PKEY_OP_ENCAPSULATE
-        && (p = OSSL_PARAM_locate_const(params, OSSL_KEM_PARAM_IKME)) != NULL) {
+    if (ctx->op == EVP_PKEY_OP_ENCAPSULATE &&
+        (p = OSSL_PARAM_locate_const(params, OSSL_KEM_PARAM_IKME)) != NULL) {
         size_t len = ML_KEM_RANDOM_BYTES;
 
         ctx->entropy = ctx->entropy_buf;
-        if (OSSL_PARAM_get_octet_string(p, (void **)&ctx->entropy,
-                                        len, &len)
-            && len == ML_KEM_RANDOM_BYTES)
+        if (OSSL_PARAM_get_octet_string(p, (void **)&ctx->entropy, len, &len) &&
+            len == ML_KEM_RANDOM_BYTES)
             return 1;
 
         /* Possibly, but much less likely wrong type */
@@ -132,19 +134,18 @@ static int ml_kem_set_ctx_params(void *vctx, const OSSL_PARAM params[])
     return 1;
 }
 
-static const OSSL_PARAM *ml_kem_settable_ctx_params(ossl_unused void *vctx,
-                                                    ossl_unused void *provctx)
+static const OSSL_PARAM *
+ml_kem_settable_ctx_params(ossl_unused void *vctx, ossl_unused void *provctx)
 {
-    static const OSSL_PARAM params[] = {
-        OSSL_PARAM_octet_string(OSSL_KEM_PARAM_IKME, NULL, 0),
-        OSSL_PARAM_END
-    };
+    static const OSSL_PARAM params[] = {OSSL_PARAM_octet_string(OSSL_KEM_PARAM_IKME, NULL, 0),
+                                        OSSL_PARAM_END};
 
     return params;
 }
 
-static int ml_kem_encapsulate(void *vctx, unsigned char *ctext, size_t *clen,
-                              unsigned char *shsec, size_t *slen)
+static int
+ml_kem_encapsulate(void *vctx, unsigned char *ctext, size_t *clen, unsigned char *shsec,
+                   size_t *slen)
 {
     PROV_ML_KEM_CTX *ctx = vctx;
     ML_KEM_KEY *key = ctx->key;
@@ -171,8 +172,7 @@ static int ml_kem_encapsulate(void *vctx, unsigned char *ctext, size_t *clen,
         return 1;
     }
     if (shsec == NULL) {
-        ERR_raise_data(ERR_LIB_PROV, PROV_R_OUTPUT_BUFFER_TOO_SMALL,
-                       "NULL shared-secret buffer");
+        ERR_raise_data(ERR_LIB_PROV, PROV_R_OUTPUT_BUFFER_TOO_SMALL, "NULL shared-secret buffer");
         goto end;
     }
 
@@ -181,8 +181,7 @@ static int ml_kem_encapsulate(void *vctx, unsigned char *ctext, size_t *clen,
                        "null ciphertext input/output length pointer");
         goto end;
     } else if (*clen < encap_clen) {
-        ERR_raise_data(ERR_LIB_PROV, PROV_R_OUTPUT_BUFFER_TOO_SMALL,
-                       "ciphertext buffer too small");
+        ERR_raise_data(ERR_LIB_PROV, PROV_R_OUTPUT_BUFFER_TOO_SMALL, "ciphertext buffer too small");
         goto end;
     } else {
         *clen = encap_clen;
@@ -201,12 +200,12 @@ static int ml_kem_encapsulate(void *vctx, unsigned char *ctext, size_t *clen,
     }
 
     if (ctx->entropy != NULL)
-        ret = ossl_ml_kem_encap_seed(ctext, encap_clen, shsec, encap_slen,
-                                     ctx->entropy, ML_KEM_RANDOM_BYTES, key);
+        ret = ossl_ml_kem_encap_seed(ctext, encap_clen, shsec, encap_slen, ctx->entropy,
+                                     ML_KEM_RANDOM_BYTES, key);
     else
         ret = ossl_ml_kem_encap_rand(ctext, encap_clen, shsec, encap_slen, key);
 
- end:
+end:
     /*
      * One shot entropy, each encapsulate call must either provide a new
      * "ikmE", or else will use a random value.  If a caller sets an explicit
@@ -221,8 +220,8 @@ static int ml_kem_encapsulate(void *vctx, unsigned char *ctext, size_t *clen,
     return ret;
 }
 
-static int ml_kem_decapsulate(void *vctx, uint8_t *shsec, size_t *slen,
-                              const uint8_t *ctext, size_t clen)
+static int
+ml_kem_decapsulate(void *vctx, uint8_t *shsec, size_t *slen, const uint8_t *ctext, size_t clen)
 {
     PROV_ML_KEM_CTX *ctx = vctx;
     ML_KEM_KEY *key = ctx->key;
@@ -256,13 +255,12 @@ static int ml_kem_decapsulate(void *vctx, uint8_t *shsec, size_t *slen,
 }
 
 const OSSL_DISPATCH ossl_ml_kem_asym_kem_functions[] = {
-    { OSSL_FUNC_KEM_NEWCTX, (OSSL_FUNC) ml_kem_newctx },
-    { OSSL_FUNC_KEM_ENCAPSULATE_INIT, (OSSL_FUNC) ml_kem_encapsulate_init },
-    { OSSL_FUNC_KEM_ENCAPSULATE, (OSSL_FUNC) ml_kem_encapsulate },
-    { OSSL_FUNC_KEM_DECAPSULATE_INIT, (OSSL_FUNC) ml_kem_decapsulate_init },
-    { OSSL_FUNC_KEM_DECAPSULATE, (OSSL_FUNC) ml_kem_decapsulate },
-    { OSSL_FUNC_KEM_FREECTX, (OSSL_FUNC) ml_kem_freectx },
-    { OSSL_FUNC_KEM_SET_CTX_PARAMS, (OSSL_FUNC) ml_kem_set_ctx_params },
-    { OSSL_FUNC_KEM_SETTABLE_CTX_PARAMS, (OSSL_FUNC) ml_kem_settable_ctx_params },
-    OSSL_DISPATCH_END
-};
+    {OSSL_FUNC_KEM_NEWCTX, (OSSL_FUNC)ml_kem_newctx},
+    {OSSL_FUNC_KEM_ENCAPSULATE_INIT, (OSSL_FUNC)ml_kem_encapsulate_init},
+    {OSSL_FUNC_KEM_ENCAPSULATE, (OSSL_FUNC)ml_kem_encapsulate},
+    {OSSL_FUNC_KEM_DECAPSULATE_INIT, (OSSL_FUNC)ml_kem_decapsulate_init},
+    {OSSL_FUNC_KEM_DECAPSULATE, (OSSL_FUNC)ml_kem_decapsulate},
+    {OSSL_FUNC_KEM_FREECTX, (OSSL_FUNC)ml_kem_freectx},
+    {OSSL_FUNC_KEM_SET_CTX_PARAMS, (OSSL_FUNC)ml_kem_set_ctx_params},
+    {OSSL_FUNC_KEM_SETTABLE_CTX_PARAMS, (OSSL_FUNC)ml_kem_settable_ctx_params},
+    OSSL_DISPATCH_END};

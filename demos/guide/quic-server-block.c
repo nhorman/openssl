@@ -34,7 +34,8 @@
 #ifdef _WIN32
 static const char *progname;
 
-static void vwarnx(const char *fmt, va_list ap)
+static void
+vwarnx(const char *fmt, va_list ap)
 {
     if (progname != NULL)
         fprintf(stderr, "%s: ", progname);
@@ -42,7 +43,8 @@ static void vwarnx(const char *fmt, va_list ap)
     putc('\n', stderr);
 }
 
-static void errx(int status, const char *fmt, ...)
+static void
+errx(int status, const char *fmt, ...)
 {
     va_list ap;
 
@@ -52,7 +54,8 @@ static void errx(int status, const char *fmt, ...)
     exit(status);
 }
 
-static void warnx(const char *fmt, ...)
+static void
+warnx(const char *fmt, ...)
 {
     va_list ap;
 
@@ -67,26 +70,25 @@ static void warnx(const char *fmt, ...)
  * are accepted.
  */
 static const unsigned char alpn_ossltest[] = {
-    8,  'h', 't', 't', 'p', '/', '1', '.', '0',
-    10, 'h', 'q', '-', 'i', 'n', 't', 'e', 'r', 'o', 'p',
+    8, 'h', 't', 't', 'p', '/', '1', '.', '0', 10, 'h', 'q', '-', 'i', 'n', 't', 'e', 'r', 'o', 'p',
 };
 
 /*
  * This callback validates and negotiates the desired ALPN on the server side.
  */
-static int select_alpn(SSL *ssl, const unsigned char **out,
-                       unsigned char *out_len, const unsigned char *in,
-                       unsigned int in_len, void *arg)
+static int
+select_alpn(SSL *ssl, const unsigned char **out, unsigned char *out_len, const unsigned char *in,
+            unsigned int in_len, void *arg)
 {
-    if (SSL_select_next_proto((unsigned char **)out, out_len, alpn_ossltest,
-                              sizeof(alpn_ossltest), in,
-                              in_len) == OPENSSL_NPN_NEGOTIATED)
+    if (SSL_select_next_proto((unsigned char **)out, out_len, alpn_ossltest, sizeof(alpn_ossltest),
+                              in, in_len) == OPENSSL_NPN_NEGOTIATED)
         return SSL_TLSEXT_ERR_OK;
     return SSL_TLSEXT_ERR_ALERT_FATAL;
 }
 
 /* Create SSL_CTX. */
-static SSL_CTX *create_ctx(const char *cert_path, const char *key_path)
+static SSL_CTX *
+create_ctx(const char *cert_path, const char *key_path)
 {
     SSL_CTX *ctx;
 
@@ -154,7 +156,8 @@ err:
 }
 
 /* Create UDP socket on the given port. */
-static int create_socket(uint16_t port)
+static int
+create_socket(uint16_t port)
 {
     int fd;
     struct sockaddr_in sa = {0};
@@ -186,7 +189,8 @@ err:
  * Main loop for server to accept QUIC connections.
  * Echo every request back to the client.
  */
-static int run_quic_server(SSL_CTX *ctx, int fd)
+static int
+run_quic_server(SSL_CTX *ctx, int fd)
 {
     int ok = 0;
     SSL *listener, *conn;
@@ -229,8 +233,7 @@ static int run_quic_server(SSL_CTX *ctx, int fd)
 
         /* Echo client input */
         while (SSL_read_ex(conn, buf, sizeof(buf), &nread) > 0) {
-            if (SSL_write_ex(conn, buf, nread, &nwritten) > 0
-                && nwritten == nread)
+            if (SSL_write_ex(conn, buf, nread, &nwritten) > 0 && nwritten == nread)
                 continue;
             fprintf(stderr, "Error echoing client input");
             break;
@@ -259,7 +262,8 @@ err:
 }
 
 /* Minimal QUIC HTTP/1.0 server. */
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
     int res = EXIT_FAILURE;
     SSL_CTX *ctx = NULL;

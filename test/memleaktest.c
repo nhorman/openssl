@@ -32,7 +32,8 @@
  * test framework to avoid CRYPTO_mem_leaks stuff.
  */
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
 #if __SANITIZE_ADDRESS__
     int exitcode = EXIT_SUCCESS;

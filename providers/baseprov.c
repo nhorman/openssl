@@ -38,22 +38,21 @@ static const OSSL_PARAM base_param_types[] = {
     OSSL_PARAM_DEFN(OSSL_PROV_PARAM_NAME, OSSL_PARAM_UTF8_PTR, NULL, 0),
     OSSL_PARAM_DEFN(OSSL_PROV_PARAM_VERSION, OSSL_PARAM_UTF8_PTR, NULL, 0),
     OSSL_PARAM_DEFN(OSSL_PROV_PARAM_BUILDINFO, OSSL_PARAM_UTF8_PTR, NULL, 0),
-    OSSL_PARAM_DEFN(OSSL_PROV_PARAM_STATUS, OSSL_PARAM_INTEGER, NULL, 0),
-    OSSL_PARAM_END
-};
+    OSSL_PARAM_DEFN(OSSL_PROV_PARAM_STATUS, OSSL_PARAM_INTEGER, NULL, 0), OSSL_PARAM_END};
 
-static const OSSL_PARAM *base_gettable_params(void *provctx)
+static const OSSL_PARAM *
+base_gettable_params(void *provctx)
 {
     return base_param_types;
 }
 
-static int base_get_params(void *provctx, OSSL_PARAM params[])
+static int
+base_get_params(void *provctx, OSSL_PARAM params[])
 {
     OSSL_PARAM *p;
 
     p = OSSL_PARAM_locate(params, OSSL_PROV_PARAM_NAME);
-    if (p != NULL
-            && !OSSL_PARAM_set_utf8_ptr(p, "OpenSSL Base Provider"))
+    if (p != NULL && !OSSL_PARAM_set_utf8_ptr(p, "OpenSSL Base Provider"))
         return 0;
     p = OSSL_PARAM_locate(params, OSSL_PROV_PARAM_VERSION);
     if (p != NULL && !OSSL_PARAM_set_utf8_ptr(p, OPENSSL_VERSION_STR))
@@ -71,36 +70,34 @@ static int base_get_params(void *provctx, OSSL_PARAM params[])
 static const OSSL_ALGORITHM base_encoder[] = {
 #define ENCODER_PROVIDER "base"
 #include "encoders.inc"
-    { NULL, NULL, NULL }
+    {NULL, NULL, NULL}
 #undef ENCODER_PROVIDER
 };
 
 static const OSSL_ALGORITHM base_decoder[] = {
 #define DECODER_PROVIDER "base"
 #include "decoders.inc"
-    { NULL, NULL, NULL }
+    {NULL, NULL, NULL}
 #undef DECODER_PROVIDER
 };
 
 static const OSSL_ALGORITHM base_store[] = {
-#define STORE(name, _fips, func_table)                           \
-    { name, "provider=base,fips=" _fips, (func_table) },
+#define STORE(name, _fips, func_table) {name, "provider=base,fips=" _fips, (func_table)},
 
 #include "stores.inc"
-    { NULL, NULL, NULL }
+    {NULL, NULL, NULL}
 #undef STORE
 };
 
 static const OSSL_ALGORITHM base_rands[] = {
-    { PROV_NAMES_SEED_SRC, "provider=base", ossl_seed_src_functions },
+    {PROV_NAMES_SEED_SRC, "provider=base", ossl_seed_src_functions},
 #ifndef OPENSSL_NO_JITTER
-    { PROV_NAMES_JITTER, "provider=base", ossl_jitter_functions },
+    {PROV_NAMES_JITTER, "provider=base", ossl_jitter_functions},
 #endif
-    { NULL, NULL, NULL }
-};
+    {NULL, NULL, NULL}};
 
-static const OSSL_ALGORITHM *base_query(void *provctx, int operation_id,
-                                         int *no_cache)
+static const OSSL_ALGORITHM *
+base_query(void *provctx, int operation_id, int *no_cache)
 {
     *no_cache = 0;
     switch (operation_id) {
@@ -116,7 +113,8 @@ static const OSSL_ALGORITHM *base_query(void *provctx, int operation_id,
     return NULL;
 }
 
-static void base_teardown(void *provctx)
+static void
+base_teardown(void *provctx)
 {
     BIO_meth_free(ossl_prov_ctx_get0_core_bio_method(provctx));
     ossl_prov_ctx_free(provctx);
@@ -124,19 +122,17 @@ static void base_teardown(void *provctx)
 
 /* Functions we provide to the core */
 static const OSSL_DISPATCH base_dispatch_table[] = {
-    { OSSL_FUNC_PROVIDER_TEARDOWN, (void (*)(void))base_teardown },
-    { OSSL_FUNC_PROVIDER_GETTABLE_PARAMS,
-      (void (*)(void))base_gettable_params },
-    { OSSL_FUNC_PROVIDER_GET_PARAMS, (void (*)(void))base_get_params },
-    { OSSL_FUNC_PROVIDER_QUERY_OPERATION, (void (*)(void))base_query },
-    OSSL_DISPATCH_END
-};
+    {OSSL_FUNC_PROVIDER_TEARDOWN, (void (*)(void))base_teardown},
+    {OSSL_FUNC_PROVIDER_GETTABLE_PARAMS, (void (*)(void))base_gettable_params},
+    {OSSL_FUNC_PROVIDER_GET_PARAMS, (void (*)(void))base_get_params},
+    {OSSL_FUNC_PROVIDER_QUERY_OPERATION, (void (*)(void))base_query},
+    OSSL_DISPATCH_END};
 
 OSSL_provider_init_fn ossl_base_provider_init;
 
-int ossl_base_provider_init(const OSSL_CORE_HANDLE *handle,
-                            const OSSL_DISPATCH *in, const OSSL_DISPATCH **out,
-                            void **provctx)
+int
+ossl_base_provider_init(const OSSL_CORE_HANDLE *handle, const OSSL_DISPATCH *in,
+                        const OSSL_DISPATCH **out, void **provctx)
 {
     OSSL_FUNC_core_get_libctx_fn *c_get_libctx = NULL;
     BIO_METHOD *corebiometh;
@@ -171,14 +167,13 @@ int ossl_base_provider_init(const OSSL_CORE_HANDLE *handle,
      * This only works for built-in providers.  Most providers should
      * create their own library context.
      */
-    if ((*provctx = ossl_prov_ctx_new()) == NULL
-            || (corebiometh = ossl_bio_prov_init_bio_method()) == NULL) {
+    if ((*provctx = ossl_prov_ctx_new()) == NULL ||
+        (corebiometh = ossl_bio_prov_init_bio_method()) == NULL) {
         ossl_prov_ctx_free(*provctx);
         *provctx = NULL;
         return 0;
     }
-    ossl_prov_ctx_set0_libctx(*provctx,
-                                       (OSSL_LIB_CTX *)c_get_libctx(handle));
+    ossl_prov_ctx_set0_libctx(*provctx, (OSSL_LIB_CTX *)c_get_libctx(handle));
     ossl_prov_ctx_set0_handle(*provctx, handle);
     ossl_prov_ctx_set0_core_bio_method(*provctx, corebiometh);
     ossl_prov_ctx_set0_core_get_params(*provctx, c_get_params);

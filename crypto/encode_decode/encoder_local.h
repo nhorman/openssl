@@ -89,7 +89,7 @@ struct ossl_encoder_ctx_st {
     /*
      * Decoders that are components of any current decoding path.
      */
-    STACK_OF(OSSL_ENCODER_INSTANCE) *encoder_insts;
+    STACK_OF(OSSL_ENCODER_INSTANCE) * encoder_insts;
 
     /*
      * The constructor and destructor of an object to pass to the first
@@ -146,7 +146,7 @@ struct ossl_decoder_ctx_st {
     /*
      * Decoders that are components of any current decoding path.
      */
-    STACK_OF(OSSL_DECODER_INSTANCE) *decoder_insts;
+    STACK_OF(OSSL_DECODER_INSTANCE) * decoder_insts;
 
     /*
      * The constructors of a decoding, and its caller argument.
@@ -162,10 +162,7 @@ struct ossl_decoder_ctx_st {
     int harderr;
 };
 
-const OSSL_PROPERTY_LIST *
-ossl_decoder_parsed_properties(const OSSL_DECODER *decoder);
-const OSSL_PROPERTY_LIST *
-ossl_encoder_parsed_properties(const OSSL_ENCODER *encoder);
+const OSSL_PROPERTY_LIST *ossl_decoder_parsed_properties(const OSSL_DECODER *decoder);
+const OSSL_PROPERTY_LIST *ossl_encoder_parsed_properties(const OSSL_ENCODER *encoder);
 
-int ossl_decoder_fast_is_a(OSSL_DECODER *decoder,
-                           const char *name, int *id_cache);
+int ossl_decoder_fast_is_a(OSSL_DECODER *decoder, const char *name, int *id_cache);

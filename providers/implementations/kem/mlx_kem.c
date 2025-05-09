@@ -35,7 +35,8 @@ typedef struct {
     int op;
 } PROV_MLX_KEM_CTX;
 
-static void *mlx_kem_newctx(void *provctx)
+static void *
+mlx_kem_newctx(void *provctx)
 {
     PROV_MLX_KEM_CTX *ctx;
 
@@ -48,13 +49,14 @@ static void *mlx_kem_newctx(void *provctx)
     return ctx;
 }
 
-static void mlx_kem_freectx(void *vctx)
+static void
+mlx_kem_freectx(void *vctx)
 {
     OPENSSL_free(vctx);
 }
 
-static int mlx_kem_init(void *vctx, int op, void *key,
-                        ossl_unused const OSSL_PARAM params[])
+static int
+mlx_kem_init(void *vctx, int op, void *key, ossl_unused const OSSL_PARAM params[])
 {
     PROV_MLX_KEM_CTX *ctx = vctx;
 
@@ -89,10 +91,10 @@ mlx_kem_decapsulate_init(void *vctx, void *vkey, const OSSL_PARAM params[])
     return mlx_kem_init(vctx, EVP_PKEY_OP_DECAPSULATE, key, params);
 }
 
-static const OSSL_PARAM *mlx_kem_settable_ctx_params(ossl_unused void *vctx,
-                                                     ossl_unused void *provctx)
+static const OSSL_PARAM *
+mlx_kem_settable_ctx_params(ossl_unused void *vctx, ossl_unused void *provctx)
 {
-    static const OSSL_PARAM params[] = { OSSL_PARAM_END };
+    static const OSSL_PARAM params[] = {OSSL_PARAM_END};
 
     return params;
 }
@@ -103,10 +105,11 @@ mlx_kem_set_ctx_params(void *vctx, const OSSL_PARAM params[])
     return 1;
 }
 
-static int mlx_kem_encapsulate(void *vctx, unsigned char *ctext, size_t *clen,
-                               unsigned char *shsec, size_t *slen)
+static int
+mlx_kem_encapsulate(void *vctx, unsigned char *ctext, size_t *clen, unsigned char *shsec,
+                    size_t *slen)
 {
-    MLX_KEY *key = ((PROV_MLX_KEM_CTX *) vctx)->key;
+    MLX_KEY *key = ((PROV_MLX_KEM_CTX *)vctx)->key;
     EVP_PKEY_CTX *ctx = NULL;
     EVP_PKEY *xkey = NULL;
     size_t encap_clen;
@@ -133,8 +136,7 @@ static int mlx_kem_encapsulate(void *vctx, unsigned char *ctext, size_t *clen,
         return 1;
     }
     if (shsec == NULL) {
-        ERR_raise_data(ERR_LIB_PROV, PROV_R_NULL_OUTPUT_BUFFER,
-                       "null shared-secret output buffer");
+        ERR_raise_data(ERR_LIB_PROV, PROV_R_NULL_OUTPUT_BUFFER, "null shared-secret output buffer");
         return 0;
     }
 
@@ -143,8 +145,7 @@ static int mlx_kem_encapsulate(void *vctx, unsigned char *ctext, size_t *clen,
                        "null ciphertext input/output length pointer");
         return 0;
     } else if (*clen < encap_clen) {
-        ERR_raise_data(ERR_LIB_PROV, PROV_R_OUTPUT_BUFFER_TOO_SMALL,
-                       "ciphertext buffer too small");
+        ERR_raise_data(ERR_LIB_PROV, PROV_R_OUTPUT_BUFFER_TOO_SMALL, "ciphertext buffer too small");
         return 0;
     } else {
         *clen = encap_clen;
@@ -168,20 +169,19 @@ static int mlx_kem_encapsulate(void *vctx, unsigned char *ctext, size_t *clen,
     cbuf = ctext + ml_kem_slot * key->xinfo->pubkey_bytes;
     sbuf = shsec + ml_kem_slot * key->xinfo->shsec_bytes;
     ctx = EVP_PKEY_CTX_new_from_pkey(key->libctx, key->mkey, key->propq);
-    if (ctx == NULL
-        || EVP_PKEY_encapsulate_init(ctx, NULL) <= 0
-        || EVP_PKEY_encapsulate(ctx, cbuf, &encap_clen, sbuf, &encap_slen) <= 0)
+    if (ctx == NULL || EVP_PKEY_encapsulate_init(ctx, NULL) <= 0 ||
+        EVP_PKEY_encapsulate(ctx, cbuf, &encap_clen, sbuf, &encap_slen) <= 0)
         goto end;
     if (encap_clen != key->minfo->ctext_bytes) {
         ERR_raise_data(ERR_LIB_PROV, ERR_R_INTERNAL_ERROR,
-                       "unexpected %s ciphertext output size: %lu",
-                       key->minfo->algorithm_name, (unsigned long) encap_clen);
+                       "unexpected %s ciphertext output size: %lu", key->minfo->algorithm_name,
+                       (unsigned long)encap_clen);
         goto end;
     }
     if (encap_slen != ML_KEM_SHARED_SECRET_BYTES) {
         ERR_raise_data(ERR_LIB_PROV, ERR_R_INTERNAL_ERROR,
-                       "unexpected %s shared secret output size: %lu",
-                       key->minfo->algorithm_name, (unsigned long) encap_slen);
+                       "unexpected %s shared secret output size: %lu", key->minfo->algorithm_name,
+                       (unsigned long)encap_slen);
         goto end;
     }
     EVP_PKEY_CTX_free(ctx);
@@ -203,16 +203,14 @@ static int mlx_kem_encapsulate(void *vctx, unsigned char *ctext, size_t *clen,
     cbuf = ctext + (1 - ml_kem_slot) * key->minfo->ctext_bytes;
     encap_clen = key->xinfo->pubkey_bytes;
     ctx = EVP_PKEY_CTX_new_from_pkey(key->libctx, key->xkey, key->propq);
-    if (ctx == NULL
-        || EVP_PKEY_keygen_init(ctx) <= 0
-        || EVP_PKEY_keygen(ctx, &xkey) <= 0
-        || EVP_PKEY_get_octet_string_param(xkey, OSSL_PKEY_PARAM_ENCODED_PUBLIC_KEY,
-                                           cbuf, encap_clen, &encap_clen) <= 0)
+    if (ctx == NULL || EVP_PKEY_keygen_init(ctx) <= 0 || EVP_PKEY_keygen(ctx, &xkey) <= 0 ||
+        EVP_PKEY_get_octet_string_param(xkey, OSSL_PKEY_PARAM_ENCODED_PUBLIC_KEY, cbuf, encap_clen,
+                                        &encap_clen) <= 0)
         goto end;
     if (encap_clen != key->xinfo->pubkey_bytes) {
         ERR_raise_data(ERR_LIB_PROV, ERR_R_INTERNAL_ERROR,
-                       "unexpected %s public key output size: %lu",
-                       key->xinfo->algorithm_name, (unsigned long) encap_clen);
+                       "unexpected %s public key output size: %lu", key->xinfo->algorithm_name,
+                       (unsigned long)encap_clen);
         goto end;
     }
     EVP_PKEY_CTX_free(ctx);
@@ -221,29 +219,28 @@ static int mlx_kem_encapsulate(void *vctx, unsigned char *ctext, size_t *clen,
     encap_slen = key->xinfo->shsec_bytes;
     sbuf = shsec + (1 - ml_kem_slot) * ML_KEM_SHARED_SECRET_BYTES;
     ctx = EVP_PKEY_CTX_new_from_pkey(key->libctx, xkey, key->propq);
-    if (ctx == NULL
-        || EVP_PKEY_derive_init(ctx) <= 0
-        || EVP_PKEY_derive_set_peer(ctx, key->xkey) <= 0
-        || EVP_PKEY_derive(ctx, sbuf, &encap_slen) <= 0)
+    if (ctx == NULL || EVP_PKEY_derive_init(ctx) <= 0 ||
+        EVP_PKEY_derive_set_peer(ctx, key->xkey) <= 0 ||
+        EVP_PKEY_derive(ctx, sbuf, &encap_slen) <= 0)
         goto end;
     if (encap_slen != key->xinfo->shsec_bytes) {
         ERR_raise_data(ERR_LIB_PROV, ERR_R_INTERNAL_ERROR,
-                       "unexpected %s shared secret output size: %lu",
-                       key->xinfo->algorithm_name, (unsigned long) encap_slen);
+                       "unexpected %s shared secret output size: %lu", key->xinfo->algorithm_name,
+                       (unsigned long)encap_slen);
         goto end;
     }
 
     ret = 1;
- end:
+end:
     EVP_PKEY_free(xkey);
     EVP_PKEY_CTX_free(ctx);
     return ret;
 }
 
-static int mlx_kem_decapsulate(void *vctx, uint8_t *shsec, size_t *slen,
-                               const uint8_t *ctext, size_t clen)
+static int
+mlx_kem_decapsulate(void *vctx, uint8_t *shsec, size_t *slen, const uint8_t *ctext, size_t clen)
 {
-    MLX_KEY *key = ((PROV_MLX_KEM_CTX *) vctx)->key;
+    MLX_KEY *key = ((PROV_MLX_KEM_CTX *)vctx)->key;
     EVP_PKEY_CTX *ctx = NULL;
     EVP_PKEY *xkey = NULL;
     const uint8_t *cbuf;
@@ -277,8 +274,7 @@ static int mlx_kem_decapsulate(void *vctx, uint8_t *shsec, size_t *slen,
     }
     if (clen != decap_clen) {
         ERR_raise_data(ERR_LIB_PROV, PROV_R_WRONG_CIPHERTEXT_SIZE,
-                       "wrong decapsulation input ciphertext size: %lu",
-                       (unsigned long) clen);
+                       "wrong decapsulation input ciphertext size: %lu", (unsigned long)clen);
         return 0;
     }
 
@@ -288,14 +284,13 @@ static int mlx_kem_decapsulate(void *vctx, uint8_t *shsec, size_t *slen,
     cbuf = ctext + ml_kem_slot * key->xinfo->pubkey_bytes;
     sbuf = shsec + ml_kem_slot * key->xinfo->shsec_bytes;
     ctx = EVP_PKEY_CTX_new_from_pkey(key->libctx, key->mkey, key->propq);
-    if (ctx == NULL
-        || EVP_PKEY_decapsulate_init(ctx, NULL) <= 0
-        || EVP_PKEY_decapsulate(ctx, sbuf, &decap_slen, cbuf, decap_clen) <= 0)
+    if (ctx == NULL || EVP_PKEY_decapsulate_init(ctx, NULL) <= 0 ||
+        EVP_PKEY_decapsulate(ctx, sbuf, &decap_slen, cbuf, decap_clen) <= 0)
         goto end;
     if (decap_slen != ML_KEM_SHARED_SECRET_BYTES) {
         ERR_raise_data(ERR_LIB_PROV, ERR_R_INTERNAL_ERROR,
-                       "unexpected %s shared secret output size: %lu",
-                       key->minfo->algorithm_name, (unsigned long) decap_slen);
+                       "unexpected %s shared secret output size: %lu", key->minfo->algorithm_name,
+                       (unsigned long)decap_slen);
         goto end;
     }
     EVP_PKEY_CTX_free(ctx);
@@ -306,36 +301,33 @@ static int mlx_kem_decapsulate(void *vctx, uint8_t *shsec, size_t *slen,
     cbuf = ctext + (1 - ml_kem_slot) * key->minfo->ctext_bytes;
     sbuf = shsec + (1 - ml_kem_slot) * ML_KEM_SHARED_SECRET_BYTES;
     ctx = EVP_PKEY_CTX_new_from_pkey(key->libctx, key->xkey, key->propq);
-    if (ctx == NULL
-        || (xkey = EVP_PKEY_new()) == NULL
-        || EVP_PKEY_copy_parameters(xkey, key->xkey) <= 0
-        || EVP_PKEY_set1_encoded_public_key(xkey, cbuf, decap_clen) <= 0
-        || EVP_PKEY_derive_init(ctx) <= 0
-        || EVP_PKEY_derive_set_peer(ctx, xkey) <= 0
-        || EVP_PKEY_derive(ctx, sbuf, &decap_slen) <= 0)
+    if (ctx == NULL || (xkey = EVP_PKEY_new()) == NULL ||
+        EVP_PKEY_copy_parameters(xkey, key->xkey) <= 0 ||
+        EVP_PKEY_set1_encoded_public_key(xkey, cbuf, decap_clen) <= 0 ||
+        EVP_PKEY_derive_init(ctx) <= 0 || EVP_PKEY_derive_set_peer(ctx, xkey) <= 0 ||
+        EVP_PKEY_derive(ctx, sbuf, &decap_slen) <= 0)
         goto end;
     if (decap_slen != key->xinfo->shsec_bytes) {
         ERR_raise_data(ERR_LIB_PROV, ERR_R_INTERNAL_ERROR,
-                       "unexpected %s shared secret output size: %lu",
-                       key->xinfo->algorithm_name, (unsigned long) decap_slen);
+                       "unexpected %s shared secret output size: %lu", key->xinfo->algorithm_name,
+                       (unsigned long)decap_slen);
         goto end;
     }
 
     ret = 1;
- end:
+end:
     EVP_PKEY_CTX_free(ctx);
     EVP_PKEY_free(xkey);
     return ret;
 }
 
 const OSSL_DISPATCH ossl_mlx_kem_asym_kem_functions[] = {
-    { OSSL_FUNC_KEM_NEWCTX, (OSSL_FUNC) mlx_kem_newctx },
-    { OSSL_FUNC_KEM_ENCAPSULATE_INIT, (OSSL_FUNC) mlx_kem_encapsulate_init },
-    { OSSL_FUNC_KEM_ENCAPSULATE, (OSSL_FUNC) mlx_kem_encapsulate },
-    { OSSL_FUNC_KEM_DECAPSULATE_INIT, (OSSL_FUNC) mlx_kem_decapsulate_init },
-    { OSSL_FUNC_KEM_DECAPSULATE, (OSSL_FUNC) mlx_kem_decapsulate },
-    { OSSL_FUNC_KEM_FREECTX, (OSSL_FUNC) mlx_kem_freectx },
-    { OSSL_FUNC_KEM_SET_CTX_PARAMS, (OSSL_FUNC) mlx_kem_set_ctx_params },
-    { OSSL_FUNC_KEM_SETTABLE_CTX_PARAMS, (OSSL_FUNC) mlx_kem_settable_ctx_params },
-    OSSL_DISPATCH_END
-};
+    {OSSL_FUNC_KEM_NEWCTX, (OSSL_FUNC)mlx_kem_newctx},
+    {OSSL_FUNC_KEM_ENCAPSULATE_INIT, (OSSL_FUNC)mlx_kem_encapsulate_init},
+    {OSSL_FUNC_KEM_ENCAPSULATE, (OSSL_FUNC)mlx_kem_encapsulate},
+    {OSSL_FUNC_KEM_DECAPSULATE_INIT, (OSSL_FUNC)mlx_kem_decapsulate_init},
+    {OSSL_FUNC_KEM_DECAPSULATE, (OSSL_FUNC)mlx_kem_decapsulate},
+    {OSSL_FUNC_KEM_FREECTX, (OSSL_FUNC)mlx_kem_freectx},
+    {OSSL_FUNC_KEM_SET_CTX_PARAMS, (OSSL_FUNC)mlx_kem_set_ctx_params},
+    {OSSL_FUNC_KEM_SETTABLE_CTX_PARAMS, (OSSL_FUNC)mlx_kem_settable_ctx_params},
+    OSSL_DISPATCH_END};

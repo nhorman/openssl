@@ -13,7 +13,8 @@
 #include <openssl/err.h>
 #include "err_local.h"
 
-void ERR_new(void)
+void
+ERR_new(void)
 {
     ERR_STATE *es;
 
@@ -26,7 +27,8 @@ void ERR_new(void)
     err_clear(es, es->top, 0);
 }
 
-void ERR_set_debug(const char *file, int line, const char *func)
+void
+ERR_set_debug(const char *file, int line, const char *func)
 {
     ERR_STATE *es;
 
@@ -37,7 +39,8 @@ void ERR_set_debug(const char *file, int line, const char *func)
     err_set_debug(es, es->top, file, line, func);
 }
 
-void ERR_set_error(int lib, int reason, const char *fmt, ...)
+void
+ERR_set_error(int lib, int reason, const char *fmt, ...)
 {
     va_list args;
 
@@ -46,7 +49,8 @@ void ERR_set_error(int lib, int reason, const char *fmt, ...)
     va_end(args);
 }
 
-void ERR_vset_error(int lib, int reason, const char *fmt, va_list args)
+void
+ERR_vset_error(int lib, int reason, const char *fmt, va_list args)
 {
     ERR_STATE *es;
     char *buf = NULL;
@@ -80,8 +84,8 @@ void ERR_vset_error(int lib, int reason, const char *fmt, va_list args)
          * Try to maximize the space available.  If that fails, we use what
          * we have.
          */
-        if (buf_size < ERR_MAX_DATA_SIZE
-            && (rbuf = OPENSSL_realloc(buf, ERR_MAX_DATA_SIZE)) != NULL) {
+        if (buf_size < ERR_MAX_DATA_SIZE &&
+            (rbuf = OPENSSL_realloc(buf, ERR_MAX_DATA_SIZE)) != NULL) {
             buf = rbuf;
             buf_size = ERR_MAX_DATA_SIZE;
         }

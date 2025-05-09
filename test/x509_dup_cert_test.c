@@ -14,17 +14,18 @@
 
 #include "testutil.h"
 
-static int test_509_dup_cert(int n)
+static int
+test_509_dup_cert(int n)
 {
     int ret = 0;
     X509_STORE *store = NULL;
     X509_LOOKUP *lookup = NULL;
     const char *cert_f = test_get_argument(n);
 
-    if (TEST_ptr(store = X509_STORE_new())
-        && TEST_ptr(lookup = X509_STORE_add_lookup(store, X509_LOOKUP_file()))
-        && TEST_true(X509_load_cert_file(lookup, cert_f, X509_FILETYPE_PEM))
-        && TEST_true(X509_load_cert_file(lookup, cert_f, X509_FILETYPE_PEM)))
+    if (TEST_ptr(store = X509_STORE_new()) &&
+        TEST_ptr(lookup = X509_STORE_add_lookup(store, X509_LOOKUP_file())) &&
+        TEST_true(X509_load_cert_file(lookup, cert_f, X509_FILETYPE_PEM)) &&
+        TEST_true(X509_load_cert_file(lookup, cert_f, X509_FILETYPE_PEM)))
         ret = 1;
 
     X509_STORE_free(store);
@@ -33,7 +34,8 @@ static int test_509_dup_cert(int n)
 
 OPT_TEST_DECLARE_USAGE("cert.pem...\n")
 
-int setup_tests(void)
+int
+setup_tests(void)
 {
     size_t n;
 

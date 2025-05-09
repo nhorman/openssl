@@ -15,12 +15,14 @@
 #include <stdio.h>
 #include <string.h>
 
-int FuzzerInitialize(int *argc, char ***argv)
+int
+FuzzerInitialize(int *argc, char ***argv)
 {
     return 1;
 }
 
-int FuzzerTestOneInput(const uint8_t *buf, size_t len)
+int
+FuzzerTestOneInput(const uint8_t *buf, size_t len)
 {
     char *b;
     unsigned int out[16], outlen = OSSL_NELEM(out);
@@ -37,6 +39,7 @@ int FuzzerTestOneInput(const uint8_t *buf, size_t len)
     return 0;
 }
 
-void FuzzerCleanup(void)
+void
+FuzzerCleanup(void)
 {
 }

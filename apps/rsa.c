@@ -34,20 +34,35 @@
 #include <openssl/core_dispatch.h>
 
 #ifndef OPENSSL_NO_RC4
-# define DEFAULT_PVK_ENCR_STRENGTH      2
+# define DEFAULT_PVK_ENCR_STRENGTH 2
 #else
-# define DEFAULT_PVK_ENCR_STRENGTH      0
+# define DEFAULT_PVK_ENCR_STRENGTH 0
 #endif
 
 typedef enum OPTION_choice {
     OPT_COMMON,
-    OPT_INFORM, OPT_OUTFORM, OPT_ENGINE, OPT_IN, OPT_OUT,
-    OPT_PUBIN, OPT_PUBOUT, OPT_PASSOUT, OPT_PASSIN,
-    OPT_RSAPUBKEY_IN, OPT_RSAPUBKEY_OUT,
+    OPT_INFORM,
+    OPT_OUTFORM,
+    OPT_ENGINE,
+    OPT_IN,
+    OPT_OUT,
+    OPT_PUBIN,
+    OPT_PUBOUT,
+    OPT_PASSOUT,
+    OPT_PASSIN,
+    OPT_RSAPUBKEY_IN,
+    OPT_RSAPUBKEY_OUT,
     /* Do not change the order here; see case statements below */
-    OPT_PVK_NONE, OPT_PVK_WEAK, OPT_PVK_STRONG,
-    OPT_NOOUT, OPT_TEXT, OPT_MODULUS, OPT_CHECK, OPT_CIPHER,
-    OPT_PROV_ENUM, OPT_TRADITIONAL
+    OPT_PVK_NONE,
+    OPT_PVK_WEAK,
+    OPT_PVK_STRONG,
+    OPT_NOOUT,
+    OPT_TEXT,
+    OPT_MODULUS,
+    OPT_CHECK,
+    OPT_CIPHER,
+    OPT_PROV_ENUM,
+    OPT_TRADITIONAL
 } OPTION_CHOICE;
 
 const OPTIONS rsa_options[] = {
@@ -75,8 +90,7 @@ const OPTIONS rsa_options[] = {
     {"noout", OPT_NOOUT, '-', "Don't print key out"},
     {"text", OPT_TEXT, '-', "Print the key in text"},
     {"modulus", OPT_MODULUS, '-', "Print the RSA key modulus"},
-    {"traditional", OPT_TRADITIONAL, '-',
-     "Use traditional format for private keys"},
+    {"traditional", OPT_TRADITIONAL, '-', "Use traditional format for private keys"},
 
 #ifndef OPENSSL_NO_RC4
     OPT_SECTION("PVK"),
@@ -86,11 +100,10 @@ const OPTIONS rsa_options[] = {
 #endif
 
     OPT_PROV_OPTIONS,
-    {NULL}
-};
+    {NULL}};
 
-static int try_legacy_encoding(EVP_PKEY *pkey, int outformat, int pubout,
-                               BIO *out)
+static int
+try_legacy_encoding(EVP_PKEY *pkey, int outformat, int pubout, BIO *out)
 {
     int ret = 0;
 #ifndef OPENSSL_NO_DEPRECATED_3_0
@@ -119,7 +132,8 @@ static int try_legacy_encoding(EVP_PKEY *pkey, int outformat, int pubout,
     return ret;
 }
 
-int rsa_main(int argc, char **argv)
+int
+rsa_main(int argc, char **argv)
 {
     ENGINE *e = NULL;
     BIO *out = NULL;
@@ -145,7 +159,7 @@ int rsa_main(int argc, char **argv)
         switch (o) {
         case OPT_EOF:
         case OPT_ERR:
- opthelp:
+        opthelp:
             BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
             goto end;
         case OPT_HELP:
@@ -187,9 +201,9 @@ int rsa_main(int argc, char **argv)
         case OPT_RSAPUBKEY_OUT:
             pubout = 2;
             break;
-        case OPT_PVK_STRONG:    /* pvk_encr:= 2 */
-        case OPT_PVK_WEAK:      /* pvk_encr:= 1 */
-        case OPT_PVK_NONE:      /* pvk_encr:= 0 */
+        case OPT_PVK_STRONG: /* pvk_encr:= 2 */
+        case OPT_PVK_WEAK:   /* pvk_encr:= 1 */
+        case OPT_PVK_NONE:   /* pvk_encr:= 0 */
             pvk_encr = (o - OPT_PVK_NONE);
             break;
         case OPT_NOOUT:
@@ -266,8 +280,8 @@ int rsa_main(int argc, char **argv)
 
     if (text) {
         assert(pubin || private);
-        if ((pubin && EVP_PKEY_print_public(out, pkey, 0, NULL) <= 0)
-            || (!pubin && EVP_PKEY_print_private(out, pkey, 0, NULL) <= 0)) {
+        if ((pubin && EVP_PKEY_print_public(out, pkey, 0, NULL) <= 0) ||
+            (!pubin && EVP_PKEY_print_private(out, pkey, 0, NULL) <= 0)) {
             perror(outfile);
             ERR_print_errors(bio_err);
             goto end;
@@ -337,8 +351,7 @@ int rsa_main(int argc, char **argv)
         selection = OSSL_KEYMGMT_SELECT_PUBLIC_KEY;
     } else {
         assert(private);
-        selection = (OSSL_KEYMGMT_SELECT_KEYPAIR
-                     | OSSL_KEYMGMT_SELECT_ALL_PARAMETERS);
+        selection = (OSSL_KEYMGMT_SELECT_KEYPAIR | OSSL_KEYMGMT_SELECT_ALL_PARAMETERS);
     }
 
     /* For DER based output, select the desired output structure */
@@ -358,12 +371,9 @@ int rsa_main(int argc, char **argv)
     }
 
     /* Now, perform the encoding */
-    ectx = OSSL_ENCODER_CTX_new_for_pkey(pkey, selection,
-                                         output_type, output_structure,
-                                         NULL);
+    ectx = OSSL_ENCODER_CTX_new_for_pkey(pkey, selection, output_type, output_structure, NULL);
     if (OSSL_ENCODER_CTX_get_num_encoders(ectx) == 0) {
-        if ((!pubout && !pubin)
-            || !try_legacy_encoding(pkey, outformat, pubout, out))
+        if ((!pubout && !pubin) || !try_legacy_encoding(pkey, outformat, pubout, out))
             BIO_printf(bio_err, "%s format not supported\n", output_type);
         else
             ret = 0;
@@ -379,14 +389,12 @@ int rsa_main(int argc, char **argv)
         OSSL_ENCODER_CTX_set_passphrase_ui(ectx, get_ui_method(), NULL);
         if (passout != NULL)
             /* When passout given, override the passphrase prompter */
-            OSSL_ENCODER_CTX_set_passphrase(ectx,
-                                            (const unsigned char *)passout,
-                                            strlen(passout));
+            OSSL_ENCODER_CTX_set_passphrase(ectx, (const unsigned char *)passout, strlen(passout));
     }
 
     /* PVK is a bit special... */
     if (outformat == FORMAT_PVK) {
-        OSSL_PARAM params[2] = { OSSL_PARAM_END, OSSL_PARAM_END };
+        OSSL_PARAM params[2] = {OSSL_PARAM_END, OSSL_PARAM_END};
 
         params[0] = OSSL_PARAM_construct_int("encrypt-level", &pvk_encr);
         if (!OSSL_ENCODER_CTX_set_params(ectx, params)) {
@@ -401,7 +409,7 @@ int rsa_main(int argc, char **argv)
         goto end;
     }
     ret = 0;
- end:
+end:
     OSSL_ENCODER_CTX_free(ectx);
     release_engine(e);
     BIO_free_all(out);

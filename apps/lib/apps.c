@@ -64,8 +64,7 @@ static int WIN32_rename(const char *from, const char *to);
 # define _kbhit kbhit
 #endif
 
-static BIO *bio_open_default_(const char *filename, char mode, int format,
-                              int quiet);
+static BIO *bio_open_default_(const char *filename, char mode, int format, int quiet);
 
 #define PASS_SOURCE_SIZE_MAX 4
 
@@ -77,13 +76,12 @@ typedef struct {
     unsigned long mask;
 } NAME_EX_TBL;
 
-static int set_table_opts(unsigned long *flags, const char *arg,
-                          const NAME_EX_TBL *in_tbl);
-static int set_multi_opts(unsigned long *flags, const char *arg,
-                          const NAME_EX_TBL *in_tbl);
+static int set_table_opts(unsigned long *flags, const char *arg, const NAME_EX_TBL *in_tbl);
+static int set_multi_opts(unsigned long *flags, const char *arg, const NAME_EX_TBL *in_tbl);
 int app_init(long mesgwin);
 
-int chopup_args(ARGS *arg, char *buf)
+int
+chopup_args(ARGS *arg, char *buf)
 {
     int quoted;
     char c = '\0', *p = NULL;
@@ -133,16 +131,16 @@ int chopup_args(ARGS *arg, char *buf)
 }
 
 #ifndef APP_INIT
-int app_init(long mesgwin)
+int
+app_init(long mesgwin)
 {
     return 1;
 }
 #endif
 
-int ctx_set_verify_locations(SSL_CTX *ctx,
-                             const char *CAfile, int noCAfile,
-                             const char *CApath, int noCApath,
-                             const char *CAstore, int noCAstore)
+int
+ctx_set_verify_locations(SSL_CTX *ctx, const char *CAfile, int noCAfile, const char *CApath,
+                         int noCApath, const char *CAstore, int noCAstore)
 {
     if (CAfile == NULL && CApath == NULL && CAstore == NULL) {
         if (!noCAfile && SSL_CTX_set_default_verify_file(ctx) <= 0)
@@ -166,7 +164,8 @@ int ctx_set_verify_locations(SSL_CTX *ctx,
 
 #ifndef OPENSSL_NO_CT
 
-int ctx_set_ctlog_list_file(SSL_CTX *ctx, const char *path)
+int
+ctx_set_ctlog_list_file(SSL_CTX *ctx, const char *path)
 {
     if (path == NULL)
         return SSL_CTX_set_default_ctlog_list_file(ctx);
@@ -179,7 +178,8 @@ int ctx_set_ctlog_list_file(SSL_CTX *ctx, const char *path)
 static unsigned long nmflag = 0;
 static char nmflag_set = 0;
 
-int set_nameopt(const char *arg)
+int
+set_nameopt(const char *arg)
 {
     int ret = set_name_ex(&nmflag, arg);
 
@@ -189,30 +189,32 @@ int set_nameopt(const char *arg)
     return ret;
 }
 
-unsigned long get_nameopt(void)
+unsigned long
+get_nameopt(void)
 {
-    return
-        nmflag_set ? nmflag : XN_FLAG_SEP_CPLUS_SPC | XN_FLAG_FN_SN
-                              | ASN1_STRFLGS_ESC_CTRL
-                              | ASN1_STRFLGS_UTF8_CONVERT
-                              | ASN1_STRFLGS_DUMP_UNKNOWN
-                              | ASN1_STRFLGS_DUMP_DER;
+    return nmflag_set
+               ? nmflag
+               : XN_FLAG_SEP_CPLUS_SPC | XN_FLAG_FN_SN | ASN1_STRFLGS_ESC_CTRL |
+                     ASN1_STRFLGS_UTF8_CONVERT | ASN1_STRFLGS_DUMP_UNKNOWN | ASN1_STRFLGS_DUMP_DER;
 }
 
-void dump_cert_text(BIO *out, X509 *x)
+void
+dump_cert_text(BIO *out, X509 *x)
 {
     print_name(out, "subject=", X509_get_subject_name(x));
     print_name(out, "issuer=", X509_get_issuer_name(x));
 }
 
-int wrap_password_callback(char *buf, int bufsiz, int verify, void *userdata)
+int
+wrap_password_callback(char *buf, int bufsiz, int verify, void *userdata)
 {
     return password_callback(buf, bufsiz, verify, (PW_CB_DATA *)userdata);
 }
 
 static char *app_get_pass(const char *arg, int keepbio);
 
-char *get_passwd(const char *pass, const char *desc)
+char *
+get_passwd(const char *pass, const char *desc)
 {
     char *result = NULL;
 
@@ -221,17 +223,16 @@ char *get_passwd(const char *pass, const char *desc)
     if (!app_passwd(pass, NULL, &result, NULL))
         BIO_printf(bio_err, "Error getting password for %s\n", desc);
     if (pass != NULL && result == NULL) {
-        BIO_printf(bio_err,
-                   "Trying plain input string (better precede with 'pass:')\n");
+        BIO_printf(bio_err, "Trying plain input string (better precede with 'pass:')\n");
         result = OPENSSL_strdup(pass);
         if (result == NULL)
-            BIO_printf(bio_err,
-                       "Out of memory getting password for %s\n", desc);
+            BIO_printf(bio_err, "Out of memory getting password for %s\n", desc);
     }
     return result;
 }
 
-int app_passwd(const char *arg1, const char *arg2, char **pass1, char **pass2)
+int
+app_passwd(const char *arg1, const char *arg2, char **pass1, char **pass2)
 {
     int same = arg1 != NULL && arg2 != NULL && strcmp(arg1, arg2) == 0;
 
@@ -252,7 +253,8 @@ int app_passwd(const char *arg1, const char *arg2, char **pass1, char **pass2)
     return 1;
 }
 
-static char *app_get_pass(const char *arg, int keepbio)
+static char *
+app_get_pass(const char *arg, int keepbio)
 {
     static BIO *pwdbio = NULL;
     char *tmp, tpass[APP_PASS_LEN];
@@ -322,8 +324,7 @@ static char *app_get_pass(const char *arg, int keepbio)
                            "Invalid password argument, missing ':' within the first %d chars\n",
                            PASS_SOURCE_SIZE_MAX + 1);
             else
-                BIO_printf(bio_err,
-                           "Invalid password argument, starting with \"%.*s\"\n",
+                BIO_printf(bio_err, "Invalid password argument, starting with \"%.*s\"\n",
                            (int)(tmp - arg + 1), arg);
             return NULL;
         }
@@ -343,7 +344,8 @@ static char *app_get_pass(const char *arg, int keepbio)
     return OPENSSL_strdup(tpass);
 }
 
-char *app_conf_try_string(const CONF *conf, const char *group, const char *name)
+char *
+app_conf_try_string(const CONF *conf, const char *group, const char *name)
 {
     char *res;
 
@@ -356,8 +358,8 @@ char *app_conf_try_string(const CONF *conf, const char *group, const char *name)
     return res;
 }
 
-int app_conf_try_number(const CONF *conf, const char *group, const char *name,
-                        long *result)
+int
+app_conf_try_number(const CONF *conf, const char *group, const char *name, long *result)
 {
     int ok;
 
@@ -370,7 +372,8 @@ int app_conf_try_number(const CONF *conf, const char *group, const char *name,
     return ok;
 }
 
-CONF *app_load_config_bio(BIO *in, const char *filename)
+CONF *
+app_load_config_bio(BIO *in, const char *filename)
 {
     long errorline = -1;
     CONF *conf;
@@ -384,8 +387,7 @@ CONF *app_load_config_bio(BIO *in, const char *filename)
     if (errorline <= 0) {
         BIO_printf(bio_err, "%s: Can't load ", opt_getprog());
     } else {
-        BIO_printf(bio_err, "%s: Error on line %ld of ", opt_getprog(),
-                   errorline);
+        BIO_printf(bio_err, "%s: Error on line %ld of ", opt_getprog(), errorline);
     }
     if (filename != NULL)
         BIO_printf(bio_err, "config file \"%s\"\n", filename);
@@ -396,7 +398,8 @@ CONF *app_load_config_bio(BIO *in, const char *filename)
     return NULL;
 }
 
-CONF *app_load_config_verbose(const char *filename, int verbose)
+CONF *
+app_load_config_verbose(const char *filename, int verbose)
 {
     if (verbose) {
         if (*filename == '\0')
@@ -407,7 +410,8 @@ CONF *app_load_config_verbose(const char *filename, int verbose)
     return app_load_config_internal(filename, 0);
 }
 
-CONF *app_load_config_internal(const char *filename, int quiet)
+CONF *
+app_load_config_internal(const char *filename, int quiet)
 {
     BIO *in;
     CONF *conf;
@@ -424,7 +428,8 @@ CONF *app_load_config_internal(const char *filename, int quiet)
     return conf;
 }
 
-int app_load_modules(const CONF *config)
+int
+app_load_modules(const CONF *config)
 {
     CONF *to_free = NULL;
 
@@ -443,10 +448,11 @@ int app_load_modules(const CONF *config)
     return 1;
 }
 
-int add_oid_section(CONF *conf)
+int
+add_oid_section(CONF *conf)
 {
     char *p;
-    STACK_OF(CONF_VALUE) *sktmp;
+    STACK_OF(CONF_VALUE) * sktmp;
     CONF_VALUE *cnf;
     int i;
 
@@ -459,15 +465,15 @@ int add_oid_section(CONF *conf)
     for (i = 0; i < sk_CONF_VALUE_num(sktmp); i++) {
         cnf = sk_CONF_VALUE_value(sktmp, i);
         if (OBJ_create(cnf->value, cnf->name, cnf->name) == NID_undef) {
-            BIO_printf(bio_err, "problem creating object %s=%s\n",
-                       cnf->name, cnf->value);
+            BIO_printf(bio_err, "problem creating object %s=%s\n", cnf->name, cnf->value);
             return 0;
         }
     }
     return 1;
 }
 
-CONF *app_load_config_modules(const char *configfile)
+CONF *
+app_load_config_modules(const char *configfile)
 {
     CONF *conf = NULL;
 
@@ -482,11 +488,11 @@ CONF *app_load_config_modules(const char *configfile)
     return conf;
 }
 
-#define IS_HTTP(uri) ((uri) != NULL  && HAS_PREFIX(uri, OSSL_HTTP_PREFIX))
+#define IS_HTTP(uri) ((uri) != NULL && HAS_PREFIX(uri, OSSL_HTTP_PREFIX))
 #define IS_HTTPS(uri) ((uri) != NULL && HAS_PREFIX(uri, OSSL_HTTPS_PREFIX))
 
-X509 *load_cert_pass(const char *uri, int format, int maybe_stdin,
-                     const char *pass, const char *desc)
+X509 *
+load_cert_pass(const char *uri, int format, int maybe_stdin, const char *pass, const char *desc)
 {
     X509 *cert = NULL;
 
@@ -501,14 +507,14 @@ X509 *load_cert_pass(const char *uri, int format, int maybe_stdin,
             BIO_printf(bio_err, "Unable to load %s from %s\n", desc, uri);
         }
     } else {
-        (void)load_key_certs_crls(uri, format, maybe_stdin, pass, desc, 0,
-                                  NULL, NULL, NULL, &cert, NULL, NULL, NULL);
+        (void)load_key_certs_crls(uri, format, maybe_stdin, pass, desc, 0, NULL, NULL, NULL, &cert,
+                                  NULL, NULL, NULL);
     }
     return cert;
 }
 
-X509_CRL *load_crl(const char *uri, int format, int maybe_stdin,
-                   const char *desc)
+X509_CRL *
+load_crl(const char *uri, int format, int maybe_stdin, const char *desc)
 {
     X509_CRL *crl = NULL;
 
@@ -523,14 +529,15 @@ X509_CRL *load_crl(const char *uri, int format, int maybe_stdin,
             BIO_printf(bio_err, "Unable to load %s from %s\n", desc, uri);
         }
     } else {
-        (void)load_key_certs_crls(uri, format, maybe_stdin, NULL, desc, 0,
-                                  NULL, NULL,  NULL, NULL, NULL, &crl, NULL);
+        (void)load_key_certs_crls(uri, format, maybe_stdin, NULL, desc, 0, NULL, NULL, NULL, NULL,
+                                  NULL, &crl, NULL);
     }
     return crl;
 }
 
 /* Could be simplified if OSSL_STORE supported CSRs, see FR #15725 */
-X509_REQ *load_csr(const char *file, int format, const char *desc)
+X509_REQ *
+load_csr(const char *file, int format, const char *desc)
 {
     X509_REQ *req = NULL;
     BIO *in;
@@ -548,7 +555,7 @@ X509_REQ *load_csr(const char *file, int format, const char *desc)
     else
         print_format_error(format, OPT_FMT_PEMDER);
 
- end:
+end:
     if (req == NULL) {
         ERR_print_errors(bio_err);
         if (desc != NULL)
@@ -559,8 +566,9 @@ X509_REQ *load_csr(const char *file, int format, const char *desc)
 }
 
 /* Better extend OSSL_STORE to support CSRs, see FR #15725 */
-X509_REQ *load_csr_autofmt(const char *infile, int format,
-                           STACK_OF(OPENSSL_STRING) *vfyopts, const char *desc)
+X509_REQ *
+load_csr_autofmt(const char *infile, int format, STACK_OF(OPENSSL_STRING) * vfyopts,
+                 const char *desc)
 {
     X509_REQ *csr;
 
@@ -577,8 +585,7 @@ X509_REQ *load_csr_autofmt(const char *infile, int format,
             csr = load_csr(infile, FORMAT_ASN1, NULL /* desc */);
         }
         if (csr == NULL) {
-            BIO_printf(bio_err, "error: unable to load %s from file '%s'\n",
-                       desc, infile);
+            BIO_printf(bio_err, "error: unable to load %s from file '%s'\n", desc, infile);
         }
     }
     if (csr != NULL) {
@@ -594,20 +601,22 @@ X509_REQ *load_csr_autofmt(const char *infile, int format,
     return csr;
 }
 
-void cleanse(char *str)
+void
+cleanse(char *str)
 {
     if (str != NULL)
         OPENSSL_cleanse(str, strlen(str));
 }
 
-void clear_free(char *str)
+void
+clear_free(char *str)
 {
     if (str != NULL)
         OPENSSL_clear_free(str, strlen(str));
 }
 
-EVP_PKEY *load_key(const char *uri, int format, int may_stdin,
-                   const char *pass, ENGINE *e, const char *desc)
+EVP_PKEY *
+load_key(const char *uri, int format, int may_stdin, const char *pass, ENGINE *e, const char *desc)
 {
     EVP_PKEY *pkey = NULL;
     char *allocated_uri = NULL;
@@ -617,16 +626,17 @@ EVP_PKEY *load_key(const char *uri, int format, int may_stdin,
 
     if (format == FORMAT_ENGINE)
         uri = allocated_uri = make_engine_uri(e, uri, desc);
-    (void)load_key_certs_crls(uri, format, may_stdin, pass, desc, 0,
-                              &pkey, NULL, NULL, NULL, NULL, NULL, NULL);
+    (void)load_key_certs_crls(uri, format, may_stdin, pass, desc, 0, &pkey, NULL, NULL, NULL, NULL,
+                              NULL, NULL);
 
     OPENSSL_free(allocated_uri);
     return pkey;
 }
 
 /* first try reading public key, on failure resort to loading private key */
-EVP_PKEY *load_pubkey(const char *uri, int format, int maybe_stdin,
-                      const char *pass, ENGINE *e, const char *desc)
+EVP_PKEY *
+load_pubkey(const char *uri, int format, int maybe_stdin, const char *pass, ENGINE *e,
+            const char *desc)
 {
     EVP_PKEY *pkey = NULL;
     char *allocated_uri = NULL;
@@ -636,44 +646,42 @@ EVP_PKEY *load_pubkey(const char *uri, int format, int maybe_stdin,
 
     if (format == FORMAT_ENGINE)
         uri = allocated_uri = make_engine_uri(e, uri, desc);
-    (void)load_key_certs_crls(uri, format, maybe_stdin, pass, desc, 1,
-                              NULL, &pkey, NULL, NULL, NULL, NULL, NULL);
+    (void)load_key_certs_crls(uri, format, maybe_stdin, pass, desc, 1, NULL, &pkey, NULL, NULL,
+                              NULL, NULL, NULL);
     if (pkey == NULL)
-        (void)load_key_certs_crls(uri, format, maybe_stdin, pass, desc, 0,
-                                  &pkey, NULL, NULL, NULL, NULL, NULL, NULL);
+        (void)load_key_certs_crls(uri, format, maybe_stdin, pass, desc, 0, &pkey, NULL, NULL, NULL,
+                                  NULL, NULL, NULL);
     OPENSSL_free(allocated_uri);
     return pkey;
 }
 
-EVP_PKEY *load_keyparams_suppress(const char *uri, int format, int maybe_stdin,
-                                  const char *keytype, const char *desc,
-                                  int suppress_decode_errors)
+EVP_PKEY *
+load_keyparams_suppress(const char *uri, int format, int maybe_stdin, const char *keytype,
+                        const char *desc, int suppress_decode_errors)
 {
     EVP_PKEY *params = NULL;
 
     if (desc == NULL)
         desc = "key parameters";
-    (void)load_key_certs_crls(uri, format, maybe_stdin, NULL, desc,
-                              suppress_decode_errors,
-                              NULL, NULL, &params, NULL, NULL, NULL, NULL);
+    (void)load_key_certs_crls(uri, format, maybe_stdin, NULL, desc, suppress_decode_errors, NULL,
+                              NULL, &params, NULL, NULL, NULL, NULL);
     if (params != NULL && keytype != NULL && !EVP_PKEY_is_a(params, keytype)) {
         ERR_print_errors(bio_err);
-        BIO_printf(bio_err,
-                   "Unable to load %s from %s (unexpected parameters type)\n",
-                   desc, uri);
+        BIO_printf(bio_err, "Unable to load %s from %s (unexpected parameters type)\n", desc, uri);
         EVP_PKEY_free(params);
         params = NULL;
     }
     return params;
 }
 
-EVP_PKEY *load_keyparams(const char *uri, int format, int maybe_stdin,
-                         const char *keytype, const char *desc)
+EVP_PKEY *
+load_keyparams(const char *uri, int format, int maybe_stdin, const char *keytype, const char *desc)
 {
     return load_keyparams_suppress(uri, format, maybe_stdin, keytype, desc, 0);
 }
 
-void app_bail_out(char *fmt, ...)
+void
+app_bail_out(char *fmt, ...)
 {
     va_list args;
 
@@ -684,17 +692,18 @@ void app_bail_out(char *fmt, ...)
     exit(EXIT_FAILURE);
 }
 
-void *app_malloc(size_t sz, const char *what)
+void *
+app_malloc(size_t sz, const char *what)
 {
     void *vp = OPENSSL_malloc(sz);
 
     if (vp == NULL)
-        app_bail_out("%s: Could not allocate %zu bytes for %s\n",
-                     opt_getprog(), sz, what);
+        app_bail_out("%s: Could not allocate %zu bytes for %s\n", opt_getprog(), sz, what);
     return vp;
 }
 
-char *next_item(char *opt) /* in list separated by comma and/or space */
+char *
+next_item(char *opt) /* in list separated by comma and/or space */
 {
     /* advance to separator (comma or whitespace), if any */
     while (*opt != ',' && !isspace(_UC(*opt)) && *opt != '\0')
@@ -709,21 +718,20 @@ char *next_item(char *opt) /* in list separated by comma and/or space */
     return *opt == '\0' ? NULL : opt; /* NULL indicates end of input */
 }
 
-static void warn_cert_msg(const char *uri, X509 *cert, const char *msg)
+static void
+warn_cert_msg(const char *uri, X509 *cert, const char *msg)
 {
     char *subj = X509_NAME_oneline(X509_get_subject_name(cert), NULL, 0);
 
-    BIO_printf(bio_err, "Warning: certificate from '%s' with subject '%s' %s\n",
-               uri, subj, msg);
+    BIO_printf(bio_err, "Warning: certificate from '%s' with subject '%s' %s\n", uri, subj, msg);
     OPENSSL_free(subj);
 }
 
-static void warn_cert(const char *uri, X509 *cert, int warn_EE,
-                      X509_VERIFY_PARAM *vpm)
+static void
+warn_cert(const char *uri, X509 *cert, int warn_EE, X509_VERIFY_PARAM *vpm)
 {
     uint32_t ex_flags = X509_get_extension_flags(cert);
-    int res = X509_cmp_timeframe(vpm, X509_get0_notBefore(cert),
-                                 X509_get0_notAfter(cert));
+    int res = X509_cmp_timeframe(vpm, X509_get0_notBefore(cert), X509_get0_notAfter(cert));
 
     if (res != 0)
         warn_cert_msg(uri, cert, res > 0 ? "has expired" : "not yet valid");
@@ -731,8 +739,8 @@ static void warn_cert(const char *uri, X509 *cert, int warn_EE,
         warn_cert_msg(uri, cert, "is not a CA cert");
 }
 
-static void warn_certs(const char *uri, STACK_OF(X509) *certs, int warn_EE,
-                       X509_VERIFY_PARAM *vpm)
+static void
+warn_certs(const char *uri, STACK_OF(X509) * certs, int warn_EE, X509_VERIFY_PARAM *vpm)
 {
     int i;
 
@@ -740,24 +748,22 @@ static void warn_certs(const char *uri, STACK_OF(X509) *certs, int warn_EE,
         warn_cert(uri, sk_X509_value(certs, i), warn_EE, vpm);
 }
 
-int load_cert_certs(const char *uri,
-                    X509 **pcert, STACK_OF(X509) **pcerts,
-                    int exclude_http, const char *pass, const char *desc,
-                    X509_VERIFY_PARAM *vpm)
+int
+load_cert_certs(const char *uri, X509 **pcert, STACK_OF(X509) * *pcerts, int exclude_http,
+                const char *pass, const char *desc, X509_VERIFY_PARAM *vpm)
 {
     int ret = 0;
     char *pass_string;
 
     if (desc == NULL)
         desc = pcerts == NULL ? "certificate" : "certificates";
-    if (exclude_http && (HAS_CASE_PREFIX(uri, "http://")
-                         || HAS_CASE_PREFIX(uri, "https://"))) {
+    if (exclude_http && (HAS_CASE_PREFIX(uri, "http://") || HAS_CASE_PREFIX(uri, "https://"))) {
         BIO_printf(bio_err, "error: HTTP retrieval not allowed for %s\n", desc);
         return ret;
     }
     pass_string = get_passwd(pass, desc);
-    ret = load_key_certs_crls(uri, FORMAT_UNDEF, 0, pass_string, desc, 0,
-                              NULL, NULL, NULL, pcert, pcerts, NULL, NULL);
+    ret = load_key_certs_crls(uri, FORMAT_UNDEF, 0, pass_string, desc, 0, NULL, NULL, NULL, pcert,
+                              pcerts, NULL, NULL);
     clear_free(pass_string);
 
     if (ret) {
@@ -774,8 +780,8 @@ int load_cert_certs(const char *uri,
     return ret;
 }
 
-STACK_OF(X509) *load_certs_multifile(char *files, const char *pass,
-                                     const char *desc, X509_VERIFY_PARAM *vpm)
+STACK_OF(X509) *
+    load_certs_multifile(char *files, const char *pass, const char *desc, X509_VERIFY_PARAM *vpm)
 {
     STACK_OF(X509) *certs = NULL;
     STACK_OF(X509) *result = sk_X509_new_null();
@@ -790,8 +796,7 @@ STACK_OF(X509) *load_certs_multifile(char *files, const char *pass,
 
         if (!load_cert_certs(files, NULL, &certs, 0, pass, desc, vpm))
             goto err;
-        if (!X509_add_certs(result, certs,
-                            X509_ADD_FLAG_UP_REF | X509_ADD_FLAG_NO_DUP))
+        if (!X509_add_certs(result, certs, X509_ADD_FLAG_UP_REF | X509_ADD_FLAG_NO_DUP))
             goto oom;
         OSSL_STACK_OF_X509_free(certs);
         certs = NULL;
@@ -799,16 +804,16 @@ STACK_OF(X509) *load_certs_multifile(char *files, const char *pass,
     }
     return result;
 
- oom:
+oom:
     BIO_printf(bio_err, "out of memory\n");
- err:
+err:
     OSSL_STACK_OF_X509_free(certs);
     OSSL_STACK_OF_X509_free(result);
     return NULL;
 }
 
-static X509_STORE *sk_X509_to_store(X509_STORE *store /* may be NULL */,
-                                    const STACK_OF(X509) *certs /* may NULL */)
+static X509_STORE *
+sk_X509_to_store(X509_STORE *store /* may be NULL */, const STACK_OF(X509) * certs /* may NULL */)
 {
     int i;
 
@@ -829,8 +834,8 @@ static X509_STORE *sk_X509_to_store(X509_STORE *store /* may be NULL */,
  * Create cert store structure with certificates read from given file(s).
  * Returns pointer to created X509_STORE on success, NULL on error.
  */
-X509_STORE *load_certstore(char *input, const char *pass, const char *desc,
-                           X509_VERIFY_PARAM *vpm)
+X509_STORE *
+load_certstore(char *input, const char *pass, const char *desc, X509_VERIFY_PARAM *vpm)
 {
     X509_STORE *store = NULL;
     STACK_OF(X509) *certs = NULL;
@@ -857,15 +862,16 @@ X509_STORE *load_certstore(char *input, const char *pass, const char *desc,
  * Initialize or extend, if *certs != NULL, a certificate stack.
  * The caller is responsible for freeing *certs if its value is left not NULL.
  */
-int load_certs(const char *uri, int maybe_stdin, STACK_OF(X509) **certs,
-               const char *pass, const char *desc)
+int
+load_certs(const char *uri, int maybe_stdin, STACK_OF(X509) * *certs, const char *pass,
+           const char *desc)
 {
     int ret, was_NULL = *certs == NULL;
 
     if (desc == NULL)
         desc = "certificates";
-    ret = load_key_certs_crls(uri, FORMAT_UNDEF, maybe_stdin, pass, desc, 0,
-                              NULL, NULL, NULL, NULL, certs, NULL, NULL);
+    ret = load_key_certs_crls(uri, FORMAT_UNDEF, maybe_stdin, pass, desc, 0, NULL, NULL, NULL, NULL,
+                              certs, NULL, NULL);
 
     if (!ret && was_NULL) {
         OSSL_STACK_OF_X509_free(*certs);
@@ -878,15 +884,15 @@ int load_certs(const char *uri, int maybe_stdin, STACK_OF(X509) **certs,
  * Initialize or extend, if *crls != NULL, a certificate stack.
  * The caller is responsible for freeing *crls if its value is left not NULL.
  */
-int load_crls(const char *uri, STACK_OF(X509_CRL) **crls,
-              const char *pass, const char *desc)
+int
+load_crls(const char *uri, STACK_OF(X509_CRL) * *crls, const char *pass, const char *desc)
 {
     int ret, was_NULL = *crls == NULL;
 
     if (desc == NULL)
         desc = "CRLs";
-    ret = load_key_certs_crls(uri, FORMAT_UNDEF, 0, pass, desc, 0,
-                              NULL, NULL, NULL, NULL, NULL, NULL, crls);
+    ret = load_key_certs_crls(uri, FORMAT_UNDEF, 0, pass, desc, 0, NULL, NULL, NULL, NULL, NULL,
+                              NULL, crls);
 
     if (!ret && was_NULL) {
         sk_X509_CRL_pop_free(*crls, X509_CRL_free);
@@ -895,7 +901,8 @@ int load_crls(const char *uri, STACK_OF(X509_CRL) **crls,
     return ret;
 }
 
-static const char *format2string(int format)
+static const char *
+format2string(int format)
 {
     switch (format) {
     case FORMAT_PEM:
@@ -911,19 +918,22 @@ static const char *format2string(int format)
 }
 
 /* Set type expectation, but set to 0 if objects of multiple types expected. */
-#define SET_EXPECT(val) \
-    (expect = expect < 0 ? (val) : (expect == (val) ? (val) : 0))
-#define SET_EXPECT1(pvar, val) \
-    if ((pvar) != NULL) { \
-        *(pvar) = NULL; \
-        SET_EXPECT(val); \
+#define SET_EXPECT(val) (expect = expect < 0 ? (val) : (expect == (val) ? (val) : 0))
+#define SET_EXPECT1(pvar, val)                                                                     \
+    if ((pvar) != NULL) {                                                                          \
+        *(pvar) = NULL;                                                                            \
+        SET_EXPECT(val);                                                                           \
     }
 /* Provide (error msg) text for some of the credential types to be loaded. */
-#define FAIL_NAME \
-    (ppkey != NULL ? "private key" : ppubkey != NULL ? "public key" :  \
-     pparams != NULL ? "key parameters" :                              \
-     pcert != NULL ? "certificate" : pcerts != NULL ? "certificates" : \
-     pcrl != NULL ? "CRL" : pcrls != NULL ? "CRLs" : NULL)
+#define FAIL_NAME                                                                                  \
+    (ppkey != NULL     ? "private key"                                                             \
+     : ppubkey != NULL ? "public key"                                                              \
+     : pparams != NULL ? "key parameters"                                                          \
+     : pcert != NULL   ? "certificate"                                                             \
+     : pcerts != NULL  ? "certificates"                                                            \
+     : pcrl != NULL    ? "CRL"                                                                     \
+     : pcrls != NULL   ? "CRLs"                                                                    \
+                       : NULL)
 /*
  * Load those types of credentials for which the result pointer is not NULL.
  * Reads from stdin if 'uri' is NULL and 'maybe_stdin' is nonzero.
@@ -939,12 +949,11 @@ static const char *format2string(int format)
  * In any case (also on error) the caller is responsible for freeing all members
  * of *pcerts and *pcrls (as far as they are not NULL).
  */
-int load_key_certs_crls(const char *uri, int format, int maybe_stdin,
-                        const char *pass, const char *desc, int quiet,
-                        EVP_PKEY **ppkey, EVP_PKEY **ppubkey,
-                        EVP_PKEY **pparams,
-                        X509 **pcert, STACK_OF(X509) **pcerts,
-                        X509_CRL **pcrl, STACK_OF(X509_CRL) **pcrls)
+int
+load_key_certs_crls(const char *uri, int format, int maybe_stdin, const char *pass,
+                    const char *desc, int quiet, EVP_PKEY **ppkey, EVP_PKEY **ppubkey,
+                    EVP_PKEY **pparams, X509 **pcert, STACK_OF(X509) * *pcerts, X509_CRL **pcrl,
+                    STACK_OF(X509_CRL) * *pcrls)
 {
     PW_CB_DATA uidata;
     OSSL_STORE_CTX *ctx = NULL;
@@ -1009,8 +1018,8 @@ int load_key_certs_crls(const char *uri, int format, int maybe_stdin,
     uidata.prompt_info = uri;
 
     if ((input_type = format2string(format)) != NULL) {
-        itp[0] = OSSL_PARAM_construct_utf8_string(OSSL_STORE_PARAM_INPUT_TYPE,
-                                                  (char *)input_type, 0);
+        itp[0] =
+            OSSL_PARAM_construct_utf8_string(OSSL_STORE_PARAM_INPUT_TYPE, (char *)input_type, 0);
         itp[1] = OSSL_PARAM_construct_end();
         params = itp;
     }
@@ -1027,14 +1036,12 @@ int load_key_certs_crls(const char *uri, int format, int maybe_stdin,
         unbuffer(stdin);
         bio = BIO_new_fp(stdin, 0);
         if (bio != NULL) {
-            ctx = OSSL_STORE_attach(bio, "file", libctx, propq,
-                                    get_ui_method(), &uidata, params,
+            ctx = OSSL_STORE_attach(bio, "file", libctx, propq, get_ui_method(), &uidata, params,
                                     NULL, NULL);
             BIO_free(bio);
         }
     } else {
-        ctx = OSSL_STORE_open_ex(uri, libctx, propq, get_ui_method(), &uidata,
-                                 params, NULL, NULL);
+        ctx = OSSL_STORE_open_ex(uri, libctx, propq, get_ui_method(), &uidata, params, NULL, NULL);
     }
     if (ctx == NULL) {
         if (!quiet)
@@ -1051,9 +1058,9 @@ int load_key_certs_crls(const char *uri, int format, int maybe_stdin,
     failed = NULL;
     /* from here, failed != NULL only if actually an error has been detected */
 
-    while ((ppkey != NULL || ppubkey != NULL || pparams != NULL
-            || pcert != NULL || pcerts != NULL || pcrl != NULL || pcrls != NULL)
-           && !OSSL_STORE_eof(ctx)) {
+    while ((ppkey != NULL || ppubkey != NULL || pparams != NULL || pcert != NULL ||
+            pcerts != NULL || pcrl != NULL || pcrls != NULL) &&
+           !OSSL_STORE_eof(ctx)) {
         OSSL_STORE_INFO *info = OSSL_STORE_load(ctx);
         int type, ok = 1;
 
@@ -1103,9 +1110,7 @@ int load_key_certs_crls(const char *uri, int format, int maybe_stdin,
                 if (ok)
                     pcert = NULL;
             } else if (pcerts != NULL) {
-                ok = X509_add_cert(*pcerts,
-                                   OSSL_STORE_INFO_get1_CERT(info),
-                                   X509_ADD_FLAG_DEFAULT);
+                ok = X509_add_cert(*pcerts, OSSL_STORE_INFO_get1_CERT(info), X509_ADD_FLAG_DEFAULT);
             }
             ncerts += ok;
             break;
@@ -1132,7 +1137,7 @@ int load_key_certs_crls(const char *uri, int format, int maybe_stdin,
         }
     }
 
- end:
+end:
     OSSL_STORE_close(ctx);
 
     /* see if any of the requested types of credentials was not found */
@@ -1176,16 +1181,17 @@ int load_key_certs_crls(const char *uri, int format, int maybe_stdin,
     return failed == NULL;
 }
 
-#define X509V3_EXT_UNKNOWN_MASK  (0xfL << 16)
-#define X509V3_EXT_DEFAULT       0          /* Return error for unknown exts */
+#define X509V3_EXT_UNKNOWN_MASK (0xfL << 16)
+#define X509V3_EXT_DEFAULT 0                /* Return error for unknown exts */
 #define X509V3_EXT_ERROR_UNKNOWN (1L << 16) /* Print error for unknown exts */
 #define X509V3_EXT_PARSE_UNKNOWN (2L << 16) /* ASN1 parse unknown extensions */
-#define X509V3_EXT_DUMP_UNKNOWN  (3L << 16) /* BIO_dump unknown extensions */
+#define X509V3_EXT_DUMP_UNKNOWN (3L << 16)  /* BIO_dump unknown extensions */
 
-#define X509_FLAG_CA (X509_FLAG_NO_ISSUER | X509_FLAG_NO_PUBKEY | \
-                      X509_FLAG_NO_HEADER | X509_FLAG_NO_VERSION)
+#define X509_FLAG_CA                                                                               \
+    (X509_FLAG_NO_ISSUER | X509_FLAG_NO_PUBKEY | X509_FLAG_NO_HEADER | X509_FLAG_NO_VERSION)
 
-int set_cert_ex(unsigned long *flags, const char *arg)
+int
+set_cert_ex(unsigned long *flags, const char *arg)
 {
     static const NAME_EX_TBL cert_tbl[] = {
         {"compatible", X509_FLAG_COMPAT, 0xffffffffl},
@@ -1206,12 +1212,12 @@ int set_cert_ex(unsigned long *flags, const char *arg)
         {"ext_error", X509V3_EXT_ERROR_UNKNOWN, X509V3_EXT_UNKNOWN_MASK},
         {"ext_parse", X509V3_EXT_PARSE_UNKNOWN, X509V3_EXT_UNKNOWN_MASK},
         {"ext_dump", X509V3_EXT_DUMP_UNKNOWN, X509V3_EXT_UNKNOWN_MASK},
-        {NULL, 0, 0}
-    };
+        {NULL, 0, 0}};
     return set_multi_opts(flags, arg, cert_tbl);
 }
 
-int set_name_ex(unsigned long *flags, const char *arg)
+int
+set_name_ex(unsigned long *flags, const char *arg)
 {
     static const NAME_EX_TBL ex_tbl[] = {
         {"esc_2253", ASN1_STRFLGS_ESC_2253, 0},
@@ -1242,17 +1248,16 @@ int set_name_ex(unsigned long *flags, const char *arg)
         {"oneline", XN_FLAG_ONELINE, 0xffffffffL},
         {"multiline", XN_FLAG_MULTILINE, 0xffffffffL},
         {"ca_default", XN_FLAG_MULTILINE, 0xffffffffL},
-        {NULL, 0, 0}
-    };
+        {NULL, 0, 0}};
     if (set_multi_opts(flags, arg, ex_tbl) == 0)
         return 0;
-    if (*flags != XN_FLAG_COMPAT
-        && (*flags & XN_FLAG_SEP_MASK) == 0)
+    if (*flags != XN_FLAG_COMPAT && (*flags & XN_FLAG_SEP_MASK) == 0)
         *flags |= XN_FLAG_SEP_CPLUS_SPC;
     return 1;
 }
 
-int set_dateopt(unsigned long *dateopt, const char *arg)
+int
+set_dateopt(unsigned long *dateopt, const char *arg)
 {
     if (OPENSSL_strcasecmp(arg, "rfc_822") == 0)
         *dateopt = ASN1_DTFLGS_RFC822;
@@ -1263,7 +1268,8 @@ int set_dateopt(unsigned long *dateopt, const char *arg)
     return 1;
 }
 
-int set_ext_copy(int *copy_type, const char *arg)
+int
+set_ext_copy(int *copy_type, const char *arg)
 {
     if (OPENSSL_strcasecmp(arg, "none") == 0)
         *copy_type = EXT_COPY_NONE;
@@ -1276,9 +1282,10 @@ int set_ext_copy(int *copy_type, const char *arg)
     return 1;
 }
 
-int copy_extensions(X509 *x, X509_REQ *req, int copy_type)
+int
+copy_extensions(X509 *x, X509_REQ *req, int copy_type)
 {
-    STACK_OF(X509_EXTENSION) *exts;
+    STACK_OF(X509_EXTENSION) * exts;
     int i, ret = 0;
 
     if (x == NULL || req == NULL)
@@ -1308,15 +1315,15 @@ int copy_extensions(X509 *x, X509_REQ *req, int copy_type)
     }
     ret = 1;
 
- end:
+end:
     sk_X509_EXTENSION_pop_free(exts, X509_EXTENSION_free);
     return ret;
 }
 
-static int set_multi_opts(unsigned long *flags, const char *arg,
-                          const NAME_EX_TBL *in_tbl)
+static int
+set_multi_opts(unsigned long *flags, const char *arg, const NAME_EX_TBL *in_tbl)
 {
-    STACK_OF(CONF_VALUE) *vals;
+    STACK_OF(CONF_VALUE) * vals;
     CONF_VALUE *val;
     int i, ret = 1;
 
@@ -1332,8 +1339,8 @@ static int set_multi_opts(unsigned long *flags, const char *arg,
     return ret;
 }
 
-static int set_table_opts(unsigned long *flags, const char *arg,
-                          const NAME_EX_TBL *in_tbl)
+static int
+set_table_opts(unsigned long *flags, const char *arg, const NAME_EX_TBL *in_tbl)
 {
     char c;
     const NAME_EX_TBL *ptbl;
@@ -1362,7 +1369,8 @@ static int set_table_opts(unsigned long *flags, const char *arg,
     return 0;
 }
 
-void print_name(BIO *out, const char *title, const X509_NAME *nm)
+void
+print_name(BIO *out, const char *title, const X509_NAME *nm)
 {
     char *buf;
     char mline = 0;
@@ -1390,8 +1398,8 @@ void print_name(BIO *out, const char *title, const X509_NAME *nm)
     }
 }
 
-void print_bignum_var(BIO *out, const BIGNUM *in, const char *var,
-                      int len, unsigned char *buffer)
+void
+print_bignum_var(BIO *out, const BIGNUM *in, const char *var, int len, unsigned char *buffer)
 {
     BIO_printf(out, "    static unsigned char %s_%d[] = {", var, len);
     if (BN_is_zero(in)) {
@@ -1411,7 +1419,8 @@ void print_bignum_var(BIO *out, const BIGNUM *in, const char *var,
     BIO_printf(out, "\n    };\n");
 }
 
-void print_array(BIO *out, const char *title, int len, const unsigned char *d)
+void
+print_array(BIO *out, const char *title, int len, const unsigned char *d)
 {
     int i;
 
@@ -1427,9 +1436,9 @@ void print_array(BIO *out, const char *title, int len, const unsigned char *d)
     BIO_printf(out, "\n};\n");
 }
 
-X509_STORE *setup_verify(const char *CAfile, int noCAfile,
-                         const char *CApath, int noCApath,
-                         const char *CAstore, int noCAstore)
+X509_STORE *
+setup_verify(const char *CAfile, int noCAfile, const char *CApath, int noCApath,
+             const char *CAstore, int noCAstore)
 {
     X509_STORE *store = X509_STORE_new();
     X509_LOOKUP *lookup;
@@ -1444,18 +1453,16 @@ X509_STORE *setup_verify(const char *CAfile, int noCAfile,
         if (lookup == NULL)
             goto end;
         if (CAfile != NULL) {
-            if (X509_LOOKUP_load_file_ex(lookup, CAfile, X509_FILETYPE_PEM,
-                                         libctx, propq) <= 0) {
+            if (X509_LOOKUP_load_file_ex(lookup, CAfile, X509_FILETYPE_PEM, libctx, propq) <= 0) {
                 ERR_clear_error();
-                if (X509_LOOKUP_load_file_ex(lookup, CAfile, X509_FILETYPE_ASN1,
-                                             libctx, propq) <= 0) {
+                if (X509_LOOKUP_load_file_ex(lookup, CAfile, X509_FILETYPE_ASN1, libctx, propq) <=
+                    0) {
                     BIO_printf(bio_err, "Error loading file %s\n", CAfile);
                     goto end;
                 }
             }
         } else {
-            X509_LOOKUP_load_file_ex(lookup, NULL, X509_FILETYPE_DEFAULT,
-                                     libctx, propq);
+            X509_LOOKUP_load_file_ex(lookup, NULL, X509_FILETYPE_DEFAULT, libctx, propq);
         }
     }
 
@@ -1486,13 +1493,14 @@ X509_STORE *setup_verify(const char *CAfile, int noCAfile,
 
     ERR_clear_error();
     return store;
- end:
+end:
     ERR_print_errors(bio_err);
     X509_STORE_free(store);
     return NULL;
 }
 
-static unsigned long index_serial_hash(const OPENSSL_CSTRING *a)
+static unsigned long
+index_serial_hash(const OPENSSL_CSTRING *a)
 {
     const char *n;
 
@@ -1502,39 +1510,44 @@ static unsigned long index_serial_hash(const OPENSSL_CSTRING *a)
     return OPENSSL_LH_strhash(n);
 }
 
-static int index_serial_cmp(const OPENSSL_CSTRING *a,
-                            const OPENSSL_CSTRING *b)
+static int
+index_serial_cmp(const OPENSSL_CSTRING *a, const OPENSSL_CSTRING *b)
 {
     const char *aa, *bb;
 
-    for (aa = a[DB_serial]; *aa == '0'; aa++) ;
-    for (bb = b[DB_serial]; *bb == '0'; bb++) ;
+    for (aa = a[DB_serial]; *aa == '0'; aa++)
+        ;
+    for (bb = b[DB_serial]; *bb == '0'; bb++)
+        ;
     return strcmp(aa, bb);
 }
 
-static int index_name_qual(char **a)
+static int
+index_name_qual(char **a)
 {
     return (a[0][0] == 'V');
 }
 
-static unsigned long index_name_hash(const OPENSSL_CSTRING *a)
+static unsigned long
+index_name_hash(const OPENSSL_CSTRING *a)
 {
     return OPENSSL_LH_strhash(a[DB_name]);
 }
 
-int index_name_cmp(const OPENSSL_CSTRING *a, const OPENSSL_CSTRING *b)
+int
+index_name_cmp(const OPENSSL_CSTRING *a, const OPENSSL_CSTRING *b)
 {
     return strcmp(a[DB_name], b[DB_name]);
 }
 
-static IMPLEMENT_LHASH_HASH_FN(index_serial, OPENSSL_CSTRING)
-static IMPLEMENT_LHASH_COMP_FN(index_serial, OPENSSL_CSTRING)
-static IMPLEMENT_LHASH_HASH_FN(index_name, OPENSSL_CSTRING)
-static IMPLEMENT_LHASH_COMP_FN(index_name, OPENSSL_CSTRING)
+static IMPLEMENT_LHASH_HASH_FN(index_serial, OPENSSL_CSTRING) static IMPLEMENT_LHASH_COMP_FN(
+    index_serial,
+    OPENSSL_CSTRING) static IMPLEMENT_LHASH_HASH_FN(index_name,
+                                                    OPENSSL_CSTRING) static IMPLEMENT_LHASH_COMP_FN(index_name,
+                                                                                                    OPENSSL_CSTRING)
 #undef BSIZE
 #define BSIZE 256
-BIGNUM *load_serial(const char *serialfile, int *exists, int create,
-                    ASN1_INTEGER **retai)
+    BIGNUM *load_serial(const char *serialfile, int *exists, int create, ASN1_INTEGER **retai)
 {
     BIO *in = NULL;
     BIGNUM *ret = NULL;
@@ -1558,15 +1571,13 @@ BIGNUM *load_serial(const char *serialfile, int *exists, int create,
         if (ret == NULL) {
             BIO_printf(bio_err, "Out of memory\n");
         } else if (!rand_serial(ret, ai)) {
-            BIO_printf(bio_err, "Error creating random number to store in %s\n",
-                       serialfile);
+            BIO_printf(bio_err, "Error creating random number to store in %s\n", serialfile);
             BN_free(ret);
             ret = NULL;
         }
     } else {
         if (!a2i_ASN1_INTEGER(in, ai, buf, 1024)) {
-            BIO_printf(bio_err, "Unable to load number from %s\n",
-                       serialfile);
+            BIO_printf(bio_err, "Unable to load number from %s\n", serialfile);
             goto err;
         }
         ret = ASN1_INTEGER_to_BN(ai, NULL);
@@ -1580,7 +1591,7 @@ BIGNUM *load_serial(const char *serialfile, int *exists, int create,
         *retai = ai;
         ai = NULL;
     }
- err:
+err:
     if (ret == NULL)
         ERR_print_errors(bio_err);
     BIO_free(in);
@@ -1588,8 +1599,8 @@ BIGNUM *load_serial(const char *serialfile, int *exists, int create,
     return ret;
 }
 
-int save_serial(const char *serialfile, const char *suffix,
-                const BIGNUM *serial, ASN1_INTEGER **retai)
+int
+save_serial(const char *serialfile, const char *suffix, const BIGNUM *serial, ASN1_INTEGER **retai)
 {
     char buf[1][BSIZE];
     BIO *out = NULL;
@@ -1631,7 +1642,7 @@ int save_serial(const char *serialfile, const char *suffix,
         *retai = ai;
         ai = NULL;
     }
- err:
+err:
     if (!ret)
         ERR_print_errors(bio_err);
     BIO_free_all(out);
@@ -1639,8 +1650,8 @@ int save_serial(const char *serialfile, const char *suffix,
     return ret;
 }
 
-int rotate_serial(const char *serialfile, const char *new_suffix,
-                  const char *old_suffix)
+int
+rotate_serial(const char *serialfile, const char *new_suffix, const char *old_suffix)
 {
     char buf[2][BSIZE];
     int i, j;
@@ -1664,26 +1675,25 @@ int rotate_serial(const char *serialfile, const char *new_suffix,
 #ifdef ENOTDIR
         && errno != ENOTDIR
 #endif
-        ) {
-        BIO_printf(bio_err,
-                   "Unable to rename %s to %s\n", serialfile, buf[1]);
+    ) {
+        BIO_printf(bio_err, "Unable to rename %s to %s\n", serialfile, buf[1]);
         perror("reason");
         goto err;
     }
     if (rename(buf[0], serialfile) < 0) {
-        BIO_printf(bio_err,
-                   "Unable to rename %s to %s\n", buf[0], serialfile);
+        BIO_printf(bio_err, "Unable to rename %s to %s\n", buf[0], serialfile);
         perror("reason");
         rename(buf[1], serialfile);
         goto err;
     }
     return 1;
- err:
+err:
     ERR_print_errors(bio_err);
     return 0;
 }
 
-int rand_serial(BIGNUM *b, ASN1_INTEGER *ai)
+int
+rand_serial(BIGNUM *b, ASN1_INTEGER *ai)
 {
     BIGNUM *btmp;
     int ret = 0;
@@ -1699,7 +1709,7 @@ int rand_serial(BIGNUM *b, ASN1_INTEGER *ai)
 
     ret = 1;
 
- error:
+error:
 
     if (btmp != b)
         BN_free(btmp);
@@ -1707,7 +1717,8 @@ int rand_serial(BIGNUM *b, ASN1_INTEGER *ai)
     return ret;
 }
 
-CA_DB *load_index(const char *dbfile, DB_ATTR *db_attr)
+CA_DB *
+load_index(const char *dbfile, DB_ATTR *db_attr)
 {
     CA_DB *retdb = NULL;
     TXT_DB *tmpdb = NULL;
@@ -1726,8 +1737,7 @@ CA_DB *load_index(const char *dbfile, DB_ATTR *db_attr)
 #ifndef OPENSSL_NO_POSIX_IO
     BIO_get_fp(in, &dbfp);
     if (fstat(fileno(dbfp), &dbst) == -1) {
-        ERR_raise_data(ERR_LIB_SYS, errno,
-                       "calling fstat(%s)", dbfile);
+        ERR_raise_data(ERR_LIB_SYS, errno, "calling fstat(%s)", dbfile);
         goto err;
     }
 #endif
@@ -1765,7 +1775,7 @@ CA_DB *load_index(const char *dbfile, DB_ATTR *db_attr)
     retdb->dbst = dbst;
 #endif
 
- err:
+err:
     ERR_print_errors(bio_err);
     NCONF_free(dbattr_conf);
     TXT_DB_free(tmpdb);
@@ -1776,32 +1786,31 @@ CA_DB *load_index(const char *dbfile, DB_ATTR *db_attr)
 /*
  * Returns > 0 on success, <= 0 on error
  */
-int index_index(CA_DB *db)
+int
+index_index(CA_DB *db)
 {
-    if (!TXT_DB_create_index(db->db, DB_serial, NULL,
-                             LHASH_HASH_FN(index_serial),
+    if (!TXT_DB_create_index(db->db, DB_serial, NULL, LHASH_HASH_FN(index_serial),
                              LHASH_COMP_FN(index_serial))) {
-        BIO_printf(bio_err,
-                   "Error creating serial number index:(%ld,%ld,%ld)\n",
-                   db->db->error, db->db->arg1, db->db->arg2);
+        BIO_printf(bio_err, "Error creating serial number index:(%ld,%ld,%ld)\n", db->db->error,
+                   db->db->arg1, db->db->arg2);
         goto err;
     }
 
-    if (db->attributes.unique_subject
-        && !TXT_DB_create_index(db->db, DB_name, index_name_qual,
-                                LHASH_HASH_FN(index_name),
-                                LHASH_COMP_FN(index_name))) {
-        BIO_printf(bio_err, "Error creating name index:(%ld,%ld,%ld)\n",
-                   db->db->error, db->db->arg1, db->db->arg2);
+    if (db->attributes.unique_subject &&
+        !TXT_DB_create_index(db->db, DB_name, index_name_qual, LHASH_HASH_FN(index_name),
+                             LHASH_COMP_FN(index_name))) {
+        BIO_printf(bio_err, "Error creating name index:(%ld,%ld,%ld)\n", db->db->error,
+                   db->db->arg1, db->db->arg2);
         goto err;
     }
     return 1;
- err:
+err:
     ERR_print_errors(bio_err);
     return 0;
 }
 
-int save_index(const char *dbfile, const char *suffix, CA_DB *db)
+int
+save_index(const char *dbfile, const char *suffix, CA_DB *db)
 {
     char buf[3][BSIZE];
     BIO *out;
@@ -1838,18 +1847,17 @@ int save_index(const char *dbfile, const char *suffix, CA_DB *db)
         BIO_printf(bio_err, "Unable to open '%s'\n", buf[2]);
         goto err;
     }
-    BIO_printf(out, "unique_subject = %s\n",
-               db->attributes.unique_subject ? "yes" : "no");
+    BIO_printf(out, "unique_subject = %s\n", db->attributes.unique_subject ? "yes" : "no");
     BIO_free(out);
 
     return 1;
- err:
+err:
     ERR_print_errors(bio_err);
     return 0;
 }
 
-int rotate_index(const char *dbfile, const char *new_suffix,
-                 const char *old_suffix)
+int
+rotate_index(const char *dbfile, const char *new_suffix, const char *old_suffix)
 {
     char buf[5][BSIZE];
     int i, j;
@@ -1879,7 +1887,7 @@ int rotate_index(const char *dbfile, const char *new_suffix,
 #ifdef ENOTDIR
         && errno != ENOTDIR
 #endif
-        ) {
+    ) {
         BIO_printf(bio_err, "Unable to rename %s to %s\n", dbfile, buf[1]);
         perror("reason");
         goto err;
@@ -1894,7 +1902,7 @@ int rotate_index(const char *dbfile, const char *new_suffix,
 #ifdef ENOTDIR
         && errno != ENOTDIR
 #endif
-        ) {
+    ) {
         BIO_printf(bio_err, "Unable to rename %s to %s\n", buf[4], buf[3]);
         perror("reason");
         rename(dbfile, buf[0]);
@@ -1910,12 +1918,13 @@ int rotate_index(const char *dbfile, const char *new_suffix,
         goto err;
     }
     return 1;
- err:
+err:
     ERR_print_errors(bio_err);
     return 0;
 }
 
-void free_index(CA_DB *db)
+void
+free_index(CA_DB *db)
 {
     if (db) {
         TXT_DB_free(db->db);
@@ -1924,21 +1933,22 @@ void free_index(CA_DB *db)
     }
 }
 
-int parse_yesno(const char *str, int def)
+int
+parse_yesno(const char *str, int def)
 {
     if (str) {
         switch (*str) {
-        case 'f':              /* false */
-        case 'F':              /* FALSE */
-        case 'n':              /* no */
-        case 'N':              /* NO */
-        case '0':              /* 0 */
+        case 'f': /* false */
+        case 'F': /* FALSE */
+        case 'n': /* no */
+        case 'N': /* NO */
+        case '0': /* 0 */
             return 0;
-        case 't':              /* true */
-        case 'T':              /* TRUE */
-        case 'y':              /* yes */
-        case 'Y':              /* YES */
-        case '1':              /* 1 */
+        case 't': /* true */
+        case 'T': /* TRUE */
+        case 'y': /* yes */
+        case 'Y': /* YES */
+        case '1': /* 1 */
             return 1;
         }
     }
@@ -1950,8 +1960,8 @@ int parse_yesno(const char *str, int def)
  * where + can be used instead of / to form multi-valued RDNs if canmulti
  * and characters may be escaped by \
  */
-X509_NAME *parse_name(const char *cp, int chtype, int canmulti,
-                      const char *desc)
+X509_NAME *
+parse_name(const char *cp, int chtype, int canmulti, const char *desc)
 {
     int nextismulti = 0;
     char *work;
@@ -1973,8 +1983,7 @@ X509_NAME *parse_name(const char *cp, int chtype, int canmulti,
     }
     work = OPENSSL_strdup(cp);
     if (work == NULL) {
-        BIO_printf(bio_err, "%s: Error copying %s name input\n",
-                   opt_getprog(), desc);
+        BIO_printf(bio_err, "%s: Error copying %s name input\n", opt_getprog(), desc);
         goto err;
     }
 
@@ -1992,8 +2001,7 @@ X509_NAME *parse_name(const char *cp, int chtype, int canmulti,
             *bp++ = *cp++;
         *bp++ = '\0';
         if (*cp == '\0') {
-            BIO_printf(bio_err,
-                       "%s: Missing '=' after RDN type string '%s' in %s name string\n",
+            BIO_printf(bio_err, "%s: Missing '=' after RDN type string '%s' in %s name string\n",
                        opt_getprog(), typestr, desc);
             goto err;
         }
@@ -2008,8 +2016,7 @@ X509_NAME *parse_name(const char *cp, int chtype, int canmulti,
                 break;
             }
             if (*cp == '\\' && *++cp == '\0') {
-                BIO_printf(bio_err,
-                           "%s: Escape character at end of %s name string\n",
+                BIO_printf(bio_err, "%s: Escape character at end of %s name string\n",
                            opt_getprog(), desc);
                 goto err;
             }
@@ -2023,12 +2030,12 @@ X509_NAME *parse_name(const char *cp, int chtype, int canmulti,
         /* Parse */
         nid = OBJ_txt2nid(typestr);
         if (nid == NID_undef) {
-            BIO_printf(bio_err,
-                       "%s warning: Skipping unknown %s name attribute \"%s\"\n",
+            BIO_printf(bio_err, "%s warning: Skipping unknown %s name attribute \"%s\"\n",
                        opt_getprog(), desc, typestr);
             if (ismulti)
                 BIO_printf(bio_err,
-                           "%s hint: a '+' in a value string needs be escaped using '\\' else a new member of a multi-valued RDN is expected\n",
+                           "%s hint: a '+' in a value string needs be escaped using '\\' else a "
+                           "new member of a multi-valued RDN is expected\n",
                            opt_getprog());
             continue;
         }
@@ -2038,13 +2045,11 @@ X509_NAME *parse_name(const char *cp, int chtype, int canmulti,
                        opt_getprog(), desc, typestr);
             continue;
         }
-        if (!X509_NAME_add_entry_by_NID(n, nid, chtype,
-                                        valstr, strlen((char *)valstr),
-                                        -1, ismulti ? -1 : 0)) {
+        if (!X509_NAME_add_entry_by_NID(n, nid, chtype, valstr, strlen((char *)valstr), -1,
+                                        ismulti ? -1 : 0)) {
             ERR_print_errors(bio_err);
-            BIO_printf(bio_err,
-                       "%s: Error adding %s name attribute \"/%s=%s\"\n",
-                       opt_getprog(), desc, typestr, valstr);
+            BIO_printf(bio_err, "%s: Error adding %s name attribute \"/%s=%s\"\n", opt_getprog(),
+                       desc, typestr, valstr);
             goto err;
         }
     }
@@ -2052,7 +2057,7 @@ X509_NAME *parse_name(const char *cp, int chtype, int canmulti,
     OPENSSL_free(work);
     return n;
 
- err:
+err:
     X509_NAME_free(n);
     OPENSSL_free(work);
     return NULL;
@@ -2063,7 +2068,8 @@ X509_NAME *parse_name(const char *cp, int chtype, int canmulti,
  * it.
  */
 
-int bio_to_mem(unsigned char **out, int maxlen, BIO *in)
+int
+bio_to_mem(unsigned char **out, int maxlen, BIO *in)
 {
     BIO *mem;
     int len, ret;
@@ -2100,7 +2106,8 @@ int bio_to_mem(unsigned char **out, int maxlen, BIO *in)
     return ret;
 }
 
-int pkey_ctrl_string(EVP_PKEY_CTX *ctx, const char *value)
+int
+pkey_ctrl_string(EVP_PKEY_CTX *ctx, const char *value)
 {
     int rv = 0;
     char *stmp, *vtmp = NULL;
@@ -2116,12 +2123,13 @@ int pkey_ctrl_string(EVP_PKEY_CTX *ctx, const char *value)
     vtmp++;
     rv = EVP_PKEY_CTX_ctrl_str(ctx, stmp, vtmp);
 
- err:
+err:
     OPENSSL_free(stmp);
     return rv;
 }
 
-static void nodes_print(const char *name, STACK_OF(X509_POLICY_NODE) *nodes)
+static void
+nodes_print(const char *name, STACK_OF(X509_POLICY_NODE) * nodes)
 {
     X509_POLICY_NODE *node;
     int i;
@@ -2138,7 +2146,8 @@ static void nodes_print(const char *name, STACK_OF(X509_POLICY_NODE) *nodes)
     }
 }
 
-void policies_print(X509_STORE_CTX *ctx)
+void
+policies_print(X509_STORE_CTX *ctx)
 {
     X509_POLICY_TREE *tree;
     int explicit_policy;
@@ -2146,8 +2155,7 @@ void policies_print(X509_STORE_CTX *ctx)
     tree = X509_STORE_CTX_get0_policy_tree(ctx);
     explicit_policy = X509_STORE_CTX_get_explicit_policy(ctx);
 
-    BIO_printf(bio_err, "Require explicit Policy: %s\n",
-               explicit_policy ? "True" : "False");
+    BIO_printf(bio_err, "Require explicit Policy: %s\n", explicit_policy ? "True" : "False");
 
     nodes_print("Authority", X509_policy_tree_get0_policies(tree));
     nodes_print("User", X509_policy_tree_get0_user_policies(tree));
@@ -2162,7 +2170,8 @@ void policies_print(X509_STORE_CTX *ctx)
  *
  *   returns: a malloc'd buffer or NULL on failure.
  */
-unsigned char *next_protos_parse(size_t *outlen, const char *in)
+unsigned char *
+next_protos_parse(size_t *outlen, const char *in)
 {
     size_t len;
     unsigned char *out;
@@ -2210,9 +2219,9 @@ unsigned char *next_protos_parse(size_t *outlen, const char *in)
     return out;
 }
 
-int check_cert_attributes(BIO *bio, X509 *x, const char *checkhost,
-                          const char *checkemail, const char *checkip,
-                          int print)
+int
+check_cert_attributes(BIO *bio, X509 *x, const char *checkhost, const char *checkemail,
+                      const char *checkip, int print)
 {
     int valid_host = 0;
     int valid_mail = 0;
@@ -2225,31 +2234,31 @@ int check_cert_attributes(BIO *bio, X509 *x, const char *checkhost,
     if (checkhost != NULL) {
         valid_host = X509_check_host(x, checkhost, 0, 0, NULL);
         if (print)
-            BIO_printf(bio, "Hostname %s does%s match certificate\n",
-                       checkhost, valid_host == 1 ? "" : " NOT");
+            BIO_printf(bio, "Hostname %s does%s match certificate\n", checkhost,
+                       valid_host == 1 ? "" : " NOT");
         ret = ret && valid_host > 0;
     }
 
     if (checkemail != NULL) {
         valid_mail = X509_check_email(x, checkemail, 0, 0);
         if (print)
-            BIO_printf(bio, "Email %s does%s match certificate\n",
-                       checkemail, valid_mail ? "" : " NOT");
+            BIO_printf(bio, "Email %s does%s match certificate\n", checkemail,
+                       valid_mail ? "" : " NOT");
         ret = ret && valid_mail > 0;
     }
 
     if (checkip != NULL) {
         valid_ip = X509_check_ip_asc(x, checkip, 0);
         if (print)
-            BIO_printf(bio, "IP %s does%s match certificate\n",
-                       checkip, valid_ip ? "" : " NOT");
+            BIO_printf(bio, "IP %s does%s match certificate\n", checkip, valid_ip ? "" : " NOT");
         ret = ret && valid_ip > 0;
     }
 
     return ret;
 }
 
-static int do_pkey_ctx_init(EVP_PKEY_CTX *pkctx, STACK_OF(OPENSSL_STRING) *opts)
+static int
+do_pkey_ctx_init(EVP_PKEY_CTX *pkctx, STACK_OF(OPENSSL_STRING) * opts)
 {
     int i;
 
@@ -2269,7 +2278,8 @@ static int do_pkey_ctx_init(EVP_PKEY_CTX *pkctx, STACK_OF(OPENSSL_STRING) *opts)
     return 1;
 }
 
-static int do_x509_init(X509 *x, STACK_OF(OPENSSL_STRING) *opts)
+static int
+do_x509_init(X509 *x, STACK_OF(OPENSSL_STRING) * opts)
 {
     int i;
 
@@ -2289,7 +2299,8 @@ static int do_x509_init(X509 *x, STACK_OF(OPENSSL_STRING) *opts)
     return 1;
 }
 
-static int do_x509_req_init(X509_REQ *x, STACK_OF(OPENSSL_STRING) *opts)
+static int
+do_x509_req_init(X509_REQ *x, STACK_OF(OPENSSL_STRING) * opts)
 {
     int i;
 
@@ -2309,8 +2320,8 @@ static int do_x509_req_init(X509_REQ *x, STACK_OF(OPENSSL_STRING) *opts)
     return 1;
 }
 
-static int do_sign_init(EVP_MD_CTX *ctx, EVP_PKEY *pkey,
-                        const char *md, STACK_OF(OPENSSL_STRING) *sigopts)
+static int
+do_sign_init(EVP_MD_CTX *ctx, EVP_PKEY *pkey, const char *md, STACK_OF(OPENSSL_STRING) * sigopts)
 {
     EVP_PKEY_CTX *pkctx = NULL;
     char def_md[80];
@@ -2321,19 +2332,20 @@ static int do_sign_init(EVP_MD_CTX *ctx, EVP_PKEY *pkey,
      * EVP_PKEY_get_default_digest_name() returns 2 if the digest is mandatory
      * for this algorithm.
      */
-    if (EVP_PKEY_get_default_digest_name(pkey, def_md, sizeof(def_md)) == 2
-            && strcmp(def_md, "UNDEF") == 0) {
+    if (EVP_PKEY_get_default_digest_name(pkey, def_md, sizeof(def_md)) == 2 &&
+        strcmp(def_md, "UNDEF") == 0) {
         /* The signing algorithm requires there to be no digest */
         md = NULL;
     }
 
-    return EVP_DigestSignInit_ex(ctx, &pkctx, md, app_get0_libctx(),
-                                 app_get0_propq(), pkey, NULL)
-        && do_pkey_ctx_init(pkctx, sigopts);
+    return EVP_DigestSignInit_ex(ctx, &pkctx, md, app_get0_libctx(), app_get0_propq(), pkey,
+                                 NULL) &&
+           do_pkey_ctx_init(pkctx, sigopts);
 }
 
-static int adapt_keyid_ext(X509 *cert, X509V3_CTX *ext_ctx,
-                           const char *name, const char *value, int add_default)
+static int
+adapt_keyid_ext(X509 *cert, X509V3_CTX *ext_ctx, const char *name, const char *value,
+                int add_default)
 {
     const STACK_OF(X509_EXTENSION) *exts = X509_get0_extensions(cert);
     X509_EXTENSION *new_ext = X509V3_EXT_nconf(NULL, ext_ctx, name, value);
@@ -2360,7 +2372,8 @@ static int adapt_keyid_ext(X509 *cert, X509V3_CTX *ext_ctx,
     return rv;
 }
 
-int cert_matches_key(const X509 *cert, const EVP_PKEY *pkey)
+int
+cert_matches_key(const X509 *cert, const EVP_PKEY *pkey)
 {
     int match;
 
@@ -2371,8 +2384,9 @@ int cert_matches_key(const X509 *cert, const EVP_PKEY *pkey)
 }
 
 /* Ensure RFC 5280 compliance, adapt keyIDs as needed, and sign the cert info */
-int do_X509_sign(X509 *cert, int force_v1, EVP_PKEY *pkey, const char *md,
-                 STACK_OF(OPENSSL_STRING) *sigopts, X509V3_CTX *ext_ctx)
+int
+do_X509_sign(X509 *cert, int force_v1, EVP_PKEY *pkey, const char *md,
+             STACK_OF(OPENSSL_STRING) * sigopts, X509V3_CTX *ext_ctx)
 {
     EVP_MD_CTX *mctx = EVP_MD_CTX_new();
     int self_sign;
@@ -2391,22 +2405,21 @@ int do_X509_sign(X509 *cert, int force_v1, EVP_PKEY *pkey, const char *md,
             goto end;
         /* Prevent X509_V_ERR_MISSING_AUTHORITY_KEY_IDENTIFIER */
         self_sign = cert_matches_key(cert, pkey);
-        if (!adapt_keyid_ext(cert, ext_ctx, "authorityKeyIdentifier",
-                             "keyid, issuer", !self_sign))
+        if (!adapt_keyid_ext(cert, ext_ctx, "authorityKeyIdentifier", "keyid, issuer", !self_sign))
             goto end;
     }
     /* May add further measures for ensuring RFC 5280 compliance, see #19805 */
 
     if (mctx != NULL && do_sign_init(mctx, pkey, md, sigopts) > 0)
         rv = (X509_sign_ctx(cert, mctx) > 0);
- end:
+end:
     EVP_MD_CTX_free(mctx);
     return rv;
 }
 
 /* Sign the certificate request info */
-int do_X509_REQ_sign(X509_REQ *x, EVP_PKEY *pkey, const char *md,
-                     STACK_OF(OPENSSL_STRING) *sigopts)
+int
+do_X509_REQ_sign(X509_REQ *x, EVP_PKEY *pkey, const char *md, STACK_OF(OPENSSL_STRING) * sigopts)
 {
     int rv = 0;
     EVP_MD_CTX *mctx = EVP_MD_CTX_new();
@@ -2418,8 +2431,8 @@ int do_X509_REQ_sign(X509_REQ *x, EVP_PKEY *pkey, const char *md,
 }
 
 /* Sign the CRL info */
-int do_X509_CRL_sign(X509_CRL *x, EVP_PKEY *pkey, const char *md,
-                     STACK_OF(OPENSSL_STRING) *sigopts)
+int
+do_X509_CRL_sign(X509_CRL *x, EVP_PKEY *pkey, const char *md, STACK_OF(OPENSSL_STRING) * sigopts)
 {
     int rv = 0;
     EVP_MD_CTX *mctx = EVP_MD_CTX_new();
@@ -2434,7 +2447,8 @@ int do_X509_CRL_sign(X509_CRL *x, EVP_PKEY *pkey, const char *md,
  * do_X509_verify returns 1 if the signature is valid,
  * 0 if the signature check fails, or -1 if error occurs.
  */
-int do_X509_verify(X509 *x, EVP_PKEY *pkey, STACK_OF(OPENSSL_STRING) *vfyopts)
+int
+do_X509_verify(X509 *x, EVP_PKEY *pkey, STACK_OF(OPENSSL_STRING) * vfyopts)
 {
     int rv = 0;
 
@@ -2449,8 +2463,8 @@ int do_X509_verify(X509 *x, EVP_PKEY *pkey, STACK_OF(OPENSSL_STRING) *vfyopts)
  * do_X509_REQ_verify returns 1 if the signature is valid,
  * 0 if the signature check fails, or -1 if error occurs.
  */
-int do_X509_REQ_verify(X509_REQ *x, EVP_PKEY *pkey,
-                       STACK_OF(OPENSSL_STRING) *vfyopts)
+int
+do_X509_REQ_verify(X509_REQ *x, EVP_PKEY *pkey, STACK_OF(OPENSSL_STRING) * vfyopts)
 {
     int rv = 0;
 
@@ -2463,7 +2477,8 @@ int do_X509_REQ_verify(X509_REQ *x, EVP_PKEY *pkey,
 
 /* Get first http URL from a DIST_POINT structure */
 
-static const char *get_dp_url(DIST_POINT *dp)
+static const char *
+get_dp_url(DIST_POINT *dp)
 {
     GENERAL_NAMES *gens;
     GENERAL_NAME *gen;
@@ -2491,7 +2506,8 @@ static const char *get_dp_url(DIST_POINT *dp)
  * downloads a CRL from.
  */
 
-static X509_CRL *load_crl_crldp(STACK_OF(DIST_POINT) *crldp)
+static X509_CRL *
+load_crl_crldp(STACK_OF(DIST_POINT) * crldp)
 {
     int i;
     const char *urlptr = NULL;
@@ -2511,13 +2527,12 @@ static X509_CRL *load_crl_crldp(STACK_OF(DIST_POINT) *crldp)
  * not usable for real world as it always downloads and doesn't cache anything.
  */
 
-static STACK_OF(X509_CRL) *crls_http_cb(const X509_STORE_CTX *ctx,
-                                        const X509_NAME *nm)
+static STACK_OF(X509_CRL) * crls_http_cb(const X509_STORE_CTX *ctx, const X509_NAME *nm)
 {
     X509 *x;
     STACK_OF(X509_CRL) *crls = NULL;
     X509_CRL *crl;
-    STACK_OF(DIST_POINT) *crldp;
+    STACK_OF(DIST_POINT) * crldp;
 
     crls = sk_X509_CRL_new_null();
     if (!crls)
@@ -2546,13 +2561,15 @@ error:
     return NULL;
 }
 
-void store_setup_crl_download(X509_STORE *st)
+void
+store_setup_crl_download(X509_STORE *st)
 {
     X509_STORE_set_lookup_crls_cb(st, crls_http_cb);
 }
 
 #if !defined(OPENSSL_NO_SOCK) && !defined(OPENSSL_NO_HTTP)
-static const char *tls_error_hint(void)
+static const char *
+tls_error_hint(void)
 {
     unsigned long err = ERR_peek_error();
 
@@ -2567,17 +2584,21 @@ static const char *tls_error_hint(void)
     case SSL_R_UNKNOWN_PROTOCOL:
         return "The server does not support HTTPS";
     case SSL_R_CERTIFICATE_VERIFY_FAILED:
-        return "Cannot authenticate server via its TLS certificate, likely due to mismatch with our trusted TLS certs or missing revocation status";
+        return "Cannot authenticate server via its TLS certificate, likely due to mismatch with "
+               "our trusted TLS certs or missing revocation status";
     case SSL_AD_REASON_OFFSET + TLS1_AD_UNKNOWN_CA:
-        return "Server did not accept our TLS certificate, likely due to mismatch with server's trust anchor or missing revocation status";
+        return "Server did not accept our TLS certificate, likely due to mismatch with server's "
+               "trust anchor or missing revocation status";
     case SSL_AD_REASON_OFFSET + SSL3_AD_HANDSHAKE_FAILURE:
-        return "TLS handshake failure. Possibly the server requires our TLS certificate but did not receive it";
+        return "TLS handshake failure. Possibly the server requires our TLS certificate but did "
+               "not receive it";
     default:
         return NULL; /* no hint available for TLS error */
     }
 }
 
-static BIO *http_tls_shutdown(BIO *bio)
+static BIO *
+http_tls_shutdown(BIO *bio)
 {
     if (bio != NULL) {
         BIO *cbio;
@@ -2587,8 +2608,8 @@ static BIO *http_tls_shutdown(BIO *bio)
             BIO_printf(bio_err, "%s\n", hint);
         (void)ERR_set_mark();
         BIO_ssl_shutdown(bio);
-        cbio = BIO_pop(bio); /* connect+HTTP BIO */
-        BIO_free(bio); /* SSL BIO */
+        cbio = BIO_pop(bio);     /* connect+HTTP BIO */
+        BIO_free(bio);           /* SSL BIO */
         (void)ERR_pop_to_mark(); /* hide SSL_R_READ_BIO_NOT_SET etc. */
         bio = cbio;
     }
@@ -2596,7 +2617,8 @@ static BIO *http_tls_shutdown(BIO *bio)
 }
 
 /* HTTP callback function that supports TLS connection also via HTTPS proxy */
-BIO *app_http_tls_cb(BIO *bio, void *arg, int connect, int detail)
+BIO *
+app_http_tls_cb(BIO *bio, void *arg, int connect, int detail)
 {
     APP_HTTP_TLS_INFO *info = (APP_HTTP_TLS_INFO *)arg;
     SSL_CTX *ssl_ctx = info->ssl_ctx;
@@ -2608,15 +2630,14 @@ BIO *app_http_tls_cb(BIO *bio, void *arg, int connect, int detail)
         BIO *sbio = NULL;
         X509_STORE *ts = SSL_CTX_get_cert_store(ssl_ctx);
         X509_VERIFY_PARAM *vpm = X509_STORE_get0_param(ts);
-        const char *host = vpm == NULL ? NULL :
-            X509_VERIFY_PARAM_get0_host(vpm, 0 /* first hostname */);
+        const char *host =
+            vpm == NULL ? NULL : X509_VERIFY_PARAM_get0_host(vpm, 0 /* first hostname */);
 
         /* adapt after fixing callback design flaw, see #17088 */
-        if ((info->use_proxy
-             && !OSSL_HTTP_proxy_connect(bio, info->server, info->port,
-                                         NULL, NULL, /* no proxy credentials */
-                                         info->timeout, bio_err, opt_getprog()))
-                || (sbio = BIO_new(BIO_f_ssl())) == NULL) {
+        if ((info->use_proxy && !OSSL_HTTP_proxy_connect(bio, info->server, info->port, NULL,
+                                                         NULL, /* no proxy credentials */
+                                                         info->timeout, bio_err, opt_getprog())) ||
+            (sbio = BIO_new(BIO_f_ssl())) == NULL) {
             return NULL;
         }
         if ((ssl = SSL_new(ssl_ctx)) == NULL) {
@@ -2637,7 +2658,8 @@ BIO *app_http_tls_cb(BIO *bio, void *arg, int connect, int detail)
     return bio;
 }
 
-void APP_HTTP_TLS_INFO_free(APP_HTTP_TLS_INFO *info)
+void
+APP_HTTP_TLS_INFO_free(APP_HTTP_TLS_INFO *info)
 {
     if (info != NULL) {
         SSL_CTX_free(info->ssl_ctx);
@@ -2645,11 +2667,10 @@ void APP_HTTP_TLS_INFO_free(APP_HTTP_TLS_INFO *info)
     }
 }
 
-ASN1_VALUE *app_http_get_asn1(const char *url, const char *proxy,
-                              const char *no_proxy, SSL_CTX *ssl_ctx,
-                              const STACK_OF(CONF_VALUE) *headers,
-                              long timeout, const char *expected_content_type,
-                              const ASN1_ITEM *it)
+ASN1_VALUE *
+app_http_get_asn1(const char *url, const char *proxy, const char *no_proxy, SSL_CTX *ssl_ctx,
+                  const STACK_OF(CONF_VALUE) * headers, long timeout,
+                  const char *expected_content_type, const ASN1_ITEM *it)
 {
     APP_HTTP_TLS_INFO info;
     char *server;
@@ -2667,8 +2688,7 @@ ASN1_VALUE *app_http_get_asn1(const char *url, const char *proxy,
                              NULL /* port_num, */, NULL, NULL, NULL))
         return NULL;
     if (use_ssl && ssl_ctx == NULL) {
-        ERR_raise_data(ERR_LIB_HTTP, ERR_R_PASSED_NULL_PARAMETER,
-                       "missing SSL_CTX");
+        ERR_raise_data(ERR_LIB_HTTP, ERR_R_PASSED_NULL_PARAMETER, "missing SSL_CTX");
         goto end;
     }
     if (!use_ssl && ssl_ctx != NULL) {
@@ -2683,28 +2703,23 @@ ASN1_VALUE *app_http_get_asn1(const char *url, const char *proxy,
         OSSL_HTTP_adapt_proxy(proxy, no_proxy, server, use_ssl) != NULL;
     info.timeout = timeout;
     info.ssl_ctx = ssl_ctx;
-    mem = OSSL_HTTP_get(url, proxy, no_proxy, NULL /* bio */, NULL /* rbio */,
-                        app_http_tls_cb, &info, 0 /* buf_size */, headers,
-                        expected_content_type, 1 /* expect_asn1 */,
-                        OSSL_HTTP_DEFAULT_MAX_RESP_LEN, timeout);
+    mem = OSSL_HTTP_get(url, proxy, no_proxy, NULL /* bio */, NULL /* rbio */, app_http_tls_cb,
+                        &info, 0 /* buf_size */, headers, expected_content_type,
+                        1 /* expect_asn1 */, OSSL_HTTP_DEFAULT_MAX_RESP_LEN, timeout);
     resp = ASN1_item_d2i_bio(it, mem, NULL);
     BIO_free(mem);
 
- end:
+end:
     OPENSSL_free(server);
     OPENSSL_free(port);
     return resp;
-
 }
 
-ASN1_VALUE *app_http_post_asn1(const char *host, const char *port,
-                               const char *path, const char *proxy,
-                               const char *no_proxy, SSL_CTX *ssl_ctx,
-                               const STACK_OF(CONF_VALUE) *headers,
-                               const char *content_type,
-                               ASN1_VALUE *req, const ASN1_ITEM *req_it,
-                               const char *expected_content_type,
-                               long timeout, const ASN1_ITEM *rsp_it)
+ASN1_VALUE *
+app_http_post_asn1(const char *host, const char *port, const char *path, const char *proxy,
+                   const char *no_proxy, SSL_CTX *ssl_ctx, const STACK_OF(CONF_VALUE) * headers,
+                   const char *content_type, ASN1_VALUE *req, const ASN1_ITEM *req_it,
+                   const char *expected_content_type, long timeout, const ASN1_ITEM *rsp_it)
 {
     int use_ssl = ssl_ctx != NULL;
     APP_HTTP_TLS_INFO info;
@@ -2720,13 +2735,10 @@ ASN1_VALUE *app_http_post_asn1(const char *host, const char *port,
         OSSL_HTTP_adapt_proxy(proxy, no_proxy, host, use_ssl) != NULL;
     info.timeout = timeout;
     info.ssl_ctx = ssl_ctx;
-    rsp = OSSL_HTTP_transfer(NULL, host, port, path, use_ssl,
-                             proxy, no_proxy, NULL /* bio */, NULL /* rbio */,
-                             app_http_tls_cb, &info,
-                             0 /* buf_size */, headers, content_type, req_mem,
-                             expected_content_type, 1 /* expect_asn1 */,
-                             OSSL_HTTP_DEFAULT_MAX_RESP_LEN, timeout,
-                             0 /* keep_alive */);
+    rsp = OSSL_HTTP_transfer(NULL, host, port, path, use_ssl, proxy, no_proxy, NULL /* bio */,
+                             NULL /* rbio */, app_http_tls_cb, &info, 0 /* buf_size */, headers,
+                             content_type, req_mem, expected_content_type, 1 /* expect_asn1 */,
+                             OSSL_HTTP_DEFAULT_MAX_RESP_LEN, timeout, 0 /* keep_alive */);
     BIO_free(req_mem);
     res = ASN1_item_d2i_bio(rsp_it, rsp, NULL);
     BIO_free(rsp);
@@ -2747,7 +2759,8 @@ ASN1_VALUE *app_http_post_asn1(const char *host, const char *port,
 # include <windows.h>
 # include <tchar.h>
 
-static int WIN32_rename(const char *from, const char *to)
+static int
+WIN32_rename(const char *from, const char *to)
 {
     TCHAR *tfrom = NULL, *tto;
     DWORD err;
@@ -2756,7 +2769,7 @@ static int WIN32_rename(const char *from, const char *to)
     if (sizeof(TCHAR) == 1) {
         tfrom = (TCHAR *)from;
         tto = (TCHAR *)to;
-    } else {                    /* UNICODE path */
+    } else { /* UNICODE path */
         size_t i, flen = strlen(from) + 1, tlen = strlen(to) + 1;
 
         tfrom = malloc(sizeof(*tfrom) * (flen + tlen));
@@ -2788,10 +2801,10 @@ static int WIN32_rename(const char *from, const char *to)
     else if (err == ERROR_ACCESS_DENIED)
         errno = EACCES;
     else
-        errno = EINVAL;         /* we could map more codes... */
- err:
+        errno = EINVAL; /* we could map more codes... */
+err:
     ret = -1;
- ok:
+ok:
     if (tfrom != NULL && tfrom != (TCHAR *)from)
         free(tfrom);
     return ret;
@@ -2800,7 +2813,8 @@ static int WIN32_rename(const char *from, const char *to)
 
 /* app_tminterval section */
 #if defined(_WIN32)
-double app_tminterval(int stop, int usertime)
+double
+app_tminterval(int stop, int usertime)
 {
     FILETIME now;
     double ret = 0;
@@ -2812,13 +2826,12 @@ double app_tminterval(int stop, int usertime)
 
     if (proc == NULL) {
         if (check_winnt())
-            proc = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE,
-                               GetCurrentProcessId());
+            proc = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, GetCurrentProcessId());
         if (proc == NULL)
-            proc = (HANDLE) - 1;
+            proc = (HANDLE)-1;
     }
 
-    if (usertime && proc != (HANDLE) - 1) {
+    if (usertime && proc != (HANDLE)-1) {
         FILETIME junk;
 
         GetProcessTimes(proc, &junk, &junk, &junk, &now);
@@ -2830,7 +2843,7 @@ double app_tminterval(int stop, int usertime)
 
         if (usertime && warning) {
             BIO_printf(bio_err, "To get meaningful results, run "
-                       "this program on idle system.\n");
+                                "this program on idle system.\n");
             warning = 0;
         }
         GetSystemTime(&systime);
@@ -2854,7 +2867,8 @@ double app_tminterval(int stop, int usertime)
 #elif defined(OPENSSL_SYS_VXWORKS)
 # include <time.h>
 
-double app_tminterval(int stop, int usertime)
+double
+app_tminterval(int stop, int usertime)
 {
     double ret = 0;
 # ifdef CLOCK_REALTIME
@@ -2868,7 +2882,7 @@ double app_tminterval(int stop, int usertime)
 
     if (usertime && warning) {
         BIO_printf(bio_err, "To get meaningful results, run "
-                   "this program on idle system.\n");
+                            "this program on idle system.\n");
         warning = 0;
     }
 # ifdef CLOCK_REALTIME
@@ -2876,8 +2890,7 @@ double app_tminterval(int stop, int usertime)
     if (stop == TM_START)
         tmstart = now;
     else
-        ret = ((now.tv_sec + now.tv_nsec * 1e-9)
-               - (tmstart.tv_sec + tmstart.tv_nsec * 1e-9));
+        ret = ((now.tv_sec + now.tv_nsec * 1e-9) - (tmstart.tv_sec + tmstart.tv_nsec * 1e-9));
 # else
     now = tickGet();
     if (stop == TM_START)
@@ -2888,10 +2901,11 @@ double app_tminterval(int stop, int usertime)
     return ret;
 }
 
-#elif defined(_SC_CLK_TCK)      /* by means of unistd.h */
+#elif defined(_SC_CLK_TCK) /* by means of unistd.h */
 # include <sys/times.h>
 
-double app_tminterval(int stop, int usertime)
+double
+app_tminterval(int stop, int usertime)
 {
     double ret = 0;
     struct tms rus;
@@ -2916,7 +2930,8 @@ double app_tminterval(int stop, int usertime)
 # include <sys/time.h>
 # include <sys/resource.h>
 
-double app_tminterval(int stop, int usertime)
+double
+app_tminterval(int stop, int usertime)
 {
     double ret = 0;
     struct rusage rus;
@@ -2931,14 +2946,14 @@ double app_tminterval(int stop, int usertime)
     if (stop == TM_START)
         tmstart = now;
     else
-        ret = ((now.tv_sec + now.tv_usec * 1e-6)
-               - (tmstart.tv_sec + tmstart.tv_usec * 1e-6));
+        ret = ((now.tv_sec + now.tv_usec * 1e-6) - (tmstart.tv_sec + tmstart.tv_usec * 1e-6));
 
     return ret;
 }
 #endif
 
-int app_access(const char *name, int flag)
+int
+app_access(const char *name, int flag)
 {
 #ifdef _WIN32
     return _access(name, flag);
@@ -2947,7 +2962,8 @@ int app_access(const char *name, int flag)
 #endif
 }
 
-int app_isdir(const char *name)
+int
+app_isdir(const char *name)
 {
     return opt_isdir(name);
 }
@@ -2957,12 +2973,14 @@ int app_isdir(const char *name)
 # include "vms_term_sock.h"
 static int stdin_sock = -1;
 
-static void close_stdin_sock(void)
+static void
+close_stdin_sock(void)
 {
     TerminalSocket(TERM_SOCK_DELETE, &stdin_sock);
 }
 
-int fileno_stdin(void)
+int
+fileno_stdin(void)
 {
     if (stdin_sock == -1) {
         TerminalSocket(TERM_SOCK_CREATE, &stdin_sock);
@@ -2972,19 +2990,22 @@ int fileno_stdin(void)
     return stdin_sock;
 }
 #else
-int fileno_stdin(void)
+int
+fileno_stdin(void)
 {
     return fileno(stdin);
 }
 #endif
 
-int fileno_stdout(void)
+int
+fileno_stdout(void)
 {
     return fileno(stdout);
 }
 
 #if defined(_WIN32) && defined(STD_INPUT_HANDLE)
-int raw_read_stdin(void *buf, int siz)
+int
+raw_read_stdin(void *buf, int siz)
 {
     DWORD n;
 
@@ -2996,19 +3017,22 @@ int raw_read_stdin(void *buf, int siz)
 #elif defined(__VMS)
 # include <sys/socket.h>
 
-int raw_read_stdin(void *buf, int siz)
+int
+raw_read_stdin(void *buf, int siz)
 {
     return recv(fileno_stdin(), buf, siz, 0);
 }
 #else
-int raw_read_stdin(void *buf, int siz)
+int
+raw_read_stdin(void *buf, int siz)
 {
     return read(fileno_stdin(), buf, siz);
 }
 #endif
 
 #if defined(_WIN32) && defined(STD_OUTPUT_HANDLE)
-int raw_write_stdout(const void *buf, int siz)
+int
+raw_write_stdout(const void *buf, int siz)
 {
     DWORD n;
 
@@ -3017,14 +3041,15 @@ int raw_write_stdout(const void *buf, int siz)
     else
         return -1;
 }
-#elif defined(OPENSSL_SYS_TANDEM) && defined(OPENSSL_THREADS) \
-    && defined(_SPT_MODEL_)
-int raw_write_stdout(const void *buf, int siz)
+#elif defined(OPENSSL_SYS_TANDEM) && defined(OPENSSL_THREADS) && defined(_SPT_MODEL_)
+int
+raw_write_stdout(const void *buf, int siz)
 {
     return write(fileno(stdout), (void *)buf, siz);
 }
 #else
-int raw_write_stdout(const void *buf, int siz)
+int
+raw_write_stdout(const void *buf, int siz)
 {
     return write(fileno_stdout(), buf, siz);
 }
@@ -3037,16 +3062,16 @@ int raw_write_stdout(const void *buf, int siz)
  * does impact behavior on some platforms, such as differentiating between
  * text and binary input/output on non-Unix platforms
  */
-BIO *dup_bio_in(int format)
+BIO *
+dup_bio_in(int format)
 {
-    return BIO_new_fp(stdin,
-                      BIO_NOCLOSE | (FMT_istext(format) ? BIO_FP_TEXT : 0));
+    return BIO_new_fp(stdin, BIO_NOCLOSE | (FMT_istext(format) ? BIO_FP_TEXT : 0));
 }
 
-BIO *dup_bio_out(int format)
+BIO *
+dup_bio_out(int format)
 {
-    BIO *b = BIO_new_fp(stdout,
-                        BIO_NOCLOSE | (FMT_istext(format) ? BIO_FP_TEXT : 0));
+    BIO *b = BIO_new_fp(stdout, BIO_NOCLOSE | (FMT_istext(format) ? BIO_FP_TEXT : 0));
     void *prefix = NULL;
 
     if (b == NULL)
@@ -3057,8 +3082,7 @@ BIO *dup_bio_out(int format)
         b = BIO_push(BIO_new(BIO_f_linebuffer()), b);
 #endif
 
-    if (FMT_istext(format)
-        && (prefix = getenv("HARNESS_OSSL_PREFIX")) != NULL) {
+    if (FMT_istext(format) && (prefix = getenv("HARNESS_OSSL_PREFIX")) != NULL) {
         b = BIO_push(BIO_new(BIO_f_prefix()), b);
         BIO_set_prefix(b, prefix);
     }
@@ -3066,10 +3090,10 @@ BIO *dup_bio_out(int format)
     return b;
 }
 
-BIO *dup_bio_err(int format)
+BIO *
+dup_bio_err(int format)
 {
-    BIO *b = BIO_new_fp(stderr,
-                        BIO_NOCLOSE | (FMT_istext(format) ? BIO_FP_TEXT : 0));
+    BIO *b = BIO_new_fp(stderr, BIO_NOCLOSE | (FMT_istext(format) ? BIO_FP_TEXT : 0));
 
 #ifdef OPENSSL_SYS_VMS
     if (b != NULL && FMT_istext(format))
@@ -3078,7 +3102,8 @@ BIO *dup_bio_err(int format)
     return b;
 }
 
-void unbuffer(FILE *fp)
+void
+unbuffer(FILE *fp)
 {
 /*
  * On VMS, setbuf() will only take 32-bit pointers, and a compilation
@@ -3097,7 +3122,8 @@ void unbuffer(FILE *fp)
 #endif
 }
 
-static const char *modestr(char mode, int format)
+static const char *
+modestr(char mode, int format)
 {
     OPENSSL_assert(mode == 'a' || mode == 'r' || mode == 'w');
 
@@ -3113,7 +3139,8 @@ static const char *modestr(char mode, int format)
     return NULL;
 }
 
-static const char *modeverb(char mode)
+static const char *
+modeverb(char mode)
 {
     switch (mode) {
     case 'a':
@@ -3129,7 +3156,8 @@ static const char *modeverb(char mode)
 /*
  * Open a file for writing, owner-read-only.
  */
-BIO *bio_open_owner(const char *filename, int format, int private)
+BIO *
+bio_open_owner(const char *filename, int format, int private)
 {
     FILE *fp = NULL;
     BIO *b = NULL;
@@ -3173,10 +3201,10 @@ BIO *bio_open_owner(const char *filename, int format, int private)
     if (fd < 0)
         goto err;
     fp = fdopen(fd, modestr('w', format));
-#else   /* OPENSSL_NO_POSIX_IO */
+#else  /* OPENSSL_NO_POSIX_IO */
     /* Have stdio but not Posix IO, do the best we can */
     fp = fopen(filename, modestr('w', format));
-#endif  /* OPENSSL_NO_POSIX_IO */
+#endif /* OPENSSL_NO_POSIX_IO */
     if (fp == NULL)
         goto err;
     bflags = BIO_CLOSE;
@@ -3186,9 +3214,9 @@ BIO *bio_open_owner(const char *filename, int format, int private)
     if (b != NULL)
         return b;
 
- err:
-    BIO_printf(bio_err, "%s: Can't open \"%s\" for writing, %s\n",
-               opt_getprog(), filename, strerror(errno));
+err:
+    BIO_printf(bio_err, "%s: Can't open \"%s\" for writing, %s\n", opt_getprog(), filename,
+               strerror(errno));
     ERR_print_errors(bio_err);
     /* If we have fp, then fdopen took over fd, so don't close both. */
     if (fp != NULL)
@@ -3200,8 +3228,8 @@ BIO *bio_open_owner(const char *filename, int format, int private)
     return NULL;
 }
 
-static BIO *bio_open_default_(const char *filename, char mode, int format,
-                              int quiet)
+static BIO *
+bio_open_default_(const char *filename, char mode, int format, int quiet)
 {
     BIO *ret;
 
@@ -3213,9 +3241,8 @@ static BIO *bio_open_default_(const char *filename, char mode, int format,
         }
         if (ret != NULL)
             return ret;
-        BIO_printf(bio_err,
-                   "Can't open %s, %s\n",
-                   mode == 'r' ? "stdin" : "stdout", strerror(errno));
+        BIO_printf(bio_err, "Can't open %s, %s\n", mode == 'r' ? "stdin" : "stdout",
+                   strerror(errno));
     } else {
         ret = BIO_new_file(filename, modestr(mode, format));
         if (quiet) {
@@ -3224,25 +3251,27 @@ static BIO *bio_open_default_(const char *filename, char mode, int format,
         }
         if (ret != NULL)
             return ret;
-        BIO_printf(bio_err,
-                   "Can't open \"%s\" for %s, %s\n",
-                   filename, modeverb(mode), strerror(errno));
+        BIO_printf(bio_err, "Can't open \"%s\" for %s, %s\n", filename, modeverb(mode),
+                   strerror(errno));
     }
     ERR_print_errors(bio_err);
     return NULL;
 }
 
-BIO *bio_open_default(const char *filename, char mode, int format)
+BIO *
+bio_open_default(const char *filename, char mode, int format)
 {
     return bio_open_default_(filename, mode, format, 0);
 }
 
-BIO *bio_open_default_quiet(const char *filename, char mode, int format)
+BIO *
+bio_open_default_quiet(const char *filename, char mode, int format)
 {
     return bio_open_default_(filename, mode, format, 1);
 }
 
-int mem_bio_to_file(BIO *in, const char *filename, int format, int private)
+int
+mem_bio_to_file(BIO *in, const char *filename, int format, int private)
 {
     int rv = 0, ret = 0;
     BIO *out = NULL;
@@ -3268,7 +3297,8 @@ end:
     return ret;
 }
 
-void wait_for_async(SSL *s)
+void
+wait_for_async(SSL *s)
 {
     /* On Windows select only works for sockets, so we simply don't wait  */
 #ifndef OPENSSL_SYS_WINDOWS
@@ -3301,7 +3331,8 @@ void wait_for_async(SSL *s)
 
 /* if OPENSSL_SYS_WINDOWS is defined then so is OPENSSL_SYS_MSDOS */
 #if defined(OPENSSL_SYS_MSDOS)
-int has_stdin_waiting(void)
+int
+has_stdin_waiting(void)
 {
 # if defined(OPENSSL_SYS_WINDOWS)
     HANDLE inhand = GetStdHandle(STD_INPUT_HANDLE);
@@ -3328,26 +3359,27 @@ int has_stdin_waiting(void)
 #endif
 
 /* Corrupt a signature by modifying final byte */
-void corrupt_signature(const ASN1_STRING *signature)
+void
+corrupt_signature(const ASN1_STRING *signature)
 {
     unsigned char *s = signature->data;
 
     s[signature->length - 1] ^= 0x1;
 }
 
-int check_cert_time_string(const char *time, const char *desc)
+int
+check_cert_time_string(const char *time, const char *desc)
 {
-    if (time == NULL || strcmp(time, "today") == 0
-            || ASN1_TIME_set_string_X509(NULL, time))
+    if (time == NULL || strcmp(time, "today") == 0 || ASN1_TIME_set_string_X509(NULL, time))
         return 1;
-    BIO_printf(bio_err,
-               "%s is invalid, it should be \"today\" or have format [CC]YYMMDDHHMMSSZ\n",
+    BIO_printf(bio_err, "%s is invalid, it should be \"today\" or have format [CC]YYMMDDHHMMSSZ\n",
                desc);
     return 0;
 }
 
-int set_cert_times(X509 *x, const char *startdate, const char *enddate,
-                   int days, int strict_compare_times)
+int
+set_cert_times(X509 *x, const char *startdate, const char *enddate, int days,
+               int strict_compare_times)
 {
     if (!check_cert_time_string(startdate, "start date"))
         return 0;
@@ -3386,7 +3418,8 @@ int set_cert_times(X509 *x, const char *startdate, const char *enddate,
     return 1;
 }
 
-int set_crl_lastupdate(X509_CRL *crl, const char *lastupdate)
+int
+set_crl_lastupdate(X509_CRL *crl, const char *lastupdate)
 {
     int ret = 0;
     ASN1_TIME *tm = ASN1_TIME_new();
@@ -3411,8 +3444,8 @@ end:
     return ret;
 }
 
-int set_crl_nextupdate(X509_CRL *crl, const char *nextupdate,
-                       long days, long hours, long secs)
+int
+set_crl_nextupdate(X509_CRL *crl, const char *nextupdate, long days, long hours, long secs)
 {
     int ret = 0;
     ASN1_TIME *tm = ASN1_TIME_new();
@@ -3437,7 +3470,8 @@ end:
     return ret;
 }
 
-void make_uppercase(char *string)
+void
+make_uppercase(char *string)
 {
     int i;
 
@@ -3445,8 +3479,8 @@ void make_uppercase(char *string)
         string[i] = toupper((unsigned char)string[i]);
 }
 
-OSSL_PARAM *app_params_new_from_opts(STACK_OF(OPENSSL_STRING) *opts,
-                                     const OSSL_PARAM *paramdefs)
+OSSL_PARAM *
+app_params_new_from_opts(STACK_OF(OPENSSL_STRING) * opts, const OSSL_PARAM *paramdefs)
 {
     OSSL_PARAM *params = NULL;
     size_t sz = (size_t)sk_OPENSSL_STRING_num(opts);
@@ -3463,15 +3497,14 @@ OSSL_PARAM *app_params_new_from_opts(STACK_OF(OPENSSL_STRING) *opts,
 
     for (params_n = 0; params_n < sz; params_n++) {
         opt = sk_OPENSSL_STRING_value(opts, (int)params_n);
-        if ((stmp = OPENSSL_strdup(opt)) == NULL
-            || (vtmp = strchr(stmp, ':')) == NULL)
+        if ((stmp = OPENSSL_strdup(opt)) == NULL || (vtmp = strchr(stmp, ':')) == NULL)
             goto err;
         /* Replace ':' with 0 to terminate the string pointed to by stmp */
         *vtmp = 0;
         /* Skip over the separator so that vmtp points to the value */
         vtmp++;
-        if (!OSSL_PARAM_allocate_from_text(&params[params_n], paramdefs,
-                                           stmp, vtmp, strlen(vtmp), &found))
+        if (!OSSL_PARAM_allocate_from_text(&params[params_n], paramdefs, stmp, vtmp, strlen(vtmp),
+                                           &found))
             goto err;
         OPENSSL_free(stmp);
     }
@@ -3479,14 +3512,14 @@ OSSL_PARAM *app_params_new_from_opts(STACK_OF(OPENSSL_STRING) *opts,
     return params;
 err:
     OPENSSL_free(stmp);
-    BIO_printf(bio_err, "Parameter %s '%s'\n", found ? "error" : "unknown",
-               opt);
+    BIO_printf(bio_err, "Parameter %s '%s'\n", found ? "error" : "unknown", opt);
     ERR_print_errors(bio_err);
     app_params_free(params);
     return NULL;
 }
 
-void app_params_free(OSSL_PARAM *params)
+void
+app_params_free(OSSL_PARAM *params)
 {
     int i;
 
@@ -3497,7 +3530,8 @@ void app_params_free(OSSL_PARAM *params)
     }
 }
 
-EVP_PKEY *app_keygen(EVP_PKEY_CTX *ctx, const char *alg, int bits, int verbose)
+EVP_PKEY *
+app_keygen(EVP_PKEY_CTX *ctx, const char *alg, int bits, int verbose)
 {
     EVP_PKEY *res = NULL;
 
@@ -3510,23 +3544,24 @@ EVP_PKEY *app_keygen(EVP_PKEY_CTX *ctx, const char *alg, int bits, int verbose)
     }
     if (!RAND_status())
         BIO_printf(bio_err, "Warning: generating random key material may take a long time\n"
-                   "if the system has a poor entropy source\n");
+                            "if the system has a poor entropy source\n");
     if (EVP_PKEY_keygen(ctx, &res) <= 0)
         BIO_printf(bio_err, "%s: Error generating %s key\n", opt_getprog(),
                    alg != NULL ? alg : "asymmetric");
     return res;
 }
 
-EVP_PKEY *app_paramgen(EVP_PKEY_CTX *ctx, const char *alg)
+EVP_PKEY *
+app_paramgen(EVP_PKEY_CTX *ctx, const char *alg)
 {
     EVP_PKEY *res = NULL;
 
     if (!RAND_status())
         BIO_printf(bio_err, "Warning: generating random key parameters may take a long time\n"
-                   "if the system has a poor entropy source\n");
+                            "if the system has a poor entropy source\n");
     if (EVP_PKEY_paramgen(ctx, &res) <= 0)
-        BIO_printf(bio_err, "%s: Generating %s key parameters failed\n",
-                   opt_getprog(), alg != NULL ? alg : "asymmetric");
+        BIO_printf(bio_err, "%s: Generating %s key parameters failed\n", opt_getprog(),
+                   alg != NULL ? alg : "asymmetric");
     return res;
 }
 
@@ -3535,7 +3570,8 @@ EVP_PKEY *app_paramgen(EVP_PKEY_CTX *ctx, const char *alg)
  * This decision is based on the global command line operations and the
  * behaviour thus far.
  */
-int opt_legacy_okay(void)
+int
+opt_legacy_okay(void)
 {
     int provider_options = opt_provider_option_given();
     int libctx = app_get0_libctx() != NULL || app_get0_propq() != NULL;

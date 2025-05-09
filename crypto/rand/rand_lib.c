@@ -24,7 +24,7 @@
 #include "internal/provider.h"
 
 #ifndef OPENSSL_DEFAULT_SEED_SRC
-# define OPENSSL_DEFAULT_SEED_SRC SEED-SRC
+# define OPENSSL_DEFAULT_SEED_SRC SEED - SRC
 #endif
 
 typedef struct rand_global_st {
@@ -59,7 +59,7 @@ typedef struct rand_global_st {
 #ifndef FIPS_MODULE
     OSSL_PROVIDER *random_provider;
     char *random_provider_name;
-#endif      /* !FIPS_MODULE */
+#endif /* !FIPS_MODULE */
 
     /*
      * The <public> DRBG
@@ -96,7 +96,8 @@ static EVP_RAND_CTX *rand_get0_primary(OSSL_LIB_CTX *ctx, RAND_GLOBAL *dgbl);
 static EVP_RAND_CTX *rand_get0_public(OSSL_LIB_CTX *ctx, RAND_GLOBAL *dgbl);
 static EVP_RAND_CTX *rand_get0_private(OSSL_LIB_CTX *ctx, RAND_GLOBAL *dgbl);
 
-static RAND_GLOBAL *rand_get_global(OSSL_LIB_CTX *libctx)
+static RAND_GLOBAL *
+rand_get_global(OSSL_LIB_CTX *libctx)
 {
     return ossl_lib_ctx_get_data(libctx, OSSL_LIB_CTX_DRBG_INDEX);
 }
@@ -120,10 +121,11 @@ static RAND_GLOBAL *rand_get_global(OSSL_LIB_CTX *libctx)
  */
 static const char random_provider_fips_name[] = "fips";
 
-static int set_random_provider_name(RAND_GLOBAL *dgbl, const char *name)
+static int
+set_random_provider_name(RAND_GLOBAL *dgbl, const char *name)
 {
-    if (dgbl->random_provider_name != NULL
-            && OPENSSL_strcasecmp(dgbl->random_provider_name, name) == 0)
+    if (dgbl->random_provider_name != NULL &&
+        OPENSSL_strcasecmp(dgbl->random_provider_name, name) == 0)
         return 1;
 
     OPENSSL_free(dgbl->random_provider_name);
@@ -135,11 +137,11 @@ static int set_random_provider_name(RAND_GLOBAL *dgbl, const char *name)
 /* non-NULL if default_RAND_meth is ENGINE-provided */
 static ENGINE *funct_ref;
 static CRYPTO_RWLOCK *rand_engine_lock;
-# endif     /* !OPENSSL_NO_ENGINE */
+# endif /* !OPENSSL_NO_ENGINE */
 # ifndef OPENSSL_NO_DEPRECATED_3_0
 static CRYPTO_RWLOCK *rand_meth_lock;
 static const RAND_METHOD *default_RAND_meth;
-# endif     /* !OPENSSL_NO_DEPRECATED_3_0 */
+# endif /* !OPENSSL_NO_DEPRECATED_3_0 */
 static CRYPTO_ONCE rand_init = CRYPTO_ONCE_STATIC_INIT;
 
 static int rand_inited = 0;
@@ -150,13 +152,13 @@ DEFINE_RUN_ONCE_STATIC(do_rand_init)
     rand_engine_lock = CRYPTO_THREAD_lock_new();
     if (rand_engine_lock == NULL)
         return 0;
-# endif     /* !OPENSSL_NO_ENGINE */
+# endif /* !OPENSSL_NO_ENGINE */
 
 # ifndef OPENSSL_NO_DEPRECATED_3_0
     rand_meth_lock = CRYPTO_THREAD_lock_new();
     if (rand_meth_lock == NULL)
         goto err;
-# endif     /* !OPENSSL_NO_DEPRECATED_3_0 */
+# endif /* !OPENSSL_NO_DEPRECATED_3_0 */
 
     if (!ossl_rand_pool_init())
         goto err;
@@ -164,19 +166,20 @@ DEFINE_RUN_ONCE_STATIC(do_rand_init)
     rand_inited = 1;
     return 1;
 
- err:
+err:
 # ifndef OPENSSL_NO_DEPRECATED_3_0
     CRYPTO_THREAD_lock_free(rand_meth_lock);
     rand_meth_lock = NULL;
-# endif     /* !OPENSSL_NO_DEPRECATED_3_0 */
+# endif /* !OPENSSL_NO_DEPRECATED_3_0 */
 # ifndef OPENSSL_NO_ENGINE
     CRYPTO_THREAD_lock_free(rand_engine_lock);
     rand_engine_lock = NULL;
-# endif     /* !OPENSSL_NO_ENGINE */
+# endif /* !OPENSSL_NO_ENGINE */
     return 0;
 }
 
-void ossl_rand_cleanup_int(void)
+void
+ossl_rand_cleanup_int(void)
 {
 # ifndef OPENSSL_NO_DEPRECATED_3_0
     const RAND_METHOD *meth = default_RAND_meth;
@@ -187,16 +190,16 @@ void ossl_rand_cleanup_int(void)
     if (meth != NULL && meth->cleanup != NULL)
         meth->cleanup();
     RAND_set_rand_method(NULL);
-# endif     /* !OPENSSL_NO_DEPRECATED_3_0 */
+# endif /* !OPENSSL_NO_DEPRECATED_3_0 */
     ossl_rand_pool_cleanup();
 # ifndef OPENSSL_NO_ENGINE
     CRYPTO_THREAD_lock_free(rand_engine_lock);
     rand_engine_lock = NULL;
-# endif     /* !OPENSSL_NO_ENGINE */
+# endif /* !OPENSSL_NO_ENGINE */
 # ifndef OPENSSL_NO_DEPRECATED_3_0
     CRYPTO_THREAD_lock_free(rand_meth_lock);
     rand_meth_lock = NULL;
-# endif     /* !OPENSSL_NO_DEPRECATED_3_0 */
+# endif /* !OPENSSL_NO_DEPRECATED_3_0 */
     ossl_release_default_drbg_ctx();
     rand_inited = 0;
 }
@@ -206,7 +209,8 @@ void ossl_rand_cleanup_int(void)
  * closed after use.  This only applies to libcrypto/default provider,
  * it does not apply to other providers.
  */
-void RAND_keep_random_devices_open(int keep)
+void
+RAND_keep_random_devices_open(int keep)
 {
     if (RUN_ONCE(&rand_init, do_rand_init))
         ossl_rand_pool_keep_random_devices_open(keep);
@@ -219,7 +223,8 @@ void RAND_keep_random_devices_open(int keep)
  * sources which depend on the operating system and are
  * configurable via the --with-rand-seed configure option.
  */
-int RAND_poll(void)
+int
+RAND_poll(void)
 {
     static const char salt[] = "polling";
 
@@ -232,8 +237,7 @@ int RAND_poll(void)
 
     if (!ret) {
         /* fill random pool and seed the current legacy RNG */
-        RAND_POOL *pool = ossl_rand_pool_new(RAND_DRBG_STRENGTH, 1,
-                                             (RAND_DRBG_STRENGTH + 7) / 8,
+        RAND_POOL *pool = ossl_rand_pool_new(RAND_DRBG_STRENGTH, 1, (RAND_DRBG_STRENGTH + 7) / 8,
                                              RAND_POOL_MAX_LENGTH);
 
         if (pool == NULL)
@@ -242,26 +246,24 @@ int RAND_poll(void)
         if (ossl_pool_acquire_entropy(pool) == 0)
             goto err;
 
-        if (meth->add == NULL
-            || meth->add(ossl_rand_pool_buffer(pool),
-                         ossl_rand_pool_length(pool),
-                         (ossl_rand_pool_entropy(pool) / 8.0)) == 0)
+        if (meth->add == NULL || meth->add(ossl_rand_pool_buffer(pool), ossl_rand_pool_length(pool),
+                                           (ossl_rand_pool_entropy(pool) / 8.0)) == 0)
             goto err;
 
         ret = 1;
-     err:
+    err:
         ossl_rand_pool_free(pool);
         return ret;
     }
-# endif     /* !OPENSSL_NO_DEPRECATED_3_0 */
+# endif /* !OPENSSL_NO_DEPRECATED_3_0 */
 
     RAND_seed(salt, sizeof(salt));
     return 1;
 }
 
 # ifndef OPENSSL_NO_DEPRECATED_3_0
-static int rand_set_rand_method_internal(const RAND_METHOD *meth,
-                                         ossl_unused ENGINE *e)
+static int
+rand_set_rand_method_internal(const RAND_METHOD *meth, ossl_unused ENGINE *e)
 {
     if (!RUN_ONCE(&rand_init, do_rand_init))
         return 0;
@@ -277,12 +279,14 @@ static int rand_set_rand_method_internal(const RAND_METHOD *meth,
     return 1;
 }
 
-int RAND_set_rand_method(const RAND_METHOD *meth)
+int
+RAND_set_rand_method(const RAND_METHOD *meth)
 {
     return rand_set_rand_method_internal(meth, NULL);
 }
 
-const RAND_METHOD *RAND_get_rand_method(void)
+const RAND_METHOD *
+RAND_get_rand_method(void)
 {
     const RAND_METHOD *tmp_meth = NULL;
 
@@ -303,8 +307,7 @@ const RAND_METHOD *RAND_get_rand_method(void)
         ENGINE *e;
 
         /* If we have an engine that can do RAND, use it. */
-        if ((e = ENGINE_get_default_RAND()) != NULL
-                && (tmp_meth = ENGINE_get_RAND(e)) != NULL) {
+        if ((e = ENGINE_get_default_RAND()) != NULL && (tmp_meth = ENGINE_get_RAND(e)) != NULL) {
             funct_ref = e;
             default_RAND_meth = tmp_meth;
         } else {
@@ -321,7 +324,8 @@ const RAND_METHOD *RAND_get_rand_method(void)
 }
 
 #  if !defined(OPENSSL_NO_ENGINE)
-int RAND_set_rand_engine(ENGINE *engine)
+int
+RAND_set_rand_engine(ENGINE *engine)
 {
     const RAND_METHOD *tmp_meth = NULL;
 
@@ -350,7 +354,8 @@ int RAND_set_rand_engine(ENGINE *engine)
 #  endif
 # endif /* OPENSSL_NO_DEPRECATED_3_0 */
 
-void RAND_seed(const void *buf, int num)
+void
+RAND_seed(const void *buf, int num)
 {
     EVP_RAND_CTX *drbg;
 # ifndef OPENSSL_NO_DEPRECATED_3_0
@@ -367,7 +372,8 @@ void RAND_seed(const void *buf, int num)
         EVP_RAND_reseed(drbg, 0, NULL, 0, buf, num);
 }
 
-void RAND_add(const void *buf, int num, double randomness)
+void
+RAND_add(const void *buf, int num, double randomness)
 {
     EVP_RAND_CTX *drbg;
 # ifndef OPENSSL_NO_DEPRECATED_3_0
@@ -390,7 +396,8 @@ void RAND_add(const void *buf, int num, double randomness)
 }
 
 # if !defined(OPENSSL_NO_DEPRECATED_1_1_0)
-int RAND_pseudo_bytes(unsigned char *buf, int num)
+int
+RAND_pseudo_bytes(unsigned char *buf, int num)
 {
     const RAND_METHOD *meth = RAND_get_rand_method();
 
@@ -401,7 +408,8 @@ int RAND_pseudo_bytes(unsigned char *buf, int num)
 }
 # endif
 
-int RAND_status(void)
+int
+RAND_status(void)
 {
     EVP_RAND_CTX *rand;
 # ifndef OPENSSL_NO_DEPRECATED_3_0
@@ -415,10 +423,11 @@ int RAND_status(void)
         return 0;
     return EVP_RAND_get_state(rand) == EVP_RAND_STATE_READY;
 }
-# else  /* !FIPS_MODULE */
+#else /* !FIPS_MODULE */
 
 # ifndef OPENSSL_NO_DEPRECATED_3_0
-const RAND_METHOD *RAND_get_rand_method(void)
+const RAND_METHOD *
+RAND_get_rand_method(void)
 {
     return NULL;
 }
@@ -430,8 +439,8 @@ const RAND_METHOD *RAND_get_rand_method(void)
  * the default method, then just call RAND_bytes().  Otherwise make
  * sure we're instantiated and use the private DRBG.
  */
-int RAND_priv_bytes_ex(OSSL_LIB_CTX *ctx, unsigned char *buf, size_t num,
-                       unsigned int strength)
+int
+RAND_priv_bytes_ex(OSSL_LIB_CTX *ctx, unsigned char *buf, size_t num, unsigned int strength)
 {
     RAND_GLOBAL *dgbl;
     EVP_RAND_CTX *rand;
@@ -451,10 +460,9 @@ int RAND_priv_bytes_ex(OSSL_LIB_CTX *ctx, unsigned char *buf, size_t num,
         return 0;
 #ifndef FIPS_MODULE
     if (dgbl->random_provider != NULL)
-        return ossl_provider_random_bytes(dgbl->random_provider,
-                                          OSSL_PROV_RANDOM_PRIVATE,
-                                          buf, num, strength);
-#endif      /* !FIPS_MODULE */
+        return ossl_provider_random_bytes(dgbl->random_provider, OSSL_PROV_RANDOM_PRIVATE, buf, num,
+                                          strength);
+#endif /* !FIPS_MODULE */
     rand = rand_get0_private(ctx, dgbl);
     if (rand != NULL)
         return EVP_RAND_generate(rand, buf, num, strength, 0, NULL, 0);
@@ -462,15 +470,16 @@ int RAND_priv_bytes_ex(OSSL_LIB_CTX *ctx, unsigned char *buf, size_t num,
     return 0;
 }
 
-int RAND_priv_bytes(unsigned char *buf, int num)
+int
+RAND_priv_bytes(unsigned char *buf, int num)
 {
     if (num < 0)
         return 0;
     return RAND_priv_bytes_ex(NULL, buf, (size_t)num, 0);
 }
 
-int RAND_bytes_ex(OSSL_LIB_CTX *ctx, unsigned char *buf, size_t num,
-                  unsigned int strength)
+int
+RAND_bytes_ex(OSSL_LIB_CTX *ctx, unsigned char *buf, size_t num, unsigned int strength)
 {
     RAND_GLOBAL *dgbl;
     EVP_RAND_CTX *rand;
@@ -490,10 +499,9 @@ int RAND_bytes_ex(OSSL_LIB_CTX *ctx, unsigned char *buf, size_t num,
         return 0;
 #ifndef FIPS_MODULE
     if (dgbl->random_provider != NULL)
-        return ossl_provider_random_bytes(dgbl->random_provider,
-                                          OSSL_PROV_RANDOM_PUBLIC,
-                                          buf, num, strength);
-#endif      /* !FIPS_MODULE */
+        return ossl_provider_random_bytes(dgbl->random_provider, OSSL_PROV_RANDOM_PUBLIC, buf, num,
+                                          strength);
+#endif /* !FIPS_MODULE */
 
     rand = rand_get0_public(ctx, dgbl);
     if (rand != NULL)
@@ -502,7 +510,8 @@ int RAND_bytes_ex(OSSL_LIB_CTX *ctx, unsigned char *buf, size_t num,
     return 0;
 }
 
-int RAND_bytes(unsigned char *buf, int num)
+int
+RAND_bytes(unsigned char *buf, int num)
 {
     if (num < 0)
         return 0;
@@ -513,7 +522,8 @@ int RAND_bytes(unsigned char *buf, int num)
  * Initialize the OSSL_LIB_CTX global DRBGs on first use.
  * Returns the allocated global data on success or NULL on failure.
  */
-void *ossl_rand_ctx_new(OSSL_LIB_CTX *libctx)
+void *
+ossl_rand_ctx_new(OSSL_LIB_CTX *libctx)
 {
     RAND_GLOBAL *dgbl = OPENSSL_zalloc(sizeof(*dgbl));
 
@@ -545,19 +555,20 @@ void *ossl_rand_ctx_new(OSSL_LIB_CTX *libctx)
 
     return dgbl;
 
- err2:
+err2:
     CRYPTO_THREAD_cleanup_local(&dgbl->private);
- err1:
+err1:
     CRYPTO_THREAD_lock_free(dgbl->lock);
 #ifndef FIPS_MODULE
- err0:
+err0:
     OPENSSL_free(dgbl->random_provider_name);
 #endif
     OPENSSL_free(dgbl);
     return NULL;
 }
 
-void ossl_rand_ctx_free(void *vdgbl)
+void
+ossl_rand_ctx_free(void *vdgbl)
 {
     RAND_GLOBAL *dgbl = vdgbl;
 
@@ -571,7 +582,7 @@ void ossl_rand_ctx_free(void *vdgbl)
     EVP_RAND_CTX_free(dgbl->seed);
 #ifndef FIPS_MODULE
     OPENSSL_free(dgbl->random_provider_name);
-#endif      /* !FIPS_MODULE */
+#endif /* !FIPS_MODULE */
     OPENSSL_free(dgbl->rng_name);
     OPENSSL_free(dgbl->rng_cipher);
     OPENSSL_free(dgbl->rng_digest);
@@ -582,7 +593,8 @@ void ossl_rand_ctx_free(void *vdgbl)
     OPENSSL_free(dgbl);
 }
 
-static void rand_delete_thread_state(void *arg)
+static void
+rand_delete_thread_state(void *arg)
 {
     OSSL_LIB_CTX *ctx = arg;
     RAND_GLOBAL *dgbl = rand_get_global(ctx);
@@ -601,7 +613,8 @@ static void rand_delete_thread_state(void *arg)
 }
 
 #if !defined(FIPS_MODULE) || !defined(OPENSSL_NO_FIPS_JITTER)
-static EVP_RAND_CTX *rand_new_seed(OSSL_LIB_CTX *libctx)
+static EVP_RAND_CTX *
+rand_new_seed(OSSL_LIB_CTX *libctx)
 {
     EVP_RAND *rand;
     const char *propq;
@@ -613,9 +626,8 @@ static EVP_RAND_CTX *rand_new_seed(OSSL_LIB_CTX *libctx)
     if (dgbl == NULL)
         return NULL;
     propq = dgbl->seed_propq;
-    name = dgbl->seed_name != NULL ? dgbl->seed_name
-                                   : OPENSSL_MSTR(OPENSSL_DEFAULT_SEED_SRC);
-# else /* !OPENSSL_NO_FIPS_JITTER */
+    name = dgbl->seed_name != NULL ? dgbl->seed_name : OPENSSL_MSTR(OPENSSL_DEFAULT_SEED_SRC);
+# else  /* !OPENSSL_NO_FIPS_JITTER */
     name = "JITTER";
     propq = "";
 # endif /* OPENSSL_NO_FIPS_JITTER */
@@ -636,14 +648,15 @@ static EVP_RAND_CTX *rand_new_seed(OSSL_LIB_CTX *libctx)
         goto err;
     }
     return ctx;
- err:
+err:
     EVP_RAND_CTX_free(ctx);
     return NULL;
 }
-#endif  /* !FIPS_MODULE || !OPENSSL_NO_FIPS_JITTER */
+#endif /* !FIPS_MODULE || !OPENSSL_NO_FIPS_JITTER */
 
 #ifndef FIPS_MODULE
-EVP_RAND_CTX *ossl_rand_get0_seed_noncreating(OSSL_LIB_CTX *ctx)
+EVP_RAND_CTX *
+ossl_rand_get0_seed_noncreating(OSSL_LIB_CTX *ctx)
 {
     RAND_GLOBAL *dgbl = rand_get_global(ctx);
     EVP_RAND_CTX *ret;
@@ -657,11 +670,11 @@ EVP_RAND_CTX *ossl_rand_get0_seed_noncreating(OSSL_LIB_CTX *ctx)
     CRYPTO_THREAD_unlock(dgbl->lock);
     return ret;
 }
-#endif  /* !FIPS_MODULE */
+#endif /* !FIPS_MODULE */
 
-static EVP_RAND_CTX *rand_new_drbg(OSSL_LIB_CTX *libctx, EVP_RAND_CTX *parent,
-                                   unsigned int reseed_interval,
-                                   time_t reseed_time_interval)
+static EVP_RAND_CTX *
+rand_new_drbg(OSSL_LIB_CTX *libctx, EVP_RAND_CTX *parent, unsigned int reseed_interval,
+              time_t reseed_time_interval)
 {
     EVP_RAND *rand;
     RAND_GLOBAL *dgbl = rand_get_global(libctx);
@@ -691,27 +704,21 @@ static EVP_RAND_CTX *rand_new_drbg(OSSL_LIB_CTX *libctx, EVP_RAND_CTX *parent,
     settables = EVP_RAND_CTX_settable_params(ctx);
     if (OSSL_PARAM_locate_const(settables, OSSL_DRBG_PARAM_CIPHER)) {
         cipher = dgbl->rng_cipher != NULL ? dgbl->rng_cipher : "AES-256-CTR";
-        *p++ = OSSL_PARAM_construct_utf8_string(OSSL_DRBG_PARAM_CIPHER,
-                                                cipher, 0);
+        *p++ = OSSL_PARAM_construct_utf8_string(OSSL_DRBG_PARAM_CIPHER, cipher, 0);
     }
-    if (dgbl->rng_digest != NULL
-            && OSSL_PARAM_locate_const(settables, OSSL_DRBG_PARAM_DIGEST))
-        *p++ = OSSL_PARAM_construct_utf8_string(OSSL_DRBG_PARAM_DIGEST,
-                                                dgbl->rng_digest, 0);
+    if (dgbl->rng_digest != NULL && OSSL_PARAM_locate_const(settables, OSSL_DRBG_PARAM_DIGEST))
+        *p++ = OSSL_PARAM_construct_utf8_string(OSSL_DRBG_PARAM_DIGEST, dgbl->rng_digest, 0);
     if (prov_name != NULL)
-        *p++ = OSSL_PARAM_construct_utf8_string(OSSL_PROV_PARAM_CORE_PROV_NAME,
-                                                (char *)prov_name, 0);
+        *p++ =
+            OSSL_PARAM_construct_utf8_string(OSSL_PROV_PARAM_CORE_PROV_NAME, (char *)prov_name, 0);
     if (dgbl->rng_propq != NULL)
-        *p++ = OSSL_PARAM_construct_utf8_string(OSSL_DRBG_PARAM_PROPERTIES,
-                                                dgbl->rng_propq, 0);
+        *p++ = OSSL_PARAM_construct_utf8_string(OSSL_DRBG_PARAM_PROPERTIES, dgbl->rng_propq, 0);
     if (OSSL_PARAM_locate_const(settables, OSSL_ALG_PARAM_MAC))
         *p++ = OSSL_PARAM_construct_utf8_string(OSSL_ALG_PARAM_MAC, "HMAC", 0);
     if (OSSL_PARAM_locate_const(settables, OSSL_DRBG_PARAM_USE_DF))
         *p++ = OSSL_PARAM_construct_int(OSSL_DRBG_PARAM_USE_DF, &use_df);
-    *p++ = OSSL_PARAM_construct_uint(OSSL_DRBG_PARAM_RESEED_REQUESTS,
-                                     &reseed_interval);
-    *p++ = OSSL_PARAM_construct_time_t(OSSL_DRBG_PARAM_RESEED_TIME_INTERVAL,
-                                       &reseed_time_interval);
+    *p++ = OSSL_PARAM_construct_uint(OSSL_DRBG_PARAM_RESEED_REQUESTS, &reseed_interval);
+    *p++ = OSSL_PARAM_construct_time_t(OSSL_DRBG_PARAM_RESEED_TIME_INTERVAL, &reseed_time_interval);
     *p = OSSL_PARAM_construct_end();
     if (!EVP_RAND_instantiate(ctx, 0, 0, NULL, 0, params)) {
         ERR_raise(ERR_LIB_RAND, RAND_R_ERROR_INSTANTIATING_DRBG);
@@ -722,7 +729,8 @@ static EVP_RAND_CTX *rand_new_drbg(OSSL_LIB_CTX *libctx, EVP_RAND_CTX *parent,
 }
 
 #if defined(FIPS_MODULE)
-static EVP_RAND_CTX *rand_new_crngt(OSSL_LIB_CTX *libctx, EVP_RAND_CTX *parent)
+static EVP_RAND_CTX *
+rand_new_crngt(OSSL_LIB_CTX *libctx, EVP_RAND_CTX *parent)
 {
     EVP_RAND *rand;
     EVP_RAND_CTX *ctx;
@@ -746,14 +754,15 @@ static EVP_RAND_CTX *rand_new_crngt(OSSL_LIB_CTX *libctx, EVP_RAND_CTX *parent)
     }
     return ctx;
 }
-#endif  /* FIPS_MODULE */
+#endif /* FIPS_MODULE */
 
 /*
  * Get the primary random generator.
  * Returns pointer to its EVP_RAND_CTX on success, NULL on failure.
  *
  */
-static EVP_RAND_CTX *rand_get0_primary(OSSL_LIB_CTX *ctx, RAND_GLOBAL *dgbl)
+static EVP_RAND_CTX *
+rand_get0_primary(OSSL_LIB_CTX *ctx, RAND_GLOBAL *dgbl)
 {
     EVP_RAND_CTX *ret, *seed, *newseed = NULL, *primary;
 
@@ -777,15 +786,14 @@ static EVP_RAND_CTX *rand_get0_primary(OSSL_LIB_CTX *ctx, RAND_GLOBAL *dgbl)
         seed = newseed = rand_new_seed(ctx);
         ERR_pop_to_mark();
     }
-#endif  /* !FIPS_MODULE || !OPENSSL_NO_FIPS_JITTER */
+#endif /* !FIPS_MODULE || !OPENSSL_NO_FIPS_JITTER */
 
 #if defined(FIPS_MODULE)
     /* The FIPS provider has entropy health tests instead of the primary */
     ret = rand_new_crngt(ctx, seed);
-#else   /* FIPS_MODULE */
-    ret = rand_new_drbg(ctx, seed, PRIMARY_RESEED_INTERVAL,
-                        PRIMARY_RESEED_TIME_INTERVAL);
-#endif  /* FIPS_MODULE */
+#else  /* FIPS_MODULE */
+    ret = rand_new_drbg(ctx, seed, PRIMARY_RESEED_INTERVAL, PRIMARY_RESEED_TIME_INTERVAL);
+#endif /* FIPS_MODULE */
 
     /*
      * The primary DRBG may be shared between multiple threads so we must
@@ -825,14 +833,16 @@ static EVP_RAND_CTX *rand_get0_primary(OSSL_LIB_CTX *ctx, RAND_GLOBAL *dgbl)
  * Returns pointer to its EVP_RAND_CTX on success, NULL on failure.
  *
  */
-EVP_RAND_CTX *RAND_get0_primary(OSSL_LIB_CTX *ctx)
+EVP_RAND_CTX *
+RAND_get0_primary(OSSL_LIB_CTX *ctx)
 {
     RAND_GLOBAL *dgbl = rand_get_global(ctx);
 
     return dgbl == NULL ? NULL : rand_get0_primary(ctx, dgbl);
 }
 
-static EVP_RAND_CTX *rand_get0_public(OSSL_LIB_CTX *ctx, RAND_GLOBAL *dgbl)
+static EVP_RAND_CTX *
+rand_get0_public(OSSL_LIB_CTX *ctx, RAND_GLOBAL *dgbl)
 {
     EVP_RAND_CTX *rand, *primary;
 
@@ -853,11 +863,11 @@ static EVP_RAND_CTX *rand_get0_public(OSSL_LIB_CTX *ctx, RAND_GLOBAL *dgbl)
          * If the private is also NULL then this is the first time we've
          * used this thread.
          */
-        if (CRYPTO_THREAD_get_local(&dgbl->private) == NULL
-                && !ossl_init_thread_start(NULL, ctx, rand_delete_thread_state))
+        if (CRYPTO_THREAD_get_local(&dgbl->private) == NULL &&
+            !ossl_init_thread_start(NULL, ctx, rand_delete_thread_state))
             return NULL;
-        rand = rand_new_drbg(ctx, primary, SECONDARY_RESEED_INTERVAL,
-                             SECONDARY_RESEED_TIME_INTERVAL);
+        rand =
+            rand_new_drbg(ctx, primary, SECONDARY_RESEED_INTERVAL, SECONDARY_RESEED_TIME_INTERVAL);
         CRYPTO_THREAD_set_local(&dgbl->public, rand);
     }
     return rand;
@@ -867,14 +877,16 @@ static EVP_RAND_CTX *rand_get0_public(OSSL_LIB_CTX *ctx, RAND_GLOBAL *dgbl)
  * Get the public random generator.
  * Returns pointer to its EVP_RAND_CTX on success, NULL on failure.
  */
-EVP_RAND_CTX *RAND_get0_public(OSSL_LIB_CTX *ctx)
+EVP_RAND_CTX *
+RAND_get0_public(OSSL_LIB_CTX *ctx)
 {
     RAND_GLOBAL *dgbl = rand_get_global(ctx);
 
     return dgbl == NULL ? NULL : rand_get0_public(ctx, dgbl);
 }
 
-static EVP_RAND_CTX *rand_get0_private(OSSL_LIB_CTX *ctx, RAND_GLOBAL *dgbl)
+static EVP_RAND_CTX *
+rand_get0_private(OSSL_LIB_CTX *ctx, RAND_GLOBAL *dgbl)
 {
     EVP_RAND_CTX *rand, *primary;
 
@@ -892,11 +904,11 @@ static EVP_RAND_CTX *rand_get0_private(OSSL_LIB_CTX *ctx, RAND_GLOBAL *dgbl)
          * If the public is also NULL then this is the first time we've
          * used this thread.
          */
-        if (CRYPTO_THREAD_get_local(&dgbl->public) == NULL
-                && !ossl_init_thread_start(NULL, ctx, rand_delete_thread_state))
+        if (CRYPTO_THREAD_get_local(&dgbl->public) == NULL &&
+            !ossl_init_thread_start(NULL, ctx, rand_delete_thread_state))
             return NULL;
-        rand = rand_new_drbg(ctx, primary, SECONDARY_RESEED_INTERVAL,
-                             SECONDARY_RESEED_TIME_INTERVAL);
+        rand =
+            rand_new_drbg(ctx, primary, SECONDARY_RESEED_INTERVAL, SECONDARY_RESEED_TIME_INTERVAL);
         CRYPTO_THREAD_set_local(&dgbl->private, rand);
     }
     return rand;
@@ -906,7 +918,8 @@ static EVP_RAND_CTX *rand_get0_private(OSSL_LIB_CTX *ctx, RAND_GLOBAL *dgbl)
  * Get the private random generator.
  * Returns pointer to its EVP_RAND_CTX on success, NULL on failure.
  */
-EVP_RAND_CTX *RAND_get0_private(OSSL_LIB_CTX *ctx)
+EVP_RAND_CTX *
+RAND_get0_private(OSSL_LIB_CTX *ctx)
 {
     RAND_GLOBAL *dgbl = rand_get_global(ctx);
 
@@ -914,7 +927,8 @@ EVP_RAND_CTX *RAND_get0_private(OSSL_LIB_CTX *ctx)
 }
 
 #ifdef FIPS_MODULE
-EVP_RAND_CTX *ossl_rand_get0_private_noncreating(OSSL_LIB_CTX *ctx)
+EVP_RAND_CTX *
+ossl_rand_get0_private_noncreating(OSSL_LIB_CTX *ctx)
 {
     RAND_GLOBAL *dgbl = rand_get_global(ctx);
 
@@ -925,7 +939,8 @@ EVP_RAND_CTX *ossl_rand_get0_private_noncreating(OSSL_LIB_CTX *ctx)
 }
 #endif
 
-int RAND_set0_public(OSSL_LIB_CTX *ctx, EVP_RAND_CTX *rand)
+int
+RAND_set0_public(OSSL_LIB_CTX *ctx, EVP_RAND_CTX *rand)
 {
     RAND_GLOBAL *dgbl = rand_get_global(ctx);
     EVP_RAND_CTX *old;
@@ -939,7 +954,8 @@ int RAND_set0_public(OSSL_LIB_CTX *ctx, EVP_RAND_CTX *rand)
     return r;
 }
 
-int RAND_set0_private(OSSL_LIB_CTX *ctx, EVP_RAND_CTX *rand)
+int
+RAND_set0_private(OSSL_LIB_CTX *ctx, EVP_RAND_CTX *rand)
 {
     RAND_GLOBAL *dgbl = rand_get_global(ctx);
     EVP_RAND_CTX *old;
@@ -954,7 +970,8 @@ int RAND_set0_private(OSSL_LIB_CTX *ctx, EVP_RAND_CTX *rand)
 }
 
 #ifndef FIPS_MODULE
-static int random_set_string(char **p, const char *s)
+static int
+random_set_string(char **p, const char *s)
 {
     char *d = NULL;
 
@@ -971,16 +988,16 @@ static int random_set_string(char **p, const char *s)
 /*
  * Load the DRBG definitions from a configuration file.
  */
-static int random_conf_init(CONF_IMODULE *md, const CONF *cnf)
+static int
+random_conf_init(CONF_IMODULE *md, const CONF *cnf)
 {
-    STACK_OF(CONF_VALUE) *elist;
+    STACK_OF(CONF_VALUE) * elist;
     CONF_VALUE *cval;
     OSSL_LIB_CTX *libctx = NCONF_get0_libctx((CONF *)cnf);
     RAND_GLOBAL *dgbl = rand_get_global(libctx);
     int i, r = 1;
 
-    OSSL_TRACE1(CONF, "Loading random module: section %s\n",
-                CONF_imodule_get_value(md));
+    OSSL_TRACE1(CONF, "Loading random module: section %s\n", CONF_imodule_get_value(md));
 
     /* Value is a section containing RANDOM configuration */
     elist = NCONF_get_section(cnf, CONF_imodule_get_value(md));
@@ -1038,8 +1055,7 @@ static int random_conf_init(CONF_IMODULE *md, const CONF *cnf)
                 return 0;
 # endif
         } else {
-            ERR_raise_data(ERR_LIB_CRYPTO,
-                           CRYPTO_R_UNKNOWN_NAME_IN_RANDOM_SECTION,
+            ERR_raise_data(ERR_LIB_CRYPTO, CRYPTO_R_UNKNOWN_NAME_IN_RANDOM_SECTION,
                            "name=%s, value=%s", cval->name, cval->value);
             r = 0;
         }
@@ -1047,20 +1063,22 @@ static int random_conf_init(CONF_IMODULE *md, const CONF *cnf)
     return r;
 }
 
-
-static void random_conf_deinit(CONF_IMODULE *md)
+static void
+random_conf_deinit(CONF_IMODULE *md)
 {
     OSSL_TRACE(CONF, "Cleaned up random\n");
 }
 
-void ossl_random_add_conf_module(void)
+void
+ossl_random_add_conf_module(void)
 {
     OSSL_TRACE(CONF, "Adding config module 'random'\n");
     CONF_module_add("random", random_conf_init, random_conf_deinit);
 }
 
-int RAND_set_DRBG_type(OSSL_LIB_CTX *ctx, const char *drbg, const char *propq,
-                       const char *cipher, const char *digest)
+int
+RAND_set_DRBG_type(OSSL_LIB_CTX *ctx, const char *drbg, const char *propq, const char *cipher,
+                   const char *digest)
 {
     RAND_GLOBAL *dgbl = rand_get_global(ctx);
 
@@ -1070,14 +1088,13 @@ int RAND_set_DRBG_type(OSSL_LIB_CTX *ctx, const char *drbg, const char *propq,
         ERR_raise(ERR_LIB_CRYPTO, RAND_R_ALREADY_INSTANTIATED);
         return 0;
     }
-    return random_set_string(&dgbl->rng_name, drbg)
-        && random_set_string(&dgbl->rng_propq, propq)
-        && random_set_string(&dgbl->rng_cipher, cipher)
-        && random_set_string(&dgbl->rng_digest, digest);
+    return random_set_string(&dgbl->rng_name, drbg) && random_set_string(&dgbl->rng_propq, propq) &&
+           random_set_string(&dgbl->rng_cipher, cipher) &&
+           random_set_string(&dgbl->rng_digest, digest);
 }
 
-int RAND_set_seed_source_type(OSSL_LIB_CTX *ctx, const char *seed,
-                              const char *propq)
+int
+RAND_set_seed_source_type(OSSL_LIB_CTX *ctx, const char *seed, const char *propq)
 {
     RAND_GLOBAL *dgbl = rand_get_global(ctx);
 
@@ -1087,11 +1104,11 @@ int RAND_set_seed_source_type(OSSL_LIB_CTX *ctx, const char *seed,
         ERR_raise(ERR_LIB_CRYPTO, RAND_R_ALREADY_INSTANTIATED);
         return 0;
     }
-    return random_set_string(&dgbl->seed_name, seed)
-        && random_set_string(&dgbl->seed_propq, propq);
+    return random_set_string(&dgbl->seed_name, seed) && random_set_string(&dgbl->seed_propq, propq);
 }
 
-int RAND_set1_random_provider(OSSL_LIB_CTX *ctx, OSSL_PROVIDER *prov)
+int
+RAND_set1_random_provider(OSSL_LIB_CTX *ctx, OSSL_PROVIDER *prov)
 {
     RAND_GLOBAL *dgbl = rand_get_global(ctx);
 
@@ -1119,8 +1136,8 @@ int RAND_set1_random_provider(OSSL_LIB_CTX *ctx, OSSL_PROVIDER *prov)
  * When a new provider is loaded, we need to check to see if it is the
  * designated randomness provider and register it if it is.
  */
-int ossl_rand_check_random_provider_on_load(OSSL_LIB_CTX *ctx,
-                                            OSSL_PROVIDER *prov)
+int
+ossl_rand_check_random_provider_on_load(OSSL_LIB_CTX *ctx, OSSL_PROVIDER *prov)
 {
     RAND_GLOBAL *dgbl = rand_get_global(ctx);
 
@@ -1143,8 +1160,8 @@ int ossl_rand_check_random_provider_on_load(OSSL_LIB_CTX *ctx,
  * When a provider is being unloaded, if it is the randomness provider,
  * we need to deregister it.
  */
-int ossl_rand_check_random_provider_on_unload(OSSL_LIB_CTX *ctx,
-                                              OSSL_PROVIDER *prov)
+int
+ossl_rand_check_random_provider_on_unload(OSSL_LIB_CTX *ctx, OSSL_PROVIDER *prov)
 {
     RAND_GLOBAL *dgbl = rand_get_global(ctx);
 
@@ -1156,4 +1173,4 @@ int ossl_rand_check_random_provider_on_unload(OSSL_LIB_CTX *ctx,
     return 1;
 }
 
-#endif      /* !FIPS_MODULE */
+#endif /* !FIPS_MODULE */

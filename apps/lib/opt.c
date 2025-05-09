@@ -51,12 +51,13 @@ static char prog[40];
  */
 #if defined(OPENSSL_SYS_WIN32)
 
-const char *opt_path_end(const char *filename)
+const char *
+opt_path_end(const char *filename)
 {
     const char *p;
 
     /* find the last '/', '\' or ':' */
-    for (p = filename + strlen(filename); --p > filename; )
+    for (p = filename + strlen(filename); --p > filename;)
         if (*p == '/' || *p == '\\' || *p == ':') {
             p++;
             break;
@@ -64,7 +65,8 @@ const char *opt_path_end(const char *filename)
     return p;
 }
 
-char *opt_progname(const char *argv0)
+char *
+opt_progname(const char *argv0)
 {
     size_t i, n;
     const char *p;
@@ -74,8 +76,7 @@ char *opt_progname(const char *argv0)
 
     /* Strip off trailing nonsense. */
     n = strlen(p);
-    if (n > 4 &&
-        (strcmp(&p[n - 4], ".exe") == 0 || strcmp(&p[n - 4], ".EXE") == 0))
+    if (n > 4 && (strcmp(&p[n - 4], ".exe") == 0 || strcmp(&p[n - 4], ".EXE") == 0))
         n -= 4;
 
     /* Copy over the name, in lowercase. */
@@ -89,7 +90,8 @@ char *opt_progname(const char *argv0)
 
 #elif defined(OPENSSL_SYS_VMS)
 
-const char *opt_path_end(const char *filename)
+const char *
+opt_path_end(const char *filename)
 {
     const char *p;
 
@@ -102,7 +104,8 @@ const char *opt_path_end(const char *filename)
     return p;
 }
 
-char *opt_progname(const char *argv0)
+char *
+opt_progname(const char *argv0)
 {
     const char *p, *q;
 
@@ -119,7 +122,8 @@ char *opt_progname(const char *argv0)
 
 #else
 
-const char *opt_path_end(const char *filename)
+const char *
+opt_path_end(const char *filename)
 {
     const char *p;
 
@@ -132,7 +136,8 @@ const char *opt_path_end(const char *filename)
     return p;
 }
 
-char *opt_progname(const char *argv0)
+char *
+opt_progname(const char *argv0)
 {
     const char *p;
 
@@ -144,7 +149,8 @@ char *opt_progname(const char *argv0)
 }
 #endif
 
-char *opt_appname(const char *argv0)
+char *
+opt_appname(const char *argv0)
 {
     size_t len = strlen(prog);
 
@@ -153,13 +159,15 @@ char *opt_appname(const char *argv0)
     return prog;
 }
 
-char *opt_getprog(void)
+char *
+opt_getprog(void)
 {
     return prog;
 }
 
 /* Set up the arg parsing. */
-char *opt_init(int ac, char **av, const OPTIONS *o)
+char *
+opt_init(int ac, char **av, const OPTIONS *o)
 {
     /* Store state. */
     argc = ac;
@@ -177,9 +185,7 @@ char *opt_init(int ac, char **av, const OPTIONS *o)
         int duplicated, i;
 #endif
 
-        if (o->name == OPT_HELP_STR
-                || o->name == OPT_MORE_STR
-                || o->name == OPT_SECTION_STR)
+        if (o->name == OPT_HELP_STR || o->name == OPT_MORE_STR || o->name == OPT_SECTION_STR)
             continue;
 #ifndef NDEBUG
         i = o->valtype;
@@ -191,10 +197,26 @@ char *opt_init(int ac, char **av, const OPTIONS *o)
         else
             OPENSSL_assert(o->retval == OPT_DUP || o->retval > OPT_PARAM);
         switch (i) {
-        case   0: case '-': case '.':
-        case '/': case '<': case '>': case 'E': case 'F':
-        case 'M': case 'U': case 'f': case 'l': case 'n': case 'p': case 's':
-        case 'u': case 'c': case ':': case 'N': case 'A':
+        case 0:
+        case '-':
+        case '.':
+        case '/':
+        case '<':
+        case '>':
+        case 'E':
+        case 'F':
+        case 'M':
+        case 'U':
+        case 'f':
+        case 'l':
+        case 'n':
+        case 'p':
+        case 's':
+        case 'u':
+        case 'c':
+        case ':':
+        case 'N':
+        case 'A':
             break;
         default:
             OPENSSL_assert(0);
@@ -205,11 +227,9 @@ char *opt_init(int ac, char **av, const OPTIONS *o)
             /*
              * Some compilers inline strcmp and the assert string is too long.
              */
-            duplicated = next->retval != OPT_DUP
-                && strcmp(o->name, next->name) == 0;
+            duplicated = next->retval != OPT_DUP && strcmp(o->name, next->name) == 0;
             if (duplicated) {
-                opt_printf_stderr("%s: Internal error: duplicate option %s\n",
-                                  prog, o->name);
+                opt_printf_stderr("%s: Internal error: duplicate option %s\n", prog, o->name);
                 OPENSSL_assert(!duplicated);
             }
         }
@@ -225,27 +245,20 @@ char *opt_init(int ac, char **av, const OPTIONS *o)
 }
 
 static OPT_PAIR formats[] = {
-    {"pem", OPT_FMT_PEM},
-    {"der", OPT_FMT_DER},
-    {"b64", OPT_FMT_B64},
-    {"pkcs12", OPT_FMT_PKCS12},
-    {"smime", OPT_FMT_SMIME},
-    {"engine", OPT_FMT_ENGINE},
-    {"msblob", OPT_FMT_MSBLOB},
-    {"nss", OPT_FMT_NSS},
-    {"text", OPT_FMT_TEXT},
-    {"http", OPT_FMT_HTTP},
-    {"pvk", OPT_FMT_PVK},
-    {NULL}
-};
+    {"pem", OPT_FMT_PEM},       {"der", OPT_FMT_DER},     {"b64", OPT_FMT_B64},
+    {"pkcs12", OPT_FMT_PKCS12}, {"smime", OPT_FMT_SMIME}, {"engine", OPT_FMT_ENGINE},
+    {"msblob", OPT_FMT_MSBLOB}, {"nss", OPT_FMT_NSS},     {"text", OPT_FMT_TEXT},
+    {"http", OPT_FMT_HTTP},     {"pvk", OPT_FMT_PVK},     {NULL}};
 
-void opt_set_unknown_name(const char *name)
+void
+opt_set_unknown_name(const char *name)
 {
     unknown_name = name;
 }
 
 /* Print an error message about a failed format parse. */
-static int opt_format_error(const char *s, unsigned long flags)
+static int
+opt_format_error(const char *s, unsigned long flags)
 {
     OPT_PAIR *ap;
 
@@ -259,7 +272,8 @@ static int opt_format_error(const char *s, unsigned long flags)
 }
 
 /* Parse a format string, put it into *result; return 0 on failure, else 1. */
-int opt_format(const char *s, unsigned long flags, int *result)
+int
+opt_format(const char *s, unsigned long flags, int *result)
 {
     switch (*s) {
     default:
@@ -267,9 +281,8 @@ int opt_format(const char *s, unsigned long flags, int *result)
         return 0;
     case 'B':
     case 'b':
-        if (s[1] == '\0'
-            || strcmp(s, "B64") == 0 || strcmp(s, "b64") == 0
-            || strcmp(s, "BASE64") == 0 || strcmp(s, "base64") == 0 ) {
+        if (s[1] == '\0' || strcmp(s, "B64") == 0 || strcmp(s, "b64") == 0 ||
+            strcmp(s, "BASE64") == 0 || strcmp(s, "base64") == 0) {
             if ((flags & OPT_FMT_B64) == 0)
                 return opt_format_error(s, flags);
             *result = FORMAT_BASE64;
@@ -336,8 +349,8 @@ int opt_format(const char *s, unsigned long flags, int *result)
             if ((flags & OPT_FMT_PVK) == 0)
                 return opt_format_error(s, flags);
             *result = FORMAT_PVK;
-        } else if (strcmp(s, "P12") == 0 || strcmp(s, "p12") == 0
-                   || strcmp(s, "PKCS12") == 0 || strcmp(s, "pkcs12") == 0) {
+        } else if (strcmp(s, "P12") == 0 || strcmp(s, "p12") == 0 || strcmp(s, "PKCS12") == 0 ||
+                   strcmp(s, "pkcs12") == 0) {
             if ((flags & OPT_FMT_PKCS12) == 0)
                 return opt_format_error(s, flags);
             *result = FORMAT_PKCS12;
@@ -351,7 +364,8 @@ int opt_format(const char *s, unsigned long flags, int *result)
 }
 
 /* Return string representing the given format. */
-static const char *format2str(int format)
+static const char *
+format2str(int format)
 {
     switch (format) {
     default:
@@ -380,7 +394,8 @@ static const char *format2str(int format)
 }
 
 /* Print an error message about unsuitable/unsupported format requested. */
-void print_format_error(int format, unsigned long flags)
+void
+print_format_error(int format, unsigned long flags)
 {
     (void)opt_format_error(format2str(format), flags);
 }
@@ -389,15 +404,14 @@ void print_format_error(int format, unsigned long flags)
  * Parse a cipher name, put it in *cipherp after freeing what was there, if
  * cipherp is not NULL.  Return 0 on failure, else 1.
  */
-int opt_cipher_silent(const char *name, EVP_CIPHER **cipherp)
+int
+opt_cipher_silent(const char *name, EVP_CIPHER **cipherp)
 {
     EVP_CIPHER *c;
 
     ERR_set_mark();
-    if ((c = EVP_CIPHER_fetch(app_get0_libctx(), name,
-                              app_get0_propq())) != NULL
-        || (opt_legacy_okay()
-            && (c = (EVP_CIPHER *)EVP_get_cipherbyname(name)) != NULL)) {
+    if ((c = EVP_CIPHER_fetch(app_get0_libctx(), name, app_get0_propq())) != NULL ||
+        (opt_legacy_okay() && (c = (EVP_CIPHER *)EVP_get_cipherbyname(name)) != NULL)) {
         ERR_pop_to_mark();
         if (cipherp != NULL) {
             EVP_CIPHER_free(*cipherp);
@@ -411,26 +425,28 @@ int opt_cipher_silent(const char *name, EVP_CIPHER **cipherp)
     return 0;
 }
 
-int opt_cipher_any(const char *name, EVP_CIPHER **cipherp)
+int
+opt_cipher_any(const char *name, EVP_CIPHER **cipherp)
 {
     int ret;
 
     if (name == NULL)
-         return 1;
+        return 1;
     if ((ret = opt_cipher_silent(name, cipherp)) == 0)
         opt_printf_stderr("%s: Unknown option or cipher: %s\n", prog, name);
     return ret;
 }
 
-int opt_cipher(const char *name, EVP_CIPHER **cipherp)
+int
+opt_cipher(const char *name, EVP_CIPHER **cipherp)
 {
-     int mode, ret = 0;
-     unsigned long int flags;
-     EVP_CIPHER *c = NULL;
+    int mode, ret = 0;
+    unsigned long int flags;
+    EVP_CIPHER *c = NULL;
 
     if (name == NULL)
-         return 1;
-     if (opt_cipher_any(name, &c)) {
+        return 1;
+    if (opt_cipher_any(name, &c)) {
         mode = EVP_CIPHER_get_mode(c);
         flags = EVP_CIPHER_get_flags(c);
         if (mode == EVP_CIPH_XTS_MODE) {
@@ -451,14 +467,14 @@ int opt_cipher(const char *name, EVP_CIPHER **cipherp)
 /*
  * Parse message digest name, put it in *EVP_MD; return 0 on failure, else 1.
  */
-int opt_md_silent(const char *name, EVP_MD **mdp)
+int
+opt_md_silent(const char *name, EVP_MD **mdp)
 {
     EVP_MD *md;
 
     ERR_set_mark();
-    if ((md = EVP_MD_fetch(app_get0_libctx(), name, app_get0_propq())) != NULL
-        || (opt_legacy_okay()
-            && (md = (EVP_MD *)EVP_get_digestbyname(name)) != NULL)) {
+    if ((md = EVP_MD_fetch(app_get0_libctx(), name, app_get0_propq())) != NULL ||
+        (opt_legacy_okay() && (md = (EVP_MD *)EVP_get_digestbyname(name)) != NULL)) {
         ERR_pop_to_mark();
         if (mdp != NULL) {
             EVP_MD_free(*mdp);
@@ -472,19 +488,20 @@ int opt_md_silent(const char *name, EVP_MD **mdp)
     return 0;
 }
 
-int opt_md(const char *name, EVP_MD **mdp)
+int
+opt_md(const char *name, EVP_MD **mdp)
 {
     int ret;
 
     if (name == NULL)
         return 1;
     if ((ret = opt_md_silent(name, mdp)) == 0)
-        opt_printf_stderr("%s: Unknown option or message digest: %s\n",
-                          prog, name);
+        opt_printf_stderr("%s: Unknown option or message digest: %s\n", prog, name);
     return ret;
 }
 
-int opt_check_md(const char *name)
+int
+opt_check_md(const char *name)
 {
     if (opt_md(name, NULL))
         return 1;
@@ -493,7 +510,8 @@ int opt_check_md(const char *name)
 }
 
 /* Look through a list of name/value pairs. */
-int opt_pair(const char *name, const OPT_PAIR* pairs, int *result)
+int
+opt_pair(const char *name, const OPT_PAIR *pairs, int *result)
 {
     const OPT_PAIR *pp;
 
@@ -509,7 +527,8 @@ int opt_pair(const char *name, const OPT_PAIR* pairs, int *result)
 }
 
 /* Look through a list of valid names */
-int opt_string(const char *name, const char **options)
+int
+opt_string(const char *name, const char **options)
 {
     const char **p;
 
@@ -523,7 +542,8 @@ int opt_string(const char *name, const char **options)
 }
 
 /* Parse an int, put it into *result; return 0 on failure, else 1. */
-int opt_int(const char *value, int *result)
+int
+opt_int(const char *value, int *result)
 {
     long l;
 
@@ -531,15 +551,15 @@ int opt_int(const char *value, int *result)
         return 0;
     *result = (int)l;
     if (*result != l) {
-        opt_printf_stderr("%s: Value \"%s\" outside integer range\n",
-                          prog, value);
+        opt_printf_stderr("%s: Value \"%s\" outside integer range\n", prog, value);
         return 0;
     }
     return 1;
 }
 
 /* Parse and return an integer, assuming range has been checked before. */
-int opt_int_arg(void)
+int
+opt_int_arg(void)
 {
     int result = -1;
 
@@ -547,22 +567,18 @@ int opt_int_arg(void)
     return result;
 }
 
-static void opt_number_error(const char *v)
+static void
+opt_number_error(const char *v)
 {
     size_t i = 0;
     struct strstr_pair_st {
         char *prefix;
         char *name;
-    } b[] = {
-        {"0x", "a hexadecimal"},
-        {"0X", "a hexadecimal"},
-        {"0", "an octal"}
-    };
+    } b[] = {{"0x", "a hexadecimal"}, {"0X", "a hexadecimal"}, {"0", "an octal"}};
 
     for (i = 0; i < OSSL_NELEM(b); i++) {
         if (strncmp(v, b[i].prefix, strlen(b[i].prefix)) == 0) {
-            opt_printf_stderr("%s: Can't parse \"%s\" as %s number\n",
-                              prog, v, b[i].name);
+            opt_printf_stderr("%s: Can't parse \"%s\" as %s number\n", prog, v, b[i].name);
             return;
         }
     }
@@ -571,7 +587,8 @@ static void opt_number_error(const char *v)
 }
 
 /* Parse a long, put it into *result; return 0 on failure, else 1. */
-int opt_long(const char *value, long *result)
+int
+opt_long(const char *value, long *result)
 {
     int oerrno = errno;
     long l;
@@ -579,10 +596,8 @@ int opt_long(const char *value, long *result)
 
     errno = 0;
     l = strtol(value, &endp, 0);
-    if (*endp
-            || endp == value
-            || ((l == LONG_MAX || l == LONG_MIN) && errno == ERANGE)
-            || (l == 0 && errno != 0)) {
+    if (*endp || endp == value || ((l == LONG_MAX || l == LONG_MIN) && errno == ERANGE) ||
+        (l == 0 && errno != 0)) {
         opt_number_error(value);
         errno = oerrno;
         return 0;
@@ -592,12 +607,12 @@ int opt_long(const char *value, long *result)
     return 1;
 }
 
-#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L && \
-    defined(INTMAX_MAX) && defined(UINTMAX_MAX) && \
-    !defined(OPENSSL_NO_INTTYPES_H)
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L && defined(INTMAX_MAX) &&             \
+    defined(UINTMAX_MAX) && !defined(OPENSSL_NO_INTTYPES_H)
 
 /* Parse an intmax_t, put it into *result; return 0 on failure, else 1. */
-int opt_intmax(const char *value, ossl_intmax_t *result)
+int
+opt_intmax(const char *value, ossl_intmax_t *result)
 {
     int oerrno = errno;
     intmax_t m;
@@ -605,18 +620,14 @@ int opt_intmax(const char *value, ossl_intmax_t *result)
 
     errno = 0;
     m = strtoimax(value, &endp, 0);
-    if (*endp
-            || endp == value
-            || ((m == INTMAX_MAX || m == INTMAX_MIN)
-                && errno == ERANGE)
-            || (m == 0 && errno != 0)) {
+    if (*endp || endp == value || ((m == INTMAX_MAX || m == INTMAX_MIN) && errno == ERANGE) ||
+        (m == 0 && errno != 0)) {
         opt_number_error(value);
         errno = oerrno;
         return 0;
     }
     /* Ensure that the value in |m| is never too big for |*result| */
-    if (sizeof(m) > sizeof(*result)
-        && (m < OSSL_INTMAX_MIN || m > OSSL_INTMAX_MAX)) {
+    if (sizeof(m) > sizeof(*result) && (m < OSSL_INTMAX_MIN || m > OSSL_INTMAX_MAX)) {
         opt_number_error(value);
         return 0;
     }
@@ -626,7 +637,8 @@ int opt_intmax(const char *value, ossl_intmax_t *result)
 }
 
 /* Parse a uintmax_t, put it into *result; return 0 on failure, else 1. */
-int opt_uintmax(const char *value, ossl_uintmax_t *result)
+int
+opt_uintmax(const char *value, ossl_uintmax_t *result)
 {
     int oerrno = errno;
     uintmax_t m;
@@ -634,17 +646,13 @@ int opt_uintmax(const char *value, ossl_uintmax_t *result)
 
     errno = 0;
     m = strtoumax(value, &endp, 0);
-    if (*endp
-            || endp == value
-            || (m == UINTMAX_MAX && errno == ERANGE)
-            || (m == 0 && errno != 0)) {
+    if (*endp || endp == value || (m == UINTMAX_MAX && errno == ERANGE) || (m == 0 && errno != 0)) {
         opt_number_error(value);
         errno = oerrno;
         return 0;
     }
     /* Ensure that the value in |m| is never too big for |*result| */
-    if (sizeof(m) > sizeof(*result)
-        && m > OSSL_UINTMAX_MAX) {
+    if (sizeof(m) > sizeof(*result) && m > OSSL_UINTMAX_MAX) {
         opt_number_error(value);
         return 0;
     }
@@ -654,7 +662,8 @@ int opt_uintmax(const char *value, ossl_uintmax_t *result)
 }
 #else
 /* Fallback implementations based on long */
-int opt_intmax(const char *value, ossl_intmax_t *result)
+int
+opt_intmax(const char *value, ossl_intmax_t *result)
 {
     long m;
     int ret;
@@ -664,7 +673,8 @@ int opt_intmax(const char *value, ossl_intmax_t *result)
     return ret;
 }
 
-int opt_uintmax(const char *value, ossl_uintmax_t *result)
+int
+opt_uintmax(const char *value, ossl_uintmax_t *result)
 {
     unsigned long m;
     int ret;
@@ -678,7 +688,8 @@ int opt_uintmax(const char *value, ossl_uintmax_t *result)
 /*
  * Parse an unsigned long, put it into *result; return 0 on failure, else 1.
  */
-int opt_ulong(const char *value, unsigned long *result)
+int
+opt_ulong(const char *value, unsigned long *result)
 {
     int oerrno = errno;
     char *endptr;
@@ -686,10 +697,8 @@ int opt_ulong(const char *value, unsigned long *result)
 
     errno = 0;
     l = strtoul(value, &endptr, 0);
-    if (*endptr
-            || endptr == value
-            || ((l == ULONG_MAX) && errno == ERANGE)
-            || (l == 0 && errno != 0)) {
+    if (*endptr || endptr == value || ((l == ULONG_MAX) && errno == ERANGE) ||
+        (l == 0 && errno != 0)) {
         opt_number_error(value);
         errno = oerrno;
         return 0;
@@ -706,7 +715,8 @@ int opt_ulong(const char *value, unsigned long *result)
  */
 enum range { OPT_V_ENUM };
 
-int opt_verify(int opt, X509_VERIFY_PARAM *vpm)
+int
+opt_verify(int opt, X509_VERIFY_PARAM *vpm)
 {
     int i;
     ossl_intmax_t t = 0;
@@ -730,8 +740,7 @@ int opt_verify(int opt, X509_VERIFY_PARAM *vpm)
         }
         if (!X509_VERIFY_PARAM_add0_policy(vpm, otmp)) {
             ASN1_OBJECT_free(otmp);
-            opt_printf_stderr("%s: Internal error adding Policy %s\n",
-                              prog, opt_arg());
+            opt_printf_stderr("%s: Internal error adding Policy %s\n", prog, opt_arg());
             return 0;
         }
         break;
@@ -750,16 +759,14 @@ int opt_verify(int opt, X509_VERIFY_PARAM *vpm)
         i = X509_PURPOSE_get_id(xptmp);
 
         if (!X509_VERIFY_PARAM_set_purpose(vpm, i)) {
-            opt_printf_stderr("%s: Internal error setting purpose %s\n",
-                              prog, opt_arg());
+            opt_printf_stderr("%s: Internal error setting purpose %s\n", prog, opt_arg());
             return 0;
         }
         break;
     case OPT_V_VERIFY_NAME:
         vtmp = X509_VERIFY_PARAM_lookup(opt_arg());
         if (vtmp == NULL) {
-            opt_printf_stderr("%s: Invalid verify name %s\n",
-                              prog, opt_arg());
+            opt_printf_stderr("%s: Invalid verify name %s\n", prog, opt_arg());
             return 0;
         }
         X509_VERIFY_PARAM_set1(vpm, vtmp);
@@ -778,8 +785,7 @@ int opt_verify(int opt, X509_VERIFY_PARAM *vpm)
         if (!opt_intmax(opt_arg(), &t))
             return 0;
         if (t != (time_t)t) {
-            opt_printf_stderr("%s: epoch time out of range %s\n",
-                              prog, opt_arg());
+            opt_printf_stderr("%s: epoch time out of range %s\n", prog, opt_arg());
             return 0;
         }
         X509_VERIFY_PARAM_set_time(vpm, (time_t)t);
@@ -806,9 +812,7 @@ int opt_verify(int opt, X509_VERIFY_PARAM *vpm)
         X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_CRL_CHECK);
         break;
     case OPT_V_CRL_CHECK_ALL:
-        X509_VERIFY_PARAM_set_flags(vpm,
-                                    X509_V_FLAG_CRL_CHECK |
-                                    X509_V_FLAG_CRL_CHECK_ALL);
+        X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_CRL_CHECK | X509_V_FLAG_CRL_CHECK_ALL);
         break;
     case OPT_V_POLICY_CHECK:
         X509_VERIFY_PARAM_set_flags(vpm, X509_V_FLAG_POLICY_CHECK);
@@ -863,10 +867,10 @@ int opt_verify(int opt, X509_VERIFY_PARAM *vpm)
         break;
     }
     return 1;
-
 }
 
-void opt_begin(void)
+void
+opt_begin(void)
 {
     opt_index = 1;
     arg = NULL;
@@ -877,7 +881,8 @@ void opt_begin(void)
  * Parse the next flag (and value if specified), return 0 if done, -1 on
  * error, otherwise the flag's retval.
  */
-int opt_next(void)
+int
+opt_next(void)
 {
     char *p;
     const OPTIONS *o;
@@ -912,15 +917,13 @@ int opt_next(void)
         *arg++ = '\0';
     for (o = opts; o->name; ++o) {
         /* If not this option, move on to the next one. */
-        if (!(strcmp(p, "h") == 0 && strcmp(o->name, "help") == 0)
-                && strcmp(p, o->name) != 0)
+        if (!(strcmp(p, "h") == 0 && strcmp(o->name, "help") == 0) && strcmp(p, o->name) != 0)
             continue;
 
         /* If it doesn't take a value, make sure none was given. */
         if (o->valtype == 0 || o->valtype == '-') {
             if (arg) {
-                opt_printf_stderr("%s: Option -%s does not take a value\n",
-                                  prog, p);
+                opt_printf_stderr("%s: Option -%s does not take a value\n", prog, p);
                 return -1;
             }
             return o->retval;
@@ -929,8 +932,7 @@ int opt_next(void)
         /* Want a value; get the next param if =foo not used. */
         if (arg == NULL) {
             if (argv[opt_index] == NULL) {
-                opt_printf_stderr("%s: Option -%s needs a value\n",
-                                  prog, o->name);
+                opt_printf_stderr("%s: Option -%s needs a value\n", prog, o->name);
                 return -1;
             }
             arg = argv[opt_index++];
@@ -963,13 +965,13 @@ int opt_next(void)
             if (!opt_int(arg, &ival))
                 return -1;
             if (o->valtype == 'p' && ival <= 0) {
-                opt_printf_stderr("%s: Non-positive number \"%s\" for option -%s\n",
-                                  prog, arg, o->name);
+                opt_printf_stderr("%s: Non-positive number \"%s\" for option -%s\n", prog, arg,
+                                  o->name);
                 return -1;
             }
             if (o->valtype == 'N' && ival < 0) {
-                opt_printf_stderr("%s: Negative number \"%s\" for option -%s\n",
-                                  prog, arg, o->name);
+                opt_printf_stderr("%s: Negative number \"%s\" for option -%s\n", prog, arg,
+                                  o->name);
                 return -1;
             }
             break;
@@ -996,14 +998,14 @@ int opt_next(void)
         case 'A':
         case 'a':
             if (opt_format(arg,
-                           o->valtype == 'c' ? OPT_FMT_PDS :
-                           o->valtype == 'E' ? OPT_FMT_PDE :
-                           o->valtype == 'F' ? OPT_FMT_PEMDER :
-                           o->valtype == 'A' ? OPT_FMT_ASN1 :
-                           OPT_FMT_ANY, &ival))
+                           o->valtype == 'c'   ? OPT_FMT_PDS
+                           : o->valtype == 'E' ? OPT_FMT_PDE
+                           : o->valtype == 'F' ? OPT_FMT_PEMDER
+                           : o->valtype == 'A' ? OPT_FMT_ASN1
+                                               : OPT_FMT_ANY,
+                           &ival))
                 break;
-            opt_printf_stderr("%s: Invalid format \"%s\" for option -%s\n",
-                              prog, arg, o->name);
+            opt_printf_stderr("%s: Invalid format \"%s\" for option -%s\n", prog, arg, o->name);
             return -1;
         }
 
@@ -1012,8 +1014,8 @@ int opt_next(void)
     }
     if (unknown != NULL) {
         if (dunno != NULL) {
-            opt_printf_stderr("%s: Multiple %s or unknown options: -%s and -%s\n",
-                              prog, unknown_name, dunno, p);
+            opt_printf_stderr("%s: Multiple %s or unknown options: -%s and -%s\n", prog,
+                              unknown_name, dunno, p);
             return -1;
         }
         dunno = p;
@@ -1024,37 +1026,43 @@ int opt_next(void)
 }
 
 /* Return the most recent flag parameter. */
-char *opt_arg(void)
+char *
+opt_arg(void)
 {
     return arg;
 }
 
 /* Return the most recent flag (option name including the preceding '-'). */
-char *opt_flag(void)
+char *
+opt_flag(void)
 {
     return flag;
 }
 
 /* Return the unknown option. */
-char *opt_unknown(void)
+char *
+opt_unknown(void)
 {
     return dunno;
 }
 
 /* Reset the unknown option; needed by ocsp to allow multiple digest options. */
-void reset_unknown(void)
+void
+reset_unknown(void)
 {
     dunno = NULL;
 }
 
 /* Return the rest of the arguments after parsing flags. */
-char **opt_rest(void)
+char **
+opt_rest(void)
 {
     return &argv[opt_index];
 }
 
 /* How many items in remaining args? */
-int opt_num_rest(void)
+int
+opt_num_rest(void)
 {
     int i = 0;
     char **pp;
@@ -1064,7 +1072,8 @@ int opt_num_rest(void)
     return i;
 }
 
-int opt_check_rest_arg(const char *expected)
+int
+opt_check_rest_arg(const char *expected)
 {
     char *opt = *opt_rest();
 
@@ -1084,13 +1093,13 @@ int opt_check_rest_arg(const char *expected)
     if (opt_unknown() == NULL)
         opt_printf_stderr("%s: Extra option: \"%s\"\n", prog, opt);
     else
-        opt_printf_stderr("%s: Extra (unknown) options: \"%s\" \"%s\"\n",
-                          prog, opt_unknown(), opt);
+        opt_printf_stderr("%s: Extra (unknown) options: \"%s\" \"%s\"\n", prog, opt_unknown(), opt);
     return 0;
 }
 
 /* Return a string describing the parameter type. */
-static const char *valtype2param(const OPTIONS *o)
+static const char *
+valtype2param(const OPTIONS *o)
 {
     switch (o->valtype) {
     case 0:
@@ -1130,9 +1139,10 @@ static const char *valtype2param(const OPTIONS *o)
     return "parm";
 }
 
-static void opt_print(const OPTIONS *o, int doingparams, int width)
+static void
+opt_print(const OPTIONS *o, int doingparams, int width)
 {
-    const char* help;
+    const char *help;
     char start[80 + 1];
     int linelen, printlen;
 
@@ -1170,11 +1180,11 @@ static void opt_print(const OPTIONS *o, int doingparams, int width)
     printlen = opt_printf_stderr(" %s", !doingparams ? "-" : "");
     linelen += (printlen > 0) ? printlen : MAX_OPT_HELP_WIDTH;
 
-    printlen = opt_printf_stderr("%s" , o->name[0] ? o->name : "*");
+    printlen = opt_printf_stderr("%s", o->name[0] ? o->name : "*");
     linelen += (printlen > 0) ? printlen : MAX_OPT_HELP_WIDTH;
 
     if (o->valtype != '-') {
-        printlen = opt_printf_stderr(" %s" , valtype2param(o));
+        printlen = opt_printf_stderr(" %s", valtype2param(o));
         linelen += (printlen > 0) ? printlen : MAX_OPT_HELP_WIDTH;
     }
 
@@ -1190,7 +1200,8 @@ static void opt_print(const OPTIONS *o, int doingparams, int width)
     opt_printf_stderr("%s  %s\n", start, help);
 }
 
-void opt_help(const OPTIONS *list)
+void
+opt_help(const OPTIONS *list)
 {
     const OPTIONS *o;
     int i, sawparams = 0, width = 5;
@@ -1232,7 +1243,8 @@ void opt_help(const OPTIONS *list)
 /* opt_isdir section */
 #ifdef _WIN32
 # include <windows.h>
-int opt_isdir(const char *name)
+int
+opt_isdir(const char *name)
 {
     DWORD attr;
 # if defined(UNICODE) || defined(_UNICODE)
@@ -1242,7 +1254,7 @@ int opt_isdir(const char *name)
     if (len_0 > MAX_PATH)
         return -1;
 
-#  if !defined(_WIN32_WCE) || _WIN32_WCE>=101
+#  if !defined(_WIN32_WCE) || _WIN32_WCE >= 101
     if (!MultiByteToWideChar(CP_ACP, 0, name, len_0, tempname, MAX_PATH))
 #  endif
         for (i = 0; i < len_0; i++)
@@ -1260,13 +1272,14 @@ int opt_isdir(const char *name)
 # include <sys/stat.h>
 # ifndef S_ISDIR
 #  if defined(_S_IFMT) && defined(_S_IFDIR)
-#   define S_ISDIR(a)   (((a) & _S_IFMT) == _S_IFDIR)
+#   define S_ISDIR(a) (((a) & _S_IFMT) == _S_IFDIR)
 #  else
-#   define S_ISDIR(a)   (((a) & S_IFMT) == S_IFDIR)
+#   define S_ISDIR(a) (((a) & S_IFMT) == S_IFDIR)
 #  endif
 # endif
 
-int opt_isdir(const char *name)
+int
+opt_isdir(const char *name)
 {
 # if defined(S_ISDIR)
     struct stat st;

@@ -144,99 +144,100 @@ IMPLEMENT_ASN1_FUNCTIONS(OSSL_CRMF_POPO)
 
 ASN1_ADB_TEMPLATE(attributetypeandvalue_default) =
     ASN1_OPT(OSSL_CRMF_ATTRIBUTETYPEANDVALUE, value.other, ASN1_ANY);
-ASN1_ADB(OSSL_CRMF_ATTRIBUTETYPEANDVALUE) = {
-    ADB_ENTRY(NID_id_regCtrl_regToken,
-              ASN1_SIMPLE(OSSL_CRMF_ATTRIBUTETYPEANDVALUE,
-                          value.regToken, ASN1_UTF8STRING)),
-    ADB_ENTRY(NID_id_regCtrl_authenticator,
-              ASN1_SIMPLE(OSSL_CRMF_ATTRIBUTETYPEANDVALUE,
-                          value.authenticator, ASN1_UTF8STRING)),
-    ADB_ENTRY(NID_id_regCtrl_pkiPublicationInfo,
-              ASN1_SIMPLE(OSSL_CRMF_ATTRIBUTETYPEANDVALUE,
-                          value.pkiPublicationInfo,
-                          OSSL_CRMF_PKIPUBLICATIONINFO)),
-    ADB_ENTRY(NID_id_regCtrl_oldCertID,
-              ASN1_SIMPLE(OSSL_CRMF_ATTRIBUTETYPEANDVALUE,
-                          value.oldCertID, OSSL_CRMF_CERTID)),
-    ADB_ENTRY(NID_id_regCtrl_protocolEncrKey,
-              ASN1_SIMPLE(OSSL_CRMF_ATTRIBUTETYPEANDVALUE,
-                          value.protocolEncrKey, X509_PUBKEY)),
-    ADB_ENTRY(NID_id_regCtrl_algId,
-              ASN1_SIMPLE(OSSL_CRMF_ATTRIBUTETYPEANDVALUE,
-                          value.algId, X509_ALGOR)),
-    ADB_ENTRY(NID_id_regCtrl_rsaKeyLen,
-              ASN1_SIMPLE(OSSL_CRMF_ATTRIBUTETYPEANDVALUE,
-                          value.rsaKeyLen, ASN1_INTEGER)),
-    ADB_ENTRY(NID_id_regInfo_utf8Pairs,
-              ASN1_SIMPLE(OSSL_CRMF_ATTRIBUTETYPEANDVALUE,
-                          value.utf8Pairs, ASN1_UTF8STRING)),
-    ADB_ENTRY(NID_id_regInfo_certReq,
-              ASN1_SIMPLE(OSSL_CRMF_ATTRIBUTETYPEANDVALUE,
-                          value.certReq, OSSL_CRMF_CERTREQUEST)),
-} ASN1_ADB_END(OSSL_CRMF_ATTRIBUTETYPEANDVALUE, 0, type, 0,
-               &attributetypeandvalue_default_tt, NULL);
+ASN1_ADB(OSSL_CRMF_ATTRIBUTETYPEANDVALUE) =
+    {
+        ADB_ENTRY(NID_id_regCtrl_regToken,
+                  ASN1_SIMPLE(OSSL_CRMF_ATTRIBUTETYPEANDVALUE, value.regToken, ASN1_UTF8STRING)),
+        ADB_ENTRY(NID_id_regCtrl_authenticator, ASN1_SIMPLE(OSSL_CRMF_ATTRIBUTETYPEANDVALUE,
+                                                            value.authenticator, ASN1_UTF8STRING)),
+        ADB_ENTRY(NID_id_regCtrl_pkiPublicationInfo,
+                  ASN1_SIMPLE(OSSL_CRMF_ATTRIBUTETYPEANDVALUE, value.pkiPublicationInfo,
+                              OSSL_CRMF_PKIPUBLICATIONINFO)),
+        ADB_ENTRY(NID_id_regCtrl_oldCertID,
+                  ASN1_SIMPLE(OSSL_CRMF_ATTRIBUTETYPEANDVALUE, value.oldCertID, OSSL_CRMF_CERTID)),
+        ADB_ENTRY(NID_id_regCtrl_protocolEncrKey,
+                  ASN1_SIMPLE(OSSL_CRMF_ATTRIBUTETYPEANDVALUE, value.protocolEncrKey, X509_PUBKEY)),
+        ADB_ENTRY(NID_id_regCtrl_algId,
+                  ASN1_SIMPLE(OSSL_CRMF_ATTRIBUTETYPEANDVALUE, value.algId, X509_ALGOR)),
+        ADB_ENTRY(NID_id_regCtrl_rsaKeyLen,
+                  ASN1_SIMPLE(OSSL_CRMF_ATTRIBUTETYPEANDVALUE, value.rsaKeyLen, ASN1_INTEGER)),
+        ADB_ENTRY(NID_id_regInfo_utf8Pairs,
+                  ASN1_SIMPLE(OSSL_CRMF_ATTRIBUTETYPEANDVALUE, value.utf8Pairs, ASN1_UTF8STRING)),
+        ADB_ENTRY(NID_id_regInfo_certReq, ASN1_SIMPLE(OSSL_CRMF_ATTRIBUTETYPEANDVALUE,
+                                                      value.certReq, OSSL_CRMF_CERTREQUEST)),
+} ASN1_ADB_END(OSSL_CRMF_ATTRIBUTETYPEANDVALUE, 0, type, 0, &attributetypeandvalue_default_tt,
+               NULL);
 
-ASN1_SEQUENCE(OSSL_CRMF_ATTRIBUTETYPEANDVALUE) = {
-    ASN1_SIMPLE(OSSL_CRMF_ATTRIBUTETYPEANDVALUE, type, ASN1_OBJECT),
-    ASN1_ADB_OBJECT(OSSL_CRMF_ATTRIBUTETYPEANDVALUE)
-} ASN1_SEQUENCE_END(OSSL_CRMF_ATTRIBUTETYPEANDVALUE)
+ASN1_SEQUENCE(OSSL_CRMF_ATTRIBUTETYPEANDVALUE) =
+    {ASN1_SIMPLE(OSSL_CRMF_ATTRIBUTETYPEANDVALUE, type, ASN1_OBJECT),
+     ASN1_ADB_OBJECT(
+         OSSL_CRMF_ATTRIBUTETYPEANDVALUE)} ASN1_SEQUENCE_END(OSSL_CRMF_ATTRIBUTETYPEANDVALUE)
 
-IMPLEMENT_ASN1_FUNCTIONS(OSSL_CRMF_ATTRIBUTETYPEANDVALUE)
-IMPLEMENT_ASN1_DUP_FUNCTION(OSSL_CRMF_ATTRIBUTETYPEANDVALUE)
+        IMPLEMENT_ASN1_FUNCTIONS(OSSL_CRMF_ATTRIBUTETYPEANDVALUE) IMPLEMENT_ASN1_DUP_FUNCTION(
+            OSSL_CRMF_ATTRIBUTETYPEANDVALUE)
 
-ASN1_SEQUENCE(OSSL_CRMF_OPTIONALVALIDITY) = {
-    ASN1_EXP_OPT(OSSL_CRMF_OPTIONALVALIDITY, notBefore, ASN1_TIME, 0),
-    ASN1_EXP_OPT(OSSL_CRMF_OPTIONALVALIDITY, notAfter,  ASN1_TIME, 1)
-} ASN1_SEQUENCE_END(OSSL_CRMF_OPTIONALVALIDITY)
-IMPLEMENT_ASN1_FUNCTIONS(OSSL_CRMF_OPTIONALVALIDITY)
+            ASN1_SEQUENCE(
+                OSSL_CRMF_OPTIONALVALIDITY) = {ASN1_EXP_OPT(OSSL_CRMF_OPTIONALVALIDITY, notBefore,
+                                                            ASN1_TIME, 0),
+                                               ASN1_EXP_OPT(
+                                                   OSSL_CRMF_OPTIONALVALIDITY, notAfter, ASN1_TIME,
+                                                   1)} ASN1_SEQUENCE_END(OSSL_CRMF_OPTIONALVALIDITY)
+                IMPLEMENT_ASN1_FUNCTIONS(OSSL_CRMF_OPTIONALVALIDITY)
 
-ASN1_SEQUENCE(OSSL_CRMF_CERTTEMPLATE) = {
-    ASN1_IMP_OPT(OSSL_CRMF_CERTTEMPLATE, version, ASN1_INTEGER, 0),
-    /*
-     * serialNumber MUST be omitted. This field is assigned by the CA
-     * during certificate creation.
-     */
-    ASN1_IMP_OPT(OSSL_CRMF_CERTTEMPLATE, serialNumber, ASN1_INTEGER, 1),
-    /*
-     * signingAlg MUST be omitted. This field is assigned by the CA
-     * during certificate creation.
-     */
-    ASN1_IMP_OPT(OSSL_CRMF_CERTTEMPLATE, signingAlg, X509_ALGOR, 2),
-    ASN1_EXP_OPT(OSSL_CRMF_CERTTEMPLATE, issuer, X509_NAME, 3),
-    ASN1_IMP_OPT(OSSL_CRMF_CERTTEMPLATE, validity,
-                 OSSL_CRMF_OPTIONALVALIDITY, 4),
-    ASN1_EXP_OPT(OSSL_CRMF_CERTTEMPLATE, subject, X509_NAME, 5),
-    ASN1_IMP_OPT(OSSL_CRMF_CERTTEMPLATE, publicKey, X509_PUBKEY, 6),
-    /* issuerUID is deprecated in version 2 */
-    ASN1_IMP_OPT(OSSL_CRMF_CERTTEMPLATE, issuerUID, ASN1_BIT_STRING, 7),
-    /* subjectUID is deprecated in version 2 */
-    ASN1_IMP_OPT(OSSL_CRMF_CERTTEMPLATE, subjectUID, ASN1_BIT_STRING, 8),
-    ASN1_IMP_SEQUENCE_OF_OPT(OSSL_CRMF_CERTTEMPLATE, extensions,
-                             X509_EXTENSION, 9),
-} ASN1_SEQUENCE_END(OSSL_CRMF_CERTTEMPLATE)
-IMPLEMENT_ASN1_FUNCTIONS(OSSL_CRMF_CERTTEMPLATE)
-IMPLEMENT_ASN1_DUP_FUNCTION(OSSL_CRMF_CERTTEMPLATE)
+                    ASN1_SEQUENCE(OSSL_CRMF_CERTTEMPLATE) =
+                        {
+                            ASN1_IMP_OPT(OSSL_CRMF_CERTTEMPLATE, version, ASN1_INTEGER, 0),
+                            /*
+                             * serialNumber MUST be omitted. This field is assigned by the CA
+                             * during certificate creation.
+                             */
+                            ASN1_IMP_OPT(OSSL_CRMF_CERTTEMPLATE, serialNumber, ASN1_INTEGER, 1),
+                            /*
+                             * signingAlg MUST be omitted. This field is assigned by the CA
+                             * during certificate creation.
+                             */
+                            ASN1_IMP_OPT(OSSL_CRMF_CERTTEMPLATE, signingAlg, X509_ALGOR, 2),
+                            ASN1_EXP_OPT(OSSL_CRMF_CERTTEMPLATE, issuer, X509_NAME, 3),
+                            ASN1_IMP_OPT(OSSL_CRMF_CERTTEMPLATE, validity,
+                                         OSSL_CRMF_OPTIONALVALIDITY, 4),
+                            ASN1_EXP_OPT(OSSL_CRMF_CERTTEMPLATE, subject, X509_NAME, 5),
+                            ASN1_IMP_OPT(OSSL_CRMF_CERTTEMPLATE, publicKey, X509_PUBKEY, 6),
+                            /* issuerUID is deprecated in version 2 */
+                            ASN1_IMP_OPT(OSSL_CRMF_CERTTEMPLATE, issuerUID, ASN1_BIT_STRING, 7),
+                            /* subjectUID is deprecated in version 2 */
+                            ASN1_IMP_OPT(OSSL_CRMF_CERTTEMPLATE, subjectUID, ASN1_BIT_STRING, 8),
+                            ASN1_IMP_SEQUENCE_OF_OPT(OSSL_CRMF_CERTTEMPLATE, extensions,
+                                                     X509_EXTENSION, 9),
+} ASN1_SEQUENCE_END(OSSL_CRMF_CERTTEMPLATE) IMPLEMENT_ASN1_FUNCTIONS(OSSL_CRMF_CERTTEMPLATE)
+                            IMPLEMENT_ASN1_DUP_FUNCTION(OSSL_CRMF_CERTTEMPLATE)
 
-ASN1_SEQUENCE(OSSL_CRMF_CERTREQUEST) = {
-    ASN1_SIMPLE(OSSL_CRMF_CERTREQUEST, certReqId, ASN1_INTEGER),
-    ASN1_SIMPLE(OSSL_CRMF_CERTREQUEST, certTemplate, OSSL_CRMF_CERTTEMPLATE),
-    ASN1_SEQUENCE_OF_OPT(OSSL_CRMF_CERTREQUEST, controls,
-                         OSSL_CRMF_ATTRIBUTETYPEANDVALUE)
-} ASN1_SEQUENCE_END(OSSL_CRMF_CERTREQUEST)
-IMPLEMENT_ASN1_FUNCTIONS(OSSL_CRMF_CERTREQUEST)
-IMPLEMENT_ASN1_DUP_FUNCTION(OSSL_CRMF_CERTREQUEST)
+                                ASN1_SEQUENCE(OSSL_CRMF_CERTREQUEST) =
+                                    {ASN1_SIMPLE(OSSL_CRMF_CERTREQUEST, certReqId, ASN1_INTEGER),
+                                     ASN1_SIMPLE(OSSL_CRMF_CERTREQUEST, certTemplate,
+                                                 OSSL_CRMF_CERTTEMPLATE),
+                                     ASN1_SEQUENCE_OF_OPT(
+                                         OSSL_CRMF_CERTREQUEST, controls,
+                                         OSSL_CRMF_ATTRIBUTETYPEANDVALUE)} ASN1_SEQUENCE_END(OSSL_CRMF_CERTREQUEST)
+                                        IMPLEMENT_ASN1_FUNCTIONS(OSSL_CRMF_CERTREQUEST)
+                                            IMPLEMENT_ASN1_DUP_FUNCTION(OSSL_CRMF_CERTREQUEST)
 
-ASN1_SEQUENCE(OSSL_CRMF_MSG) = {
-    ASN1_SIMPLE(OSSL_CRMF_MSG, certReq, OSSL_CRMF_CERTREQUEST),
-    ASN1_OPT(OSSL_CRMF_MSG, popo, OSSL_CRMF_POPO),
-    ASN1_SEQUENCE_OF_OPT(OSSL_CRMF_MSG, regInfo,
-                         OSSL_CRMF_ATTRIBUTETYPEANDVALUE)
-} ASN1_SEQUENCE_END(OSSL_CRMF_MSG)
-IMPLEMENT_ASN1_FUNCTIONS(OSSL_CRMF_MSG)
-IMPLEMENT_ASN1_DUP_FUNCTION(OSSL_CRMF_MSG)
+                                                ASN1_SEQUENCE(OSSL_CRMF_MSG) =
+                                                    {ASN1_SIMPLE(OSSL_CRMF_MSG, certReq,
+                                                                 OSSL_CRMF_CERTREQUEST),
+                                                     ASN1_OPT(OSSL_CRMF_MSG, popo, OSSL_CRMF_POPO),
+                                                     ASN1_SEQUENCE_OF_OPT(
+                                                         OSSL_CRMF_MSG, regInfo,
+                                                         OSSL_CRMF_ATTRIBUTETYPEANDVALUE)} ASN1_SEQUENCE_END(OSSL_CRMF_MSG)
+                                                        IMPLEMENT_ASN1_FUNCTIONS(OSSL_CRMF_MSG)
+                                                            IMPLEMENT_ASN1_DUP_FUNCTION(
+                                                                OSSL_CRMF_MSG)
 
-ASN1_ITEM_TEMPLATE(OSSL_CRMF_MSGS) =
-    ASN1_EX_TEMPLATE_TYPE(ASN1_TFLG_SEQUENCE_OF, 0,
-                          OSSL_CRMF_MSGS, OSSL_CRMF_MSG)
-ASN1_ITEM_TEMPLATE_END(OSSL_CRMF_MSGS)
-IMPLEMENT_ASN1_FUNCTIONS(OSSL_CRMF_MSGS)
+                                                                ASN1_ITEM_TEMPLATE(OSSL_CRMF_MSGS) =
+                                                                    ASN1_EX_TEMPLATE_TYPE(
+                                                                        ASN1_TFLG_SEQUENCE_OF, 0,
+                                                                        OSSL_CRMF_MSGS,
+                                                                        OSSL_CRMF_MSG)
+                                                                        ASN1_ITEM_TEMPLATE_END(
+                                                                            OSSL_CRMF_MSGS)
+                                                                            IMPLEMENT_ASN1_FUNCTIONS(
+                                                                                OSSL_CRMF_MSGS)

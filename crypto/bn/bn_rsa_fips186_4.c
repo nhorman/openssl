@@ -29,7 +29,7 @@
 #include "internal/nelem.h"
 
 #if BN_BITS2 == 64
-# define BN_DEF(lo, hi) (BN_ULONG)hi<<32|lo
+# define BN_DEF(lo, hi) (BN_ULONG) hi << 32 | lo
 #else
 # define BN_DEF(lo, hi) lo, hi
 #endif
@@ -37,22 +37,17 @@
 /* 1 / sqrt(2) * 2^256, rounded up */
 static const BN_ULONG inv_sqrt_2_val[] = {
     BN_DEF(0x83339916UL, 0xED17AC85UL), BN_DEF(0x893BA84CUL, 0x1D6F60BAUL),
-    BN_DEF(0x754ABE9FUL, 0x597D89B3UL), BN_DEF(0xF9DE6484UL, 0xB504F333UL)
-};
+    BN_DEF(0x754ABE9FUL, 0x597D89B3UL), BN_DEF(0xF9DE6484UL, 0xB504F333UL)};
 
-const BIGNUM ossl_bn_inv_sqrt_2 = {
-    (BN_ULONG *)inv_sqrt_2_val,
-    OSSL_NELEM(inv_sqrt_2_val),
-    OSSL_NELEM(inv_sqrt_2_val),
-    0,
-    BN_FLG_STATIC_DATA
-};
+const BIGNUM ossl_bn_inv_sqrt_2 = {(BN_ULONG *)inv_sqrt_2_val, OSSL_NELEM(inv_sqrt_2_val),
+                                   OSSL_NELEM(inv_sqrt_2_val), 0, BN_FLG_STATIC_DATA};
 
 /*
  * Refer to FIPS 186-5 Table B.1 for minimum rounds of Miller Rabin
  * required for generation of RSA aux primes (p1, p2, q1 and q2).
  */
-static int bn_rsa_fips186_5_aux_prime_MR_rounds(int nbits)
+static int
+bn_rsa_fips186_5_aux_prime_MR_rounds(int nbits)
 {
     if (nbits >= 4096)
         return 44;
@@ -67,7 +62,8 @@ static int bn_rsa_fips186_5_aux_prime_MR_rounds(int nbits)
  * Refer to FIPS 186-5 Table B.1 for minimum rounds of Miller Rabin
  * required for generation of RSA primes (p and q)
  */
-static int bn_rsa_fips186_5_prime_MR_rounds(int nbits)
+static int
+bn_rsa_fips186_5_prime_MR_rounds(int nbits)
 {
     if (nbits >= 3072)
         return 4;
@@ -85,7 +81,8 @@ static int bn_rsa_fips186_5_prime_MR_rounds(int nbits)
  * Returns:
  *     The minimum size of the auxiliary primes or 0 if nbits is invalid.
  */
-static int bn_rsa_fips186_5_aux_prime_min_size(int nbits)
+static int
+bn_rsa_fips186_5_aux_prime_min_size(int nbits)
 {
     if (nbits >= 4096)
         return 201;
@@ -105,7 +102,8 @@ static int bn_rsa_fips186_5_aux_prime_min_size(int nbits)
  * Returns:
  *     The maximum length or 0 if nbits is invalid.
  */
-static int bn_rsa_fips186_5_aux_prime_max_sum_size_for_prob_primes(int nbits)
+static int
+bn_rsa_fips186_5_aux_prime_max_sum_size_for_prob_primes(int nbits)
 {
     if (nbits >= 4096)
         return 2030;
@@ -129,10 +127,9 @@ static int bn_rsa_fips186_5_aux_prime_max_sum_size_for_prob_primes(int nbits)
  *     cb An optional BIGNUM callback.
  * Returns: 1 on success otherwise it returns 0.
  */
-static int bn_rsa_fips186_4_find_aux_prob_prime(const BIGNUM *Xp1,
-                                                BIGNUM *p1, BN_CTX *ctx,
-                                                int rounds,
-                                                BN_GENCB *cb)
+static int
+bn_rsa_fips186_4_find_aux_prob_prime(const BIGNUM *Xp1, BIGNUM *p1, BN_CTX *ctx, int rounds,
+                                     BN_GENCB *cb)
 {
     int ret = 0;
     int i = 0;
@@ -181,12 +178,10 @@ err:
  *     cb An optional BIGNUM callback.
  * Returns: 1 on success otherwise it returns 0.
  */
-int ossl_bn_rsa_fips186_4_gen_prob_primes(BIGNUM *p, BIGNUM *Xpout,
-                                          BIGNUM *p1, BIGNUM *p2,
-                                          const BIGNUM *Xp, const BIGNUM *Xp1,
-                                          const BIGNUM *Xp2, int nlen,
-                                          const BIGNUM *e, BN_CTX *ctx,
-                                          BN_GENCB *cb)
+int
+ossl_bn_rsa_fips186_4_gen_prob_primes(BIGNUM *p, BIGNUM *Xpout, BIGNUM *p1, BIGNUM *p2,
+                                      const BIGNUM *Xp, const BIGNUM *Xp1, const BIGNUM *Xp2,
+                                      int nlen, const BIGNUM *e, BN_CTX *ctx, BN_GENCB *cb)
 {
     int ret = 0;
     BIGNUM *p1i = NULL, *p2i = NULL, *Xp1i = NULL, *Xp2i = NULL;
@@ -212,29 +207,26 @@ int ossl_bn_rsa_fips186_4_gen_prob_primes(BIGNUM *p, BIGNUM *Xpout,
     /* (Steps 4.1/5.1): Randomly generate Xp1 if it is not passed in */
     if (Xp1 == NULL) {
         /* Set the top and bottom bits to make it odd and the correct size */
-        if (!BN_priv_rand_ex(Xp1i, bitlen, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ODD,
-                             0, ctx))
+        if (!BN_priv_rand_ex(Xp1i, bitlen, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ODD, 0, ctx))
             goto err;
     }
     /* (Steps 4.1/5.1): Randomly generate Xp2 if it is not passed in */
     if (Xp2 == NULL) {
         /* Set the top and bottom bits to make it odd and the correct size */
-        if (!BN_priv_rand_ex(Xp2i, bitlen, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ODD,
-                             0, ctx))
+        if (!BN_priv_rand_ex(Xp2i, bitlen, BN_RAND_TOP_ONE, BN_RAND_BOTTOM_ODD, 0, ctx))
             goto err;
     }
 
     /* (Steps 4.2/5.2) - find first auxiliary probable primes */
-    if (!bn_rsa_fips186_4_find_aux_prob_prime(Xp1i, p1i, ctx, rounds, cb)
-            || !bn_rsa_fips186_4_find_aux_prob_prime(Xp2i, p2i, ctx, rounds, cb))
+    if (!bn_rsa_fips186_4_find_aux_prob_prime(Xp1i, p1i, ctx, rounds, cb) ||
+        !bn_rsa_fips186_4_find_aux_prob_prime(Xp2i, p2i, ctx, rounds, cb))
         goto err;
     /* (Table B.1) auxiliary prime Max length check */
     if ((BN_num_bits(p1i) + BN_num_bits(p2i)) >=
-            bn_rsa_fips186_5_aux_prime_max_sum_size_for_prob_primes(nlen))
+        bn_rsa_fips186_5_aux_prime_max_sum_size_for_prob_primes(nlen))
         goto err;
     /* (Steps 4.3/5.3) - generate prime */
-    if (!ossl_bn_rsa_fips186_4_derive_prime(p, Xpout, Xp, p1i, p2i, nlen, e,
-                                            ctx, cb))
+    if (!ossl_bn_rsa_fips186_4_derive_prime(p, Xpout, Xp, p1i, p2i, nlen, e, ctx, cb))
         goto err;
     ret = 1;
 err:
@@ -272,10 +264,10 @@ err:
  * Assumptions:
  *     Y, X, r1, r2, e are not NULL.
  */
-int ossl_bn_rsa_fips186_4_derive_prime(BIGNUM *Y, BIGNUM *X, const BIGNUM *Xin,
-                                       const BIGNUM *r1, const BIGNUM *r2,
-                                       int nlen, const BIGNUM *e,
-                                       BN_CTX *ctx, BN_GENCB *cb)
+int
+ossl_bn_rsa_fips186_4_derive_prime(BIGNUM *Y, BIGNUM *X, const BIGNUM *Xin, const BIGNUM *r1,
+                                   const BIGNUM *r2, int nlen, const BIGNUM *e, BN_CTX *ctx,
+                                   BN_GENCB *cb)
 {
     int ret = 0;
     int i, imax, rounds;
@@ -310,10 +302,8 @@ int ossl_bn_rsa_fips186_4_derive_prime(BIGNUM *Y, BIGNUM *X, const BIGNUM *Xin,
     if (Xin == NULL) {
         if (bits < BN_num_bits(&ossl_bn_inv_sqrt_2))
             goto err;
-        if (!BN_lshift(base, &ossl_bn_inv_sqrt_2,
-                       bits - BN_num_bits(&ossl_bn_inv_sqrt_2))
-            || !BN_lshift(range, BN_value_one(), bits)
-            || !BN_sub(range, range, base))
+        if (!BN_lshift(base, &ossl_bn_inv_sqrt_2, bits - BN_num_bits(&ossl_bn_inv_sqrt_2)) ||
+            !BN_lshift(range, BN_value_one(), bits) || !BN_sub(range, range, base))
             goto err;
     }
 
@@ -326,15 +316,15 @@ int ossl_bn_rsa_fips186_4_derive_prime(BIGNUM *Y, BIGNUM *X, const BIGNUM *Xin,
      *    BN_gcd(), the call to BN_gcd() has been omitted. The inverse result
      *    is used further down.
      */
-    if (!(BN_lshift1(r1x2, r1)
-            && (BN_mod_inverse(tmp, r1x2, r2, ctx) != NULL)
-            /* (Step 2) R = ((r2^-1 mod 2r1) * r2) - ((2r1^-1 mod r2)*2r1) */
-            && (BN_mod_inverse(R, r2, r1x2, ctx) != NULL)
-            && BN_mul(R, R, r2, ctx) /* R = (r2^-1 mod 2r1) * r2 */
-            && BN_mul(tmp, tmp, r1x2, ctx) /* tmp = (2r1^-1 mod r2)*2r1 */
-            && BN_sub(R, R, tmp)
-            /* Calculate 2r1r2 */
-            && BN_mul(r1r2x2, r1x2, r2, ctx)))
+    if (!(BN_lshift1(r1x2, r1) &&
+          (BN_mod_inverse(tmp, r1x2, r2, ctx) != NULL)
+          /* (Step 2) R = ((r2^-1 mod 2r1) * r2) - ((2r1^-1 mod r2)*2r1) */
+          && (BN_mod_inverse(R, r2, r1x2, ctx) != NULL) &&
+          BN_mul(R, R, r2, ctx)          /* R = (r2^-1 mod 2r1) * r2 */
+          && BN_mul(tmp, tmp, r1x2, ctx) /* tmp = (2r1^-1 mod r2)*2r1 */
+          && BN_sub(R, R, tmp)
+          /* Calculate 2r1r2 */
+          && BN_mul(r1r2x2, r1x2, r2, ctx)))
         goto err;
     /* Make positive by adding the modulus */
     if (BN_is_negative(R) && !BN_add(R, R, r1r2x2))
@@ -343,7 +333,8 @@ int ossl_bn_rsa_fips186_4_derive_prime(BIGNUM *Y, BIGNUM *X, const BIGNUM *Xin,
     /*
      * In FIPS 186-4 imax was set to 5 * nlen/2.
      * Analysis by Allen Roginsky
-     * (See https://csrc.nist.gov/CSRC/media/Publications/fips/186/4/final/documents/comments-received-fips186-4-december-2015.pdf
+     * (See
+     * https://csrc.nist.gov/CSRC/media/Publications/fips/186/4/final/documents/comments-received-fips186-4-december-2015.pdf
      * page 68) indicates this has a 1 in 2 million chance of failure.
      * The number has been updated to 20 * nlen/2 as used in
      * FIPS186-5 Appendix B.9 Step 9.
@@ -375,8 +366,7 @@ int ossl_bn_rsa_fips186_4_derive_prime(BIGNUM *Y, BIGNUM *X, const BIGNUM *Xin,
             BN_GENCB_call(cb, 0, 2);
 
             /* (Step 7) If GCD(Y-1) == 1 & Y is probably prime then return Y */
-            if (BN_copy(y1, Y) == NULL
-                    || !BN_sub_word(y1, 1))
+            if (BN_copy(y1, Y) == NULL || !BN_sub_word(y1, 1))
                 goto err;
 
             if (BN_are_coprime(y1, e, ctx)) {

@@ -7,7 +7,7 @@
  * https://www.openssl.org/source/license.html
  */
 
-#if defined (__TANDEM) && defined (_SPT_MODEL_)
+#if defined(__TANDEM) && defined(_SPT_MODEL_)
 /*
  * These definitions have to come first in SPT due to scoping of the
  * declarations in c99 associated with SPT use of stat.
@@ -38,12 +38,12 @@
 # if defined(_WIN32) && !defined(_WIN32_WCE)
 #  include <windows.h>
 #  include <io.h>
-#  define stat    _stat
-#  define chmod   _chmod
-#  define open    _open
-#  define fdopen  _fdopen
-#  define fstat   _fstat
-#  define fileno  _fileno
+#  define stat _stat
+#  define chmod _chmod
+#  define open _open
+#  define fdopen _fdopen
+#  define fstat _fstat
+#  define fileno _fileno
 # endif
 #endif
 
@@ -54,9 +54,9 @@
  * would look like ((m) & MASK == TYPE), but since MASK availability
  * is as questionable, we settle for this poor-man fallback...
  */
-# if !defined(S_ISREG)
-#   define S_ISREG(m) ((m) & S_IFREG)
-# endif
+#if !defined(S_ISREG)
+# define S_ISREG(m) ((m) & S_IFREG)
+#endif
 
 #define RAND_BUF_SIZE 1024
 #define RFILE ".rnd"
@@ -70,10 +70,10 @@
  * This declaration is a nasty hack to get around vms' extension to fopen for
  * passing in sharing options being disabled by /STANDARD=ANSI89
  */
-static __FILE_ptr32 (*const vms_fopen)(const char *, const char *, ...) =
-        (__FILE_ptr32 (*)(const char *, const char *, ...))fopen;
-# define VMS_OPEN_ATTRS \
-        "shr=get,put,upd,del","ctx=bin,stm","rfm=stm","rat=none","mrs=0"
+static __FILE_ptr32 (*const vms_fopen)(const char *, const char *,
+                                       ...) = (__FILE_ptr32 (*)(const char *, const char *,
+                                                                ...))fopen;
+# define VMS_OPEN_ATTRS "shr=get,put,upd,del", "ctx=bin,stm", "rfm=stm", "rat=none", "mrs=0"
 # define openssl_fopen(fname, mode) vms_fopen((fname), (mode), VMS_OPEN_ATTRS)
 #endif
 
@@ -82,7 +82,8 @@ static __FILE_ptr32 (*const vms_fopen)(const char *, const char *, ...) =
  * devices and EGD sockets are handled in rand_unix.c  If |bytes| is
  * -1 read the complete file; otherwise read the specified amount.
  */
-int RAND_load_file(const char *file, long bytes)
+int
+RAND_load_file(const char *file, long bytes)
 {
     /*
      * The load buffer size exceeds the chunk size by the comfortable amount
@@ -104,15 +105,13 @@ int RAND_load_file(const char *file, long bytes)
         return 0;
 
     if ((in = openssl_fopen(file, "rb")) == NULL) {
-        ERR_raise_data(ERR_LIB_RAND, RAND_R_CANNOT_OPEN_FILE,
-                       "Filename=%s", file);
+        ERR_raise_data(ERR_LIB_RAND, RAND_R_CANNOT_OPEN_FILE, "Filename=%s", file);
         return -1;
     }
 
 #ifndef OPENSSL_NO_POSIX_IO
     if (fstat(fileno(in), &sb) < 0) {
-        ERR_raise_data(ERR_LIB_RAND, RAND_R_INTERNAL_ERROR,
-                       "Filename=%s", file);
+        ERR_raise_data(ERR_LIB_RAND, RAND_R_INTERNAL_ERROR, "Filename=%s", file);
         fclose(in);
         return -1;
     }
@@ -179,7 +178,8 @@ int RAND_load_file(const char *file, long bytes)
     return ret;
 }
 
-int RAND_write_file(const char *file)
+int
+RAND_write_file(const char *file)
 {
     unsigned char buf[RAND_BUF_SIZE];
     int ret = -1;
@@ -188,18 +188,17 @@ int RAND_write_file(const char *file)
     struct stat sb;
 
     if (stat(file, &sb) >= 0 && !S_ISREG(sb.st_mode)) {
-        ERR_raise_data(ERR_LIB_RAND, RAND_R_NOT_A_REGULAR_FILE,
-                       "Filename=%s", file);
+        ERR_raise_data(ERR_LIB_RAND, RAND_R_NOT_A_REGULAR_FILE, "Filename=%s", file);
         return -1;
     }
 #endif
 
     /* Collect enough random data. */
     if (RAND_priv_bytes(buf, (int)sizeof(buf)) != 1)
-        return  -1;
+        return -1;
 
-#if defined(O_CREAT) && !defined(OPENSSL_NO_POSIX_IO) && \
-    !defined(OPENSSL_SYS_VMS) && !defined(OPENSSL_SYS_WINDOWS)
+#if defined(O_CREAT) && !defined(OPENSSL_NO_POSIX_IO) && !defined(OPENSSL_SYS_VMS) &&              \
+    !defined(OPENSSL_SYS_WINDOWS)
     {
 # ifndef O_BINARY
 #  define O_BINARY 0
@@ -214,8 +213,7 @@ int RAND_write_file(const char *file)
             out = fdopen(fd, "wb");
             if (out == NULL) {
                 close(fd);
-                ERR_raise_data(ERR_LIB_RAND, RAND_R_CANNOT_OPEN_FILE,
-                               "Filename=%s", file);
+                ERR_raise_data(ERR_LIB_RAND, RAND_R_CANNOT_OPEN_FILE, "Filename=%s", file);
                 return -1;
             }
         }
@@ -246,8 +244,7 @@ int RAND_write_file(const char *file)
     if (out == NULL)
         out = openssl_fopen(file, "wb");
     if (out == NULL) {
-        ERR_raise_data(ERR_LIB_RAND, RAND_R_CANNOT_OPEN_FILE,
-                       "Filename=%s", file);
+        ERR_raise_data(ERR_LIB_RAND, RAND_R_CANNOT_OPEN_FILE, "Filename=%s", file);
         return -1;
     }
 
@@ -264,7 +261,8 @@ int RAND_write_file(const char *file)
     return ret;
 }
 
-const char *RAND_file_name(char *buf, size_t size)
+const char *
+RAND_file_name(char *buf, size_t size)
 {
     char *s = NULL;
     size_t len;
@@ -277,9 +275,8 @@ const char *RAND_file_name(char *buf, size_t size)
     /* Look up various environment variables. */
     if ((envlen = GetEnvironmentVariableW(var = L"RANDFILE", NULL, 0)) == 0) {
         use_randfile = 0;
-        if ((envlen = GetEnvironmentVariableW(var = L"HOME", NULL, 0)) == 0
-                && (envlen = GetEnvironmentVariableW(var = L"USERPROFILE",
-                                                  NULL, 0)) == 0)
+        if ((envlen = GetEnvironmentVariableW(var = L"HOME", NULL, 0)) == 0 &&
+            (envlen = GetEnvironmentVariableW(var = L"USERPROFILE", NULL, 0)) == 0)
             envlen = GetEnvironmentVariableW(var = L"SYSTEMROOT", NULL, 0);
     }
 
@@ -288,12 +285,10 @@ const char *RAND_file_name(char *buf, size_t size)
         int sz;
         WCHAR *val = _alloca(envlen * sizeof(WCHAR));
 
-        if (GetEnvironmentVariableW(var, val, envlen) < envlen
-                && (sz = WideCharToMultiByte(CP_UTF8, 0, val, -1, NULL, 0,
-                                             NULL, NULL)) != 0) {
+        if (GetEnvironmentVariableW(var, val, envlen) < envlen &&
+            (sz = WideCharToMultiByte(CP_UTF8, 0, val, -1, NULL, 0, NULL, NULL)) != 0) {
             s = _alloca(sz);
-            if (WideCharToMultiByte(CP_UTF8, 0, val, -1, s, sz,
-                                    NULL, NULL) == 0)
+            if (WideCharToMultiByte(CP_UTF8, 0, val, -1, s, sz, NULL, NULL) == 0)
                 s = NULL;
         }
     }

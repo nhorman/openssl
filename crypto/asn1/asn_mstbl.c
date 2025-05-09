@@ -17,11 +17,12 @@
 
 static int do_tcreate(const char *value, const char *name);
 
-static int stbl_module_init(CONF_IMODULE *md, const CONF *cnf)
+static int
+stbl_module_init(CONF_IMODULE *md, const CONF *cnf)
 {
     int i;
     const char *stbl_section;
-    STACK_OF(CONF_VALUE) *sktmp;
+    STACK_OF(CONF_VALUE) * sktmp;
     CONF_VALUE *mval;
 
     stbl_section = CONF_imodule_get_value(md);
@@ -39,12 +40,14 @@ static int stbl_module_init(CONF_IMODULE *md, const CONF *cnf)
     return 1;
 }
 
-static void stbl_module_finish(CONF_IMODULE *md)
+static void
+stbl_module_finish(CONF_IMODULE *md)
 {
     ASN1_STRING_TABLE_cleanup();
 }
 
-void ASN1_add_stable_module(void)
+void
+ASN1_add_stable_module(void)
 {
     CONF_module_add("stbl_section", stbl_module_init, stbl_module_finish);
 }
@@ -54,7 +57,8 @@ void ASN1_add_stable_module(void)
  * n1:v1, n2:v2,... where name is "min", "max", "mask" or "flags".
  */
 
-static int do_tcreate(const char *value, const char *name)
+static int
+do_tcreate(const char *value, const char *name)
 {
     char *eptr;
     int nid, i, rv = 0;
@@ -96,19 +100,16 @@ static int do_tcreate(const char *value, const char *name)
             goto err;
     }
     rv = 1;
- err:
+err:
     if (rv == 0) {
         if (cnf)
-            ERR_raise_data(ERR_LIB_ASN1, ASN1_R_INVALID_STRING_TABLE_VALUE,
-                           "field=%s, value=%s", cnf->name,
-                                                 cnf->value != NULL ? cnf->value
-                                                 : value);
+            ERR_raise_data(ERR_LIB_ASN1, ASN1_R_INVALID_STRING_TABLE_VALUE, "field=%s, value=%s",
+                           cnf->name, cnf->value != NULL ? cnf->value : value);
         else
-            ERR_raise_data(ERR_LIB_ASN1, ASN1_R_INVALID_STRING_TABLE_VALUE,
-                           "name=%s, value=%s", name, value);
+            ERR_raise_data(ERR_LIB_ASN1, ASN1_R_INVALID_STRING_TABLE_VALUE, "name=%s, value=%s",
+                           name, value);
     } else {
-        rv = ASN1_STRING_TABLE_add(nid, tbl_min, tbl_max,
-                                   tbl_mask, tbl_flags);
+        rv = ASN1_STRING_TABLE_add(nid, tbl_min, tbl_max, tbl_mask, tbl_flags);
         if (!rv)
             ERR_raise(ERR_LIB_ASN1, ERR_R_ASN1_LIB);
     }

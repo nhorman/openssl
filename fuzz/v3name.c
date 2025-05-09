@@ -14,12 +14,15 @@
 #include "internal/nelem.h"
 #include "fuzzer.h"
 
-int FuzzerInitialize(int *argc, char ***argv)
+int
+FuzzerInitialize(int *argc, char ***argv)
 {
     return 1;
 }
 
-int FuzzerTestOneInput(const uint8_t* data, size_t size){
+int
+FuzzerTestOneInput(const uint8_t *data, size_t size)
+{
     GENERAL_NAME *namesa;
     GENERAL_NAME *namesb;
 
@@ -39,6 +42,7 @@ int FuzzerTestOneInput(const uint8_t* data, size_t size){
     return 0;
 }
 
-void FuzzerCleanup(void)
+void
+FuzzerCleanup(void)
 {
 }

@@ -8,56 +8,47 @@
  */
 
 #ifndef OSSL_ENGINES_E_AFALG_H
-# define OSSL_ENGINES_E_AFALG_H
+#define OSSL_ENGINES_E_AFALG_H
 
-# if defined(__GNUC__) && __GNUC__ >= 4 && \
-     (!defined(__STDC_VERSION__) || __STDC_VERSION__ < 199901L)
-#  pragma GCC diagnostic ignored "-Wvariadic-macros"
-# endif
+#if defined(__GNUC__) && __GNUC__ >= 4 && (!defined(__STDC_VERSION__) || __STDC_VERSION__ < 199901L)
+# pragma GCC diagnostic ignored "-Wvariadic-macros"
+#endif
 
-# ifdef ALG_DEBUG
-#  define ALG_DGB(x, ...) fprintf(stderr, "ALG_DBG: " x, __VA_ARGS__)
-#  define ALG_INFO(x, ...) fprintf(stderr, "ALG_INFO: " x, __VA_ARGS__)
-#  define ALG_WARN(x, ...) fprintf(stderr, "ALG_WARN: " x, __VA_ARGS__)
-# else
-#  define ALG_DGB(x, ...)
-#  define ALG_INFO(x, ...)
-#  define ALG_WARN(x, ...)
-# endif
+#ifdef ALG_DEBUG
+# define ALG_DGB(x, ...) fprintf(stderr, "ALG_DBG: " x, __VA_ARGS__)
+# define ALG_INFO(x, ...) fprintf(stderr, "ALG_INFO: " x, __VA_ARGS__)
+# define ALG_WARN(x, ...) fprintf(stderr, "ALG_WARN: " x, __VA_ARGS__)
+#else
+# define ALG_DGB(x, ...)
+# define ALG_INFO(x, ...)
+# define ALG_WARN(x, ...)
+#endif
 
-# define ALG_ERR(x, ...) fprintf(stderr, "ALG_ERR: " x, __VA_ARGS__)
-# define ALG_PERR(x, ...) \
-                do { \
-                    fprintf(stderr, "ALG_PERR: " x, __VA_ARGS__); \
-                    perror(NULL); \
-                } while(0)
-# define ALG_PWARN(x, ...) \
-                do { \
-                    fprintf(stderr, "ALG_PERR: " x, __VA_ARGS__); \
-                    perror(NULL); \
-                } while(0)
+#define ALG_ERR(x, ...) fprintf(stderr, "ALG_ERR: " x, __VA_ARGS__)
+#define ALG_PERR(x, ...)                                                                           \
+    do {                                                                                           \
+        fprintf(stderr, "ALG_PERR: " x, __VA_ARGS__);                                              \
+        perror(NULL);                                                                              \
+    } while (0)
+#define ALG_PWARN(x, ...)                                                                          \
+    do {                                                                                           \
+        fprintf(stderr, "ALG_PERR: " x, __VA_ARGS__);                                              \
+        perror(NULL);                                                                              \
+    } while (0)
 
-# ifndef AES_BLOCK_SIZE
-#  define AES_BLOCK_SIZE   16
-# endif
-# define AES_KEY_SIZE_128 16
-# define AES_KEY_SIZE_192 24
-# define AES_KEY_SIZE_256 32
-# define AES_IV_LEN       16
+#ifndef AES_BLOCK_SIZE
+# define AES_BLOCK_SIZE 16
+#endif
+#define AES_KEY_SIZE_128 16
+#define AES_KEY_SIZE_192 24
+#define AES_KEY_SIZE_256 32
+#define AES_IV_LEN 16
 
-# define MAX_INFLIGHTS 1
+#define MAX_INFLIGHTS 1
 
-typedef enum {
-    MODE_UNINIT = 0,
-    MODE_SYNC,
-    MODE_ASYNC
-} op_mode;
+typedef enum { MODE_UNINIT = 0, MODE_SYNC, MODE_ASYNC } op_mode;
 
-enum {
-    AES_CBC_128 = 0,
-    AES_CBC_192,
-    AES_CBC_256
-};
+enum { AES_CBC_128 = 0, AES_CBC_192, AES_CBC_256 };
 
 struct cbc_cipher_handles {
     int key_size;
@@ -79,15 +70,15 @@ typedef struct afalg_aio_st afalg_aio;
  * MAGIC Number to identify correct initialisation
  * of afalg_ctx.
  */
-# define MAGIC_INIT_NUM 0x1890671
+#define MAGIC_INIT_NUM 0x1890671
 
 struct afalg_ctx_st {
     int init_done;
     int sfd;
     int bfd;
-# ifdef ALG_ZERO_COPY
+#ifdef ALG_ZERO_COPY
     int zc_pipe[2];
-# endif
+#endif
     afalg_aio aio;
 };
 

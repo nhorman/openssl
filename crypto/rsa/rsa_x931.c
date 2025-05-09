@@ -40,8 +40,8 @@
  *     from The input hash followed by the 1st byte of the trailer.
  *     flen The size of the input hash + 1 (trailer byte)
  */
-int RSA_padding_add_X931(unsigned char *to, int tlen,
-                         const unsigned char *from, int flen)
+int
+RSA_padding_add_X931(unsigned char *to, int tlen, const unsigned char *from, int flen)
 {
     int j;
     unsigned char *p;
@@ -76,8 +76,8 @@ int RSA_padding_add_X931(unsigned char *to, int tlen,
     return 1;
 }
 
-int RSA_padding_check_X931(unsigned char *to, int tlen,
-                           const unsigned char *from, int flen, int num)
+int
+RSA_padding_check_X931(unsigned char *to, int tlen, const unsigned char *from, int flen, int num)
 {
     int i = 0, j;
     const unsigned char *p;
@@ -128,7 +128,8 @@ int RSA_padding_check_X931(unsigned char *to, int tlen,
  * first byte of the 'trailer'.
  */
 
-int RSA_X931_hash_id(int nid)
+int
+RSA_X931_hash_id(int nid)
 {
     switch (nid) {
     case NID_sha1:
@@ -142,7 +143,6 @@ int RSA_X931_hash_id(int nid)
 
     case NID_sha512:
         return 0x35;
-
     }
     return -1;
 }

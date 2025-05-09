@@ -28,11 +28,9 @@
 #include <openssl/dsa.h>
 #include <openssl/sha.h>
 
-DSA *DSA_generate_parameters(int bits,
-                             unsigned char *seed_in, int seed_len,
-                             int *counter_ret, unsigned long *h_ret,
-                             void (*callback) (int, int, void *),
-                             void *cb_arg)
+DSA *
+DSA_generate_parameters(int bits, unsigned char *seed_in, int seed_len, int *counter_ret,
+                        unsigned long *h_ret, void (*callback)(int, int, void *), void *cb_arg)
 {
     BN_GENCB *cb;
     DSA *ret;
@@ -45,8 +43,7 @@ DSA *DSA_generate_parameters(int bits,
 
     BN_GENCB_set_old(cb, callback, cb_arg);
 
-    if (DSA_generate_parameters_ex(ret, bits, seed_in, seed_len,
-                                   counter_ret, h_ret, cb)) {
+    if (DSA_generate_parameters_ex(ret, bits, seed_in, seed_len, counter_ret, h_ret, cb)) {
         BN_GENCB_free(cb);
         return ret;
     }

@@ -13,19 +13,19 @@
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #if !defined(OPENSSL_SYS_WINDOWS)
-#include <unistd.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
+# include <unistd.h>
+# include <sys/socket.h>
+# include <arpa/inet.h>
+# include <netinet/in.h>
 #else
-#include <winsock.h>
+# include <winsock.h>
 #endif
 
 static const int server_port = 4433;
 
-typedef unsigned char   flag;
-#define true            1
-#define false           0
+typedef unsigned char flag;
+#define true 1
+#define false 0
 
 /*
  * This flag won't be useful until both accept/read (TCP & SSL) methods
@@ -33,7 +33,8 @@ typedef unsigned char   flag;
  */
 static volatile flag server_running = true;
 
-static int create_socket(flag isServer)
+static int
+create_socket(flag isServer)
 {
     int s;
     int optval = 1;
@@ -51,13 +52,12 @@ static int create_socket(flag isServer)
         addr.sin_addr.s_addr = INADDR_ANY;
 
         /* Reuse the address; good for quick restarts */
-        if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval))
-                < 0) {
+        if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) < 0) {
             perror("setsockopt(SO_REUSEADDR) failed");
             exit(EXIT_FAILURE);
         }
 
-        if (bind(s, (struct sockaddr*) &addr, sizeof(addr)) < 0) {
+        if (bind(s, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
             perror("Unable to bind");
             exit(EXIT_FAILURE);
         }
@@ -71,7 +71,8 @@ static int create_socket(flag isServer)
     return s;
 }
 
-static SSL_CTX *create_context(flag isServer)
+static SSL_CTX *
+create_context(flag isServer)
 {
     const SSL_METHOD *method;
     SSL_CTX *ctx;
@@ -91,7 +92,8 @@ static SSL_CTX *create_context(flag isServer)
     return ctx;
 }
 
-static void configure_server_context(SSL_CTX *ctx)
+static void
+configure_server_context(SSL_CTX *ctx)
 {
     /* Set the key and cert */
     if (SSL_CTX_use_certificate_chain_file(ctx, "cert.pem") <= 0) {
@@ -105,7 +107,8 @@ static void configure_server_context(SSL_CTX *ctx)
     }
 }
 
-static void configure_client_context(SSL_CTX *ctx)
+static void
+configure_client_context(SSL_CTX *ctx)
 {
     /*
      * Configure the client to abort the handshake if certificate verification
@@ -113,9 +116,9 @@ static void configure_client_context(SSL_CTX *ctx)
      */
     SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, NULL);
     /*
-     * In a real application you would probably just use the default system certificate trust store and call:
-     *     SSL_CTX_set_default_verify_paths(ctx);
-     * In this demo though we are using a self-signed certificate, so the client must trust it directly.
+     * In a real application you would probably just use the default system certificate trust store
+     * and call: SSL_CTX_set_default_verify_paths(ctx); In this demo though we are using a
+     * self-signed certificate, so the client must trust it directly.
      */
     if (!SSL_CTX_load_verify_locations(ctx, "cert.pem", NULL)) {
         ERR_print_errors_fp(stderr);
@@ -123,7 +126,8 @@ static void configure_client_context(SSL_CTX *ctx)
     }
 }
 
-static void usage(void)
+static void
+usage(void)
 {
     printf("Usage: sslecho s\n");
     printf("       --or--\n");
@@ -133,7 +137,8 @@ static void usage(void)
 }
 
 #define BUFFERSIZE 1024
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
     flag isServer;
     int result;
@@ -161,14 +166,13 @@ int main(int argc, char **argv)
     unsigned int addr_len = sizeof(addr);
 #endif
 
-#if !defined (OPENSSL_SYS_WINDOWS)
+#if !defined(OPENSSL_SYS_WINDOWS)
     /* ignore SIGPIPE so that server can continue running when client pipe closes abruptly */
     signal(SIGPIPE, SIG_IGN);
 #endif
 
     /* Splash */
-    printf("\nsslecho : Simple Echo Client/Server : %s : %s\n\n", __DATE__,
-    __TIME__);
+    printf("\nsslecho : Simple Echo Client/Server : %s : %s\n\n", __DATE__, __TIME__);
 
     /* Need to know if client or server */
     if (argc < 2) {
@@ -206,8 +210,7 @@ int main(int argc, char **argv)
          */
         while (server_running) {
             /* Wait for TCP connection from client */
-            client_skt = accept(server_skt, (struct sockaddr*) &addr,
-                    &addr_len);
+            client_skt = accept(server_skt, (struct sockaddr *)&addr, &addr_len);
             if (client_skt < 0) {
                 perror("Unable to accept");
                 exit(EXIT_FAILURE);
@@ -283,7 +286,7 @@ int main(int argc, char **argv)
         inet_pton(AF_INET, rem_server_ip, &addr.sin_addr.s_addr);
         addr.sin_port = htons(server_port);
         /* Do TCP connect with server */
-        if (connect(client_skt, (struct sockaddr*) &addr, sizeof(addr)) != 0) {
+        if (connect(client_skt, (struct sockaddr *)&addr, sizeof(addr)) != 0) {
             perror("Unable to TCP connect to server");
             goto exit;
         } else {

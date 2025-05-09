@@ -18,7 +18,8 @@
 #include "idea_local.h"
 
 static IDEA_INT inverse(unsigned int xin);
-void IDEA_set_encrypt_key(const unsigned char *key, IDEA_KEY_SCHEDULE *ks)
+void
+IDEA_set_encrypt_key(const unsigned char *key, IDEA_KEY_SCHEDULE *ks)
 {
     int i;
     register IDEA_INT *kt, *kf, r0, r1, r2;
@@ -58,7 +59,8 @@ void IDEA_set_encrypt_key(const unsigned char *key, IDEA_KEY_SCHEDULE *ks)
     }
 }
 
-void IDEA_set_decrypt_key(IDEA_KEY_SCHEDULE *ek, IDEA_KEY_SCHEDULE *dk)
+void
+IDEA_set_decrypt_key(IDEA_KEY_SCHEDULE *ek, IDEA_KEY_SCHEDULE *dk)
 {
     int r;
     register IDEA_INT *fp, *tp, t;
@@ -88,7 +90,8 @@ void IDEA_set_decrypt_key(IDEA_KEY_SCHEDULE *ek, IDEA_KEY_SCHEDULE *dk)
 }
 
 /* taken directly from the 'paper' I'll have a look at it later */
-static IDEA_INT inverse(unsigned int xin)
+static IDEA_INT
+inverse(unsigned int xin)
 {
     long n1, n2, q, r, b1, b2, t;
 

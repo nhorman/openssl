@@ -23,7 +23,8 @@ IMPLEMENT_ASN1_FUNCTIONS(CMS_ReceiptRequest)
 
 /* ESS services */
 
-int CMS_get1_ReceiptRequest(CMS_SignerInfo *si, CMS_ReceiptRequest **prr)
+int
+CMS_get1_ReceiptRequest(CMS_SignerInfo *si, CMS_ReceiptRequest **prr)
 {
     ASN1_STRING *str;
     CMS_ReceiptRequest *rr;
@@ -49,8 +50,8 @@ int CMS_get1_ReceiptRequest(CMS_SignerInfo *si, CMS_ReceiptRequest **prr)
  * Returns 0 if attribute is not found, 1 if found,
  * or -1 on attribute parsing failure.
  */
-static int ossl_cms_signerinfo_get_signing_cert(const CMS_SignerInfo *si,
-                                                ESS_SIGNING_CERT **psc)
+static int
+ossl_cms_signerinfo_get_signing_cert(const CMS_SignerInfo *si, ESS_SIGNING_CERT **psc)
 {
     ASN1_STRING *str;
     ESS_SIGNING_CERT *sc;
@@ -76,8 +77,8 @@ static int ossl_cms_signerinfo_get_signing_cert(const CMS_SignerInfo *si,
  * Returns 0 if attribute is not found, 1 if found,
  * or -1 on attribute parsing failure.
  */
-static int ossl_cms_signerinfo_get_signing_cert_v2(const CMS_SignerInfo *si,
-                                                   ESS_SIGNING_CERT_V2 **psc)
+static int
+ossl_cms_signerinfo_get_signing_cert_v2(const CMS_SignerInfo *si, ESS_SIGNING_CERT_V2 **psc)
 {
     ASN1_STRING *str;
     ESS_SIGNING_CERT_V2 *sc;
@@ -99,24 +100,24 @@ static int ossl_cms_signerinfo_get_signing_cert_v2(const CMS_SignerInfo *si,
     return 1;
 }
 
-int ossl_cms_check_signing_certs(const CMS_SignerInfo *si,
-                                 const STACK_OF(X509) *chain)
+int
+ossl_cms_check_signing_certs(const CMS_SignerInfo *si, const STACK_OF(X509) * chain)
 {
     ESS_SIGNING_CERT *ss = NULL;
     ESS_SIGNING_CERT_V2 *ssv2 = NULL;
-    int ret = ossl_cms_signerinfo_get_signing_cert(si, &ss) >= 0
-        && ossl_cms_signerinfo_get_signing_cert_v2(si, &ssv2) >= 0
-        && OSSL_ESS_check_signing_certs(ss, ssv2, chain, 1) > 0;
+    int ret = ossl_cms_signerinfo_get_signing_cert(si, &ss) >= 0 &&
+              ossl_cms_signerinfo_get_signing_cert_v2(si, &ssv2) >= 0 &&
+              OSSL_ESS_check_signing_certs(ss, ssv2, chain, 1) > 0;
 
     ESS_SIGNING_CERT_free(ss);
     ESS_SIGNING_CERT_V2_free(ssv2);
     return ret;
 }
 
-CMS_ReceiptRequest *CMS_ReceiptRequest_create0_ex(
-    unsigned char *id, int idlen, int allorfirst,
-    STACK_OF(GENERAL_NAMES) *receiptList, STACK_OF(GENERAL_NAMES) *receiptsTo,
-    OSSL_LIB_CTX *libctx)
+CMS_ReceiptRequest *
+CMS_ReceiptRequest_create0_ex(unsigned char *id, int idlen, int allorfirst,
+                              STACK_OF(GENERAL_NAMES) * receiptList,
+                              STACK_OF(GENERAL_NAMES) * receiptsTo, OSSL_LIB_CTX *libctx)
 {
     CMS_ReceiptRequest *rr;
 
@@ -132,8 +133,7 @@ CMS_ReceiptRequest *CMS_ReceiptRequest_create0_ex(
             ERR_raise(ERR_LIB_CMS, ERR_R_ASN1_LIB);
             goto err;
         }
-        if (RAND_bytes_ex(libctx, rr->signedContentIdentifier->data, 32,
-                          0) <= 0)
+        if (RAND_bytes_ex(libctx, rr->signedContentIdentifier->data, 32, 0) <= 0)
             goto err;
     }
 
@@ -150,21 +150,21 @@ CMS_ReceiptRequest *CMS_ReceiptRequest_create0_ex(
 
     return rr;
 
- err:
+err:
     CMS_ReceiptRequest_free(rr);
     return NULL;
-
 }
 
-CMS_ReceiptRequest *CMS_ReceiptRequest_create0(
-    unsigned char *id, int idlen, int allorfirst,
-    STACK_OF(GENERAL_NAMES) *receiptList, STACK_OF(GENERAL_NAMES) *receiptsTo)
+CMS_ReceiptRequest *
+CMS_ReceiptRequest_create0(unsigned char *id, int idlen, int allorfirst,
+                           STACK_OF(GENERAL_NAMES) * receiptList,
+                           STACK_OF(GENERAL_NAMES) * receiptsTo)
 {
-    return CMS_ReceiptRequest_create0_ex(id, idlen, allorfirst, receiptList,
-                                         receiptsTo, NULL);
+    return CMS_ReceiptRequest_create0_ex(id, idlen, allorfirst, receiptList, receiptsTo, NULL);
 }
 
-int CMS_add1_ReceiptRequest(CMS_SignerInfo *si, CMS_ReceiptRequest *rr)
+int
+CMS_add1_ReceiptRequest(CMS_SignerInfo *si, CMS_ReceiptRequest *rr)
 {
     unsigned char *rrder = NULL;
     int rrderlen, r = 0;
@@ -175,26 +175,23 @@ int CMS_add1_ReceiptRequest(CMS_SignerInfo *si, CMS_ReceiptRequest *rr)
         goto err;
     }
 
-    if (!CMS_signed_add1_attr_by_NID(si, NID_id_smime_aa_receiptRequest,
-                                     V_ASN1_SEQUENCE, rrder, rrderlen)) {
+    if (!CMS_signed_add1_attr_by_NID(si, NID_id_smime_aa_receiptRequest, V_ASN1_SEQUENCE, rrder,
+                                     rrderlen)) {
         ERR_raise(ERR_LIB_CMS, ERR_R_CMS_LIB);
         goto err;
     }
 
     r = 1;
 
- err:
+err:
     OPENSSL_free(rrder);
 
     return r;
-
 }
 
-void CMS_ReceiptRequest_get0_values(CMS_ReceiptRequest *rr,
-                                    ASN1_STRING **pcid,
-                                    int *pallorfirst,
-                                    STACK_OF(GENERAL_NAMES) **plist,
-                                    STACK_OF(GENERAL_NAMES) **prto)
+void
+CMS_ReceiptRequest_get0_values(CMS_ReceiptRequest *rr, ASN1_STRING **pcid, int *pallorfirst,
+                               STACK_OF(GENERAL_NAMES) * *plist, STACK_OF(GENERAL_NAMES) * *prto)
 {
     if (pcid != NULL)
         *pcid = rr->signedContentIdentifier;
@@ -215,16 +212,15 @@ void CMS_ReceiptRequest_get0_values(CMS_ReceiptRequest *rr,
 
 /* Digest a SignerInfo structure for msgSigDigest attribute processing */
 
-static int cms_msgSigDigest(CMS_SignerInfo *si,
-                            unsigned char *dig, unsigned int *diglen)
+static int
+cms_msgSigDigest(CMS_SignerInfo *si, unsigned char *dig, unsigned int *diglen)
 {
     const EVP_MD *md = EVP_get_digestbyobj(si->digestAlgorithm->algorithm);
 
     if (md == NULL)
         return 0;
-    if (!ossl_asn1_item_digest_ex(ASN1_ITEM_rptr(CMS_Attributes_Verify), md,
-                                  si->signedAttrs, dig, diglen,
-                                  ossl_cms_ctx_get0_libctx(si->cms_ctx),
+    if (!ossl_asn1_item_digest_ex(ASN1_ITEM_rptr(CMS_Attributes_Verify), md, si->signedAttrs, dig,
+                                  diglen, ossl_cms_ctx_get0_libctx(si->cms_ctx),
                                   ossl_cms_ctx_get0_propq(si->cms_ctx)))
         return 0;
     return 1;
@@ -232,7 +228,8 @@ static int cms_msgSigDigest(CMS_SignerInfo *si,
 
 /* Add a msgSigDigest attribute to a SignerInfo */
 
-int ossl_cms_msgSigDigest_add1(CMS_SignerInfo *dest, CMS_SignerInfo *src)
+int
+ossl_cms_msgSigDigest_add1(CMS_SignerInfo *dest, CMS_SignerInfo *src)
 {
     unsigned char dig[EVP_MAX_MD_SIZE];
     unsigned int diglen;
@@ -241,8 +238,8 @@ int ossl_cms_msgSigDigest_add1(CMS_SignerInfo *dest, CMS_SignerInfo *src)
         ERR_raise(ERR_LIB_CMS, CMS_R_MSGSIGDIGEST_ERROR);
         return 0;
     }
-    if (!CMS_signed_add1_attr_by_NID(dest, NID_id_smime_aa_msgSigDigest,
-                                     V_ASN1_OCTET_STRING, dig, diglen)) {
+    if (!CMS_signed_add1_attr_by_NID(dest, NID_id_smime_aa_msgSigDigest, V_ASN1_OCTET_STRING, dig,
+                                     diglen)) {
         ERR_raise(ERR_LIB_CMS, ERR_R_CMS_LIB);
         return 0;
     }
@@ -251,12 +248,13 @@ int ossl_cms_msgSigDigest_add1(CMS_SignerInfo *dest, CMS_SignerInfo *src)
 
 /* Verify signed receipt after it has already passed normal CMS verify */
 
-int ossl_cms_Receipt_verify(CMS_ContentInfo *cms, CMS_ContentInfo *req_cms)
+int
+ossl_cms_Receipt_verify(CMS_ContentInfo *cms, CMS_ContentInfo *req_cms)
 {
     int r = 0, i;
     CMS_ReceiptRequest *rr = NULL;
     CMS_Receipt *rct = NULL;
-    STACK_OF(CMS_SignerInfo) *sis, *osis;
+    STACK_OF(CMS_SignerInfo) * sis, *osis;
     CMS_SignerInfo *si, *osi = NULL;
     ASN1_OCTET_STRING *msig, **pcont;
     ASN1_OBJECT *octype;
@@ -311,9 +309,7 @@ int ossl_cms_Receipt_verify(CMS_ContentInfo *cms, CMS_ContentInfo *req_cms)
 
     /* Get msgSigDigest value and compare */
 
-    msig = CMS_signed_get0_data_by_OBJ(si,
-                                       OBJ_nid2obj
-                                       (NID_id_smime_aa_msgSigDigest), -3,
+    msig = CMS_signed_get0_data_by_OBJ(si, OBJ_nid2obj(NID_id_smime_aa_msgSigDigest), -3,
                                        V_ASN1_OCTET_STRING);
 
     if (!msig) {
@@ -338,9 +334,8 @@ int ossl_cms_Receipt_verify(CMS_ContentInfo *cms, CMS_ContentInfo *req_cms)
 
     /* Compare content types */
 
-    octype = CMS_signed_get0_data_by_OBJ(osi,
-                                         OBJ_nid2obj(NID_pkcs9_contentType),
-                                         -3, V_ASN1_OBJECT);
+    octype =
+        CMS_signed_get0_data_by_OBJ(osi, OBJ_nid2obj(NID_pkcs9_contentType), -3, V_ASN1_OBJECT);
     if (!octype) {
         ERR_raise(ERR_LIB_CMS, CMS_R_NO_CONTENT_TYPE);
         goto err;
@@ -360,19 +355,17 @@ int ossl_cms_Receipt_verify(CMS_ContentInfo *cms, CMS_ContentInfo *req_cms)
         goto err;
     }
 
-    if (ASN1_STRING_cmp(rr->signedContentIdentifier,
-                        rct->signedContentIdentifier)) {
+    if (ASN1_STRING_cmp(rr->signedContentIdentifier, rct->signedContentIdentifier)) {
         ERR_raise(ERR_LIB_CMS, CMS_R_CONTENTIDENTIFIER_MISMATCH);
         goto err;
     }
 
     r = 1;
 
- err:
+err:
     CMS_ReceiptRequest_free(rr);
     M_ASN1_free_of(rct, CMS_Receipt);
     return r;
-
 }
 
 /*
@@ -380,7 +373,8 @@ int ossl_cms_Receipt_verify(CMS_ContentInfo *cms, CMS_ContentInfo *req_cms)
  * SignedData ContentInfo.
  */
 
-ASN1_OCTET_STRING *ossl_cms_encode_Receipt(CMS_SignerInfo *si)
+ASN1_OCTET_STRING *
+ossl_cms_encode_Receipt(CMS_SignerInfo *si)
 {
     CMS_Receipt rct;
     CMS_ReceiptRequest *rr = NULL;
@@ -398,9 +392,7 @@ ASN1_OCTET_STRING *ossl_cms_encode_Receipt(CMS_SignerInfo *si)
 
     /* Get original content type */
 
-    ctype = CMS_signed_get0_data_by_OBJ(si,
-                                        OBJ_nid2obj(NID_pkcs9_contentType),
-                                        -3, V_ASN1_OBJECT);
+    ctype = CMS_signed_get0_data_by_OBJ(si, OBJ_nid2obj(NID_pkcs9_contentType), -3, V_ASN1_OBJECT);
     if (!ctype) {
         ERR_raise(ERR_LIB_CMS, CMS_R_NO_CONTENT_TYPE);
         goto err;
@@ -413,7 +405,7 @@ ASN1_OCTET_STRING *ossl_cms_encode_Receipt(CMS_SignerInfo *si)
 
     os = ASN1_item_pack(&rct, ASN1_ITEM_rptr(CMS_Receipt), NULL);
 
- err:
+err:
     CMS_ReceiptRequest_free(rr);
     return os;
 }

@@ -57,12 +57,14 @@
  *            item inside the data structure can represent a span of zero
  *            integers.
  */
-void ossl_uint_set_init(UINT_SET *s)
+void
+ossl_uint_set_init(UINT_SET *s)
 {
     ossl_list_uint_set_init(s);
 }
 
-void ossl_uint_set_destroy(UINT_SET *s)
+void
+ossl_uint_set_destroy(UINT_SET *s)
 {
     UINT_SET_ITEM *x, *xnext;
 
@@ -73,7 +75,8 @@ void ossl_uint_set_destroy(UINT_SET *s)
 }
 
 /* Possible merge of x, prev(x) */
-static void uint_set_merge_adjacent(UINT_SET *s, UINT_SET_ITEM *x)
+static void
+uint_set_merge_adjacent(UINT_SET *s, UINT_SET_ITEM *x)
 {
     UINT_SET_ITEM *xprev = ossl_list_uint_set_prev(x);
 
@@ -88,12 +91,14 @@ static void uint_set_merge_adjacent(UINT_SET *s, UINT_SET_ITEM *x)
     OPENSSL_free(xprev);
 }
 
-static uint64_t u64_min(uint64_t x, uint64_t y)
+static uint64_t
+u64_min(uint64_t x, uint64_t y)
 {
     return x < y ? x : y;
 }
 
-static uint64_t u64_max(uint64_t x, uint64_t y)
+static uint64_t
+u64_max(uint64_t x, uint64_t y)
 {
     return x > y ? x : y;
 }
@@ -102,14 +107,14 @@ static uint64_t u64_max(uint64_t x, uint64_t y)
  * Returns 1 if there exists an integer x which falls within both ranges a and
  * b.
  */
-static int uint_range_overlaps(const UINT_RANGE *a,
-                               const UINT_RANGE *b)
+static int
+uint_range_overlaps(const UINT_RANGE *a, const UINT_RANGE *b)
 {
-    return u64_min(a->end, b->end)
-        >= u64_max(a->start, b->start);
+    return u64_min(a->end, b->end) >= u64_max(a->start, b->start);
 }
 
-static UINT_SET_ITEM *create_set_item(uint64_t start, uint64_t end)
+static UINT_SET_ITEM *
+create_set_item(uint64_t start, uint64_t end)
 {
     UINT_SET_ITEM *x = OPENSSL_malloc(sizeof(UINT_SET_ITEM));
 
@@ -118,11 +123,12 @@ static UINT_SET_ITEM *create_set_item(uint64_t start, uint64_t end)
 
     ossl_list_uint_set_init_elem(x);
     x->range.start = start;
-    x->range.end   = end;
+    x->range.end = end;
     return x;
 }
 
-int ossl_uint_set_insert(UINT_SET *s, const UINT_RANGE *range)
+int
+ossl_uint_set_insert(UINT_SET *s, const UINT_RANGE *range)
 {
     UINT_SET_ITEM *x, *xnext, *z, *zprev, *f;
     uint64_t start = range->start, end = range->end;
@@ -218,8 +224,7 @@ int ossl_uint_set_insert(UINT_SET *s, const UINT_RANGE *range)
                 OPENSSL_free(x);
             }
             break;
-        } else if (end < z->range.start
-                    && (zprev == NULL || start > zprev->range.end)) {
+        } else if (end < z->range.start && (zprev == NULL || start > zprev->range.end)) {
             if (z->range.start == end + 1) {
                 /* We can extend the following range backwards. */
                 z->range.start = start;
@@ -255,7 +260,8 @@ int ossl_uint_set_insert(UINT_SET *s, const UINT_RANGE *range)
     return 1;
 }
 
-int ossl_uint_set_remove(UINT_SET *s, const UINT_RANGE *range)
+int
+ossl_uint_set_remove(UINT_SET *s, const UINT_RANGE *range)
 {
     UINT_SET_ITEM *z, *zprev, *y;
     uint64_t start = range->start, end = range->end;
@@ -315,7 +321,8 @@ int ossl_uint_set_remove(UINT_SET *s, const UINT_RANGE *range)
     return 1;
 }
 
-int ossl_uint_set_query(const UINT_SET *s, uint64_t v)
+int
+ossl_uint_set_query(const UINT_SET *s, uint64_t v)
 {
     UINT_SET_ITEM *x;
 

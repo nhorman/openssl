@@ -19,7 +19,8 @@
 #include <openssl/ssl.h>
 #include <openssl/conf.h>
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
     unsigned char buf[512];
     char *port = "*:4433";
@@ -53,7 +54,7 @@ int main(int argc, char *argv[])
      */
     BIO_set_accept_bios(in, ssl_bio);
 
- again:
+again:
     /*
      * The first call will setup the accept socket, and the second will get a
      * socket.  In this loop, the first actual accept will occur in the
@@ -86,7 +87,7 @@ int main(int argc, char *argv[])
     }
 
     ret = EXIT_SUCCESS;
- err:
+err:
     if (ret != EXIT_SUCCESS)
         ERR_print_errors_fp(stderr);
     BIO_free(in);

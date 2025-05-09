@@ -11,7 +11,8 @@
 #include <string.h>
 #include <openssl/crypto.h>
 
-struct tm *OPENSSL_gmtime(const time_t *timer, struct tm *result)
+struct tm *
+OPENSSL_gmtime(const time_t *timer, struct tm *result)
 {
     struct tm *ts = NULL;
 
@@ -24,14 +25,14 @@ struct tm *OPENSSL_gmtime(const time_t *timer, struct tm *result)
          * and copy the result.  The stack is always reachable with 32-bit
          * pointers.
          */
-#if defined(OPENSSL_SYS_VMS) && __INITIAL_POINTER_SIZE
-# pragma pointer_size save
-# pragma pointer_size 32
-#endif
+# if defined(OPENSSL_SYS_VMS) && __INITIAL_POINTER_SIZE
+#  pragma pointer_size save
+#  pragma pointer_size 32
+# endif
         struct tm data, *ts2 = &data;
-#if defined OPENSSL_SYS_VMS && __INITIAL_POINTER_SIZE
-# pragma pointer_size restore
-#endif
+# if defined OPENSSL_SYS_VMS && __INITIAL_POINTER_SIZE
+#  pragma pointer_size restore
+# endif
         if (gmtime_r(timer, ts2) == NULL)
             return NULL;
         memcpy(result, ts2, sizeof(struct tm));
@@ -41,7 +42,7 @@ struct tm *OPENSSL_gmtime(const time_t *timer, struct tm *result)
     if (gmtime_r(timer, result) == NULL)
         return NULL;
     ts = result;
-#elif defined (OPENSSL_SYS_WINDOWS) && defined(_MSC_VER) && _MSC_VER >= 1400 && !defined(_WIN32_WCE)
+#elif defined(OPENSSL_SYS_WINDOWS) && defined(_MSC_VER) && _MSC_VER >= 1400 && !defined(_WIN32_WCE)
     if (gmtime_s(result, timer))
         return NULL;
     ts = result;
@@ -66,10 +67,10 @@ struct tm *OPENSSL_gmtime(const time_t *timer, struct tm *result)
 
 static long date_to_julian(int y, int m, int d);
 static void julian_to_date(long jd, int *y, int *m, int *d);
-static int julian_adj(const struct tm *tm, int off_day, long offset_sec,
-                      long *pday, int *psec);
+static int julian_adj(const struct tm *tm, int off_day, long offset_sec, long *pday, int *psec);
 
-int OPENSSL_gmtime_adj(struct tm *tm, int off_day, long offset_sec)
+int
+OPENSSL_gmtime_adj(struct tm *tm, int off_day, long offset_sec)
 {
     int time_sec, time_year, time_month, time_day;
     long time_jd;
@@ -96,11 +97,10 @@ int OPENSSL_gmtime_adj(struct tm *tm, int off_day, long offset_sec)
     tm->tm_sec = time_sec % 60;
 
     return 1;
-
 }
 
-int OPENSSL_gmtime_diff(int *pday, int *psec,
-                        const struct tm *from, const struct tm *to)
+int
+OPENSSL_gmtime_diff(int *pday, int *psec, const struct tm *from, const struct tm *to)
 {
     int from_sec, to_sec, diff_sec;
     long from_jd, to_jd, diff_day;
@@ -126,12 +126,11 @@ int OPENSSL_gmtime_diff(int *pday, int *psec,
         *psec = diff_sec;
 
     return 1;
-
 }
 
 /* Convert tm structure and offset into julian day and seconds */
-static int julian_adj(const struct tm *tm, int off_day, long offset_sec,
-                      long *pday, int *psec)
+static int
+julian_adj(const struct tm *tm, int off_day, long offset_sec, long *pday, int *psec)
 {
     int offset_hms;
     long offset_day, time_jd;
@@ -176,14 +175,15 @@ static int julian_adj(const struct tm *tm, int off_day, long offset_sec,
 /*
  * Convert date to and from julian day Uses Fliegel & Van Flandern algorithm
  */
-static long date_to_julian(int y, int m, int d)
+static long
+date_to_julian(int y, int m, int d)
 {
-    return (1461 * (y + 4800 + (m - 14) / 12)) / 4 +
-        (367 * (m - 2 - 12 * ((m - 14) / 12))) / 12 -
-        (3 * ((y + 4900 + (m - 14) / 12) / 100)) / 4 + d - 32075;
+    return (1461 * (y + 4800 + (m - 14) / 12)) / 4 + (367 * (m - 2 - 12 * ((m - 14) / 12))) / 12 -
+           (3 * ((y + 4900 + (m - 14) / 12) / 100)) / 4 + d - 32075;
 }
 
-static void julian_to_date(long jd, int *y, int *m, int *d)
+static void
+julian_to_date(long jd, int *y, int *m, int *d)
 {
     long L = jd + 68569;
     long n = (4 * L) / 146097;

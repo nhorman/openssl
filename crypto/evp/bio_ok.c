@@ -90,9 +90,9 @@ static __owur int sig_out(BIO *b);
 static __owur int sig_in(BIO *b);
 static __owur int block_out(BIO *b);
 static __owur int block_in(BIO *b);
-#define OK_BLOCK_SIZE   (1024*4)
-#define OK_BLOCK_BLOCK  4
-#define IOBS            (OK_BLOCK_SIZE+ OK_BLOCK_BLOCK+ 3*EVP_MAX_MD_SIZE)
+#define OK_BLOCK_SIZE (1024 * 4)
+#define OK_BLOCK_BLOCK 4
+#define IOBS (OK_BLOCK_SIZE + OK_BLOCK_BLOCK + 3 * EVP_MAX_MD_SIZE)
 #define WELLKNOWN "The quick brown fox jumped over the lazy dog's back."
 
 typedef struct ok_struct {
@@ -100,11 +100,11 @@ typedef struct ok_struct {
     size_t buf_off;
     size_t buf_len_save;
     size_t buf_off_save;
-    int cont;                   /* <= 0 when finished */
+    int cont; /* <= 0 when finished */
     int finished;
     EVP_MD_CTX *md;
-    int blockout;               /* output block is ready */
-    int sigio;                  /* must process signature */
+    int blockout; /* output block is ready */
+    int sigio;    /* must process signature */
     unsigned char buf[IOBS];
 } BIO_OK_CTX;
 
@@ -115,20 +115,22 @@ static const BIO_METHOD methods_ok = {
     ok_write,
     bread_conv,
     ok_read,
-    NULL,                       /* ok_puts, */
-    NULL,                       /* ok_gets, */
+    NULL, /* ok_puts, */
+    NULL, /* ok_gets, */
     ok_ctrl,
     ok_new,
     ok_free,
     ok_callback_ctrl,
 };
 
-const BIO_METHOD *BIO_f_reliable(void)
+const BIO_METHOD *
+BIO_f_reliable(void)
 {
     return &methods_ok;
 }
 
-static int ok_new(BIO *bi)
+static int
+ok_new(BIO *bi)
 {
     BIO_OK_CTX *ctx;
 
@@ -148,7 +150,8 @@ static int ok_new(BIO *bi)
     return 1;
 }
 
-static int ok_free(BIO *a)
+static int
+ok_free(BIO *a)
 {
     BIO_OK_CTX *ctx;
 
@@ -165,7 +168,8 @@ static int ok_free(BIO *a)
     return 1;
 }
 
-static int ok_read(BIO *b, char *out, int outl)
+static int
+ok_read(BIO *b, char *out, int outl)
 {
     int ret = 0, i, n;
     BIO_OK_CTX *ctx;
@@ -202,8 +206,7 @@ static int ok_read(BIO *b, char *out, int outl)
                  */
                 if (ctx->buf_len_save > ctx->buf_off_save) {
                     ctx->buf_len = ctx->buf_len_save - ctx->buf_off_save;
-                    memmove(ctx->buf, &(ctx->buf[ctx->buf_off_save]),
-                            ctx->buf_len);
+                    memmove(ctx->buf, &(ctx->buf[ctx->buf_off_save]), ctx->buf_len);
                 } else {
                     ctx->buf_len = 0;
                 }
@@ -220,7 +223,7 @@ static int ok_read(BIO *b, char *out, int outl)
         i = BIO_read(next, &(ctx->buf[ctx->buf_len]), n);
 
         if (i <= 0)
-            break;              /* nothing new */
+            break; /* nothing new */
 
         ctx->buf_len += i;
 
@@ -243,7 +246,6 @@ static int ok_read(BIO *b, char *out, int outl)
         /* invalid block -- cancel */
         if (ctx->cont <= 0)
             break;
-
     }
 
     BIO_clear_retry_flags(b);
@@ -251,7 +253,8 @@ static int ok_read(BIO *b, char *out, int outl)
     return ret;
 }
 
-static int ok_write(BIO *b, const char *in, int inl)
+static int
+ok_write(BIO *b, const char *in, int inl)
 {
     int ret = 0, n, i;
     BIO_OK_CTX *ctx;
@@ -295,8 +298,9 @@ static int ok_write(BIO *b, const char *in, int inl)
         if ((in == NULL) || (inl <= 0))
             return 0;
 
-        n = (inl + ctx->buf_len > OK_BLOCK_SIZE + OK_BLOCK_BLOCK) ?
-            (int)(OK_BLOCK_SIZE + OK_BLOCK_BLOCK - ctx->buf_len) : inl;
+        n = (inl + ctx->buf_len > OK_BLOCK_SIZE + OK_BLOCK_BLOCK)
+                ? (int)(OK_BLOCK_SIZE + OK_BLOCK_BLOCK - ctx->buf_len)
+                : inl;
 
         memcpy(&ctx->buf[ctx->buf_len], in, n);
         ctx->buf_len += n;
@@ -316,7 +320,8 @@ static int ok_write(BIO *b, const char *in, int inl)
     return ret;
 }
 
-static long ok_ctrl(BIO *b, int cmd, long num, void *ptr)
+static long
+ok_ctrl(BIO *b, int cmd, long num, void *ptr)
 {
     BIO_OK_CTX *ctx;
     EVP_MD *md;
@@ -340,14 +345,14 @@ static long ok_ctrl(BIO *b, int cmd, long num, void *ptr)
         ctx->sigio = 1;
         ret = BIO_ctrl(next, cmd, num, ptr);
         break;
-    case BIO_CTRL_EOF:         /* More to read */
+    case BIO_CTRL_EOF: /* More to read */
         if (ctx->cont <= 0)
             ret = 1;
         else
             ret = BIO_ctrl(next, cmd, num, ptr);
         break;
-    case BIO_CTRL_PENDING:     /* More to read in buffer */
-    case BIO_CTRL_WPENDING:    /* More to read in buffer */
+    case BIO_CTRL_PENDING:  /* More to read in buffer */
+    case BIO_CTRL_WPENDING: /* More to read in buffer */
         ret = ctx->blockout ? ctx->buf_len - ctx->buf_off : 0;
         if (ret <= 0)
             ret = BIO_ctrl(next, cmd, num, ptr);
@@ -402,7 +407,8 @@ static long ok_ctrl(BIO *b, int cmd, long num, void *ptr)
     return ret;
 }
 
-static long ok_callback_ctrl(BIO *b, int cmd, BIO_info_cb *fp)
+static long
+ok_callback_ctrl(BIO *b, int cmd, BIO_info_cb *fp)
 {
     BIO *next;
 
@@ -414,7 +420,8 @@ static long ok_callback_ctrl(BIO *b, int cmd, BIO_info_cb *fp)
     return BIO_callback_ctrl(next, cmd, fp);
 }
 
-static void longswap(void *_ptr, size_t len)
+static void
+longswap(void *_ptr, size_t len)
 {
     DECLARE_IS_ENDIAN;
 
@@ -429,7 +436,8 @@ static void longswap(void *_ptr, size_t len)
     }
 }
 
-static int sig_out(BIO *b)
+static int
+sig_out(BIO *b)
 {
     BIO_OK_CTX *ctx;
     EVP_MD_CTX *md;
@@ -468,12 +476,13 @@ static int sig_out(BIO *b)
     ctx->blockout = 1;
     ctx->sigio = 0;
     return 1;
- berr:
+berr:
     BIO_clear_retry_flags(b);
     return 0;
 }
 
-static int sig_in(BIO *b)
+static int
+sig_in(BIO *b)
 {
     BIO_OK_CTX *ctx;
     EVP_MD_CTX *md;
@@ -509,8 +518,7 @@ static int sig_in(BIO *b)
     if (ret == 1) {
         ctx->sigio = 0;
         if (ctx->buf_len != ctx->buf_off) {
-            memmove(ctx->buf, &(ctx->buf[ctx->buf_off]),
-                    ctx->buf_len - ctx->buf_off);
+            memmove(ctx->buf, &(ctx->buf[ctx->buf_off]), ctx->buf_len - ctx->buf_off);
         }
         ctx->buf_len -= ctx->buf_off;
         ctx->buf_off = 0;
@@ -518,12 +526,13 @@ static int sig_in(BIO *b)
         ctx->cont = 0;
     }
     return 1;
- berr:
+berr:
     BIO_clear_retry_flags(b);
     return 0;
 }
 
-static int block_out(BIO *b)
+static int
+block_out(BIO *b)
 {
     BIO_OK_CTX *ctx;
     EVP_MD_CTX *md;
@@ -543,20 +552,20 @@ static int block_out(BIO *b)
     ctx->buf[1] = (unsigned char)(tl >> 16);
     ctx->buf[2] = (unsigned char)(tl >> 8);
     ctx->buf[3] = (unsigned char)(tl);
-    if (!EVP_DigestUpdate(md,
-                          (unsigned char *)&(ctx->buf[OK_BLOCK_BLOCK]), tl))
+    if (!EVP_DigestUpdate(md, (unsigned char *)&(ctx->buf[OK_BLOCK_BLOCK]), tl))
         goto berr;
     if (!EVP_DigestFinal_ex(md, &(ctx->buf[ctx->buf_len]), NULL))
         goto berr;
     ctx->buf_len += md_size;
     ctx->blockout = 1;
     return 1;
- berr:
+berr:
     BIO_clear_retry_flags(b);
     return 0;
 }
 
-static int block_in(BIO *b)
+static int
+block_in(BIO *b)
 {
     BIO_OK_CTX *ctx;
     EVP_MD_CTX *md;
@@ -582,8 +591,7 @@ static int block_in(BIO *b)
     if (ctx->buf_len < tl + OK_BLOCK_BLOCK + md_size)
         return 1;
 
-    if (!EVP_DigestUpdate(md,
-                          (unsigned char *)&(ctx->buf[OK_BLOCK_BLOCK]), tl))
+    if (!EVP_DigestUpdate(md, (unsigned char *)&(ctx->buf[OK_BLOCK_BLOCK]), tl))
         goto berr;
     if (!EVP_DigestFinal_ex(md, tmp, NULL))
         goto berr;
@@ -598,7 +606,7 @@ static int block_in(BIO *b)
         ctx->cont = 0;
     }
     return 1;
- berr:
+berr:
     BIO_clear_retry_flags(b);
     return 0;
 }

@@ -18,7 +18,8 @@ static UINT saved_cp;
 static int newargc;
 static char **newargv;
 
-static void cleanup(void)
+static void
+cleanup(void)
 {
     int i;
 
@@ -33,7 +34,8 @@ static void cleanup(void)
 /*
  * Incrementally [re]allocate newargv and keep it NULL-terminated.
  */
-static int validate_argv(int argc)
+static int
+validate_argv(int argc)
 {
     static int size = 0;
 
@@ -55,7 +57,8 @@ static int validate_argv(int argc)
     return 1;
 }
 
-static int process_glob(WCHAR *wstr, int wlen)
+static int
+process_glob(WCHAR *wstr, int wlen)
 {
     int i, slash, udlen;
     WCHAR saved_char;
@@ -81,18 +84,17 @@ static int process_glob(WCHAR *wstr, int wlen)
             break;
 
     if (i == wlen)
-        return 0;   /* definitely not a glob */
+        return 0; /* definitely not a glob */
 
     saved_char = wstr[wlen];
     wstr[wlen] = L'\0';
     h = FindFirstFileW(wstr, &data);
     wstr[wlen] = saved_char;
     if (h == INVALID_HANDLE_VALUE)
-        return 0;   /* not a valid glob, just pass... */
+        return 0; /* not a valid glob, just pass... */
 
     if (slash)
-        udlen = WideCharToMultiByte(CP_UTF8, 0, wstr, slash,
-                                    NULL, 0, NULL, NULL);
+        udlen = WideCharToMultiByte(CP_UTF8, 0, wstr, slash, NULL, 0, NULL, NULL);
     else
         udlen = 0;
 
@@ -116,19 +118,16 @@ static int process_glob(WCHAR *wstr, int wlen)
          * -1 below means "scan for trailing '\0' *and* count it",
          * so that |uflen| covers even trailing '\0'.
          */
-        uflen = WideCharToMultiByte(CP_UTF8, 0, data.cFileName, -1,
-                                    NULL, 0, NULL, NULL);
+        uflen = WideCharToMultiByte(CP_UTF8, 0, data.cFileName, -1, NULL, 0, NULL, NULL);
 
         arg = malloc(udlen + uflen);
         if (arg == NULL)
             break;
 
         if (udlen)
-            WideCharToMultiByte(CP_UTF8, 0, wstr, slash,
-                                arg, udlen, NULL, NULL);
+            WideCharToMultiByte(CP_UTF8, 0, wstr, slash, arg, udlen, NULL, NULL);
 
-        WideCharToMultiByte(CP_UTF8, 0, data.cFileName, -1,
-                            arg + udlen, uflen, NULL, NULL);
+        WideCharToMultiByte(CP_UTF8, 0, data.cFileName, -1, arg + udlen, uflen, NULL, NULL);
 
         newargv[newargc++] = arg;
     } while (FindNextFileW(h, &data));
@@ -138,7 +137,8 @@ static int process_glob(WCHAR *wstr, int wlen)
     return 1;
 }
 
-void win32_utf8argv(int *argc, char **argv[])
+void
+win32_utf8argv(int *argc, char **argv[])
 {
     const WCHAR *wcmdline;
     WCHAR *warg, *wend, *p;
@@ -154,7 +154,8 @@ void win32_utf8argv(int *argc, char **argv[])
         return;
 
     wcmdline = GetCommandLineW();
-    if (wcmdline == NULL) return;
+    if (wcmdline == NULL)
+        return;
 
     /*
      * make a copy of the command line, since we might have to modify it...
@@ -177,8 +178,7 @@ void win32_utf8argv(int *argc, char **argv[])
          * the number of characters will never expand.
          */
         warg = wend = p;
-        while (*p != L'\0'
-               && (in_quote || (*p != L' ' && *p != L'\t'))) {
+        while (*p != L'\0' && (in_quote || (*p != L' ' && *p != L'\t'))) {
             switch (*p) {
             case L'\\':
                 /*
@@ -258,8 +258,7 @@ void win32_utf8argv(int *argc, char **argv[])
 
             ulen = 0;
             if (wlen > 0) {
-                ulen = WideCharToMultiByte(CP_UTF8, 0, warg, wlen,
-                                           NULL, 0, NULL, NULL);
+                ulen = WideCharToMultiByte(CP_UTF8, 0, warg, wlen, NULL, 0, NULL, NULL);
                 if (ulen <= 0)
                     continue;
             }
@@ -271,8 +270,7 @@ void win32_utf8argv(int *argc, char **argv[])
             }
 
             if (wlen > 0)
-                WideCharToMultiByte(CP_UTF8, 0, warg, wlen,
-                                    arg, ulen, NULL, NULL);
+                WideCharToMultiByte(CP_UTF8, 0, warg, wlen, arg, ulen, NULL, NULL);
             arg[ulen] = '\0';
 
             newargv[newargc++] = arg;
@@ -302,6 +300,9 @@ void win32_utf8argv(int *argc, char **argv[])
     return;
 }
 #else
-void win32_utf8argv(int *argc, char **argv[])
-{   return;   }
+void
+win32_utf8argv(int *argc, char **argv[])
+{
+    return;
+}
 #endif

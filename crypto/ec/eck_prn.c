@@ -18,7 +18,8 @@
 
 #ifndef OPENSSL_NO_DEPRECATED_3_0
 # ifndef OPENSSL_NO_STDIO
-int ECPKParameters_print_fp(FILE *fp, const EC_GROUP *x, int off)
+int
+ECPKParameters_print_fp(FILE *fp, const EC_GROUP *x, int off)
 {
     BIO *b;
     int ret;
@@ -33,7 +34,8 @@ int ECPKParameters_print_fp(FILE *fp, const EC_GROUP *x, int off)
     return ret;
 }
 
-int EC_KEY_print_fp(FILE *fp, const EC_KEY *x, int off)
+int
+EC_KEY_print_fp(FILE *fp, const EC_KEY *x, int off)
 {
     BIO *b;
     int ret;
@@ -48,7 +50,8 @@ int EC_KEY_print_fp(FILE *fp, const EC_KEY *x, int off)
     return ret;
 }
 
-int ECParameters_print_fp(FILE *fp, const EC_KEY *x)
+int
+ECParameters_print_fp(FILE *fp, const EC_KEY *x)
 {
     BIO *b;
     int ret;
@@ -62,12 +65,12 @@ int ECParameters_print_fp(FILE *fp, const EC_KEY *x)
     BIO_free(b);
     return ret;
 }
-#endif /* OPENSSL_NO_STDIO */
+# endif /* OPENSSL_NO_STDIO */
 
-static int print_bin(BIO *fp, const char *str, const unsigned char *num,
-                     size_t len, int off);
+static int print_bin(BIO *fp, const char *str, const unsigned char *num, size_t len, int off);
 
-int ECPKParameters_print(BIO *bp, const EC_GROUP *x, int off)
+int
+ECPKParameters_print(BIO *bp, const EC_GROUP *x, int off)
 {
     int ret = 0, reason = ERR_R_BIO_LIB;
     BN_CTX *ctx = NULL;
@@ -125,8 +128,7 @@ int ECPKParameters_print(BIO *bp, const EC_GROUP *x, int off)
         if (tmp_nid == NID_X9_62_characteristic_two_field)
             is_char_two = 1;
 
-        if ((p = BN_new()) == NULL || (a = BN_new()) == NULL ||
-            (b = BN_new()) == NULL) {
+        if ((p = BN_new()) == NULL || (a = BN_new()) == NULL || (b = BN_new()) == NULL) {
             reason = ERR_R_BN_LIB;
             goto err;
         }
@@ -162,8 +164,7 @@ int ECPKParameters_print(BIO *bp, const EC_GROUP *x, int off)
             goto err;
 
         /* print the 'short name' of the field type */
-        if (BIO_printf(bp, "Field Type: %s\n", OBJ_nid2sn(tmp_nid))
-            <= 0)
+        if (BIO_printf(bp, "Field Type: %s\n", OBJ_nid2sn(tmp_nid)) <= 0)
             goto err;
 
         if (is_char_two) {
@@ -175,13 +176,11 @@ int ECPKParameters_print(BIO *bp, const EC_GROUP *x, int off)
             if (!BIO_indent(bp, off, 128))
                 goto err;
 
-            if (BIO_printf(bp, "Basis Type: %s\n",
-                           OBJ_nid2sn(basis_type)) <= 0)
+            if (BIO_printf(bp, "Basis Type: %s\n", OBJ_nid2sn(basis_type)) <= 0)
                 goto err;
 
             /* print the polynomial */
-            if ((p != NULL) && !ASN1_bn_print(bp, "Polynomial:", p, NULL,
-                                              off))
+            if ((p != NULL) && !ASN1_bn_print(bp, "Polynomial:", p, NULL, off))
                 goto err;
         } else {
             if ((p != NULL) && !ASN1_bn_print(bp, "Prime:", p, NULL, off))
@@ -198,20 +197,18 @@ int ECPKParameters_print(BIO *bp, const EC_GROUP *x, int off)
             form_str = gen_uncompressed;
         else
             form_str = gen_hybrid;
-        if (gen_buf != NULL
-            && !print_bin(bp, form_str, gen_buf, gen_buf_len, off))
+        if (gen_buf != NULL && !print_bin(bp, form_str, gen_buf, gen_buf_len, off))
             goto err;
 
         if ((order != NULL) && !ASN1_bn_print(bp, "Order: ", order, NULL, off))
             goto err;
-        if ((cofactor != NULL) && !ASN1_bn_print(bp, "Cofactor: ", cofactor,
-                                                 NULL, off))
+        if ((cofactor != NULL) && !ASN1_bn_print(bp, "Cofactor: ", cofactor, NULL, off))
             goto err;
         if (seed && !print_bin(bp, "Seed:", seed, seed_len, off))
             goto err;
     }
     ret = 1;
- err:
+err:
     if (!ret)
         ERR_raise(ERR_LIB_EC, reason);
     BN_free(p);
@@ -222,8 +219,8 @@ int ECPKParameters_print(BIO *bp, const EC_GROUP *x, int off)
     return ret;
 }
 
-static int print_bin(BIO *fp, const char *name, const unsigned char *buf,
-                     size_t len, int off)
+static int
+print_bin(BIO *fp, const char *name, const unsigned char *buf, size_t len, int off)
 {
     size_t i;
     char str[128 + 1 + 4];
@@ -250,8 +247,7 @@ static int print_bin(BIO *fp, const char *name, const unsigned char *buf,
             if (BIO_write(fp, str, off + 1 + 4) <= 0)
                 return 0;
         }
-        if (BIO_printf(fp, "%02x%s", buf[i], ((i + 1) == len) ? "" : ":") <=
-            0)
+        if (BIO_printf(fp, "%02x%s", buf[i], ((i + 1) == len) ? "" : ":") <= 0)
             return 0;
     }
     if (BIO_write(fp, "\n", 1) <= 0)

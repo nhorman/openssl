@@ -9,7 +9,8 @@
 
 #include "fmt.h"
 
-int FMT_istext(int format)
+int
+FMT_istext(int format)
 {
     return (format & B_FORMAT_TEXT) == B_FORMAT_TEXT;
 }

@@ -31,7 +31,8 @@
  * @param r0 The remainder in the range (0..4096 or q-4095..q-1)
  *           So r0 has an effective range of 8192 (i.e. 13 bits).
  */
-void ossl_ml_dsa_key_compress_power2_round(uint32_t r, uint32_t *r1, uint32_t *r0)
+void
+ossl_ml_dsa_key_compress_power2_round(uint32_t r, uint32_t *r1, uint32_t *r0)
 {
     unsigned int mask;
     uint32_t r0_adjusted, r1_adjusted;
@@ -59,7 +60,8 @@ void ossl_ml_dsa_key_compress_power2_round(uint32_t r, uint32_t *r1, uint32_t *r
  * @param gamma2 Depending on the algorithm gamma2 is either (q-1)/32 or (q-1)/88
  * @returns r1 (The high order bits)
  */
-uint32_t ossl_ml_dsa_key_compress_high_bits(uint32_t r, uint32_t gamma2)
+uint32_t
+ossl_ml_dsa_key_compress_high_bits(uint32_t r, uint32_t gamma2)
 {
     int32_t r1 = (r + 127) >> 7;
 
@@ -83,8 +85,8 @@ uint32_t ossl_ml_dsa_key_compress_high_bits(uint32_t r, uint32_t gamma2)
  * @param r1 The returned high order bits
  * @param r0 The returned low order bits
  */
-void ossl_ml_dsa_key_compress_decompose(uint32_t r, uint32_t gamma2,
-                                        uint32_t *r1, int32_t *r0)
+void
+ossl_ml_dsa_key_compress_decompose(uint32_t r, uint32_t gamma2, uint32_t *r1, int32_t *r0)
 {
     *r1 = ossl_ml_dsa_key_compress_high_bits(r, gamma2);
 
@@ -101,7 +103,8 @@ void ossl_ml_dsa_key_compress_decompose(uint32_t r, uint32_t gamma2,
  * @param gamma2 Depending on the algorithm gamma2 is either (q-1)/32 or (q-1)/88
  * @param r0 The returned low order bits
  */
-int32_t ossl_ml_dsa_key_compress_low_bits(uint32_t r, uint32_t gamma2)
+int32_t
+ossl_ml_dsa_key_compress_low_bits(uint32_t r, uint32_t gamma2)
 {
     uint32_t r1;
     int32_t r0;
@@ -123,21 +126,21 @@ int32_t ossl_ml_dsa_key_compress_low_bits(uint32_t r, uint32_t gamma2)
  * But z + r is just w - cs2, so this takes three arguments and saves an addition.
  *
  * @params ct0 A polynomial c (with coefficients of (-1,0,1)) multiplied by the
- *             polynomial vector t0 (which encodes the least significant bits of each coefficient of the
-               uncompressed public-key polynomial t)
+ *             polynomial vector t0 (which encodes the least significant bits of each coefficient of
+ the uncompressed public-key polynomial t)
  * @params cs2 A polynomial c (with coefficients of (-1,0,1)) multiplied by s2 (a secret polynomial)
  * @params gamma2 Depending on the algorithm gamma2 is either (q-1)/32 or (q-1)/88
  * @params w  (A * y)
  * @returns The hint bit.
  */
-int32_t ossl_ml_dsa_key_compress_make_hint(uint32_t ct0, uint32_t cs2,
-                                           uint32_t gamma2, uint32_t w)
+int32_t
+ossl_ml_dsa_key_compress_make_hint(uint32_t ct0, uint32_t cs2, uint32_t gamma2, uint32_t w)
 {
     uint32_t r_plus_z = mod_sub(w, cs2);
     uint32_t r = reduce_once(r_plus_z + ct0);
 
-    return  ossl_ml_dsa_key_compress_high_bits(r, gamma2)
-        !=  ossl_ml_dsa_key_compress_high_bits(r_plus_z, gamma2);
+    return ossl_ml_dsa_key_compress_high_bits(r, gamma2) !=
+           ossl_ml_dsa_key_compress_high_bits(r_plus_z, gamma2);
 }
 
 /*
@@ -151,8 +154,8 @@ int32_t ossl_ml_dsa_key_compress_make_hint(uint32_t ct0, uint32_t cs2,
  *
  * @returns The adjusted high bits or r.
  */
-uint32_t ossl_ml_dsa_key_compress_use_hint(uint32_t hint, uint32_t r,
-                                           uint32_t gamma2)
+uint32_t
+ossl_ml_dsa_key_compress_use_hint(uint32_t hint, uint32_t r, uint32_t gamma2)
 {
     uint32_t r1;
     int32_t r0;

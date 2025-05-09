@@ -13,7 +13,8 @@
 
 /* ASN1 packing and unpacking functions */
 
-ASN1_STRING *ASN1_item_pack(void *obj, const ASN1_ITEM *it, ASN1_STRING **oct)
+ASN1_STRING *
+ASN1_item_pack(void *obj, const ASN1_ITEM *it, ASN1_STRING **oct)
 {
     ASN1_STRING *octmp;
 
@@ -41,7 +42,7 @@ ASN1_STRING *ASN1_item_pack(void *obj, const ASN1_ITEM *it, ASN1_STRING **oct)
         *oct = octmp;
 
     return octmp;
- err:
+err:
     if (oct == NULL || *oct == NULL)
         ASN1_STRING_free(octmp);
     return NULL;
@@ -49,7 +50,8 @@ ASN1_STRING *ASN1_item_pack(void *obj, const ASN1_ITEM *it, ASN1_STRING **oct)
 
 /* Extract an ASN1 object from an ASN1_STRING */
 
-void *ASN1_item_unpack(const ASN1_STRING *oct, const ASN1_ITEM *it)
+void *
+ASN1_item_unpack(const ASN1_STRING *oct, const ASN1_ITEM *it)
 {
     const unsigned char *p;
     void *ret;
@@ -60,15 +62,15 @@ void *ASN1_item_unpack(const ASN1_STRING *oct, const ASN1_ITEM *it)
     return ret;
 }
 
-void *ASN1_item_unpack_ex(const ASN1_STRING *oct, const ASN1_ITEM *it,
-                          OSSL_LIB_CTX *libctx, const char *propq)
+void *
+ASN1_item_unpack_ex(const ASN1_STRING *oct, const ASN1_ITEM *it, OSSL_LIB_CTX *libctx,
+                    const char *propq)
 {
     const unsigned char *p;
     void *ret;
 
     p = oct->data;
-    if ((ret = ASN1_item_d2i_ex(NULL, &p, oct->length, it,\
-                                libctx, propq)) == NULL)
+    if ((ret = ASN1_item_d2i_ex(NULL, &p, oct->length, it, libctx, propq)) == NULL)
         ERR_raise(ERR_LIB_ASN1, ASN1_R_DECODE_ERROR);
     return ret;
 }

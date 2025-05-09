@@ -25,8 +25,8 @@
 
 #include "crypto/evp.h"
 
-EVP_PKEY *d2i_PublicKey(int type, EVP_PKEY **a, const unsigned char **pp,
-                        long length)
+EVP_PKEY *
+d2i_PublicKey(int type, EVP_PKEY **a, const unsigned char **pp, long length)
 {
     EVP_PKEY *ret;
     EVP_PKEY *copy = NULL;
@@ -40,16 +40,14 @@ EVP_PKEY *d2i_PublicKey(int type, EVP_PKEY **a, const unsigned char **pp,
         ret = *a;
 
 #ifndef OPENSSL_NO_EC
-        if (evp_pkey_is_provided(ret)
-            && EVP_PKEY_get_base_id(ret) == EVP_PKEY_EC) {
+        if (evp_pkey_is_provided(ret) && EVP_PKEY_get_base_id(ret) == EVP_PKEY_EC) {
             if (!evp_pkey_copy_downgraded(&copy, ret))
                 goto err;
         }
 #endif
     }
 
-    if ((type != EVP_PKEY_get_id(ret) || copy != NULL)
-        && !EVP_PKEY_set_type(ret, type)) {
+    if ((type != EVP_PKEY_get_id(ret) || copy != NULL) && !EVP_PKEY_set_type(ret, type)) {
         ERR_raise(ERR_LIB_ASN1, ERR_R_EVP_LIB);
         goto err;
     }
@@ -90,7 +88,7 @@ EVP_PKEY *d2i_PublicKey(int type, EVP_PKEY **a, const unsigned char **pp,
         (*a) = ret;
     EVP_PKEY_free(copy);
     return ret;
- err:
+err:
     if (a == NULL || *a != ret)
         EVP_PKEY_free(ret);
     EVP_PKEY_free(copy);

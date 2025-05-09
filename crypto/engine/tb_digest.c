@@ -14,30 +14,33 @@
 
 static ENGINE_TABLE *digest_table = NULL;
 
-void ENGINE_unregister_digests(ENGINE *e)
+void
+ENGINE_unregister_digests(ENGINE *e)
 {
     engine_table_unregister(&digest_table, e);
 }
 
-static void engine_unregister_all_digests(void)
+static void
+engine_unregister_all_digests(void)
 {
     engine_table_cleanup(&digest_table);
 }
 
-int ENGINE_register_digests(ENGINE *e)
+int
+ENGINE_register_digests(ENGINE *e)
 {
     if (e->digests) {
         const int *nids;
         int num_nids = e->digests(e, NULL, &nids, 0);
         if (num_nids > 0)
-            return engine_table_register(&digest_table,
-                                         engine_unregister_all_digests, e,
-                                         nids, num_nids, 0);
+            return engine_table_register(&digest_table, engine_unregister_all_digests, e, nids,
+                                         num_nids, 0);
     }
     return 1;
 }
 
-void ENGINE_register_all_digests(void)
+void
+ENGINE_register_all_digests(void)
 {
     ENGINE *e;
 
@@ -45,15 +48,15 @@ void ENGINE_register_all_digests(void)
         ENGINE_register_digests(e);
 }
 
-int ENGINE_set_default_digests(ENGINE *e)
+int
+ENGINE_set_default_digests(ENGINE *e)
 {
     if (e->digests) {
         const int *nids;
         int num_nids = e->digests(e, NULL, &nids, 0);
         if (num_nids > 0)
-            return engine_table_register(&digest_table,
-                                         engine_unregister_all_digests, e,
-                                         nids, num_nids, 1);
+            return engine_table_register(&digest_table, engine_unregister_all_digests, e, nids,
+                                         num_nids, 1);
     }
     return 1;
 }
@@ -63,14 +66,15 @@ int ENGINE_set_default_digests(ENGINE *e)
  * table (ie. try to get a functional reference from the tabled structural
  * references) for a given digest 'nid'
  */
-ENGINE *ENGINE_get_digest_engine(int nid)
+ENGINE *
+ENGINE_get_digest_engine(int nid)
 {
-    return ossl_engine_table_select(&digest_table, nid,
-                                    OPENSSL_FILE, OPENSSL_LINE);
+    return ossl_engine_table_select(&digest_table, nid, OPENSSL_FILE, OPENSSL_LINE);
 }
 
 /* Obtains a digest implementation from an ENGINE functional reference */
-const EVP_MD *ENGINE_get_digest(ENGINE *e, int nid)
+const EVP_MD *
+ENGINE_get_digest(ENGINE *e, int nid)
 {
     const EVP_MD *ret;
     ENGINE_DIGESTS_PTR fn = ENGINE_get_digests(e);
@@ -82,13 +86,12 @@ const EVP_MD *ENGINE_get_digest(ENGINE *e, int nid)
 }
 
 /* Gets the digest callback from an ENGINE structure */
-ENGINE_DIGESTS_PTR ENGINE_get_digests(const ENGINE *e)
-{
-    return e->digests;
-}
+ENGINE_DIGESTS_PTR
+ENGINE_get_digests(const ENGINE *e) { return e->digests; }
 
 /* Sets the digest callback in an ENGINE structure */
-int ENGINE_set_digests(ENGINE *e, ENGINE_DIGESTS_PTR f)
+int
+ENGINE_set_digests(ENGINE *e, ENGINE_DIGESTS_PTR f)
 {
     e->digests = f;
     return 1;

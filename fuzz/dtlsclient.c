@@ -23,7 +23,12 @@ static int idx;
 
 #define FUZZTIME 1485898104
 
-#define TIME_IMPL(t) { if (t != NULL) *t = FUZZTIME; return FUZZTIME; }
+#define TIME_IMPL(t)                                                                               \
+    {                                                                                              \
+        if (t != NULL)                                                                             \
+            *t = FUZZTIME;                                                                         \
+        return FUZZTIME;                                                                           \
+    }
 
 /*
  * This might not work in all cases (and definitely not on Windows
@@ -33,12 +38,13 @@ static int idx;
  * different coverage.
  */
 #if !defined(_WIN32)
-time_t time(time_t *t) TIME_IMPL(t)
+time_t
+time(time_t *t) TIME_IMPL(t)
 #endif
 
-int FuzzerInitialize(int *argc, char ***argv)
+    int FuzzerInitialize(int *argc, char ***argv)
 {
-    STACK_OF(SSL_COMP) *comp_methods;
+    STACK_OF(SSL_COMP) * comp_methods;
 
     FuzzerSetRand();
     OPENSSL_init_crypto(OPENSSL_INIT_LOAD_CRYPTO_STRINGS | OPENSSL_INIT_ASYNC, NULL);
@@ -53,7 +59,8 @@ int FuzzerInitialize(int *argc, char ***argv)
     return 1;
 }
 
-int FuzzerTestOneInput(const uint8_t *buf, size_t len)
+int
+FuzzerTestOneInput(const uint8_t *buf, size_t len)
 {
     SSL *client = NULL;
     BIO *in;
@@ -94,7 +101,7 @@ int FuzzerTestOneInput(const uint8_t *buf, size_t len)
             }
         }
     }
- end:
+end:
     SSL_free(client);
     ERR_clear_error();
     SSL_CTX_free(ctx);
@@ -102,7 +109,8 @@ int FuzzerTestOneInput(const uint8_t *buf, size_t len)
     return 0;
 }
 
-void FuzzerCleanup(void)
+void
+FuzzerCleanup(void)
 {
     FuzzerClearRand();
 }

@@ -31,54 +31,44 @@
 typedef struct {
     AES_KEY ks;
     SHA256_CTX head, tail, md;
-    size_t payload_length;      /* AAD length in decrypt case */
+    size_t payload_length; /* AAD length in decrypt case */
     union {
         unsigned int tls_ver;
         unsigned char tls_aad[16]; /* 13 used */
     } aux;
 } EVP_AES_HMAC_SHA256;
 
-# define NO_PAYLOAD_LENGTH       ((size_t)-1)
+#define NO_PAYLOAD_LENGTH ((size_t)-1)
 
-#if     defined(AES_ASM) &&     ( \
-        defined(__x86_64)       || defined(__x86_64__)  || \
-        defined(_M_AMD64)       || defined(_M_X64)      )
+#if defined(AES_ASM) &&                                                                            \
+    (defined(__x86_64) || defined(__x86_64__) || defined(_M_AMD64) || defined(_M_X64))
 
-# define AESNI_CAPABLE   (1<<(57-32))
+# define AESNI_CAPABLE (1 << (57 - 32))
 
-int aesni_set_encrypt_key(const unsigned char *userKey, int bits,
-                          AES_KEY *key);
-int aesni_set_decrypt_key(const unsigned char *userKey, int bits,
-                          AES_KEY *key);
+int aesni_set_encrypt_key(const unsigned char *userKey, int bits, AES_KEY *key);
+int aesni_set_decrypt_key(const unsigned char *userKey, int bits, AES_KEY *key);
 
-void aesni_cbc_encrypt(const unsigned char *in,
-                       unsigned char *out,
-                       size_t length,
+void aesni_cbc_encrypt(const unsigned char *in, unsigned char *out, size_t length,
                        const AES_KEY *key, unsigned char *ivec, int enc);
 
-int aesni_cbc_sha256_enc(const void *inp, void *out, size_t blocks,
-                         const AES_KEY *key, unsigned char iv[16],
-                         SHA256_CTX *ctx, const void *in0);
+int aesni_cbc_sha256_enc(const void *inp, void *out, size_t blocks, const AES_KEY *key,
+                         unsigned char iv[16], SHA256_CTX *ctx, const void *in0);
 
 # define data(ctx) ((EVP_AES_HMAC_SHA256 *)EVP_CIPHER_CTX_get_cipher_data(ctx))
 
-static int aesni_cbc_hmac_sha256_init_key(EVP_CIPHER_CTX *ctx,
-                                          const unsigned char *inkey,
-                                          const unsigned char *iv, int enc)
+static int
+aesni_cbc_hmac_sha256_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *inkey,
+                               const unsigned char *iv, int enc)
 {
     EVP_AES_HMAC_SHA256 *key = data(ctx);
     int ret;
 
     if (enc)
-        ret = aesni_set_encrypt_key(inkey,
-                                    EVP_CIPHER_CTX_get_key_length(ctx) * 8,
-                                    &key->ks);
+        ret = aesni_set_encrypt_key(inkey, EVP_CIPHER_CTX_get_key_length(ctx) * 8, &key->ks);
     else
-        ret = aesni_set_decrypt_key(inkey,
-                                    EVP_CIPHER_CTX_get_key_length(ctx) * 8,
-                                    &key->ks);
+        ret = aesni_set_decrypt_key(inkey, EVP_CIPHER_CTX_get_key_length(ctx) * 8, &key->ks);
 
-    SHA256_Init(&key->head);    /* handy when benchmarking */
+    SHA256_Init(&key->head); /* handy when benchmarking */
     key->tail = key->head;
     key->md = key->head;
 
@@ -95,7 +85,8 @@ static int aesni_cbc_hmac_sha256_init_key(EVP_CIPHER_CTX *ctx,
 
 void sha256_block_data_order(void *c, const void *p, size_t len);
 
-static void sha256_update(SHA256_CTX *c, const void *data, size_t len)
+static void
+sha256_update(SHA256_CTX *c, const void *data, size_t len)
 {
     const unsigned char *ptr = data;
     size_t res;
@@ -152,11 +143,10 @@ typedef struct {
 
 void aesni_multi_cbc_encrypt(CIPH_DESC *, void *, int);
 
-static size_t tls1_1_multi_block_encrypt(EVP_AES_HMAC_SHA256 *key,
-                                         unsigned char *out,
-                                         const unsigned char *inp,
-                                         size_t inp_len, int n4x)
-{                               /* n4x is 1 or 2 */
+static size_t
+tls1_1_multi_block_encrypt(EVP_AES_HMAC_SHA256 *key, unsigned char *out, const unsigned char *inp,
+                           size_t inp_len, int n4x)
+{ /* n4x is 1 or 2 */
     HASH_DESC hash_d[8], edges[8];
     CIPH_DESC ciph_d[8];
     unsigned char storage[sizeof(SHA256_MB_CTX) + 32];
@@ -166,8 +156,7 @@ static size_t tls1_1_multi_block_encrypt(EVP_AES_HMAC_SHA256 *key,
         u8 c[128];
     } blocks[8];
     SHA256_MB_CTX *ctx;
-    unsigned int frag, last, packlen, i, x4 = 4 * n4x, minblocks, processed =
-        0;
+    unsigned int frag, last, packlen, i, x4 = 4 * n4x, minblocks, processed = 0;
     size_t ret = 0;
     u8 *IVs;
 #  if defined(BSWAP8)
@@ -179,7 +168,7 @@ static size_t tls1_1_multi_block_encrypt(EVP_AES_HMAC_SHA256 *key,
         return 0;
 
     /* align */
-    ctx = (SHA256_MB_CTX *) (storage + 32 - ((size_t)storage % 32));
+    ctx = (SHA256_MB_CTX *)(storage + 32 - ((size_t)storage % 32));
 
     frag = (unsigned int)inp_len >> (1 + n4x);
     last = (unsigned int)inp_len + frag - (frag << (1 + n4x));
@@ -253,10 +242,10 @@ static size_t tls1_1_multi_block_encrypt(EVP_AES_HMAC_SHA256 *key,
     /* hash 13-byte headers and first 64-13 bytes of inputs */
     sha256_multi_block(ctx, edges, n4x);
     /* hash bulk inputs */
-#  define MAXCHUNKSIZE    2048
-#  if     MAXCHUNKSIZE%64
-#   error  "MAXCHUNKSIZE is not divisible by 64"
-#  elif   MAXCHUNKSIZE
+#  define MAXCHUNKSIZE 2048
+#  if MAXCHUNKSIZE % 64
+#   error "MAXCHUNKSIZE is not divisible by 64"
+#  elif MAXCHUNKSIZE
     /*
      * goal is to minimize pressure on L1 cache by moving in shorter steps,
      * so that hashed data is still in the cache by the time we encrypt it
@@ -286,20 +275,19 @@ static size_t tls1_1_multi_block_encrypt(EVP_AES_HMAC_SHA256 *key,
         } while (minblocks > MAXCHUNKSIZE / 64);
     }
 #  endif
-#  undef  MAXCHUNKSIZE
+#  undef MAXCHUNKSIZE
     sha256_multi_block(ctx, hash_d, n4x);
 
     memset(blocks, 0, sizeof(blocks));
     for (i = 0; i < x4; i++) {
-        unsigned int len = (i == (x4 - 1) ? last : frag),
-            off = hash_d[i].blocks * 64;
+        unsigned int len = (i == (x4 - 1) ? last : frag), off = hash_d[i].blocks * 64;
         const unsigned char *ptr = hash_d[i].ptr + off;
 
         off = (len - processed) - (64 - 13) - off; /* remainder actually */
         memcpy(blocks[i].c, ptr, off);
         blocks[i].c[off] = 0x80;
-        len += 64 + 13;         /* 64 is HMAC header */
-        len *= 8;               /* convert to bits */
+        len += 64 + 13; /* 64 is HMAC header */
+        len *= 8;       /* convert to bits */
         if (off < (64 - 8)) {
 #  ifdef BSWAP4
             blocks[i].d[15] = BSWAP4(len);
@@ -397,7 +385,7 @@ static size_t tls1_1_multi_block_encrypt(EVP_AES_HMAC_SHA256 *key,
         len += pad + 1;
 
         ciph_d[i].blocks = (len - processed) / 16;
-        len += 16;              /* account for explicit iv */
+        len += 16; /* account for explicit iv */
 
         /* arrange header */
         out0[0] = ((u8 *)key->md.data)[8];
@@ -419,9 +407,9 @@ static size_t tls1_1_multi_block_encrypt(EVP_AES_HMAC_SHA256 *key,
 }
 # endif
 
-static int aesni_cbc_hmac_sha256_cipher(EVP_CIPHER_CTX *ctx,
-                                        unsigned char *out,
-                                        const unsigned char *in, size_t len)
+static int
+aesni_cbc_hmac_sha256_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out, const unsigned char *in,
+                             size_t len)
 {
     EVP_AES_HMAC_SHA256 *key = data(ctx);
     unsigned int l;
@@ -442,9 +430,7 @@ static int aesni_cbc_hmac_sha256_cipher(EVP_CIPHER_CTX *ctx,
     if (EVP_CIPHER_CTX_is_encrypting(ctx)) {
         if (plen == NO_PAYLOAD_LENGTH)
             plen = len;
-        else if (len !=
-                 ((plen + SHA256_DIGEST_LENGTH +
-                   AES_BLOCK_SIZE) & -AES_BLOCK_SIZE))
+        else if (len != ((plen + SHA256_DIGEST_LENGTH + AES_BLOCK_SIZE) & -AES_BLOCK_SIZE))
             return 0;
         else if (key->aux.tls_ver >= TLS1_1_VERSION)
             iv = AES_BLOCK_SIZE;
@@ -468,8 +454,8 @@ static int aesni_cbc_hmac_sha256_cipher(EVP_CIPHER_CTX *ctx,
             (blocks = (plen - (sha_off + iv)) / SHA256_CBLOCK)) {
             SHA256_Update(&key->md, in + iv, sha_off);
 
-            (void)aesni_cbc_sha256_enc(in, out, blocks, &key->ks,
-                                       ctx->iv, &key->md, in + iv + sha_off);
+            (void)aesni_cbc_sha256_enc(in, out, blocks, &key->ks, ctx->iv, &key->md,
+                                       in + iv + sha_off);
             blocks *= SHA256_CBLOCK;
             aes_off += blocks;
             sha_off += blocks;
@@ -484,7 +470,7 @@ static int aesni_cbc_hmac_sha256_cipher(EVP_CIPHER_CTX *ctx,
         sha_off += iv;
         SHA256_Update(&key->md, in + sha_off, plen - sha_off);
 
-        if (plen != len) {      /* "TLS" mode of operation */
+        if (plen != len) { /* "TLS" mode of operation */
             if (in != out)
                 memcpy(out + aes_off, in + aes_off, plen - aes_off);
 
@@ -499,11 +485,9 @@ static int aesni_cbc_hmac_sha256_cipher(EVP_CIPHER_CTX *ctx,
             for (l = len - plen - 1; plen < len; plen++)
                 out[plen] = l;
             /* encrypt HMAC|padding at once */
-            aesni_cbc_encrypt(out + aes_off, out + aes_off, len - aes_off,
-                              &key->ks, ctx->iv, 1);
+            aesni_cbc_encrypt(out + aes_off, out + aes_off, len - aes_off, &key->ks, ctx->iv, 1);
         } else {
-            aesni_cbc_encrypt(in + aes_off, out + aes_off, len - aes_off,
-                              &key->ks, ctx->iv, 1);
+            aesni_cbc_encrypt(in + aes_off, out + aes_off, len - aes_off, &key->ks, ctx->iv, 1);
         }
     } else {
         union {
@@ -515,8 +499,7 @@ static int aesni_cbc_hmac_sha256_cipher(EVP_CIPHER_CTX *ctx,
         pmac = (void *)(((size_t)mac.c + 63) & ((size_t)0 - 64));
 
         /* decrypt HMAC|padding at once */
-        aesni_cbc_encrypt(in, out, len, &key->ks,
-                          ctx->iv, 0);
+        aesni_cbc_encrypt(in, out, len, &key->ks, ctx->iv, 0);
 
         if (plen != NO_PAYLOAD_LENGTH) { /* "TLS" mode of operation */
             size_t inp_len, mask, j, i;
@@ -527,8 +510,7 @@ static int aesni_cbc_hmac_sha256_cipher(EVP_CIPHER_CTX *ctx,
                 unsigned char c[SHA256_CBLOCK];
             } *data = (void *)key->md.data;
 
-            if ((key->aux.tls_aad[plen - 4] << 8 | key->aux.tls_aad[plen - 3])
-                >= TLS1_1_VERSION)
+            if ((key->aux.tls_aad[plen - 4] << 8 | key->aux.tls_aad[plen - 3]) >= TLS1_1_VERSION)
                 iv = AES_BLOCK_SIZE;
 
             if (len < (iv + SHA256_DIGEST_LENGTH + 1))
@@ -563,7 +545,7 @@ static int aesni_cbc_hmac_sha256_cipher(EVP_CIPHER_CTX *ctx,
             key->md = key->head;
             SHA256_Update(&key->md, key->aux.tls_aad, plen);
 
-# if 1      /* see original reference version in #else */
+# if 1                                   /* see original reference version in #else */
             len -= SHA256_DIGEST_LENGTH; /* amend mac */
             if (len >= (256 + SHA256_CBLOCK)) {
                 j = (len - (256 + SHA256_CBLOCK)) & (0 - SHA256_CBLOCK);
@@ -681,17 +663,15 @@ static int aesni_cbc_hmac_sha256_cipher(EVP_CIPHER_CTX *ctx,
                 unsigned int inp_blocks, pad_blocks;
 
                 /* but pretend as if we hashed padded payload */
-                inp_blocks =
-                    1 + ((SHA256_CBLOCK - 9 - res) >> (sizeof(res) * 8 - 1));
+                inp_blocks = 1 + ((SHA256_CBLOCK - 9 - res) >> (sizeof(res) * 8 - 1));
                 res += (unsigned int)(len - inp_len);
                 pad_blocks = res / SHA256_CBLOCK;
                 res %= SHA256_CBLOCK;
-                pad_blocks +=
-                    1 + ((SHA256_CBLOCK - 9 - res) >> (sizeof(res) * 8 - 1));
+                pad_blocks += 1 + ((SHA256_CBLOCK - 9 - res) >> (sizeof(res) * 8 - 1));
                 for (; inp_blocks < pad_blocks; inp_blocks++)
                     sha1_block_data_order(&key->md, data, 1);
             }
-# endif      /* pre-lucky-13 reference version of above */
+# endif /* pre-lucky-13 reference version of above */
             key->md = key->tail;
             SHA256_Update(&key->md, pmac->c, SHA256_DIGEST_LENGTH);
             SHA256_Final(pmac->c, &key->md);
@@ -699,19 +679,15 @@ static int aesni_cbc_hmac_sha256_cipher(EVP_CIPHER_CTX *ctx,
             /* verify HMAC */
             out += inp_len;
             len -= inp_len;
-# if 1      /* see original reference version in #else */
+# if 1 /* see original reference version in #else */
             {
-                unsigned char *p =
-                    out + len - 1 - maxpad - SHA256_DIGEST_LENGTH;
+                unsigned char *p = out + len - 1 - maxpad - SHA256_DIGEST_LENGTH;
                 size_t off = out - p;
                 unsigned int c, cmask;
 
-                for (res = 0, i = 0, j = 0; j < maxpad + SHA256_DIGEST_LENGTH;
-                     j++) {
+                for (res = 0, i = 0, j = 0; j < maxpad + SHA256_DIGEST_LENGTH; j++) {
                     c = p[j];
-                    cmask =
-                        ((int)(j - off - SHA256_DIGEST_LENGTH)) >>
-                        (sizeof(int) * 8 - 1);
+                    cmask = ((int)(j - off - SHA256_DIGEST_LENGTH)) >> (sizeof(int) * 8 - 1);
                     res |= (c ^ pad) & ~cmask; /* ... and padding */
                     cmask &= ((int)(off - 1 - j)) >> (sizeof(int) * 8 - 1);
                     res |= (c ^ pmac->c[i]) & cmask;
@@ -721,7 +697,7 @@ static int aesni_cbc_hmac_sha256_cipher(EVP_CIPHER_CTX *ctx,
                 res = 0 - ((0 - res) >> (sizeof(res) * 8 - 1));
                 ret &= (int)~res;
             }
-# else      /* pre-lucky-13 reference version of above */
+# else /* pre-lucky-13 reference version of above */
             for (res = 0, i = 0; i < SHA256_DIGEST_LENGTH; i++)
                 res |= out[i] ^ pmac->c[i];
             res = 0 - ((0 - res) >> (sizeof(res) * 8 - 1));
@@ -745,143 +721,133 @@ static int aesni_cbc_hmac_sha256_cipher(EVP_CIPHER_CTX *ctx,
     return 1;
 }
 
-static int aesni_cbc_hmac_sha256_ctrl(EVP_CIPHER_CTX *ctx, int type, int arg,
-                                      void *ptr)
+static int
+aesni_cbc_hmac_sha256_ctrl(EVP_CIPHER_CTX *ctx, int type, int arg, void *ptr)
 {
     EVP_AES_HMAC_SHA256 *key = data(ctx);
     unsigned int u_arg = (unsigned int)arg;
 
     switch (type) {
-    case EVP_CTRL_AEAD_SET_MAC_KEY:
-        {
-            unsigned int i;
-            unsigned char hmac_key[64];
+    case EVP_CTRL_AEAD_SET_MAC_KEY: {
+        unsigned int i;
+        unsigned char hmac_key[64];
 
-            memset(hmac_key, 0, sizeof(hmac_key));
+        memset(hmac_key, 0, sizeof(hmac_key));
 
-            if (arg < 0)
-                return -1;
+        if (arg < 0)
+            return -1;
 
-            if (u_arg > sizeof(hmac_key)) {
-                SHA256_Init(&key->head);
-                SHA256_Update(&key->head, ptr, arg);
-                SHA256_Final(hmac_key, &key->head);
-            } else {
-                memcpy(hmac_key, ptr, arg);
-            }
-
-            for (i = 0; i < sizeof(hmac_key); i++)
-                hmac_key[i] ^= 0x36; /* ipad */
+        if (u_arg > sizeof(hmac_key)) {
             SHA256_Init(&key->head);
-            SHA256_Update(&key->head, hmac_key, sizeof(hmac_key));
-
-            for (i = 0; i < sizeof(hmac_key); i++)
-                hmac_key[i] ^= 0x36 ^ 0x5c; /* opad */
-            SHA256_Init(&key->tail);
-            SHA256_Update(&key->tail, hmac_key, sizeof(hmac_key));
-
-            OPENSSL_cleanse(hmac_key, sizeof(hmac_key));
-
-            return 1;
+            SHA256_Update(&key->head, ptr, arg);
+            SHA256_Final(hmac_key, &key->head);
+        } else {
+            memcpy(hmac_key, ptr, arg);
         }
-    case EVP_CTRL_AEAD_TLS1_AAD:
-        {
-            unsigned char *p = ptr;
-            unsigned int len;
 
-            if (arg != EVP_AEAD_TLS1_AAD_LEN)
-                return -1;
+        for (i = 0; i < sizeof(hmac_key); i++)
+            hmac_key[i] ^= 0x36; /* ipad */
+        SHA256_Init(&key->head);
+        SHA256_Update(&key->head, hmac_key, sizeof(hmac_key));
 
-            len = p[arg - 2] << 8 | p[arg - 1];
+        for (i = 0; i < sizeof(hmac_key); i++)
+            hmac_key[i] ^= 0x36 ^ 0x5c; /* opad */
+        SHA256_Init(&key->tail);
+        SHA256_Update(&key->tail, hmac_key, sizeof(hmac_key));
 
-            if (EVP_CIPHER_CTX_is_encrypting(ctx)) {
-                key->payload_length = len;
-                if ((key->aux.tls_ver =
-                     p[arg - 4] << 8 | p[arg - 3]) >= TLS1_1_VERSION) {
-                    if (len < AES_BLOCK_SIZE)
-                        return 0;
-                    len -= AES_BLOCK_SIZE;
-                    p[arg - 2] = len >> 8;
-                    p[arg - 1] = len;
-                }
-                key->md = key->head;
-                SHA256_Update(&key->md, p, arg);
+        OPENSSL_cleanse(hmac_key, sizeof(hmac_key));
 
-                return (int)(((len + SHA256_DIGEST_LENGTH +
-                               AES_BLOCK_SIZE) & -AES_BLOCK_SIZE)
-                             - len);
-            } else {
-                memcpy(key->aux.tls_aad, ptr, arg);
-                key->payload_length = arg;
+        return 1;
+    }
+    case EVP_CTRL_AEAD_TLS1_AAD: {
+        unsigned char *p = ptr;
+        unsigned int len;
 
-                return SHA256_DIGEST_LENGTH;
+        if (arg != EVP_AEAD_TLS1_AAD_LEN)
+            return -1;
+
+        len = p[arg - 2] << 8 | p[arg - 1];
+
+        if (EVP_CIPHER_CTX_is_encrypting(ctx)) {
+            key->payload_length = len;
+            if ((key->aux.tls_ver = p[arg - 4] << 8 | p[arg - 3]) >= TLS1_1_VERSION) {
+                if (len < AES_BLOCK_SIZE)
+                    return 0;
+                len -= AES_BLOCK_SIZE;
+                p[arg - 2] = len >> 8;
+                p[arg - 1] = len;
             }
+            key->md = key->head;
+            SHA256_Update(&key->md, p, arg);
+
+            return (int)(((len + SHA256_DIGEST_LENGTH + AES_BLOCK_SIZE) & -AES_BLOCK_SIZE) - len);
+        } else {
+            memcpy(key->aux.tls_aad, ptr, arg);
+            key->payload_length = arg;
+
+            return SHA256_DIGEST_LENGTH;
         }
+    }
 # if !defined(OPENSSL_NO_MULTIBLOCK)
     case EVP_CTRL_TLS1_1_MULTIBLOCK_MAX_BUFSIZE:
         return (int)(5 + 16 + ((arg + 32 + 16) & -16));
-    case EVP_CTRL_TLS1_1_MULTIBLOCK_AAD:
-        {
-            EVP_CTRL_TLS1_1_MULTIBLOCK_PARAM *param =
-                (EVP_CTRL_TLS1_1_MULTIBLOCK_PARAM *) ptr;
-            unsigned int n4x = 1, x4;
-            unsigned int frag, last, packlen, inp_len;
+    case EVP_CTRL_TLS1_1_MULTIBLOCK_AAD: {
+        EVP_CTRL_TLS1_1_MULTIBLOCK_PARAM *param = (EVP_CTRL_TLS1_1_MULTIBLOCK_PARAM *)ptr;
+        unsigned int n4x = 1, x4;
+        unsigned int frag, last, packlen, inp_len;
 
-            if (arg < 0)
+        if (arg < 0)
+            return -1;
+
+        if (u_arg < sizeof(EVP_CTRL_TLS1_1_MULTIBLOCK_PARAM))
+            return -1;
+
+        inp_len = param->inp[11] << 8 | param->inp[12];
+
+        if (EVP_CIPHER_CTX_is_encrypting(ctx)) {
+            if ((param->inp[9] << 8 | param->inp[10]) < TLS1_1_VERSION)
                 return -1;
 
-            if (u_arg < sizeof(EVP_CTRL_TLS1_1_MULTIBLOCK_PARAM))
+            if (inp_len) {
+                if (inp_len < 4096)
+                    return 0; /* too short */
+
+                if (inp_len >= 8192 && OPENSSL_ia32cap_P[2] & (1 << 5))
+                    n4x = 2; /* AVX2 */
+            } else if ((n4x = param->interleave / 4) && n4x <= 2)
+                inp_len = param->len;
+            else
                 return -1;
 
-            inp_len = param->inp[11] << 8 | param->inp[12];
+            key->md = key->head;
+            SHA256_Update(&key->md, param->inp, 13);
 
-            if (EVP_CIPHER_CTX_is_encrypting(ctx)) {
-                if ((param->inp[9] << 8 | param->inp[10]) < TLS1_1_VERSION)
-                    return -1;
+            x4 = 4 * n4x;
+            n4x += 1;
 
-                if (inp_len) {
-                    if (inp_len < 4096)
-                        return 0; /* too short */
+            frag = inp_len >> n4x;
+            last = inp_len + frag - (frag << n4x);
+            if (last > frag && ((last + 13 + 9) % 64 < (x4 - 1))) {
+                frag++;
+                last -= x4 - 1;
+            }
 
-                    if (inp_len >= 8192 && OPENSSL_ia32cap_P[2] & (1 << 5))
-                        n4x = 2; /* AVX2 */
-                } else if ((n4x = param->interleave / 4) && n4x <= 2)
-                    inp_len = param->len;
-                else
-                    return -1;
+            packlen = 5 + 16 + ((frag + 32 + 16) & -16);
+            packlen = (packlen << n4x) - packlen;
+            packlen += 5 + 16 + ((last + 32 + 16) & -16);
 
-                key->md = key->head;
-                SHA256_Update(&key->md, param->inp, 13);
+            param->interleave = x4;
 
-                x4 = 4 * n4x;
-                n4x += 1;
+            return (int)packlen;
+        } else
+            return -1; /* not yet */
+    }
+    case EVP_CTRL_TLS1_1_MULTIBLOCK_ENCRYPT: {
+        EVP_CTRL_TLS1_1_MULTIBLOCK_PARAM *param = (EVP_CTRL_TLS1_1_MULTIBLOCK_PARAM *)ptr;
 
-                frag = inp_len >> n4x;
-                last = inp_len + frag - (frag << n4x);
-                if (last > frag && ((last + 13 + 9) % 64 < (x4 - 1))) {
-                    frag++;
-                    last -= x4 - 1;
-                }
-
-                packlen = 5 + 16 + ((frag + 32 + 16) & -16);
-                packlen = (packlen << n4x) - packlen;
-                packlen += 5 + 16 + ((last + 32 + 16) & -16);
-
-                param->interleave = x4;
-
-                return (int)packlen;
-            } else
-                return -1;      /* not yet */
-        }
-    case EVP_CTRL_TLS1_1_MULTIBLOCK_ENCRYPT:
-        {
-            EVP_CTRL_TLS1_1_MULTIBLOCK_PARAM *param =
-                (EVP_CTRL_TLS1_1_MULTIBLOCK_PARAM *) ptr;
-
-            return (int)tls1_1_multi_block_encrypt(key, param->out,
-                                                   param->inp, param->len,
-                                                   param->interleave / 4);
-        }
+        return (int)tls1_1_multi_block_encrypt(key, param->out, param->inp, param->len,
+                                               param->interleave / 4);
+    }
     case EVP_CTRL_TLS1_1_MULTIBLOCK_DECRYPT:
 # endif
     default:
@@ -895,9 +861,11 @@ static EVP_CIPHER aesni_128_cbc_hmac_sha256_cipher = {
 # else
     NID_undef,
 # endif
-    AES_BLOCK_SIZE, 16, AES_BLOCK_SIZE,
-    EVP_CIPH_CBC_MODE | EVP_CIPH_FLAG_DEFAULT_ASN1 |
-        EVP_CIPH_FLAG_AEAD_CIPHER | EVP_CIPH_FLAG_TLS1_1_MULTIBLOCK,
+    AES_BLOCK_SIZE,
+    16,
+    AES_BLOCK_SIZE,
+    EVP_CIPH_CBC_MODE | EVP_CIPH_FLAG_DEFAULT_ASN1 | EVP_CIPH_FLAG_AEAD_CIPHER |
+        EVP_CIPH_FLAG_TLS1_1_MULTIBLOCK,
     EVP_ORIG_GLOBAL,
     aesni_cbc_hmac_sha256_init_key,
     aesni_cbc_hmac_sha256_cipher,
@@ -906,8 +874,7 @@ static EVP_CIPHER aesni_128_cbc_hmac_sha256_cipher = {
     EVP_CIPH_FLAG_DEFAULT_ASN1 ? NULL : EVP_CIPHER_set_asn1_iv,
     EVP_CIPH_FLAG_DEFAULT_ASN1 ? NULL : EVP_CIPHER_get_asn1_iv,
     aesni_cbc_hmac_sha256_ctrl,
-    NULL
-};
+    NULL};
 
 static EVP_CIPHER aesni_256_cbc_hmac_sha256_cipher = {
 # ifdef NID_aes_256_cbc_hmac_sha256
@@ -915,9 +882,11 @@ static EVP_CIPHER aesni_256_cbc_hmac_sha256_cipher = {
 # else
     NID_undef,
 # endif
-    AES_BLOCK_SIZE, 32, AES_BLOCK_SIZE,
-    EVP_CIPH_CBC_MODE | EVP_CIPH_FLAG_DEFAULT_ASN1 |
-        EVP_CIPH_FLAG_AEAD_CIPHER | EVP_CIPH_FLAG_TLS1_1_MULTIBLOCK,
+    AES_BLOCK_SIZE,
+    32,
+    AES_BLOCK_SIZE,
+    EVP_CIPH_CBC_MODE | EVP_CIPH_FLAG_DEFAULT_ASN1 | EVP_CIPH_FLAG_AEAD_CIPHER |
+        EVP_CIPH_FLAG_TLS1_1_MULTIBLOCK,
     EVP_ORIG_GLOBAL,
     aesni_cbc_hmac_sha256_init_key,
     aesni_cbc_hmac_sha256_cipher,
@@ -926,29 +895,34 @@ static EVP_CIPHER aesni_256_cbc_hmac_sha256_cipher = {
     EVP_CIPH_FLAG_DEFAULT_ASN1 ? NULL : EVP_CIPHER_set_asn1_iv,
     EVP_CIPH_FLAG_DEFAULT_ASN1 ? NULL : EVP_CIPHER_get_asn1_iv,
     aesni_cbc_hmac_sha256_ctrl,
-    NULL
-};
+    NULL};
 
-const EVP_CIPHER *EVP_aes_128_cbc_hmac_sha256(void)
+const EVP_CIPHER *
+EVP_aes_128_cbc_hmac_sha256(void)
 {
     return ((OPENSSL_ia32cap_P[1] & AESNI_CAPABLE) &&
-            aesni_cbc_sha256_enc(NULL, NULL, 0, NULL, NULL, NULL, NULL) ?
-            &aesni_128_cbc_hmac_sha256_cipher : NULL);
+                    aesni_cbc_sha256_enc(NULL, NULL, 0, NULL, NULL, NULL, NULL)
+                ? &aesni_128_cbc_hmac_sha256_cipher
+                : NULL);
 }
 
-const EVP_CIPHER *EVP_aes_256_cbc_hmac_sha256(void)
+const EVP_CIPHER *
+EVP_aes_256_cbc_hmac_sha256(void)
 {
     return ((OPENSSL_ia32cap_P[1] & AESNI_CAPABLE) &&
-            aesni_cbc_sha256_enc(NULL, NULL, 0, NULL, NULL, NULL, NULL) ?
-            &aesni_256_cbc_hmac_sha256_cipher : NULL);
+                    aesni_cbc_sha256_enc(NULL, NULL, 0, NULL, NULL, NULL, NULL)
+                ? &aesni_256_cbc_hmac_sha256_cipher
+                : NULL);
 }
 #else
-const EVP_CIPHER *EVP_aes_128_cbc_hmac_sha256(void)
+const EVP_CIPHER *
+EVP_aes_128_cbc_hmac_sha256(void)
 {
     return NULL;
 }
 
-const EVP_CIPHER *EVP_aes_256_cbc_hmac_sha256(void)
+const EVP_CIPHER *
+EVP_aes_256_cbc_hmac_sha256(void)
 {
     return NULL;
 }

@@ -20,11 +20,12 @@
 
 static int do_create(const char *value, const char *name);
 
-static int oid_module_init(CONF_IMODULE *md, const CONF *cnf)
+static int
+oid_module_init(CONF_IMODULE *md, const CONF *cnf)
 {
     int i;
     const char *oid_section;
-    STACK_OF(CONF_VALUE) *sktmp;
+    STACK_OF(CONF_VALUE) * sktmp;
     CONF_VALUE *oval;
 
     oid_section = CONF_imodule_get_value(md);
@@ -42,11 +43,13 @@ static int oid_module_init(CONF_IMODULE *md, const CONF *cnf)
     return 1;
 }
 
-static void oid_module_finish(CONF_IMODULE *md)
+static void
+oid_module_finish(CONF_IMODULE *md)
 {
 }
 
-void ASN1_add_oid_module(void)
+void
+ASN1_add_oid_module(void)
 {
     CONF_module_add("oid_section", oid_module_init, oid_module_finish);
 }
@@ -57,7 +60,8 @@ void ASN1_add_oid_module(void)
  * shortname = some long name, 1.2.3.4
  */
 
-static int do_create(const char *value, const char *name)
+static int
+do_create(const char *value, const char *name)
 {
     int nid;
     const char *ln, *ostr, *p;

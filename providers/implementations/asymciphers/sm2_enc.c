@@ -46,9 +46,10 @@ typedef struct {
     PROV_DIGEST md;
 } PROV_SM2_CTX;
 
-static void *sm2_newctx(void *provctx)
+static void *
+sm2_newctx(void *provctx)
 {
-    PROV_SM2_CTX *psm2ctx =  OPENSSL_zalloc(sizeof(PROV_SM2_CTX));
+    PROV_SM2_CTX *psm2ctx = OPENSSL_zalloc(sizeof(PROV_SM2_CTX));
 
     if (psm2ctx == NULL)
         return NULL;
@@ -57,7 +58,8 @@ static void *sm2_newctx(void *provctx)
     return psm2ctx;
 }
 
-static int sm2_init(void *vpsm2ctx, void *vkey, const OSSL_PARAM params[])
+static int
+sm2_init(void *vpsm2ctx, void *vkey, const OSSL_PARAM params[])
 {
     PROV_SM2_CTX *psm2ctx = (PROV_SM2_CTX *)vpsm2ctx;
 
@@ -69,7 +71,8 @@ static int sm2_init(void *vpsm2ctx, void *vkey, const OSSL_PARAM params[])
     return sm2_set_ctx_params(psm2ctx, params);
 }
 
-static const EVP_MD *sm2_get_md(PROV_SM2_CTX *psm2ctx)
+static const EVP_MD *
+sm2_get_md(PROV_SM2_CTX *psm2ctx)
 {
     const EVP_MD *md = ossl_prov_digest_md(&psm2ctx->md);
 
@@ -79,9 +82,9 @@ static const EVP_MD *sm2_get_md(PROV_SM2_CTX *psm2ctx)
     return md;
 }
 
-static int sm2_asym_encrypt(void *vpsm2ctx, unsigned char *out, size_t *outlen,
-                            size_t outsize, const unsigned char *in,
-                            size_t inlen)
+static int
+sm2_asym_encrypt(void *vpsm2ctx, unsigned char *out, size_t *outlen, size_t outsize,
+                 const unsigned char *in, size_t inlen)
 {
     PROV_SM2_CTX *psm2ctx = (PROV_SM2_CTX *)vpsm2ctx;
     const EVP_MD *md = sm2_get_md(psm2ctx);
@@ -100,9 +103,9 @@ static int sm2_asym_encrypt(void *vpsm2ctx, unsigned char *out, size_t *outlen,
     return ossl_sm2_encrypt(psm2ctx->key, md, in, inlen, out, outlen);
 }
 
-static int sm2_asym_decrypt(void *vpsm2ctx, unsigned char *out, size_t *outlen,
-                            size_t outsize, const unsigned char *in,
-                            size_t inlen)
+static int
+sm2_asym_decrypt(void *vpsm2ctx, unsigned char *out, size_t *outlen, size_t outsize,
+                 const unsigned char *in, size_t inlen)
 {
     PROV_SM2_CTX *psm2ctx = (PROV_SM2_CTX *)vpsm2ctx;
     const EVP_MD *md = sm2_get_md(psm2ctx);
@@ -119,7 +122,8 @@ static int sm2_asym_decrypt(void *vpsm2ctx, unsigned char *out, size_t *outlen,
     return ossl_sm2_decrypt(psm2ctx->key, md, in, inlen, out, outlen);
 }
 
-static void sm2_freectx(void *vpsm2ctx)
+static void
+sm2_freectx(void *vpsm2ctx)
 {
     PROV_SM2_CTX *psm2ctx = (PROV_SM2_CTX *)vpsm2ctx;
 
@@ -129,7 +133,8 @@ static void sm2_freectx(void *vpsm2ctx)
     OPENSSL_free(psm2ctx);
 }
 
-static void *sm2_dupctx(void *vpsm2ctx)
+static void *
+sm2_dupctx(void *vpsm2ctx)
 {
     PROV_SM2_CTX *srcctx = (PROV_SM2_CTX *)vpsm2ctx;
     PROV_SM2_CTX *dstctx;
@@ -154,7 +159,8 @@ static void *sm2_dupctx(void *vpsm2ctx)
     return dstctx;
 }
 
-static int sm2_get_ctx_params(void *vpsm2ctx, OSSL_PARAM *params)
+static int
+sm2_get_ctx_params(void *vpsm2ctx, OSSL_PARAM *params)
 {
     PROV_SM2_CTX *psm2ctx = (PROV_SM2_CTX *)vpsm2ctx;
     OSSL_PARAM *p;
@@ -166,8 +172,7 @@ static int sm2_get_ctx_params(void *vpsm2ctx, OSSL_PARAM *params)
     if (p != NULL) {
         const EVP_MD *md = ossl_prov_digest_md(&psm2ctx->md);
 
-        if (!OSSL_PARAM_set_utf8_string(p, md == NULL ? ""
-                                                      : EVP_MD_get0_name(md)))
+        if (!OSSL_PARAM_set_utf8_string(p, md == NULL ? "" : EVP_MD_get0_name(md)))
             return 0;
     }
 
@@ -175,17 +180,16 @@ static int sm2_get_ctx_params(void *vpsm2ctx, OSSL_PARAM *params)
 }
 
 static const OSSL_PARAM known_gettable_ctx_params[] = {
-    OSSL_PARAM_utf8_string(OSSL_ASYM_CIPHER_PARAM_DIGEST, NULL, 0),
-    OSSL_PARAM_END
-};
+    OSSL_PARAM_utf8_string(OSSL_ASYM_CIPHER_PARAM_DIGEST, NULL, 0), OSSL_PARAM_END};
 
-static const OSSL_PARAM *sm2_gettable_ctx_params(ossl_unused void *vpsm2ctx,
-                                                 ossl_unused void *provctx)
+static const OSSL_PARAM *
+sm2_gettable_ctx_params(ossl_unused void *vpsm2ctx, ossl_unused void *provctx)
 {
     return known_gettable_ctx_params;
 }
 
-static int sm2_set_ctx_params(void *vpsm2ctx, const OSSL_PARAM params[])
+static int
+sm2_set_ctx_params(void *vpsm2ctx, const OSSL_PARAM params[])
 {
     PROV_SM2_CTX *psm2ctx = (PROV_SM2_CTX *)vpsm2ctx;
 
@@ -194,8 +198,7 @@ static int sm2_set_ctx_params(void *vpsm2ctx, const OSSL_PARAM params[])
     if (ossl_param_is_empty(params))
         return 1;
 
-    if (!ossl_prov_digest_load_from_params(&psm2ctx->md, params,
-                                           psm2ctx->libctx))
+    if (!ossl_prov_digest_load_from_params(&psm2ctx->md, params, psm2ctx->libctx))
         return 0;
 
     return 1;
@@ -204,31 +207,24 @@ static int sm2_set_ctx_params(void *vpsm2ctx, const OSSL_PARAM params[])
 static const OSSL_PARAM known_settable_ctx_params[] = {
     OSSL_PARAM_utf8_string(OSSL_ASYM_CIPHER_PARAM_DIGEST, NULL, 0),
     OSSL_PARAM_utf8_string(OSSL_ASYM_CIPHER_PARAM_PROPERTIES, NULL, 0),
-    OSSL_PARAM_utf8_string(OSSL_ASYM_CIPHER_PARAM_ENGINE, NULL, 0),
-    OSSL_PARAM_END
-};
+    OSSL_PARAM_utf8_string(OSSL_ASYM_CIPHER_PARAM_ENGINE, NULL, 0), OSSL_PARAM_END};
 
-static const OSSL_PARAM *sm2_settable_ctx_params(ossl_unused void *vpsm2ctx,
-                                                 ossl_unused void *provctx)
+static const OSSL_PARAM *
+sm2_settable_ctx_params(ossl_unused void *vpsm2ctx, ossl_unused void *provctx)
 {
     return known_settable_ctx_params;
 }
 
 const OSSL_DISPATCH ossl_sm2_asym_cipher_functions[] = {
-    { OSSL_FUNC_ASYM_CIPHER_NEWCTX, (void (*)(void))sm2_newctx },
-    { OSSL_FUNC_ASYM_CIPHER_ENCRYPT_INIT, (void (*)(void))sm2_init },
-    { OSSL_FUNC_ASYM_CIPHER_ENCRYPT, (void (*)(void))sm2_asym_encrypt },
-    { OSSL_FUNC_ASYM_CIPHER_DECRYPT_INIT, (void (*)(void))sm2_init },
-    { OSSL_FUNC_ASYM_CIPHER_DECRYPT, (void (*)(void))sm2_asym_decrypt },
-    { OSSL_FUNC_ASYM_CIPHER_FREECTX, (void (*)(void))sm2_freectx },
-    { OSSL_FUNC_ASYM_CIPHER_DUPCTX, (void (*)(void))sm2_dupctx },
-    { OSSL_FUNC_ASYM_CIPHER_GET_CTX_PARAMS,
-      (void (*)(void))sm2_get_ctx_params },
-    { OSSL_FUNC_ASYM_CIPHER_GETTABLE_CTX_PARAMS,
-      (void (*)(void))sm2_gettable_ctx_params },
-    { OSSL_FUNC_ASYM_CIPHER_SET_CTX_PARAMS,
-      (void (*)(void))sm2_set_ctx_params },
-    { OSSL_FUNC_ASYM_CIPHER_SETTABLE_CTX_PARAMS,
-      (void (*)(void))sm2_settable_ctx_params },
-    OSSL_DISPATCH_END
-};
+    {OSSL_FUNC_ASYM_CIPHER_NEWCTX, (void (*)(void))sm2_newctx},
+    {OSSL_FUNC_ASYM_CIPHER_ENCRYPT_INIT, (void (*)(void))sm2_init},
+    {OSSL_FUNC_ASYM_CIPHER_ENCRYPT, (void (*)(void))sm2_asym_encrypt},
+    {OSSL_FUNC_ASYM_CIPHER_DECRYPT_INIT, (void (*)(void))sm2_init},
+    {OSSL_FUNC_ASYM_CIPHER_DECRYPT, (void (*)(void))sm2_asym_decrypt},
+    {OSSL_FUNC_ASYM_CIPHER_FREECTX, (void (*)(void))sm2_freectx},
+    {OSSL_FUNC_ASYM_CIPHER_DUPCTX, (void (*)(void))sm2_dupctx},
+    {OSSL_FUNC_ASYM_CIPHER_GET_CTX_PARAMS, (void (*)(void))sm2_get_ctx_params},
+    {OSSL_FUNC_ASYM_CIPHER_GETTABLE_CTX_PARAMS, (void (*)(void))sm2_gettable_ctx_params},
+    {OSSL_FUNC_ASYM_CIPHER_SET_CTX_PARAMS, (void (*)(void))sm2_set_ctx_params},
+    {OSSL_FUNC_ASYM_CIPHER_SETTABLE_CTX_PARAMS, (void (*)(void))sm2_settable_ctx_params},
+    OSSL_DISPATCH_END};

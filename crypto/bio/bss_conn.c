@@ -55,47 +55,35 @@ static long conn_ctrl(BIO *h, int cmd, long arg1, void *arg2);
 static int conn_new(BIO *h);
 static int conn_free(BIO *data);
 static long conn_callback_ctrl(BIO *h, int cmd, BIO_info_cb *);
-static int conn_sendmmsg(BIO *h, BIO_MSG *m, size_t s, size_t n,
-                         uint64_t f, size_t *mp);
-static int conn_recvmmsg(BIO *h, BIO_MSG *m, size_t s, size_t n,
-                         uint64_t f, size_t *mp);
+static int conn_sendmmsg(BIO *h, BIO_MSG *m, size_t s, size_t n, uint64_t f, size_t *mp);
+static int conn_recvmmsg(BIO *h, BIO_MSG *m, size_t s, size_t n, uint64_t f, size_t *mp);
 
 static int conn_state(BIO *b, BIO_CONNECT *c);
 static void conn_close_socket(BIO *data);
 static BIO_CONNECT *BIO_CONNECT_new(void);
 static void BIO_CONNECT_free(BIO_CONNECT *a);
 
-#define BIO_CONN_S_BEFORE                1
-#define BIO_CONN_S_GET_ADDR              2
-#define BIO_CONN_S_CREATE_SOCKET         3
-#define BIO_CONN_S_CONNECT               4
-#define BIO_CONN_S_OK                    5
-#define BIO_CONN_S_BLOCKED_CONNECT       6
-#define BIO_CONN_S_CONNECT_ERROR         7
+# define BIO_CONN_S_BEFORE 1
+# define BIO_CONN_S_GET_ADDR 2
+# define BIO_CONN_S_CREATE_SOCKET 3
+# define BIO_CONN_S_CONNECT 4
+# define BIO_CONN_S_OK 5
+# define BIO_CONN_S_BLOCKED_CONNECT 6
+# define BIO_CONN_S_CONNECT_ERROR 7
 
 static const BIO_METHOD methods_connectp = {
-    BIO_TYPE_CONNECT,
-    "socket connect",
-    bwrite_conv,
-    conn_write,
-    bread_conv,
-    conn_read,
-    conn_puts,
-    conn_gets,
-    conn_ctrl,
-    conn_new,
-    conn_free,
-    conn_callback_ctrl,
-    conn_sendmmsg,
-    conn_recvmmsg,
+    BIO_TYPE_CONNECT, "socket connect",   bwrite_conv,   conn_write,    bread_conv,
+    conn_read,        conn_puts,          conn_gets,     conn_ctrl,     conn_new,
+    conn_free,        conn_callback_ctrl, conn_sendmmsg, conn_recvmmsg,
 };
 
-static int conn_create_dgram_bio(BIO *b, BIO_CONNECT *c)
+static int
+conn_create_dgram_bio(BIO *b, BIO_CONNECT *c)
 {
     if (c->connect_sock_type != SOCK_DGRAM)
         return 1;
 
-#ifndef OPENSSL_NO_DGRAM
+# ifndef OPENSSL_NO_DGRAM
     c->dgram_bio = BIO_new_dgram(b->num, 0);
     if (c->dgram_bio == NULL)
         goto err;
@@ -103,12 +91,13 @@ static int conn_create_dgram_bio(BIO *b, BIO_CONNECT *c)
     return 1;
 
 err:
-#endif
+# endif
     c->state = BIO_CONN_S_CONNECT_ERROR;
     return 0;
 }
 
-static int conn_state(BIO *b, BIO_CONNECT *c)
+static int
+conn_state(BIO *b, BIO_CONNECT *c)
 {
     int ret = -1, i, opts;
     BIO_info_cb *cb = NULL;
@@ -120,48 +109,43 @@ static int conn_state(BIO *b, BIO_CONNECT *c)
         switch (c->state) {
         case BIO_CONN_S_BEFORE:
             if (c->param_hostname == NULL && c->param_service == NULL) {
-                ERR_raise_data(ERR_LIB_BIO,
-                               BIO_R_NO_HOSTNAME_OR_SERVICE_SPECIFIED,
-                               "hostname=%s service=%s",
-                               c->param_hostname, c->param_service);
+                ERR_raise_data(ERR_LIB_BIO, BIO_R_NO_HOSTNAME_OR_SERVICE_SPECIFIED,
+                               "hostname=%s service=%s", c->param_hostname, c->param_service);
                 goto exit_loop;
             }
             c->state = BIO_CONN_S_GET_ADDR;
             break;
 
-        case BIO_CONN_S_GET_ADDR:
-            {
-                int family = AF_UNSPEC;
-                switch (c->connect_family) {
-                case BIO_FAMILY_IPV6:
-                    if (1) { /* This is a trick we use to avoid bit rot.
-                              * at least the "else" part will always be
-                              * compiled.
-                              */
-#if OPENSSL_USE_IPV6
-                        family = AF_INET6;
-                    } else {
-#endif
-                        ERR_raise(ERR_LIB_BIO, BIO_R_UNAVAILABLE_IP_FAMILY);
-                        goto exit_loop;
-                    }
-                    break;
-                case BIO_FAMILY_IPV4:
-                    family = AF_INET;
-                    break;
-                case BIO_FAMILY_IPANY:
-                    family = AF_UNSPEC;
-                    break;
-                default:
-                    ERR_raise(ERR_LIB_BIO, BIO_R_UNSUPPORTED_IP_FAMILY);
+        case BIO_CONN_S_GET_ADDR: {
+            int family = AF_UNSPEC;
+            switch (c->connect_family) {
+            case BIO_FAMILY_IPV6:
+                if (1) { /* This is a trick we use to avoid bit rot.
+                          * at least the "else" part will always be
+                          * compiled.
+                          */
+# if OPENSSL_USE_IPV6
+                    family = AF_INET6;
+                } else {
+# endif
+                    ERR_raise(ERR_LIB_BIO, BIO_R_UNAVAILABLE_IP_FAMILY);
                     goto exit_loop;
                 }
-                if (BIO_lookup(c->param_hostname, c->param_service,
-                               BIO_LOOKUP_CLIENT,
-                               family, c->connect_sock_type,
-                               &c->addr_first) == 0)
-                    goto exit_loop;
+                break;
+            case BIO_FAMILY_IPV4:
+                family = AF_INET;
+                break;
+            case BIO_FAMILY_IPANY:
+                family = AF_UNSPEC;
+                break;
+            default:
+                ERR_raise(ERR_LIB_BIO, BIO_R_UNSUPPORTED_IP_FAMILY);
+                goto exit_loop;
             }
+            if (BIO_lookup(c->param_hostname, c->param_service, BIO_LOOKUP_CLIENT, family,
+                           c->connect_sock_type, &c->addr_first) == 0)
+                goto exit_loop;
+        }
             if (c->addr_first == NULL) {
                 ERR_raise(ERR_LIB_BIO, BIO_R_LOOKUP_RETURNED_NOTHING);
                 goto exit_loop;
@@ -171,12 +155,10 @@ static int conn_state(BIO *b, BIO_CONNECT *c)
             break;
 
         case BIO_CONN_S_CREATE_SOCKET:
-            ret = BIO_socket(BIO_ADDRINFO_family(c->addr_iter),
-                             BIO_ADDRINFO_socktype(c->addr_iter),
+            ret = BIO_socket(BIO_ADDRINFO_family(c->addr_iter), BIO_ADDRINFO_socktype(c->addr_iter),
                              BIO_ADDRINFO_protocol(c->addr_iter), 0);
             if (ret == (int)INVALID_SOCKET) {
-                ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
-                               "calling socket(%s, %s)",
+                ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(), "calling socket(%s, %s)",
                                c->param_hostname, c->param_service);
                 ERR_raise(ERR_LIB_BIO, BIO_R_UNABLE_TO_CREATE_SOCKET);
                 goto exit_loop;
@@ -201,8 +183,7 @@ static int conn_state(BIO *b, BIO_CONNECT *c)
                     c->state = BIO_CONN_S_BLOCKED_CONNECT;
                     b->retry_reason = BIO_RR_CONNECT;
                     ERR_pop_to_mark();
-                } else if ((c->addr_iter = BIO_ADDRINFO_next(c->addr_iter))
-                           != NULL) {
+                } else if ((c->addr_iter = BIO_ADDRINFO_next(c->addr_iter)) != NULL) {
                     /*
                      * if there are more addresses to try, do that first
                      */
@@ -212,9 +193,8 @@ static int conn_state(BIO *b, BIO_CONNECT *c)
                     break;
                 } else {
                     ERR_clear_last_mark();
-                    ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
-                                   "calling connect(%s, %s)",
-                                    c->param_hostname, c->param_service);
+                    ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(), "calling connect(%s, %s)",
+                                   c->param_hostname, c->param_service);
                     c->state = BIO_CONN_S_CONNECT_ERROR;
                     break;
                 }
@@ -242,9 +222,8 @@ static int conn_state(BIO *b, BIO_CONNECT *c)
                     c->state = BIO_CONN_S_CREATE_SOCKET;
                     break;
                 }
-                ERR_raise_data(ERR_LIB_SYS, i,
-                               "calling connect(%s, %s)",
-                                c->param_hostname, c->param_service);
+                ERR_raise_data(ERR_LIB_SYS, i, "calling connect(%s, %s)", c->param_hostname,
+                               c->param_service);
                 ERR_raise(ERR_LIB_BIO, BIO_R_NBIO_CONNECT_ERROR);
                 ret = 0;
                 goto exit_loop;
@@ -284,14 +263,15 @@ static int conn_state(BIO *b, BIO_CONNECT *c)
     }
 
     /* Loop does not exit */
- exit_loop:
+exit_loop:
     if (cb != NULL)
         ret = cb((BIO *)b, c->state, ret);
- end:
+end:
     return ret;
 }
 
-static BIO_CONNECT *BIO_CONNECT_new(void)
+static BIO_CONNECT *
+BIO_CONNECT_new(void)
 {
     BIO_CONNECT *ret;
 
@@ -303,7 +283,8 @@ static BIO_CONNECT *BIO_CONNECT_new(void)
     return ret;
 }
 
-static void BIO_CONNECT_free(BIO_CONNECT *a)
+static void
+BIO_CONNECT_free(BIO_CONNECT *a)
 {
     if (a == NULL)
         return;
@@ -313,12 +294,14 @@ static void BIO_CONNECT_free(BIO_CONNECT *a)
     OPENSSL_free(a);
 }
 
-const BIO_METHOD *BIO_s_connect(void)
+const BIO_METHOD *
+BIO_s_connect(void)
 {
     return &methods_connectp;
 }
 
-static int conn_new(BIO *bi)
+static int
+conn_new(BIO *bi)
 {
     bi->init = 0;
     bi->num = (int)INVALID_SOCKET;
@@ -329,7 +312,8 @@ static int conn_new(BIO *bi)
         return 1;
 }
 
-static void conn_close_socket(BIO *bio)
+static void
+conn_close_socket(BIO *bio)
 {
     BIO_CONNECT *c;
 
@@ -343,7 +327,8 @@ static void conn_close_socket(BIO *bio)
     }
 }
 
-static int conn_free(BIO *a)
+static int
+conn_free(BIO *a)
 {
     BIO_CONNECT *data;
 
@@ -363,7 +348,8 @@ static int conn_free(BIO *a)
     return 1;
 }
 
-static int conn_read(BIO *b, char *out, int outl)
+static int
+conn_read(BIO *b, char *out, int outl)
 {
     int ret = 0;
     BIO_CONNECT *data;
@@ -401,7 +387,8 @@ static int conn_read(BIO *b, char *out, int outl)
     return ret;
 }
 
-static int conn_write(BIO *b, const char *in, int inl)
+static int
+conn_write(BIO *b, const char *in, int inl)
 {
     int ret;
     BIO_CONNECT *data;
@@ -431,11 +418,11 @@ static int conn_write(BIO *b, const char *in, int inl)
     } else
 # endif
 # if defined(OSSL_TFO_SENDTO)
-    if (data->tfo_first) {
+        if (data->tfo_first) {
         int peerlen = BIO_ADDRINFO_sockaddr_size(data->addr_iter);
 
-        ret = sendto(b->num, in, inl, OSSL_TFO_SENDTO,
-                     BIO_ADDRINFO_sockaddr(data->addr_iter), peerlen);
+        ret = sendto(b->num, in, inl, OSSL_TFO_SENDTO, BIO_ADDRINFO_sockaddr(data->addr_iter),
+                     peerlen);
         data->tfo_first = 0;
     } else
 # endif
@@ -448,7 +435,8 @@ static int conn_write(BIO *b, const char *in, int inl)
     return ret;
 }
 
-static long conn_ctrl(BIO *b, int cmd, long num, void *ptr)
+static long
+conn_ctrl(BIO *b, int cmd, long num, void *ptr)
 {
     BIO *dbio;
     int *ip;
@@ -525,9 +513,7 @@ static long conn_ctrl(BIO *b, int cmd, long num, void *ptr)
 
                 OPENSSL_free(data->param_hostname);
                 data->param_hostname = NULL;
-                ret = BIO_parse_hostserv(ptr,
-                                         &data->param_hostname,
-                                         &data->param_service,
+                ret = BIO_parse_hostserv(ptr, &data->param_hostname, &data->param_service,
                                          BIO_PARSE_PRIO_HOST);
                 if (hold_service != data->param_service)
                     OPENSSL_free(hold_service);
@@ -561,8 +547,7 @@ static long conn_ctrl(BIO *b, int cmd, long num, void *ptr)
         }
         break;
     case BIO_C_SET_SOCK_TYPE:
-        if ((num != SOCK_STREAM && num != SOCK_DGRAM)
-            || data->state >= BIO_CONN_S_GET_ADDR) {
+        if ((num != SOCK_STREAM && num != SOCK_DGRAM) || data->state >= BIO_CONN_S_GET_ADDR) {
             ret = 0;
             break;
         }
@@ -586,9 +571,8 @@ static long conn_ctrl(BIO *b, int cmd, long num, void *ptr)
         if (data->state != BIO_CONN_S_OK)
             conn_state(b, data); /* best effort */
 
-        if (data->state >= BIO_CONN_S_CREATE_SOCKET
-            && data->addr_iter != NULL
-            && (dg_addr = BIO_ADDRINFO_address(data->addr_iter)) != NULL) {
+        if (data->state >= BIO_CONN_S_CREATE_SOCKET && data->addr_iter != NULL &&
+            (dg_addr = BIO_ADDRINFO_address(data->addr_iter)) != NULL) {
 
             ret = BIO_ADDR_sockaddr_size(dg_addr);
             if (num == 0 || num > ret)
@@ -602,21 +586,19 @@ static long conn_ctrl(BIO *b, int cmd, long num, void *ptr)
 
         break;
     case BIO_CTRL_GET_RPOLL_DESCRIPTOR:
-    case BIO_CTRL_GET_WPOLL_DESCRIPTOR:
-        {
-            BIO_POLL_DESCRIPTOR *pd = ptr;
+    case BIO_CTRL_GET_WPOLL_DESCRIPTOR: {
+        BIO_POLL_DESCRIPTOR *pd = ptr;
 
-            if (data->state != BIO_CONN_S_OK)
-                conn_state(b, data); /* best effort */
+        if (data->state != BIO_CONN_S_OK)
+            conn_state(b, data); /* best effort */
 
-            if (data->state >= BIO_CONN_S_CREATE_SOCKET) {
-                pd->type        = BIO_POLL_DESCRIPTOR_TYPE_SOCK_FD;
-                pd->value.fd    = b->num;
-            } else {
-                ret = 0;
-            }
+        if (data->state >= BIO_CONN_S_CREATE_SOCKET) {
+            pd->type = BIO_POLL_DESCRIPTOR_TYPE_SOCK_FD;
+            pd->value.fd = b->num;
+        } else {
+            ret = 0;
         }
-        break;
+    } break;
     case BIO_C_SET_NBIO:
         if (num != 0)
             data->connect_mode |= BIO_SOCK_NONBLOCK;
@@ -627,7 +609,7 @@ static long conn_ctrl(BIO *b, int cmd, long num, void *ptr)
             ret = BIO_set_nbio(data->dgram_bio, num);
 
         break;
-#if defined(TCP_FASTOPEN) && !defined(OPENSSL_NO_TFO)
+# if defined(TCP_FASTOPEN) && !defined(OPENSSL_NO_TFO)
     case BIO_C_SET_TFO:
         if (num != 0) {
             data->connect_mode |= BIO_SOCK_TFO;
@@ -637,7 +619,7 @@ static long conn_ctrl(BIO *b, int cmd, long num, void *ptr)
             data->tfo_first = 0;
         }
         break;
-#endif
+# endif
     case BIO_C_SET_CONNECT_MODE:
         data->connect_mode = (int)num;
         if (num & BIO_SOCK_TFO)
@@ -666,33 +648,29 @@ static long conn_ctrl(BIO *b, int cmd, long num, void *ptr)
         break;
     case BIO_CTRL_FLUSH:
         break;
-    case BIO_CTRL_DUP:
-        {
-            dbio = (BIO *)ptr;
-            if (data->param_hostname)
-                BIO_set_conn_hostname(dbio, data->param_hostname);
-            if (data->param_service)
-                BIO_set_conn_port(dbio, data->param_service);
-            BIO_set_conn_ip_family(dbio, data->connect_family);
-            BIO_set_conn_mode(dbio, data->connect_mode);
-            /*
-             * FIXME: the cast of the function seems unlikely to be a good
-             * idea
-             */
-            (void)BIO_set_info_callback(dbio, data->info_callback);
-        }
-        break;
+    case BIO_CTRL_DUP: {
+        dbio = (BIO *)ptr;
+        if (data->param_hostname)
+            BIO_set_conn_hostname(dbio, data->param_hostname);
+        if (data->param_service)
+            BIO_set_conn_port(dbio, data->param_service);
+        BIO_set_conn_ip_family(dbio, data->connect_family);
+        BIO_set_conn_mode(dbio, data->connect_mode);
+        /*
+         * FIXME: the cast of the function seems unlikely to be a good
+         * idea
+         */
+        (void)BIO_set_info_callback(dbio, data->info_callback);
+    } break;
     case BIO_CTRL_SET_CALLBACK:
         ret = 0; /* use callback ctrl */
         break;
-    case BIO_CTRL_GET_CALLBACK:
-        {
-            BIO_info_cb **fptr;
+    case BIO_CTRL_GET_CALLBACK: {
+        BIO_info_cb **fptr;
 
-            fptr = (BIO_info_cb **)ptr;
-            *fptr = data->info_callback;
-        }
-        break;
+        fptr = (BIO_info_cb **)ptr;
+        *fptr = data->info_callback;
+    } break;
     case BIO_CTRL_EOF:
         ret = (b->flags & BIO_FLAGS_IN_EOF) != 0;
         break;
@@ -729,7 +707,8 @@ static long conn_ctrl(BIO *b, int cmd, long num, void *ptr)
     return ret;
 }
 
-static long conn_callback_ctrl(BIO *b, int cmd, BIO_info_cb *fp)
+static long
+conn_callback_ctrl(BIO *b, int cmd, BIO_info_cb *fp)
 {
     long ret = 1;
     BIO_CONNECT *data;
@@ -737,11 +716,9 @@ static long conn_callback_ctrl(BIO *b, int cmd, BIO_info_cb *fp)
     data = (BIO_CONNECT *)b->ptr;
 
     switch (cmd) {
-    case BIO_CTRL_SET_CALLBACK:
-        {
-            data->info_callback = fp;
-        }
-        break;
+    case BIO_CTRL_SET_CALLBACK: {
+        data->info_callback = fp;
+    } break;
     default:
         ret = 0;
         break;
@@ -749,7 +726,8 @@ static long conn_callback_ctrl(BIO *b, int cmd, BIO_info_cb *fp)
     return ret;
 }
 
-static int conn_puts(BIO *bp, const char *str)
+static int
+conn_puts(BIO *bp, const char *str)
 {
     int n, ret;
 
@@ -758,7 +736,8 @@ static int conn_puts(BIO *bp, const char *str)
     return ret;
 }
 
-int conn_gets(BIO *bio, char *buf, int size)
+int
+conn_gets(BIO *bio, char *buf, int size)
 {
     BIO_CONNECT *data;
     char *ptr = buf;
@@ -813,8 +792,9 @@ int conn_gets(BIO *bio, char *buf, int size)
     return ret > 0 || (bio->flags & BIO_FLAGS_IN_EOF) != 0 ? ptr - buf : ret;
 }
 
-static int conn_sendmmsg(BIO *bio, BIO_MSG *msg, size_t stride, size_t num_msgs,
-                         uint64_t flags, size_t *msgs_processed)
+static int
+conn_sendmmsg(BIO *bio, BIO_MSG *msg, size_t stride, size_t num_msgs, uint64_t flags,
+              size_t *msgs_processed)
 {
     int ret;
     BIO_CONNECT *data;
@@ -840,12 +820,12 @@ static int conn_sendmmsg(BIO *bio, BIO_MSG *msg, size_t stride, size_t num_msgs,
         return 0;
     }
 
-    return BIO_sendmmsg(data->dgram_bio, msg, stride, num_msgs,
-                        flags, msgs_processed);
+    return BIO_sendmmsg(data->dgram_bio, msg, stride, num_msgs, flags, msgs_processed);
 }
 
-static int conn_recvmmsg(BIO *bio, BIO_MSG *msg, size_t stride, size_t num_msgs,
-                         uint64_t flags, size_t *msgs_processed)
+static int
+conn_recvmmsg(BIO *bio, BIO_MSG *msg, size_t stride, size_t num_msgs, uint64_t flags,
+              size_t *msgs_processed)
 {
     int ret;
     BIO_CONNECT *data;
@@ -871,11 +851,11 @@ static int conn_recvmmsg(BIO *bio, BIO_MSG *msg, size_t stride, size_t num_msgs,
         return 0;
     }
 
-    return BIO_recvmmsg(data->dgram_bio, msg, stride, num_msgs,
-                        flags, msgs_processed);
+    return BIO_recvmmsg(data->dgram_bio, msg, stride, num_msgs, flags, msgs_processed);
 }
 
-BIO *BIO_new_connect(const char *str)
+BIO *
+BIO_new_connect(const char *str)
 {
     BIO *ret;
 

@@ -36,7 +36,7 @@ struct ctlog_st {
 struct ctlog_store_st {
     OSSL_LIB_CTX *libctx;
     char *propq;
-    STACK_OF(CTLOG) *logs;
+    STACK_OF(CTLOG) * logs;
 };
 
 /* The context when loading a CT log list from a CONF file. */
@@ -56,22 +56,25 @@ static CTLOG_STORE_LOAD_CTX *ctlog_store_load_ctx_new(void);
  * Deletes a CT log store load context.
  * Does not delete any of the fields.
  */
-static void ctlog_store_load_ctx_free(CTLOG_STORE_LOAD_CTX* ctx);
+static void ctlog_store_load_ctx_free(CTLOG_STORE_LOAD_CTX *ctx);
 
-static CTLOG_STORE_LOAD_CTX *ctlog_store_load_ctx_new(void)
+static CTLOG_STORE_LOAD_CTX *
+ctlog_store_load_ctx_new(void)
 {
     CTLOG_STORE_LOAD_CTX *ctx = OPENSSL_zalloc(sizeof(*ctx));
 
     return ctx;
 }
 
-static void ctlog_store_load_ctx_free(CTLOG_STORE_LOAD_CTX* ctx)
+static void
+ctlog_store_load_ctx_free(CTLOG_STORE_LOAD_CTX *ctx)
 {
     OPENSSL_free(ctx);
 }
 
 /* Converts a log's public key into a SHA256 log ID */
-static int ct_v1_log_id_from_pkey(CTLOG *log, EVP_PKEY *pkey)
+static int
+ct_v1_log_id_from_pkey(CTLOG *log, EVP_PKEY *pkey)
 {
     int ret = 0;
     unsigned char *pkey_der = NULL;
@@ -89,15 +92,15 @@ static int ct_v1_log_id_from_pkey(CTLOG *log, EVP_PKEY *pkey)
         goto err;
     }
 
-    ret = EVP_Digest(pkey_der, pkey_der_len, log->log_id, &len, sha256,
-                     NULL);
+    ret = EVP_Digest(pkey_der, pkey_der_len, log->log_id, &len, sha256, NULL);
 err:
     EVP_MD_free(sha256);
     OPENSSL_free(pkey_der);
     return ret;
 }
 
-CTLOG_STORE *CTLOG_STORE_new_ex(OSSL_LIB_CTX *libctx, const char *propq)
+CTLOG_STORE *
+CTLOG_STORE_new_ex(OSSL_LIB_CTX *libctx, const char *propq)
 {
     CTLOG_STORE *ret = OPENSSL_zalloc(sizeof(*ret));
 
@@ -123,12 +126,14 @@ err:
     return NULL;
 }
 
-CTLOG_STORE *CTLOG_STORE_new(void)
+CTLOG_STORE *
+CTLOG_STORE_new(void)
 {
     return CTLOG_STORE_new_ex(NULL, NULL);
 }
 
-void CTLOG_STORE_free(CTLOG_STORE *store)
+void
+CTLOG_STORE_free(CTLOG_STORE *store)
 {
     if (store != NULL) {
         OPENSSL_free(store->propq);
@@ -137,8 +142,8 @@ void CTLOG_STORE_free(CTLOG_STORE *store)
     }
 }
 
-static int ctlog_new_from_conf(CTLOG_STORE *store, CTLOG **ct_log,
-                               const CONF *conf, const char *section)
+static int
+ctlog_new_from_conf(CTLOG_STORE *store, CTLOG **ct_log, const CONF *conf, const char *section)
 {
     const char *description = NCONF_get_string(conf, section, "description");
     char *pkey_base64;
@@ -154,16 +159,16 @@ static int ctlog_new_from_conf(CTLOG_STORE *store, CTLOG **ct_log,
         return 0;
     }
 
-    return CTLOG_new_from_base64_ex(ct_log, pkey_base64, description,
-                                    store->libctx, store->propq);
+    return CTLOG_new_from_base64_ex(ct_log, pkey_base64, description, store->libctx, store->propq);
 }
 
-int CTLOG_STORE_load_default_file(CTLOG_STORE *store)
+int
+CTLOG_STORE_load_default_file(CTLOG_STORE *store)
 {
     const char *fpath = ossl_safe_getenv(CTLOG_FILE_EVP);
 
     if (fpath == NULL)
-      fpath = CTLOG_FILE;
+        fpath = CTLOG_FILE;
 
     return CTLOG_STORE_load_file(store, fpath);
 }
@@ -174,8 +179,8 @@ int CTLOG_STORE_load_default_file(CTLOG_STORE *store)
  * the following log entries.
  * It may stop parsing and returns -1 on any internal (malloc) error.
  */
-static int ctlog_store_load_log(const char *log_name, int log_name_len,
-                                void *arg)
+static int
+ctlog_store_load_log(const char *log_name, int log_name_len, void *arg)
 {
     CTLOG_STORE_LOAD_CTX *load_ctx = arg;
     CTLOG *ct_log = NULL;
@@ -212,11 +217,12 @@ static int ctlog_store_load_log(const char *log_name, int log_name_len,
     return 1;
 }
 
-int CTLOG_STORE_load_file(CTLOG_STORE *store, const char *file)
+int
+CTLOG_STORE_load_file(CTLOG_STORE *store, const char *file)
 {
     int ret = 0;
     char *enabled_logs;
-    CTLOG_STORE_LOAD_CTX* load_ctx = ctlog_store_load_ctx_new();
+    CTLOG_STORE_LOAD_CTX *load_ctx = ctlog_store_load_ctx_new();
 
     if (load_ctx == NULL)
         return 0;
@@ -254,8 +260,8 @@ end:
  * Takes ownership of the public key.
  * Copies the name.
  */
-CTLOG *CTLOG_new_ex(EVP_PKEY *public_key, const char *name, OSSL_LIB_CTX *libctx,
-                    const char *propq)
+CTLOG *
+CTLOG_new_ex(EVP_PKEY *public_key, const char *name, OSSL_LIB_CTX *libctx, const char *propq)
 {
     CTLOG *ret = OPENSSL_zalloc(sizeof(*ret));
 
@@ -283,13 +289,15 @@ err:
     return NULL;
 }
 
-CTLOG *CTLOG_new(EVP_PKEY *public_key, const char *name)
+CTLOG *
+CTLOG_new(EVP_PKEY *public_key, const char *name)
 {
     return CTLOG_new_ex(public_key, name, NULL, NULL);
 }
 
 /* Frees CT log and associated structures */
-void CTLOG_free(CTLOG *log)
+void
+CTLOG_free(CTLOG *log)
 {
     if (log != NULL) {
         OPENSSL_free(log->name);
@@ -299,19 +307,21 @@ void CTLOG_free(CTLOG *log)
     }
 }
 
-const char *CTLOG_get0_name(const CTLOG *log)
+const char *
+CTLOG_get0_name(const CTLOG *log)
 {
     return log->name;
 }
 
-void CTLOG_get0_log_id(const CTLOG *log, const uint8_t **log_id,
-                       size_t *log_id_len)
+void
+CTLOG_get0_log_id(const CTLOG *log, const uint8_t **log_id, size_t *log_id_len)
 {
     *log_id = log->log_id;
     *log_id_len = CT_V1_HASHLEN;
 }
 
-EVP_PKEY *CTLOG_get0_public_key(const CTLOG *log)
+EVP_PKEY *
+CTLOG_get0_public_key(const CTLOG *log)
 {
     return log->public_key;
 }
@@ -320,9 +330,8 @@ EVP_PKEY *CTLOG_get0_public_key(const CTLOG *log)
  * Given a log ID, finds the matching log.
  * Returns NULL if no match found.
  */
-const CTLOG *CTLOG_STORE_get0_log_by_id(const CTLOG_STORE *store,
-                                        const uint8_t *log_id,
-                                        size_t log_id_len)
+const CTLOG *
+CTLOG_STORE_get0_log_by_id(const CTLOG_STORE *store, const uint8_t *log_id, size_t log_id_len)
 {
     int i;
 

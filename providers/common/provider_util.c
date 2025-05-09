@@ -21,7 +21,8 @@
 #include "prov/providercommon.h"
 #include "prov/provider_util.h"
 
-void ossl_prov_cipher_reset(PROV_CIPHER *pc)
+void
+ossl_prov_cipher_reset(PROV_CIPHER *pc)
 {
     EVP_CIPHER_free(pc->alloc_cipher);
     pc->alloc_cipher = NULL;
@@ -32,7 +33,8 @@ void ossl_prov_cipher_reset(PROV_CIPHER *pc)
     pc->engine = NULL;
 }
 
-int ossl_prov_cipher_copy(PROV_CIPHER *dst, const PROV_CIPHER *src)
+int
+ossl_prov_cipher_copy(PROV_CIPHER *dst, const PROV_CIPHER *src)
 {
     if (src->alloc_cipher != NULL && !EVP_CIPHER_up_ref(src->alloc_cipher))
         return 0;
@@ -48,8 +50,8 @@ int ossl_prov_cipher_copy(PROV_CIPHER *dst, const PROV_CIPHER *src)
     return 1;
 }
 
-static int load_common(const OSSL_PARAM params[], const char **propquery,
-                       ENGINE **engine)
+static int
+load_common(const OSSL_PARAM params[], const char **propquery, ENGINE **engine)
 {
     const OSSL_PARAM *p;
 
@@ -88,9 +90,8 @@ static int load_common(const OSSL_PARAM params[], const char **propquery,
     return 1;
 }
 
-int ossl_prov_cipher_load_from_params(PROV_CIPHER *pc,
-                                      const OSSL_PARAM params[],
-                                      OSSL_LIB_CTX *ctx)
+int
+ossl_prov_cipher_load_from_params(PROV_CIPHER *pc, const OSSL_PARAM params[], OSSL_LIB_CTX *ctx)
 {
     const OSSL_PARAM *p;
     const char *propquery;
@@ -127,17 +128,20 @@ int ossl_prov_cipher_load_from_params(PROV_CIPHER *pc,
     return pc->cipher != NULL;
 }
 
-const EVP_CIPHER *ossl_prov_cipher_cipher(const PROV_CIPHER *pc)
+const EVP_CIPHER *
+ossl_prov_cipher_cipher(const PROV_CIPHER *pc)
 {
     return pc->cipher;
 }
 
-ENGINE *ossl_prov_cipher_engine(const PROV_CIPHER *pc)
+ENGINE *
+ossl_prov_cipher_engine(const PROV_CIPHER *pc)
 {
     return pc->engine;
 }
 
-void ossl_prov_digest_reset(PROV_DIGEST *pd)
+void
+ossl_prov_digest_reset(PROV_DIGEST *pd)
 {
     EVP_MD_free(pd->alloc_md);
     pd->alloc_md = NULL;
@@ -148,7 +152,8 @@ void ossl_prov_digest_reset(PROV_DIGEST *pd)
     pd->engine = NULL;
 }
 
-int ossl_prov_digest_copy(PROV_DIGEST *dst, const PROV_DIGEST *src)
+int
+ossl_prov_digest_copy(PROV_DIGEST *dst, const PROV_DIGEST *src)
 {
     if (src->alloc_md != NULL && !EVP_MD_up_ref(src->alloc_md))
         return 0;
@@ -164,8 +169,9 @@ int ossl_prov_digest_copy(PROV_DIGEST *dst, const PROV_DIGEST *src)
     return 1;
 }
 
-const EVP_MD *ossl_prov_digest_fetch(PROV_DIGEST *pd, OSSL_LIB_CTX *libctx,
-                                     const char *mdname, const char *propquery)
+const EVP_MD *
+ossl_prov_digest_fetch(PROV_DIGEST *pd, OSSL_LIB_CTX *libctx, const char *mdname,
+                       const char *propquery)
 {
     EVP_MD_free(pd->alloc_md);
     pd->md = pd->alloc_md = EVP_MD_fetch(libctx, mdname, propquery);
@@ -173,9 +179,8 @@ const EVP_MD *ossl_prov_digest_fetch(PROV_DIGEST *pd, OSSL_LIB_CTX *libctx,
     return pd->md;
 }
 
-int ossl_prov_digest_load_from_params(PROV_DIGEST *pd,
-                                      const OSSL_PARAM params[],
-                                      OSSL_LIB_CTX *ctx)
+int
+ossl_prov_digest_load_from_params(PROV_DIGEST *pd, const OSSL_PARAM params[], OSSL_LIB_CTX *ctx)
 {
     const OSSL_PARAM *p;
     const char *propquery;
@@ -211,54 +216,50 @@ int ossl_prov_digest_load_from_params(PROV_DIGEST *pd,
     return pd->md != NULL;
 }
 
-void ossl_prov_digest_set_md(PROV_DIGEST *pd, EVP_MD *md)
+void
+ossl_prov_digest_set_md(PROV_DIGEST *pd, EVP_MD *md)
 {
     ossl_prov_digest_reset(pd);
     pd->md = pd->alloc_md = md;
 }
 
-const EVP_MD *ossl_prov_digest_md(const PROV_DIGEST *pd)
+const EVP_MD *
+ossl_prov_digest_md(const PROV_DIGEST *pd)
 {
     return pd->md;
 }
 
-ENGINE *ossl_prov_digest_engine(const PROV_DIGEST *pd)
+ENGINE *
+ossl_prov_digest_engine(const PROV_DIGEST *pd)
 {
     return pd->engine;
 }
 
-int ossl_prov_set_macctx(EVP_MAC_CTX *macctx,
-                         const OSSL_PARAM params[],
-                         const char *ciphername,
-                         const char *mdname,
-                         const char *engine,
-                         const char *properties,
-                         const unsigned char *key,
-                         size_t keylen)
+int
+ossl_prov_set_macctx(EVP_MAC_CTX *macctx, const OSSL_PARAM params[], const char *ciphername,
+                     const char *mdname, const char *engine, const char *properties,
+                     const unsigned char *key, size_t keylen)
 {
     const OSSL_PARAM *p;
     OSSL_PARAM mac_params[6], *mp = mac_params;
 
     if (params != NULL) {
         if (mdname == NULL) {
-            if ((p = OSSL_PARAM_locate_const(params,
-                                            OSSL_ALG_PARAM_DIGEST)) != NULL) {
+            if ((p = OSSL_PARAM_locate_const(params, OSSL_ALG_PARAM_DIGEST)) != NULL) {
                 if (p->data_type != OSSL_PARAM_UTF8_STRING)
                     return 0;
                 mdname = p->data;
             }
         }
         if (ciphername == NULL) {
-            if ((p = OSSL_PARAM_locate_const(params,
-                                            OSSL_ALG_PARAM_CIPHER)) != NULL) {
+            if ((p = OSSL_PARAM_locate_const(params, OSSL_ALG_PARAM_CIPHER)) != NULL) {
                 if (p->data_type != OSSL_PARAM_UTF8_STRING)
                     return 0;
                 ciphername = p->data;
             }
         }
         if (engine == NULL) {
-            if ((p = OSSL_PARAM_locate_const(params, OSSL_ALG_PARAM_ENGINE))
-                    != NULL) {
+            if ((p = OSSL_PARAM_locate_const(params, OSSL_ALG_PARAM_ENGINE)) != NULL) {
                 if (p->data_type != OSSL_PARAM_UTF8_STRING)
                     return 0;
                 engine = p->data;
@@ -267,50 +268,39 @@ int ossl_prov_set_macctx(EVP_MAC_CTX *macctx,
     }
 
     if (mdname != NULL)
-        *mp++ = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_DIGEST,
-                                                 (char *)mdname, 0);
+        *mp++ = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_DIGEST, (char *)mdname, 0);
     if (ciphername != NULL)
-        *mp++ = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_CIPHER,
-                                                 (char *)ciphername, 0);
+        *mp++ = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_CIPHER, (char *)ciphername, 0);
     if (properties != NULL)
-        *mp++ = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_PROPERTIES,
-                                                 (char *)properties, 0);
+        *mp++ = OSSL_PARAM_construct_utf8_string(OSSL_MAC_PARAM_PROPERTIES, (char *)properties, 0);
 
 #if !defined(OPENSSL_NO_ENGINE) && !defined(FIPS_MODULE)
     if (engine != NULL)
-        *mp++ = OSSL_PARAM_construct_utf8_string(OSSL_ALG_PARAM_ENGINE,
-                                                 (char *) engine, 0);
+        *mp++ = OSSL_PARAM_construct_utf8_string(OSSL_ALG_PARAM_ENGINE, (char *)engine, 0);
 #endif
 
     if (key != NULL)
-        *mp++ = OSSL_PARAM_construct_octet_string(OSSL_MAC_PARAM_KEY,
-                                                  (unsigned char *)key,
-                                                  keylen);
+        *mp++ = OSSL_PARAM_construct_octet_string(OSSL_MAC_PARAM_KEY, (unsigned char *)key, keylen);
 
     *mp = OSSL_PARAM_construct_end();
 
     return EVP_MAC_CTX_set_params(macctx, mac_params);
-
 }
 
-int ossl_prov_macctx_load_from_params(EVP_MAC_CTX **macctx,
-                                      const OSSL_PARAM params[],
-                                      const char *macname,
-                                      const char *ciphername,
-                                      const char *mdname,
-                                      OSSL_LIB_CTX *libctx)
+int
+ossl_prov_macctx_load_from_params(EVP_MAC_CTX **macctx, const OSSL_PARAM params[],
+                                  const char *macname, const char *ciphername, const char *mdname,
+                                  OSSL_LIB_CTX *libctx)
 {
     const OSSL_PARAM *p;
     const char *properties = NULL;
 
-    if (macname == NULL
-        && (p = OSSL_PARAM_locate_const(params, OSSL_ALG_PARAM_MAC)) != NULL) {
+    if (macname == NULL && (p = OSSL_PARAM_locate_const(params, OSSL_ALG_PARAM_MAC)) != NULL) {
         if (p->data_type != OSSL_PARAM_UTF8_STRING)
             return 0;
         macname = p->data;
     }
-    if ((p = OSSL_PARAM_locate_const(params,
-                                     OSSL_ALG_PARAM_PROPERTIES)) != NULL) {
+    if ((p = OSSL_PARAM_locate_const(params, OSSL_ALG_PARAM_PROPERTIES)) != NULL) {
         if (p->data_type != OSSL_PARAM_UTF8_STRING)
             return 0;
         properties = p->data;
@@ -335,8 +325,7 @@ int ossl_prov_macctx_load_from_params(EVP_MAC_CTX **macctx,
     if (*macctx == NULL)
         return 1;
 
-    if (ossl_prov_set_macctx(*macctx, params, ciphername, mdname, NULL,
-                             properties, NULL, 0))
+    if (ossl_prov_set_macctx(*macctx, params, ciphername, mdname, NULL, properties, NULL, 0))
         return 1;
 
     EVP_MAC_CTX_free(*macctx);
@@ -344,8 +333,8 @@ int ossl_prov_macctx_load_from_params(EVP_MAC_CTX **macctx,
     return 0;
 }
 
-void ossl_prov_cache_exported_algorithms(const OSSL_ALGORITHM_CAPABLE *in,
-                                         OSSL_ALGORITHM *out)
+void
+ossl_prov_cache_exported_algorithms(const OSSL_ALGORITHM_CAPABLE *in, OSSL_ALGORITHM *out)
 {
     int i, j;
 
@@ -359,8 +348,8 @@ void ossl_prov_cache_exported_algorithms(const OSSL_ALGORITHM_CAPABLE *in,
 }
 
 /* Duplicate a lump of memory safely */
-int ossl_prov_memdup(const void *src, size_t src_len,
-                     unsigned char **dest, size_t *dest_len)
+int
+ossl_prov_memdup(const void *src, size_t src_len, unsigned char **dest, size_t *dest_len)
 {
     if (src != NULL) {
         if ((*dest = OPENSSL_memdup(src, src_len)) == NULL)

@@ -14,7 +14,8 @@
 /*
  * I've just gone over this and it is now %20 faster on x86 - eay - 27 Jun 96
  */
-int BN_sqr(BIGNUM *r, const BIGNUM *a, BN_CTX *ctx)
+int
+BN_sqr(BIGNUM *r, const BIGNUM *a, BN_CTX *ctx)
 {
     int ret = bn_sqr_fixed_top(r, a, ctx);
 
@@ -24,7 +25,8 @@ int BN_sqr(BIGNUM *r, const BIGNUM *a, BN_CTX *ctx)
     return ret;
 }
 
-int bn_sqr_fixed_top(BIGNUM *r, const BIGNUM *a, BN_CTX *ctx)
+int
+bn_sqr_fixed_top(BIGNUM *r, const BIGNUM *a, BN_CTX *ctx)
 {
     int max, al;
     int ret = 0;
@@ -45,7 +47,7 @@ int bn_sqr_fixed_top(BIGNUM *r, const BIGNUM *a, BN_CTX *ctx)
     if (rr == NULL || tmp == NULL)
         goto err;
 
-    max = 2 * al;               /* Non-zero (from above) */
+    max = 2 * al; /* Non-zero (from above) */
     if (bn_wexpand(rr, max) == NULL)
         goto err;
 
@@ -98,7 +100,7 @@ int bn_sqr_fixed_top(BIGNUM *r, const BIGNUM *a, BN_CTX *ctx)
         goto err;
 
     ret = 1;
- err:
+err:
     bn_check_top(rr);
     bn_check_top(tmp);
     BN_CTX_end(ctx);
@@ -106,7 +108,8 @@ int bn_sqr_fixed_top(BIGNUM *r, const BIGNUM *a, BN_CTX *ctx)
 }
 
 /* tmp must have 2*n words */
-void bn_sqr_normal(BN_ULONG *r, const BN_ULONG *a, int n, BN_ULONG *tmp)
+void
+bn_sqr_normal(BN_ULONG *r, const BN_ULONG *a, int n, BN_ULONG *tmp)
 {
     int i, j, max;
     const BN_ULONG *ap;
@@ -153,7 +156,8 @@ void bn_sqr_normal(BN_ULONG *r, const BN_ULONG *a, int n, BN_ULONG *tmp)
  * a[0]*b[0]+a[1]*b[1]+(a[0]-a[1])*(b[1]-b[0])
  * a[1]*b[1]
  */
-void bn_sqr_recursive(BN_ULONG *r, const BN_ULONG *a, int n2, BN_ULONG *t)
+void
+bn_sqr_recursive(BN_ULONG *r, const BN_ULONG *a, int n2, BN_ULONG *t)
 {
     int n = n2 / 2;
     int zero, c1;

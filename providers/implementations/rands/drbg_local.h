@@ -8,28 +8,28 @@
  */
 
 #ifndef OSSL_CRYPTO_PROV_LOCAL_H
-# define OSSL_CRYPTO_PROV_LOCAL_H
+#define OSSL_CRYPTO_PROV_LOCAL_H
 
-# include <openssl/evp.h>
-# include <openssl/core_dispatch.h>
-# include <openssl/core_names.h>
-# include <openssl/params.h>
-# include "internal/tsan_assist.h"
-# include "internal/nelem.h"
-# include "internal/numbers.h"
-# include "prov/provider_ctx.h"
-# include "prov/securitycheck.h"
+#include <openssl/evp.h>
+#include <openssl/core_dispatch.h>
+#include <openssl/core_names.h>
+#include <openssl/params.h>
+#include "internal/tsan_assist.h"
+#include "internal/nelem.h"
+#include "internal/numbers.h"
+#include "prov/provider_ctx.h"
+#include "prov/securitycheck.h"
 
 /* How many times to read the TSC as a randomness source. */
-# define TSC_READ_COUNT                 4
+#define TSC_READ_COUNT 4
 
 /* Maximum reseed intervals */
-# define MAX_RESEED_INTERVAL                     (1 << 24)
-# define MAX_RESEED_TIME_INTERVAL                (1 << 20) /* approx. 12 days */
+#define MAX_RESEED_INTERVAL (1 << 24)
+#define MAX_RESEED_TIME_INTERVAL (1 << 20) /* approx. 12 days */
 
 /* Default reseed intervals */
-# define RESEED_INTERVAL                         (1 << 8)
-# define TIME_INTERVAL                           (60*60)   /* 1 hour */
+#define RESEED_INTERVAL (1 << 8)
+#define TIME_INTERVAL (60 * 60) /* 1 hour */
 
 /*
  * The number of bytes that constitutes an atomic lump of entropy with respect
@@ -39,7 +39,7 @@
  *
  * The value is in bytes.
  */
-#define CRNGT_BUFSIZ    16
+#define CRNGT_BUFSIZ 16
 
 /*
  * Maximum input size for the DRBG (entropy, nonce, personalization string)
@@ -48,20 +48,18 @@
  *
  * We lower it to 'only' INT32_MAX bytes, which is equivalent to 2 gigabytes.
  */
-# define DRBG_MAX_LENGTH                         INT32_MAX
+#define DRBG_MAX_LENGTH INT32_MAX
 
 /* The default nonce */
 /* ASCII: "OpenSSL NIST SP 800-90A DRBG", in hex for EBCDIC compatibility */
-#define DRBG_DEFAULT_PERS_STRING "\x4f\x70\x65\x6e\x53\x53\x4c\x20\x4e\x49\x53\x54\x20\x53\x50\x20\x38\x30\x30\x2d\x39\x30\x41\x20\x44\x52\x42\x47"
+#define DRBG_DEFAULT_PERS_STRING                                                                   \
+    "\x4f\x70\x65\x6e\x53\x53\x4c\x20\x4e\x49\x53\x54\x20\x53\x50\x20\x38\x30\x30\x2d\x39\x30\x41" \
+    "\x20\x44\x52\x42\x47"
 
 typedef struct prov_drbg_st PROV_DRBG;
 
 /* DRBG status values */
-typedef enum drbg_status_e {
-    DRBG_UNINITIALISED,
-    DRBG_READY,
-    DRBG_ERROR
-} DRBG_STATUS;
+typedef enum drbg_status_e { DRBG_UNINITIALISED, DRBG_READY, DRBG_ERROR } DRBG_STATUS;
 
 /*
  * The state of all types of DRBGs.
@@ -71,15 +69,14 @@ struct prov_drbg_st {
     PROV_CTX *provctx;
 
     /* Virtual functions are cached here */
-    int (*instantiate)(PROV_DRBG *drbg,
-                       const unsigned char *entropy, size_t entropylen,
-                       const unsigned char *nonce, size_t noncelen,
-                       const unsigned char *pers, size_t perslen);
+    int (*instantiate)(PROV_DRBG *drbg, const unsigned char *entropy, size_t entropylen,
+                       const unsigned char *nonce, size_t noncelen, const unsigned char *pers,
+                       size_t perslen);
     int (*uninstantiate)(PROV_DRBG *ctx);
     int (*reseed)(PROV_DRBG *drbg, const unsigned char *ent, size_t ent_len,
                   const unsigned char *adin, size_t adin_len);
-    int (*generate)(PROV_DRBG *, unsigned char *out, size_t outlen,
-                    const unsigned char *adin, size_t adin_len);
+    int (*generate)(PROV_DRBG *, unsigned char *out, size_t outlen, const unsigned char *adin,
+                    size_t adin_len);
 
     /* Parent PROV_RAND and its dispatch table functions */
     void *parent;
@@ -174,30 +171,26 @@ struct prov_drbg_st {
     OSSL_FIPS_IND_DECLARE
 };
 
-PROV_DRBG *ossl_rand_drbg_new
-    (void *provctx, void *parent, const OSSL_DISPATCH *parent_dispatch,
-     int (*dnew)(PROV_DRBG *ctx),
-     void (*dfree)(void *vctx),
-     int (*instantiate)(PROV_DRBG *drbg,
-                        const unsigned char *entropy, size_t entropylen,
-                        const unsigned char *nonce, size_t noncelen,
-                        const unsigned char *pers, size_t perslen),
-     int (*uninstantiate)(PROV_DRBG *ctx),
-     int (*reseed)(PROV_DRBG *drbg, const unsigned char *ent, size_t ent_len,
-                   const unsigned char *adin, size_t adin_len),
-     int (*generate)(PROV_DRBG *, unsigned char *out, size_t outlen,
-                     const unsigned char *adin, size_t adin_len));
+PROV_DRBG *
+ossl_rand_drbg_new(void *provctx, void *parent, const OSSL_DISPATCH *parent_dispatch,
+                   int (*dnew)(PROV_DRBG *ctx), void (*dfree)(void *vctx),
+                   int (*instantiate)(PROV_DRBG *drbg, const unsigned char *entropy,
+                                      size_t entropylen, const unsigned char *nonce,
+                                      size_t noncelen, const unsigned char *pers, size_t perslen),
+                   int (*uninstantiate)(PROV_DRBG *ctx),
+                   int (*reseed)(PROV_DRBG *drbg, const unsigned char *ent, size_t ent_len,
+                                 const unsigned char *adin, size_t adin_len),
+                   int (*generate)(PROV_DRBG *, unsigned char *out, size_t outlen,
+                                   const unsigned char *adin, size_t adin_len));
 void ossl_rand_drbg_free(PROV_DRBG *drbg);
 
-int ossl_prov_drbg_instantiate(PROV_DRBG *drbg, unsigned int strength,
-                               int prediction_resistance,
+int ossl_prov_drbg_instantiate(PROV_DRBG *drbg, unsigned int strength, int prediction_resistance,
                                const unsigned char *pers, size_t perslen);
 
 int ossl_prov_drbg_uninstantiate(PROV_DRBG *drbg);
 
-int ossl_prov_drbg_reseed(PROV_DRBG *drbg, int prediction_resistance,
-                          const unsigned char *ent, size_t ent_len,
-                          const unsigned char *adin, size_t adinlen);
+int ossl_prov_drbg_reseed(PROV_DRBG *drbg, int prediction_resistance, const unsigned char *ent,
+                          size_t ent_len, const unsigned char *adin, size_t adinlen);
 
 int ossl_prov_drbg_generate(PROV_DRBG *drbg, unsigned char *out, size_t outlen,
                             unsigned int strength, int prediction_resistance,
@@ -208,13 +201,13 @@ OSSL_FUNC_rand_get_seed_fn ossl_drbg_get_seed;
 OSSL_FUNC_rand_clear_seed_fn ossl_drbg_clear_seed;
 
 /* Verify that an array of numeric values is all zero */
-#define PROV_DRBG_VERIFY_ZEROIZATION(v)     \
-    {                                       \
-        size_t i;                           \
-                                            \
-        for (i = 0; i < OSSL_NELEM(v); i++) \
-            if ((v)[i] != 0)                \
-                goto err;                   \
+#define PROV_DRBG_VERIFY_ZEROIZATION(v)                                                            \
+    {                                                                                              \
+        size_t i;                                                                                  \
+                                                                                                   \
+        for (i = 0; i < OSSL_NELEM(v); i++)                                                        \
+            if ((v)[i] != 0)                                                                       \
+                goto err;                                                                          \
     }
 
 /* locking api */
@@ -224,36 +217,31 @@ OSSL_FUNC_rand_unlock_fn ossl_drbg_unlock;
 
 /* Common parameters for all of our DRBGs */
 int ossl_drbg_get_ctx_params(PROV_DRBG *drbg, OSSL_PARAM params[]);
-int ossl_drbg_get_ctx_params_no_lock(PROV_DRBG *drbg, OSSL_PARAM params[],
-                                     int *complete);
+int ossl_drbg_get_ctx_params_no_lock(PROV_DRBG *drbg, OSSL_PARAM params[], int *complete);
 int ossl_drbg_set_ctx_params(PROV_DRBG *drbg, const OSSL_PARAM params[]);
 
-#define OSSL_PARAM_DRBG_SETTABLE_CTX_COMMON                             \
-    OSSL_PARAM_uint(OSSL_DRBG_PARAM_RESEED_REQUESTS, NULL),             \
-    OSSL_PARAM_uint64(OSSL_DRBG_PARAM_RESEED_TIME_INTERVAL, NULL)
+#define OSSL_PARAM_DRBG_SETTABLE_CTX_COMMON                                                        \
+    OSSL_PARAM_uint(OSSL_DRBG_PARAM_RESEED_REQUESTS, NULL),                                        \
+        OSSL_PARAM_uint64(OSSL_DRBG_PARAM_RESEED_TIME_INTERVAL, NULL)
 
-#define OSSL_PARAM_DRBG_GETTABLE_CTX_COMMON                             \
-    OSSL_PARAM_int(OSSL_RAND_PARAM_STATE, NULL),                        \
-    OSSL_PARAM_uint(OSSL_RAND_PARAM_STRENGTH, NULL),                    \
-    OSSL_PARAM_size_t(OSSL_RAND_PARAM_MAX_REQUEST, NULL),               \
-    OSSL_PARAM_size_t(OSSL_DRBG_PARAM_MIN_ENTROPYLEN, NULL),            \
-    OSSL_PARAM_size_t(OSSL_DRBG_PARAM_MAX_ENTROPYLEN, NULL),            \
-    OSSL_PARAM_size_t(OSSL_DRBG_PARAM_MIN_NONCELEN, NULL),              \
-    OSSL_PARAM_size_t(OSSL_DRBG_PARAM_MAX_NONCELEN, NULL),              \
-    OSSL_PARAM_size_t(OSSL_DRBG_PARAM_MAX_PERSLEN, NULL),               \
-    OSSL_PARAM_size_t(OSSL_DRBG_PARAM_MAX_ADINLEN, NULL),               \
-    OSSL_PARAM_uint(OSSL_DRBG_PARAM_RESEED_COUNTER, NULL),              \
-    OSSL_PARAM_time_t(OSSL_DRBG_PARAM_RESEED_TIME, NULL),               \
-    OSSL_PARAM_uint(OSSL_DRBG_PARAM_RESEED_REQUESTS, NULL),             \
-    OSSL_PARAM_uint64(OSSL_DRBG_PARAM_RESEED_TIME_INTERVAL, NULL)
+#define OSSL_PARAM_DRBG_GETTABLE_CTX_COMMON                                                        \
+    OSSL_PARAM_int(OSSL_RAND_PARAM_STATE, NULL), OSSL_PARAM_uint(OSSL_RAND_PARAM_STRENGTH, NULL),  \
+        OSSL_PARAM_size_t(OSSL_RAND_PARAM_MAX_REQUEST, NULL),                                      \
+        OSSL_PARAM_size_t(OSSL_DRBG_PARAM_MIN_ENTROPYLEN, NULL),                                   \
+        OSSL_PARAM_size_t(OSSL_DRBG_PARAM_MAX_ENTROPYLEN, NULL),                                   \
+        OSSL_PARAM_size_t(OSSL_DRBG_PARAM_MIN_NONCELEN, NULL),                                     \
+        OSSL_PARAM_size_t(OSSL_DRBG_PARAM_MAX_NONCELEN, NULL),                                     \
+        OSSL_PARAM_size_t(OSSL_DRBG_PARAM_MAX_PERSLEN, NULL),                                      \
+        OSSL_PARAM_size_t(OSSL_DRBG_PARAM_MAX_ADINLEN, NULL),                                      \
+        OSSL_PARAM_uint(OSSL_DRBG_PARAM_RESEED_COUNTER, NULL),                                     \
+        OSSL_PARAM_time_t(OSSL_DRBG_PARAM_RESEED_TIME, NULL),                                      \
+        OSSL_PARAM_uint(OSSL_DRBG_PARAM_RESEED_REQUESTS, NULL),                                    \
+        OSSL_PARAM_uint64(OSSL_DRBG_PARAM_RESEED_TIME_INTERVAL, NULL)
 
 /* Continuous test "entropy" calls */
-size_t ossl_crngt_get_entropy(PROV_DRBG *drbg,
-                              unsigned char **pout,
-                              int entropy, size_t min_len, size_t max_len,
-                              int prediction_resistance);
-void ossl_crngt_cleanup_entropy(PROV_DRBG *drbg,
-                                unsigned char *out, size_t outlen);
+size_t ossl_crngt_get_entropy(PROV_DRBG *drbg, unsigned char **pout, int entropy, size_t min_len,
+                              size_t max_len, int prediction_resistance);
+void ossl_crngt_cleanup_entropy(PROV_DRBG *drbg, unsigned char *out, size_t outlen);
 
 /* Confirm digest is allowed to be used with a DRBG */
 int ossl_drbg_verify_digest(PROV_DRBG *drbg, OSSL_LIB_CTX *libctx, const EVP_MD *md);

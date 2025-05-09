@@ -42,39 +42,42 @@ static PKCS12 *from_bio_p12(BIO *bio, const PKCS12_ENC *mac);
 static PKCS12 *read_p12(const char *infile, const PKCS12_ENC *mac);
 static int check_p12_mac(PKCS12 *p12, const PKCS12_ENC *mac);
 static int check_asn1_string(const ASN1_TYPE *av, const char *txt);
-static int check_attrs(const STACK_OF(X509_ATTRIBUTE) *bag_attrs, const PKCS12_ATTR *attrs);
-
+static int check_attrs(const STACK_OF(X509_ATTRIBUTE) * bag_attrs, const PKCS12_ATTR *attrs);
 
 /* --------------------------------------------------------------------------
  * Global settings
  */
 
-void PKCS12_helper_set_write_files(int enable)
+void
+PKCS12_helper_set_write_files(int enable)
 {
     write_files = enable;
 }
 
-void PKCS12_helper_set_legacy(int enable)
+void
+PKCS12_helper_set_legacy(int enable)
 {
     legacy = enable;
 }
 
-void PKCS12_helper_set_libctx(OSSL_LIB_CTX *libctx)
+void
+PKCS12_helper_set_libctx(OSSL_LIB_CTX *libctx)
 {
     test_ctx = libctx;
 }
 
-void PKCS12_helper_set_propq(const char *propq)
+void
+PKCS12_helper_set_propq(const char *propq)
 {
     test_propq = propq;
 }
-
 
 /* --------------------------------------------------------------------------
  * Test data load functions
  */
 
-static X509 *load_cert_asn1(const unsigned char *bytes, int len)
+static X509 *
+load_cert_asn1(const unsigned char *bytes, int len)
 {
     X509 *cert = NULL;
 
@@ -85,7 +88,8 @@ err:
     return cert;
 }
 
-static EVP_PKEY *load_pkey_asn1(const unsigned char *bytes, int len)
+static EVP_PKEY *
+load_pkey_asn1(const unsigned char *bytes, int len)
 {
     EVP_PKEY *pkey = NULL;
 
@@ -100,7 +104,8 @@ err:
  * PKCS12 builder
  */
 
-PKCS12_BUILDER *new_pkcs12_builder(const char *filename)
+PKCS12_BUILDER *
+new_pkcs12_builder(const char *filename)
 {
     PKCS12_BUILDER *pb = OPENSSL_malloc(sizeof(PKCS12_BUILDER));
     if (!TEST_ptr(pb))
@@ -111,7 +116,8 @@ PKCS12_BUILDER *new_pkcs12_builder(const char *filename)
     return pb;
 }
 
-int end_pkcs12_builder(PKCS12_BUILDER *pb)
+int
+end_pkcs12_builder(PKCS12_BUILDER *pb)
 {
     int result = pb->success;
 
@@ -119,31 +125,31 @@ int end_pkcs12_builder(PKCS12_BUILDER *pb)
     return result;
 }
 
-
-void start_pkcs12(PKCS12_BUILDER *pb)
+void
+start_pkcs12(PKCS12_BUILDER *pb)
 {
     pb->safes = NULL;
 }
 
-
-void end_pkcs12(PKCS12_BUILDER *pb)
+void
+end_pkcs12(PKCS12_BUILDER *pb)
 {
     if (!pb->success)
         return;
     generate_p12(pb, NULL);
 }
 
-
-void end_pkcs12_with_mac(PKCS12_BUILDER *pb, const PKCS12_ENC *mac)
+void
+end_pkcs12_with_mac(PKCS12_BUILDER *pb, const PKCS12_ENC *mac)
 {
     if (!pb->success)
         return;
     generate_p12(pb, mac);
 }
 
-
 /* Generate the PKCS12 encoding and write to memory bio */
-static void generate_p12(PKCS12_BUILDER *pb, const PKCS12_ENC *mac)
+static void
+generate_p12(PKCS12_BUILDER *pb, const PKCS12_ENC *mac)
 {
     PKCS12 *p12;
     EVP_MD *md = NULL;
@@ -172,8 +178,7 @@ static void generate_p12(PKCS12_BUILDER *pb, const PKCS12_ENC *mac)
         else
             md = EVP_MD_fetch(test_ctx, OBJ_nid2sn(mac->nid), test_propq);
 
-        if (!TEST_true(PKCS12_set_mac(p12, mac->pass, strlen(mac->pass),
-                                      NULL, 0, mac->iter, md))) {
+        if (!TEST_true(PKCS12_set_mac(p12, mac->pass, strlen(mac->pass), NULL, 0, mac->iter, md))) {
             pb->success = 0;
             goto err;
         }
@@ -189,8 +194,8 @@ err:
     PKCS12_free(p12);
 }
 
-
-static int write_p12(PKCS12 *p12, const char *outfile)
+static int
+write_p12(PKCS12 *p12, const char *outfile)
 {
     int ret = 0;
     BIO *out = BIO_new_file(outfile, "w");
@@ -206,7 +211,8 @@ err:
     return ret;
 }
 
-static PKCS12 *from_bio_p12(BIO *bio, const PKCS12_ENC *mac)
+static PKCS12 *
+from_bio_p12(BIO *bio, const PKCS12_ENC *mac)
 {
     PKCS12 *p12 = NULL;
 
@@ -233,9 +239,9 @@ err:
     return NULL;
 }
 
-
 /* For use with existing files */
-static PKCS12 *read_p12(const char *infile, const PKCS12_ENC *mac)
+static PKCS12 *
+read_p12(const char *infile, const PKCS12_ENC *mac)
 {
     PKCS12 *p12 = NULL;
     BIO *in = BIO_new_file(infile, "r");
@@ -259,24 +265,25 @@ err:
     return NULL;
 }
 
-static int check_p12_mac(PKCS12 *p12, const PKCS12_ENC *mac)
+static int
+check_p12_mac(PKCS12 *p12, const PKCS12_ENC *mac)
 {
-    return TEST_true(PKCS12_mac_present(p12))
-        && TEST_true(PKCS12_verify_mac(p12, mac->pass, strlen(mac->pass)));
+    return TEST_true(PKCS12_mac_present(p12)) &&
+           TEST_true(PKCS12_verify_mac(p12, mac->pass, strlen(mac->pass)));
 }
-
 
 /* -------------------------------------------------------------------------
  * PKCS7 content info builder
  */
 
-void start_contentinfo(PKCS12_BUILDER *pb)
+void
+start_contentinfo(PKCS12_BUILDER *pb)
 {
     pb->bags = NULL;
 }
 
-
-void end_contentinfo(PKCS12_BUILDER *pb)
+void
+end_contentinfo(PKCS12_BUILDER *pb)
 {
     if (pb->success && pb->bags != NULL) {
         if (!TEST_true(PKCS12_add_safe(&pb->safes, pb->bags, -1, 0, NULL)))
@@ -286,18 +293,16 @@ void end_contentinfo(PKCS12_BUILDER *pb)
     pb->bags = NULL;
 }
 
-
-void end_contentinfo_encrypted(PKCS12_BUILDER *pb, const PKCS12_ENC *enc)
+void
+end_contentinfo_encrypted(PKCS12_BUILDER *pb, const PKCS12_ENC *enc)
 {
     if (pb->success && pb->bags != NULL) {
         if (legacy) {
-            if (!TEST_true(PKCS12_add_safe(&pb->safes, pb->bags, enc->nid,
-                                           enc->iter, enc->pass)))
+            if (!TEST_true(PKCS12_add_safe(&pb->safes, pb->bags, enc->nid, enc->iter, enc->pass)))
                 pb->success = 0;
         } else {
-            if (!TEST_true(PKCS12_add_safe_ex(&pb->safes, pb->bags, enc->nid,
-                                              enc->iter, enc->pass, test_ctx,
-                                              test_propq)))
+            if (!TEST_true(PKCS12_add_safe_ex(&pb->safes, pb->bags, enc->nid, enc->iter, enc->pass,
+                                              test_ctx, test_propq)))
                 pb->success = 0;
         }
     }
@@ -305,8 +310,8 @@ void end_contentinfo_encrypted(PKCS12_BUILDER *pb, const PKCS12_ENC *enc)
     pb->bags = NULL;
 }
 
-
-static STACK_OF(PKCS12_SAFEBAG) *decode_contentinfo(STACK_OF(PKCS7) *safes, int idx, const PKCS12_ENC *enc)
+static STACK_OF(PKCS12_SAFEBAG) *
+    decode_contentinfo(STACK_OF(PKCS7) * safes, int idx, const PKCS12_ENC *enc)
 {
     STACK_OF(PKCS12_SAFEBAG) *bags = NULL;
     int bagnid;
@@ -333,17 +338,17 @@ err:
     return NULL;
 }
 
-
 /* -------------------------------------------------------------------------
  * PKCS12 safeBag/attribute builder
  */
 
-static int add_attributes(PKCS12_SAFEBAG *bag, const PKCS12_ATTR *attr)
+static int
+add_attributes(PKCS12_SAFEBAG *bag, const PKCS12_ATTR *attr)
 {
     int ret = 0;
     int attr_nid;
     const PKCS12_ATTR *p_attr = attr;
-    STACK_OF(X509_ATTRIBUTE)* attrs = NULL;
+    STACK_OF(X509_ATTRIBUTE) *attrs = NULL;
     X509_ATTRIBUTE *x509_attr = NULL;
 
     if (attr == NULL)
@@ -361,8 +366,9 @@ static int add_attributes(PKCS12_SAFEBAG *bag, const PKCS12_ATTR *attr)
                                                  strlen(p_attr->value))))
                 goto err;
         } else if (attr_nid == NID_oracle_jdk_trustedkeyusage) {
-            attrs = (STACK_OF(X509_ATTRIBUTE)*)PKCS12_SAFEBAG_get0_attrs(bag);
-            x509_attr = X509_ATTRIBUTE_create(attr_nid, V_ASN1_OBJECT, OBJ_txt2obj(p_attr->value, 0));
+            attrs = (STACK_OF(X509_ATTRIBUTE) *)PKCS12_SAFEBAG_get0_attrs(bag);
+            x509_attr =
+                X509_ATTRIBUTE_create(attr_nid, V_ASN1_OBJECT, OBJ_txt2obj(p_attr->value, 0));
             X509at_add1_attr(&attrs, x509_attr);
             PKCS12_SAFEBAG_set0_attrs(bag, attrs);
             X509_ATTRIBUTE_free(x509_attr);
@@ -380,8 +386,8 @@ err:
     return ret;
 }
 
-void add_certbag(PKCS12_BUILDER *pb, const unsigned char *bytes, int len,
-                 const PKCS12_ATTR *attrs)
+void
+add_certbag(PKCS12_BUILDER *pb, const unsigned char *bytes, int len, const PKCS12_ATTR *attrs)
 {
     PKCS12_SAFEBAG *bag = NULL;
     X509 *cert = NULL;
@@ -414,8 +420,9 @@ err:
     X509_free(cert);
 }
 
-void add_keybag(PKCS12_BUILDER *pb, const unsigned char *bytes, int len,
-                const PKCS12_ATTR *attrs, const PKCS12_ENC *enc)
+void
+add_keybag(PKCS12_BUILDER *pb, const unsigned char *bytes, int len, const PKCS12_ATTR *attrs,
+           const PKCS12_ENC *enc)
 {
     PKCS12_SAFEBAG *bag = NULL;
     EVP_PKEY *pkey = NULL;
@@ -446,8 +453,8 @@ err:
     EVP_PKEY_free(pkey);
 }
 
-void add_secretbag(PKCS12_BUILDER *pb, int secret_nid, const char *secret,
-                               const PKCS12_ATTR *attrs)
+void
+add_secretbag(PKCS12_BUILDER *pb, int secret_nid, const char *secret, const PKCS12_ATTR *attrs)
 {
     PKCS12_SAFEBAG *bag = NULL;
 
@@ -465,12 +472,12 @@ void add_secretbag(PKCS12_BUILDER *pb, int secret_nid, const char *secret,
         pb->success = 0;
 }
 
-
 /* -------------------------------------------------------------------------
  * PKCS12 structure checking
  */
 
-static int check_asn1_string(const ASN1_TYPE *av, const char *txt)
+static int
+check_asn1_string(const ASN1_TYPE *av, const char *txt)
 {
     int ret = 0;
     char *value = NULL;
@@ -480,8 +487,7 @@ static int check_asn1_string(const ASN1_TYPE *av, const char *txt)
 
     switch (av->type) {
     case V_ASN1_BMPSTRING:
-        value = OPENSSL_uni2asc(av->value.bmpstring->data,
-                                av->value.bmpstring->length);
+        value = OPENSSL_uni2asc(av->value.bmpstring->data, av->value.bmpstring->length);
         if (!TEST_str_eq(txt, (char *)value))
             goto err;
         break;
@@ -493,8 +499,7 @@ static int check_asn1_string(const ASN1_TYPE *av, const char *txt)
         break;
 
     case V_ASN1_OCTET_STRING:
-        if (!TEST_mem_eq(txt, strlen(txt),
-                         (char *)av->value.octet_string->data,
+        if (!TEST_mem_eq(txt, strlen(txt), (char *)av->value.octet_string->data,
                          av->value.octet_string->length))
             goto err;
         break;
@@ -509,7 +514,8 @@ err:
     return ret;
 }
 
-static int check_attrs(const STACK_OF(X509_ATTRIBUTE) *bag_attrs, const PKCS12_ATTR *attrs)
+static int
+check_attrs(const STACK_OF(X509_ATTRIBUTE) * bag_attrs, const PKCS12_ATTR *attrs)
 {
     int ret = 0;
     X509_ATTRIBUTE *attr;
@@ -546,8 +552,8 @@ err:
     return ret;
 }
 
-void check_certbag(PKCS12_BUILDER *pb, const unsigned char *bytes, int len,
-                   const PKCS12_ATTR *attrs)
+void
+check_certbag(PKCS12_BUILDER *pb, const unsigned char *bytes, int len, const PKCS12_ATTR *attrs)
 {
     X509 *x509 = NULL;
     X509 *ref_x509 = NULL;
@@ -561,9 +567,9 @@ void check_certbag(PKCS12_BUILDER *pb, const unsigned char *bytes, int len,
         pb->success = 0;
         return;
     }
-    if (!check_attrs(PKCS12_SAFEBAG_get0_attrs(bag), attrs)
-        || !TEST_int_eq(PKCS12_SAFEBAG_get_nid(bag), NID_certBag)
-        || !TEST_int_eq(PKCS12_SAFEBAG_get_bag_nid(bag), NID_x509Certificate)) {
+    if (!check_attrs(PKCS12_SAFEBAG_get0_attrs(bag), attrs) ||
+        !TEST_int_eq(PKCS12_SAFEBAG_get_nid(bag), NID_certBag) ||
+        !TEST_int_eq(PKCS12_SAFEBAG_get_bag_nid(bag), NID_x509Certificate)) {
         pb->success = 0;
         return;
     }
@@ -580,8 +586,9 @@ err:
     X509_free(ref_x509);
 }
 
-void check_keybag(PKCS12_BUILDER *pb, const unsigned char *bytes, int len,
-                  const PKCS12_ATTR *attrs, const PKCS12_ENC *enc)
+void
+check_keybag(PKCS12_BUILDER *pb, const unsigned char *bytes, int len, const PKCS12_ATTR *attrs,
+             const PKCS12_ENC *enc)
 {
     EVP_PKEY *pkey = NULL;
     EVP_PKEY *ref_pkey = NULL;
@@ -643,7 +650,8 @@ err:
     EVP_PKEY_free(ref_pkey);
 }
 
-void check_secretbag(PKCS12_BUILDER *pb, int secret_nid, const char *secret, const PKCS12_ATTR *attrs)
+void
+check_secretbag(PKCS12_BUILDER *pb, int secret_nid, const char *secret, const PKCS12_ATTR *attrs)
 {
     const PKCS12_SAFEBAG *bag;
 
@@ -656,15 +664,15 @@ void check_secretbag(PKCS12_BUILDER *pb, int secret_nid, const char *secret, con
         return;
     }
 
-    if (!check_attrs(PKCS12_SAFEBAG_get0_attrs(bag), attrs)
-        || !TEST_int_eq(PKCS12_SAFEBAG_get_nid(bag), NID_secretBag)
-        || !TEST_int_eq(PKCS12_SAFEBAG_get_bag_nid(bag), secret_nid)
-        || !TEST_true(check_asn1_string(PKCS12_SAFEBAG_get0_bag_obj(bag), secret)))
+    if (!check_attrs(PKCS12_SAFEBAG_get0_attrs(bag), attrs) ||
+        !TEST_int_eq(PKCS12_SAFEBAG_get_nid(bag), NID_secretBag) ||
+        !TEST_int_eq(PKCS12_SAFEBAG_get_bag_nid(bag), secret_nid) ||
+        !TEST_true(check_asn1_string(PKCS12_SAFEBAG_get0_bag_obj(bag), secret)))
         pb->success = 0;
 }
 
-
-void start_check_pkcs12(PKCS12_BUILDER *pb)
+void
+start_check_pkcs12(PKCS12_BUILDER *pb)
 {
     PKCS12 *p12;
 
@@ -684,7 +692,8 @@ void start_check_pkcs12(PKCS12_BUILDER *pb)
     PKCS12_free(p12);
 }
 
-void start_check_pkcs12_with_mac(PKCS12_BUILDER *pb, const PKCS12_ENC *mac)
+void
+start_check_pkcs12_with_mac(PKCS12_BUILDER *pb, const PKCS12_ENC *mac)
 {
     PKCS12 *p12;
 
@@ -704,7 +713,8 @@ void start_check_pkcs12_with_mac(PKCS12_BUILDER *pb, const PKCS12_ENC *mac)
     PKCS12_free(p12);
 }
 
-void start_check_pkcs12_file(PKCS12_BUILDER *pb)
+void
+start_check_pkcs12_file(PKCS12_BUILDER *pb)
 {
     PKCS12 *p12;
 
@@ -724,7 +734,8 @@ void start_check_pkcs12_file(PKCS12_BUILDER *pb)
     PKCS12_free(p12);
 }
 
-void start_check_pkcs12_file_with_mac(PKCS12_BUILDER *pb, const PKCS12_ENC *mac)
+void
+start_check_pkcs12_file_with_mac(PKCS12_BUILDER *pb, const PKCS12_ENC *mac)
 {
     PKCS12 *p12;
 
@@ -744,7 +755,8 @@ void start_check_pkcs12_file_with_mac(PKCS12_BUILDER *pb, const PKCS12_ENC *mac)
     PKCS12_free(p12);
 }
 
-void end_check_pkcs12(PKCS12_BUILDER *pb)
+void
+end_check_pkcs12(PKCS12_BUILDER *pb)
 {
     if (!pb->success)
         return;
@@ -752,8 +764,8 @@ void end_check_pkcs12(PKCS12_BUILDER *pb)
     sk_PKCS7_pop_free(pb->safes, PKCS7_free);
 }
 
-
-void start_check_contentinfo(PKCS12_BUILDER *pb)
+void
+start_check_contentinfo(PKCS12_BUILDER *pb)
 {
     if (!pb->success)
         return;
@@ -767,7 +779,8 @@ void start_check_contentinfo(PKCS12_BUILDER *pb)
     TEST_info("Decoding %d bags", sk_PKCS12_SAFEBAG_num(pb->bags));
 }
 
-void start_check_contentinfo_encrypted(PKCS12_BUILDER *pb, const PKCS12_ENC *enc)
+void
+start_check_contentinfo_encrypted(PKCS12_BUILDER *pb, const PKCS12_ENC *enc)
 {
     if (!pb->success)
         return;
@@ -781,8 +794,8 @@ void start_check_contentinfo_encrypted(PKCS12_BUILDER *pb, const PKCS12_ENC *enc
     TEST_info("Decoding %d bags", sk_PKCS12_SAFEBAG_num(pb->bags));
 }
 
-
-void end_check_contentinfo(PKCS12_BUILDER *pb)
+void
+end_check_contentinfo(PKCS12_BUILDER *pb)
 {
     if (!pb->success)
         return;
@@ -792,5 +805,3 @@ void end_check_contentinfo(PKCS12_BUILDER *pb)
     sk_PKCS12_SAFEBAG_pop_free(pb->bags, PKCS12_SAFEBAG_free);
     pb->bags = NULL;
 }
-
-

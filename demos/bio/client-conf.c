@@ -12,7 +12,8 @@
 #include <openssl/ssl.h>
 #include <openssl/conf.h>
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
     BIO *sbio = NULL, *out = NULL;
     int i, len, rv;
@@ -55,8 +56,7 @@ int main(int argc, char **argv)
         if (rv > 0)
             continue;
         if (rv != -2) {
-            fprintf(stderr, "Error processing %s = %s\n",
-                    cnf->name, cnf->value);
+            fprintf(stderr, "Error processing %s = %s\n", cnf->name, cnf->value);
             ERR_print_errors_fp(stderr);
             goto end;
         }
@@ -111,7 +111,7 @@ int main(int argc, char **argv)
     }
     ret = EXIT_SUCCESS;
 
- end:
+end:
     SSL_CONF_CTX_free(cctx);
     BIO_free_all(sbio);
     BIO_free(out);

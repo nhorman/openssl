@@ -41,258 +41,260 @@
 #include "internal/nelem.h"
 #include "fuzzer.h"
 
-static ASN1_ITEM_EXP *item_type[] = {
-    ASN1_ITEM_ref(ACCESS_DESCRIPTION),
+static ASN1_ITEM_EXP *item_type[] = {ASN1_ITEM_ref(ACCESS_DESCRIPTION),
 #ifndef OPENSSL_NO_RFC3779
-    ASN1_ITEM_ref(ASIdentifierChoice),
-    ASN1_ITEM_ref(ASIdentifiers),
-    ASN1_ITEM_ref(ASIdOrRange),
+                                     ASN1_ITEM_ref(ASIdentifierChoice),
+                                     ASN1_ITEM_ref(ASIdentifiers),
+                                     ASN1_ITEM_ref(ASIdOrRange),
 #endif
-    ASN1_ITEM_ref(ASN1_ANY),
-    ASN1_ITEM_ref(ASN1_BIT_STRING),
-    ASN1_ITEM_ref(ASN1_BMPSTRING),
-    ASN1_ITEM_ref(ASN1_BOOLEAN),
-    ASN1_ITEM_ref(ASN1_ENUMERATED),
-    ASN1_ITEM_ref(ASN1_FBOOLEAN),
-    ASN1_ITEM_ref(ASN1_GENERALIZEDTIME),
-    ASN1_ITEM_ref(ASN1_GENERALSTRING),
-    ASN1_ITEM_ref(ASN1_IA5STRING),
-    ASN1_ITEM_ref(ASN1_INTEGER),
-    ASN1_ITEM_ref(ASN1_NULL),
-    ASN1_ITEM_ref(ASN1_OBJECT),
-    ASN1_ITEM_ref(ASN1_OCTET_STRING),
-    ASN1_ITEM_ref(ASN1_OCTET_STRING_NDEF),
-    ASN1_ITEM_ref(ASN1_PRINTABLE),
-    ASN1_ITEM_ref(ASN1_PRINTABLESTRING),
-    ASN1_ITEM_ref(ASN1_SEQUENCE),
-    ASN1_ITEM_ref(ASN1_SEQUENCE_ANY),
-    ASN1_ITEM_ref(ASN1_SET_ANY),
-    ASN1_ITEM_ref(ASN1_T61STRING),
-    ASN1_ITEM_ref(ASN1_TBOOLEAN),
-    ASN1_ITEM_ref(ASN1_TIME),
-    ASN1_ITEM_ref(ASN1_UNIVERSALSTRING),
-    ASN1_ITEM_ref(ASN1_UTCTIME),
-    ASN1_ITEM_ref(ASN1_UTF8STRING),
-    ASN1_ITEM_ref(ASN1_VISIBLESTRING),
+                                     ASN1_ITEM_ref(ASN1_ANY),
+                                     ASN1_ITEM_ref(ASN1_BIT_STRING),
+                                     ASN1_ITEM_ref(ASN1_BMPSTRING),
+                                     ASN1_ITEM_ref(ASN1_BOOLEAN),
+                                     ASN1_ITEM_ref(ASN1_ENUMERATED),
+                                     ASN1_ITEM_ref(ASN1_FBOOLEAN),
+                                     ASN1_ITEM_ref(ASN1_GENERALIZEDTIME),
+                                     ASN1_ITEM_ref(ASN1_GENERALSTRING),
+                                     ASN1_ITEM_ref(ASN1_IA5STRING),
+                                     ASN1_ITEM_ref(ASN1_INTEGER),
+                                     ASN1_ITEM_ref(ASN1_NULL),
+                                     ASN1_ITEM_ref(ASN1_OBJECT),
+                                     ASN1_ITEM_ref(ASN1_OCTET_STRING),
+                                     ASN1_ITEM_ref(ASN1_OCTET_STRING_NDEF),
+                                     ASN1_ITEM_ref(ASN1_PRINTABLE),
+                                     ASN1_ITEM_ref(ASN1_PRINTABLESTRING),
+                                     ASN1_ITEM_ref(ASN1_SEQUENCE),
+                                     ASN1_ITEM_ref(ASN1_SEQUENCE_ANY),
+                                     ASN1_ITEM_ref(ASN1_SET_ANY),
+                                     ASN1_ITEM_ref(ASN1_T61STRING),
+                                     ASN1_ITEM_ref(ASN1_TBOOLEAN),
+                                     ASN1_ITEM_ref(ASN1_TIME),
+                                     ASN1_ITEM_ref(ASN1_UNIVERSALSTRING),
+                                     ASN1_ITEM_ref(ASN1_UTCTIME),
+                                     ASN1_ITEM_ref(ASN1_UTF8STRING),
+                                     ASN1_ITEM_ref(ASN1_VISIBLESTRING),
 #ifndef OPENSSL_NO_RFC3779
-    ASN1_ITEM_ref(ASRange),
+                                     ASN1_ITEM_ref(ASRange),
 #endif
-    ASN1_ITEM_ref(AUTHORITY_INFO_ACCESS),
-    ASN1_ITEM_ref(AUTHORITY_KEYID),
-    ASN1_ITEM_ref(BASIC_CONSTRAINTS),
-    ASN1_ITEM_ref(BIGNUM),
-    ASN1_ITEM_ref(CBIGNUM),
-    ASN1_ITEM_ref(CERTIFICATEPOLICIES),
+                                     ASN1_ITEM_ref(AUTHORITY_INFO_ACCESS),
+                                     ASN1_ITEM_ref(AUTHORITY_KEYID),
+                                     ASN1_ITEM_ref(BASIC_CONSTRAINTS),
+                                     ASN1_ITEM_ref(BIGNUM),
+                                     ASN1_ITEM_ref(CBIGNUM),
+                                     ASN1_ITEM_ref(CERTIFICATEPOLICIES),
 #ifndef OPENSSL_NO_CMS
-    ASN1_ITEM_ref(CMS_ContentInfo),
-    ASN1_ITEM_ref(CMS_ReceiptRequest),
-    ASN1_ITEM_ref(CRL_DIST_POINTS),
+                                     ASN1_ITEM_ref(CMS_ContentInfo),
+                                     ASN1_ITEM_ref(CMS_ReceiptRequest),
+                                     ASN1_ITEM_ref(CRL_DIST_POINTS),
 #endif
 #ifndef OPENSSL_NO_DH
-    ASN1_ITEM_ref(DHparams),
+                                     ASN1_ITEM_ref(DHparams),
 #endif
-    ASN1_ITEM_ref(DIRECTORYSTRING),
-    ASN1_ITEM_ref(DISPLAYTEXT),
-    ASN1_ITEM_ref(DIST_POINT),
-    ASN1_ITEM_ref(DIST_POINT_NAME),
+                                     ASN1_ITEM_ref(DIRECTORYSTRING),
+                                     ASN1_ITEM_ref(DISPLAYTEXT),
+                                     ASN1_ITEM_ref(DIST_POINT),
+                                     ASN1_ITEM_ref(DIST_POINT_NAME),
 #if !defined(OPENSSL_NO_EC) && !defined(OPENSSL_NO_DEPRECATED_3_0)
-    ASN1_ITEM_ref(ECPARAMETERS),
-    ASN1_ITEM_ref(ECPKPARAMETERS),
+                                     ASN1_ITEM_ref(ECPARAMETERS),
+                                     ASN1_ITEM_ref(ECPKPARAMETERS),
 #endif
-    ASN1_ITEM_ref(EDIPARTYNAME),
-    ASN1_ITEM_ref(EXTENDED_KEY_USAGE),
-    ASN1_ITEM_ref(GENERAL_NAME),
-    ASN1_ITEM_ref(GENERAL_NAMES),
-    ASN1_ITEM_ref(GENERAL_SUBTREE),
+                                     ASN1_ITEM_ref(EDIPARTYNAME),
+                                     ASN1_ITEM_ref(EXTENDED_KEY_USAGE),
+                                     ASN1_ITEM_ref(GENERAL_NAME),
+                                     ASN1_ITEM_ref(GENERAL_NAMES),
+                                     ASN1_ITEM_ref(GENERAL_SUBTREE),
 #ifndef OPENSSL_NO_RFC3779
-    ASN1_ITEM_ref(IPAddressChoice),
-    ASN1_ITEM_ref(IPAddressFamily),
-    ASN1_ITEM_ref(IPAddressOrRange),
-    ASN1_ITEM_ref(IPAddressRange),
+                                     ASN1_ITEM_ref(IPAddressChoice),
+                                     ASN1_ITEM_ref(IPAddressFamily),
+                                     ASN1_ITEM_ref(IPAddressOrRange),
+                                     ASN1_ITEM_ref(IPAddressRange),
 #endif
-    ASN1_ITEM_ref(ISSUING_DIST_POINT),
+                                     ASN1_ITEM_ref(ISSUING_DIST_POINT),
 #ifndef OPENSSL_NO_DEPRECATED_3_0
-    ASN1_ITEM_ref(LONG),
+                                     ASN1_ITEM_ref(LONG),
 #endif
-    ASN1_ITEM_ref(NAME_CONSTRAINTS),
-    ASN1_ITEM_ref(NETSCAPE_CERT_SEQUENCE),
-    ASN1_ITEM_ref(NETSCAPE_SPKAC),
-    ASN1_ITEM_ref(NETSCAPE_SPKI),
-    ASN1_ITEM_ref(NOTICEREF),
+                                     ASN1_ITEM_ref(NAME_CONSTRAINTS),
+                                     ASN1_ITEM_ref(NETSCAPE_CERT_SEQUENCE),
+                                     ASN1_ITEM_ref(NETSCAPE_SPKAC),
+                                     ASN1_ITEM_ref(NETSCAPE_SPKI),
+                                     ASN1_ITEM_ref(NOTICEREF),
 #ifndef OPENSSL_NO_OCSP
-    ASN1_ITEM_ref(OCSP_BASICRESP),
-    ASN1_ITEM_ref(OCSP_CERTID),
-    ASN1_ITEM_ref(OCSP_CERTSTATUS),
-    ASN1_ITEM_ref(OCSP_CRLID),
-    ASN1_ITEM_ref(OCSP_ONEREQ),
-    ASN1_ITEM_ref(OCSP_REQINFO),
-    ASN1_ITEM_ref(OCSP_REQUEST),
-    ASN1_ITEM_ref(OCSP_RESPBYTES),
-    ASN1_ITEM_ref(OCSP_RESPDATA),
-    ASN1_ITEM_ref(OCSP_RESPID),
-    ASN1_ITEM_ref(OCSP_RESPONSE),
-    ASN1_ITEM_ref(OCSP_REVOKEDINFO),
-    ASN1_ITEM_ref(OCSP_SERVICELOC),
-    ASN1_ITEM_ref(OCSP_SIGNATURE),
-    ASN1_ITEM_ref(OCSP_SINGLERESP),
+                                     ASN1_ITEM_ref(OCSP_BASICRESP),
+                                     ASN1_ITEM_ref(OCSP_CERTID),
+                                     ASN1_ITEM_ref(OCSP_CERTSTATUS),
+                                     ASN1_ITEM_ref(OCSP_CRLID),
+                                     ASN1_ITEM_ref(OCSP_ONEREQ),
+                                     ASN1_ITEM_ref(OCSP_REQINFO),
+                                     ASN1_ITEM_ref(OCSP_REQUEST),
+                                     ASN1_ITEM_ref(OCSP_RESPBYTES),
+                                     ASN1_ITEM_ref(OCSP_RESPDATA),
+                                     ASN1_ITEM_ref(OCSP_RESPID),
+                                     ASN1_ITEM_ref(OCSP_RESPONSE),
+                                     ASN1_ITEM_ref(OCSP_REVOKEDINFO),
+                                     ASN1_ITEM_ref(OCSP_SERVICELOC),
+                                     ASN1_ITEM_ref(OCSP_SIGNATURE),
+                                     ASN1_ITEM_ref(OCSP_SINGLERESP),
 #endif
-    ASN1_ITEM_ref(OTHERNAME),
-    ASN1_ITEM_ref(PBE2PARAM),
-    ASN1_ITEM_ref(PBEPARAM),
-    ASN1_ITEM_ref(PBKDF2PARAM),
-    ASN1_ITEM_ref(PKCS12),
-    ASN1_ITEM_ref(PKCS12_AUTHSAFES),
-    ASN1_ITEM_ref(PKCS12_BAGS),
-    ASN1_ITEM_ref(PKCS12_MAC_DATA),
-    ASN1_ITEM_ref(PKCS12_SAFEBAG),
-    ASN1_ITEM_ref(PKCS12_SAFEBAGS),
-    ASN1_ITEM_ref(PKCS7),
-    ASN1_ITEM_ref(PKCS7_ATTR_SIGN),
-    ASN1_ITEM_ref(PKCS7_ATTR_VERIFY),
-    ASN1_ITEM_ref(PKCS7_DIGEST),
-    ASN1_ITEM_ref(PKCS7_ENC_CONTENT),
-    ASN1_ITEM_ref(PKCS7_ENCRYPT),
-    ASN1_ITEM_ref(PKCS7_ENVELOPE),
-    ASN1_ITEM_ref(PKCS7_ISSUER_AND_SERIAL),
-    ASN1_ITEM_ref(PKCS7_RECIP_INFO),
-    ASN1_ITEM_ref(PKCS7_SIGNED),
-    ASN1_ITEM_ref(PKCS7_SIGN_ENVELOPE),
-    ASN1_ITEM_ref(PKCS7_SIGNER_INFO),
-    ASN1_ITEM_ref(PKCS8_PRIV_KEY_INFO),
-    ASN1_ITEM_ref(PKEY_USAGE_PERIOD),
-    ASN1_ITEM_ref(POLICY_CONSTRAINTS),
-    ASN1_ITEM_ref(POLICYINFO),
-    ASN1_ITEM_ref(POLICY_MAPPING),
-    ASN1_ITEM_ref(POLICY_MAPPINGS),
-    ASN1_ITEM_ref(POLICYQUALINFO),
-    ASN1_ITEM_ref(PROXY_CERT_INFO_EXTENSION),
-    ASN1_ITEM_ref(PROXY_POLICY),
-    ASN1_ITEM_ref(RSA_OAEP_PARAMS),
-    ASN1_ITEM_ref(RSA_PSS_PARAMS),
+                                     ASN1_ITEM_ref(OTHERNAME),
+                                     ASN1_ITEM_ref(PBE2PARAM),
+                                     ASN1_ITEM_ref(PBEPARAM),
+                                     ASN1_ITEM_ref(PBKDF2PARAM),
+                                     ASN1_ITEM_ref(PKCS12),
+                                     ASN1_ITEM_ref(PKCS12_AUTHSAFES),
+                                     ASN1_ITEM_ref(PKCS12_BAGS),
+                                     ASN1_ITEM_ref(PKCS12_MAC_DATA),
+                                     ASN1_ITEM_ref(PKCS12_SAFEBAG),
+                                     ASN1_ITEM_ref(PKCS12_SAFEBAGS),
+                                     ASN1_ITEM_ref(PKCS7),
+                                     ASN1_ITEM_ref(PKCS7_ATTR_SIGN),
+                                     ASN1_ITEM_ref(PKCS7_ATTR_VERIFY),
+                                     ASN1_ITEM_ref(PKCS7_DIGEST),
+                                     ASN1_ITEM_ref(PKCS7_ENC_CONTENT),
+                                     ASN1_ITEM_ref(PKCS7_ENCRYPT),
+                                     ASN1_ITEM_ref(PKCS7_ENVELOPE),
+                                     ASN1_ITEM_ref(PKCS7_ISSUER_AND_SERIAL),
+                                     ASN1_ITEM_ref(PKCS7_RECIP_INFO),
+                                     ASN1_ITEM_ref(PKCS7_SIGNED),
+                                     ASN1_ITEM_ref(PKCS7_SIGN_ENVELOPE),
+                                     ASN1_ITEM_ref(PKCS7_SIGNER_INFO),
+                                     ASN1_ITEM_ref(PKCS8_PRIV_KEY_INFO),
+                                     ASN1_ITEM_ref(PKEY_USAGE_PERIOD),
+                                     ASN1_ITEM_ref(POLICY_CONSTRAINTS),
+                                     ASN1_ITEM_ref(POLICYINFO),
+                                     ASN1_ITEM_ref(POLICY_MAPPING),
+                                     ASN1_ITEM_ref(POLICY_MAPPINGS),
+                                     ASN1_ITEM_ref(POLICYQUALINFO),
+                                     ASN1_ITEM_ref(PROXY_CERT_INFO_EXTENSION),
+                                     ASN1_ITEM_ref(PROXY_POLICY),
+                                     ASN1_ITEM_ref(RSA_OAEP_PARAMS),
+                                     ASN1_ITEM_ref(RSA_PSS_PARAMS),
 #ifndef OPENSSL_NO_DEPRECATED_3_0
-    ASN1_ITEM_ref(RSAPrivateKey),
-    ASN1_ITEM_ref(RSAPublicKey),
+                                     ASN1_ITEM_ref(RSAPrivateKey),
+                                     ASN1_ITEM_ref(RSAPublicKey),
 #endif
-    ASN1_ITEM_ref(SXNET),
-    ASN1_ITEM_ref(SXNETID),
-    ASN1_ITEM_ref(OSSL_TARGETING_INFORMATION),
-    ASN1_ITEM_ref(USERNOTICE),
-    ASN1_ITEM_ref(X509),
-    ASN1_ITEM_ref(X509_ALGOR),
-    ASN1_ITEM_ref(X509_ALGORS),
-    ASN1_ITEM_ref(X509_ATTRIBUTE),
-    ASN1_ITEM_ref(X509_CERT_AUX),
-    ASN1_ITEM_ref(X509_CINF),
-    ASN1_ITEM_ref(X509_CRL),
-    ASN1_ITEM_ref(X509_CRL_INFO),
-    ASN1_ITEM_ref(X509_EXTENSION),
-    ASN1_ITEM_ref(X509_EXTENSIONS),
-    ASN1_ITEM_ref(X509_NAME),
-    ASN1_ITEM_ref(X509_NAME_ENTRY),
-    ASN1_ITEM_ref(X509_PUBKEY),
-    ASN1_ITEM_ref(X509_REQ),
-    ASN1_ITEM_ref(X509_REQ_INFO),
-    ASN1_ITEM_ref(X509_REVOKED),
-    ASN1_ITEM_ref(X509_SIG),
-    ASN1_ITEM_ref(X509_VAL),
+                                     ASN1_ITEM_ref(SXNET),
+                                     ASN1_ITEM_ref(SXNETID),
+                                     ASN1_ITEM_ref(OSSL_TARGETING_INFORMATION),
+                                     ASN1_ITEM_ref(USERNOTICE),
+                                     ASN1_ITEM_ref(X509),
+                                     ASN1_ITEM_ref(X509_ALGOR),
+                                     ASN1_ITEM_ref(X509_ALGORS),
+                                     ASN1_ITEM_ref(X509_ATTRIBUTE),
+                                     ASN1_ITEM_ref(X509_CERT_AUX),
+                                     ASN1_ITEM_ref(X509_CINF),
+                                     ASN1_ITEM_ref(X509_CRL),
+                                     ASN1_ITEM_ref(X509_CRL_INFO),
+                                     ASN1_ITEM_ref(X509_EXTENSION),
+                                     ASN1_ITEM_ref(X509_EXTENSIONS),
+                                     ASN1_ITEM_ref(X509_NAME),
+                                     ASN1_ITEM_ref(X509_NAME_ENTRY),
+                                     ASN1_ITEM_ref(X509_PUBKEY),
+                                     ASN1_ITEM_ref(X509_REQ),
+                                     ASN1_ITEM_ref(X509_REQ_INFO),
+                                     ASN1_ITEM_ref(X509_REVOKED),
+                                     ASN1_ITEM_ref(X509_SIG),
+                                     ASN1_ITEM_ref(X509_VAL),
 #ifndef OPENSSL_NO_DEPRECATED_3_0
-    ASN1_ITEM_ref(ZLONG),
+                                     ASN1_ITEM_ref(ZLONG),
 #endif
-    ASN1_ITEM_ref(INT32),
-    ASN1_ITEM_ref(ZINT32),
-    ASN1_ITEM_ref(UINT32),
-    ASN1_ITEM_ref(ZUINT32),
-    ASN1_ITEM_ref(INT64),
-    ASN1_ITEM_ref(ZINT64),
-    ASN1_ITEM_ref(UINT64),
-    ASN1_ITEM_ref(ZUINT64),
-    NULL
-};
+                                     ASN1_ITEM_ref(INT32),
+                                     ASN1_ITEM_ref(ZINT32),
+                                     ASN1_ITEM_ref(UINT32),
+                                     ASN1_ITEM_ref(ZUINT32),
+                                     ASN1_ITEM_ref(INT64),
+                                     ASN1_ITEM_ref(ZINT64),
+                                     ASN1_ITEM_ref(UINT64),
+                                     ASN1_ITEM_ref(ZUINT64),
+                                     NULL};
 
 static ASN1_PCTX *pctx;
 
-#define DO_TEST(TYPE, D2I, I2D, PRINT) { \
-    const unsigned char *p = buf; \
-    unsigned char *der = NULL; \
-    TYPE *type = D2I(NULL, &p, len); \
-    \
-    if (type != NULL) { \
-        int len2; \
-        BIO *bio = BIO_new(BIO_s_null()); \
-        \
-        if (bio != NULL) { \
-            PRINT(bio, type); \
-            BIO_free(bio); \
-        } \
-        len2 = I2D(type, &der); \
-        if (len2 != 0) {} \
-        OPENSSL_free(der); \
-        TYPE ## _free(type); \
-    } \
-}
+#define DO_TEST(TYPE, D2I, I2D, PRINT)                                                             \
+    {                                                                                              \
+        const unsigned char *p = buf;                                                              \
+        unsigned char *der = NULL;                                                                 \
+        TYPE *type = D2I(NULL, &p, len);                                                           \
+                                                                                                   \
+        if (type != NULL) {                                                                        \
+            int len2;                                                                              \
+            BIO *bio = BIO_new(BIO_s_null());                                                      \
+                                                                                                   \
+            if (bio != NULL) {                                                                     \
+                PRINT(bio, type);                                                                  \
+                BIO_free(bio);                                                                     \
+            }                                                                                      \
+            len2 = I2D(type, &der);                                                                \
+            if (len2 != 0) {                                                                       \
+            }                                                                                      \
+            OPENSSL_free(der);                                                                     \
+            TYPE##_free(type);                                                                     \
+        }                                                                                          \
+    }
 
-#define DO_TEST_PRINT_OFFSET(TYPE, D2I, I2D, PRINT) { \
-    const unsigned char *p = buf; \
-    unsigned char *der = NULL; \
-    TYPE *type = D2I(NULL, &p, len); \
-    \
-    if (type != NULL) { \
-        BIO *bio = BIO_new(BIO_s_null()); \
-        \
-        if (bio != NULL) { \
-            PRINT(bio, type, 0); \
-            BIO_free(bio); \
-        } \
-        I2D(type, &der); \
-        OPENSSL_free(der); \
-        TYPE ## _free(type); \
-    } \
-}
+#define DO_TEST_PRINT_OFFSET(TYPE, D2I, I2D, PRINT)                                                \
+    {                                                                                              \
+        const unsigned char *p = buf;                                                              \
+        unsigned char *der = NULL;                                                                 \
+        TYPE *type = D2I(NULL, &p, len);                                                           \
+                                                                                                   \
+        if (type != NULL) {                                                                        \
+            BIO *bio = BIO_new(BIO_s_null());                                                      \
+                                                                                                   \
+            if (bio != NULL) {                                                                     \
+                PRINT(bio, type, 0);                                                               \
+                BIO_free(bio);                                                                     \
+            }                                                                                      \
+            I2D(type, &der);                                                                       \
+            OPENSSL_free(der);                                                                     \
+            TYPE##_free(type);                                                                     \
+        }                                                                                          \
+    }
 
-#define DO_TEST_PRINT_PCTX(TYPE, D2I, I2D, PRINT) { \
-    const unsigned char *p = buf; \
-    unsigned char *der = NULL; \
-    TYPE *type = D2I(NULL, &p, len); \
-    \
-    if (type != NULL) { \
-        BIO *bio = BIO_new(BIO_s_null()); \
-        \
-        if (bio != NULL) { \
-            PRINT(bio, type, 0, pctx); \
-            BIO_free(bio); \
-        } \
-        I2D(type, &der); \
-        OPENSSL_free(der); \
-        TYPE ## _free(type); \
-    } \
-}
+#define DO_TEST_PRINT_PCTX(TYPE, D2I, I2D, PRINT)                                                  \
+    {                                                                                              \
+        const unsigned char *p = buf;                                                              \
+        unsigned char *der = NULL;                                                                 \
+        TYPE *type = D2I(NULL, &p, len);                                                           \
+                                                                                                   \
+        if (type != NULL) {                                                                        \
+            BIO *bio = BIO_new(BIO_s_null());                                                      \
+                                                                                                   \
+            if (bio != NULL) {                                                                     \
+                PRINT(bio, type, 0, pctx);                                                         \
+                BIO_free(bio);                                                                     \
+            }                                                                                      \
+            I2D(type, &der);                                                                       \
+            OPENSSL_free(der);                                                                     \
+            TYPE##_free(type);                                                                     \
+        }                                                                                          \
+    }
 
+#define DO_TEST_NO_PRINT(TYPE, D2I, I2D)                                                           \
+    {                                                                                              \
+        const unsigned char *p = buf;                                                              \
+        unsigned char *der = NULL;                                                                 \
+        TYPE *type = D2I(NULL, &p, len);                                                           \
+                                                                                                   \
+        if (type != NULL) {                                                                        \
+            BIO *bio = BIO_new(BIO_s_null());                                                      \
+                                                                                                   \
+            BIO_free(bio);                                                                         \
+            I2D(type, &der);                                                                       \
+            OPENSSL_free(der);                                                                     \
+            TYPE##_free(type);                                                                     \
+        }                                                                                          \
+    }
 
-#define DO_TEST_NO_PRINT(TYPE, D2I, I2D) { \
-    const unsigned char *p = buf; \
-    unsigned char *der = NULL; \
-    TYPE *type = D2I(NULL, &p, len); \
-    \
-    if (type != NULL) { \
-        BIO *bio = BIO_new(BIO_s_null()); \
-        \
-        BIO_free(bio); \
-        I2D(type, &der); \
-        OPENSSL_free(der); \
-        TYPE ## _free(type); \
-    } \
-}
-
-
-int FuzzerInitialize(int *argc, char ***argv)
+int
+FuzzerInitialize(int *argc, char ***argv)
 {
     FuzzerSetRand();
     pctx = ASN1_PCTX_new();
-    ASN1_PCTX_set_flags(pctx, ASN1_PCTX_FLAGS_SHOW_ABSENT |
-        ASN1_PCTX_FLAGS_SHOW_SEQUENCE | ASN1_PCTX_FLAGS_SHOW_SSOF |
-        ASN1_PCTX_FLAGS_SHOW_TYPE | ASN1_PCTX_FLAGS_SHOW_FIELD_STRUCT_NAME);
-    ASN1_PCTX_set_str_flags(pctx, ASN1_STRFLGS_UTF8_CONVERT |
-        ASN1_STRFLGS_SHOW_TYPE | ASN1_STRFLGS_DUMP_ALL);
+    ASN1_PCTX_set_flags(pctx, ASN1_PCTX_FLAGS_SHOW_ABSENT | ASN1_PCTX_FLAGS_SHOW_SEQUENCE |
+                                  ASN1_PCTX_FLAGS_SHOW_SSOF | ASN1_PCTX_FLAGS_SHOW_TYPE |
+                                  ASN1_PCTX_FLAGS_SHOW_FIELD_STRUCT_NAME);
+    ASN1_PCTX_set_str_flags(pctx, ASN1_STRFLGS_UTF8_CONVERT | ASN1_STRFLGS_SHOW_TYPE |
+                                      ASN1_STRFLGS_DUMP_ALL);
 
     OPENSSL_init_crypto(OPENSSL_INIT_LOAD_CRYPTO_STRINGS, NULL);
     OPENSSL_init_ssl(OPENSSL_INIT_LOAD_SSL_STRINGS, NULL);
@@ -302,10 +304,10 @@ int FuzzerInitialize(int *argc, char ***argv)
     return 1;
 }
 
-int FuzzerTestOneInput(const uint8_t *buf, size_t len)
+int
+FuzzerTestOneInput(const uint8_t *buf, size_t len)
 {
     int n;
-
 
     for (n = 0; item_type[n] != NULL; ++n) {
         const uint8_t *b = buf;
@@ -376,7 +378,8 @@ int FuzzerTestOneInput(const uint8_t *buf, size_t len)
     return 0;
 }
 
-void FuzzerCleanup(void)
+void
+FuzzerCleanup(void)
 {
     ASN1_PCTX_free(pctx);
     FuzzerClearRand();

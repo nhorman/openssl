@@ -39,16 +39,16 @@ static OSSL_FUNC_keymgmt_import_types_fn mlx_kem_imexport_types;
 static OSSL_FUNC_keymgmt_export_types_fn mlx_kem_imexport_types;
 static OSSL_FUNC_keymgmt_dup_fn mlx_kem_dup;
 
-static const int minimal_selection = OSSL_KEYMGMT_SELECT_DOMAIN_PARAMETERS
-    | OSSL_KEYMGMT_SELECT_PRIVATE_KEY;
+static const int minimal_selection =
+    OSSL_KEYMGMT_SELECT_DOMAIN_PARAMETERS | OSSL_KEYMGMT_SELECT_PRIVATE_KEY;
 
 /* Must match DECLARE_DISPATCH invocations at the end of the file */
 static const ECDH_VINFO hybrid_vtable[] = {
-    { "EC",  "P-256", 65, 32, 32, 1, EVP_PKEY_ML_KEM_768 },
-    { "EC",  "P-384", 97, 48, 48, 1, EVP_PKEY_ML_KEM_1024 },
+    {"EC", "P-256", 65, 32, 32, 1, EVP_PKEY_ML_KEM_768},
+    {"EC", "P-384", 97, 48, 48, 1, EVP_PKEY_ML_KEM_1024},
 #if !defined(OPENSSL_NO_ECX)
-    { "X25519", NULL, 32, 32, 32, 0, EVP_PKEY_ML_KEM_768 },
-    { "X448",   NULL, 56, 56, 56, 0, EVP_PKEY_ML_KEM_1024 },
+    {"X25519", NULL, 32, 32, 32, 0, EVP_PKEY_ML_KEM_768},
+    {"X448", NULL, 56, 56, 56, 0, EVP_PKEY_ML_KEM_1024},
 #endif
 };
 
@@ -59,7 +59,8 @@ typedef struct mlx_kem_gen_ctx_st {
     unsigned int evp_type;
 } PROV_ML_KEM_GEN_CTX;
 
-static void mlx_kem_key_free(void *vkey)
+static void
+mlx_kem_key_free(void *vkey)
 {
     MLX_KEY *key = vkey;
 
@@ -78,9 +79,8 @@ mlx_kem_key_new(unsigned int v, OSSL_LIB_CTX *libctx, char *propq)
     MLX_KEY *key = NULL;
     unsigned int ml_kem_variant;
 
-    if (!ossl_prov_is_running()
-        || v >= OSSL_NELEM(hybrid_vtable)
-        || (key = OPENSSL_malloc(sizeof(*key))) == NULL)
+    if (!ossl_prov_is_running() || v >= OSSL_NELEM(hybrid_vtable) ||
+        (key = OPENSSL_malloc(sizeof(*key))) == NULL)
         goto err;
 
     ml_kem_variant = hybrid_vtable[v].ml_kem_variant;
@@ -92,13 +92,13 @@ mlx_kem_key_new(unsigned int v, OSSL_LIB_CTX *libctx, char *propq)
     key->propq = propq;
     return key;
 
- err:
+err:
     OPENSSL_free(propq);
     return NULL;
 }
 
-
-static int mlx_kem_has(const void *vkey, int selection)
+static int
+mlx_kem_has(const void *vkey, int selection)
 {
     const MLX_KEY *key = vkey;
 
@@ -116,7 +116,8 @@ static int mlx_kem_has(const void *vkey, int selection)
     }
 }
 
-static int mlx_kem_match(const void *vkey1, const void *vkey2, int selection)
+static int
+mlx_kem_match(const void *vkey1, const void *vkey2, int selection)
 {
     const MLX_KEY *key1 = vkey1;
     const MLX_KEY *key2 = vkey2;
@@ -140,24 +141,24 @@ static int mlx_kem_match(const void *vkey1, const void *vkey2, int selection)
     if (!have_pub1)
         return 1;
 
-    return EVP_PKEY_eq(key1->mkey, key2->mkey)
-        && EVP_PKEY_eq(key1->xkey, key2->xkey);
+    return EVP_PKEY_eq(key1->mkey, key2->mkey) && EVP_PKEY_eq(key1->xkey, key2->xkey);
 }
 
 typedef struct export_cb_arg_st {
     const char *algorithm_name;
     uint8_t *pubenc;
     uint8_t *prvenc;
-    int      pubcount;
-    int      prvcount;
-    size_t   puboff;
-    size_t   prvoff;
-    size_t   publen;
-    size_t   prvlen;
+    int pubcount;
+    int prvcount;
+    size_t puboff;
+    size_t prvoff;
+    size_t publen;
+    size_t prvlen;
 } EXPORT_CB_ARG;
 
 /* Copy any exported key material into its storage slot */
-static int export_sub_cb(const OSSL_PARAM *params, void *varg)
+static int
+export_sub_cb(const OSSL_PARAM *params, void *varg)
 {
     EXPORT_CB_ARG *sub_arg = varg;
     const OSSL_PARAM *p = NULL;
@@ -170,32 +171,30 @@ static int export_sub_cb(const OSSL_PARAM *params, void *varg)
      */
     if (ossl_param_is_empty(params))
         return 1;
-    if (sub_arg->pubenc != NULL
-        && (p = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_PUB_KEY)) != NULL) {
+    if (sub_arg->pubenc != NULL &&
+        (p = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_PUB_KEY)) != NULL) {
         void *pub = sub_arg->pubenc + sub_arg->puboff;
 
         if (OSSL_PARAM_get_octet_string(p, &pub, sub_arg->publen, &len) != 1)
             return 0;
         if (len != sub_arg->publen) {
             ERR_raise_data(ERR_LIB_PROV, ERR_R_INTERNAL_ERROR,
-                           "Unexpected %s public key length %lu != %lu",
-                           sub_arg->algorithm_name, (unsigned long) len,
-                           sub_arg->publen);
+                           "Unexpected %s public key length %lu != %lu", sub_arg->algorithm_name,
+                           (unsigned long)len, sub_arg->publen);
             return 0;
         }
         ++sub_arg->pubcount;
     }
-    if (sub_arg->prvenc != NULL
-        && (p = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_PRIV_KEY)) != NULL) {
+    if (sub_arg->prvenc != NULL &&
+        (p = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_PRIV_KEY)) != NULL) {
         void *prv = sub_arg->prvenc + sub_arg->prvoff;
 
         if (OSSL_PARAM_get_octet_string(p, &prv, sub_arg->prvlen, &len) != 1)
             return 0;
         if (len != sub_arg->prvlen) {
             ERR_raise_data(ERR_LIB_PROV, ERR_R_INTERNAL_ERROR,
-                           "Unexpected %s private key length %lu != %lu",
-                           sub_arg->algorithm_name, (unsigned long) len,
-                           (unsigned long) sub_arg->publen);
+                           "Unexpected %s private key length %lu != %lu", sub_arg->algorithm_name,
+                           (unsigned long)len, (unsigned long)sub_arg->publen);
             return 0;
         }
         ++sub_arg->prvcount;
@@ -241,8 +240,8 @@ export_sub(EXPORT_CB_ARG *sub_arg, int selection, MLX_KEY *key)
     return 1;
 }
 
-static int mlx_kem_export(void *vkey, int selection, OSSL_CALLBACK *param_cb,
-                          void *cbarg)
+static int
+mlx_kem_export(void *vkey, int selection, OSSL_CALLBACK *param_cb, void *cbarg)
 {
     MLX_KEY *key = vkey;
     OSSL_PARAM_BLD *tmpl = NULL;
@@ -273,8 +272,7 @@ static int mlx_kem_export(void *vkey, int selection, OSSL_CALLBACK *param_cb,
             goto err;
     }
 
-    if (mlx_kem_have_prvkey(key)
-        && (selection & OSSL_KEYMGMT_SELECT_PRIVATE_KEY) != 0) {
+    if (mlx_kem_have_prvkey(key) && (selection & OSSL_KEYMGMT_SELECT_PRIVATE_KEY) != 0) {
         /*
          * Allocated on the secure heap if configured, this is detected in
          * ossl_param_build_set_octet_string(), which will then also use the
@@ -293,14 +291,14 @@ static int mlx_kem_export(void *vkey, int selection, OSSL_CALLBACK *param_cb,
     if (!export_sub(&sub_arg, selection, key))
         goto err;
 
-    if (sub_arg.pubenc != NULL && sub_arg.pubcount == 2
-        && !ossl_param_build_set_octet_string(
-                tmpl, NULL, OSSL_PKEY_PARAM_PUB_KEY, sub_arg.pubenc, publen))
+    if (sub_arg.pubenc != NULL && sub_arg.pubcount == 2 &&
+        !ossl_param_build_set_octet_string(tmpl, NULL, OSSL_PKEY_PARAM_PUB_KEY, sub_arg.pubenc,
+                                           publen))
         goto err;
 
-    if (sub_arg.prvenc != NULL && sub_arg.prvcount == 2
-        && !ossl_param_build_set_octet_string(
-                tmpl, NULL, OSSL_PKEY_PARAM_PRIV_KEY, sub_arg.prvenc, prvlen))
+    if (sub_arg.prvenc != NULL && sub_arg.prvcount == 2 &&
+        !ossl_param_build_set_octet_string(tmpl, NULL, OSSL_PKEY_PARAM_PRIV_KEY, sub_arg.prvenc,
+                                           prvlen))
         goto err;
 
     params = OSSL_PARAM_BLD_to_param(tmpl);
@@ -310,20 +308,19 @@ static int mlx_kem_export(void *vkey, int selection, OSSL_CALLBACK *param_cb,
     ret = param_cb(params, cbarg);
     OSSL_PARAM_free(params);
 
- err:
+err:
     OSSL_PARAM_BLD_free(tmpl);
     OPENSSL_secure_clear_free(sub_arg.prvenc, prvlen);
     OPENSSL_free(sub_arg.pubenc);
     return ret;
 }
 
-static const OSSL_PARAM *mlx_kem_imexport_types(int selection)
+static const OSSL_PARAM *
+mlx_kem_imexport_types(int selection)
 {
     static const OSSL_PARAM key_types[] = {
         OSSL_PARAM_octet_string(OSSL_PKEY_PARAM_PUB_KEY, NULL, 0),
-        OSSL_PARAM_octet_string(OSSL_PKEY_PARAM_PRIV_KEY, NULL, 0),
-        OSSL_PARAM_END
-    };
+        OSSL_PARAM_octet_string(OSSL_PKEY_PARAM_PRIV_KEY, NULL, 0), OSSL_PARAM_END};
 
     if ((selection & OSSL_KEYMGMT_SELECT_KEYPAIR) != 0)
         return key_types;
@@ -331,13 +328,12 @@ static const OSSL_PARAM *mlx_kem_imexport_types(int selection)
 }
 
 static int
-load_slot(OSSL_LIB_CTX *libctx, const char *propq, const char *pname,
-          int selection, MLX_KEY *key, int slot, const uint8_t *in,
-          int mbytes, int xbytes)
+load_slot(OSSL_LIB_CTX *libctx, const char *propq, const char *pname, int selection, MLX_KEY *key,
+          int slot, const uint8_t *in, int mbytes, int xbytes)
 {
     EVP_PKEY_CTX *ctx;
     EVP_PKEY **ppkey;
-    OSSL_PARAM parr[] = { OSSL_PARAM_END, OSSL_PARAM_END, OSSL_PARAM_END };
+    OSSL_PARAM parr[] = {OSSL_PARAM_END, OSSL_PARAM_END, OSSL_PARAM_END};
     const char *alg;
     char *group = NULL;
     size_t off, len;
@@ -352,54 +348,49 @@ load_slot(OSSL_LIB_CTX *libctx, const char *propq, const char *pname,
         len = mbytes;
     } else {
         alg = key->xinfo->algorithm_name;
-        group = (char *) key->xinfo->group_name;
+        group = (char *)key->xinfo->group_name;
         ppkey = &key->xkey;
         off = (1 - ml_kem_slot) * mbytes;
         len = xbytes;
     }
     val = (void *)(in + off);
 
-    if ((ctx = EVP_PKEY_CTX_new_from_name(libctx, alg, propq)) == NULL
-        || EVP_PKEY_fromdata_init(ctx) <= 0)
+    if ((ctx = EVP_PKEY_CTX_new_from_name(libctx, alg, propq)) == NULL ||
+        EVP_PKEY_fromdata_init(ctx) <= 0)
         goto err;
     parr[0] = OSSL_PARAM_construct_octet_string(pname, val, len);
     if (group != NULL)
-        parr[1] = OSSL_PARAM_construct_utf8_string(OSSL_PKEY_PARAM_GROUP_NAME,
-                                                   group, 0);
+        parr[1] = OSSL_PARAM_construct_utf8_string(OSSL_PKEY_PARAM_GROUP_NAME, group, 0);
     if (EVP_PKEY_fromdata(ctx, ppkey, selection, parr) > 0)
         ret = 1;
 
- err:
+err:
     EVP_PKEY_CTX_free(ctx);
     return ret;
 }
 
 static int
-load_keys(MLX_KEY *key,
-          const uint8_t *pubenc, size_t publen,
-          const uint8_t *prvenc, size_t prvlen)
+load_keys(MLX_KEY *key, const uint8_t *pubenc, size_t publen, const uint8_t *prvenc, size_t prvlen)
 {
     int slot;
 
     for (slot = 0; slot < 2; ++slot) {
         if (prvlen) {
             /* Ignore public keys when private provided */
-            if (!load_slot(key->libctx, key->propq, OSSL_PKEY_PARAM_PRIV_KEY,
-                           minimal_selection, key, slot, prvenc,
-                           key->minfo->prvkey_bytes, key->xinfo->prvkey_bytes))
+            if (!load_slot(key->libctx, key->propq, OSSL_PKEY_PARAM_PRIV_KEY, minimal_selection,
+                           key, slot, prvenc, key->minfo->prvkey_bytes, key->xinfo->prvkey_bytes))
                 goto err;
         } else if (publen) {
             /* Absent private key data, import public keys */
-            if (!load_slot(key->libctx, key->propq, OSSL_PKEY_PARAM_PUB_KEY,
-                           minimal_selection, key, slot, pubenc,
-                           key->minfo->pubkey_bytes, key->xinfo->pubkey_bytes))
+            if (!load_slot(key->libctx, key->propq, OSSL_PKEY_PARAM_PUB_KEY, minimal_selection, key,
+                           slot, pubenc, key->minfo->pubkey_bytes, key->xinfo->pubkey_bytes))
                 goto err;
         }
     }
     key->state = prvlen ? MLX_HAVE_PRVKEY : MLX_HAVE_PUBKEY;
     return 1;
 
- err:
+err:
     EVP_PKEY_free(key->mkey);
     EVP_PKEY_free(key->xkey);
     key->xkey = key->mkey = NULL;
@@ -407,9 +398,8 @@ load_keys(MLX_KEY *key,
     return 0;
 }
 
-static int mlx_kem_key_fromdata(MLX_KEY *key,
-                               const OSSL_PARAM params[],
-                               int include_private)
+static int
+mlx_kem_key_fromdata(MLX_KEY *key, const OSSL_PARAM params[], int include_private)
 {
     const OSSL_PARAM *param_prv_key = NULL, *param_pub_key;
     const void *pubenc = NULL, *prvenc = NULL;
@@ -428,8 +418,7 @@ static int mlx_kem_key_fromdata(MLX_KEY *key,
         OSSL_PARAM_get_octet_string_ptr(param_pub_key, &pubenc, &publen) != 1)
         return 0;
     if (include_private)
-        param_prv_key = OSSL_PARAM_locate_const(params,
-                                                OSSL_PKEY_PARAM_PRIV_KEY);
+        param_prv_key = OSSL_PARAM_locate_const(params, OSSL_PKEY_PARAM_PRIV_KEY);
     if (param_prv_key != NULL &&
         OSSL_PARAM_get_octet_string_ptr(param_prv_key, &prvenc, &prvlen) != 1)
         return 0;
@@ -457,7 +446,8 @@ static int mlx_kem_key_fromdata(MLX_KEY *key,
     return load_keys(key, pubenc, publen, prvenc, prvlen);
 }
 
-static int mlx_kem_import(void *vkey, int selection, const OSSL_PARAM params[])
+static int
+mlx_kem_import(void *vkey, int selection, const OSSL_PARAM params[])
 {
     MLX_KEY *key = vkey;
     int include_private;
@@ -472,7 +462,8 @@ static int mlx_kem_import(void *vkey, int selection, const OSSL_PARAM params[])
     return mlx_kem_key_fromdata(key, params, include_private);
 }
 
-static const OSSL_PARAM *mlx_kem_gettable_params(void *provctx)
+static const OSSL_PARAM *
+mlx_kem_gettable_params(void *provctx)
 {
     static const OSSL_PARAM arr[] = {
         OSSL_PARAM_int(OSSL_PKEY_PARAM_BITS, NULL),
@@ -480,8 +471,7 @@ static const OSSL_PARAM *mlx_kem_gettable_params(void *provctx)
         OSSL_PARAM_int(OSSL_PKEY_PARAM_MAX_SIZE, NULL),
         OSSL_PARAM_octet_string(OSSL_PKEY_PARAM_ENCODED_PUBLIC_KEY, NULL, 0),
         OSSL_PARAM_octet_string(OSSL_PKEY_PARAM_PRIV_KEY, NULL, 0),
-        OSSL_PARAM_END
-    };
+        OSSL_PARAM_END};
 
     return arr;
 }
@@ -489,7 +479,8 @@ static const OSSL_PARAM *mlx_kem_gettable_params(void *provctx)
 /*
  * It is assumed the key is guaranteed non-NULL here, and is from this provider
  */
-static int mlx_kem_get_params(void *vkey, OSSL_PARAM params[])
+static int
+mlx_kem_get_params(void *vkey, OSSL_PARAM params[])
 {
     MLX_KEY *key = vkey;
     OSSL_PARAM *p, *pub, *prv = NULL;
@@ -530,8 +521,7 @@ static int mlx_kem_get_params(void *vkey, OSSL_PARAM params[])
         } else if (pub->data_size < publen) {
             ERR_raise_data(ERR_LIB_PROV, PROV_R_OUTPUT_BUFFER_TOO_SMALL,
                            "public key output buffer too short: %lu < %lu",
-                           (unsigned long) pub->data_size,
-                           (unsigned long) publen);
+                           (unsigned long)pub->data_size, (unsigned long)publen);
             return 0;
         } else {
             sub_arg.pubenc = pub->data;
@@ -548,8 +538,7 @@ static int mlx_kem_get_params(void *vkey, OSSL_PARAM params[])
             } else if (prv->data_size < prvlen) {
                 ERR_raise_data(ERR_LIB_PROV, PROV_R_OUTPUT_BUFFER_TOO_SMALL,
                                "private key output buffer too short: %lu < %lu",
-                               (unsigned long) prv->data_size,
-                               (unsigned long) prvlen);
+                               (unsigned long)prv->data_size, (unsigned long)prvlen);
                 return 0;
             } else {
                 sub_arg.prvenc = prv->data;
@@ -568,24 +557,23 @@ static int mlx_kem_get_params(void *vkey, OSSL_PARAM params[])
     if (!export_sub(&sub_arg, selection, key))
         return 0;
 
-    if ((pub != NULL && sub_arg.pubcount != 2)
-        || (prv != NULL && sub_arg.prvcount != 2))
+    if ((pub != NULL && sub_arg.pubcount != 2) || (prv != NULL && sub_arg.prvcount != 2))
         return 0;
 
     return 1;
 }
 
-static const OSSL_PARAM *mlx_kem_settable_params(void *provctx)
+static const OSSL_PARAM *
+mlx_kem_settable_params(void *provctx)
 {
     static const OSSL_PARAM arr[] = {
-        OSSL_PARAM_octet_string(OSSL_PKEY_PARAM_ENCODED_PUBLIC_KEY, NULL, 0),
-        OSSL_PARAM_END
-    };
+        OSSL_PARAM_octet_string(OSSL_PKEY_PARAM_ENCODED_PUBLIC_KEY, NULL, 0), OSSL_PARAM_END};
 
     return arr;
 }
 
-static int mlx_kem_set_params(void *vkey, const OSSL_PARAM params[])
+static int
+mlx_kem_set_params(void *vkey, const OSSL_PARAM params[])
 {
     MLX_KEY *key = vkey;
     const OSSL_PARAM *p;
@@ -602,8 +590,7 @@ static int mlx_kem_set_params(void *vkey, const OSSL_PARAM params[])
 
     /* Key mutation is reportedly generally not allowed */
     if (mlx_kem_have_pubkey(key)) {
-        ERR_raise_data(ERR_LIB_PROV,
-                       PROV_R_OPERATION_NOT_SUPPORTED_FOR_THIS_KEYTYPE,
+        ERR_raise_data(ERR_LIB_PROV, PROV_R_OPERATION_NOT_SUPPORTED_FOR_THIS_KEYTYPE,
                        "keys cannot be mutated");
         return 0;
     }
@@ -627,7 +614,8 @@ static int mlx_kem_set_params(void *vkey, const OSSL_PARAM params[])
     return load_keys(key, pubenc, publen, NULL, 0);
 }
 
-static int mlx_kem_gen_set_params(void *vgctx, const OSSL_PARAM params[])
+static int
+mlx_kem_gen_set_params(void *vgctx, const OSSL_PARAM params[])
 {
     PROV_ML_KEM_GEN_CTX *gctx = vgctx;
     const OSSL_PARAM *p;
@@ -648,8 +636,8 @@ static int mlx_kem_gen_set_params(void *vgctx, const OSSL_PARAM params[])
     return 1;
 }
 
-static void *mlx_kem_gen_init(int evp_type, OSSL_LIB_CTX *libctx,
-                              int selection, const OSSL_PARAM params[])
+static void *
+mlx_kem_gen_init(int evp_type, OSSL_LIB_CTX *libctx, int selection, const OSSL_PARAM params[])
 {
     PROV_ML_KEM_GEN_CTX *gctx = NULL;
 
@@ -657,9 +645,8 @@ static void *mlx_kem_gen_init(int evp_type, OSSL_LIB_CTX *libctx,
      * We can only generate private keys, check that the selection is
      * appropriate.
      */
-    if (!ossl_prov_is_running()
-        || (selection & minimal_selection) == 0
-        || (gctx = OPENSSL_zalloc(sizeof(*gctx))) == NULL)
+    if (!ossl_prov_is_running() || (selection & minimal_selection) == 0 ||
+        (gctx = OPENSSL_zalloc(sizeof(*gctx))) == NULL)
         return NULL;
 
     gctx->evp_type = evp_type;
@@ -672,26 +659,24 @@ static void *mlx_kem_gen_init(int evp_type, OSSL_LIB_CTX *libctx,
     return NULL;
 }
 
-static const OSSL_PARAM *mlx_kem_gen_settable_params(ossl_unused void *vgctx,
-                                                     ossl_unused void *provctx)
+static const OSSL_PARAM *
+mlx_kem_gen_settable_params(ossl_unused void *vgctx, ossl_unused void *provctx)
 {
-    static OSSL_PARAM settable[] = {
-        OSSL_PARAM_octet_string(OSSL_PKEY_PARAM_PROPERTIES, NULL, 0),
-        OSSL_PARAM_END
-    };
+    static OSSL_PARAM settable[] = {OSSL_PARAM_octet_string(OSSL_PKEY_PARAM_PROPERTIES, NULL, 0),
+                                    OSSL_PARAM_END};
 
     return settable;
 }
 
-static void *mlx_kem_gen(void *vgctx, OSSL_CALLBACK *osslcb, void *cbarg)
+static void *
+mlx_kem_gen(void *vgctx, OSSL_CALLBACK *osslcb, void *cbarg)
 {
     PROV_ML_KEM_GEN_CTX *gctx = vgctx;
     MLX_KEY *key;
     char *propq;
 
-    if (gctx == NULL
-        || (gctx->selection & OSSL_KEYMGMT_SELECT_KEYPAIR) ==
-            OSSL_KEYMGMT_SELECT_PUBLIC_KEY)
+    if (gctx == NULL ||
+        (gctx->selection & OSSL_KEYMGMT_SELECT_KEYPAIR) == OSSL_KEYMGMT_SELECT_PUBLIC_KEY)
         return NULL;
 
     /* Lose ownership of propq */
@@ -704,10 +689,8 @@ static void *mlx_kem_gen(void *vgctx, OSSL_CALLBACK *osslcb, void *cbarg)
         return key;
 
     /* For now, using the same "propq" for all components */
-    key->mkey = EVP_PKEY_Q_keygen(key->libctx, key->propq,
-                                  key->minfo->algorithm_name);
-    key->xkey = EVP_PKEY_Q_keygen(key->libctx, key->propq,
-                                  key->xinfo->algorithm_name,
+    key->mkey = EVP_PKEY_Q_keygen(key->libctx, key->propq, key->minfo->algorithm_name);
+    key->xkey = EVP_PKEY_Q_keygen(key->libctx, key->propq, key->xinfo->algorithm_name,
                                   key->xinfo->group_name);
     if (key->mkey != NULL && key->xkey != NULL) {
         key->state = MLX_HAVE_PRVKEY;
@@ -718,7 +701,8 @@ static void *mlx_kem_gen(void *vgctx, OSSL_CALLBACK *osslcb, void *cbarg)
     return NULL;
 }
 
-static void mlx_kem_gen_cleanup(void *vgctx)
+static void
+mlx_kem_gen_cleanup(void *vgctx)
 {
     PROV_ML_KEM_GEN_CTX *gctx = vgctx;
 
@@ -728,17 +712,16 @@ static void mlx_kem_gen_cleanup(void *vgctx)
     OPENSSL_free(gctx);
 }
 
-static void *mlx_kem_dup(const void *vkey, int selection)
+static void *
+mlx_kem_dup(const void *vkey, int selection)
 {
     const MLX_KEY *key = vkey;
     MLX_KEY *ret;
 
-    if (!ossl_prov_is_running()
-        || (ret = OPENSSL_memdup(key, sizeof(*ret))) == NULL)
+    if (!ossl_prov_is_running() || (ret = OPENSSL_memdup(key, sizeof(*ret))) == NULL)
         return NULL;
 
-    if (ret->propq != NULL
-        && (ret->propq = OPENSSL_strdup(ret->propq)) == NULL) {
+    if (ret->propq != NULL && (ret->propq = OPENSSL_strdup(ret->propq)) == NULL) {
         OPENSSL_free(ret);
         return NULL;
     }
@@ -772,45 +755,44 @@ static void *mlx_kem_dup(const void *vkey, int selection)
     return NULL;
 }
 
-#define DECLARE_DISPATCH(name, variant) \
-    static OSSL_FUNC_keymgmt_new_fn mlx_##name##_kem_new; \
-    static void *mlx_##name##_kem_new(void *provctx) \
-    { \
-        OSSL_LIB_CTX *libctx; \
-                              \
-        libctx = provctx == NULL ? NULL : PROV_LIBCTX_OF(provctx); \
-        return mlx_kem_key_new(variant, libctx, NULL); \
-    } \
-    static OSSL_FUNC_keymgmt_gen_init_fn mlx_##name##_kem_gen_init; \
-    static void *mlx_##name##_kem_gen_init(void *provctx, int selection, \
-                                           const OSSL_PARAM params[]) \
-    { \
-        OSSL_LIB_CTX *libctx; \
-                              \
-        libctx = provctx == NULL ? NULL : PROV_LIBCTX_OF(provctx); \
-        return mlx_kem_gen_init(variant, libctx, selection, params); \
-    } \
-    const OSSL_DISPATCH ossl_mlx_##name##_kem_kmgmt_functions[] = { \
-        { OSSL_FUNC_KEYMGMT_NEW, (OSSL_FUNC) mlx_##name##_kem_new }, \
-        { OSSL_FUNC_KEYMGMT_FREE, (OSSL_FUNC) mlx_kem_key_free }, \
-        { OSSL_FUNC_KEYMGMT_GET_PARAMS, (OSSL_FUNC) mlx_kem_get_params }, \
-        { OSSL_FUNC_KEYMGMT_GETTABLE_PARAMS, (OSSL_FUNC) mlx_kem_gettable_params }, \
-        { OSSL_FUNC_KEYMGMT_SET_PARAMS, (OSSL_FUNC) mlx_kem_set_params }, \
-        { OSSL_FUNC_KEYMGMT_SETTABLE_PARAMS, (OSSL_FUNC) mlx_kem_settable_params }, \
-        { OSSL_FUNC_KEYMGMT_HAS, (OSSL_FUNC) mlx_kem_has }, \
-        { OSSL_FUNC_KEYMGMT_MATCH, (OSSL_FUNC) mlx_kem_match }, \
-        { OSSL_FUNC_KEYMGMT_GEN_INIT, (OSSL_FUNC) mlx_##name##_kem_gen_init }, \
-        { OSSL_FUNC_KEYMGMT_GEN_SET_PARAMS, (OSSL_FUNC) mlx_kem_gen_set_params }, \
-        { OSSL_FUNC_KEYMGMT_GEN_SETTABLE_PARAMS, (OSSL_FUNC) mlx_kem_gen_settable_params }, \
-        { OSSL_FUNC_KEYMGMT_GEN, (OSSL_FUNC) mlx_kem_gen }, \
-        { OSSL_FUNC_KEYMGMT_GEN_CLEANUP, (OSSL_FUNC) mlx_kem_gen_cleanup }, \
-        { OSSL_FUNC_KEYMGMT_DUP, (OSSL_FUNC) mlx_kem_dup }, \
-        { OSSL_FUNC_KEYMGMT_IMPORT, (OSSL_FUNC) mlx_kem_import }, \
-        { OSSL_FUNC_KEYMGMT_IMPORT_TYPES, (OSSL_FUNC) mlx_kem_imexport_types }, \
-        { OSSL_FUNC_KEYMGMT_EXPORT, (OSSL_FUNC) mlx_kem_export }, \
-        { OSSL_FUNC_KEYMGMT_EXPORT_TYPES, (OSSL_FUNC) mlx_kem_imexport_types }, \
-        OSSL_DISPATCH_END \
-    }
+#define DECLARE_DISPATCH(name, variant)                                                            \
+    static OSSL_FUNC_keymgmt_new_fn mlx_##name##_kem_new;                                          \
+    static void *mlx_##name##_kem_new(void *provctx)                                               \
+    {                                                                                              \
+        OSSL_LIB_CTX *libctx;                                                                      \
+                                                                                                   \
+        libctx = provctx == NULL ? NULL : PROV_LIBCTX_OF(provctx);                                 \
+        return mlx_kem_key_new(variant, libctx, NULL);                                             \
+    }                                                                                              \
+    static OSSL_FUNC_keymgmt_gen_init_fn mlx_##name##_kem_gen_init;                                \
+    static void *mlx_##name##_kem_gen_init(void *provctx, int selection,                           \
+                                           const OSSL_PARAM params[])                              \
+    {                                                                                              \
+        OSSL_LIB_CTX *libctx;                                                                      \
+                                                                                                   \
+        libctx = provctx == NULL ? NULL : PROV_LIBCTX_OF(provctx);                                 \
+        return mlx_kem_gen_init(variant, libctx, selection, params);                               \
+    }                                                                                              \
+    const OSSL_DISPATCH ossl_mlx_##name##_kem_kmgmt_functions[] = {                                \
+        {OSSL_FUNC_KEYMGMT_NEW, (OSSL_FUNC)mlx_##name##_kem_new},                                  \
+        {OSSL_FUNC_KEYMGMT_FREE, (OSSL_FUNC)mlx_kem_key_free},                                     \
+        {OSSL_FUNC_KEYMGMT_GET_PARAMS, (OSSL_FUNC)mlx_kem_get_params},                             \
+        {OSSL_FUNC_KEYMGMT_GETTABLE_PARAMS, (OSSL_FUNC)mlx_kem_gettable_params},                   \
+        {OSSL_FUNC_KEYMGMT_SET_PARAMS, (OSSL_FUNC)mlx_kem_set_params},                             \
+        {OSSL_FUNC_KEYMGMT_SETTABLE_PARAMS, (OSSL_FUNC)mlx_kem_settable_params},                   \
+        {OSSL_FUNC_KEYMGMT_HAS, (OSSL_FUNC)mlx_kem_has},                                           \
+        {OSSL_FUNC_KEYMGMT_MATCH, (OSSL_FUNC)mlx_kem_match},                                       \
+        {OSSL_FUNC_KEYMGMT_GEN_INIT, (OSSL_FUNC)mlx_##name##_kem_gen_init},                        \
+        {OSSL_FUNC_KEYMGMT_GEN_SET_PARAMS, (OSSL_FUNC)mlx_kem_gen_set_params},                     \
+        {OSSL_FUNC_KEYMGMT_GEN_SETTABLE_PARAMS, (OSSL_FUNC)mlx_kem_gen_settable_params},           \
+        {OSSL_FUNC_KEYMGMT_GEN, (OSSL_FUNC)mlx_kem_gen},                                           \
+        {OSSL_FUNC_KEYMGMT_GEN_CLEANUP, (OSSL_FUNC)mlx_kem_gen_cleanup},                           \
+        {OSSL_FUNC_KEYMGMT_DUP, (OSSL_FUNC)mlx_kem_dup},                                           \
+        {OSSL_FUNC_KEYMGMT_IMPORT, (OSSL_FUNC)mlx_kem_import},                                     \
+        {OSSL_FUNC_KEYMGMT_IMPORT_TYPES, (OSSL_FUNC)mlx_kem_imexport_types},                       \
+        {OSSL_FUNC_KEYMGMT_EXPORT, (OSSL_FUNC)mlx_kem_export},                                     \
+        {OSSL_FUNC_KEYMGMT_EXPORT_TYPES, (OSSL_FUNC)mlx_kem_imexport_types},                       \
+        OSSL_DISPATCH_END}
 /* See |hybrid_vtable| above */
 DECLARE_DISPATCH(p256, 0);
 DECLARE_DISPATCH(p384, 1);

@@ -22,7 +22,8 @@
 # include <openssl/ebcdic.h>
 #endif
 
-unsigned char *MD4(const unsigned char *d, size_t n, unsigned char *md)
+unsigned char *
+MD4(const unsigned char *d, size_t n, unsigned char *md)
 {
     MD4_CTX c;
     static unsigned char m[MD4_DIGEST_LENGTH];

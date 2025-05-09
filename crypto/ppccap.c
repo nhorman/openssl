@@ -16,7 +16,7 @@
 #if defined(__linux) || defined(_AIX)
 # include <sys/utsname.h>
 #endif
-#if defined(_AIX53)     /* defined even on post-5.3 */
+#if defined(_AIX53) /* defined even on post-5.3 */
 # include <sys/systemcfg.h>
 # if !defined(__power_set)
 #  define __power_set(a) (_system_configuration.implementation & (a))
@@ -35,7 +35,8 @@ unsigned int OPENSSL_ppccap_P = 0;
 static sigset_t all_masked;
 
 static sigjmp_buf ill_jmp;
-static void ill_handler(int sig)
+static void
+ill_handler(int sig)
 {
     siglongjmp(ill_jmp, sig);
 }
@@ -50,7 +51,8 @@ void OPENSSL_brd31_probe(void);
 long OPENSSL_rdtsc_mftb(void);
 long OPENSSL_rdtsc_mfspr268(void);
 
-uint32_t OPENSSL_rdtsc(void)
+uint32_t
+OPENSSL_rdtsc(void)
 {
     if (OPENSSL_ppccap_P & PPC_MFTB)
         return OPENSSL_rdtsc_mftb();
@@ -63,7 +65,8 @@ uint32_t OPENSSL_rdtsc(void)
 size_t OPENSSL_instrument_bus_mftb(unsigned int *, size_t);
 size_t OPENSSL_instrument_bus_mfspr268(unsigned int *, size_t);
 
-size_t OPENSSL_instrument_bus(unsigned int *out, size_t cnt)
+size_t
+OPENSSL_instrument_bus(unsigned int *out, size_t cnt)
 {
     if (OPENSSL_ppccap_P & PPC_MFTB)
         return OPENSSL_instrument_bus_mftb(out, cnt);
@@ -76,7 +79,8 @@ size_t OPENSSL_instrument_bus(unsigned int *out, size_t cnt)
 size_t OPENSSL_instrument_bus2_mftb(unsigned int *, size_t, size_t);
 size_t OPENSSL_instrument_bus2_mfspr268(unsigned int *, size_t, size_t);
 
-size_t OPENSSL_instrument_bus2(unsigned int *out, size_t cnt, size_t max)
+size_t
+OPENSSL_instrument_bus2(unsigned int *out, size_t cnt, size_t max)
 {
     if (OPENSSL_ppccap_P & PPC_MFTB)
         return OPENSSL_instrument_bus2_mftb(out, cnt, max);
@@ -101,41 +105,43 @@ size_t OPENSSL_instrument_bus2(unsigned int *out, size_t cnt, size_t max)
 
 #if defined(__FreeBSD__) || defined(__OpenBSD__)
 # include <sys/param.h>
-# if (defined(__FreeBSD__) && __FreeBSD_version >= 1200000) || \
-    (defined(__OpenBSD__) && OpenBSD >= 202409)
+# if (defined(__FreeBSD__) && __FreeBSD_version >= 1200000) ||                                     \
+     (defined(__OpenBSD__) && OpenBSD >= 202409)
 #  include <sys/auxv.h>
 #  define OSSL_IMPLEMENT_GETAUXVAL
 
-static unsigned long getauxval(unsigned long key)
+static unsigned long
+getauxval(unsigned long key)
 {
-  unsigned long val = 0ul;
+    unsigned long val = 0ul;
 
-  if (elf_aux_info((int)key, &val, sizeof(val)) != 0)
-    return 0ul;
+    if (elf_aux_info((int)key, &val, sizeof(val)) != 0)
+        return 0ul;
 
-  return val;
+    return val;
 }
 # endif
 #endif
 
 /* I wish <sys/auxv.h> was universally available */
 #ifndef AT_HWCAP
-# define AT_HWCAP               16      /* AT_HWCAP */
+# define AT_HWCAP 16 /* AT_HWCAP */
 #endif
-#define HWCAP_PPC64             (1U << 30)
-#define HWCAP_ALTIVEC           (1U << 28)
-#define HWCAP_FPU               (1U << 27)
-#define HWCAP_POWER6_EXT        (1U << 9)
-#define HWCAP_VSX               (1U << 7)
+#define HWCAP_PPC64 (1U << 30)
+#define HWCAP_ALTIVEC (1U << 28)
+#define HWCAP_FPU (1U << 27)
+#define HWCAP_POWER6_EXT (1U << 9)
+#define HWCAP_VSX (1U << 7)
 
 #ifndef AT_HWCAP2
-# define AT_HWCAP2              26      /* AT_HWCAP2 */
+# define AT_HWCAP2 26 /* AT_HWCAP2 */
 #endif
-#define HWCAP_VEC_CRYPTO        (1U << 25)
-#define HWCAP_ARCH_3_00         (1U << 23)
-#define HWCAP_ARCH_3_1          (1U << 18)
+#define HWCAP_VEC_CRYPTO (1U << 25)
+#define HWCAP_ARCH_3_00 (1U << 23)
+#define HWCAP_ARCH_3_1 (1U << 18)
 
-void OPENSSL_cpuid_setup(void)
+void
+OPENSSL_cpuid_setup(void)
 {
     char *e;
     struct sigaction ill_oact, ill_act;
@@ -174,24 +180,24 @@ void OPENSSL_cpuid_setup(void)
      */
     if (sizeof(size_t) == 4) {
         /* In 32-bit case PPC_FPU64 is always fastest [if option] */
-        if (__power_set(0xffffffffU<<13))       /* POWER5 and later */
+        if (__power_set(0xffffffffU << 13)) /* POWER5 and later */
             OPENSSL_ppccap_P |= PPC_FPU64;
     } else {
         /* In 64-bit case PPC_FPU64 is fastest only on POWER6 */
-        if (__power_set(0x1U<<14))              /* POWER6 */
+        if (__power_set(0x1U << 14)) /* POWER6 */
             OPENSSL_ppccap_P |= PPC_FPU64;
     }
 
-    if (__power_set(0xffffffffU<<14))           /* POWER6 and later */
+    if (__power_set(0xffffffffU << 14)) /* POWER6 and later */
         OPENSSL_ppccap_P |= PPC_ALTIVEC;
 
-    if (__power_set(0xffffffffU<<16))           /* POWER8 and later */
+    if (__power_set(0xffffffffU << 16)) /* POWER8 and later */
         OPENSSL_ppccap_P |= PPC_CRYPTO207;
 
-    if (__power_set(0xffffffffU<<17))           /* POWER9 and later */
+    if (__power_set(0xffffffffU << 17)) /* POWER9 and later */
         OPENSSL_ppccap_P |= PPC_MADD300;
 
-    if (__power_set(0xffffffffU<<18))           /* POWER10 and later */
+    if (__power_set(0xffffffffU << 18)) /* POWER10 and later */
         OPENSSL_ppccap_P |= PPC_BRD31;
 
     return;

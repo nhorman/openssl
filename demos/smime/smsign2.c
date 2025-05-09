@@ -12,7 +12,8 @@
 #include <openssl/pkcs7.h>
 #include <openssl/err.h>
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
     BIO *in = NULL, *out = NULL, *tbio = NULL;
     X509 *scert = NULL, *scert2 = NULL;
@@ -82,7 +83,7 @@ int main(int argc, char **argv)
     printf("Success\n");
 
     ret = EXIT_SUCCESS;
- err:
+err:
     if (ret != EXIT_SUCCESS) {
         fprintf(stderr, "Error Signing Data\n");
         ERR_print_errors_fp(stderr);

@@ -39,7 +39,7 @@
  * If unistd.h defines _POSIX_VERSION, we conclude that we are on a POSIX
  * system and have sigaction and termios.
  */
-#  if defined(_POSIX_VERSION) && _POSIX_VERSION>=199309L
+#  if defined(_POSIX_VERSION) && _POSIX_VERSION >= 199309L
 
 #   define SIGACTION
 #   if !defined(TERMIOS) && !defined(TERMIO) && !defined(SGTTY)
@@ -52,7 +52,7 @@
 # include "ui_local.h"
 # include "internal/cryptlib.h"
 
-# ifdef OPENSSL_SYS_VMS          /* prototypes for sys$whatever */
+# ifdef OPENSSL_SYS_VMS /* prototypes for sys$whatever */
 #  include <starlet.h>
 #  ifdef __DECC
 #   pragma message disable DOLLARID
@@ -81,18 +81,16 @@
 # if !defined(TERMIOS) && !defined(TERMIO) && !defined(SGTTY)
 
 #  if defined(_LIBC)
-#   undef  TERMIOS
+#   undef TERMIOS
 #   define TERMIO
-#   undef  SGTTY
+#   undef SGTTY
 /*
  * We know that VMS, MSDOS, VXWORKS, use entirely other mechanisms.
  */
-#  elif !defined(OPENSSL_SYS_VMS) \
-        && !defined(OPENSSL_SYS_MSDOS) \
-        && !defined(OPENSSL_SYS_VXWORKS)
+#  elif !defined(OPENSSL_SYS_VMS) && !defined(OPENSSL_SYS_MSDOS) && !defined(OPENSSL_SYS_VXWORKS)
 #   define TERMIOS
-#   undef  TERMIO
-#   undef  SGTTY
+#   undef TERMIO
+#   undef SGTTY
 #  endif
 
 # endif
@@ -105,29 +103,30 @@
 
 # ifdef TERMIOS
 #  include <termios.h>
-#  define TTY_STRUCT             struct termios
-#  define TTY_FLAGS              c_lflag
-#  define TTY_get(tty,data)      tcgetattr(tty,data)
-#  define TTY_set(tty,data)      tcsetattr(tty,TCSANOW,data)
+#  define TTY_STRUCT struct termios
+#  define TTY_FLAGS c_lflag
+#  define TTY_get(tty, data) tcgetattr(tty, data)
+#  define TTY_set(tty, data) tcsetattr(tty, TCSANOW, data)
 # endif
 
 # ifdef TERMIO
 #  include <termio.h>
-#  define TTY_STRUCT             struct termio
-#  define TTY_FLAGS              c_lflag
-#  define TTY_get(tty,data)      ioctl(tty,TCGETA,data)
-#  define TTY_set(tty,data)      ioctl(tty,TCSETA,data)
+#  define TTY_STRUCT struct termio
+#  define TTY_FLAGS c_lflag
+#  define TTY_get(tty, data) ioctl(tty, TCGETA, data)
+#  define TTY_set(tty, data) ioctl(tty, TCSETA, data)
 # endif
 
 # ifdef SGTTY
 #  include <sgtty.h>
-#  define TTY_STRUCT             struct sgttyb
-#  define TTY_FLAGS              sg_flags
-#  define TTY_get(tty,data)      ioctl(tty,TIOCGETP,data)
-#  define TTY_set(tty,data)      ioctl(tty,TIOCSETP,data)
+#  define TTY_STRUCT struct sgttyb
+#  define TTY_FLAGS sg_flags
+#  define TTY_get(tty, data) ioctl(tty, TIOCGETP, data)
+#  define TTY_set(tty, data) ioctl(tty, TIOCSETP, data)
 # endif
 
-# if !defined(_LIBC) && !defined(OPENSSL_SYS_MSDOS) && !defined(OPENSSL_SYS_VMS) && ! (defined(OPENSSL_SYS_TANDEM) && defined(_SPT_MODEL_))
+# if !defined(_LIBC) && !defined(OPENSSL_SYS_MSDOS) && !defined(OPENSSL_SYS_VMS) &&                \
+     !(defined(OPENSSL_SYS_TANDEM) && defined(_SPT_MODEL_))
 #  include <sys/ioctl.h>
 # endif
 
@@ -155,7 +154,7 @@ struct IOSB {
 # ifdef SIGACTION
 static struct sigaction savsig[NX509_SIG];
 # else
-static void (*savsig[NX509_SIG]) (int);
+static void (*savsig[NX509_SIG])(int);
 # endif
 
 # ifdef OPENSSL_SYS_VMS
@@ -200,7 +199,8 @@ static int close_console(UI *ui);
  * The following function makes sure that info and error strings are printed
  * before any prompt.
  */
-static int write_string(UI *ui, UI_STRING *uis)
+static int
+write_string(UI *ui, UI_STRING *uis)
 {
     switch (UI_get_string_type(uis)) {
     case UIT_ERROR:
@@ -217,7 +217,8 @@ static int write_string(UI *ui, UI_STRING *uis)
     return 1;
 }
 
-static int read_string(UI *ui, UI_STRING *uis)
+static int
+read_string(UI *ui, UI_STRING *uis)
 {
     int ok = 0;
 
@@ -226,21 +227,15 @@ static int read_string(UI *ui, UI_STRING *uis)
         fputs(UI_get0_output_string(uis), tty_out);
         fputs(UI_get0_action_string(uis), tty_out);
         fflush(tty_out);
-        return read_string_inner(ui, uis,
-                                 UI_get_input_flags(uis) & UI_INPUT_FLAG_ECHO,
-                                 0);
+        return read_string_inner(ui, uis, UI_get_input_flags(uis) & UI_INPUT_FLAG_ECHO, 0);
     case UIT_PROMPT:
         fputs(UI_get0_output_string(uis), tty_out);
         fflush(tty_out);
-        return read_string_inner(ui, uis,
-                                 UI_get_input_flags(uis) & UI_INPUT_FLAG_ECHO,
-                                 1);
+        return read_string_inner(ui, uis, UI_get_input_flags(uis) & UI_INPUT_FLAG_ECHO, 1);
     case UIT_VERIFY:
         fprintf(tty_out, "Verifying - %s", UI_get0_output_string(uis));
         fflush(tty_out);
-        if ((ok = read_string_inner(ui, uis,
-                                    UI_get_input_flags(uis) &
-                                    UI_INPUT_FLAG_ECHO, 1)) <= 0)
+        if ((ok = read_string_inner(ui, uis, UI_get_input_flags(uis) & UI_INPUT_FLAG_ECHO, 1)) <= 0)
             return ok;
         if (strcmp(UI_get0_result_string(uis), UI_get0_test_string(uis)) != 0) {
             fprintf(tty_out, "Verify failure\n");
@@ -258,7 +253,8 @@ static int read_string(UI *ui, UI_STRING *uis)
 
 # if !defined(OPENSSL_SYS_WINCE)
 /* Internal functions to read a string without echoing */
-static int read_till_nl(FILE *in)
+static int
+read_till_nl(FILE *in)
 {
 #  define SIZE 4
     char buf[SIZE + 1];
@@ -273,7 +269,8 @@ static int read_till_nl(FILE *in)
 static volatile sig_atomic_t intr_signal;
 # endif
 
-static int read_string_inner(UI *ui, UI_STRING *uis, int echo, int strip_nl)
+static int
+read_string_inner(UI *ui, UI_STRING *uis, int echo, int strip_nl)
 {
     static int ps;
     int ok;
@@ -302,28 +299,24 @@ static int read_string_inner(UI *ui, UI_STRING *uis, int echo, int strip_nl)
         if (GetEnvironmentVariableW(L"OPENSSL_WIN32_UTF8", NULL, 0) != 0) {
             WCHAR wresult[BUFSIZ];
 
-            if (ReadConsoleW(GetStdHandle(STD_INPUT_HANDLE),
-                         wresult, maxsize, &numread, NULL)) {
-                if (numread >= 2 &&
-                    wresult[numread-2] == L'\r' &&
-                    wresult[numread-1] == L'\n') {
-                    wresult[numread-2] = L'\n';
+            if (ReadConsoleW(GetStdHandle(STD_INPUT_HANDLE), wresult, maxsize, &numread, NULL)) {
+                if (numread >= 2 && wresult[numread - 2] == L'\r' &&
+                    wresult[numread - 1] == L'\n') {
+                    wresult[numread - 2] = L'\n';
                     numread--;
                 }
                 wresult[numread] = '\0';
-                if (WideCharToMultiByte(CP_UTF8, 0, wresult, -1,
-                                        result, sizeof(result), NULL, 0) > 0)
+                if (WideCharToMultiByte(CP_UTF8, 0, wresult, -1, result, sizeof(result), NULL, 0) >
+                    0)
                     p = result;
 
                 OPENSSL_cleanse(wresult, sizeof(wresult));
             }
         } else
 #   endif
-        if (ReadConsoleA(GetStdHandle(STD_INPUT_HANDLE),
-                         result, maxsize, &numread, NULL)) {
-            if (numread >= 2 &&
-                result[numread-2] == '\r' && result[numread-1] == '\n') {
-                result[numread-2] = '\n';
+            if (ReadConsoleA(GetStdHandle(STD_INPUT_HANDLE), result, maxsize, &numread, NULL)) {
+            if (numread >= 2 && result[numread - 2] == '\r' && result[numread - 1] == '\n') {
+                result[numread - 2] = '\n';
                 numread--;
             }
             result[numread] = '\0';
@@ -333,10 +326,10 @@ static int read_string_inner(UI *ui, UI_STRING *uis, int echo, int strip_nl)
 #  elif defined(OPENSSL_SYS_MSDOS)
     if (!echo) {
         noecho_fgets(result, maxsize, tty_in);
-        p = result;             /* FIXME: noecho_fgets doesn't return errors */
+        p = result; /* FIXME: noecho_fgets doesn't return errors */
     } else
 #  endif
-    p = fgets(result, maxsize, tty_in);
+        p = fgets(result, maxsize, tty_in);
     if (p == NULL)
         goto error;
     if (feof(tty_in))
@@ -351,7 +344,7 @@ static int read_string_inner(UI *ui, UI_STRING *uis, int echo, int strip_nl)
     if (UI_set_result(ui, uis, result) >= 0)
         ok = 1;
 
- error:
+error:
     if (intr_signal == SIGINT)
         ok = -1;
     if (echo_eol)
@@ -370,7 +363,8 @@ static int read_string_inner(UI *ui, UI_STRING *uis, int echo, int strip_nl)
 }
 
 /* Internal functions to open, handle and close a channel to the console.  */
-static int open_console(UI *ui)
+static int
+open_console(UI *ui)
 {
     if (!CRYPTO_THREAD_write_lock(ui->lock))
         return 0;
@@ -414,52 +408,52 @@ static int open_console(UI *ui)
              * Ariel Glenn reports that solaris can return EINVAL instead.
              * This should be ok
              */
-        if (errno == EINVAL)
-            is_a_tty = 0;
-        else
+            if (errno == EINVAL)
+                is_a_tty = 0;
+            else
 #  endif
 #  ifdef ENXIO
-            /*
-             * Solaris can return ENXIO.
-             * This should be ok
-             */
-        if (errno == ENXIO)
-            is_a_tty = 0;
-        else
+                /*
+                 * Solaris can return ENXIO.
+                 * This should be ok
+                 */
+                if (errno == ENXIO)
+                    is_a_tty = 0;
+                else
 #  endif
 #  ifdef EIO
-            /*
-             * Linux can return EIO.
-             * This should be ok
-             */
-        if (errno == EIO)
-            is_a_tty = 0;
-        else
+                    /*
+                     * Linux can return EIO.
+                     * This should be ok
+                     */
+                    if (errno == EIO)
+                        is_a_tty = 0;
+                    else
 #  endif
 #  ifdef EPERM
-            /*
-             * Linux can return EPERM (Operation not permitted),
-             * e.g. if a daemon executes openssl via fork()+execve()
-             * This should be ok
-             */
-        if (errno == EPERM)
-            is_a_tty = 0;
-        else
+                        /*
+                         * Linux can return EPERM (Operation not permitted),
+                         * e.g. if a daemon executes openssl via fork()+execve()
+                         * This should be ok
+                         */
+                        if (errno == EPERM)
+                            is_a_tty = 0;
+                        else
 #  endif
 #  ifdef ENODEV
-            /*
-             * MacOS X returns ENODEV (Operation not supported by device),
-             * which seems appropriate.
-             */
-        if (errno == ENODEV)
-                is_a_tty = 0;
-        else
+                            /*
+                             * MacOS X returns ENODEV (Operation not supported by device),
+                             * which seems appropriate.
+                             */
+                            if (errno == ENODEV)
+                                is_a_tty = 0;
+                            else
 #  endif
-            {
-                ERR_raise_data(ERR_LIB_UI, UI_R_UNKNOWN_TTYGET_ERRNO_VALUE,
-                               "errno=%d", errno);
-                return 0;
-            }
+                            {
+                                ERR_raise_data(ERR_LIB_UI, UI_R_UNKNOWN_TTYGET_ERRNO_VALUE,
+                                               "errno=%d", errno);
+                                return 0;
+                            }
     }
 # endif
 # ifdef OPENSSL_SYS_VMS
@@ -467,13 +461,11 @@ static int open_console(UI *ui)
 
     /* if there isn't a TT device, something is very wrong */
     if (status != SS$_NORMAL) {
-        ERR_raise_data(ERR_LIB_UI, UI_R_SYSASSIGN_ERROR,
-                       "status=%%X%08X", status);
+        ERR_raise_data(ERR_LIB_UI, UI_R_SYSASSIGN_ERROR, "status=%%X%08X", status);
         return 0;
     }
 
-    status = sys$qiow(0, channel, IO$_SENSEMODE, &iosb, 0, 0, tty_orig, 12,
-                      0, 0, 0, 0);
+    status = sys$qiow(0, channel, IO$_SENSEMODE, &iosb, 0, 0, tty_orig, 12, 0, 0, 0, 0);
 
     /* If IO$_SENSEMODE doesn't work, this is not a terminal device */
     if ((status != SS$_NORMAL) || (iosb.iosb$w_value != SS$_NORMAL))
@@ -482,7 +474,8 @@ static int open_console(UI *ui)
     return 1;
 }
 
-static int noecho_console(UI *ui)
+static int
+noecho_console(UI *ui)
 {
 # ifdef TTY_FLAGS
     memcpy(&(tty_new), &(tty_orig), sizeof(tty_orig));
@@ -498,12 +491,10 @@ static int noecho_console(UI *ui)
         tty_new[0] = tty_orig[0];
         tty_new[1] = tty_orig[1] | TT$M_NOECHO;
         tty_new[2] = tty_orig[2];
-        status = sys$qiow(0, channel, IO$_SETMODE, &iosb, 0, 0, tty_new, 12,
-                          0, 0, 0, 0);
+        status = sys$qiow(0, channel, IO$_SETMODE, &iosb, 0, 0, tty_new, 12, 0, 0, 0, 0);
         if ((status != SS$_NORMAL) || (iosb.iosb$w_value != SS$_NORMAL)) {
             ERR_raise_data(ERR_LIB_UI, UI_R_SYSQIOW_ERROR,
-                           "status=%%X%08X, iosb.iosb$w_value=%%X%08X",
-                           status, iosb.iosb$w_value);
+                           "status=%%X%08X, iosb.iosb$w_value=%%X%08X", status, iosb.iosb$w_value);
             return 0;
         }
     }
@@ -518,7 +509,8 @@ static int noecho_console(UI *ui)
     return 1;
 }
 
-static int echo_console(UI *ui)
+static int
+echo_console(UI *ui)
 {
 # if defined(TTY_set) && !defined(OPENSSL_SYS_VMS)
     memcpy(&(tty_new), &(tty_orig), sizeof(tty_orig));
@@ -530,12 +522,10 @@ static int echo_console(UI *ui)
         tty_new[0] = tty_orig[0];
         tty_new[1] = tty_orig[1];
         tty_new[2] = tty_orig[2];
-        status = sys$qiow(0, channel, IO$_SETMODE, &iosb, 0, 0, tty_new, 12,
-                          0, 0, 0, 0);
+        status = sys$qiow(0, channel, IO$_SETMODE, &iosb, 0, 0, tty_new, 12, 0, 0, 0, 0);
         if ((status != SS$_NORMAL) || (iosb.iosb$w_value != SS$_NORMAL)) {
             ERR_raise_data(ERR_LIB_UI, UI_R_SYSQIOW_ERROR,
-                           "status=%%X%08X, iosb.iosb$w_value=%%X%08X",
-                           status, iosb.iosb$w_value);
+                           "status=%%X%08X, iosb.iosb$w_value=%%X%08X", status, iosb.iosb$w_value);
             return 0;
         }
     }
@@ -549,7 +539,8 @@ static int echo_console(UI *ui)
     return 1;
 }
 
-static int close_console(UI *ui)
+static int
+close_console(UI *ui)
 {
     int ret = 1;
 
@@ -560,8 +551,7 @@ static int close_console(UI *ui)
 # ifdef OPENSSL_SYS_VMS
     status = sys$dassgn(channel);
     if (status != SS$_NORMAL) {
-        ERR_raise_data(ERR_LIB_UI, UI_R_SYSDASSGN_ERROR,
-                       "status=%%X%08X", status);
+        ERR_raise_data(ERR_LIB_UI, UI_R_SYSDASSGN_ERROR, "status=%%X%08X", status);
         ret = 0;
     }
 # endif
@@ -572,7 +562,8 @@ static int close_console(UI *ui)
 
 # if !defined(OPENSSL_SYS_WINCE)
 /* Internal functions to handle signals and act on them */
-static void pushsig(void)
+static void
+pushsig(void)
 {
 #  ifndef OPENSSL_SYS_WIN32
     int i;
@@ -602,7 +593,7 @@ static void pushsig(void)
             continue;
 #   endif
 #   ifdef SIGKILL
-        if (i == SIGKILL)       /* We can't make any action on that. */
+        if (i == SIGKILL) /* We can't make any action on that. */
             continue;
 #   endif
 #   ifdef SIGACTION
@@ -618,7 +609,8 @@ static void pushsig(void)
 #  endif
 }
 
-static void popsig(void)
+static void
+popsig(void)
 {
 #  ifdef OPENSSL_SYS_WIN32
     signal(SIGABRT, savsig[SIGABRT]);
@@ -647,7 +639,8 @@ static void popsig(void)
 #  endif
 }
 
-static void recsig(int i)
+static void
+recsig(int i)
 {
     intr_signal = i;
 }
@@ -655,7 +648,8 @@ static void recsig(int i)
 
 /* Internal functions specific for Windows */
 # if defined(OPENSSL_SYS_MSDOS) && !defined(_WIN32)
-static int noecho_fgets(char *buf, int size, FILE *tty)
+static int
+noecho_fgets(char *buf, int size, FILE *tty)
 {
     int i;
     char *p;
@@ -697,18 +691,17 @@ static int noecho_fgets(char *buf, int size, FILE *tty)
 }
 # endif
 
-static UI_METHOD ui_openssl = {
-    "OpenSSL default user interface",
-    open_console,
-    write_string,
-    NULL,                       /* No flusher is needed for command lines */
-    read_string,
-    close_console,
-    NULL
-};
+static UI_METHOD ui_openssl = {"OpenSSL default user interface",
+                               open_console,
+                               write_string,
+                               NULL, /* No flusher is needed for command lines */
+                               read_string,
+                               close_console,
+                               NULL};
 
 /* The method with all the built-in console thingies */
-UI_METHOD *UI_OpenSSL(void)
+UI_METHOD *
+UI_OpenSSL(void)
 {
     return &ui_openssl;
 }
@@ -721,12 +714,14 @@ static const UI_METHOD *default_UI_meth = NULL;
 
 #endif
 
-void UI_set_default_method(const UI_METHOD *meth)
+void
+UI_set_default_method(const UI_METHOD *meth)
 {
     default_UI_meth = meth;
 }
 
-const UI_METHOD *UI_get_default_method(void)
+const UI_METHOD *
+UI_get_default_method(void)
 {
     return default_UI_meth;
 }

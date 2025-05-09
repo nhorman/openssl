@@ -18,12 +18,16 @@
 #include <openssl/core_names.h>
 
 #undef BUFSIZE
-#define BUFSIZE 1024*8
+#define BUFSIZE 1024 * 8
 
 typedef enum OPTION_choice {
     OPT_COMMON,
-    OPT_MACOPT, OPT_BIN, OPT_IN, OPT_OUT,
-    OPT_CIPHER, OPT_DIGEST,
+    OPT_MACOPT,
+    OPT_BIN,
+    OPT_IN,
+    OPT_OUT,
+    OPT_CIPHER,
+    OPT_DIGEST,
     OPT_PROV_ENUM
 } OPTION_CHOICE;
 
@@ -42,18 +46,16 @@ const OPTIONS mac_options[] = {
 
     OPT_SECTION("Output"),
     {"out", OPT_OUT, '>', "Output to filename rather than stdout"},
-    {"binary", OPT_BIN, '-',
-        "Output in binary format (default is hexadecimal)"},
+    {"binary", OPT_BIN, '-', "Output in binary format (default is hexadecimal)"},
 
     OPT_PROV_OPTIONS,
 
     OPT_PARAMETERS(),
     {"mac_name", 0, 0, "MAC algorithm"},
-    {NULL}
-};
+    {NULL}};
 
-static char *alloc_mac_algorithm_name(STACK_OF(OPENSSL_STRING) **optp,
-                                      const char *name, const char *arg)
+static char *
+alloc_mac_algorithm_name(STACK_OF(OPENSSL_STRING) * *optp, const char *name, const char *arg)
 {
     size_t len = strlen(name) + strlen(arg) + 2;
     char *res;
@@ -71,7 +73,8 @@ static char *alloc_mac_algorithm_name(STACK_OF(OPENSSL_STRING) **optp,
     return NULL;
 }
 
-int mac_main(int argc, char **argv)
+int
+mac_main(int argc, char **argv)
 {
     int ret = 1;
     char *prog;
@@ -95,7 +98,7 @@ int mac_main(int argc, char **argv)
     while ((o = opt_next()) != OPT_EOF) {
         switch (o) {
         default:
-opthelp:
+        opthelp:
             BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
             goto err;
         case OPT_HELP:
@@ -154,8 +157,7 @@ opthelp:
     if (opts != NULL) {
         int ok = 1;
 
-        params = app_params_new_from_opts(opts,
-                                          EVP_MAC_settable_ctx_params(mac));
+        params = app_params_new_from_opts(opts, EVP_MAC_settable_ctx_params(mac));
         if (params == NULL)
             goto err;
 

@@ -15,7 +15,8 @@
 #include <openssl/ts.h>
 #include "ts_local.h"
 
-int TS_REQ_print_bio(BIO *bio, TS_REQ *a)
+int
+TS_REQ_print_bio(BIO *bio, TS_REQ *a)
 {
     int v;
     ASN1_OBJECT *policy_id;
@@ -42,8 +43,7 @@ int TS_REQ_print_bio(BIO *bio, TS_REQ *a)
         TS_ASN1_INTEGER_print_bio(bio, a->nonce);
     BIO_write(bio, "\n", 1);
 
-    BIO_printf(bio, "Certificate required: %s\n",
-               a->cert_req ? "yes" : "no");
+    BIO_printf(bio, "Certificate required: %s\n", a->cert_req ? "yes" : "no");
 
     TS_ext_print_bio(bio, a->extensions);
 

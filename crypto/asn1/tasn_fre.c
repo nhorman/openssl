@@ -15,17 +15,20 @@
 
 /* Free up an ASN1 structure */
 
-void ASN1_item_free(ASN1_VALUE *val, const ASN1_ITEM *it)
+void
+ASN1_item_free(ASN1_VALUE *val, const ASN1_ITEM *it)
 {
     ossl_asn1_item_embed_free(&val, it, 0);
 }
 
-void ASN1_item_ex_free(ASN1_VALUE **pval, const ASN1_ITEM *it)
+void
+ASN1_item_ex_free(ASN1_VALUE **pval, const ASN1_ITEM *it)
 {
     ossl_asn1_item_embed_free(pval, it, 0);
 }
 
-void ossl_asn1_item_embed_free(ASN1_VALUE **pval, const ASN1_ITEM *it, int embed)
+void
+ossl_asn1_item_embed_free(ASN1_VALUE **pval, const ASN1_ITEM *it, int embed)
 {
     const ASN1_TEMPLATE *tt = NULL, *seqtt;
     const ASN1_EXTERN_FUNCS *ef;
@@ -123,7 +126,8 @@ void ossl_asn1_item_embed_free(ASN1_VALUE **pval, const ASN1_ITEM *it, int embed
     }
 }
 
-void ossl_asn1_template_free(ASN1_VALUE **pval, const ASN1_TEMPLATE *tt)
+void
+ossl_asn1_template_free(ASN1_VALUE **pval, const ASN1_TEMPLATE *tt)
 {
     int embed = tt->flags & ASN1_TFLG_EMBED;
     ASN1_VALUE *tval;
@@ -147,7 +151,8 @@ void ossl_asn1_template_free(ASN1_VALUE **pval, const ASN1_TEMPLATE *tt)
     }
 }
 
-void ossl_asn1_primitive_free(ASN1_VALUE **pval, const ASN1_ITEM *it, int embed)
+void
+ossl_asn1_primitive_free(ASN1_VALUE **pval, const ASN1_ITEM *it, int embed)
 {
     int utype;
 

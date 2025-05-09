@@ -15,7 +15,8 @@
 #include "internal/quic_rcidm.h"
 #include "internal/packet.h"
 
-int FuzzerInitialize(int *argc, char ***argv)
+int
+FuzzerInitialize(int *argc, char ***argv)
 {
     FuzzerSetRand();
     OPENSSL_init_crypto(OPENSSL_INIT_LOAD_CRYPTO_STRINGS | OPENSSL_INIT_ASYNC, NULL);
@@ -59,20 +60,21 @@ enum {
     CMD_GET_PREFERRED_TX_DCID_CHANGED
 };
 
-static int get_cid(PACKET *pkt, QUIC_CONN_ID *cid)
+static int
+get_cid(PACKET *pkt, QUIC_CONN_ID *cid)
 {
     unsigned int cidl;
 
-    if (!PACKET_get_1(pkt, &cidl)
-        || cidl > QUIC_MAX_CONN_ID_LEN
-        || !PACKET_copy_bytes(pkt, cid->id, cidl))
+    if (!PACKET_get_1(pkt, &cidl) || cidl > QUIC_MAX_CONN_ID_LEN ||
+        !PACKET_copy_bytes(pkt, cid->id, cidl))
         return 0;
 
     cid->id_len = (unsigned char)cidl;
     return 1;
 }
 
-int FuzzerTestOneInput(const uint8_t *buf, size_t len)
+int
+FuzzerTestOneInput(const uint8_t *buf, size_t len)
 {
     int rc = 0;
     QUIC_RCIDM *rcidm = NULL;
@@ -133,9 +135,9 @@ int FuzzerTestOneInput(const uint8_t *buf, size_t len)
             break;
 
         case CMD_ADD_FROM_NCID:
-            if (!PACKET_get_net_8(&pkt, &ncid_frame.seq_num)
-                || !PACKET_get_net_8(&pkt, &ncid_frame.retire_prior_to)
-                || !get_cid(&pkt, &ncid_frame.conn_id)) {
+            if (!PACKET_get_net_8(&pkt, &ncid_frame.seq_num) ||
+                !PACKET_get_net_8(&pkt, &ncid_frame.retire_prior_to) ||
+                !get_cid(&pkt, &ncid_frame.conn_id)) {
                 rc = -1;
                 goto err;
             }
@@ -192,7 +194,8 @@ err:
     return rc;
 }
 
-void FuzzerCleanup(void)
+void
+FuzzerCleanup(void)
 {
     FuzzerClearRand();
 }

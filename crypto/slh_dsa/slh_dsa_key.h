@@ -11,7 +11,7 @@
 
 #define SLH_DSA_MAX_N 32
 #define SLH_DSA_SK_SEED(key) ((key)->priv)
-#define SLH_DSA_SK_PRF(key)  ((key)->priv + (key)->params->n)
+#define SLH_DSA_SK_PRF(key) ((key)->priv + (key)->params->n)
 #define SLH_DSA_PK_SEED(key) ((key)->priv + (key)->params->n * 2)
 #define SLH_DSA_PK_ROOT(key) ((key)->priv + (key)->params->n * 3)
 #define SLH_DSA_PUB(key) SLH_DSA_PK_SEED(key)
@@ -44,7 +44,7 @@ struct slh_dsa_key_st {
     const SLH_HASH_FUNC *hash_func;
     /* See FIPS 205 Section 11.1 */
 
-    EVP_MD *md; /* Used for SHAKE and SHA-256 */
+    EVP_MD *md;     /* Used for SHAKE and SHA-256 */
     EVP_MD *md_big; /* Used for SHA-256 or SHA-512 */
     EVP_MAC *hmac;
 };

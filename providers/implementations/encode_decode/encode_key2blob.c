@@ -26,8 +26,8 @@
 #include "prov/provider_ctx.h"
 #include "endecoder_local.h"
 
-static int write_blob(void *provctx, OSSL_CORE_BIO *cout,
-                      void *data, int len)
+static int
+write_blob(void *provctx, OSSL_CORE_BIO *cout, void *data, int len)
 {
     BIO *out = ossl_bio_new_from_core_bio(provctx, cout);
     int ret;
@@ -43,26 +43,26 @@ static int write_blob(void *provctx, OSSL_CORE_BIO *cout,
 static OSSL_FUNC_encoder_newctx_fn key2blob_newctx;
 static OSSL_FUNC_encoder_freectx_fn key2blob_freectx;
 
-static void *key2blob_newctx(void *provctx)
+static void *
+key2blob_newctx(void *provctx)
 {
     return provctx;
 }
 
-static void key2blob_freectx(void *vctx)
+static void
+key2blob_freectx(void *vctx)
 {
 }
 
-static int key2blob_check_selection(int selection, int selection_mask)
+static int
+key2blob_check_selection(int selection, int selection_mask)
 {
     /*
      * The selections are kinda sorta "levels", i.e. each selection given
      * here is assumed to include those following.
      */
-    int checks[] = {
-        OSSL_KEYMGMT_SELECT_PRIVATE_KEY,
-        OSSL_KEYMGMT_SELECT_PUBLIC_KEY,
-        OSSL_KEYMGMT_SELECT_ALL_PARAMETERS
-    };
+    int checks[] = {OSSL_KEYMGMT_SELECT_PRIVATE_KEY, OSSL_KEYMGMT_SELECT_PUBLIC_KEY,
+                    OSSL_KEYMGMT_SELECT_ALL_PARAMETERS};
     size_t i;
 
     /* The decoder implementations made here support guessing */
@@ -85,8 +85,8 @@ static int key2blob_check_selection(int selection, int selection_mask)
     return 0;
 }
 
-static int key2blob_encode(void *vctx, const void *key, int selection,
-                           OSSL_CORE_BIO *cout)
+static int
+key2blob_encode(void *vctx, const void *key, int selection, OSSL_CORE_BIO *cout)
 {
     int pubkey_len = 0, ok = 0;
     unsigned char *pubkey = NULL;
@@ -118,58 +118,43 @@ static int key2blob_encode(void *vctx, const void *key, int selection,
  * EVP_PKEY_##selection_name are convenience macros that combine "typical"
  * OSSL_KEYMGMT_SELECT_ macros for a certain type of EVP_PKEY content.
  */
-#define MAKE_BLOB_ENCODER(impl, type, selection_name)                   \
-    static OSSL_FUNC_encoder_import_object_fn                           \
-    impl##2blob_import_object;                                          \
-    static OSSL_FUNC_encoder_free_object_fn impl##2blob_free_object;    \
-    static OSSL_FUNC_encoder_does_selection_fn                          \
-    impl##2blob_does_selection;                                         \
-    static OSSL_FUNC_encoder_encode_fn impl##2blob_encode;              \
-                                                                        \
-    static void *impl##2blob_import_object(void *ctx, int selection,    \
-                                           const OSSL_PARAM params[])   \
-    {                                                                   \
-        return ossl_prov_import_key(ossl_##impl##_keymgmt_functions,    \
-                                    ctx, selection, params);            \
-    }                                                                   \
-    static void impl##2blob_free_object(void *key)                      \
-    {                                                                   \
-        ossl_prov_free_key(ossl_##impl##_keymgmt_functions, key);       \
-    }                                                                   \
-    static int impl##2blob_does_selection(void *ctx, int selection)     \
-    {                                                                   \
-        return key2blob_check_selection(selection,                      \
-                                        EVP_PKEY_##selection_name);     \
-    }                                                                   \
-    static int impl##2blob_encode(void *vctx, OSSL_CORE_BIO *cout,      \
-                                  const void *key,                      \
-                                  const OSSL_PARAM key_abstract[],      \
-                                  int selection,                        \
-                                  OSSL_PASSPHRASE_CALLBACK *cb,         \
-                                  void *cbarg)                          \
-    {                                                                   \
-        /* We don't deal with abstract objects */                       \
-        if (key_abstract != NULL) {                                     \
-            ERR_raise(ERR_LIB_PROV, ERR_R_PASSED_INVALID_ARGUMENT);     \
-            return 0;                                                   \
-        }                                                               \
-        return key2blob_encode(vctx, key, selection, cout);             \
-    }                                                                   \
-    const OSSL_DISPATCH ossl_##impl##_to_blob_encoder_functions[] = {   \
-        { OSSL_FUNC_ENCODER_NEWCTX,                                     \
-          (void (*)(void))key2blob_newctx },                            \
-        { OSSL_FUNC_ENCODER_FREECTX,                                    \
-          (void (*)(void))key2blob_freectx },                           \
-        { OSSL_FUNC_ENCODER_DOES_SELECTION,                             \
-          (void (*)(void))impl##2blob_does_selection },                 \
-        { OSSL_FUNC_ENCODER_IMPORT_OBJECT,                              \
-          (void (*)(void))impl##2blob_import_object },                  \
-        { OSSL_FUNC_ENCODER_FREE_OBJECT,                                \
-          (void (*)(void))impl##2blob_free_object },                    \
-        { OSSL_FUNC_ENCODER_ENCODE,                                     \
-          (void (*)(void))impl##2blob_encode },                         \
-        OSSL_DISPATCH_END                                               \
-    }
+#define MAKE_BLOB_ENCODER(impl, type, selection_name)                                              \
+    static OSSL_FUNC_encoder_import_object_fn impl##2blob_import_object;                           \
+    static OSSL_FUNC_encoder_free_object_fn impl##2blob_free_object;                               \
+    static OSSL_FUNC_encoder_does_selection_fn impl##2blob_does_selection;                         \
+    static OSSL_FUNC_encoder_encode_fn impl##2blob_encode;                                         \
+                                                                                                   \
+    static void *impl##2blob_import_object(void *ctx, int selection, const OSSL_PARAM params[])    \
+    {                                                                                              \
+        return ossl_prov_import_key(ossl_##impl##_keymgmt_functions, ctx, selection, params);      \
+    }                                                                                              \
+    static void impl##2blob_free_object(void *key)                                                 \
+    {                                                                                              \
+        ossl_prov_free_key(ossl_##impl##_keymgmt_functions, key);                                  \
+    }                                                                                              \
+    static int impl##2blob_does_selection(void *ctx, int selection)                                \
+    {                                                                                              \
+        return key2blob_check_selection(selection, EVP_PKEY_##selection_name);                     \
+    }                                                                                              \
+    static int impl##2blob_encode(void *vctx, OSSL_CORE_BIO *cout, const void *key,                \
+                                  const OSSL_PARAM key_abstract[], int selection,                  \
+                                  OSSL_PASSPHRASE_CALLBACK *cb, void *cbarg)                       \
+    {                                                                                              \
+        /* We don't deal with abstract objects */                                                  \
+        if (key_abstract != NULL) {                                                                \
+            ERR_raise(ERR_LIB_PROV, ERR_R_PASSED_INVALID_ARGUMENT);                                \
+            return 0;                                                                              \
+        }                                                                                          \
+        return key2blob_encode(vctx, key, selection, cout);                                        \
+    }                                                                                              \
+    const OSSL_DISPATCH ossl_##impl##_to_blob_encoder_functions[] = {                              \
+        {OSSL_FUNC_ENCODER_NEWCTX, (void (*)(void))key2blob_newctx},                               \
+        {OSSL_FUNC_ENCODER_FREECTX, (void (*)(void))key2blob_freectx},                             \
+        {OSSL_FUNC_ENCODER_DOES_SELECTION, (void (*)(void))impl##2blob_does_selection},            \
+        {OSSL_FUNC_ENCODER_IMPORT_OBJECT, (void (*)(void))impl##2blob_import_object},              \
+        {OSSL_FUNC_ENCODER_FREE_OBJECT, (void (*)(void))impl##2blob_free_object},                  \
+        {OSSL_FUNC_ENCODER_ENCODE, (void (*)(void))impl##2blob_encode},                            \
+        OSSL_DISPATCH_END}
 
 #ifndef OPENSSL_NO_EC
 MAKE_BLOB_ENCODER(ec, ec, PUBLIC_KEY);

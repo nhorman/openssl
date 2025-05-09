@@ -17,18 +17,22 @@
  * Query an EGD
  */
 
-#if defined(OPENSSL_SYS_WIN32) || defined(OPENSSL_SYS_VMS) || defined(OPENSSL_SYS_MSDOS) || defined(OPENSSL_SYS_VXWORKS) || defined(OPENSSL_SYS_VOS) || defined(OPENSSL_SYS_UEFI)
-int RAND_query_egd_bytes(const char *path, unsigned char *buf, int bytes)
+#if defined(OPENSSL_SYS_WIN32) || defined(OPENSSL_SYS_VMS) || defined(OPENSSL_SYS_MSDOS) ||        \
+    defined(OPENSSL_SYS_VXWORKS) || defined(OPENSSL_SYS_VOS) || defined(OPENSSL_SYS_UEFI)
+int
+RAND_query_egd_bytes(const char *path, unsigned char *buf, int bytes)
 {
     return -1;
 }
 
-int RAND_egd(const char *path)
+int
+RAND_egd(const char *path)
 {
     return -1;
 }
 
-int RAND_egd_bytes(const char *path, int bytes)
+int
+RAND_egd_bytes(const char *path, int bytes)
 {
     return -1;
 }
@@ -43,10 +47,10 @@ int RAND_egd_bytes(const char *path, int bytes)
 #  include <sys/un.h>
 # else
 struct sockaddr_un {
-    short sun_family;           /* AF_UNIX */
-    char sun_path[108];         /* path name (gag) */
+    short sun_family;   /* AF_UNIX */
+    char sun_path[108]; /* path name (gag) */
 };
-# endif                         /* NO_SYS_UN_H */
+# endif /* NO_SYS_UN_H */
 # include <string.h>
 # include <errno.h>
 
@@ -66,17 +70,14 @@ struct sockaddr_un {
  *  the two modes or revise the EGD code to listen on two different sockets
  *  (each in one of the two modes) or use the hardware randomizer.
  */
-_variable
-int hpns_socket(int family,
-                int type,
-                int protocol,
-                char* transport)
+_variable int
+hpns_socket(int family, int type, int protocol, char *transport)
 {
-    int  socket_rc;
+    int socket_rc;
     char current_transport[20];
 
-#  define AF_UNIX_PORTABILITY    "$ZAFN2"
-#  define AF_UNIX_COMPATIBILITY  "$ZPLS"
+#  define AF_UNIX_PORTABILITY "$ZAFN2"
+#  define AF_UNIX_COMPATIBILITY "$ZPLS"
 
     if (!_arg_present(transport) || transport == NULL || transport[0] == '\0')
         return socket(family, type, protocol);
@@ -105,8 +106,8 @@ static int hpns_connect_attempt = 0;
 
 # endif /* defined(OPENSSL_SYS_HPNS) */
 
-
-int RAND_query_egd_bytes(const char *path, unsigned char *buf, int bytes)
+int
+RAND_query_egd_bytes(const char *path, unsigned char *buf, int bytes)
 {
     FILE *fp = NULL;
     struct sockaddr_un addr;
@@ -123,11 +124,11 @@ int RAND_query_egd_bytes(const char *path, unsigned char *buf, int bytes)
         return -1;
     strcpy(addr.sun_path, path);
     i = offsetof(struct sockaddr_un, sun_path) + strlen(path);
-#if defined(OPENSSL_SYS_TANDEM)
+# if defined(OPENSSL_SYS_TANDEM)
     fd = hpns_socket(AF_UNIX, SOCK_STREAM, 0, AF_UNIX_COMPATIBILITY);
-#else
+# else
     fd = socket(AF_UNIX, SOCK_STREAM, 0);
-#endif
+# endif
     if (fd == -1 || (fp = fdopen(fd, "r+")) == NULL)
         return -1;
     setbuf(fp, NULL);
@@ -164,7 +165,7 @@ int RAND_query_egd_bytes(const char *path, unsigned char *buf, int bytes)
                 if (fd == -1)
                     return -1;
                 ++hpns_connect_attempt;
-                break;  /* try the connect again */
+                break; /* try the connect again */
             }
 # endif
 
@@ -195,13 +196,14 @@ int RAND_query_egd_bytes(const char *path, unsigned char *buf, int bytes)
     if (mybuffer)
         RAND_add(tempbuf, i, i);
 
- err:
+err:
     if (fp != NULL)
         fclose(fp);
     return ret;
 }
 
-int RAND_egd_bytes(const char *path, int bytes)
+int
+RAND_egd_bytes(const char *path, int bytes)
 {
     int num;
 
@@ -213,7 +215,8 @@ int RAND_egd_bytes(const char *path, int bytes)
     return num;
 }
 
-int RAND_egd(const char *path)
+int
+RAND_egd(const char *path)
 {
     return RAND_egd_bytes(path, 255);
 }

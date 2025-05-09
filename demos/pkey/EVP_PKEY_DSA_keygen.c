@@ -21,7 +21,8 @@
  * See the EVP_PKEY_DSA_paramgen demo if you need to
  * use non default parameters.
  */
-static EVP_PKEY *dsa_genparams(OSSL_LIB_CTX *libctx, const char *propq)
+static EVP_PKEY *
+dsa_genparams(OSSL_LIB_CTX *libctx, const char *propq)
 {
     EVP_PKEY *dsaparamkey = NULL;
     EVP_PKEY_CTX *ctx = NULL;
@@ -33,8 +34,7 @@ static EVP_PKEY *dsa_genparams(OSSL_LIB_CTX *libctx, const char *propq)
         return NULL;
     }
 
-    if (EVP_PKEY_paramgen_init(ctx) <= 0
-            || EVP_PKEY_paramgen(ctx, &dsaparamkey) <= 0) {
+    if (EVP_PKEY_paramgen_init(ctx) <= 0 || EVP_PKEY_paramgen(ctx, &dsaparamkey) <= 0) {
         fprintf(stderr, "DSA paramgen failed\n");
         goto cleanup;
     }
@@ -43,7 +43,8 @@ cleanup:
     return dsaparamkey;
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
     int ret = EXIT_FAILURE;
     OSSL_LIB_CTX *libctx = NULL;
@@ -65,8 +66,7 @@ int main(int argc, char **argv)
     }
 
     /* Generate a key using the dsa params */
-    if (EVP_PKEY_keygen_init(ctx) <= 0
-            || EVP_PKEY_keygen(ctx, &dsakey) <= 0) {
+    if (EVP_PKEY_keygen_init(ctx) <= 0 || EVP_PKEY_keygen(ctx, &dsakey) <= 0) {
         fprintf(stderr, "DSA keygen failed\n");
         goto cleanup;
     }

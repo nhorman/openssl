@@ -32,26 +32,22 @@ typedef struct nbio_test_st {
 } NBIO_TEST;
 
 static const BIO_METHOD methods_nbiof = {
-    BIO_TYPE_NBIO_TEST,
-    "non-blocking IO test filter",
-    bwrite_conv,
-    nbiof_write,
-    bread_conv,
-    nbiof_read,
-    nbiof_puts,
-    nbiof_gets,
-    nbiof_ctrl,
-    nbiof_new,
-    nbiof_free,
-    nbiof_callback_ctrl,
+    BIO_TYPE_NBIO_TEST, "non-blocking IO test filter",
+    bwrite_conv,        nbiof_write,
+    bread_conv,         nbiof_read,
+    nbiof_puts,         nbiof_gets,
+    nbiof_ctrl,         nbiof_new,
+    nbiof_free,         nbiof_callback_ctrl,
 };
 
-const BIO_METHOD *BIO_f_nbio_test(void)
+const BIO_METHOD *
+BIO_f_nbio_test(void)
 {
     return &methods_nbiof;
 }
 
-static int nbiof_new(BIO *bi)
+static int
+nbiof_new(BIO *bi)
 {
     NBIO_TEST *nt;
 
@@ -64,7 +60,8 @@ static int nbiof_new(BIO *bi)
     return 1;
 }
 
-static int nbiof_free(BIO *a)
+static int
+nbiof_free(BIO *a)
 {
     if (a == NULL)
         return 0;
@@ -75,7 +72,8 @@ static int nbiof_free(BIO *a)
     return 1;
 }
 
-static int nbiof_read(BIO *b, char *out, int outl)
+static int
+nbiof_read(BIO *b, char *out, int outl)
 {
     int ret = 0;
     int num;
@@ -105,7 +103,8 @@ static int nbiof_read(BIO *b, char *out, int outl)
     return ret;
 }
 
-static int nbiof_write(BIO *b, const char *in, int inl)
+static int
+nbiof_write(BIO *b, const char *in, int inl)
 {
     NBIO_TEST *nt;
     int ret = 0;
@@ -145,7 +144,8 @@ static int nbiof_write(BIO *b, const char *in, int inl)
     return ret;
 }
 
-static long nbiof_ctrl(BIO *b, int cmd, long num, void *ptr)
+static long
+nbiof_ctrl(BIO *b, int cmd, long num, void *ptr)
 {
     long ret;
 
@@ -167,21 +167,24 @@ static long nbiof_ctrl(BIO *b, int cmd, long num, void *ptr)
     return ret;
 }
 
-static long nbiof_callback_ctrl(BIO *b, int cmd, BIO_info_cb *fp)
+static long
+nbiof_callback_ctrl(BIO *b, int cmd, BIO_info_cb *fp)
 {
     if (b->next_bio == NULL)
         return 0;
     return BIO_callback_ctrl(b->next_bio, cmd, fp);
 }
 
-static int nbiof_gets(BIO *bp, char *buf, int size)
+static int
+nbiof_gets(BIO *bp, char *buf, int size)
 {
     if (bp->next_bio == NULL)
         return 0;
     return BIO_gets(bp->next_bio, buf, size);
 }
 
-static int nbiof_puts(BIO *bp, const char *str)
+static int
+nbiof_puts(BIO *bp, const char *str)
 {
     if (bp->next_bio == NULL)
         return 0;

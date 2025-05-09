@@ -17,7 +17,8 @@
 /**
  * Print the given value escaped for the OpenSSL configuration file format.
  */
-static void print_escaped_value(BIO *out, const char *value)
+static void
+print_escaped_value(BIO *out, const char *value)
 {
     const char *p;
 
@@ -70,7 +71,8 @@ static void print_escaped_value(BIO *out, const char *value)
 /**
  * Print all values in the configuration section identified by section_name
  */
-static void print_section(BIO *out, const CONF *cnf, OPENSSL_CSTRING section_name)
+static void
+print_section(BIO *out, const CONF *cnf, OPENSSL_CSTRING section_name)
 {
     STACK_OF(CONF_VALUE) *values = NCONF_get_section(cnf, section_name);
     int idx;
@@ -84,12 +86,7 @@ static void print_section(BIO *out, const CONF *cnf, OPENSSL_CSTRING section_nam
     }
 }
 
-typedef enum OPTION_choice {
-    OPT_COMMON,
-    OPT_OUT,
-    OPT_NOHEADER,
-    OPT_CONFIG
-} OPTION_CHOICE;
+typedef enum OPTION_choice { OPT_COMMON, OPT_OUT, OPT_NOHEADER, OPT_CONFIG } OPTION_CHOICE;
 
 const OPTIONS configutl_options[] = {
     OPT_SECTION("General"),
@@ -98,15 +95,15 @@ const OPTIONS configutl_options[] = {
     OPT_SECTION("Output"),
     {"out", OPT_OUT, '>', "Output to filename rather than stdout"},
     {"noheader", OPT_NOHEADER, '-', "Don't print the information about original config"},
-    {NULL}
-};
+    {NULL}};
 
 /**
  * Parse the passed OpenSSL configuration file (or the default one/specified in the
  * OPENSSL_CONF environment variable) and write it back in
  * a canonical format with all includes and variables expanded.
  */
-int configutl_main(int argc, char *argv[])
+int
+configutl_main(int argc, char *argv[])
 {
     int ret = 1;
     char *prog, *configfile = NULL;
@@ -125,7 +122,7 @@ int configutl_main(int argc, char *argv[])
         switch (o) {
         case OPT_EOF:
         case OPT_ERR:
- opthelp:
+        opthelp:
             BIO_printf(bio_err, "%s: Use -help for summary.\n", prog);
             goto end;
         case OPT_HELP:

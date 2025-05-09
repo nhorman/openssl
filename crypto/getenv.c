@@ -15,7 +15,8 @@
 #include "internal/cryptlib.h"
 #include "internal/e_os.h"
 
-char *ossl_safe_getenv(const char *name)
+char *
+ossl_safe_getenv(const char *name)
 {
 #if defined(_WIN32) && defined(CP_UTF8) && !defined(_WIN32_WCE)
     if (GetEnvironmentVariableW(L"OPENSSL_WIN32_UTF8", NULL, 0) != 0) {
@@ -34,10 +35,9 @@ char *ossl_safe_getenv(const char *name)
          * For the code pages listed below, dwFlags must be set to 0.
          * Otherwise, the function fails with ERROR_INVALID_FLAGS.
          */
-        if (curacp == 50220 || curacp == 50221 || curacp == 50222 ||
-            curacp == 50225 || curacp == 50227 || curacp == 50229 ||
-            (57002 <= curacp && curacp <=57011) || curacp == 65000 ||
-            curacp == 42)
+        if (curacp == 50220 || curacp == 50221 || curacp == 50222 || curacp == 50225 ||
+            curacp == 50227 || curacp == 50229 || (57002 <= curacp && curacp <= 57011) ||
+            curacp == 65000 || curacp == 42)
             dwFlags = 0;
 
         /* query for buffer len */
@@ -61,8 +61,7 @@ char *ossl_safe_getenv(const char *name)
             /* if can get env value as wide string */
             if (GetEnvironmentVariableW(namew, valw, envlen) < envlen) {
                 /* determine value string size in utf-8 */
-                vallen = WideCharToMultiByte(CP_UTF8, 0, valw, -1, NULL, 0,
-                                             NULL, NULL);
+                vallen = WideCharToMultiByte(CP_UTF8, 0, valw, -1, NULL, 0, NULL, NULL);
             }
         }
 
@@ -71,8 +70,7 @@ char *ossl_safe_getenv(const char *name)
 
         if (NULL != val) {
             /* convert value string from wide to utf-8 */
-            if (WideCharToMultiByte(CP_UTF8, 0, valw, -1, val, vallen,
-                                    NULL, NULL) == 0) {
+            if (WideCharToMultiByte(CP_UTF8, 0, valw, -1, val, vallen, NULL, NULL) == 0) {
                 OPENSSL_free(val);
                 val = NULL;
             }

@@ -12,7 +12,8 @@
 #include "internal/cryptlib.h"
 #include <openssl/asn1.h>
 
-int ASN1_PRINTABLE_type(const unsigned char *s, int len)
+int
+ASN1_PRINTABLE_type(const unsigned char *s, int len)
 {
     int c;
     int ia5 = 0;
@@ -38,7 +39,8 @@ int ASN1_PRINTABLE_type(const unsigned char *s, int len)
     return V_ASN1_PRINTABLESTRING;
 }
 
-int ASN1_UNIVERSALSTRING_to_string(ASN1_UNIVERSALSTRING *s)
+int
+ASN1_UNIVERSALSTRING_to_string(ASN1_UNIVERSALSTRING *s)
 {
     int i;
     unsigned char *p;
@@ -66,7 +68,8 @@ int ASN1_UNIVERSALSTRING_to_string(ASN1_UNIVERSALSTRING *s)
     return 1;
 }
 
-int ASN1_STRING_print(BIO *bp, const ASN1_STRING *v)
+int
+ASN1_STRING_print(BIO *bp, const ASN1_STRING *v)
 {
     int i, n;
     char buf[80];
@@ -77,8 +80,7 @@ int ASN1_STRING_print(BIO *bp, const ASN1_STRING *v)
     n = 0;
     p = (const char *)v->data;
     for (i = 0; i < v->length; i++) {
-        if ((p[i] > '~') || ((p[i] < ' ') &&
-                             (p[i] != '\n') && (p[i] != '\r')))
+        if ((p[i] > '~') || ((p[i] < ' ') && (p[i] != '\n') && (p[i] != '\r')))
             buf[n] = '.';
         else
             buf[n] = p[i];

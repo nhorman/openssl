@@ -30,11 +30,9 @@
 
 int ossl_pem_check_suffix(const char *pem_str, const char *suffix);
 
-static EVP_PKEY *pem_read_bio_key_decoder(BIO *bp, EVP_PKEY **x,
-                                          pem_password_cb *cb, void *u,
-                                          OSSL_LIB_CTX *libctx,
-                                          const char *propq,
-                                          int selection)
+static EVP_PKEY *
+pem_read_bio_key_decoder(BIO *bp, EVP_PKEY **x, pem_password_cb *cb, void *u, OSSL_LIB_CTX *libctx,
+                         const char *propq, int selection)
 {
     EVP_PKEY *pkey = NULL;
     OSSL_DECODER_CTX *dctx = NULL;
@@ -44,8 +42,7 @@ static EVP_PKEY *pem_read_bio_key_decoder(BIO *bp, EVP_PKEY **x,
         /* We can depend on BIO_tell() thanks to the BIO_f_readbuffer() */
         return NULL;
 
-    dctx = OSSL_DECODER_CTX_new_for_pkey(&pkey, "PEM", NULL, NULL,
-                                         selection, libctx, propq);
+    dctx = OSSL_DECODER_CTX_new_for_pkey(&pkey, "PEM", NULL, NULL, selection, libctx, propq);
 
     if (dctx == NULL)
         return NULL;
@@ -91,16 +88,14 @@ static EVP_PKEY *pem_read_bio_key_decoder(BIO *bp, EVP_PKEY **x,
         *x = pkey;
     }
 
- err:
+err:
     OSSL_DECODER_CTX_free(dctx);
     return pkey;
 }
 
-static EVP_PKEY *pem_read_bio_key_legacy(BIO *bp, EVP_PKEY **x,
-                                         pem_password_cb *cb, void *u,
-                                         OSSL_LIB_CTX *libctx,
-                                         const char *propq,
-                                         int selection)
+static EVP_PKEY *
+pem_read_bio_key_legacy(BIO *bp, EVP_PKEY **x, pem_password_cb *cb, void *u, OSSL_LIB_CTX *libctx,
+                        const char *propq, int selection)
 {
     char *nm = NULL;
     const unsigned char *p = NULL;
@@ -109,22 +104,18 @@ static EVP_PKEY *pem_read_bio_key_legacy(BIO *bp, EVP_PKEY **x,
     int slen;
     EVP_PKEY *ret = NULL;
 
-    ERR_set_mark();  /* not interested in PEM read errors */
+    ERR_set_mark(); /* not interested in PEM read errors */
     if ((selection & OSSL_KEYMGMT_SELECT_PRIVATE_KEY) != 0) {
-        if (!PEM_bytes_read_bio_secmem(&data, &len, &nm,
-                                       PEM_STRING_EVP_PKEY,
-                                       bp, cb, u)) {
+        if (!PEM_bytes_read_bio_secmem(&data, &len, &nm, PEM_STRING_EVP_PKEY, bp, cb, u)) {
             ERR_pop_to_mark();
             return NULL;
-         }
+        }
     } else {
         const char *pem_string = PEM_STRING_PARAMETERS;
 
         if ((selection & OSSL_KEYMGMT_SELECT_PUBLIC_KEY) != 0)
             pem_string = PEM_STRING_PUBLIC;
-        if (!PEM_bytes_read_bio(&data, &len, &nm,
-                                pem_string,
-                                bp, cb, u)) {
+        if (!PEM_bytes_read_bio(&data, &len, &nm, pem_string, bp, cb, u)) {
             ERR_pop_to_mark();
             return NULL;
         }
@@ -176,21 +167,19 @@ static EVP_PKEY *pem_read_bio_key_legacy(BIO *bp, EVP_PKEY **x,
         ameth = EVP_PKEY_asn1_find_str(NULL, nm, slen);
         if (ameth == NULL || ameth->old_priv_decode == NULL)
             goto p8err;
-        ret = ossl_d2i_PrivateKey_legacy(ameth->pkey_id, x, &p, len, libctx,
-                                         propq);
-    } else if ((selection & OSSL_KEYMGMT_SELECT_PRIVATE_KEY) == 0
-               && (selection & OSSL_KEYMGMT_SELECT_PUBLIC_KEY) != 0) {
+        ret = ossl_d2i_PrivateKey_legacy(ameth->pkey_id, x, &p, len, libctx, propq);
+    } else if ((selection & OSSL_KEYMGMT_SELECT_PRIVATE_KEY) == 0 &&
+               (selection & OSSL_KEYMGMT_SELECT_PUBLIC_KEY) != 0) {
         /* Trying legacy PUBKEY decoding only if we do not want private key. */
         ret = ossl_d2i_PUBKEY_legacy(x, &p, len);
-    } else if ((selection & EVP_PKEY_KEYPAIR) == 0
-               && (slen = ossl_pem_check_suffix(nm, "PARAMETERS")) > 0) {
+    } else if ((selection & EVP_PKEY_KEYPAIR) == 0 &&
+               (slen = ossl_pem_check_suffix(nm, "PARAMETERS")) > 0) {
         /* Trying legacy params decoding only if we do not want a key. */
         ret = EVP_PKEY_new();
         if (ret == NULL)
             goto err;
-        if (!EVP_PKEY_set_type_str(ret, nm, slen)
-            || !ret->ameth->param_decode
-            || !ret->ameth->param_decode(ret, &p, len)) {
+        if (!EVP_PKEY_set_type_str(ret, nm, slen) || !ret->ameth->param_decode ||
+            !ret->ameth->param_decode(ret, &p, len)) {
             EVP_PKEY_free(ret);
             ret = NULL;
             goto err;
@@ -201,26 +190,24 @@ static EVP_PKEY *pem_read_bio_key_legacy(BIO *bp, EVP_PKEY **x,
         }
     }
 
- p8err:
+p8err:
     if (ret == NULL && ERR_peek_last_error() == 0)
         /* ensure some error is reported but do not hide the real one */
         ERR_raise(ERR_LIB_PEM, ERR_R_ASN1_LIB);
- err:
+err:
     OPENSSL_secure_free(nm);
     OPENSSL_secure_clear_free(data, len);
     return ret;
 }
 
-static EVP_PKEY *pem_read_bio_key(BIO *bp, EVP_PKEY **x,
-                                  pem_password_cb *cb, void *u,
-                                  OSSL_LIB_CTX *libctx,
-                                  const char *propq,
-                                  int selection)
+static EVP_PKEY *
+pem_read_bio_key(BIO *bp, EVP_PKEY **x, pem_password_cb *cb, void *u, OSSL_LIB_CTX *libctx,
+                 const char *propq, int selection)
 {
     EVP_PKEY *ret = NULL;
     BIO *new_bio = NULL;
     int pos;
-    struct ossl_passphrase_data_st pwdata = { 0 };
+    struct ossl_passphrase_data_st pwdata = {0};
 
     if ((pos = BIO_tell(bp)) < 0) {
         new_bio = BIO_new(BIO_f_readbuffer());
@@ -233,24 +220,19 @@ static EVP_PKEY *pem_read_bio_key(BIO *bp, EVP_PKEY **x,
     if (cb == NULL)
         cb = PEM_def_callback;
 
-    if (!ossl_pw_set_pem_password_cb(&pwdata, cb, u)
-        || !ossl_pw_enable_passphrase_caching(&pwdata))
+    if (!ossl_pw_set_pem_password_cb(&pwdata, cb, u) || !ossl_pw_enable_passphrase_caching(&pwdata))
         goto err;
 
     ERR_set_mark();
-    ret = pem_read_bio_key_decoder(bp, x, ossl_pw_pem_password, &pwdata,
-                                   libctx, propq, selection);
-    if (ret == NULL
-        && (BIO_seek(bp, pos) < 0
-            || (ret = pem_read_bio_key_legacy(bp, x,
-                                              ossl_pw_pem_password, &pwdata,
-                                              libctx, propq,
-                                              selection)) == NULL))
+    ret = pem_read_bio_key_decoder(bp, x, ossl_pw_pem_password, &pwdata, libctx, propq, selection);
+    if (ret == NULL && (BIO_seek(bp, pos) < 0 ||
+                        (ret = pem_read_bio_key_legacy(bp, x, ossl_pw_pem_password, &pwdata, libctx,
+                                                       propq, selection)) == NULL))
         ERR_clear_last_mark();
     else
         ERR_pop_to_mark();
 
- err:
+err:
     ossl_pw_clear_passphrase_data(&pwdata);
     if (new_bio != NULL) {
         BIO_pop(new_bio);
@@ -259,24 +241,23 @@ static EVP_PKEY *pem_read_bio_key(BIO *bp, EVP_PKEY **x,
     return ret;
 }
 
-EVP_PKEY *PEM_read_bio_PUBKEY_ex(BIO *bp, EVP_PKEY **x,
-                                 pem_password_cb *cb, void *u,
-                                 OSSL_LIB_CTX *libctx, const char *propq)
+EVP_PKEY *
+PEM_read_bio_PUBKEY_ex(BIO *bp, EVP_PKEY **x, pem_password_cb *cb, void *u, OSSL_LIB_CTX *libctx,
+                       const char *propq)
 {
-    return pem_read_bio_key(bp, x, cb, u, libctx, propq,
-                            EVP_PKEY_PUBLIC_KEY);
+    return pem_read_bio_key(bp, x, cb, u, libctx, propq, EVP_PKEY_PUBLIC_KEY);
 }
 
-EVP_PKEY *PEM_read_bio_PUBKEY(BIO *bp, EVP_PKEY **x, pem_password_cb *cb,
-                              void *u)
+EVP_PKEY *
+PEM_read_bio_PUBKEY(BIO *bp, EVP_PKEY **x, pem_password_cb *cb, void *u)
 {
     return PEM_read_bio_PUBKEY_ex(bp, x, cb, u, NULL, NULL);
 }
 
 #ifndef OPENSSL_NO_STDIO
-EVP_PKEY *PEM_read_PUBKEY_ex(FILE *fp, EVP_PKEY **x,
-                             pem_password_cb *cb, void *u,
-                             OSSL_LIB_CTX *libctx, const char *propq)
+EVP_PKEY *
+PEM_read_PUBKEY_ex(FILE *fp, EVP_PKEY **x, pem_password_cb *cb, void *u, OSSL_LIB_CTX *libctx,
+                   const char *propq)
 {
     BIO *b;
     EVP_PKEY *ret;
@@ -291,23 +272,24 @@ EVP_PKEY *PEM_read_PUBKEY_ex(FILE *fp, EVP_PKEY **x,
     return ret;
 }
 
-EVP_PKEY *PEM_read_PUBKEY(FILE *fp, EVP_PKEY **x, pem_password_cb *cb, void *u)
+EVP_PKEY *
+PEM_read_PUBKEY(FILE *fp, EVP_PKEY **x, pem_password_cb *cb, void *u)
 {
     return PEM_read_PUBKEY_ex(fp, x, cb, u, NULL, NULL);
 }
 #endif
 
-EVP_PKEY *PEM_read_bio_PrivateKey_ex(BIO *bp, EVP_PKEY **x,
-                                     pem_password_cb *cb, void *u,
-                                     OSSL_LIB_CTX *libctx, const char *propq)
+EVP_PKEY *
+PEM_read_bio_PrivateKey_ex(BIO *bp, EVP_PKEY **x, pem_password_cb *cb, void *u,
+                           OSSL_LIB_CTX *libctx, const char *propq)
 {
     return pem_read_bio_key(bp, x, cb, u, libctx, propq,
                             /* we also want the public key, if available */
                             EVP_PKEY_KEYPAIR);
 }
 
-EVP_PKEY *PEM_read_bio_PrivateKey(BIO *bp, EVP_PKEY **x, pem_password_cb *cb,
-                                  void *u)
+EVP_PKEY *
+PEM_read_bio_PrivateKey(BIO *bp, EVP_PKEY **x, pem_password_cb *cb, void *u)
 {
     return PEM_read_bio_PrivateKey_ex(bp, x, cb, u, NULL, NULL);
 }
@@ -319,27 +301,25 @@ PEM_write_cb_ex_fnsig(PrivateKey, EVP_PKEY, BIO, write_bio)
     IMPLEMENT_PEM_provided_write_body_pass();
     IMPLEMENT_PEM_provided_write_body_main(pkey, bio);
 
- legacy:
+legacy:
     if (x != NULL && (x->ameth == NULL || x->ameth->priv_encode != NULL))
-        return PEM_write_bio_PKCS8PrivateKey(out, x, enc,
-                                             (const char *)kstr, klen, cb, u);
+        return PEM_write_bio_PKCS8PrivateKey(out, x, enc, (const char *)kstr, klen, cb, u);
     return PEM_write_bio_PrivateKey_traditional(out, x, enc, kstr, klen, cb, u);
 }
 
 PEM_write_cb_fnsig(PrivateKey, EVP_PKEY, BIO, write_bio)
 {
-    return PEM_write_bio_PrivateKey_ex(out, x, enc, kstr, klen, cb, u,
-                                       NULL, NULL);
+    return PEM_write_bio_PrivateKey_ex(out, x, enc, kstr, klen, cb, u, NULL, NULL);
 }
 
 /*
  * Note: there is no way to tell a provided pkey encoder to use "traditional"
  * encoding.  Therefore, if the pkey is provided, we try to take a copy
  */
-int PEM_write_bio_PrivateKey_traditional(BIO *bp, const EVP_PKEY *x,
-                                         const EVP_CIPHER *enc,
-                                         const unsigned char *kstr, int klen,
-                                         pem_password_cb *cb, void *u)
+int
+PEM_write_bio_PrivateKey_traditional(BIO *bp, const EVP_PKEY *x, const EVP_CIPHER *enc,
+                                     const unsigned char *kstr, int klen, pem_password_cb *cb,
+                                     void *u)
 {
     char pem_str[80];
     EVP_PKEY *copy = NULL;
@@ -348,9 +328,7 @@ int PEM_write_bio_PrivateKey_traditional(BIO *bp, const EVP_PKEY *x,
     if (x == NULL)
         return 0;
 
-    if (evp_pkey_is_assigned(x)
-        && evp_pkey_is_provided(x)
-        && evp_pkey_copy_downgraded(&copy, x))
+    if (evp_pkey_is_assigned(x) && evp_pkey_is_provided(x) && evp_pkey_copy_downgraded(&copy, x))
         x = copy;
 
     if (x->ameth == NULL || x->ameth->old_priv_encode == NULL) {
@@ -359,30 +337,30 @@ int PEM_write_bio_PrivateKey_traditional(BIO *bp, const EVP_PKEY *x,
         return 0;
     }
     BIO_snprintf(pem_str, 80, "%s PRIVATE KEY", x->ameth->pem_str);
-    ret = PEM_ASN1_write_bio((i2d_of_void *)i2d_PrivateKey,
-                             pem_str, bp, x, enc, kstr, klen, cb, u);
+    ret = PEM_ASN1_write_bio((i2d_of_void *)i2d_PrivateKey, pem_str, bp, x, enc, kstr, klen, cb, u);
 
     EVP_PKEY_free(copy);
     return ret;
 }
 
-static int no_password_cb(char *buf, int num, int rwflag, void *userdata)
+static int
+no_password_cb(char *buf, int num, int rwflag, void *userdata)
 {
     return -1;
 }
 
-EVP_PKEY *PEM_read_bio_Parameters_ex(BIO *bp, EVP_PKEY **x,
-                                     OSSL_LIB_CTX *libctx, const char *propq)
+EVP_PKEY *
+PEM_read_bio_Parameters_ex(BIO *bp, EVP_PKEY **x, OSSL_LIB_CTX *libctx, const char *propq)
 {
     /*
      * PEM_read_bio_Parameters(_ex) should never ask for a password. Any attempt
      * to get a password just fails.
      */
-    return pem_read_bio_key(bp, x, no_password_cb, NULL, libctx, propq,
-                            EVP_PKEY_KEY_PARAMETERS);
+    return pem_read_bio_key(bp, x, no_password_cb, NULL, libctx, propq, EVP_PKEY_KEY_PARAMETERS);
 }
 
-EVP_PKEY *PEM_read_bio_Parameters(BIO *bp, EVP_PKEY **x)
+EVP_PKEY *
+PEM_read_bio_Parameters(BIO *bp, EVP_PKEY **x)
 {
     return PEM_read_bio_Parameters_ex(bp, x, NULL, NULL);
 }
@@ -394,19 +372,19 @@ PEM_write_fnsig(Parameters, EVP_PKEY, BIO, write_bio)
 
     IMPLEMENT_PEM_provided_write_body_main(pkey, bio);
 
- legacy:
+legacy:
     if (!x->ameth || !x->ameth->param_encode)
         return 0;
 
     BIO_snprintf(pem_str, 80, "%s PARAMETERS", x->ameth->pem_str);
-    return PEM_ASN1_write_bio((i2d_of_void *)x->ameth->param_encode,
-                              pem_str, out, x, NULL, NULL, 0, 0, NULL);
+    return PEM_ASN1_write_bio((i2d_of_void *)x->ameth->param_encode, pem_str, out, x, NULL, NULL, 0,
+                              0, NULL);
 }
 
 #ifndef OPENSSL_NO_STDIO
-EVP_PKEY *PEM_read_PrivateKey_ex(FILE *fp, EVP_PKEY **x, pem_password_cb *cb,
-                                 void *u, OSSL_LIB_CTX *libctx,
-                                 const char *propq)
+EVP_PKEY *
+PEM_read_PrivateKey_ex(FILE *fp, EVP_PKEY **x, pem_password_cb *cb, void *u, OSSL_LIB_CTX *libctx,
+                       const char *propq)
 {
     BIO *b;
     EVP_PKEY *ret;
@@ -421,8 +399,8 @@ EVP_PKEY *PEM_read_PrivateKey_ex(FILE *fp, EVP_PKEY **x, pem_password_cb *cb,
     return ret;
 }
 
-EVP_PKEY *PEM_read_PrivateKey(FILE *fp, EVP_PKEY **x, pem_password_cb *cb,
-                              void *u)
+EVP_PKEY *
+PEM_read_PrivateKey(FILE *fp, EVP_PKEY **x, pem_password_cb *cb, void *u)
 {
     return PEM_read_PrivateKey_ex(fp, x, cb, u, NULL, NULL);
 }
@@ -436,8 +414,7 @@ PEM_write_cb_ex_fnsig(PrivateKey, EVP_PKEY, FILE, write)
         ERR_raise(ERR_LIB_PEM, ERR_R_BUF_LIB);
         return 0;
     }
-    ret = PEM_write_bio_PrivateKey_ex(b, x, enc, kstr, klen, cb, u,
-                                      libctx, propq);
+    ret = PEM_write_bio_PrivateKey_ex(b, x, enc, kstr, klen, cb, u, libctx, propq);
     BIO_free(b);
     return ret;
 }

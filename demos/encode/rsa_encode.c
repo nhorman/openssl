@@ -26,7 +26,8 @@ static const char *propq = NULL;
  * Load a PEM-encoded RSA key from a file, optionally decrypting it with a
  * supplied passphrase.
  */
-static EVP_PKEY *load_key(OSSL_LIB_CTX *libctx, FILE *f, const char *passphrase)
+static EVP_PKEY *
+load_key(OSSL_LIB_CTX *libctx, FILE *f, const char *passphrase)
 {
     int ret = 0;
     EVP_PKEY *pkey = NULL;
@@ -43,9 +44,7 @@ static EVP_PKEY *load_key(OSSL_LIB_CTX *libctx, FILE *f, const char *passphrase)
      * accepted. If set to EVP_PKEY_KEYPAIR, a private key will be required, and
      * if set to EVP_PKEY_PUBLIC_KEY, a public key will be required.
      */
-    dctx = OSSL_DECODER_CTX_new_for_pkey(&pkey, "PEM", NULL, "RSA",
-                                         selection,
-                                         libctx, propq);
+    dctx = OSSL_DECODER_CTX_new_for_pkey(&pkey, "PEM", NULL, "RSA", selection, libctx, propq);
     if (dctx == NULL) {
         fprintf(stderr, "OSSL_DECODER_CTX_new_for_pkey() failed\n");
         goto cleanup;
@@ -61,8 +60,7 @@ static EVP_PKEY *load_key(OSSL_LIB_CTX *libctx, FILE *f, const char *passphrase)
      * prompted for in advance, or for GUI applications.
      */
     if (passphrase != NULL) {
-        if (OSSL_DECODER_CTX_set_passphrase(dctx,
-                                            (const unsigned char *)passphrase,
+        if (OSSL_DECODER_CTX_set_passphrase(dctx, (const unsigned char *)passphrase,
                                             strlen(passphrase)) == 0) {
             fprintf(stderr, "OSSL_DECODER_CTX_set_passphrase() failed\n");
             goto cleanup;
@@ -98,7 +96,8 @@ cleanup:
  * If a passphrase is supplied, the file is encrypted, otherwise
  * it is unencrypted.
  */
-static int store_key(EVP_PKEY *pkey, FILE *f, const char *passphrase)
+static int
+store_key(EVP_PKEY *pkey, FILE *f, const char *passphrase)
 {
     int ret = 0;
     int selection;
@@ -118,9 +117,7 @@ static int store_key(EVP_PKEY *pkey, FILE *f, const char *passphrase)
      * Purely for the sake of demonstration, here we choose to export the whole
      * key if a passphrase is provided and the public key otherwise.
      */
-    selection = (passphrase != NULL)
-        ? EVP_PKEY_KEYPAIR
-        : EVP_PKEY_PUBLIC_KEY;
+    selection = (passphrase != NULL) ? EVP_PKEY_KEYPAIR : EVP_PKEY_PUBLIC_KEY;
 
     ectx = OSSL_ENCODER_CTX_new_for_pkey(pkey, selection, "PEM", NULL, propq);
     if (ectx == NULL) {
@@ -148,8 +145,7 @@ static int store_key(EVP_PKEY *pkey, FILE *f, const char *passphrase)
         }
 
         /* Set passphrase. */
-        if (OSSL_ENCODER_CTX_set_passphrase(ectx,
-                                            (const unsigned char *)passphrase,
+        if (OSSL_ENCODER_CTX_set_passphrase(ectx, (const unsigned char *)passphrase,
                                             strlen(passphrase)) == 0) {
             fprintf(stderr, "OSSL_ENCODER_CTX_set_passphrase() failed\n");
             goto cleanup;
@@ -168,7 +164,8 @@ cleanup:
     return ret;
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
     int ret = EXIT_FAILURE;
     OSSL_LIB_CTX *libctx = NULL;

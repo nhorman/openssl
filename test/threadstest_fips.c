@@ -16,7 +16,8 @@
 
 static int success;
 
-static void thread_fips_rand_fetch(void)
+static void
+thread_fips_rand_fetch(void)
 {
     EVP_MD *md;
 
@@ -25,7 +26,8 @@ static void thread_fips_rand_fetch(void)
     EVP_MD_free(md);
 }
 
-static int test_fips_rand_leak(void)
+static int
+test_fips_rand_leak(void)
 {
     thread_t thread;
 
@@ -38,7 +40,8 @@ static int test_fips_rand_leak(void)
     return TEST_true(success);
 }
 
-int setup_tests(void)
+int
+setup_tests(void)
 {
     /*
      * This test MUST be run first.  Once the default library context is set

@@ -27,8 +27,7 @@ static OSSL_FUNC_cleanup_user_nonce_fn *c_cleanup_user_nonce = NULL;
  * to the FIPS provider, this is the wrong one.  We need to convert this
  * to the correct core handle before up-calling libcrypto.
  */
-# define CORE_HANDLE(provctx) \
-    FIPS_get_core_handle(ossl_prov_ctx_get0_libctx(provctx))
+# define CORE_HANDLE(provctx) FIPS_get_core_handle(ossl_prov_ctx_get0_libctx(provctx))
 #else
 /*
  * The non-FIPS path *should* be unused because the full DRBG chain including
@@ -38,7 +37,8 @@ static OSSL_FUNC_cleanup_user_nonce_fn *c_cleanup_user_nonce = NULL;
 # define CORE_HANDLE(provctx) ossl_prov_ctx_get0_handle(provctx)
 #endif
 
-int ossl_prov_seeding_from_dispatch(const OSSL_DISPATCH *fns)
+int
+ossl_prov_seeding_from_dispatch(const OSSL_DISPATCH *fns)
 {
     for (; fns->function_id != 0; fns++) {
         /*
@@ -46,8 +46,13 @@ int ossl_prov_seeding_from_dispatch(const OSSL_DISPATCH *fns)
          * multiple versions of libcrypto (e.g. one static and one dynamic), but
          * sharing a single fips.so. We do a simple sanity check here.
          */
-#define set_func(c, f) \
-    do { if (c == NULL) c = f; else if (c != f) return 0; } while (0)
+#define set_func(c, f)                                                                             \
+    do {                                                                                           \
+        if (c == NULL)                                                                             \
+            c = f;                                                                                 \
+        else if (c != f)                                                                           \
+            return 0;                                                                              \
+    } while (0)
         switch (fns->function_id) {
         case OSSL_FUNC_GET_ENTROPY:
             set_func(c_get_entropy, OSSL_FUNC_get_entropy(fns));
@@ -79,8 +84,9 @@ int ossl_prov_seeding_from_dispatch(const OSSL_DISPATCH *fns)
     return 1;
 }
 
-size_t ossl_prov_get_entropy(PROV_CTX *prov_ctx, unsigned char **pout,
-                             int entropy, size_t min_len, size_t max_len)
+size_t
+ossl_prov_get_entropy(PROV_CTX *prov_ctx, unsigned char **pout, int entropy, size_t min_len,
+                      size_t max_len)
 {
     const OSSL_CORE_HANDLE *handle = CORE_HANDLE(prov_ctx);
 
@@ -91,8 +97,8 @@ size_t ossl_prov_get_entropy(PROV_CTX *prov_ctx, unsigned char **pout,
     return 0;
 }
 
-void ossl_prov_cleanup_entropy(PROV_CTX *prov_ctx, unsigned char *buf,
-                               size_t len)
+void
+ossl_prov_cleanup_entropy(PROV_CTX *prov_ctx, unsigned char *buf, size_t len)
 {
     const OSSL_CORE_HANDLE *handle = CORE_HANDLE(prov_ctx);
 
@@ -102,9 +108,9 @@ void ossl_prov_cleanup_entropy(PROV_CTX *prov_ctx, unsigned char *buf,
         c_cleanup_entropy(handle, buf, len);
 }
 
-size_t ossl_prov_get_nonce(PROV_CTX *prov_ctx, unsigned char **pout,
-                           size_t min_len, size_t max_len,
-                           const void *salt, size_t salt_len)
+size_t
+ossl_prov_get_nonce(PROV_CTX *prov_ctx, unsigned char **pout, size_t min_len, size_t max_len,
+                    const void *salt, size_t salt_len)
 {
     const OSSL_CORE_HANDLE *handle = CORE_HANDLE(prov_ctx);
 
@@ -115,7 +121,8 @@ size_t ossl_prov_get_nonce(PROV_CTX *prov_ctx, unsigned char **pout,
     return 0;
 }
 
-void ossl_prov_cleanup_nonce(PROV_CTX *prov_ctx, unsigned char *buf, size_t len)
+void
+ossl_prov_cleanup_nonce(PROV_CTX *prov_ctx, unsigned char *buf, size_t len)
 {
     const OSSL_CORE_HANDLE *handle = CORE_HANDLE(prov_ctx);
 

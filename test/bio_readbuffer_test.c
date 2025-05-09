@@ -23,7 +23,8 @@ static const char *filename = NULL;
  * 1 : Try a few reads using BIO_gets() before using BIO_read_ex()
  * 2 : Read the entire file using BIO_gets() before using BIO_read_ex().
  */
-static int test_readbuffer_file_bio(int tstid)
+static int
+test_readbuffer_file_bio(int tstid)
 {
     int ret = 0, len, partial;
     BIO *in = NULL, *in_bio = NULL, *readbuf_bio = NULL;
@@ -32,17 +33,16 @@ static int test_readbuffer_file_bio(int tstid)
     size_t readbytes = 0, bytes = 0, count = 0;
 
     /* Open a file BIO and read all the data */
-    if (!TEST_ptr(in = BIO_new_file(filename, "r"))
-        || !TEST_int_eq(BIO_read_ex(in, expected, sizeof(expected),
-                                    &readbytes), 1)
-        || !TEST_int_lt(readbytes, sizeof(expected)))
+    if (!TEST_ptr(in = BIO_new_file(filename, "r")) ||
+        !TEST_int_eq(BIO_read_ex(in, expected, sizeof(expected), &readbytes), 1) ||
+        !TEST_int_lt(readbytes, sizeof(expected)))
         goto err;
     BIO_free(in);
     in = NULL;
 
     /* Create a new file bio that sits under a readbuffer BIO */
-    if (!TEST_ptr(readbuf_bio = BIO_new(BIO_f_readbuffer()))
-        || !TEST_ptr(in_bio = BIO_new_file(filename, "r")))
+    if (!TEST_ptr(readbuf_bio = BIO_new(BIO_f_readbuffer())) ||
+        !TEST_ptr(in_bio = BIO_new_file(filename, "r")))
         goto err;
 
     in_bio = BIO_push(readbuf_bio, in_bio);
@@ -59,15 +59,12 @@ static int test_readbuffer_file_bio(int tstid)
                 if (!TEST_true(BIO_eof(in_bio)))
                     goto err;
             } else {
-                if (!TEST_int_gt(len, 0)
-                    || !TEST_int_le(len, (int)sizeof(buf) - 1))
+                if (!TEST_int_gt(len, 0) || !TEST_int_le(len, (int)sizeof(buf) - 1))
                     goto err;
                 if (!TEST_true(buf[len] == 0))
                     goto err;
-                if (len > 1
-                    && !BIO_eof(in_bio)
-                    && len != ((int)sizeof(buf) - 1)
-                    && !TEST_true(buf[len - 1] == '\n'))
+                if (len > 1 && !BIO_eof(in_bio) && len != ((int)sizeof(buf) - 1) &&
+                    !TEST_true(buf[len - 1] == '\n'))
                     goto err;
             }
             if (tstid == 1 && --partial == 0)
@@ -96,23 +93,19 @@ err:
     return ret;
 }
 
-typedef enum OPTION_choice {
-    OPT_ERR = -1,
-    OPT_EOF = 0,
-    OPT_TEST_ENUM
-} OPTION_CHOICE;
+typedef enum OPTION_choice { OPT_ERR = -1, OPT_EOF = 0, OPT_TEST_ENUM } OPTION_CHOICE;
 
-const OPTIONS *test_get_options(void)
+const OPTIONS *
+test_get_options(void)
 {
-    static const OPTIONS test_options[] = {
-        OPT_TEST_OPTIONS_WITH_EXTRA_USAGE("file\n"),
-        { OPT_HELP_STR, 1, '-', "file\tFile to run tests on.\n" },
-        { NULL }
-    };
+    static const OPTIONS test_options[] = {OPT_TEST_OPTIONS_WITH_EXTRA_USAGE("file\n"),
+                                           {OPT_HELP_STR, 1, '-', "file\tFile to run tests on.\n"},
+                                           {NULL}};
     return test_options;
 }
 
-int setup_tests(void)
+int
+setup_tests(void)
 {
     OPTION_CHOICE o;
 

@@ -19,11 +19,11 @@
 
 #ifndef OPENSSL_NO_SOCK
 # ifdef SO_MAXCONN
-#  define MAX_LISTEN  SO_MAXCONN
+#  define MAX_LISTEN SO_MAXCONN
 # elif defined(SOMAXCONN)
-#  define MAX_LISTEN  SOMAXCONN
+#  define MAX_LISTEN SOMAXCONN
 # else
-#  define MAX_LISTEN  32
+#  define MAX_LISTEN 32
 # endif
 
 /*-
@@ -39,7 +39,8 @@
  * Returns the file descriptor on success or INVALID_SOCKET on failure.  On
  * failure errno is set, and a status is added to the OpenSSL error stack.
  */
-int BIO_socket(int domain, int socktype, int protocol, int options)
+int
+BIO_socket(int domain, int socktype, int protocol, int options)
 {
     int sock = -1;
 
@@ -48,8 +49,7 @@ int BIO_socket(int domain, int socktype, int protocol, int options)
 
     sock = socket(domain, socktype, protocol);
     if (sock == -1) {
-        ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
-                       "calling socket()");
+        ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(), "calling socket()");
         ERR_raise(ERR_LIB_BIO, BIO_R_UNABLE_TO_CREATE_SOCKET);
         return INVALID_SOCKET;
     }
@@ -78,7 +78,8 @@ int BIO_socket(int domain, int socktype, int protocol, int options)
  * Returns 1 on success or 0 on failure.  On failure errno is set
  * and an error status is added to the OpenSSL error stack.
  */
-int BIO_connect(int sock, const BIO_ADDR *addr, int options)
+int
+BIO_connect(int sock, const BIO_ADDR *addr, int options)
 {
     const int on = 1;
 
@@ -91,20 +92,16 @@ int BIO_connect(int sock, const BIO_ADDR *addr, int options)
         return 0;
 
     if (options & BIO_SOCK_KEEPALIVE) {
-        if (setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE,
-                       (const void *)&on, sizeof(on)) != 0) {
-            ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
-                           "calling setsockopt()");
+        if (setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (const void *)&on, sizeof(on)) != 0) {
+            ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(), "calling setsockopt()");
             ERR_raise(ERR_LIB_BIO, BIO_R_UNABLE_TO_KEEPALIVE);
             return 0;
         }
     }
 
     if (options & BIO_SOCK_NODELAY) {
-        if (setsockopt(sock, IPPROTO_TCP, TCP_NODELAY,
-                       (const void *)&on, sizeof(on)) != 0) {
-            ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
-                           "calling setsockopt()");
+        if (setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (const void *)&on, sizeof(on)) != 0) {
+            ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(), "calling setsockopt()");
             ERR_raise(ERR_LIB_BIO, BIO_R_UNABLE_TO_NODELAY);
             return 0;
         }
@@ -148,21 +145,19 @@ int BIO_connect(int sock, const BIO_ADDR *addr, int options)
         sae.sae_dstaddr = BIO_ADDR_sockaddr(addr);
         sae.sae_dstaddrlen = BIO_ADDR_sockaddr_size(addr);
         if (connectx(sock, &sae, SAE_ASSOCID_ANY,
-                     CONNECT_DATA_IDEMPOTENT | CONNECT_RESUME_ON_READ_WRITE,
-                     NULL, 0, NULL, NULL) == -1) {
+                     CONNECT_DATA_IDEMPOTENT | CONNECT_RESUME_ON_READ_WRITE, NULL, 0, NULL,
+                     NULL) == -1) {
             if (!BIO_sock_should_retry(-1)) {
-                ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
-                               "calling connectx()");
+                ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(), "calling connectx()");
                 ERR_raise(ERR_LIB_BIO, BIO_R_CONNECT_ERROR);
             }
             return 0;
         }
 # endif
 # if defined(OSSL_TFO_CLIENT_SOCKOPT)
-        if (setsockopt(sock, IPPROTO_TCP, OSSL_TFO_CLIENT_SOCKOPT,
-                       (const void *)&on, sizeof(on)) != 0) {
-            ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
-                           "calling setsockopt()");
+        if (setsockopt(sock, IPPROTO_TCP, OSSL_TFO_CLIENT_SOCKOPT, (const void *)&on, sizeof(on)) !=
+            0) {
+            ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(), "calling setsockopt()");
             ERR_raise(ERR_LIB_BIO, BIO_R_UNABLE_TO_TFO);
             return 0;
         }
@@ -172,11 +167,9 @@ int BIO_connect(int sock, const BIO_ADDR *addr, int options)
 # endif
     }
 
-    if (connect(sock, BIO_ADDR_sockaddr(addr),
-                BIO_ADDR_sockaddr_size(addr)) == -1) {
+    if (connect(sock, BIO_ADDR_sockaddr(addr), BIO_ADDR_sockaddr_size(addr)) == -1) {
         if (!BIO_sock_should_retry(-1)) {
-            ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
-                           "calling connect()");
+            ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(), "calling connect()");
             ERR_raise(ERR_LIB_BIO, BIO_R_CONNECT_ERROR);
         }
         return 0;
@@ -209,7 +202,8 @@ int BIO_connect(int sock, const BIO_ADDR *addr, int options)
  * you set to BIO_SOCK_REUSEADDR option it will try to reuse the port anyway.
  * It's recommended that you use this.
  */
-int BIO_bind(int sock, const BIO_ADDR *addr, int options)
+int
+BIO_bind(int sock, const BIO_ADDR *addr, int options)
 {
 # ifndef OPENSSL_SYS_WINDOWS
     int on = 1;
@@ -226,10 +220,8 @@ int BIO_bind(int sock, const BIO_ADDR *addr, int options)
      * other operating systems, don't set it there.
      */
     if (options & BIO_SOCK_REUSEADDR) {
-        if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR,
-                       (const void *)&on, sizeof(on)) != 0) {
-            ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
-                           "calling setsockopt()");
+        if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const void *)&on, sizeof(on)) != 0) {
+            ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(), "calling setsockopt()");
             ERR_raise(ERR_LIB_BIO, BIO_R_UNABLE_TO_REUSEADDR);
             return 0;
         }
@@ -237,8 +229,7 @@ int BIO_bind(int sock, const BIO_ADDR *addr, int options)
 # endif
 
     if (bind(sock, BIO_ADDR_sockaddr(addr), BIO_ADDR_sockaddr_size(addr)) != 0) {
-        ERR_raise_data(ERR_LIB_SYS, get_last_socket_error() /* may be 0 */,
-                       "calling bind()");
+        ERR_raise_data(ERR_LIB_SYS, get_last_socket_error() /* may be 0 */, "calling bind()");
         ERR_raise(ERR_LIB_BIO, BIO_R_UNABLE_TO_BIND_SOCKET);
         return 0;
     }
@@ -284,7 +275,8 @@ int BIO_bind(int sock, const BIO_ADDR *addr, int options)
  * you set to BIO_SOCK_REUSEADDR option it will try to reuse the port anyway.
  * It's recommended that you use this.
  */
-int BIO_listen(int sock, const BIO_ADDR *addr, int options)
+int
+BIO_listen(int sock, const BIO_ADDR *addr, int options)
 {
     int on = 1;
     int socktype;
@@ -295,11 +287,9 @@ int BIO_listen(int sock, const BIO_ADDR *addr, int options)
         return 0;
     }
 
-    if (getsockopt(sock, SOL_SOCKET, SO_TYPE,
-                   (void *)&socktype, &socktype_len) != 0
-        || socktype_len != sizeof(socktype)) {
-        ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
-                       "calling getsockopt()");
+    if (getsockopt(sock, SOL_SOCKET, SO_TYPE, (void *)&socktype, &socktype_len) != 0 ||
+        socktype_len != sizeof(socktype)) {
+        ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(), "calling getsockopt()");
         ERR_raise(ERR_LIB_BIO, BIO_R_GETTING_SOCKTYPE);
         return 0;
     }
@@ -308,26 +298,22 @@ int BIO_listen(int sock, const BIO_ADDR *addr, int options)
         return 0;
 
     if (options & BIO_SOCK_KEEPALIVE) {
-        if (setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE,
-                       (const void *)&on, sizeof(on)) != 0) {
-            ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
-                           "calling setsockopt()");
+        if (setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (const void *)&on, sizeof(on)) != 0) {
+            ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(), "calling setsockopt()");
             ERR_raise(ERR_LIB_BIO, BIO_R_UNABLE_TO_KEEPALIVE);
             return 0;
         }
     }
 
     if (options & BIO_SOCK_NODELAY) {
-        if (setsockopt(sock, IPPROTO_TCP, TCP_NODELAY,
-                       (const void *)&on, sizeof(on)) != 0) {
-            ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
-                           "calling setsockopt()");
+        if (setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (const void *)&on, sizeof(on)) != 0) {
+            ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(), "calling setsockopt()");
             ERR_raise(ERR_LIB_BIO, BIO_R_UNABLE_TO_NODELAY);
             return 0;
         }
     }
 
-  /* On OpenBSD it is always IPv6 only with IPv6 sockets thus read-only */
+    /* On OpenBSD it is always IPv6 only with IPv6 sockets thus read-only */
 # if defined(IPV6_V6ONLY) && !defined(__OpenBSD__)
     if (BIO_ADDR_family(addr) == AF_INET6) {
         /*
@@ -335,10 +321,8 @@ int BIO_listen(int sock, const BIO_ADDR *addr, int options)
          * Therefore we always have to use setsockopt here.
          */
         on = options & BIO_SOCK_V6_ONLY ? 1 : 0;
-        if (setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY,
-                       (const void *)&on, sizeof(on)) != 0) {
-            ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
-                           "calling setsockopt()");
+        if (setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, (const void *)&on, sizeof(on)) != 0) {
+            ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(), "calling setsockopt()");
             ERR_raise(ERR_LIB_BIO, BIO_R_LISTEN_V6_ONLY);
             return 0;
         }
@@ -349,8 +333,7 @@ int BIO_listen(int sock, const BIO_ADDR *addr, int options)
         return 0;
 
     if (socktype != SOCK_DGRAM && listen(sock, MAX_LISTEN) == -1) {
-        ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
-                       "calling listen()");
+        ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(), "calling listen()");
         ERR_raise(ERR_LIB_BIO, BIO_R_UNABLE_TO_LISTEN_SOCKET);
         return 0;
     }
@@ -393,10 +376,8 @@ int BIO_listen(int sock, const BIO_ADDR *addr, int options)
         }
 #   endif
 #  endif
-        if (setsockopt(sock, IPPROTO_TCP, OSSL_TFO_SERVER_SOCKOPT,
-                       (void *)&q, sizeof(q)) < 0) {
-            ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
-                           "calling setsockopt()");
+        if (setsockopt(sock, IPPROTO_TCP, OSSL_TFO_SERVER_SOCKOPT, (void *)&q, sizeof(q)) < 0) {
+            ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(), "calling setsockopt()");
             ERR_raise(ERR_LIB_BIO, BIO_R_UNABLE_TO_TFO);
             return 0;
         }
@@ -413,7 +394,8 @@ int BIO_listen(int sock, const BIO_ADDR *addr, int options)
  * @options: BIO socket options, applied on the accepted socket.
  *
  */
-int BIO_accept_ex(int accept_sock, BIO_ADDR *addr_, int options)
+int
+BIO_accept_ex(int accept_sock, BIO_ADDR *addr_, int options)
 {
     socklen_t len;
     int accepted_sock;
@@ -421,12 +403,10 @@ int BIO_accept_ex(int accept_sock, BIO_ADDR *addr_, int options)
     BIO_ADDR *addr = addr_ == NULL ? &locaddr : addr_;
 
     len = sizeof(*addr);
-    accepted_sock = accept(accept_sock,
-                           BIO_ADDR_sockaddr_noconst(addr), &len);
+    accepted_sock = accept(accept_sock, BIO_ADDR_sockaddr_noconst(addr), &len);
     if (accepted_sock == -1) {
         if (!BIO_sock_should_retry(accepted_sock)) {
-            ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(),
-                           "calling accept()");
+            ERR_raise_data(ERR_LIB_SYS, get_last_socket_error(), "calling accept()");
             ERR_raise(ERR_LIB_BIO, BIO_R_ACCEPT_ERROR);
         }
         return INVALID_SOCKET;
@@ -444,7 +424,8 @@ int BIO_accept_ex(int accept_sock, BIO_ADDR *addr_, int options)
  * BIO_closesocket - Close a socket
  * @sock: the socket to close
  */
-int BIO_closesocket(int sock)
+int
+BIO_closesocket(int sock)
 {
     if (sock < 0 || closesocket(sock) < 0)
         return 0;

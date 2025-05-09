@@ -10,7 +10,8 @@
 #include "crypto/store.h"
 #include "store_local.h"
 
-void ossl_store_cleanup_int(void)
+void
+ossl_store_cleanup_int(void)
 {
     ossl_store_destroy_loaders_int();
 }

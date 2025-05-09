@@ -15,7 +15,8 @@
 # include <sys/types.h>
 # include <unistd.h>
 
-static void *thread_start_thunk(void *vthread)
+static void *
+thread_start_thunk(void *vthread)
 {
     CRYPTO_THREAD *thread;
     CRYPTO_THREAD_RETVAL ret;
@@ -32,7 +33,8 @@ static void *thread_start_thunk(void *vthread)
     return NULL;
 }
 
-int ossl_crypto_thread_native_spawn(CRYPTO_THREAD *thread)
+int
+ossl_crypto_thread_native_spawn(CRYPTO_THREAD *thread)
 {
     int ret;
     pthread_attr_t attr;
@@ -60,7 +62,8 @@ fail:
     return 0;
 }
 
-int ossl_crypto_thread_native_perform_join(CRYPTO_THREAD *thread, CRYPTO_THREAD_RETVAL *retval)
+int
+ossl_crypto_thread_native_perform_join(CRYPTO_THREAD *thread, CRYPTO_THREAD_RETVAL *retval)
 {
     void *thread_retval;
     pthread_t *handle;
@@ -68,7 +71,7 @@ int ossl_crypto_thread_native_perform_join(CRYPTO_THREAD *thread, CRYPTO_THREAD_
     if (thread == NULL || thread->handle == NULL)
         return 0;
 
-    handle = (pthread_t *) thread->handle;
+    handle = (pthread_t *)thread->handle;
     if (pthread_join(*handle, &thread_retval) != 0)
         return 0;
 
@@ -82,18 +85,21 @@ int ossl_crypto_thread_native_perform_join(CRYPTO_THREAD *thread, CRYPTO_THREAD_
     return 1;
 }
 
-int ossl_crypto_thread_native_exit(void)
+int
+ossl_crypto_thread_native_exit(void)
 {
     pthread_exit(NULL);
     return 1;
 }
 
-int ossl_crypto_thread_native_is_self(CRYPTO_THREAD *thread)
+int
+ossl_crypto_thread_native_is_self(CRYPTO_THREAD *thread)
 {
     return pthread_equal(*(pthread_t *)thread->handle, pthread_self());
 }
 
-CRYPTO_MUTEX *ossl_crypto_mutex_new(void)
+CRYPTO_MUTEX *
+ossl_crypto_mutex_new(void)
 {
     pthread_mutex_t *mutex;
 
@@ -106,7 +112,8 @@ CRYPTO_MUTEX *ossl_crypto_mutex_new(void)
     return (CRYPTO_MUTEX *)mutex;
 }
 
-int ossl_crypto_mutex_try_lock(CRYPTO_MUTEX *mutex)
+int
+ossl_crypto_mutex_try_lock(CRYPTO_MUTEX *mutex)
 {
     pthread_mutex_t *mutex_p;
 
@@ -118,7 +125,8 @@ int ossl_crypto_mutex_try_lock(CRYPTO_MUTEX *mutex)
     return 1;
 }
 
-void ossl_crypto_mutex_lock(CRYPTO_MUTEX *mutex)
+void
+ossl_crypto_mutex_lock(CRYPTO_MUTEX *mutex)
 {
     int rc;
     pthread_mutex_t *mutex_p;
@@ -128,7 +136,8 @@ void ossl_crypto_mutex_lock(CRYPTO_MUTEX *mutex)
     OPENSSL_assert(rc == 0);
 }
 
-void ossl_crypto_mutex_unlock(CRYPTO_MUTEX *mutex)
+void
+ossl_crypto_mutex_unlock(CRYPTO_MUTEX *mutex)
 {
     int rc;
     pthread_mutex_t *mutex_p;
@@ -138,7 +147,8 @@ void ossl_crypto_mutex_unlock(CRYPTO_MUTEX *mutex)
     OPENSSL_assert(rc == 0);
 }
 
-void ossl_crypto_mutex_free(CRYPTO_MUTEX **mutex)
+void
+ossl_crypto_mutex_free(CRYPTO_MUTEX **mutex)
 {
     pthread_mutex_t **mutex_p;
 
@@ -152,7 +162,8 @@ void ossl_crypto_mutex_free(CRYPTO_MUTEX **mutex)
     *mutex = NULL;
 }
 
-CRYPTO_CONDVAR *ossl_crypto_condvar_new(void)
+CRYPTO_CONDVAR *
+ossl_crypto_condvar_new(void)
 {
     pthread_cond_t *cv_p;
 
@@ -162,10 +173,11 @@ CRYPTO_CONDVAR *ossl_crypto_condvar_new(void)
         OPENSSL_free(cv_p);
         return NULL;
     }
-    return (CRYPTO_CONDVAR *) cv_p;
+    return (CRYPTO_CONDVAR *)cv_p;
 }
 
-void ossl_crypto_condvar_wait(CRYPTO_CONDVAR *cv, CRYPTO_MUTEX *mutex)
+void
+ossl_crypto_condvar_wait(CRYPTO_CONDVAR *cv, CRYPTO_MUTEX *mutex)
 {
     pthread_cond_t *cv_p;
     pthread_mutex_t *mutex_p;
@@ -175,8 +187,8 @@ void ossl_crypto_condvar_wait(CRYPTO_CONDVAR *cv, CRYPTO_MUTEX *mutex)
     pthread_cond_wait(cv_p, mutex_p);
 }
 
-void ossl_crypto_condvar_wait_timeout(CRYPTO_CONDVAR *cv, CRYPTO_MUTEX *mutex,
-                                      OSSL_TIME deadline)
+void
+ossl_crypto_condvar_wait_timeout(CRYPTO_CONDVAR *cv, CRYPTO_MUTEX *mutex, OSSL_TIME deadline)
 {
     pthread_cond_t *cv_p = (pthread_cond_t *)cv;
     pthread_mutex_t *mutex_p = (pthread_mutex_t *)mutex;
@@ -191,16 +203,15 @@ void ossl_crypto_condvar_wait_timeout(CRYPTO_CONDVAR *cv, CRYPTO_MUTEX *mutex,
     } else {
         struct timespec deadline_ts;
 
-        deadline_ts.tv_sec
-            = ossl_time2seconds(deadline);
-        deadline_ts.tv_nsec
-            = (ossl_time2ticks(deadline) % OSSL_TIME_SECOND) / OSSL_TIME_NS;
+        deadline_ts.tv_sec = ossl_time2seconds(deadline);
+        deadline_ts.tv_nsec = (ossl_time2ticks(deadline) % OSSL_TIME_SECOND) / OSSL_TIME_NS;
 
         pthread_cond_timedwait(cv_p, mutex_p, &deadline_ts);
     }
 }
 
-void ossl_crypto_condvar_broadcast(CRYPTO_CONDVAR *cv)
+void
+ossl_crypto_condvar_broadcast(CRYPTO_CONDVAR *cv)
 {
     pthread_cond_t *cv_p;
 
@@ -208,7 +219,8 @@ void ossl_crypto_condvar_broadcast(CRYPTO_CONDVAR *cv)
     pthread_cond_broadcast(cv_p);
 }
 
-void ossl_crypto_condvar_signal(CRYPTO_CONDVAR *cv)
+void
+ossl_crypto_condvar_signal(CRYPTO_CONDVAR *cv)
 {
     pthread_cond_t *cv_p;
 
@@ -216,7 +228,8 @@ void ossl_crypto_condvar_signal(CRYPTO_CONDVAR *cv)
     pthread_cond_signal(cv_p);
 }
 
-void ossl_crypto_condvar_free(CRYPTO_CONDVAR **cv)
+void
+ossl_crypto_condvar_free(CRYPTO_CONDVAR **cv)
 {
     pthread_cond_t **cv_p;
 

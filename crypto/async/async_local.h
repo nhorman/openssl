@@ -12,7 +12,7 @@
  * includes <signal.h> which includes <ucontext.h>
  */
 #if defined(__APPLE__) && defined(__MACH__) && !defined(_XOPEN_SOURCE)
-# define _XOPEN_SOURCE          /* Otherwise incomplete ucontext_t structure */
+# define _XOPEN_SOURCE /* Otherwise incomplete ucontext_t structure */
 # pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif
 
@@ -38,7 +38,7 @@ struct async_ctx_st {
 
 struct async_job_st {
     async_fibre fibrectx;
-    int (*func) (void *);
+    int (*func)(void *);
     void *funcargs;
     int ret;
     int status;
@@ -68,7 +68,7 @@ struct async_wait_ctx_st {
 DEFINE_STACK_OF(ASYNC_JOB)
 
 struct async_pool_st {
-    STACK_OF(ASYNC_JOB) *jobs;
+    STACK_OF(ASYNC_JOB) * jobs;
     size_t curr_size;
     size_t max_size;
 };
@@ -78,4 +78,3 @@ void async_start_func(void);
 async_ctx *async_get_ctx(void);
 
 void async_wait_ctx_reset_counts(ASYNC_WAIT_CTX *ctx);
-

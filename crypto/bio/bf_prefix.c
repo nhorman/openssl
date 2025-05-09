@@ -12,8 +12,7 @@
 #include <errno.h>
 #include "bio_local.h"
 
-static int prefix_write(BIO *b, const char *out, size_t outl,
-                        size_t *numwritten);
+static int prefix_write(BIO *b, const char *out, size_t outl, size_t *numwritten);
 static int prefix_read(BIO *b, char *buf, size_t size, size_t *numread);
 static int prefix_puts(BIO *b, const char *str);
 static int prefix_gets(BIO *b, char *str, int size);
@@ -23,33 +22,25 @@ static int prefix_destroy(BIO *b);
 static long prefix_callback_ctrl(BIO *b, int cmd, BIO_info_cb *fp);
 
 static const BIO_METHOD prefix_meth = {
-    BIO_TYPE_BUFFER,
-    "prefix",
-    prefix_write,
-    NULL,
-    prefix_read,
-    NULL,
-    prefix_puts,
-    prefix_gets,
-    prefix_ctrl,
-    prefix_create,
-    prefix_destroy,
-    prefix_callback_ctrl,
+    BIO_TYPE_BUFFER, "prefix",    prefix_write, NULL,          prefix_read,    NULL,
+    prefix_puts,     prefix_gets, prefix_ctrl,  prefix_create, prefix_destroy, prefix_callback_ctrl,
 };
 
-const BIO_METHOD *BIO_f_prefix(void)
+const BIO_METHOD *
+BIO_f_prefix(void)
 {
     return &prefix_meth;
 }
 
 typedef struct prefix_ctx_st {
-    char *prefix;              /* Text prefix, given by user */
-    unsigned int indent;       /* Indentation amount, given by user */
+    char *prefix;        /* Text prefix, given by user */
+    unsigned int indent; /* Indentation amount, given by user */
 
-    int linestart;             /* flag to indicate we're at the line start */
+    int linestart; /* flag to indicate we're at the line start */
 } PREFIX_CTX;
 
-static int prefix_create(BIO *b)
+static int
+prefix_create(BIO *b)
 {
     PREFIX_CTX *ctx = OPENSSL_zalloc(sizeof(*ctx));
 
@@ -64,7 +55,8 @@ static int prefix_create(BIO *b)
     return 1;
 }
 
-static int prefix_destroy(BIO *b)
+static int
+prefix_destroy(BIO *b)
 {
     PREFIX_CTX *ctx = BIO_get_data(b);
 
@@ -73,13 +65,14 @@ static int prefix_destroy(BIO *b)
     return 1;
 }
 
-static int prefix_read(BIO *b, char *in, size_t size, size_t *numread)
+static int
+prefix_read(BIO *b, char *in, size_t size, size_t *numread)
 {
     return BIO_read_ex(BIO_next(b), in, size, numread);
 }
 
-static int prefix_write(BIO *b, const char *out, size_t outl,
-                        size_t *numwritten)
+static int
+prefix_write(BIO *b, const char *out, size_t outl, size_t *numwritten)
 {
     PREFIX_CTX *ctx = BIO_get_data(b);
 
@@ -90,14 +83,13 @@ static int prefix_write(BIO *b, const char *out, size_t outl,
      * If no prefix is set or if it's empty, and no indentation amount is set,
      * we've got nothing to do here
      */
-    if ((ctx->prefix == NULL || *ctx->prefix == '\0')
-        && ctx->indent == 0) {
+    if ((ctx->prefix == NULL || *ctx->prefix == '\0') && ctx->indent == 0) {
         /*
          * We do note if what comes next will be a new line, though, so we're
          * prepared to handle prefix and indentation the next time around.
          */
         if (outl > 0)
-            ctx->linestart = (out[outl-1] == '\n');
+            ctx->linestart = (out[outl - 1] == '\n');
         return BIO_write_ex(BIO_next(b), out, outl, numwritten);
     }
 
@@ -114,9 +106,8 @@ static int prefix_write(BIO *b, const char *out, size_t outl,
         if (ctx->linestart) {
             size_t dontcare;
 
-            if (ctx->prefix != NULL
-                && !BIO_write_ex(BIO_next(b), ctx->prefix, strlen(ctx->prefix),
-                                 &dontcare))
+            if (ctx->prefix != NULL &&
+                !BIO_write_ex(BIO_next(b), ctx->prefix, strlen(ctx->prefix), &dontcare))
                 return 0;
             BIO_printf(BIO_next(b), "%*s", ctx->indent, "");
             ctx->linestart = 0;
@@ -148,7 +139,8 @@ static int prefix_write(BIO *b, const char *out, size_t outl,
     return 1;
 }
 
-static long prefix_ctrl(BIO *b, int cmd, long num, void *ptr)
+static long
+prefix_ctrl(BIO *b, int cmd, long num, void *ptr)
 {
     long ret = 0;
     PREFIX_CTX *ctx;
@@ -191,17 +183,20 @@ static long prefix_ctrl(BIO *b, int cmd, long num, void *ptr)
     return ret;
 }
 
-static long prefix_callback_ctrl(BIO *b, int cmd, BIO_info_cb *fp)
+static long
+prefix_callback_ctrl(BIO *b, int cmd, BIO_info_cb *fp)
 {
     return BIO_callback_ctrl(BIO_next(b), cmd, fp);
 }
 
-static int prefix_gets(BIO *b, char *buf, int size)
+static int
+prefix_gets(BIO *b, char *buf, int size)
 {
     return BIO_gets(BIO_next(b), buf, size);
 }
 
-static int prefix_puts(BIO *b, const char *str)
+static int
+prefix_puts(BIO *b, const char *str)
 {
     return BIO_write(b, str, strlen(str));
 }

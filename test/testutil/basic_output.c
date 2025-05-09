@@ -33,13 +33,15 @@ static CRYPTO_RWLOCK *io_lock = NULL;
 #endif
 
 #if defined(OPENSSL_THREADS)
-static void cleanup_test_data(void *p)
+static void
+cleanup_test_data(void *p)
 {
     OPENSSL_free(p);
 }
 #endif
 
-static int init_local_test_data(void)
+static int
+init_local_test_data(void)
 {
 #if defined(OPENSSL_THREADS)
     if (!CRYPTO_THREAD_init_local(&local_test_data, cleanup_test_data))
@@ -49,7 +51,8 @@ static int init_local_test_data(void)
     return 1;
 }
 
-static LOCAL_TEST_DATA *get_local_test_data(void)
+static LOCAL_TEST_DATA *
+get_local_test_data(void)
 {
 #if defined(OPENSSL_THREADS)
     LOCAL_TEST_DATA *p;
@@ -72,7 +75,8 @@ static LOCAL_TEST_DATA *get_local_test_data(void)
 #endif
 }
 
-static void cleanup_local_test_data(void)
+static void
+cleanup_local_test_data(void)
 {
 #if defined(OPENSSL_THREADS)
     LOCAL_TEST_DATA *p;
@@ -86,7 +90,8 @@ static void cleanup_local_test_data(void)
 #endif
 }
 
-int set_override_bio_out(BIO *bio)
+int
+set_override_bio_out(BIO *bio)
 {
     LOCAL_TEST_DATA *data = get_local_test_data();
 
@@ -97,7 +102,8 @@ int set_override_bio_out(BIO *bio)
     return 1;
 }
 
-int set_override_bio_err(BIO *bio)
+int
+set_override_bio_err(BIO *bio)
 {
     LOCAL_TEST_DATA *data = get_local_test_data();
 
@@ -108,7 +114,8 @@ int set_override_bio_err(BIO *bio)
     return 1;
 }
 
-static BIO *get_bio_out(void)
+static BIO *
+get_bio_out(void)
 {
     LOCAL_TEST_DATA *data = get_local_test_data();
 
@@ -118,7 +125,8 @@ static BIO *get_bio_out(void)
     return bio_out;
 }
 
-static BIO *get_bio_err(void)
+static BIO *
+get_bio_err(void)
 {
     LOCAL_TEST_DATA *data = get_local_test_data();
 
@@ -128,7 +136,8 @@ static BIO *get_bio_err(void)
     return bio_err;
 }
 
-void test_open_streams(void)
+void
+test_open_streams(void)
 {
     int ok;
 
@@ -160,13 +169,15 @@ void test_open_streams(void)
 #endif
 }
 
-void test_adjust_streams_tap_level(int level)
+void
+test_adjust_streams_tap_level(int level)
 {
     BIO_set_indent(tap_out, level);
     BIO_set_indent(tap_err, level);
 }
 
-void test_close_streams(void)
+void
+test_close_streams(void)
 {
     /*
      * The rest of the chain is freed by the BIO_free_all() calls below, so
@@ -185,21 +196,24 @@ void test_close_streams(void)
 #endif
 }
 
-static ossl_inline void test_io_lock(void)
+static ossl_inline void
+test_io_lock(void)
 {
 #if defined(OPENSSL_THREADS)
     OPENSSL_assert(CRYPTO_THREAD_write_lock(io_lock) > 0);
 #endif
 }
 
-static ossl_inline void test_io_unlock(void)
+static ossl_inline void
+test_io_unlock(void)
 {
 #if defined(OPENSSL_THREADS)
     CRYPTO_THREAD_unlock(io_lock);
 #endif
 }
 
-int test_vprintf_stdout(const char *fmt, va_list ap)
+int
+test_vprintf_stdout(const char *fmt, va_list ap)
 {
     int r;
 
@@ -210,7 +224,8 @@ int test_vprintf_stdout(const char *fmt, va_list ap)
     return r;
 }
 
-int test_vprintf_stderr(const char *fmt, va_list ap)
+int
+test_vprintf_stderr(const char *fmt, va_list ap)
 {
     int r;
 
@@ -221,7 +236,8 @@ int test_vprintf_stderr(const char *fmt, va_list ap)
     return r;
 }
 
-int test_flush_stdout(void)
+int
+test_flush_stdout(void)
 {
     int r;
 
@@ -232,7 +248,8 @@ int test_flush_stdout(void)
     return r;
 }
 
-int test_flush_stderr(void)
+int
+test_flush_stderr(void)
 {
     int r;
 
@@ -243,7 +260,8 @@ int test_flush_stderr(void)
     return r;
 }
 
-int test_vprintf_tapout(const char *fmt, va_list ap)
+int
+test_vprintf_tapout(const char *fmt, va_list ap)
 {
     int r;
 
@@ -254,7 +272,8 @@ int test_vprintf_tapout(const char *fmt, va_list ap)
     return r;
 }
 
-int test_vprintf_taperr(const char *fmt, va_list ap)
+int
+test_vprintf_taperr(const char *fmt, va_list ap)
 {
     int r;
 
@@ -265,7 +284,8 @@ int test_vprintf_taperr(const char *fmt, va_list ap)
     return r;
 }
 
-int test_flush_tapout(void)
+int
+test_flush_tapout(void)
 {
     int r;
 
@@ -276,7 +296,8 @@ int test_flush_tapout(void)
     return r;
 }
 
-int test_flush_taperr(void)
+int
+test_flush_taperr(void)
 {
     int r;
 

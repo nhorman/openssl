@@ -30,7 +30,8 @@
  * Returns the total entropy count, if it exceeds the requested
  * entropy count. Otherwise, returns an entropy count of 0.
  */
-size_t ossl_prov_acquire_entropy_from_tsc(RAND_POOL *pool)
+size_t
+ossl_prov_acquire_entropy_from_tsc(RAND_POOL *pool)
 {
     unsigned char c;
     int i;

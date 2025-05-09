@@ -19,12 +19,10 @@ static const ERR_STRING_DATA BN_str_reasons[] = {
     {ERR_PACK(ERR_LIB_BN, 0, BN_R_BAD_RECIPROCAL), "bad reciprocal"},
     {ERR_PACK(ERR_LIB_BN, 0, BN_R_BIGNUM_TOO_LONG), "bignum too long"},
     {ERR_PACK(ERR_LIB_BN, 0, BN_R_BITS_TOO_SMALL), "bits too small"},
-    {ERR_PACK(ERR_LIB_BN, 0, BN_R_CALLED_WITH_EVEN_MODULUS),
-    "called with even modulus"},
+    {ERR_PACK(ERR_LIB_BN, 0, BN_R_CALLED_WITH_EVEN_MODULUS), "called with even modulus"},
     {ERR_PACK(ERR_LIB_BN, 0, BN_R_DIV_BY_ZERO), "div by zero"},
     {ERR_PACK(ERR_LIB_BN, 0, BN_R_ENCODING_ERROR), "encoding error"},
-    {ERR_PACK(ERR_LIB_BN, 0, BN_R_EXPAND_ON_STATIC_BIGNUM_DATA),
-    "expand on static bignum data"},
+    {ERR_PACK(ERR_LIB_BN, 0, BN_R_EXPAND_ON_STATIC_BIGNUM_DATA), "expand on static bignum data"},
     {ERR_PACK(ERR_LIB_BN, 0, BN_R_INPUT_NOT_REDUCED), "input not reduced"},
     {ERR_PACK(ERR_LIB_BN, 0, BN_R_INVALID_LENGTH), "invalid length"},
     {ERR_PACK(ERR_LIB_BN, 0, BN_R_INVALID_RANGE), "invalid range"},
@@ -35,18 +33,16 @@ static const ERR_STRING_DATA BN_str_reasons[] = {
     {ERR_PACK(ERR_LIB_BN, 0, BN_R_NO_PRIME_CANDIDATE), "no prime candidate"},
     {ERR_PACK(ERR_LIB_BN, 0, BN_R_NO_SOLUTION), "no solution"},
     {ERR_PACK(ERR_LIB_BN, 0, BN_R_NO_SUITABLE_DIGEST), "no suitable digest"},
-    {ERR_PACK(ERR_LIB_BN, 0, BN_R_PRIVATE_KEY_TOO_LARGE),
-    "private key too large"},
+    {ERR_PACK(ERR_LIB_BN, 0, BN_R_PRIVATE_KEY_TOO_LARGE), "private key too large"},
     {ERR_PACK(ERR_LIB_BN, 0, BN_R_P_IS_NOT_PRIME), "p is not prime"},
     {ERR_PACK(ERR_LIB_BN, 0, BN_R_TOO_MANY_ITERATIONS), "too many iterations"},
-    {ERR_PACK(ERR_LIB_BN, 0, BN_R_TOO_MANY_TEMPORARY_VARIABLES),
-    "too many temporary variables"},
-    {0, NULL}
-};
+    {ERR_PACK(ERR_LIB_BN, 0, BN_R_TOO_MANY_TEMPORARY_VARIABLES), "too many temporary variables"},
+    {0, NULL}};
 
 #endif
 
-int ossl_err_load_BN_strings(void)
+int
+ossl_err_load_BN_strings(void)
 {
 #ifndef OPENSSL_NO_ERR
     if (ERR_reason_error_string(BN_str_reasons[0].error) == NULL)

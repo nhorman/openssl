@@ -34,11 +34,9 @@ static OSSL_FUNC_kdf_set_ctx_params_fn kdf_scrypt_set_ctx_params;
 static OSSL_FUNC_kdf_gettable_ctx_params_fn kdf_scrypt_gettable_ctx_params;
 static OSSL_FUNC_kdf_get_ctx_params_fn kdf_scrypt_get_ctx_params;
 
-static int scrypt_alg(const char *pass, size_t passlen,
-                      const unsigned char *salt, size_t saltlen,
-                      uint64_t N, uint64_t r, uint64_t p, uint64_t maxmem,
-                      unsigned char *key, size_t keylen, EVP_MD *sha256,
-                      OSSL_LIB_CTX *libctx, const char *propq);
+static int scrypt_alg(const char *pass, size_t passlen, const unsigned char *salt, size_t saltlen,
+                      uint64_t N, uint64_t r, uint64_t p, uint64_t maxmem, unsigned char *key,
+                      size_t keylen, EVP_MD *sha256, OSSL_LIB_CTX *libctx, const char *propq);
 
 typedef struct {
     OSSL_LIB_CTX *libctx;
@@ -55,7 +53,8 @@ typedef struct {
 
 static void kdf_scrypt_init(KDF_SCRYPT *ctx);
 
-static void *kdf_scrypt_new_inner(OSSL_LIB_CTX *libctx)
+static void *
+kdf_scrypt_new_inner(OSSL_LIB_CTX *libctx)
 {
     KDF_SCRYPT *ctx;
 
@@ -70,12 +69,14 @@ static void *kdf_scrypt_new_inner(OSSL_LIB_CTX *libctx)
     return ctx;
 }
 
-static void *kdf_scrypt_new(void *provctx)
+static void *
+kdf_scrypt_new(void *provctx)
 {
     return kdf_scrypt_new_inner(PROV_LIBCTX_OF(provctx));
 }
 
-static void kdf_scrypt_free(void *vctx)
+static void
+kdf_scrypt_free(void *vctx)
 {
     KDF_SCRYPT *ctx = (KDF_SCRYPT *)vctx;
 
@@ -87,7 +88,8 @@ static void kdf_scrypt_free(void *vctx)
     }
 }
 
-static void kdf_scrypt_reset(void *vctx)
+static void
+kdf_scrypt_reset(void *vctx)
 {
     KDF_SCRYPT *ctx = (KDF_SCRYPT *)vctx;
 
@@ -98,7 +100,8 @@ static void kdf_scrypt_reset(void *vctx)
     kdf_scrypt_init(ctx);
 }
 
-static void *kdf_scrypt_dup(void *vctx)
+static void *
+kdf_scrypt_dup(void *vctx)
 {
     const KDF_SCRYPT *src = (const KDF_SCRYPT *)vctx;
     KDF_SCRYPT *dest;
@@ -112,10 +115,8 @@ static void *kdf_scrypt_dup(void *vctx)
             if (dest->propq == NULL)
                 goto err;
         }
-        if (!ossl_prov_memdup(src->salt, src->salt_len,
-                              &dest->salt, &dest->salt_len)
-                || !ossl_prov_memdup(src->pass, src->pass_len,
-                                     &dest->pass , &dest->pass_len))
+        if (!ossl_prov_memdup(src->salt, src->salt_len, &dest->salt, &dest->salt_len) ||
+            !ossl_prov_memdup(src->pass, src->pass_len, &dest->pass, &dest->pass_len))
             goto err;
         dest->N = src->N;
         dest->r = src->r;
@@ -125,12 +126,13 @@ static void *kdf_scrypt_dup(void *vctx)
     }
     return dest;
 
- err:
+err:
     kdf_scrypt_free(dest);
     return NULL;
 }
 
-static void kdf_scrypt_init(KDF_SCRYPT *ctx)
+static void
+kdf_scrypt_init(KDF_SCRYPT *ctx)
 {
     /* Default values are the most conservative recommendation given in the
      * original paper of C. Percival. Derivation uses roughly 1 GiB of memory
@@ -142,8 +144,8 @@ static void kdf_scrypt_init(KDF_SCRYPT *ctx)
     ctx->maxmem_bytes = 1025 * 1024 * 1024;
 }
 
-static int scrypt_set_membuf(unsigned char **buffer, size_t *buflen,
-                             const OSSL_PARAM *p)
+static int
+scrypt_set_membuf(unsigned char **buffer, size_t *buflen, const OSSL_PARAM *p)
 {
     OPENSSL_clear_free(*buffer, *buflen);
     *buffer = NULL;
@@ -159,7 +161,8 @@ static int scrypt_set_membuf(unsigned char **buffer, size_t *buflen,
     return 1;
 }
 
-static int set_digest(KDF_SCRYPT *ctx)
+static int
+set_digest(KDF_SCRYPT *ctx)
 {
     EVP_MD_free(ctx->sha256);
     ctx->sha256 = EVP_MD_fetch(ctx->libctx, "sha256", ctx->propq);
@@ -170,7 +173,8 @@ static int set_digest(KDF_SCRYPT *ctx)
     return 1;
 }
 
-static int set_property_query(KDF_SCRYPT *ctx, const char *propq)
+static int
+set_property_query(KDF_SCRYPT *ctx, const char *propq)
 {
     OPENSSL_free(ctx->propq);
     ctx->propq = NULL;
@@ -182,8 +186,8 @@ static int set_property_query(KDF_SCRYPT *ctx, const char *propq)
     return 1;
 }
 
-static int kdf_scrypt_derive(void *vctx, unsigned char *key, size_t keylen,
-                             const OSSL_PARAM params[])
+static int
+kdf_scrypt_derive(void *vctx, unsigned char *key, size_t keylen, const OSSL_PARAM params[])
 {
     KDF_SCRYPT *ctx = (KDF_SCRYPT *)vctx;
 
@@ -203,18 +207,18 @@ static int kdf_scrypt_derive(void *vctx, unsigned char *key, size_t keylen,
     if (ctx->sha256 == NULL && !set_digest(ctx))
         return 0;
 
-    return scrypt_alg((char *)ctx->pass, ctx->pass_len, ctx->salt,
-                      ctx->salt_len, ctx->N, ctx->r, ctx->p,
-                      ctx->maxmem_bytes, key, keylen, ctx->sha256,
-                      ctx->libctx, ctx->propq);
+    return scrypt_alg((char *)ctx->pass, ctx->pass_len, ctx->salt, ctx->salt_len, ctx->N, ctx->r,
+                      ctx->p, ctx->maxmem_bytes, key, keylen, ctx->sha256, ctx->libctx, ctx->propq);
 }
 
-static int is_power_of_two(uint64_t value)
+static int
+is_power_of_two(uint64_t value)
 {
     return (value != 0) && ((value & (value - 1)) == 0);
 }
 
-static int kdf_scrypt_set_ctx_params(void *vctx, const OSSL_PARAM params[])
+static int
+kdf_scrypt_set_ctx_params(void *vctx, const OSSL_PARAM params[])
 {
     const OSSL_PARAM *p;
     KDF_SCRYPT *ctx = vctx;
@@ -231,31 +235,25 @@ static int kdf_scrypt_set_ctx_params(void *vctx, const OSSL_PARAM params[])
         if (!scrypt_set_membuf(&ctx->salt, &ctx->salt_len, p))
             return 0;
 
-    if ((p = OSSL_PARAM_locate_const(params, OSSL_KDF_PARAM_SCRYPT_N))
-        != NULL) {
-        if (!OSSL_PARAM_get_uint64(p, &u64_value)
-            || u64_value <= 1
-            || !is_power_of_two(u64_value))
+    if ((p = OSSL_PARAM_locate_const(params, OSSL_KDF_PARAM_SCRYPT_N)) != NULL) {
+        if (!OSSL_PARAM_get_uint64(p, &u64_value) || u64_value <= 1 || !is_power_of_two(u64_value))
             return 0;
         ctx->N = u64_value;
     }
 
-    if ((p = OSSL_PARAM_locate_const(params, OSSL_KDF_PARAM_SCRYPT_R))
-        != NULL) {
+    if ((p = OSSL_PARAM_locate_const(params, OSSL_KDF_PARAM_SCRYPT_R)) != NULL) {
         if (!OSSL_PARAM_get_uint64(p, &u64_value) || u64_value < 1)
             return 0;
         ctx->r = u64_value;
     }
 
-    if ((p = OSSL_PARAM_locate_const(params, OSSL_KDF_PARAM_SCRYPT_P))
-        != NULL) {
+    if ((p = OSSL_PARAM_locate_const(params, OSSL_KDF_PARAM_SCRYPT_P)) != NULL) {
         if (!OSSL_PARAM_get_uint64(p, &u64_value) || u64_value < 1)
             return 0;
         ctx->p = u64_value;
     }
 
-    if ((p = OSSL_PARAM_locate_const(params, OSSL_KDF_PARAM_SCRYPT_MAXMEM))
-        != NULL) {
+    if ((p = OSSL_PARAM_locate_const(params, OSSL_KDF_PARAM_SCRYPT_MAXMEM)) != NULL) {
         if (!OSSL_PARAM_get_uint64(p, &u64_value) || u64_value < 1)
             return 0;
         ctx->maxmem_bytes = u64_value;
@@ -263,16 +261,15 @@ static int kdf_scrypt_set_ctx_params(void *vctx, const OSSL_PARAM params[])
 
     p = OSSL_PARAM_locate_const(params, OSSL_KDF_PARAM_PROPERTIES);
     if (p != NULL) {
-        if (p->data_type != OSSL_PARAM_UTF8_STRING
-            || !set_property_query(ctx, p->data)
-            || !set_digest(ctx))
+        if (p->data_type != OSSL_PARAM_UTF8_STRING || !set_property_query(ctx, p->data) ||
+            !set_digest(ctx))
             return 0;
     }
     return 1;
 }
 
-static const OSSL_PARAM *kdf_scrypt_settable_ctx_params(ossl_unused void *ctx,
-                                                        ossl_unused void *p_ctx)
+static const OSSL_PARAM *
+kdf_scrypt_settable_ctx_params(ossl_unused void *ctx, ossl_unused void *p_ctx)
 {
     static const OSSL_PARAM known_settable_ctx_params[] = {
         OSSL_PARAM_octet_string(OSSL_KDF_PARAM_PASSWORD, NULL, 0),
@@ -282,12 +279,12 @@ static const OSSL_PARAM *kdf_scrypt_settable_ctx_params(ossl_unused void *ctx,
         OSSL_PARAM_uint32(OSSL_KDF_PARAM_SCRYPT_P, NULL),
         OSSL_PARAM_uint64(OSSL_KDF_PARAM_SCRYPT_MAXMEM, NULL),
         OSSL_PARAM_utf8_string(OSSL_KDF_PARAM_PROPERTIES, NULL, 0),
-        OSSL_PARAM_END
-    };
+        OSSL_PARAM_END};
     return known_settable_ctx_params;
 }
 
-static int kdf_scrypt_get_ctx_params(void *vctx, OSSL_PARAM params[])
+static int
+kdf_scrypt_get_ctx_params(void *vctx, OSSL_PARAM params[])
 {
     OSSL_PARAM *p;
 
@@ -296,33 +293,29 @@ static int kdf_scrypt_get_ctx_params(void *vctx, OSSL_PARAM params[])
     return -2;
 }
 
-static const OSSL_PARAM *kdf_scrypt_gettable_ctx_params(ossl_unused void *ctx,
-                                                        ossl_unused void *p_ctx)
+static const OSSL_PARAM *
+kdf_scrypt_gettable_ctx_params(ossl_unused void *ctx, ossl_unused void *p_ctx)
 {
     static const OSSL_PARAM known_gettable_ctx_params[] = {
-        OSSL_PARAM_size_t(OSSL_KDF_PARAM_SIZE, NULL),
-        OSSL_PARAM_END
-    };
+        OSSL_PARAM_size_t(OSSL_KDF_PARAM_SIZE, NULL), OSSL_PARAM_END};
     return known_gettable_ctx_params;
 }
 
 const OSSL_DISPATCH ossl_kdf_scrypt_functions[] = {
-    { OSSL_FUNC_KDF_NEWCTX, (void(*)(void))kdf_scrypt_new },
-    { OSSL_FUNC_KDF_DUPCTX, (void(*)(void))kdf_scrypt_dup },
-    { OSSL_FUNC_KDF_FREECTX, (void(*)(void))kdf_scrypt_free },
-    { OSSL_FUNC_KDF_RESET, (void(*)(void))kdf_scrypt_reset },
-    { OSSL_FUNC_KDF_DERIVE, (void(*)(void))kdf_scrypt_derive },
-    { OSSL_FUNC_KDF_SETTABLE_CTX_PARAMS,
-      (void(*)(void))kdf_scrypt_settable_ctx_params },
-    { OSSL_FUNC_KDF_SET_CTX_PARAMS, (void(*)(void))kdf_scrypt_set_ctx_params },
-    { OSSL_FUNC_KDF_GETTABLE_CTX_PARAMS,
-      (void(*)(void))kdf_scrypt_gettable_ctx_params },
-    { OSSL_FUNC_KDF_GET_CTX_PARAMS, (void(*)(void))kdf_scrypt_get_ctx_params },
-    OSSL_DISPATCH_END
-};
+    {OSSL_FUNC_KDF_NEWCTX, (void (*)(void))kdf_scrypt_new},
+    {OSSL_FUNC_KDF_DUPCTX, (void (*)(void))kdf_scrypt_dup},
+    {OSSL_FUNC_KDF_FREECTX, (void (*)(void))kdf_scrypt_free},
+    {OSSL_FUNC_KDF_RESET, (void (*)(void))kdf_scrypt_reset},
+    {OSSL_FUNC_KDF_DERIVE, (void (*)(void))kdf_scrypt_derive},
+    {OSSL_FUNC_KDF_SETTABLE_CTX_PARAMS, (void (*)(void))kdf_scrypt_settable_ctx_params},
+    {OSSL_FUNC_KDF_SET_CTX_PARAMS, (void (*)(void))kdf_scrypt_set_ctx_params},
+    {OSSL_FUNC_KDF_GETTABLE_CTX_PARAMS, (void (*)(void))kdf_scrypt_gettable_ctx_params},
+    {OSSL_FUNC_KDF_GET_CTX_PARAMS, (void (*)(void))kdf_scrypt_get_ctx_params},
+    OSSL_DISPATCH_END};
 
-#define R(a,b) (((a) << (b)) | ((a) >> (32 - (b))))
-static void salsa208_word_specification(uint32_t inout[16])
+# define R(a, b) (((a) << (b)) | ((a) >> (32 - (b))))
+static void
+salsa208_word_specification(uint32_t inout[16])
 {
     int i;
     uint32_t x[16];
@@ -367,7 +360,8 @@ static void salsa208_word_specification(uint32_t inout[16])
     OPENSSL_cleanse(x, sizeof(x));
 }
 
-static void scryptBlockMix(uint32_t *B_, uint32_t *B, uint64_t r)
+static void
+scryptBlockMix(uint32_t *B_, uint32_t *B, uint64_t r)
 {
     uint64_t i, j;
     uint32_t X[16], *pB;
@@ -383,8 +377,8 @@ static void scryptBlockMix(uint32_t *B_, uint32_t *B, uint64_t r)
     OPENSSL_cleanse(X, sizeof(X));
 }
 
-static void scryptROMix(unsigned char *B, uint64_t r, uint64_t N,
-                        uint32_t *X, uint32_t *T, uint32_t *V)
+static void
+scryptROMix(unsigned char *B, uint64_t r, uint64_t N, uint32_t *X, uint32_t *T, uint32_t *V)
 {
     unsigned char *pB;
     uint32_t *pV;
@@ -421,16 +415,16 @@ static void scryptROMix(unsigned char *B, uint64_t r, uint64_t N,
     }
 }
 
-#ifndef SIZE_MAX
-# define SIZE_MAX    ((size_t)-1)
-#endif
+# ifndef SIZE_MAX
+#  define SIZE_MAX ((size_t)-1)
+# endif
 
 /*
  * Maximum power of two that will fit in uint64_t: this should work on
  * most (all?) platforms.
  */
 
-#define LOG2_UINT64_MAX         (sizeof(uint64_t) * 8 - 1)
+# define LOG2_UINT64_MAX (sizeof(uint64_t) * 8 - 1)
 
 /*
  * Maximum value of p * r:
@@ -439,13 +433,12 @@ static void scryptROMix(unsigned char *B, uint64_t r, uint64_t N,
  * p * r <= (2^30-1)
  */
 
-#define SCRYPT_PR_MAX   ((1 << 30) - 1)
+# define SCRYPT_PR_MAX ((1 << 30) - 1)
 
-static int scrypt_alg(const char *pass, size_t passlen,
-                      const unsigned char *salt, size_t saltlen,
-                      uint64_t N, uint64_t r, uint64_t p, uint64_t maxmem,
-                      unsigned char *key, size_t keylen, EVP_MD *sha256,
-                      OSSL_LIB_CTX *libctx, const char *propq)
+static int
+scrypt_alg(const char *pass, size_t passlen, const unsigned char *salt, size_t saltlen, uint64_t N,
+           uint64_t r, uint64_t p, uint64_t maxmem, unsigned char *key, size_t keylen,
+           EVP_MD *sha256, OSSL_LIB_CTX *libctx, const char *propq)
 {
     int rv = 0;
     unsigned char *B;
@@ -527,18 +520,18 @@ static int scrypt_alg(const char *pass, size_t passlen,
     X = (uint32_t *)(B + Blen);
     T = X + 32 * r;
     V = T + 32 * r;
-    if (ossl_pkcs5_pbkdf2_hmac_ex(pass, passlen, salt, saltlen, 1, sha256,
-                                  (int)Blen, B, libctx, propq) == 0)
+    if (ossl_pkcs5_pbkdf2_hmac_ex(pass, passlen, salt, saltlen, 1, sha256, (int)Blen, B, libctx,
+                                  propq) == 0)
         goto err;
 
     for (i = 0; i < p; i++)
         scryptROMix(B + 128 * r * i, r, N, X, T, V);
 
-    if (ossl_pkcs5_pbkdf2_hmac_ex(pass, passlen, B, (int)Blen, 1, sha256,
-                                  keylen, key, libctx, propq) == 0)
+    if (ossl_pkcs5_pbkdf2_hmac_ex(pass, passlen, B, (int)Blen, 1, sha256, keylen, key, libctx,
+                                  propq) == 0)
         goto err;
     rv = 1;
- err:
+err:
     if (rv == 0)
         ERR_raise(ERR_LIB_EVP, EVP_R_PBKDF2_ERROR);
 

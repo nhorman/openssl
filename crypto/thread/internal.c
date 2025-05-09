@@ -16,13 +16,15 @@
 
 #if !defined(OPENSSL_NO_DEFAULT_THREAD_POOL)
 
-static ossl_inline uint64_t _ossl_get_avail_threads(OSSL_LIB_CTX_THREADS *tdata)
+static ossl_inline uint64_t
+_ossl_get_avail_threads(OSSL_LIB_CTX_THREADS *tdata)
 {
     /* assumes that tdata->lock is taken */
     return tdata->max_threads - tdata->active_threads;
 }
 
-uint64_t ossl_get_avail_threads(OSSL_LIB_CTX *ctx)
+uint64_t
+ossl_get_avail_threads(OSSL_LIB_CTX *ctx)
 {
     uint64_t retval = 0;
     OSSL_LIB_CTX_THREADS *tdata = OSSL_LIB_CTX_GET_THREADS(ctx);
@@ -37,8 +39,8 @@ uint64_t ossl_get_avail_threads(OSSL_LIB_CTX *ctx)
     return retval;
 }
 
-void *ossl_crypto_thread_start(OSSL_LIB_CTX *ctx, CRYPTO_THREAD_ROUTINE start,
-                               void *data)
+void *
+ossl_crypto_thread_start(OSSL_LIB_CTX *ctx, CRYPTO_THREAD_ROUTINE start, void *data)
 {
     CRYPTO_THREAD *thread;
     OSSL_LIB_CTX_THREADS *tdata = OSSL_LIB_CTX_GET_THREADS(ctx);
@@ -67,10 +69,11 @@ void *ossl_crypto_thread_start(OSSL_LIB_CTX *ctx, CRYPTO_THREAD_ROUTINE start,
     thread->ctx = ctx;
 
 fail:
-    return (void *) thread;
+    return (void *)thread;
 }
 
-int ossl_crypto_thread_join(void *vhandle, CRYPTO_THREAD_RETVAL *retval)
+int
+ossl_crypto_thread_join(void *vhandle, CRYPTO_THREAD_RETVAL *retval)
 {
     CRYPTO_THREAD *handle = vhandle;
     OSSL_LIB_CTX_THREADS *tdata;
@@ -92,7 +95,8 @@ int ossl_crypto_thread_join(void *vhandle, CRYPTO_THREAD_RETVAL *retval)
     return 1;
 }
 
-int ossl_crypto_thread_clean(void *vhandle)
+int
+ossl_crypto_thread_clean(void *vhandle)
 {
     CRYPTO_THREAD *handle = vhandle;
 
@@ -101,30 +105,34 @@ int ossl_crypto_thread_clean(void *vhandle)
 
 #else
 
-ossl_inline uint64_t ossl_get_avail_threads(OSSL_LIB_CTX *ctx)
+ossl_inline uint64_t
+ossl_get_avail_threads(OSSL_LIB_CTX *ctx)
 {
     return 0;
 }
 
-void *ossl_crypto_thread_start(OSSL_LIB_CTX *ctx, CRYPTO_THREAD_ROUTINE start,
-                               void *data)
+void *
+ossl_crypto_thread_start(OSSL_LIB_CTX *ctx, CRYPTO_THREAD_ROUTINE start, void *data)
 {
     return NULL;
 }
 
-int ossl_crypto_thread_join(void *vhandle, CRYPTO_THREAD_RETVAL *retval)
+int
+ossl_crypto_thread_join(void *vhandle, CRYPTO_THREAD_RETVAL *retval)
 {
     return 0;
 }
 
-int ossl_crypto_thread_clean(void *vhandle)
+int
+ossl_crypto_thread_clean(void *vhandle)
 {
     return 0;
 }
 
 #endif
 
-void *ossl_threads_ctx_new(OSSL_LIB_CTX *ctx)
+void *
+ossl_threads_ctx_new(OSSL_LIB_CTX *ctx)
 {
     struct openssl_threads_st *t = OPENSSL_zalloc(sizeof(*t));
 
@@ -144,9 +152,10 @@ fail:
     return NULL;
 }
 
-void ossl_threads_ctx_free(void *vdata)
+void
+ossl_threads_ctx_free(void *vdata)
 {
-    OSSL_LIB_CTX_THREADS *t = (OSSL_LIB_CTX_THREADS *) vdata;
+    OSSL_LIB_CTX_THREADS *t = (OSSL_LIB_CTX_THREADS *)vdata;
 
     if (t == NULL)
         return;

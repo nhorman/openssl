@@ -25,14 +25,16 @@ struct construct_data_st {
     void *mcm_data;
 };
 
-static int is_temporary_method_store(int no_store, void *cbdata)
+static int
+is_temporary_method_store(int no_store, void *cbdata)
 {
     struct construct_data_st *data = cbdata;
 
     return no_store && !data->force_store;
 }
 
-static int ossl_method_construct_reserve_store(int no_store, void *cbdata)
+static int
+ossl_method_construct_reserve_store(int no_store, void *cbdata)
 {
     struct construct_data_st *data = cbdata;
 
@@ -50,16 +52,17 @@ static int ossl_method_construct_reserve_store(int no_store, void *cbdata)
     return data->mcm->lock_store(data->store, data->mcm_data);
 }
 
-static int ossl_method_construct_unreserve_store(void *cbdata)
+static int
+ossl_method_construct_unreserve_store(void *cbdata)
 {
     struct construct_data_st *data = cbdata;
 
     return data->mcm->unlock_store(data->store, data->mcm_data);
 }
 
-static int ossl_method_construct_precondition(OSSL_PROVIDER *provider,
-                                              int operation_id, int no_store,
-                                              void *cbdata, int *result)
+static int
+ossl_method_construct_precondition(OSSL_PROVIDER *provider, int operation_id, int no_store,
+                                   void *cbdata, int *result)
 {
     if (!ossl_assert(result != NULL)) {
         ERR_raise(ERR_LIB_CRYPTO, ERR_R_PASSED_NULL_PARAMETER);
@@ -70,8 +73,8 @@ static int ossl_method_construct_precondition(OSSL_PROVIDER *provider,
     *result = 0;
 
     /* No flag bits for temporary stores */
-    if (!is_temporary_method_store(no_store, cbdata)
-        && !ossl_provider_test_operation_bit(provider, operation_id, result))
+    if (!is_temporary_method_store(no_store, cbdata) &&
+        !ossl_provider_test_operation_bit(provider, operation_id, result))
         return 0;
 
     /*
@@ -84,9 +87,9 @@ static int ossl_method_construct_precondition(OSSL_PROVIDER *provider,
     return 1;
 }
 
-static int ossl_method_construct_postcondition(OSSL_PROVIDER *provider,
-                                               int operation_id, int no_store,
-                                               void *cbdata, int *result)
+static int
+ossl_method_construct_postcondition(OSSL_PROVIDER *provider, int operation_id, int no_store,
+                                    void *cbdata, int *result)
 {
     if (!ossl_assert(result != NULL)) {
         ERR_raise(ERR_LIB_CRYPTO, ERR_R_PASSED_NULL_PARAMETER);
@@ -96,19 +99,18 @@ static int ossl_method_construct_postcondition(OSSL_PROVIDER *provider,
     *result = 1;
 
     /* No flag bits for temporary stores */
-    return is_temporary_method_store(no_store, cbdata)
-        || ossl_provider_set_operation_bit(provider, operation_id);
+    return is_temporary_method_store(no_store, cbdata) ||
+           ossl_provider_set_operation_bit(provider, operation_id);
 }
 
-static void ossl_method_construct_this(OSSL_PROVIDER *provider,
-                                       const OSSL_ALGORITHM *algo,
-                                       int no_store, void *cbdata)
+static void
+ossl_method_construct_this(OSSL_PROVIDER *provider, const OSSL_ALGORITHM *algo, int no_store,
+                           void *cbdata)
 {
     struct construct_data_st *data = cbdata;
     void *method = NULL;
 
-    if ((method = data->mcm->construct(algo, provider, data->mcm_data))
-        == NULL)
+    if ((method = data->mcm->construct(algo, provider, data->mcm_data)) == NULL)
         return;
 
     OSSL_TRACE2(QUERY,
@@ -131,9 +133,9 @@ static void ossl_method_construct_this(OSSL_PROVIDER *provider,
     data->mcm->destruct(method, data->mcm_data);
 }
 
-void *ossl_method_construct(OSSL_LIB_CTX *libctx, int operation_id,
-                            OSSL_PROVIDER **provider_rw, int force_store,
-                            OSSL_METHOD_CONSTRUCT_METHOD *mcm, void *mcm_data)
+void *
+ossl_method_construct(OSSL_LIB_CTX *libctx, int operation_id, OSSL_PROVIDER **provider_rw,
+                      int force_store, OSSL_METHOD_CONSTRUCT_METHOD *mcm, void *mcm_data)
 {
     void *method = NULL;
     OSSL_PROVIDER *provider = provider_rw != NULL ? *provider_rw : NULL;
@@ -154,18 +156,14 @@ void *ossl_method_construct(OSSL_LIB_CTX *libctx, int operation_id,
     cbdata.force_store = force_store;
     cbdata.mcm = mcm;
     cbdata.mcm_data = mcm_data;
-    ossl_algorithm_do_all(libctx, operation_id, provider,
-                          ossl_method_construct_precondition,
-                          ossl_method_construct_reserve_store,
-                          ossl_method_construct_this,
+    ossl_algorithm_do_all(libctx, operation_id, provider, ossl_method_construct_precondition,
+                          ossl_method_construct_reserve_store, ossl_method_construct_this,
                           ossl_method_construct_unreserve_store,
-                          ossl_method_construct_postcondition,
-                          &cbdata);
+                          ossl_method_construct_postcondition, &cbdata);
 
     /* If there is a temporary store, try there first */
     if (cbdata.store != NULL)
-        method = mcm->get(cbdata.store, (const OSSL_PROVIDER **)provider_rw,
-                          mcm_data);
+        method = mcm->get(cbdata.store, (const OSSL_PROVIDER **)provider_rw, mcm_data);
 
     /* If no method was found yet, try the global store */
     if (method == NULL)

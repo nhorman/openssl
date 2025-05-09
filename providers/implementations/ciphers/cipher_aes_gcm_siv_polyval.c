@@ -19,7 +19,8 @@
 #include <prov/implementations.h>
 #include "cipher_aes_gcm_siv.h"
 
-static ossl_inline void mulx_ghash(uint64_t *a)
+static ossl_inline void
+mulx_ghash(uint64_t *a)
 {
     uint64_t t[2], mask;
     DECLARE_IS_ENDIAN;
@@ -44,7 +45,8 @@ static ossl_inline void mulx_ghash(uint64_t *a)
 }
 
 #define aligned64(p) (((uintptr_t)p & 0x07) == 0)
-static ossl_inline void byte_reverse16(uint8_t *out, const uint8_t *in)
+static ossl_inline void
+byte_reverse16(uint8_t *out, const uint8_t *in)
 {
     if (aligned64(out) && aligned64(in)) {
         ((uint64_t *)out)[0] = GSWAP8(((uint64_t *)in)[1]);
@@ -58,7 +60,8 @@ static ossl_inline void byte_reverse16(uint8_t *out, const uint8_t *in)
 }
 
 /* Initialization of POLYVAL via existing GHASH implementation */
-void ossl_polyval_ghash_init(u128 Htable[16], const uint64_t H[2])
+void
+ossl_polyval_ghash_init(u128 Htable[16], const uint64_t H[2])
 {
     uint64_t tmp[2];
     DECLARE_IS_ENDIAN;
@@ -71,11 +74,12 @@ void ossl_polyval_ghash_init(u128 Htable[16], const uint64_t H[2])
         tmp[1] = GSWAP8(tmp[1]);
     }
 
-    ossl_gcm_init_4bit(Htable, (u64*)tmp);
+    ossl_gcm_init_4bit(Htable, (u64 *)tmp);
 }
 
 /* Implementation of POLYVAL via existing GHASH implementation */
-void ossl_polyval_ghash_hash(const u128 Htable[16], uint8_t *tag, const uint8_t *inp, size_t len)
+void
+ossl_polyval_ghash_hash(const u128 Htable[16], uint8_t *tag, const uint8_t *inp, size_t len)
 {
     uint64_t out[2];
     uint64_t tmp[2];
@@ -89,7 +93,7 @@ void ossl_polyval_ghash_hash(const u128 Htable[16], uint8_t *tag, const uint8_t 
      */
     for (i = 0; i < len; i += 16) {
         byte_reverse16((uint8_t *)tmp, &inp[i]);
-        ossl_gcm_ghash_4bit((u64*)out, Htable, (uint8_t *)tmp, 16);
+        ossl_gcm_ghash_4bit((u64 *)out, Htable, (uint8_t *)tmp, 16);
     }
     byte_reverse16(tag, (uint8_t *)out);
 }

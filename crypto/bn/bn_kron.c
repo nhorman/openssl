@@ -11,13 +11,14 @@
 #include "bn_local.h"
 
 /* least significant word */
-#define BN_lsw(n) (((n)->top == 0) ? (BN_ULONG) 0 : (n)->d[0])
+#define BN_lsw(n) (((n)->top == 0) ? (BN_ULONG)0 : (n)->d[0])
 
 /* Returns -2 for errors because both -1 and 0 are valid results. */
-int BN_kronecker(const BIGNUM *a, const BIGNUM *b, BN_CTX *ctx)
+int
+BN_kronecker(const BIGNUM *a, const BIGNUM *b, BN_CTX *ctx)
 {
     int i;
-    int ret = -2;               /* avoid 'uninitialized' warning */
+    int ret = -2; /* avoid 'uninitialized' warning */
     int err = 0;
     BIGNUM *A, *B, *tmp;
     /*-
@@ -27,7 +28,7 @@ int BN_kronecker(const BIGNUM *a, const BIGNUM *b, BN_CTX *ctx)
      * is $(-1)^{(n^2-1)/8}$ (using TeX notation).
      * Note that the sign of n does not matter.
      */
-    static const int tab[8] = { 0, 1, 0, -1, 0, -1, 0, 1 };
+    static const int tab[8] = {0, 1, 0, -1, 0, -1, 0, 1};
 
     bn_check_top(a);
     bn_check_top(b);
@@ -131,7 +132,7 @@ int BN_kronecker(const BIGNUM *a, const BIGNUM *b, BN_CTX *ctx)
         B = tmp;
         tmp->neg = 0;
     }
- end:
+end:
     BN_CTX_end(ctx);
     if (err)
         return -2;

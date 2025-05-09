@@ -21,7 +21,8 @@
 
 #include "ct_local.h"
 
-int o2i_SCT_signature(SCT *sct, const unsigned char **in, size_t len)
+int
+o2i_SCT_signature(SCT *sct, const unsigned char **in, size_t len)
 {
     size_t siglen;
     size_t len_remaining = len;
@@ -67,7 +68,8 @@ int o2i_SCT_signature(SCT *sct, const unsigned char **in, size_t len)
     return len - len_remaining;
 }
 
-SCT *o2i_SCT(SCT **psct, const unsigned char **in, size_t len)
+SCT *
+o2i_SCT(SCT **psct, const unsigned char **in, size_t len)
 {
     SCT *sct = NULL;
     const unsigned char *p;
@@ -150,7 +152,8 @@ err:
     return NULL;
 }
 
-int i2o_SCT_signature(const SCT *sct, unsigned char **out)
+int
+i2o_SCT_signature(const SCT *sct, unsigned char **out)
 {
     size_t len;
     unsigned char *p = NULL, *pstart = NULL;
@@ -166,10 +169,10 @@ int i2o_SCT_signature(const SCT *sct, unsigned char **out)
     }
 
     /*
-    * (1 byte) Hash algorithm
-    * (1 byte) Signature algorithm
-    * (2 bytes + ?) Signature
-    */
+     * (1 byte) Hash algorithm
+     * (1 byte) Signature algorithm
+     * (2 bytes + ?) Signature
+     */
     len = 4 + sct->sig_len;
 
     if (out != NULL) {
@@ -195,7 +198,8 @@ err:
     return -1;
 }
 
-int i2o_SCT(const SCT *sct, unsigned char **out)
+int
+i2o_SCT(const SCT *sct, unsigned char **out)
 {
     size_t len;
     unsigned char *p = NULL, *pstart = NULL;
@@ -250,8 +254,7 @@ err:
     return -1;
 }
 
-STACK_OF(SCT) *o2i_SCT_LIST(STACK_OF(SCT) **a, const unsigned char **pp,
-                            size_t len)
+STACK_OF(SCT) * o2i_SCT_LIST(STACK_OF(SCT) * *a, const unsigned char **pp, size_t len)
 {
     STACK_OF(SCT) *sk = NULL;
     size_t list_len, sct_len;
@@ -308,13 +311,14 @@ STACK_OF(SCT) *o2i_SCT_LIST(STACK_OF(SCT) **a, const unsigned char **pp,
         *a = sk;
     return sk;
 
- err:
+err:
     if (a == NULL || *a == NULL)
         SCT_LIST_free(sk);
     return NULL;
 }
 
-int i2o_SCT_LIST(const STACK_OF(SCT) *a, unsigned char **pp)
+int
+i2o_SCT_LIST(const STACK_OF(SCT) * a, unsigned char **pp)
 {
     int len, sct_len, i, is_pp_new = 0;
     size_t len2;
@@ -342,8 +346,8 @@ int i2o_SCT_LIST(const STACK_OF(SCT) *a, unsigned char **pp)
                 goto err;
             s2n(sct_len, p2);
         } else {
-          if ((sct_len = i2o_SCT(sk_SCT_value(a, i), NULL)) == -1)
-              goto err;
+            if ((sct_len = i2o_SCT(sk_SCT_value(a, i), NULL)) == -1)
+                goto err;
         }
         len2 += 2 + sct_len;
     }
@@ -359,7 +363,7 @@ int i2o_SCT_LIST(const STACK_OF(SCT) *a, unsigned char **pp)
     }
     return len2;
 
- err:
+err:
     if (is_pp_new) {
         OPENSSL_free(*pp);
         *pp = NULL;
@@ -367,8 +371,7 @@ int i2o_SCT_LIST(const STACK_OF(SCT) *a, unsigned char **pp)
     return -1;
 }
 
-STACK_OF(SCT) *d2i_SCT_LIST(STACK_OF(SCT) **a, const unsigned char **pp,
-                            long len)
+STACK_OF(SCT) * d2i_SCT_LIST(STACK_OF(SCT) * *a, const unsigned char **pp, long len)
 {
     ASN1_OCTET_STRING *oct = NULL;
     STACK_OF(SCT) *sk = NULL;
@@ -386,7 +389,8 @@ STACK_OF(SCT) *d2i_SCT_LIST(STACK_OF(SCT) **a, const unsigned char **pp,
     return sk;
 }
 
-int i2d_SCT_LIST(const STACK_OF(SCT) *a, unsigned char **out)
+int
+i2d_SCT_LIST(const STACK_OF(SCT) * a, unsigned char **out)
 {
     ASN1_OCTET_STRING oct;
     int len;

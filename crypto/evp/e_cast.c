@@ -23,22 +23,21 @@
 # include <openssl/cast.h>
 # include "evp_local.h"
 
-static int cast_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
-                         const unsigned char *iv, int enc);
+static int cast_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key, const unsigned char *iv,
+                         int enc);
 
 typedef struct {
     CAST_KEY ks;
 } EVP_CAST_KEY;
 
-# define data(ctx)       EVP_C_DATA(EVP_CAST_KEY,ctx)
+# define data(ctx) EVP_C_DATA(EVP_CAST_KEY, ctx)
 
-IMPLEMENT_BLOCK_CIPHER(cast5, ks, CAST, EVP_CAST_KEY,
-                       NID_cast5, 8, CAST_KEY_LENGTH, 8, 64,
-                       EVP_CIPH_VARIABLE_LENGTH, cast_init_key, NULL,
-                       EVP_CIPHER_set_asn1_iv, EVP_CIPHER_get_asn1_iv, NULL)
+IMPLEMENT_BLOCK_CIPHER(cast5, ks, CAST, EVP_CAST_KEY, NID_cast5, 8, CAST_KEY_LENGTH, 8, 64,
+                       EVP_CIPH_VARIABLE_LENGTH, cast_init_key, NULL, EVP_CIPHER_set_asn1_iv,
+                       EVP_CIPHER_get_asn1_iv, NULL)
 
-static int cast_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key,
-                         const unsigned char *iv, int enc)
+static int
+cast_init_key(EVP_CIPHER_CTX *ctx, const unsigned char *key, const unsigned char *iv, int enc)
 {
     int keylen = EVP_CIPHER_CTX_get_key_length(ctx);
 

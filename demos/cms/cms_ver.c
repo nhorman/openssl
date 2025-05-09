@@ -16,9 +16,10 @@
  * print any signingTime attributes.
  * signingTime is when each party purportedly signed the message.
  */
-static void print_signingTime(CMS_ContentInfo *cms)
+static void
+print_signingTime(CMS_ContentInfo *cms)
 {
-    STACK_OF(CMS_SignerInfo) *sis;
+    STACK_OF(CMS_SignerInfo) * sis;
     CMS_SignerInfo *si;
     X509_ATTRIBUTE *attr;
     ASN1_TYPE *t;
@@ -55,7 +56,8 @@ static void print_signingTime(CMS_ContentInfo *cms)
     return;
 }
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
     BIO *in = NULL, *out = NULL, *tbio = NULL, *cont = NULL;
     X509_STORE *st = NULL;
@@ -115,7 +117,7 @@ int main(int argc, char **argv)
 
     ret = EXIT_SUCCESS;
 
- err:
+err:
     if (ret != EXIT_SUCCESS) {
         fprintf(stderr, "Error Verifying Data\n");
         ERR_print_errors_fp(stderr);

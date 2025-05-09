@@ -8,7 +8,7 @@
  */
 
 #ifndef OSSL_TEST_ECDSATEST_H
-# define OSSL_TEST_ECDSATEST_H
+#define OSSL_TEST_ECDSATEST_H
 
 /*-
  * NIST CAVP ECDSA KATs:
@@ -21,28 +21,26 @@
  */
 
 typedef struct {
-    const int nid;              /* curve NID */
-    const int md_nid;           /* hash function NID */
-    const char *msg;            /* message to sign */
-    const char *d;              /* ECDSA private key */
-    const char *Q;              /* ECDSA public key: Q = dG */
-    const char *k;              /* ECDSA nonce */
-    const char *r;              /* ECDSA signature (r,s) */
+    const int nid;    /* curve NID */
+    const int md_nid; /* hash function NID */
+    const char *msg;  /* message to sign */
+    const char *d;    /* ECDSA private key */
+    const char *Q;    /* ECDSA public key: Q = dG */
+    const char *k;    /* ECDSA nonce */
+    const char *r;    /* ECDSA signature (r,s) */
     const char *s;
 } ecdsa_cavs_kat_t;
 
 static const ecdsa_cavs_kat_t ecdsa_cavs_kats[] = {
     /* prime KATs from X9.62 */
-    {NID_X9_62_prime192v1, NID_sha1,
-     "616263",                  /* "abc" */
+    {NID_X9_62_prime192v1, NID_sha1, "616263", /* "abc" */
      "1a8d598fc15bf0fd89030b5cb1111aeb92ae8baf5ea475fb",
      "0462b12d60690cdcf330babab6e69763b471f994dd702d16a563bf5ec08069705ffff65e"
      "5ca5c0d69716dfcb3474373902",
      "fa6de29746bbeb7f8bb1e761f85f7dfb2983169d82fa2f4e",
      "885052380ff147b734c330c43d39b2c4a89f29b0f749fead",
      "e9ecc78106def82bf1070cf1d4d804c3cb390046951df686"},
-    {NID_X9_62_prime239v1, NID_sha1,
-     "616263",                  /* "abc" */
+    {NID_X9_62_prime239v1, NID_sha1, "616263", /* "abc" */
      "7ef7c6fabefffdea864206e80b0b08a9331ed93e698561b64ca0f7777f3d",
      "045b6dc53bc61a2548ffb0f671472de6c9521a9d2d2534e65abfcbd5fe0c707fd9f1ed2e"
      "65f09f6ce0893baf5e8e31e6ae82ea8c3592335be906d38dee",
@@ -3350,19 +3348,20 @@ static const ecdsa_cavs_kat_t ecdsa_cavs_kats[] = {
      "507488b99f4b3c8bb404fb5c852f959273f412cbdd5e713c5e3f0e67f94",
      "0097ed9e005416fc944e26bcc3661a09b35c128fcccdc2742739c8a301a338dd77d9d135"
      "71612a3b9524a6164b09fe73643bbc31447ee31ef44a490843e4e7db23f"}
-# ifndef OPENSSL_NO_EC2M
+#ifndef OPENSSL_NO_EC2M
     /* binary KATs from NIST CAVP */
-    , {NID_sect233k1, NID_sha224,
-       "f23f784fe136c9fc0d169503d361e9c6148b0f1fbdcae0a97fae1af7033ddef25cb7489c"
-       "9963cfcb009a8cbfe44a8510a64a073eb1deae4c324ceb9302008c92c69b2dafcc9077fd"
-       "3cc3c7c119edc3ced36d176ceaa55ac036bf7f07f6fa215e8bb8196e59a5e1c9af4f98b9"
-       "0ab4970885bd7015fa26a09e03c7cf6b4b23d929",
-       "04c1d414696cc3657dd9df73ace56eda2636769ce7082e064c260be45a5",
-       "0401f228c0a75b057eb07fe7ce8223ed4163148c1fdab61e0f787271f836a900cdfa5655"
-       "d96ffd5ffb6027bfaa04da7b5d8fbdbb6202c8bb79f056ce43",
-       "058f8511089fcd59324469f6736b92693afe26bd4719e198f1f2287dc5f",
-       "016bafefb4933ffd00bd1db6d6c4fac8a06375603adc0aa2a5664083ff4",
-       "03bcb84b8f1990cfc7b88f2b8cc817105cd8e150808e7c87b310cdc47e3"},
+    ,
+    {NID_sect233k1, NID_sha224,
+     "f23f784fe136c9fc0d169503d361e9c6148b0f1fbdcae0a97fae1af7033ddef25cb7489c"
+     "9963cfcb009a8cbfe44a8510a64a073eb1deae4c324ceb9302008c92c69b2dafcc9077fd"
+     "3cc3c7c119edc3ced36d176ceaa55ac036bf7f07f6fa215e8bb8196e59a5e1c9af4f98b9"
+     "0ab4970885bd7015fa26a09e03c7cf6b4b23d929",
+     "04c1d414696cc3657dd9df73ace56eda2636769ce7082e064c260be45a5",
+     "0401f228c0a75b057eb07fe7ce8223ed4163148c1fdab61e0f787271f836a900cdfa5655"
+     "d96ffd5ffb6027bfaa04da7b5d8fbdbb6202c8bb79f056ce43",
+     "058f8511089fcd59324469f6736b92693afe26bd4719e198f1f2287dc5f",
+     "016bafefb4933ffd00bd1db6d6c4fac8a06375603adc0aa2a5664083ff4",
+     "03bcb84b8f1990cfc7b88f2b8cc817105cd8e150808e7c87b310cdc47e3"},
     {NID_sect233k1, NID_sha224,
      "400bcb297552bb37f2f8135a9314a35f5126788bb6fa4dc74152731ff64c5dab4b902103"
      "d85443dec20e16b1d6629930cdc2bd183d4099f0e96295a63c2fe266f5e9d050c401a868"
@@ -10193,22 +10192,20 @@ static const ecdsa_cavs_kat_t ecdsa_cavs_kats[] = {
      "13b5463636b8462cd9f479de8d114e29e7011489bcb9735ffe9ca0707a07df3c0aba0504"
      "3eab387bfedd9fe982fbf04968f2be200e9e052cb4b02223b8579913d713acf94e7dc80"},
     /* binary KATs from X9.62 */
-    {NID_X9_62_c2tnb191v1, NID_sha1,
-     "616263",                  /* "abc" */
+    {NID_X9_62_c2tnb191v1, NID_sha1, "616263", /* "abc" */
      "340562e1dda332f9d2aec168249b5696ee39d0ed4d03760f",
      "045de37e756bd55d72e3768cb396ffeb962614dea4ce28a2e755c0e0e02f5fb132caf416"
      "ef85b229bbb8e1352003125ba1",
      "3eeace72b4919d991738d521879f787cb590aff8189d2b69",
      "038e5a11fb55e4c65471dcd4998452b1e02d8af7099bb930",
      "0c9a08c34468c244b4e5d6b21b3c68362807416020328b6e"},
-    {NID_X9_62_c2tnb239v1, NID_sha1,
-     "616263",                  /* "abc" */
+    {NID_X9_62_c2tnb239v1, NID_sha1, "616263", /* "abc" */
      "151a30a6d843db3b25063c5108255cc4448ec0f4d426d4ec884502229c96",
      "045894609ccecf9a92533f630de713a958e96c97ccb8f5abb5a688a238deed6dc2d9d0c9"
      "4ebfb7d526ba6a61764175b99cb6011e2047f9f067293f57f5",
      "18d114bdf47e2913463e50375dc92784a14934a124f83d28caf97c5d8aab",
      "03210d71ef6c10157c0d1053dff93e8b085f1e9bc22401f7a24798a63c00",
      "1c8c4343a8ecbf7c4d4e48f7d76d5658bc027c77086ec8b10097deb307d6"}
-# endif                         /* OPENSSL_NO_EC2M */
+#endif /* OPENSSL_NO_EC2M */
 };
-#endif                          /* OSSL_TEST_ECDSATEST_H */
+#endif /* OSSL_TEST_ECDSATEST_H */

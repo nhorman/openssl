@@ -8,17 +8,17 @@
  */
 
 #ifndef OSSL_INTERNAL_PROVIDER_H
-# define OSSL_INTERNAL_PROVIDER_H
-# pragma once
+#define OSSL_INTERNAL_PROVIDER_H
+#pragma once
 
-# include <openssl/core.h>
-# include <openssl/core_dispatch.h>
-# include "internal/dso.h"
-# include "internal/symhacks.h"
+#include <openssl/core.h>
+#include <openssl/core_dispatch.h>
+#include "internal/dso.h"
+#include "internal/symhacks.h"
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif
+#endif
 
 /*
  * namespaces:
@@ -28,11 +28,10 @@ extern "C" {
  */
 
 /* Provider Object finder, constructor and destructor */
-OSSL_PROVIDER *ossl_provider_find(OSSL_LIB_CTX *libctx, const char *name,
-                                  int noconfig);
+OSSL_PROVIDER *ossl_provider_find(OSSL_LIB_CTX *libctx, const char *name, int noconfig);
 OSSL_PROVIDER *ossl_provider_new(OSSL_LIB_CTX *libctx, const char *name,
-                                 OSSL_provider_init_fn *init_function,
-                                 OSSL_PARAM *params, int noconfig);
+                                 OSSL_provider_init_fn *init_function, OSSL_PARAM *params,
+                                 int noconfig);
 int ossl_provider_up_ref(OSSL_PROVIDER *prov);
 void ossl_provider_free(OSSL_PROVIDER *prov);
 
@@ -65,9 +64,7 @@ void *ossl_provider_ctx(const OSSL_PROVIDER *prov);
 int ossl_provider_activate_fallbacks(OSSL_LIB_CTX *ctx);
 
 /* Iterate over all loaded providers */
-int ossl_provider_doall_activated(OSSL_LIB_CTX *,
-                                  int (*cb)(OSSL_PROVIDER *provider,
-                                            void *cbdata),
+int ossl_provider_doall_activated(OSSL_LIB_CTX *, int (*cb)(OSSL_PROVIDER *provider, void *cbdata),
                                   void *cbdata);
 
 /* Getters for other library functions */
@@ -82,18 +79,14 @@ OSSL_LIB_CTX *ossl_provider_libctx(const OSSL_PROVIDER *prov);
 void ossl_provider_teardown(const OSSL_PROVIDER *prov);
 const OSSL_PARAM *ossl_provider_gettable_params(const OSSL_PROVIDER *prov);
 int ossl_provider_get_params(const OSSL_PROVIDER *prov, OSSL_PARAM params[]);
-int ossl_provider_get_capabilities(const OSSL_PROVIDER *prov,
-                                   const char *capability,
-                                   OSSL_CALLBACK *cb,
-                                   void *arg);
+int ossl_provider_get_capabilities(const OSSL_PROVIDER *prov, const char *capability,
+                                   OSSL_CALLBACK *cb, void *arg);
 int ossl_provider_self_test(const OSSL_PROVIDER *prov);
-int ossl_provider_random_bytes(const OSSL_PROVIDER *prov, int which,
-                               void *buf, size_t n, unsigned int strength);
-const OSSL_ALGORITHM *ossl_provider_query_operation(const OSSL_PROVIDER *prov,
-                                                    int operation_id,
+int ossl_provider_random_bytes(const OSSL_PROVIDER *prov, int which, void *buf, size_t n,
+                               unsigned int strength);
+const OSSL_ALGORITHM *ossl_provider_query_operation(const OSSL_PROVIDER *prov, int operation_id,
                                                     int *no_cache);
-void ossl_provider_unquery_operation(const OSSL_PROVIDER *prov,
-                                     int operation_id,
+void ossl_provider_unquery_operation(const OSSL_PROVIDER *prov, int operation_id,
                                      const OSSL_ALGORITHM *algs);
 
 /*
@@ -102,20 +95,18 @@ void ossl_provider_unquery_operation(const OSSL_PROVIDER *prov,
  * They should never be called for temporary method stores!
  */
 int ossl_provider_set_operation_bit(OSSL_PROVIDER *provider, size_t bitnum);
-int ossl_provider_test_operation_bit(OSSL_PROVIDER *provider, size_t bitnum,
-                                     int *result);
+int ossl_provider_test_operation_bit(OSSL_PROVIDER *provider, size_t bitnum, int *result);
 
 /* Configuration */
 void ossl_provider_add_conf_module(void);
 
 /* Child providers */
-int ossl_provider_init_as_child(OSSL_LIB_CTX *ctx,
-                                const OSSL_CORE_HANDLE *handle,
+int ossl_provider_init_as_child(OSSL_LIB_CTX *ctx, const OSSL_CORE_HANDLE *handle,
                                 const OSSL_DISPATCH *in);
 void ossl_provider_deinit_child(OSSL_LIB_CTX *ctx);
 
-# ifdef __cplusplus
+#ifdef __cplusplus
 }
-# endif
+#endif
 
 #endif

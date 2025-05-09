@@ -20,8 +20,9 @@
 #include "prov/implementations.h"
 #include "prov/providercommon.h"
 
-void *ossl_tdes_newctx(void *provctx, int mode, size_t kbits, size_t blkbits,
-                       size_t ivbits, uint64_t flags, const PROV_CIPHER_HW *hw)
+void *
+ossl_tdes_newctx(void *provctx, int mode, size_t kbits, size_t blkbits, size_t ivbits,
+                 uint64_t flags, const PROV_CIPHER_HW *hw)
 {
     PROV_TDES_CTX *tctx;
 
@@ -31,13 +32,13 @@ void *ossl_tdes_newctx(void *provctx, int mode, size_t kbits, size_t blkbits,
     tctx = OPENSSL_zalloc(sizeof(*tctx));
     if (tctx != NULL) {
         OSSL_FIPS_IND_INIT(tctx)
-        ossl_cipher_generic_initkey(tctx, kbits, blkbits, ivbits, mode, flags,
-                                    hw, provctx);
+        ossl_cipher_generic_initkey(tctx, kbits, blkbits, ivbits, mode, flags, hw, provctx);
     }
     return tctx;
 }
 
-void *ossl_tdes_dupctx(void *ctx)
+void *
+ossl_tdes_dupctx(void *ctx)
 {
     PROV_TDES_CTX *in = (PROV_TDES_CTX *)ctx;
     PROV_TDES_CTX *ret;
@@ -54,30 +55,31 @@ void *ossl_tdes_dupctx(void *ctx)
     return ret;
 }
 
-void ossl_tdes_freectx(void *vctx)
+void
+ossl_tdes_freectx(void *vctx)
 {
     PROV_TDES_CTX *ctx = (PROV_TDES_CTX *)vctx;
 
     ossl_cipher_generic_reset_ctx((PROV_CIPHER_CTX *)vctx);
-    OPENSSL_clear_free(ctx,  sizeof(*ctx));
+    OPENSSL_clear_free(ctx, sizeof(*ctx));
 }
 
 #ifdef FIPS_MODULE
-static int tdes_encrypt_check_approved(PROV_TDES_CTX *ctx, int enc)
+static int
+tdes_encrypt_check_approved(PROV_TDES_CTX *ctx, int enc)
 {
     /* Triple-DES encryption is not approved in FIPS 140-3 */
-    if (enc && !OSSL_FIPS_IND_ON_UNAPPROVED(ctx, OSSL_FIPS_IND_SETTABLE0,
-                                            ctx->base.libctx,
-                                            "Triple-DES", "Encryption",
-                                            ossl_fips_config_tdes_encrypt_disallowed))
+    if (enc &&
+        !OSSL_FIPS_IND_ON_UNAPPROVED(ctx, OSSL_FIPS_IND_SETTABLE0, ctx->base.libctx, "Triple-DES",
+                                     "Encryption", ossl_fips_config_tdes_encrypt_disallowed))
         return 0;
     return 1;
 }
 #endif
 
-static int tdes_init(void *vctx, const unsigned char *key, size_t keylen,
-                     const unsigned char *iv, size_t ivlen,
-                     const OSSL_PARAM params[], int enc)
+static int
+tdes_init(void *vctx, const unsigned char *key, size_t keylen, const unsigned char *iv,
+          size_t ivlen, const OSSL_PARAM params[], int enc)
 {
     PROV_CIPHER_CTX *ctx = (PROV_CIPHER_CTX *)vctx;
 
@@ -91,10 +93,8 @@ static int tdes_init(void *vctx, const unsigned char *key, size_t keylen,
     if (iv != NULL) {
         if (!ossl_cipher_generic_initiv(ctx, iv, ivlen))
             return 0;
-    } else if (ctx->iv_set
-               && (ctx->mode == EVP_CIPH_CBC_MODE
-                   || ctx->mode == EVP_CIPH_CFB_MODE
-                   || ctx->mode == EVP_CIPH_OFB_MODE)) {
+    } else if (ctx->iv_set && (ctx->mode == EVP_CIPH_CBC_MODE || ctx->mode == EVP_CIPH_CFB_MODE ||
+                               ctx->mode == EVP_CIPH_OFB_MODE)) {
         /* reset IV to keep compatibility with 1.1.1 */
         memcpy(ctx->iv, ctx->oiv, ctx->ivlen);
     }
@@ -117,26 +117,25 @@ static int tdes_init(void *vctx, const unsigned char *key, size_t keylen,
     return 1;
 }
 
-int ossl_tdes_einit(void *vctx, const unsigned char *key, size_t keylen,
-                    const unsigned char *iv, size_t ivlen,
-                    const OSSL_PARAM params[])
+int
+ossl_tdes_einit(void *vctx, const unsigned char *key, size_t keylen, const unsigned char *iv,
+                size_t ivlen, const OSSL_PARAM params[])
 {
     return tdes_init(vctx, key, keylen, iv, ivlen, params, 1);
 }
 
-int ossl_tdes_dinit(void *vctx, const unsigned char *key, size_t keylen,
-                    const unsigned char *iv, size_t ivlen,
-                    const OSSL_PARAM params[])
+int
+ossl_tdes_dinit(void *vctx, const unsigned char *key, size_t keylen, const unsigned char *iv,
+                size_t ivlen, const OSSL_PARAM params[])
 {
     return tdes_init(vctx, key, keylen, iv, ivlen, params, 0);
 }
 
 CIPHER_DEFAULT_GETTABLE_CTX_PARAMS_START(ossl_tdes)
-    OSSL_PARAM_octet_string(OSSL_CIPHER_PARAM_RANDOM_KEY, NULL, 0),
-    OSSL_FIPS_IND_GETTABLE_CTX_PARAM()
-CIPHER_DEFAULT_GETTABLE_CTX_PARAMS_END(ossl_tdes)
+OSSL_PARAM_octet_string(OSSL_CIPHER_PARAM_RANDOM_KEY, NULL, 0),
+    OSSL_FIPS_IND_GETTABLE_CTX_PARAM() CIPHER_DEFAULT_GETTABLE_CTX_PARAMS_END(ossl_tdes)
 
-static int tdes_generatekey(PROV_CIPHER_CTX *ctx, void *ptr)
+        static int tdes_generatekey(PROV_CIPHER_CTX *ctx, void *ptr)
 {
     DES_cblock *deskey = ptr;
     size_t kl = ctx->keylen;
@@ -152,7 +151,8 @@ static int tdes_generatekey(PROV_CIPHER_CTX *ctx, void *ptr)
     return 1;
 }
 
-int ossl_tdes_get_ctx_params(void *vctx, OSSL_PARAM params[])
+int
+ossl_tdes_get_ctx_params(void *vctx, OSSL_PARAM params[])
 {
     PROV_CIPHER_CTX *ctx = (PROV_CIPHER_CTX *)vctx;
     OSSL_PARAM *p;
@@ -171,22 +171,21 @@ int ossl_tdes_get_ctx_params(void *vctx, OSSL_PARAM params[])
 }
 
 CIPHER_DEFAULT_SETTABLE_CTX_PARAMS_START(ossl_tdes)
-    OSSL_PARAM_uint(OSSL_CIPHER_PARAM_PADDING, NULL),
-    OSSL_PARAM_uint(OSSL_CIPHER_PARAM_NUM, NULL),
+OSSL_PARAM_uint(OSSL_CIPHER_PARAM_PADDING, NULL), OSSL_PARAM_uint(OSSL_CIPHER_PARAM_NUM, NULL),
     OSSL_FIPS_IND_SETTABLE_CTX_PARAM(OSSL_CIPHER_PARAM_FIPS_ENCRYPT_CHECK)
-CIPHER_DEFAULT_SETTABLE_CTX_PARAMS_END(ossl_tdes)
+        CIPHER_DEFAULT_SETTABLE_CTX_PARAMS_END(ossl_tdes)
 
-int ossl_tdes_set_ctx_params(void *vctx, const OSSL_PARAM params[])
+            int ossl_tdes_set_ctx_params(void *vctx, const OSSL_PARAM params[])
 {
-    if (!OSSL_FIPS_IND_SET_CTX_PARAM((PROV_TDES_CTX *)vctx,
-                                     OSSL_FIPS_IND_SETTABLE0, params,
+    if (!OSSL_FIPS_IND_SET_CTX_PARAM((PROV_TDES_CTX *)vctx, OSSL_FIPS_IND_SETTABLE0, params,
                                      OSSL_CIPHER_PARAM_FIPS_ENCRYPT_CHECK))
         return 0;
     return ossl_cipher_generic_set_ctx_params(vctx, params);
 }
 
-int ossl_tdes_get_params(OSSL_PARAM params[], unsigned int md, uint64_t flags,
-                         size_t kbits, size_t blkbits, size_t ivbits)
+int
+ossl_tdes_get_params(OSSL_PARAM params[], unsigned int md, uint64_t flags, size_t kbits,
+                     size_t blkbits, size_t ivbits)
 {
 #ifdef FIPS_MODULE
     const int decrypt_only = 1;
@@ -201,6 +200,5 @@ int ossl_tdes_get_params(OSSL_PARAM params[], unsigned int md, uint64_t flags,
         return 0;
     }
 
-    return ossl_cipher_generic_get_params(params, md, flags,
-                                          kbits, blkbits, ivbits);
+    return ossl_cipher_generic_get_params(params, md, flags, kbits, blkbits, ivbits);
 }

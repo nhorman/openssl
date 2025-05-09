@@ -45,12 +45,11 @@ static OSSL_FUNC_asym_cipher_set_ctx_params_fn rsa_set_ctx_params;
 static OSSL_FUNC_asym_cipher_settable_ctx_params_fn rsa_settable_ctx_params;
 
 static OSSL_ITEM padding_item[] = {
-    { RSA_PKCS1_PADDING,        OSSL_PKEY_RSA_PAD_MODE_PKCSV15 },
-    { RSA_NO_PADDING,           OSSL_PKEY_RSA_PAD_MODE_NONE },
-    { RSA_PKCS1_OAEP_PADDING,   OSSL_PKEY_RSA_PAD_MODE_OAEP }, /* Correct spelling first */
-    { RSA_PKCS1_OAEP_PADDING,   "oeap"   },
-    { 0,                        NULL     }
-};
+    {RSA_PKCS1_PADDING, OSSL_PKEY_RSA_PAD_MODE_PKCSV15},
+    {RSA_NO_PADDING, OSSL_PKEY_RSA_PAD_MODE_NONE},
+    {RSA_PKCS1_OAEP_PADDING, OSSL_PKEY_RSA_PAD_MODE_OAEP}, /* Correct spelling first */
+    {RSA_PKCS1_OAEP_PADDING, "oeap"},
+    {0, NULL}};
 
 /*
  * What's passed as an actual key is defined by the KEYMGMT interface.
@@ -78,7 +77,8 @@ typedef struct {
     OSSL_FIPS_IND_DECLARE
 } PROV_RSA_CTX;
 
-static void *rsa_newctx(void *provctx)
+static void *
+rsa_newctx(void *provctx)
 {
     PROV_RSA_CTX *prsactx;
 
@@ -93,8 +93,8 @@ static void *rsa_newctx(void *provctx)
     return prsactx;
 }
 
-static int rsa_init(void *vprsactx, void *vrsa, const OSSL_PARAM params[],
-                    int operation, const char *desc)
+static int
+rsa_init(void *vprsactx, void *vrsa, const OSSL_PARAM params[], int operation, const char *desc)
 {
     PROV_RSA_CTX *prsactx = (PROV_RSA_CTX *)vprsactx;
     int protect = 0;
@@ -125,30 +125,28 @@ static int rsa_init(void *vprsactx, void *vrsa, const OSSL_PARAM params[],
     if (!rsa_set_ctx_params(prsactx, params))
         return 0;
 #ifdef FIPS_MODULE
-    if (!ossl_fips_ind_rsa_key_check(OSSL_FIPS_IND_GET(prsactx),
-                                     OSSL_FIPS_IND_SETTABLE0, prsactx->libctx,
-                                     prsactx->rsa, desc, protect))
+    if (!ossl_fips_ind_rsa_key_check(OSSL_FIPS_IND_GET(prsactx), OSSL_FIPS_IND_SETTABLE0,
+                                     prsactx->libctx, prsactx->rsa, desc, protect))
         return 0;
 #endif
     return 1;
 }
 
-static int rsa_encrypt_init(void *vprsactx, void *vrsa,
-                            const OSSL_PARAM params[])
+static int
+rsa_encrypt_init(void *vprsactx, void *vrsa, const OSSL_PARAM params[])
 {
-    return rsa_init(vprsactx, vrsa, params, EVP_PKEY_OP_ENCRYPT,
-                    "RSA Encrypt Init");
+    return rsa_init(vprsactx, vrsa, params, EVP_PKEY_OP_ENCRYPT, "RSA Encrypt Init");
 }
 
-static int rsa_decrypt_init(void *vprsactx, void *vrsa,
-                            const OSSL_PARAM params[])
+static int
+rsa_decrypt_init(void *vprsactx, void *vrsa, const OSSL_PARAM params[])
 {
-    return rsa_init(vprsactx, vrsa, params, EVP_PKEY_OP_DECRYPT,
-                    "RSA Decrypt Init");
+    return rsa_init(vprsactx, vrsa, params, EVP_PKEY_OP_DECRYPT, "RSA Decrypt Init");
 }
 
-static int rsa_encrypt(void *vprsactx, unsigned char *out, size_t *outlen,
-                       size_t outsize, const unsigned char *in, size_t inlen)
+static int
+rsa_encrypt(void *vprsactx, unsigned char *out, size_t *outlen, size_t outsize,
+            const unsigned char *in, size_t inlen)
 {
     PROV_RSA_CTX *prsactx = (PROV_RSA_CTX *)vprsactx;
     int ret;
@@ -157,12 +155,11 @@ static int rsa_encrypt(void *vprsactx, unsigned char *out, size_t *outlen,
         return 0;
 
 #ifdef FIPS_MODULE
-    if ((prsactx->pad_mode == RSA_PKCS1_PADDING
-         || prsactx->pad_mode == RSA_PKCS1_WITH_TLS_PADDING)
-        && !OSSL_FIPS_IND_ON_UNAPPROVED(prsactx, OSSL_FIPS_IND_SETTABLE1,
-                                        prsactx->libctx, "RSA Encrypt",
-                                        "PKCS#1 v1.5 padding",
-                                        ossl_fips_config_rsa_pkcs15_padding_disabled)) {
+    if ((prsactx->pad_mode == RSA_PKCS1_PADDING ||
+         prsactx->pad_mode == RSA_PKCS1_WITH_TLS_PADDING) &&
+        !OSSL_FIPS_IND_ON_UNAPPROVED(prsactx, OSSL_FIPS_IND_SETTABLE1, prsactx->libctx,
+                                     "RSA Encrypt", "PKCS#1 v1.5 padding",
+                                     ossl_fips_config_rsa_pkcs15_padding_disabled)) {
         ERR_raise(ERR_LIB_PROV, PROV_R_INVALID_PADDING_MODE);
         return 0;
     }
@@ -193,24 +190,18 @@ static int rsa_encrypt(void *vprsactx, unsigned char *out, size_t *outlen,
                 return 0;
             }
         }
-        ret =
-            ossl_rsa_padding_add_PKCS1_OAEP_mgf1_ex(prsactx->libctx, tbuf,
-                                                    rsasize, in, inlen,
-                                                    prsactx->oaep_label,
-                                                    prsactx->oaep_labellen,
-                                                    prsactx->oaep_md,
-                                                    prsactx->mgf1_md);
+        ret = ossl_rsa_padding_add_PKCS1_OAEP_mgf1_ex(prsactx->libctx, tbuf, rsasize, in, inlen,
+                                                      prsactx->oaep_label, prsactx->oaep_labellen,
+                                                      prsactx->oaep_md, prsactx->mgf1_md);
 
         if (!ret) {
             OPENSSL_free(tbuf);
             return 0;
         }
-        ret = RSA_public_encrypt(rsasize, tbuf, out, prsactx->rsa,
-                                 RSA_NO_PADDING);
+        ret = RSA_public_encrypt(rsasize, tbuf, out, prsactx->rsa, RSA_NO_PADDING);
         OPENSSL_free(tbuf);
     } else {
-        ret = RSA_public_encrypt(inlen, in, out, prsactx->rsa,
-                                 prsactx->pad_mode);
+        ret = RSA_public_encrypt(inlen, in, out, prsactx->rsa, prsactx->pad_mode);
     }
     /* A ret value of 0 is not an error */
     if (ret < 0)
@@ -219,8 +210,9 @@ static int rsa_encrypt(void *vprsactx, unsigned char *out, size_t *outlen,
     return 1;
 }
 
-static int rsa_decrypt(void *vprsactx, unsigned char *out, size_t *outlen,
-                       size_t outsize, const unsigned char *in, size_t inlen)
+static int
+rsa_decrypt(void *vprsactx, unsigned char *out, size_t *outlen, size_t outsize,
+            const unsigned char *in, size_t inlen)
 {
     PROV_RSA_CTX *prsactx = (PROV_RSA_CTX *)vprsactx;
     int ret;
@@ -255,14 +247,13 @@ static int rsa_decrypt(void *vprsactx, unsigned char *out, size_t *outlen,
         }
     }
 
-    if (prsactx->pad_mode == RSA_PKCS1_OAEP_PADDING
-            || prsactx->pad_mode == RSA_PKCS1_WITH_TLS_PADDING) {
+    if (prsactx->pad_mode == RSA_PKCS1_OAEP_PADDING ||
+        prsactx->pad_mode == RSA_PKCS1_WITH_TLS_PADDING) {
         unsigned char *tbuf;
 
         if ((tbuf = OPENSSL_malloc(len)) == NULL)
             return 0;
-        ret = RSA_private_decrypt(inlen, in, tbuf, prsactx->rsa,
-                                  RSA_NO_PADDING);
+        ret = RSA_private_decrypt(inlen, in, tbuf, prsactx->rsa, RSA_NO_PADDING);
         /*
          * With no padding then, on success ret should be len, otherwise an
          * error occurred (non-constant time)
@@ -281,12 +272,9 @@ static int rsa_decrypt(void *vprsactx, unsigned char *out, size_t *outlen,
                     return 0;
                 }
             }
-            ret = RSA_padding_check_PKCS1_OAEP_mgf1(out, outsize, tbuf,
-                                                    len, len,
-                                                    prsactx->oaep_label,
-                                                    prsactx->oaep_labellen,
-                                                    prsactx->oaep_md,
-                                                    prsactx->mgf1_md);
+            ret = RSA_padding_check_PKCS1_OAEP_mgf1(out, outsize, tbuf, len, len,
+                                                    prsactx->oaep_label, prsactx->oaep_labellen,
+                                                    prsactx->oaep_md, prsactx->mgf1_md);
         } else {
             /* RSA_PKCS1_WITH_TLS_PADDING */
             if (prsactx->client_version <= 0) {
@@ -294,14 +282,13 @@ static int rsa_decrypt(void *vprsactx, unsigned char *out, size_t *outlen,
                 OPENSSL_free(tbuf);
                 return 0;
             }
-            ret = ossl_rsa_padding_check_PKCS1_type_2_TLS(
-                        prsactx->libctx, out, outsize, tbuf, len,
-                        prsactx->client_version, prsactx->alt_version);
+            ret = ossl_rsa_padding_check_PKCS1_type_2_TLS(prsactx->libctx, out, outsize, tbuf, len,
+                                                          prsactx->client_version,
+                                                          prsactx->alt_version);
         }
         OPENSSL_free(tbuf);
     } else {
-        if ((prsactx->implicit_rejection == 0) &&
-                (prsactx->pad_mode == RSA_PKCS1_PADDING))
+        if ((prsactx->implicit_rejection == 0) && (prsactx->pad_mode == RSA_PKCS1_PADDING))
             pad_mode = RSA_PKCS1_NO_IMPLICIT_REJECT_PADDING;
         else
             pad_mode = prsactx->pad_mode;
@@ -312,7 +299,8 @@ static int rsa_decrypt(void *vprsactx, unsigned char *out, size_t *outlen,
     return ret;
 }
 
-static void rsa_freectx(void *vprsactx)
+static void
+rsa_freectx(void *vprsactx)
 {
     PROV_RSA_CTX *prsactx = (PROV_RSA_CTX *)vprsactx;
 
@@ -325,7 +313,8 @@ static void rsa_freectx(void *vprsactx)
     OPENSSL_free(prsactx);
 }
 
-static void *rsa_dupctx(void *vprsactx)
+static void *
+rsa_dupctx(void *vprsactx)
 {
     PROV_RSA_CTX *srcctx = (PROV_RSA_CTX *)vprsactx;
     PROV_RSA_CTX *dstctx;
@@ -359,7 +348,8 @@ static void *rsa_dupctx(void *vprsactx)
     return dstctx;
 }
 
-static int rsa_get_ctx_params(void *vprsactx, OSSL_PARAM *params)
+static int
+rsa_get_ctx_params(void *vprsactx, OSSL_PARAM *params)
 {
     PROV_RSA_CTX *prsactx = (PROV_RSA_CTX *)vprsactx;
     OSSL_PARAM *p;
@@ -374,51 +364,43 @@ static int rsa_get_ctx_params(void *vprsactx, OSSL_PARAM *params)
             if (!OSSL_PARAM_set_int(p, prsactx->pad_mode))
                 return 0;
             break;
-        case OSSL_PARAM_UTF8_STRING:
-            {
-                int i;
-                const char *word = NULL;
+        case OSSL_PARAM_UTF8_STRING: {
+            int i;
+            const char *word = NULL;
 
-                for (i = 0; padding_item[i].id != 0; i++) {
-                    if (prsactx->pad_mode == (int)padding_item[i].id) {
-                        word = padding_item[i].ptr;
-                        break;
-                    }
-                }
-
-                if (word != NULL) {
-                    if (!OSSL_PARAM_set_utf8_string(p, word))
-                        return 0;
-                } else {
-                    ERR_raise(ERR_LIB_PROV, ERR_R_INTERNAL_ERROR);
+            for (i = 0; padding_item[i].id != 0; i++) {
+                if (prsactx->pad_mode == (int)padding_item[i].id) {
+                    word = padding_item[i].ptr;
+                    break;
                 }
             }
-            break;
+
+            if (word != NULL) {
+                if (!OSSL_PARAM_set_utf8_string(p, word))
+                    return 0;
+            } else {
+                ERR_raise(ERR_LIB_PROV, ERR_R_INTERNAL_ERROR);
+            }
+        } break;
         default:
             return 0;
         }
 
     p = OSSL_PARAM_locate(params, OSSL_ASYM_CIPHER_PARAM_OAEP_DIGEST);
-    if (p != NULL && !OSSL_PARAM_set_utf8_string(p, prsactx->oaep_md == NULL
-                                                    ? ""
-                                                    : EVP_MD_get0_name(prsactx->oaep_md)))
+    if (p != NULL && !OSSL_PARAM_set_utf8_string(
+                         p, prsactx->oaep_md == NULL ? "" : EVP_MD_get0_name(prsactx->oaep_md)))
         return 0;
 
     p = OSSL_PARAM_locate(params, OSSL_ASYM_CIPHER_PARAM_MGF1_DIGEST);
     if (p != NULL) {
-        EVP_MD *mgf1_md = prsactx->mgf1_md == NULL ? prsactx->oaep_md
-                                                   : prsactx->mgf1_md;
+        EVP_MD *mgf1_md = prsactx->mgf1_md == NULL ? prsactx->oaep_md : prsactx->mgf1_md;
 
-        if (!OSSL_PARAM_set_utf8_string(p, mgf1_md == NULL
-                                           ? ""
-                                           : EVP_MD_get0_name(mgf1_md)))
-        return 0;
+        if (!OSSL_PARAM_set_utf8_string(p, mgf1_md == NULL ? "" : EVP_MD_get0_name(mgf1_md)))
+            return 0;
     }
 
     p = OSSL_PARAM_locate(params, OSSL_ASYM_CIPHER_PARAM_OAEP_LABEL);
-    if (p != NULL &&
-        !OSSL_PARAM_set_octet_ptr(p, prsactx->oaep_label,
-                                  prsactx->oaep_labellen))
+    if (p != NULL && !OSSL_PARAM_set_octet_ptr(p, prsactx->oaep_label, prsactx->oaep_labellen))
         return 0;
 
     p = OSSL_PARAM_locate(params, OSSL_ASYM_CIPHER_PARAM_TLS_CLIENT_VERSION);
@@ -441,27 +423,25 @@ static const OSSL_PARAM known_gettable_ctx_params[] = {
     OSSL_PARAM_utf8_string(OSSL_ASYM_CIPHER_PARAM_OAEP_DIGEST, NULL, 0),
     OSSL_PARAM_utf8_string(OSSL_ASYM_CIPHER_PARAM_PAD_MODE, NULL, 0),
     OSSL_PARAM_utf8_string(OSSL_ASYM_CIPHER_PARAM_MGF1_DIGEST, NULL, 0),
-    OSSL_PARAM_DEFN(OSSL_ASYM_CIPHER_PARAM_OAEP_LABEL, OSSL_PARAM_OCTET_PTR,
-                    NULL, 0),
+    OSSL_PARAM_DEFN(OSSL_ASYM_CIPHER_PARAM_OAEP_LABEL, OSSL_PARAM_OCTET_PTR, NULL, 0),
     OSSL_PARAM_uint(OSSL_ASYM_CIPHER_PARAM_TLS_CLIENT_VERSION, NULL),
     OSSL_PARAM_uint(OSSL_ASYM_CIPHER_PARAM_TLS_NEGOTIATED_VERSION, NULL),
     OSSL_PARAM_uint(OSSL_ASYM_CIPHER_PARAM_IMPLICIT_REJECTION, NULL),
-    OSSL_FIPS_IND_GETTABLE_CTX_PARAM()
-    OSSL_PARAM_END
-};
+    OSSL_FIPS_IND_GETTABLE_CTX_PARAM() OSSL_PARAM_END};
 
-static const OSSL_PARAM *rsa_gettable_ctx_params(ossl_unused void *vprsactx,
-                                                 ossl_unused void *provctx)
+static const OSSL_PARAM *
+rsa_gettable_ctx_params(ossl_unused void *vprsactx, ossl_unused void *provctx)
 {
     return known_gettable_ctx_params;
 }
 
-static int rsa_set_ctx_params(void *vprsactx, const OSSL_PARAM params[])
+static int
+rsa_set_ctx_params(void *vprsactx, const OSSL_PARAM params[])
 {
     PROV_RSA_CTX *prsactx = (PROV_RSA_CTX *)vprsactx;
     const OSSL_PARAM *p;
     char mdname[OSSL_MAX_NAME_SIZE];
-    char mdprops[OSSL_MAX_PROPQUERY_SIZE] = { '\0' };
+    char mdprops[OSSL_MAX_PROPQUERY_SIZE] = {'\0'};
     char *str = NULL;
 
     if (prsactx == NULL)
@@ -482,8 +462,7 @@ static int rsa_set_ctx_params(void *vprsactx, const OSSL_PARAM params[])
         if (!OSSL_PARAM_get_utf8_string(p, &str, sizeof(mdname)))
             return 0;
 
-        p = OSSL_PARAM_locate_const(params,
-                                    OSSL_ASYM_CIPHER_PARAM_OAEP_DIGEST_PROPS);
+        p = OSSL_PARAM_locate_const(params, OSSL_ASYM_CIPHER_PARAM_OAEP_DIGEST_PROPS);
         if (p != NULL) {
             str = mdprops;
             if (!OSSL_PARAM_get_utf8_string(p, &str, sizeof(mdprops)))
@@ -506,21 +485,19 @@ static int rsa_set_ctx_params(void *vprsactx, const OSSL_PARAM params[])
             if (!OSSL_PARAM_get_int(p, &pad_mode))
                 return 0;
             break;
-        case OSSL_PARAM_UTF8_STRING:
-            {
-                int i;
+        case OSSL_PARAM_UTF8_STRING: {
+            int i;
 
-                if (p->data == NULL)
-                    return 0;
+            if (p->data == NULL)
+                return 0;
 
-                for (i = 0; padding_item[i].id != 0; i++) {
-                    if (strcmp(p->data, padding_item[i].ptr) == 0) {
-                        pad_mode = padding_item[i].id;
-                        break;
-                    }
+            for (i = 0; padding_item[i].id != 0; i++) {
+                if (strcmp(p->data, padding_item[i].ptr) == 0) {
+                    pad_mode = padding_item[i].id;
+                    break;
                 }
             }
-            break;
+        } break;
         default:
             return 0;
         }
@@ -545,8 +522,7 @@ static int rsa_set_ctx_params(void *vprsactx, const OSSL_PARAM params[])
         if (!OSSL_PARAM_get_utf8_string(p, &str, sizeof(mdname)))
             return 0;
 
-        p = OSSL_PARAM_locate_const(params,
-                                    OSSL_ASYM_CIPHER_PARAM_MGF1_DIGEST_PROPS);
+        p = OSSL_PARAM_locate_const(params, OSSL_ASYM_CIPHER_PARAM_MGF1_DIGEST_PROPS);
         if (p != NULL) {
             str = mdprops;
             if (!OSSL_PARAM_get_utf8_string(p, &str, sizeof(mdprops)))
@@ -613,31 +589,25 @@ static const OSSL_PARAM known_settable_ctx_params[] = {
     OSSL_PARAM_uint(OSSL_ASYM_CIPHER_PARAM_TLS_NEGOTIATED_VERSION, NULL),
     OSSL_PARAM_uint(OSSL_ASYM_CIPHER_PARAM_IMPLICIT_REJECTION, NULL),
     OSSL_FIPS_IND_SETTABLE_CTX_PARAM(OSSL_ASYM_CIPHER_PARAM_FIPS_KEY_CHECK)
-    OSSL_FIPS_IND_SETTABLE_CTX_PARAM(OSSL_ASYM_CIPHER_PARAM_FIPS_RSA_PKCS15_PAD_DISABLED)
-    OSSL_PARAM_END
-};
+        OSSL_FIPS_IND_SETTABLE_CTX_PARAM(OSSL_ASYM_CIPHER_PARAM_FIPS_RSA_PKCS15_PAD_DISABLED)
+            OSSL_PARAM_END};
 
-static const OSSL_PARAM *rsa_settable_ctx_params(ossl_unused void *vprsactx,
-                                                 ossl_unused void *provctx)
+static const OSSL_PARAM *
+rsa_settable_ctx_params(ossl_unused void *vprsactx, ossl_unused void *provctx)
 {
     return known_settable_ctx_params;
 }
 
 const OSSL_DISPATCH ossl_rsa_asym_cipher_functions[] = {
-    { OSSL_FUNC_ASYM_CIPHER_NEWCTX, (void (*)(void))rsa_newctx },
-    { OSSL_FUNC_ASYM_CIPHER_ENCRYPT_INIT, (void (*)(void))rsa_encrypt_init },
-    { OSSL_FUNC_ASYM_CIPHER_ENCRYPT, (void (*)(void))rsa_encrypt },
-    { OSSL_FUNC_ASYM_CIPHER_DECRYPT_INIT, (void (*)(void))rsa_decrypt_init },
-    { OSSL_FUNC_ASYM_CIPHER_DECRYPT, (void (*)(void))rsa_decrypt },
-    { OSSL_FUNC_ASYM_CIPHER_FREECTX, (void (*)(void))rsa_freectx },
-    { OSSL_FUNC_ASYM_CIPHER_DUPCTX, (void (*)(void))rsa_dupctx },
-    { OSSL_FUNC_ASYM_CIPHER_GET_CTX_PARAMS,
-      (void (*)(void))rsa_get_ctx_params },
-    { OSSL_FUNC_ASYM_CIPHER_GETTABLE_CTX_PARAMS,
-      (void (*)(void))rsa_gettable_ctx_params },
-    { OSSL_FUNC_ASYM_CIPHER_SET_CTX_PARAMS,
-      (void (*)(void))rsa_set_ctx_params },
-    { OSSL_FUNC_ASYM_CIPHER_SETTABLE_CTX_PARAMS,
-      (void (*)(void))rsa_settable_ctx_params },
-    OSSL_DISPATCH_END
-};
+    {OSSL_FUNC_ASYM_CIPHER_NEWCTX, (void (*)(void))rsa_newctx},
+    {OSSL_FUNC_ASYM_CIPHER_ENCRYPT_INIT, (void (*)(void))rsa_encrypt_init},
+    {OSSL_FUNC_ASYM_CIPHER_ENCRYPT, (void (*)(void))rsa_encrypt},
+    {OSSL_FUNC_ASYM_CIPHER_DECRYPT_INIT, (void (*)(void))rsa_decrypt_init},
+    {OSSL_FUNC_ASYM_CIPHER_DECRYPT, (void (*)(void))rsa_decrypt},
+    {OSSL_FUNC_ASYM_CIPHER_FREECTX, (void (*)(void))rsa_freectx},
+    {OSSL_FUNC_ASYM_CIPHER_DUPCTX, (void (*)(void))rsa_dupctx},
+    {OSSL_FUNC_ASYM_CIPHER_GET_CTX_PARAMS, (void (*)(void))rsa_get_ctx_params},
+    {OSSL_FUNC_ASYM_CIPHER_GETTABLE_CTX_PARAMS, (void (*)(void))rsa_gettable_ctx_params},
+    {OSSL_FUNC_ASYM_CIPHER_SET_CTX_PARAMS, (void (*)(void))rsa_set_ctx_params},
+    {OSSL_FUNC_ASYM_CIPHER_SETTABLE_CTX_PARAMS, (void (*)(void))rsa_settable_ctx_params},
+    OSSL_DISPATCH_END};

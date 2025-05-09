@@ -13,25 +13,30 @@
 #include "crypto/x509.h"
 #include "ext_dat.h"
 
-static ASN1_OCTET_STRING *s2i_skey_id(X509V3_EXT_METHOD *method,
-                                      X509V3_CTX *ctx, char *str);
-const X509V3_EXT_METHOD ossl_v3_skey_id = {
-    NID_subject_key_identifier, 0, ASN1_ITEM_ref(ASN1_OCTET_STRING),
-    0, 0, 0, 0,
-    (X509V3_EXT_I2S)i2s_ASN1_OCTET_STRING,
-    (X509V3_EXT_S2I)s2i_skey_id,
-    0, 0, 0, 0,
-    NULL
-};
+static ASN1_OCTET_STRING *s2i_skey_id(X509V3_EXT_METHOD *method, X509V3_CTX *ctx, char *str);
+const X509V3_EXT_METHOD ossl_v3_skey_id = {NID_subject_key_identifier,
+                                           0,
+                                           ASN1_ITEM_ref(ASN1_OCTET_STRING),
+                                           0,
+                                           0,
+                                           0,
+                                           0,
+                                           (X509V3_EXT_I2S)i2s_ASN1_OCTET_STRING,
+                                           (X509V3_EXT_S2I)s2i_skey_id,
+                                           0,
+                                           0,
+                                           0,
+                                           0,
+                                           NULL};
 
-char *i2s_ASN1_OCTET_STRING(X509V3_EXT_METHOD *method,
-                            const ASN1_OCTET_STRING *oct)
+char *
+i2s_ASN1_OCTET_STRING(X509V3_EXT_METHOD *method, const ASN1_OCTET_STRING *oct)
 {
     return OPENSSL_buf2hexstr(oct->data, oct->length);
 }
 
-ASN1_OCTET_STRING *s2i_ASN1_OCTET_STRING(X509V3_EXT_METHOD *method,
-                                         X509V3_CTX *ctx, const char *str)
+ASN1_OCTET_STRING *
+s2i_ASN1_OCTET_STRING(X509V3_EXT_METHOD *method, X509V3_CTX *ctx, const char *str)
 {
     ASN1_OCTET_STRING *oct;
     long length;
@@ -49,10 +54,10 @@ ASN1_OCTET_STRING *s2i_ASN1_OCTET_STRING(X509V3_EXT_METHOD *method,
     oct->length = length;
 
     return oct;
-
 }
 
-ASN1_OCTET_STRING *ossl_x509_pubkey_hash(X509_PUBKEY *pubkey)
+ASN1_OCTET_STRING *
+ossl_x509_pubkey_hash(X509_PUBKEY *pubkey)
 {
     ASN1_OCTET_STRING *oct;
     const unsigned char *pk;
@@ -77,8 +82,8 @@ ASN1_OCTET_STRING *ossl_x509_pubkey_hash(X509_PUBKEY *pubkey)
     }
 
     X509_PUBKEY_get0_param(NULL, &pk, &pklen, NULL, pubkey);
-    if (EVP_Digest(pk, pklen, pkey_dig, &diglen, md, NULL)
-            && ASN1_OCTET_STRING_set(oct, pkey_dig, diglen)) {
+    if (EVP_Digest(pk, pklen, pkey_dig, &diglen, md, NULL) &&
+        ASN1_OCTET_STRING_set(oct, pkey_dig, diglen)) {
         EVP_MD_free(md);
         return oct;
     }
@@ -88,8 +93,8 @@ ASN1_OCTET_STRING *ossl_x509_pubkey_hash(X509_PUBKEY *pubkey)
     return NULL;
 }
 
-static ASN1_OCTET_STRING *s2i_skey_id(X509V3_EXT_METHOD *method,
-                                      X509V3_CTX *ctx, char *str)
+static ASN1_OCTET_STRING *
+s2i_skey_id(X509V3_EXT_METHOD *method, X509V3_CTX *ctx, char *str)
 {
     if (strcmp(str, "none") == 0)
         return ASN1_OCTET_STRING_new(); /* dummy */
@@ -99,13 +104,11 @@ static ASN1_OCTET_STRING *s2i_skey_id(X509V3_EXT_METHOD *method,
 
     if (ctx != NULL && (ctx->flags & X509V3_CTX_TEST) != 0)
         return ASN1_OCTET_STRING_new();
-    if (ctx == NULL
-        || (ctx->subject_cert == NULL && ctx->subject_req == NULL)) {
+    if (ctx == NULL || (ctx->subject_cert == NULL && ctx->subject_req == NULL)) {
         ERR_raise(ERR_LIB_X509V3, X509V3_R_NO_SUBJECT_DETAILS);
         return NULL;
     }
 
-    return ossl_x509_pubkey_hash(ctx->subject_cert != NULL ?
-                                 ctx->subject_cert->cert_info.key :
-                                 ctx->subject_req->req_info.pubkey);
+    return ossl_x509_pubkey_hash(ctx->subject_cert != NULL ? ctx->subject_cert->cert_info.key
+                                                           : ctx->subject_req->req_info.pubkey);
 }

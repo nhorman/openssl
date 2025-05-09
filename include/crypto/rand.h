@@ -16,21 +16,21 @@
  */
 
 #ifndef OSSL_CRYPTO_RAND_H
-# define OSSL_CRYPTO_RAND_H
-# pragma once
+#define OSSL_CRYPTO_RAND_H
+#pragma once
 
-# include <openssl/rand.h>
-# include "crypto/rand_pool.h"
+#include <openssl/rand.h>
+#include "crypto/rand_pool.h"
 
-# if defined(__APPLE__) && !defined(OPENSSL_NO_APPLE_CRYPTO_RANDOM)
-#  include <Availability.h>
-#  if (defined(__MAC_OS_X_VERSION_MIN_REQUIRED) && __MAC_OS_X_VERSION_MIN_REQUIRED >= 101200) || \
+#if defined(__APPLE__) && !defined(OPENSSL_NO_APPLE_CRYPTO_RANDOM)
+# include <Availability.h>
+# if (defined(__MAC_OS_X_VERSION_MIN_REQUIRED) && __MAC_OS_X_VERSION_MIN_REQUIRED >= 101200) ||    \
      (defined(__IPHONE_OS_VERSION_MIN_REQUIRED) && __IPHONE_OS_VERSION_MIN_REQUIRED >= 80000)
-#   define OPENSSL_APPLE_CRYPTO_RANDOM 1
-#   include <CommonCrypto/CommonCryptoError.h>
-#   include <CommonCrypto/CommonRandom.h>
-#  endif
+#  define OPENSSL_APPLE_CRYPTO_RANDOM 1
+#  include <CommonCrypto/CommonCryptoError.h>
+#  include <CommonCrypto/CommonRandom.h>
 # endif
+#endif
 
 /*
  * Defines related to seed sources
@@ -43,7 +43,7 @@
 # define DEVRANDOM "/dev/urandom", "/dev/random", "/dev/hwrng", "/dev/srandom"
 # if defined(__linux) && !defined(__ANDROID__)
 #  ifndef DEVRANDOM_WAIT
-#   define DEVRANDOM_WAIT   "/dev/random"
+#   define DEVRANDOM_WAIT "/dev/random"
 #  endif
 /*
  * Linux kernels 4.8 and later changes how their random device works and there
@@ -51,7 +51,7 @@
  * should be used instead.
  */
 #  ifndef DEVRANDOM_SAFE_KERNEL
-#   define DEVRANDOM_SAFE_KERNEL        4, 8
+#   define DEVRANDOM_SAFE_KERNEL 4, 8
 #  endif
 /*
  * Some operating systems do not permit select(2) on their random devices,
@@ -59,7 +59,7 @@
  * from /dev/random.
  */
 #  ifndef DEVRANDM_WAIT_USE_SELECT
-#   define DEVRANDM_WAIT_USE_SELECT     1
+#   define DEVRANDM_WAIT_USE_SELECT 1
 #  endif
 /*
  * Define the shared memory identifier used to indicate if the operating
@@ -108,26 +108,18 @@ void ossl_random_add_conf_module(void);
 /*
  * Get and cleanup random seed material.
  */
-size_t ossl_rand_get_entropy(OSSL_LIB_CTX *ctx,
-                             unsigned char **pout, int entropy,
-                             size_t min_len, size_t max_len);
-size_t ossl_rand_get_user_entropy(OSSL_LIB_CTX *ctx,
-                                  unsigned char **pout, int entropy,
+size_t ossl_rand_get_entropy(OSSL_LIB_CTX *ctx, unsigned char **pout, int entropy, size_t min_len,
+                             size_t max_len);
+size_t ossl_rand_get_user_entropy(OSSL_LIB_CTX *ctx, unsigned char **pout, int entropy,
                                   size_t min_len, size_t max_len);
-void ossl_rand_cleanup_entropy(OSSL_LIB_CTX *ctx,
-                               unsigned char *buf, size_t len);
-void ossl_rand_cleanup_user_entropy(OSSL_LIB_CTX *ctx,
-                                    unsigned char *buf, size_t len);
-size_t ossl_rand_get_nonce(OSSL_LIB_CTX *ctx,
-                           unsigned char **pout, size_t min_len, size_t max_len,
+void ossl_rand_cleanup_entropy(OSSL_LIB_CTX *ctx, unsigned char *buf, size_t len);
+void ossl_rand_cleanup_user_entropy(OSSL_LIB_CTX *ctx, unsigned char *buf, size_t len);
+size_t ossl_rand_get_nonce(OSSL_LIB_CTX *ctx, unsigned char **pout, size_t min_len, size_t max_len,
                            const void *salt, size_t salt_len);
-size_t ossl_rand_get_user_nonce(OSSL_LIB_CTX *ctx, unsigned char **pout,
-                                size_t min_len, size_t max_len,
-                                const void *salt, size_t salt_len);
-void ossl_rand_cleanup_nonce(OSSL_LIB_CTX *ctx,
-                             unsigned char *buf, size_t len);
-void ossl_rand_cleanup_user_nonce(OSSL_LIB_CTX *ctx,
-                                  unsigned char *buf, size_t len);
+size_t ossl_rand_get_user_nonce(OSSL_LIB_CTX *ctx, unsigned char **pout, size_t min_len,
+                                size_t max_len, const void *salt, size_t salt_len);
+void ossl_rand_cleanup_nonce(OSSL_LIB_CTX *ctx, unsigned char *buf, size_t len);
+void ossl_rand_cleanup_user_nonce(OSSL_LIB_CTX *ctx, unsigned char *buf, size_t len);
 
 /*
  * Get seeding material from the operating system sources.
@@ -135,11 +127,11 @@ void ossl_rand_cleanup_user_nonce(OSSL_LIB_CTX *ctx,
 size_t ossl_pool_acquire_entropy(RAND_POOL *pool);
 int ossl_pool_add_nonce_data(RAND_POOL *pool);
 
-# ifdef FIPS_MODULE
+#ifdef FIPS_MODULE
 EVP_RAND_CTX *ossl_rand_get0_private_noncreating(OSSL_LIB_CTX *ctx);
-# else
+#else
 EVP_RAND_CTX *ossl_rand_get0_seed_noncreating(OSSL_LIB_CTX *ctx);
-# endif
+#endif
 
 /* Generate a uniformly distributed random integer in the interval [0, upper) */
 uint32_t ossl_rand_uniform_uint32(OSSL_LIB_CTX *ctx, uint32_t upper, int *err);
@@ -148,18 +140,15 @@ uint32_t ossl_rand_uniform_uint32(OSSL_LIB_CTX *ctx, uint32_t upper, int *err);
  * Generate a uniformly distributed random integer in the interval
  * [lower, upper).
  */
-uint32_t ossl_rand_range_uint32(OSSL_LIB_CTX *ctx, uint32_t lower, uint32_t upper,
-                                int *err);
+uint32_t ossl_rand_range_uint32(OSSL_LIB_CTX *ctx, uint32_t lower, uint32_t upper, int *err);
 
 /*
  * Check if the named provider is the nominated entropy/random provider.
  * If it is, use it.
  */
-# ifndef FIPS_MODULE
-int ossl_rand_check_random_provider_on_load(OSSL_LIB_CTX *ctx,
-                                            OSSL_PROVIDER *prov);
-int ossl_rand_check_random_provider_on_unload(OSSL_LIB_CTX *ctx,
-                                              OSSL_PROVIDER *prov);
-# endif     /* FIPS_MODULE */
+#ifndef FIPS_MODULE
+int ossl_rand_check_random_provider_on_load(OSSL_LIB_CTX *ctx, OSSL_PROVIDER *prov);
+int ossl_rand_check_random_provider_on_unload(OSSL_LIB_CTX *ctx, OSSL_PROVIDER *prov);
+#endif /* FIPS_MODULE */
 
 #endif

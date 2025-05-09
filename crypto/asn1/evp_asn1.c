@@ -13,7 +13,8 @@
 #include <openssl/asn1t.h>
 #include "crypto/asn1.h"
 
-int ASN1_TYPE_set_octetstring(ASN1_TYPE *a, unsigned char *data, int len)
+int
+ASN1_TYPE_set_octetstring(ASN1_TYPE *a, unsigned char *data, int len)
 {
     ASN1_STRING *os;
 
@@ -31,7 +32,8 @@ int ASN1_TYPE_set_octetstring(ASN1_TYPE *a, unsigned char *data, int len)
  * if passing NULL in data, nothing is copied but the necessary length
  * for it is returned.
  */
-int ASN1_TYPE_get_octetstring(const ASN1_TYPE *a, unsigned char *data, int max_len)
+int
+ASN1_TYPE_get_octetstring(const ASN1_TYPE *a, unsigned char *data, int max_len)
 {
     int ret, num;
     const unsigned char *p;
@@ -51,8 +53,8 @@ int ASN1_TYPE_get_octetstring(const ASN1_TYPE *a, unsigned char *data, int max_l
     return ret;
 }
 
-static ossl_inline void asn1_type_init_oct(ASN1_OCTET_STRING *oct,
-                                           unsigned char *data, int len)
+static ossl_inline void
+asn1_type_init_oct(ASN1_OCTET_STRING *oct, unsigned char *data, int len)
 {
     oct->data = data;
     oct->type = V_ASN1_OCTET_STRING;
@@ -60,8 +62,9 @@ static ossl_inline void asn1_type_init_oct(ASN1_OCTET_STRING *oct,
     oct->flags = 0;
 }
 
-static int asn1_type_get_int_oct(ASN1_OCTET_STRING *oct, int32_t anum,
-                                 long *num, unsigned char *data, int max_len)
+static int
+asn1_type_get_int_oct(ASN1_OCTET_STRING *oct, int32_t anum, long *num, unsigned char *data,
+                      int max_len)
 {
     int ret = ASN1_STRING_length(oct), n;
 
@@ -84,15 +87,13 @@ typedef struct {
     ASN1_OCTET_STRING *oct;
 } asn1_int_oct;
 
-ASN1_SEQUENCE(asn1_int_oct) = {
-        ASN1_EMBED(asn1_int_oct, num, INT32),
-        ASN1_SIMPLE(asn1_int_oct, oct, ASN1_OCTET_STRING)
-} static_ASN1_SEQUENCE_END(asn1_int_oct)
+ASN1_SEQUENCE(asn1_int_oct) =
+    {ASN1_EMBED(asn1_int_oct, num, INT32),
+     ASN1_SIMPLE(asn1_int_oct, oct, ASN1_OCTET_STRING)} static_ASN1_SEQUENCE_END(asn1_int_oct)
 
-DECLARE_ASN1_ITEM(asn1_int_oct)
+        DECLARE_ASN1_ITEM(asn1_int_oct)
 
-int ASN1_TYPE_set_int_octetstring(ASN1_TYPE *a, long num, unsigned char *data,
-                                  int len)
+            int ASN1_TYPE_set_int_octetstring(ASN1_TYPE * a, long num, unsigned char *data, int len)
 {
     asn1_int_oct atmp;
     ASN1_OCTET_STRING oct;
@@ -106,8 +107,8 @@ int ASN1_TYPE_set_int_octetstring(ASN1_TYPE *a, long num, unsigned char *data,
     return 0;
 }
 
-int ASN1_TYPE_get_int_octetstring(const ASN1_TYPE *a, long *num,
-                                  unsigned char *data, int max_len)
+int
+ASN1_TYPE_get_int_octetstring(const ASN1_TYPE *a, long *num, unsigned char *data, int max_len)
 {
     asn1_int_oct *atmp = NULL;
     int ret = -1;
@@ -124,7 +125,7 @@ int ASN1_TYPE_get_int_octetstring(const ASN1_TYPE *a, long *num,
     ret = asn1_type_get_int_oct(atmp->oct, atmp->num, num, data, max_len);
 
     if (ret == -1) {
- err:
+    err:
         ERR_raise(ERR_LIB_ASN1, ASN1_R_DATA_IS_WRONG);
     }
     M_ASN1_free_of(atmp, asn1_int_oct);
@@ -140,15 +141,14 @@ typedef struct {
  * Defined in RFC 5084 -
  * Section 2. "Content-Authenticated Encryption Algorithms"
  */
-ASN1_SEQUENCE(asn1_oct_int) = {
-        ASN1_SIMPLE(asn1_oct_int, oct, ASN1_OCTET_STRING),
-        ASN1_EMBED(asn1_oct_int, num, INT32)
-} static_ASN1_SEQUENCE_END(asn1_oct_int)
+ASN1_SEQUENCE(asn1_oct_int) = {ASN1_SIMPLE(asn1_oct_int, oct, ASN1_OCTET_STRING),
+                               ASN1_EMBED(asn1_oct_int, num,
+                                          INT32)} static_ASN1_SEQUENCE_END(asn1_oct_int)
 
-DECLARE_ASN1_ITEM(asn1_oct_int)
+    DECLARE_ASN1_ITEM(asn1_oct_int)
 
-int ossl_asn1_type_set_octetstring_int(ASN1_TYPE *a, long num,
-                                       unsigned char *data, int len)
+        int ossl_asn1_type_set_octetstring_int(ASN1_TYPE * a, long num, unsigned char *data,
+                                               int len)
 {
     asn1_oct_int atmp;
     ASN1_OCTET_STRING oct;
@@ -162,8 +162,8 @@ int ossl_asn1_type_set_octetstring_int(ASN1_TYPE *a, long num,
     return 0;
 }
 
-int ossl_asn1_type_get_octetstring_int(const ASN1_TYPE *a, long *num,
-                                       unsigned char *data, int max_len)
+int
+ossl_asn1_type_get_octetstring_int(const ASN1_TYPE *a, long *num, unsigned char *data, int max_len)
 {
     asn1_oct_int *atmp = NULL;
     int ret = -1;
@@ -179,7 +179,7 @@ int ossl_asn1_type_get_octetstring_int(const ASN1_TYPE *a, long *num,
     ret = asn1_type_get_int_oct(atmp->oct, atmp->num, num, data, max_len);
 
     if (ret == -1) {
- err:
+    err:
         ERR_raise(ERR_LIB_ASN1, ASN1_R_DATA_IS_WRONG);
     }
     M_ASN1_free_of(atmp, asn1_oct_int);

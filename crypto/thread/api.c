@@ -11,7 +11,8 @@
 #include <openssl/thread.h>
 #include <internal/thread.h>
 
-uint32_t OSSL_get_thread_support_flags(void)
+uint32_t
+OSSL_get_thread_support_flags(void)
 {
     int support = 0;
 
@@ -27,19 +28,22 @@ uint32_t OSSL_get_thread_support_flags(void)
 
 #if defined(OPENSSL_NO_THREAD_POOL) || defined(OPENSSL_NO_DEFAULT_THREAD_POOL)
 
-int OSSL_set_max_threads(OSSL_LIB_CTX *ctx, uint64_t max_threads)
+int
+OSSL_set_max_threads(OSSL_LIB_CTX *ctx, uint64_t max_threads)
 {
     return 0;
 }
 
-uint64_t OSSL_get_max_threads(OSSL_LIB_CTX *ctx)
+uint64_t
+OSSL_get_max_threads(OSSL_LIB_CTX *ctx)
 {
     return 0;
 }
 
 #else
 
-uint64_t OSSL_get_max_threads(OSSL_LIB_CTX *ctx)
+uint64_t
+OSSL_get_max_threads(OSSL_LIB_CTX *ctx)
 {
     uint64_t ret = 0;
     OSSL_LIB_CTX_THREADS *tdata = OSSL_LIB_CTX_GET_THREADS(ctx);
@@ -55,7 +59,8 @@ fail:
     return ret;
 }
 
-int OSSL_set_max_threads(OSSL_LIB_CTX *ctx, uint64_t max_threads)
+int
+OSSL_set_max_threads(OSSL_LIB_CTX *ctx, uint64_t max_threads)
 {
     OSSL_LIB_CTX_THREADS *tdata;
 

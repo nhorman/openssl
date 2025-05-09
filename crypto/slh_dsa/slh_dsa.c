@@ -17,8 +17,8 @@
 /* The size of md is (21..40 bytes) - since a is in bits round up to nearest byte */
 #define MD_LEN(params) (((params)->k * (params)->a + 7) >> 3)
 
-static int get_tree_ids(PACKET *pkt, const SLH_DSA_PARAMS *params,
-                        uint64_t *tree_id, uint32_t *leaf_id);
+static int get_tree_ids(PACKET *pkt, const SLH_DSA_PARAMS *params, uint64_t *tree_id,
+                        uint32_t *leaf_id);
 
 /**
  * @brief SLH-DSA Signature generation
@@ -39,23 +39,22 @@ static int get_tree_ids(PACKET *pkt, const SLH_DSA_PARAMS *params,
  * @param opt_rand An optional random value to use of size |n|. It can be NULL.
  * @returns 1 if the signature generation succeeded or 0 otherwise.
  */
-static int slh_sign_internal(SLH_DSA_HASH_CTX *hctx,
-                             const uint8_t *msg, size_t msg_len,
-                             uint8_t *sig, size_t *sig_len, size_t sig_size,
-                             const uint8_t *opt_rand)
+static int
+slh_sign_internal(SLH_DSA_HASH_CTX *hctx, const uint8_t *msg, size_t msg_len, uint8_t *sig,
+                  size_t *sig_len, size_t sig_size, const uint8_t *opt_rand)
 {
     int ret = 0;
     const SLH_DSA_KEY *priv = hctx->key;
     const SLH_DSA_PARAMS *params = priv->params;
     size_t sig_len_expected = params->sig_len;
     uint8_t m_digest[SLH_MAX_M];
-    const uint8_t *md; /* The first md_len bytes of m_digest */
+    const uint8_t *md;              /* The first md_len bytes of m_digest */
     size_t md_len = MD_LEN(params); /* The size of the digest |md| */
     /* Points to |m_digest| buffer, it is also reused to point to |sig_fors| */
     PACKET r_packet, *rpkt = &r_packet;
-    uint8_t *r, *sig_fors; /* Pointers into buffer inside |wpkt| */
+    uint8_t *r, *sig_fors;               /* Pointers into buffer inside |wpkt| */
     WPACKET w_packet, *wpkt = &w_packet; /* Points to output |sig| buffer */
-    const uint8_t *pk_seed, *sk_seed; /* pointers to elements within |priv| */
+    const uint8_t *pk_seed, *sk_seed;    /* pointers to elements within |priv| */
     uint8_t pk_fors[SLH_MAX_N];
     uint64_t tree_id;
     uint32_t leaf_id;
@@ -95,13 +94,13 @@ static int slh_sign_internal(SLH_DSA_HASH_CTX *hctx,
     /* calculate Randomness value r, and output to the SLH-DSA signature */
     r = WPACKET_get_curr(wpkt);
     if (!hashf->PRF_MSG(hctx, SLH_DSA_SK_PRF(priv), opt_rand, msg, msg_len, wpkt)
-            /* generate a digest of size |params->m| bytes where m is (30..49) */
-            || !hashf->H_MSG(hctx, r, pk_seed, SLH_DSA_PK_ROOT(priv), msg, msg_len,
-                             m_digest, sizeof(m_digest))
-            /* Grab the first md_len bytes of m_digest to use in fors_sign() */
-            || !PACKET_get_bytes(rpkt, &md, md_len)
-            /* Grab remaining bytes from m_digest to select tree and leaf id's */
-            || !get_tree_ids(rpkt, params, &tree_id, &leaf_id))
+        /* generate a digest of size |params->m| bytes where m is (30..49) */
+        || !hashf->H_MSG(hctx, r, pk_seed, SLH_DSA_PK_ROOT(priv), msg, msg_len, m_digest,
+                         sizeof(m_digest))
+        /* Grab the first md_len bytes of m_digest to use in fors_sign() */
+        || !PACKET_get_bytes(rpkt, &md, md_len)
+        /* Grab remaining bytes from m_digest to select tree and leaf id's */
+        || !get_tree_ids(rpkt, params, &tree_id, &leaf_id))
         goto err;
 
     adrsf->set_tree_address(adrs, tree_id);
@@ -111,17 +110,15 @@ static int slh_sign_internal(SLH_DSA_HASH_CTX *hctx,
     sig_fors = WPACKET_get_curr(wpkt);
     /* generate the FORS signature and append it to the SLH-DSA signature */
     ret = ossl_slh_fors_sign(hctx, md, sk_seed, pk_seed, adrs, wpkt)
-        /* Reuse rpkt to point to the FORS signature that was just generated */
-        && PACKET_buf_init(rpkt, sig_fors, WPACKET_get_curr(wpkt) - sig_fors)
-        /* Calculate the FORS public key using the generated FORS signature */
-        && ossl_slh_fors_pk_from_sig(hctx, rpkt, md, pk_seed, adrs,
-                                     pk_fors, sizeof(pk_fors))
-        /* Generate ht signature and append to the SLH-DSA signature */
-        && ossl_slh_ht_sign(hctx, pk_fors, sk_seed, pk_seed, tree_id, leaf_id,
-                            wpkt);
+          /* Reuse rpkt to point to the FORS signature that was just generated */
+          && PACKET_buf_init(rpkt, sig_fors, WPACKET_get_curr(wpkt) - sig_fors)
+          /* Calculate the FORS public key using the generated FORS signature */
+          && ossl_slh_fors_pk_from_sig(hctx, rpkt, md, pk_seed, adrs, pk_fors, sizeof(pk_fors))
+          /* Generate ht signature and append to the SLH-DSA signature */
+          && ossl_slh_ht_sign(hctx, pk_fors, sk_seed, pk_seed, tree_id, leaf_id, wpkt);
     *sig_len = sig_len_expected;
     ret = 1;
- err:
+err:
     if (!WPACKET_finish(wpkt))
         ret = 0;
     return ret;
@@ -144,9 +141,9 @@ static int slh_sign_internal(SLH_DSA_HASH_CTX *hctx,
  * @param sig_len The size of |sig|
  * @returns 1 if the signature verification succeeded or 0 otherwise.
  */
-static int slh_verify_internal(SLH_DSA_HASH_CTX *hctx,
-                               const uint8_t *msg, size_t msg_len,
-                               const uint8_t *sig, size_t sig_len)
+static int
+slh_verify_internal(SLH_DSA_HASH_CTX *hctx, const uint8_t *msg, size_t msg_len, const uint8_t *sig,
+                    size_t sig_len)
 {
     const SLH_DSA_KEY *pub = hctx->key;
     SLH_HASH_FUNC_DECLARE(pub, hashf);
@@ -155,12 +152,12 @@ static int slh_verify_internal(SLH_DSA_HASH_CTX *hctx,
     const SLH_DSA_PARAMS *params = pub->params;
     uint32_t n = params->n;
     const uint8_t *pk_seed, *pk_root; /* Pointers to elements in |pub| */
-    PACKET pkt, *sig_rpkt = &pkt; /* Points to the |sig| buffer */
+    PACKET pkt, *sig_rpkt = &pkt;     /* Points to the |sig| buffer */
     uint8_t m_digest[SLH_MAX_M];
-    const uint8_t *md; /* This is a pointer into the buffer in m_digest_rpkt */
-    size_t md_len = MD_LEN(params); /* 21..40 bytes */
+    const uint8_t *md;                   /* This is a pointer into the buffer in m_digest_rpkt */
+    size_t md_len = MD_LEN(params);      /* 21..40 bytes */
     PACKET pkt2, *m_digest_rpkt = &pkt2; /* Points to m_digest buffer */
-    const uint8_t *r; /* Pointer to |sig_rpkt| buffer */
+    const uint8_t *r;                    /* Pointer to |sig_rpkt| buffer */
     uint8_t pk_fors[SLH_MAX_N];
     uint64_t tree_id;
     uint32_t leaf_id;
@@ -172,8 +169,7 @@ static int slh_verify_internal(SLH_DSA_HASH_CTX *hctx,
     }
 
     /* Exit if signature is invalid size */
-    if (sig_len != params->sig_len
-            || !PACKET_buf_init(sig_rpkt, sig, sig_len))
+    if (sig_len != params->sig_len || !PACKET_buf_init(sig_rpkt, sig, sig_len))
         return 0;
     if (!PACKET_get_bytes(sig_rpkt, &r, n))
         return 0;
@@ -183,8 +179,7 @@ static int slh_verify_internal(SLH_DSA_HASH_CTX *hctx,
     pk_seed = SLH_DSA_PK_SEED(pub);
     pk_root = SLH_DSA_PK_ROOT(pub);
 
-    if (!hashf->H_MSG(hctx, r, pk_seed, pk_root, msg, msg_len,
-                      m_digest, sizeof(m_digest)))
+    if (!hashf->H_MSG(hctx, r, pk_seed, pk_root, msg, msg_len, m_digest, sizeof(m_digest)))
         return 0;
 
     /*
@@ -192,19 +187,17 @@ static int slh_verify_internal(SLH_DSA_HASH_CTX *hctx,
      * ossl_slh_fors_pk_from_sig(), and then retrieve the tree id and leaf id
      * from the remaining bytes in m_digest.
      */
-    if (!PACKET_buf_init(m_digest_rpkt, m_digest, sizeof(m_digest))
-            || !PACKET_get_bytes(m_digest_rpkt, &md, md_len)
-            || !get_tree_ids(m_digest_rpkt, params, &tree_id, &leaf_id))
+    if (!PACKET_buf_init(m_digest_rpkt, m_digest, sizeof(m_digest)) ||
+        !PACKET_get_bytes(m_digest_rpkt, &md, md_len) ||
+        !get_tree_ids(m_digest_rpkt, params, &tree_id, &leaf_id))
         return 0;
 
     adrsf->set_tree_address(adrs, tree_id);
     adrsf->set_type_and_clear(adrs, SLH_ADRS_TYPE_FORS_TREE);
     adrsf->set_keypair_address(adrs, leaf_id);
-    return ossl_slh_fors_pk_from_sig(hctx, sig_rpkt, md, pk_seed, adrs,
-                                     pk_fors, sizeof(pk_fors))
-        && ossl_slh_ht_verify(hctx, pk_fors, sig_rpkt, pk_seed,
-                              tree_id, leaf_id, pk_root)
-        && PACKET_remaining(sig_rpkt) == 0;
+    return ossl_slh_fors_pk_from_sig(hctx, sig_rpkt, md, pk_seed, adrs, pk_fors, sizeof(pk_fors)) &&
+           ossl_slh_ht_verify(hctx, pk_fors, sig_rpkt, pk_seed, tree_id, leaf_id, pk_root) &&
+           PACKET_remaining(sig_rpkt) == 0;
 }
 
 /**
@@ -228,9 +221,9 @@ static int slh_verify_internal(SLH_DSA_HASH_CTX *hctx,
  * otherwise it allocates memory which must be freed by the caller. If |encode|
  * is 0 then it returns |msg|. NULL is returned if there is a failure.
  */
-static uint8_t *msg_encode(const uint8_t *msg, size_t msg_len,
-                           const uint8_t *ctx, size_t ctx_len, int encode,
-                           uint8_t *tmp, size_t tmp_len, size_t *out_len)
+static uint8_t *
+msg_encode(const uint8_t *msg, size_t msg_len, const uint8_t *ctx, size_t ctx_len, int encode,
+           uint8_t *tmp, size_t tmp_len, size_t *out_len)
 {
     uint8_t *encoded = NULL;
     size_t encoded_len;
@@ -264,19 +257,17 @@ static uint8_t *msg_encode(const uint8_t *msg, size_t msg_len,
  * See FIPS 205 Section 10.2.1 Algorithm 22
  * @returns 1 on success, or 0 on error.
  */
-int ossl_slh_dsa_sign(SLH_DSA_HASH_CTX *slh_ctx,
-                      const uint8_t *msg, size_t msg_len,
-                      const uint8_t *ctx, size_t ctx_len,
-                      const uint8_t *add_rand, int encode,
-                      unsigned char *sig, size_t *siglen, size_t sigsize)
+int
+ossl_slh_dsa_sign(SLH_DSA_HASH_CTX *slh_ctx, const uint8_t *msg, size_t msg_len, const uint8_t *ctx,
+                  size_t ctx_len, const uint8_t *add_rand, int encode, unsigned char *sig,
+                  size_t *siglen, size_t sigsize)
 {
     uint8_t m_tmp[1024], *m = m_tmp;
     size_t m_len = 0;
     int ret = 0;
 
     if (sig != NULL) {
-        m = msg_encode(msg, msg_len, ctx, ctx_len, encode, m_tmp, sizeof(m_tmp),
-                       &m_len);
+        m = msg_encode(msg, msg_len, ctx, ctx_len, encode, m_tmp, sizeof(m_tmp), &m_len);
         if (m == NULL)
             return 0;
     }
@@ -290,18 +281,17 @@ int ossl_slh_dsa_sign(SLH_DSA_HASH_CTX *slh_ctx,
  * See FIPS 205 Section 10.3 Algorithm 24
  * @returns 1 on success, or 0 on error.
  */
-int ossl_slh_dsa_verify(SLH_DSA_HASH_CTX *slh_ctx,
-                        const uint8_t *msg, size_t msg_len,
-                        const uint8_t *ctx, size_t ctx_len, int encode,
-                        const uint8_t *sig, size_t sig_len)
+int
+ossl_slh_dsa_verify(SLH_DSA_HASH_CTX *slh_ctx, const uint8_t *msg, size_t msg_len,
+                    const uint8_t *ctx, size_t ctx_len, int encode, const uint8_t *sig,
+                    size_t sig_len)
 {
     uint8_t *m;
     size_t m_len;
     uint8_t m_tmp[1024];
     int ret = 0;
 
-    m = msg_encode(msg, msg_len, ctx, ctx_len, encode, m_tmp, sizeof(m_tmp),
-                   &m_len);
+    m = msg_encode(msg, msg_len, ctx, ctx_len, encode, m_tmp, sizeof(m_tmp), &m_len);
     if (m == NULL)
         return 0;
 
@@ -315,7 +305,8 @@ int ossl_slh_dsa_verify(SLH_DSA_HASH_CTX *slh_ctx,
  * See FIPS 205 Algorithm 2 toInt(X, n)
  * OPENSSL_load_u64_be() cant be used here as the |in_len| may be < 8
  */
-static uint64_t bytes_to_u64_be(const uint8_t *in, size_t in_len)
+static uint64_t
+bytes_to_u64_be(const uint8_t *in, size_t in_len)
 {
 
     size_t i;
@@ -331,18 +322,18 @@ static uint64_t bytes_to_u64_be(const uint8_t *in, size_t in_len)
  * Converts digested bytes into a tree index, and leaf index within the tree.
  * The sizes are determined by the |params| parameter set.
  */
-static int get_tree_ids(PACKET *rpkt, const SLH_DSA_PARAMS *params,
-                        uint64_t *tree_id, uint32_t *leaf_id)
+static int
+get_tree_ids(PACKET *rpkt, const SLH_DSA_PARAMS *params, uint64_t *tree_id, uint32_t *leaf_id)
 {
     const uint8_t *tree_id_bytes, *leaf_id_bytes;
     uint32_t tree_id_len, leaf_id_len;
     uint64_t tree_id_mask, leaf_id_mask;
 
     tree_id_len = ((params->h - params->hm + 7) >> 3); /* 7 or 8 bytes */
-    leaf_id_len = ((params->hm + 7) >> 3); /* 1 or 2 bytes */
+    leaf_id_len = ((params->hm + 7) >> 3);             /* 1 or 2 bytes */
 
-    if (!PACKET_get_bytes(rpkt, &tree_id_bytes, tree_id_len)
-            || !PACKET_get_bytes(rpkt, &leaf_id_bytes, leaf_id_len))
+    if (!PACKET_get_bytes(rpkt, &tree_id_bytes, tree_id_len) ||
+        !PACKET_get_bytes(rpkt, &leaf_id_bytes, leaf_id_len))
         return 0;
 
     /*

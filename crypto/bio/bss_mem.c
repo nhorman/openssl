@@ -24,33 +24,17 @@ static int mem_buf_free(BIO *data);
 static int mem_buf_sync(BIO *h);
 
 static const BIO_METHOD mem_method = {
-    BIO_TYPE_MEM,
-    "memory buffer",
-    bwrite_conv,
-    mem_write,
-    bread_conv,
-    mem_read,
-    mem_puts,
-    mem_gets,
-    mem_ctrl,
-    mem_new,
-    mem_free,
-    NULL,                      /* mem_callback_ctrl */
+    BIO_TYPE_MEM, "memory buffer", bwrite_conv, mem_write, bread_conv, mem_read,
+    mem_puts,     mem_gets,        mem_ctrl,    mem_new,   mem_free,   NULL, /* mem_callback_ctrl */
 };
 
 static const BIO_METHOD secmem_method = {
-    BIO_TYPE_MEM,
-    "secure memory buffer",
-    bwrite_conv,
-    mem_write,
-    bread_conv,
-    mem_read,
-    mem_puts,
-    mem_gets,
-    mem_ctrl,
-    secmem_new,
-    mem_free,
-    NULL,                      /* mem_callback_ctrl */
+    BIO_TYPE_MEM, "secure memory buffer",
+    bwrite_conv,  mem_write,
+    bread_conv,   mem_read,
+    mem_puts,     mem_gets,
+    mem_ctrl,     secmem_new,
+    mem_free,     NULL, /* mem_callback_ctrl */
 };
 
 /*
@@ -69,17 +53,20 @@ typedef struct bio_buf_mem_st {
  * should_retry is not set
  */
 
-const BIO_METHOD *BIO_s_mem(void)
+const BIO_METHOD *
+BIO_s_mem(void)
 {
     return &mem_method;
 }
 
-const BIO_METHOD *BIO_s_secmem(void)
+const BIO_METHOD *
+BIO_s_secmem(void)
 {
     return &secmem_method;
 }
 
-BIO *BIO_new_mem_buf(const void *buf, int len)
+BIO *
+BIO_new_mem_buf(const void *buf, int len)
 {
     BIO *ret;
     BUF_MEM *b;
@@ -106,7 +93,8 @@ BIO *BIO_new_mem_buf(const void *buf, int len)
     return ret;
 }
 
-static int mem_init(BIO *bi, unsigned long flags)
+static int
+mem_init(BIO *bi, unsigned long flags)
 {
     BIO_BUF_MEM *bb = OPENSSL_zalloc(sizeof(*bb));
 
@@ -129,17 +117,20 @@ static int mem_init(BIO *bi, unsigned long flags)
     return 1;
 }
 
-static int mem_new(BIO *bi)
+static int
+mem_new(BIO *bi)
 {
     return mem_init(bi, 0L);
 }
 
-static int secmem_new(BIO *bi)
+static int
+secmem_new(BIO *bi)
 {
     return mem_init(bi, BUF_MEM_FLAG_SECURE);
 }
 
-static int mem_free(BIO *a)
+static int
+mem_free(BIO *a)
 {
     BIO_BUF_MEM *bb;
 
@@ -154,7 +145,8 @@ static int mem_free(BIO *a)
     return 1;
 }
 
-static int mem_buf_free(BIO *a)
+static int
+mem_buf_free(BIO *a)
 {
     if (a == NULL)
         return 0;
@@ -174,7 +166,8 @@ static int mem_buf_free(BIO *a)
  * Reallocate memory buffer if read pointer differs
  * NOT FOR RDONLY
  */
-static int mem_buf_sync(BIO *b)
+static int
+mem_buf_sync(BIO *b)
 {
     if (b != NULL && b->init != 0 && b->ptr != NULL) {
         BIO_BUF_MEM *bbm = (BIO_BUF_MEM *)b->ptr;
@@ -188,7 +181,8 @@ static int mem_buf_sync(BIO *b)
     return 0;
 }
 
-static int mem_read(BIO *b, char *out, int outl)
+static int
+mem_read(BIO *b, char *out, int outl)
 {
     int ret = -1;
     BIO_BUF_MEM *bbm = (BIO_BUF_MEM *)b->ptr;
@@ -211,7 +205,8 @@ static int mem_read(BIO *b, char *out, int outl)
     return ret;
 }
 
-static int mem_write(BIO *b, const char *in, int inl)
+static int
+mem_write(BIO *b, const char *in, int inl)
 {
     int ret = -1;
     int blen;
@@ -235,16 +230,17 @@ static int mem_write(BIO *b, const char *in, int inl)
     memcpy(bbm->buf->data + blen, in, inl);
     *bbm->readp = *bbm->buf;
     ret = inl;
- end:
+end:
     return ret;
 }
 
-static long mem_ctrl(BIO *b, int cmd, long num, void *ptr)
+static long
+mem_ctrl(BIO *b, int cmd, long num, void *ptr)
 {
     long ret = 1;
     char **pptr;
     BIO_BUF_MEM *bbm = (BIO_BUF_MEM *)b->ptr;
-    BUF_MEM *bm, *bo;            /* bio_mem, bio_other */
+    BUF_MEM *bm, *bo; /* bio_mem, bio_other */
     long off, remain;
 
     if (b->flags & BIO_FLAGS_MEM_RDONLY) {
@@ -275,7 +271,7 @@ static long mem_ctrl(BIO *b, int cmd, long num, void *ptr)
         break;
     case BIO_C_FILE_SEEK:
         if (num < 0 || num > off + remain)
-            return -1;   /* Can't see outside of the current buffer */
+            return -1; /* Can't see outside of the current buffer */
 
         bm->data = (num != 0) ? bo->data + num : bo->data;
         bm->length = bo->length - num;
@@ -338,7 +334,8 @@ static long mem_ctrl(BIO *b, int cmd, long num, void *ptr)
     return ret;
 }
 
-static int mem_gets(BIO *bp, char *buf, int size)
+static int
+mem_gets(BIO *bp, char *buf, int size)
 {
     int i, j;
     int ret = -1;
@@ -376,7 +373,8 @@ static int mem_gets(BIO *bp, char *buf, int size)
     return ret;
 }
 
-static int mem_puts(BIO *bp, const char *str)
+static int
+mem_puts(BIO *bp, const char *str)
 {
     int n, ret;
 

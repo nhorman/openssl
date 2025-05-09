@@ -41,8 +41,8 @@ static const char delimiter = '-';
  *  return k + (((base - tmin + 1) * delta) div (delta + skew))
  */
 
-static int adapt(unsigned int delta, unsigned int numpoints,
-                 unsigned int firsttime)
+static int
+adapt(unsigned int delta, unsigned int numpoints, unsigned int firsttime)
 {
     unsigned int k = 0;
 
@@ -57,7 +57,8 @@ static int adapt(unsigned int delta, unsigned int numpoints,
     return k + (((base - tmin + 1) * delta) / (delta + skew));
 }
 
-static ossl_inline int is_basic(unsigned int a)
+static ossl_inline int
+is_basic(unsigned int a)
 {
     return (a < 0x80) ? 1 : 0;
 }
@@ -69,7 +70,8 @@ static ossl_inline int is_basic(unsigned int a)
  * 61..7A (a-z) =  0 to 25, respectively
  * 30..39 (0-9) = 26 to 35, respectively
  */
-static ossl_inline int digit_decoded(const unsigned char a)
+static ossl_inline int
+digit_decoded(const unsigned char a)
 {
     if (a >= 0x41 && a <= 0x5A)
         return a - 0x41;
@@ -116,8 +118,9 @@ static ossl_inline int digit_decoded(const unsigned char a)
  *  end
  */
 
-int ossl_punycode_decode(const char *pEncoded, const size_t enc_len,
-                         unsigned int *pDecoded, unsigned int *pout_length)
+int
+ossl_punycode_decode(const char *pEncoded, const size_t enc_len, unsigned int *pDecoded,
+                     unsigned int *pout_length)
 {
     unsigned int n = initial_n;
     unsigned int i = 0;
@@ -184,8 +187,7 @@ int ossl_punycode_decode(const char *pEncoded, const size_t enc_len,
         if (written_out >= max_out)
             return 0;
 
-        memmove(pDecoded + i + 1, pDecoded + i,
-                (written_out - i) * sizeof(*pDecoded));
+        memmove(pDecoded + i + 1, pDecoded + i, (written_out - i) * sizeof(*pDecoded));
         pDecoded[i] = n;
         i++;
         written_out++;
@@ -200,7 +202,8 @@ int ossl_punycode_decode(const char *pEncoded, const size_t enc_len,
  * return number of bytes on success, 0 on failure
  * (also produces U+FFFD, which uses 3 bytes on failure)
  */
-static int codepoint2utf8(unsigned char *out, unsigned long utf)
+static int
+codepoint2utf8(unsigned char *out, unsigned long utf)
 {
     if (utf <= 0x7F) {
         /* Plain ASCII */
@@ -245,7 +248,8 @@ static int codepoint2utf8(unsigned char *out, unsigned long utf)
  * -1 - bad string passed or other error
  */
 
-int ossl_a2ulabel(const char *in, char *out, size_t outlen)
+int
+ossl_a2ulabel(const char *in, char *out, size_t outlen)
 {
     /*-
      * Domain name has some parts consisting of ASCII chars joined with dot.
@@ -256,7 +260,7 @@ int ossl_a2ulabel(const char *in, char *out, size_t outlen)
     const char *inptr = in;
     int result = 1;
     unsigned int i;
-    unsigned int buf[LABEL_BUF_SIZE];      /* It's a hostname */
+    unsigned int buf[LABEL_BUF_SIZE]; /* It's a hostname */
     WPACKET pkt;
 
     /* Internal API, so should not fail */
@@ -306,7 +310,7 @@ int ossl_a2ulabel(const char *in, char *out, size_t outlen)
 
     if (!WPACKET_put_bytes_u8(&pkt, '\0'))
         result = 0;
- end:
+end:
     WPACKET_cleanup(&pkt);
     return result;
 }

@@ -14,8 +14,7 @@
 
 #include "pcy_local.h"
 
-static int policy_data_cmp(const X509_POLICY_DATA *const *a,
-                           const X509_POLICY_DATA *const *b);
+static int policy_data_cmp(const X509_POLICY_DATA *const *a, const X509_POLICY_DATA *const *b);
 static int policy_cache_set_int(long *out, ASN1_INTEGER *value);
 
 /*
@@ -23,8 +22,8 @@ static int policy_cache_set_int(long *out, ASN1_INTEGER *value);
  * destroys the passed CERTIFICATEPOLICIES structure.
  */
 
-static int policy_cache_create(X509 *x,
-                               CERTIFICATEPOLICIES *policies, int crit)
+static int
+policy_cache_create(X509 *x, CERTIFICATEPOLICIES *policies, int crit)
 {
     int i, num, ret = 0;
     X509_POLICY_CACHE *cache = x->policy_cache;
@@ -54,7 +53,7 @@ static int policy_cache_create(X509 *x,
                 goto bad_policy;
             }
             cache->anyPolicy = data;
-        } else if (sk_X509_POLICY_DATA_find(cache->data, data) >=0) {
+        } else if (sk_X509_POLICY_DATA_find(cache->data, data) >= 0) {
             ret = -1;
             goto bad_policy;
         } else if (!sk_X509_POLICY_DATA_push(cache->data, data)) {
@@ -67,11 +66,11 @@ static int policy_cache_create(X509 *x,
     sk_X509_POLICY_DATA_sort(cache->data);
     ret = 1;
 
- bad_policy:
+bad_policy:
     if (ret == -1)
         x->ex_flags |= EXFLAG_INVALID_POLICY;
     ossl_policy_data_free(data);
- just_cleanup:
+just_cleanup:
     sk_POLICYINFO_pop_free(policies, POLICYINFO_free);
     if (ret <= 0) {
         sk_X509_POLICY_DATA_pop_free(cache->data, ossl_policy_data_free);
@@ -80,7 +79,8 @@ static int policy_cache_create(X509 *x,
     return ret;
 }
 
-static int policy_cache_new(X509 *x)
+static int
+policy_cache_new(X509 *x)
 {
     X509_POLICY_CACHE *cache;
     ASN1_INTEGER *ext_any = NULL;
@@ -112,14 +112,11 @@ static int policy_cache_new(X509 *x)
         if (i != -1)
             goto bad_cache;
     } else {
-        if (!ext_pcons->requireExplicitPolicy
-            && !ext_pcons->inhibitPolicyMapping)
+        if (!ext_pcons->requireExplicitPolicy && !ext_pcons->inhibitPolicyMapping)
             goto bad_cache;
-        if (!policy_cache_set_int(&cache->explicit_skip,
-                                  ext_pcons->requireExplicitPolicy))
+        if (!policy_cache_set_int(&cache->explicit_skip, ext_pcons->requireExplicitPolicy))
             goto bad_cache;
-        if (!policy_cache_set_int(&cache->map_skip,
-                                  ext_pcons->inhibitPolicyMapping))
+        if (!policy_cache_set_int(&cache->map_skip, ext_pcons->inhibitPolicyMapping))
             goto bad_cache;
     }
 
@@ -165,17 +162,17 @@ static int policy_cache_new(X509 *x)
         goto bad_cache;
     goto just_cleanup;
 
- bad_cache:
+bad_cache:
     x->ex_flags |= EXFLAG_INVALID_POLICY;
 
- just_cleanup:
+just_cleanup:
     POLICY_CONSTRAINTS_free(ext_pcons);
     ASN1_INTEGER_free(ext_any);
     return 1;
-
 }
 
-void ossl_policy_cache_free(X509_POLICY_CACHE *cache)
+void
+ossl_policy_cache_free(X509_POLICY_CACHE *cache)
 {
     if (!cache)
         return;
@@ -184,7 +181,8 @@ void ossl_policy_cache_free(X509_POLICY_CACHE *cache)
     OPENSSL_free(cache);
 }
 
-const X509_POLICY_CACHE *ossl_policy_cache_set(X509 *x)
+const X509_POLICY_CACHE *
+ossl_policy_cache_set(X509 *x)
 {
 
     if (x->policy_cache == NULL) {
@@ -195,11 +193,10 @@ const X509_POLICY_CACHE *ossl_policy_cache_set(X509 *x)
     }
 
     return x->policy_cache;
-
 }
 
-X509_POLICY_DATA *ossl_policy_cache_find_data(const X509_POLICY_CACHE *cache,
-                                              const ASN1_OBJECT *id)
+X509_POLICY_DATA *
+ossl_policy_cache_find_data(const X509_POLICY_CACHE *cache, const ASN1_OBJECT *id)
 {
     int idx;
     X509_POLICY_DATA tmp;
@@ -208,13 +205,14 @@ X509_POLICY_DATA *ossl_policy_cache_find_data(const X509_POLICY_CACHE *cache,
     return sk_X509_POLICY_DATA_value(cache->data, idx);
 }
 
-static int policy_data_cmp(const X509_POLICY_DATA *const *a,
-                           const X509_POLICY_DATA *const *b)
+static int
+policy_data_cmp(const X509_POLICY_DATA *const *a, const X509_POLICY_DATA *const *b)
 {
     return OBJ_cmp((*a)->valid_policy, (*b)->valid_policy);
 }
 
-static int policy_cache_set_int(long *out, ASN1_INTEGER *value)
+static int
+policy_cache_set_int(long *out, ASN1_INTEGER *value)
 {
     if (value == NULL)
         return 1;

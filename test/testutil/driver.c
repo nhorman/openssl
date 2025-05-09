@@ -17,24 +17,23 @@
 #include "internal/nelem.h"
 #include <openssl/bio.h>
 
-#include "platform.h"            /* From libapps */
+#include "platform.h" /* From libapps */
 
 #if defined(_WIN32) && !defined(__BORLANDC__)
 # define strdup _strdup
 #endif
-
 
 /*
  * Declares the structures needed to register each test case function.
  */
 typedef struct test_info {
     const char *test_case_name;
-    int (*test_fn) (void);
+    int (*test_fn)(void);
     int (*param_test_fn)(int idx);
     int num;
 
     /* flags */
-    int subtest:1;
+    int subtest : 1;
 } TEST_INFO;
 
 static TEST_INFO all_tests[1024];
@@ -55,8 +54,8 @@ static int num_test_cases = 0;
 
 static int process_shared_options(void);
 
-
-void add_test(const char *test_case_name, int (*test_fn) (void))
+void
+add_test(const char *test_case_name, int (*test_fn)(void))
 {
     assert(num_tests != OSSL_NELEM(all_tests));
     all_tests[num_tests].test_case_name = test_case_name;
@@ -66,8 +65,8 @@ void add_test(const char *test_case_name, int (*test_fn) (void))
     ++num_test_cases;
 }
 
-void add_all_tests(const char *test_case_name, int(*test_fn)(int idx),
-                   int num, int subtest)
+void
+add_all_tests(const char *test_case_name, int (*test_fn)(int idx), int num, int subtest)
 {
     assert(num_tests != OSSL_NELEM(all_tests));
     all_tests[num_tests].test_case_name = test_case_name;
@@ -81,7 +80,8 @@ void add_all_tests(const char *test_case_name, int(*test_fn)(int idx),
         num_test_cases += num;
 }
 
-static int gcd(int a, int b)
+static int
+gcd(int a, int b)
 {
     while (b != 0) {
         int t = b;
@@ -91,7 +91,8 @@ static int gcd(int a, int b)
     return a;
 }
 
-static void set_seed(int s)
+static void
+set_seed(int s)
 {
     seed = s;
     if (seed <= 0)
@@ -99,8 +100,8 @@ static void set_seed(int s)
     test_random_seed(seed);
 }
 
-
-int setup_test_framework(int argc, char *argv[])
+int
+setup_test_framework(int argc, char *argv[])
 {
     char *test_rand_order = getenv("OPENSSL_TEST_RAND_ORDER");
     char *test_rand_seed = getenv("OPENSSL_TEST_RAND_SEED");
@@ -132,12 +133,12 @@ int setup_test_framework(int argc, char *argv[])
     return 1;
 }
 
-
 /*
  * This can only be called after setup() has run, since num_tests and
  * all_tests[] are setup at this point
  */
-static int check_single_test_params(char *name, char *testname, char *itname)
+static int
+check_single_test_params(char *name, char *testname, char *itname)
 {
     if (name != NULL) {
         int i;
@@ -150,7 +151,6 @@ static int check_single_test_params(char *name, char *testname, char *itname)
         if (i >= num_tests)
             single_test = atoi(name);
     }
-
 
     /* if only iteration is specified, assume we want the first test */
     if (single_test == -1 && single_iter != -1)
@@ -166,25 +166,22 @@ static int check_single_test_params(char *name, char *testname, char *itname)
     }
     if (single_iter != -1) {
         if (all_tests[single_test - 1].num == -1) {
-            test_printf_stderr("-%s option is not valid for test %d:%s\n",
-                               itname,
-                               single_test,
+            test_printf_stderr("-%s option is not valid for test %d:%s\n", itname, single_test,
                                all_tests[single_test - 1].test_case_name);
             return 0;
-        } else if (single_iter < 1
-                   || single_iter > all_tests[single_test - 1].num) {
+        } else if (single_iter < 1 || single_iter > all_tests[single_test - 1].num) {
             test_printf_stderr("Invalid -%s value for test %d:%s\t"
                                "(Value must be in the range %d..%d)\n",
-                               itname, single_test,
-                               all_tests[single_test - 1].test_case_name,
-                               1, all_tests[single_test - 1].num);
+                               itname, single_test, all_tests[single_test - 1].test_case_name, 1,
+                               all_tests[single_test - 1].num);
             return 0;
         }
     }
     return 1;
 }
 
-static int process_shared_options(void)
+static int
+process_shared_options(void)
 {
     OPTION_CHOICE_DEFAULT o;
     int value;
@@ -236,14 +233,15 @@ end:
     return ret;
 }
 
-
-int pulldown_test_framework(int ret)
+int
+pulldown_test_framework(int ret)
 {
     set_test_title(NULL);
     return ret;
 }
 
-static void finalize(int success)
+static void
+finalize(int success)
 {
     if (success)
         ERR_clear_error();
@@ -253,14 +251,14 @@ static void finalize(int success)
 
 static char *test_title = NULL;
 
-void set_test_title(const char *title)
+void
+set_test_title(const char *title)
 {
     free(test_title);
     test_title = title == NULL ? NULL : strdup(title);
 }
 
-PRINTF_FORMAT(2, 3) static void test_verdict(int verdict,
-                                             const char *description, ...)
+PRINTF_FORMAT(2, 3) static void test_verdict(int verdict, const char *description, ...)
 {
     va_list ap;
 
@@ -283,7 +281,8 @@ PRINTF_FORMAT(2, 3) static void test_verdict(int verdict,
     test_flush_tapout();
 }
 
-int run_tests(const char *test_prog_name)
+int
+run_tests(const char *test_prog_name)
 {
     int num_failed = 0;
     int verdict = 1;
@@ -323,17 +322,14 @@ int run_tests(const char *test_prog_name)
     for (ii = 0; ii != num_tests; ++ii) {
         i = permute[ii];
 
-        if (single_test != -1 && ((i+1) != single_test)) {
+        if (single_test != -1 && ((i + 1) != single_test)) {
             continue;
-        }
-        else if (show_list) {
+        } else if (show_list) {
             if (all_tests[i].num != -1) {
-                test_printf_tapout("%d - %s (%d..%d)\n", ii + 1,
-                                   all_tests[i].test_case_name, 1,
+                test_printf_tapout("%d - %s (%d..%d)\n", ii + 1, all_tests[i].test_case_name, 1,
                                    all_tests[i].num);
             } else {
-                test_printf_tapout("%d - %s\n", ii + 1,
-                                   all_tests[i].test_case_name);
+                test_printf_tapout("%d - %s\n", ii + 1, all_tests[i].test_case_name);
             }
             test_flush_tapout();
         } else if (all_tests[i].num == -1) {
@@ -385,12 +381,10 @@ int run_tests(const char *test_prog_name)
                 finalize(v != 0);
 
                 if (all_tests[i].subtest)
-                    test_verdict(v, "%d - iteration %d",
-                                 subtest_case_count + 1, j + 1);
+                    test_verdict(v, "%d - iteration %d", subtest_case_count + 1, j + 1);
                 else
                     test_verdict(v, "%d - %s - iteration %d",
-                                 test_case_count + subtest_case_count + 1,
-                                 test_title, j + 1);
+                                 test_case_count + subtest_case_count + 1, test_title, j + 1);
                 subtest_case_count++;
             }
 
@@ -401,8 +395,7 @@ int run_tests(const char *test_prog_name)
             if (verdict == 0)
                 ++num_failed;
             if (all_tests[i].num == -1 || all_tests[i].subtest)
-                test_verdict(verdict, "%d - %s", test_case_count + 1,
-                             all_tests[i].test_case_name);
+                test_verdict(verdict, "%d - %s", test_case_count + 1, all_tests[i].test_case_name);
             test_case_count++;
         }
     }
@@ -415,7 +408,8 @@ int run_tests(const char *test_prog_name)
  * Glue an array of strings together and return it as an allocated string.
  * Optionally return the whole length of this string in |out_len|
  */
-char *glue_strings(const char *list[], size_t *out_len)
+char *
+glue_strings(const char *list[], size_t *out_len)
 {
     size_t len = 0;
     char *p, *ret;
@@ -436,15 +430,16 @@ char *glue_strings(const char *list[], size_t *out_len)
     return ret;
 }
 
-char *test_mk_file_path(const char *dir, const char *file)
+char *
+test_mk_file_path(const char *dir, const char *file)
 {
-# ifndef OPENSSL_SYS_VMS
+#ifndef OPENSSL_SYS_VMS
     const char *sep = "/";
-# else
+#else
     const char *sep = "";
     char *dir_end;
     char dir_end_sep;
-# endif
+#endif
     size_t dirlen = dir != NULL ? strlen(dir) : 0;
     size_t len = dirlen + strlen(sep) + strlen(file) + 1;
     char *full_file = OPENSSL_zalloc(len);
@@ -452,7 +447,7 @@ char *test_mk_file_path(const char *dir, const char *file)
     if (full_file != NULL) {
         if (dir != NULL && dirlen > 0) {
             OPENSSL_strlcpy(full_file, dir, len);
-# ifdef OPENSSL_SYS_VMS
+#ifdef OPENSSL_SYS_VMS
             /*
              * If |file| contains a directory spec, we need to do some
              * careful merging.
@@ -461,8 +456,7 @@ char *test_mk_file_path(const char *dir, const char *file)
              */
             dir_end = &full_file[strlen(full_file) - 1];
             dir_end_sep = *dir_end;
-            if ((dir_end_sep == ']' || dir_end_sep == '>')
-                && (file[0] == '[' || file[0] == '<')) {
+            if ((dir_end_sep == ']' || dir_end_sep == '>') && (file[0] == '[' || file[0] == '<')) {
                 file++;
                 if (file[0] == '.')
                     *dir_end = '\0';

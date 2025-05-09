@@ -13,7 +13,8 @@
 #include <openssl/asn1.h>
 #include <openssl/x509.h>
 
-X509_INFO *X509_INFO_new(void)
+X509_INFO *
+X509_INFO_new(void)
 {
     X509_INFO *ret;
 
@@ -24,7 +25,8 @@ X509_INFO *X509_INFO_new(void)
     return ret;
 }
 
-void X509_INFO_free(X509_INFO *x)
+void
+X509_INFO_free(X509_INFO *x)
 {
     if (x == NULL)
         return;
