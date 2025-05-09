@@ -1833,34 +1833,34 @@ enum {
 };
 
 #define TPARAM_CHECK_DUP(name, reason) \
-    { QUIC_TPARAM_##name, TPARAM_OP_DUP, (reason) },
+    { QUIC_TPARAM_##name, TPARAM_OP_DUP, (reason) }
 #define TPARAM_CHECK_DROP(name, reason) \
-    { QUIC_TPARAM_##name, TPARAM_OP_DROP, (reason) },
+    { QUIC_TPARAM_##name, TPARAM_OP_DROP, (reason) }
 #define TPARAM_CHECK_INJECT(name, buf, buf_len, reason) \
     { QUIC_TPARAM_##name, TPARAM_OP_INJECT, (reason), \
-      (buf), (buf_len) },
+      (buf), (buf_len) }
 #define TPARAM_CHECK_INJECT_A(name, buf, reason) \
     TPARAM_CHECK_INJECT(name, buf, sizeof(buf), reason)
 #define TPARAM_CHECK_DROP_INJECT(name, buf, buf_len, reason) \
     { QUIC_TPARAM_##name, TPARAM_OP_DROP_INJECT, (reason), \
-      (buf), (buf_len) },
+      (buf), (buf_len) }
 #define TPARAM_CHECK_DROP_INJECT_A(name, buf, reason) \
     TPARAM_CHECK_DROP_INJECT(name, buf, sizeof(buf), reason)
 #define TPARAM_CHECK_INJECT_TWICE(name, buf, buf_len, reason) \
     { QUIC_TPARAM_##name, TPARAM_OP_INJECT_TWICE, (reason), \
-      (buf), (buf_len) },
+      (buf), (buf_len) }
 #define TPARAM_CHECK_INJECT_TWICE_A(name, buf, reason) \
     TPARAM_CHECK_INJECT_TWICE(name, buf, sizeof(buf), reason)
 #define TPARAM_CHECK_INJECT_RAW(buf, buf_len, reason) \
     { 0, TPARAM_OP_INJECT_RAW, (reason), \
-      (buf), (buf_len) },
+      (buf), (buf_len) }
 #define TPARAM_CHECK_INJECT_RAW_A(buf, reason) \
     TPARAM_CHECK_INJECT_RAW(buf, sizeof(buf), reason)
 #define TPARAM_CHECK_MUTATE(name, reason) \
-    { QUIC_TPARAM_##name, TPARAM_OP_MUTATE, (reason) },
+    { QUIC_TPARAM_##name, TPARAM_OP_MUTATE, (reason) }
 #define TPARAM_CHECK_INT(name, reason) \
-    TPARAM_CHECK_DROP_INJECT(name, NULL, 0, reason) \
-    TPARAM_CHECK_DROP_INJECT_A(name, bogus_int, reason) \
+    TPARAM_CHECK_DROP_INJECT(name, NULL, 0, reason), \
+    TPARAM_CHECK_DROP_INJECT_A(name, bogus_int, reason), \
     TPARAM_CHECK_DROP_INJECT_A(name, int_with_trailer, reason)
 
 struct tparam_test {
@@ -1969,123 +1969,123 @@ static const unsigned char int_with_trailer[2] = { 0x01 };
 
 static const struct tparam_test tparam_tests[] = {
     TPARAM_CHECK_DUP(ORIG_DCID,
-                     "ORIG_DCID appears multiple times")
+                     "ORIG_DCID appears multiple times"),
     TPARAM_CHECK_DUP(INITIAL_SCID,
-                     "INITIAL_SCID appears multiple times")
+                     "INITIAL_SCID appears multiple times"),
     TPARAM_CHECK_DUP(INITIAL_MAX_DATA,
-                     "INITIAL_MAX_DATA appears multiple times")
+                     "INITIAL_MAX_DATA appears multiple times"),
     TPARAM_CHECK_DUP(INITIAL_MAX_STREAM_DATA_BIDI_LOCAL,
-                     "INITIAL_MAX_STREAM_DATA_BIDI_LOCAL appears multiple times")
+                     "INITIAL_MAX_STREAM_DATA_BIDI_LOCAL appears multiple times"),
     TPARAM_CHECK_DUP(INITIAL_MAX_STREAM_DATA_BIDI_REMOTE,
-                     "INITIAL_MAX_STREAM_DATA_BIDI_REMOTE appears multiple times")
+                     "INITIAL_MAX_STREAM_DATA_BIDI_REMOTE appears multiple times"),
     TPARAM_CHECK_DUP(INITIAL_MAX_STREAM_DATA_UNI,
-                     "INITIAL_MAX_STREAM_DATA_UNI appears multiple times")
+                     "INITIAL_MAX_STREAM_DATA_UNI appears multiple times"),
     TPARAM_CHECK_DUP(INITIAL_MAX_STREAMS_BIDI,
-                     "INITIAL_MAX_STREAMS_BIDI appears multiple times")
+                     "INITIAL_MAX_STREAMS_BIDI appears multiple times"),
     TPARAM_CHECK_DUP(INITIAL_MAX_STREAMS_UNI,
-                     "INITIAL_MAX_STREAMS_UNI appears multiple times")
+                     "INITIAL_MAX_STREAMS_UNI appears multiple times"),
     TPARAM_CHECK_DUP(MAX_IDLE_TIMEOUT,
-                     "MAX_IDLE_TIMEOUT appears multiple times")
+                     "MAX_IDLE_TIMEOUT appears multiple times"),
     TPARAM_CHECK_DUP(MAX_UDP_PAYLOAD_SIZE,
-                     "MAX_UDP_PAYLOAD_SIZE appears multiple times")
+                     "MAX_UDP_PAYLOAD_SIZE appears multiple times"),
     TPARAM_CHECK_DUP(ACTIVE_CONN_ID_LIMIT,
-                     "ACTIVE_CONN_ID_LIMIT appears multiple times")
+                     "ACTIVE_CONN_ID_LIMIT appears multiple times"),
     TPARAM_CHECK_DUP(DISABLE_ACTIVE_MIGRATION,
-                     "DISABLE_ACTIVE_MIGRATION appears multiple times")
+                     "DISABLE_ACTIVE_MIGRATION appears multiple times"),
 
     TPARAM_CHECK_DROP(INITIAL_SCID,
-                      "INITIAL_SCID was not sent but is required")
+                      "INITIAL_SCID was not sent but is required"),
     TPARAM_CHECK_DROP(ORIG_DCID,
-                      "ORIG_DCID was not sent but is required")
+                      "ORIG_DCID was not sent but is required"),
 
     TPARAM_CHECK_DROP_INJECT_A(DISABLE_ACTIVE_MIGRATION, disable_active_migration_1,
-                               "DISABLE_ACTIVE_MIGRATION is malformed")
+                               "DISABLE_ACTIVE_MIGRATION is malformed"),
     TPARAM_CHECK_INJECT(UNKNOWN_1, NULL, 0,
-                        NULL)
+                        NULL),
     TPARAM_CHECK_INJECT_RAW_A(malformed_stateless_reset_token_1,
-                              "STATELESS_RESET_TOKEN is malformed")
+                              "STATELESS_RESET_TOKEN is malformed"),
     TPARAM_CHECK_INJECT_A(STATELESS_RESET_TOKEN,
                           malformed_stateless_reset_token_2,
-                          "STATELESS_RESET_TOKEN is malformed")
+                          "STATELESS_RESET_TOKEN is malformed"),
     TPARAM_CHECK_INJECT_A(STATELESS_RESET_TOKEN,
                           malformed_stateless_reset_token_3,
-                          "STATELESS_RESET_TOKEN is malformed")
+                          "STATELESS_RESET_TOKEN is malformed"),
     TPARAM_CHECK_INJECT_A(STATELESS_RESET_TOKEN,
                           malformed_stateless_reset_token_4,
-                          "STATELESS_RESET_TOKEN is malformed")
+                          "STATELESS_RESET_TOKEN is malformed"),
     TPARAM_CHECK_INJECT(STATELESS_RESET_TOKEN,
                         NULL, 0,
-                        "STATELESS_RESET_TOKEN is malformed")
+                        "STATELESS_RESET_TOKEN is malformed"),
     TPARAM_CHECK_INJECT_RAW_A(malformed_preferred_addr_1,
-                              "PREFERRED_ADDR is malformed")
+                              "PREFERRED_ADDR is malformed"),
     TPARAM_CHECK_INJECT_RAW_A(malformed_preferred_addr_2,
-                              "PREFERRED_ADDR is malformed")
+                              "PREFERRED_ADDR is malformed"),
     TPARAM_CHECK_INJECT_RAW_A(malformed_preferred_addr_3,
-                              "PREFERRED_ADDR is malformed")
+                              "PREFERRED_ADDR is malformed"),
     TPARAM_CHECK_INJECT_RAW_A(malformed_preferred_addr_4,
-                              "PREFERRED_ADDR is malformed")
+                              "PREFERRED_ADDR is malformed"),
     TPARAM_CHECK_INJECT_RAW_A(malformed_unknown_1,
-                              "bad transport parameter")
+                              "bad transport parameter"),
     TPARAM_CHECK_INJECT_RAW_A(malformed_unknown_2,
-                              "bad transport parameter")
+                              "bad transport parameter"),
     TPARAM_CHECK_INJECT_RAW_A(malformed_unknown_3,
-                              "bad transport parameter")
+                              "bad transport parameter"),
 
     TPARAM_CHECK_INJECT_A(ACK_DELAY_EXP, excess_ack_delay_exp,
-                          "ACK_DELAY_EXP is malformed")
+                          "ACK_DELAY_EXP is malformed"),
     TPARAM_CHECK_INJECT_A(MAX_ACK_DELAY, excess_max_ack_delay,
-                          "MAX_ACK_DELAY is malformed")
+                          "MAX_ACK_DELAY is malformed"),
     TPARAM_CHECK_DROP_INJECT_A(INITIAL_MAX_STREAMS_BIDI, excess_initial_max_streams,
-                               "INITIAL_MAX_STREAMS_BIDI is malformed")
+                               "INITIAL_MAX_STREAMS_BIDI is malformed"),
     TPARAM_CHECK_DROP_INJECT_A(INITIAL_MAX_STREAMS_UNI, excess_initial_max_streams,
-                               "INITIAL_MAX_STREAMS_UNI is malformed")
+                               "INITIAL_MAX_STREAMS_UNI is malformed"),
 
     TPARAM_CHECK_DROP_INJECT_A(MAX_UDP_PAYLOAD_SIZE, undersize_udp_payload_size,
-                               "MAX_UDP_PAYLOAD_SIZE is malformed")
+                               "MAX_UDP_PAYLOAD_SIZE is malformed"),
     TPARAM_CHECK_DROP_INJECT_A(ACTIVE_CONN_ID_LIMIT, undersize_active_conn_id_limit,
-                               "ACTIVE_CONN_ID_LIMIT is malformed")
+                               "ACTIVE_CONN_ID_LIMIT is malformed"),
 
     TPARAM_CHECK_INJECT_TWICE_A(ACK_DELAY_EXP, ack_delay_exp,
-                                "ACK_DELAY_EXP appears multiple times")
+                                "ACK_DELAY_EXP appears multiple times"),
     TPARAM_CHECK_INJECT_TWICE_A(MAX_ACK_DELAY, ack_delay_exp,
-                                "MAX_ACK_DELAY appears multiple times")
+                                "MAX_ACK_DELAY appears multiple times"),
     TPARAM_CHECK_INJECT_TWICE_A(STATELESS_RESET_TOKEN, stateless_reset_token,
-                                "STATELESS_RESET_TOKEN appears multiple times")
+                                "STATELESS_RESET_TOKEN appears multiple times"),
     TPARAM_CHECK_INJECT_TWICE_A(PREFERRED_ADDR, preferred_addr,
-                                "PREFERRED_ADDR appears multiple times")
+                                "PREFERRED_ADDR appears multiple times"),
 
     TPARAM_CHECK_MUTATE(ORIG_DCID,
-                        "ORIG_DCID does not match expected value")
+                        "ORIG_DCID does not match expected value"),
     TPARAM_CHECK_MUTATE(INITIAL_SCID,
-                        "INITIAL_SCID does not match expected value")
+                        "INITIAL_SCID does not match expected value"),
 
     TPARAM_CHECK_DROP_INJECT_A(ORIG_DCID, long_cid,
-                               "ORIG_DCID is malformed")
+                               "ORIG_DCID is malformed"),
     TPARAM_CHECK_DROP_INJECT_A(INITIAL_SCID, long_cid,
-                               "INITIAL_SCID is malformed")
+                               "INITIAL_SCID is malformed"),
 
     TPARAM_CHECK_INT(INITIAL_MAX_DATA,
-                     "INITIAL_MAX_DATA is malformed")
+                     "INITIAL_MAX_DATA is malformed"),
     TPARAM_CHECK_INT(INITIAL_MAX_STREAM_DATA_BIDI_LOCAL,
-                     "INITIAL_MAX_STREAM_DATA_BIDI_LOCAL is malformed")
+                     "INITIAL_MAX_STREAM_DATA_BIDI_LOCAL is malformed"),
     TPARAM_CHECK_INT(INITIAL_MAX_STREAM_DATA_BIDI_REMOTE,
-                     "INITIAL_MAX_STREAM_DATA_BIDI_REMOTE is malformed")
+                     "INITIAL_MAX_STREAM_DATA_BIDI_REMOTE is malformed"),
     TPARAM_CHECK_INT(INITIAL_MAX_STREAM_DATA_UNI,
-                     "INITIAL_MAX_STREAM_DATA_UNI is malformed")
+                     "INITIAL_MAX_STREAM_DATA_UNI is malformed"),
     TPARAM_CHECK_INT(ACK_DELAY_EXP,
-                     "ACK_DELAY_EXP is malformed")
+                     "ACK_DELAY_EXP is malformed"),
     TPARAM_CHECK_INT(MAX_ACK_DELAY,
-                     "MAX_ACK_DELAY is malformed")
+                     "MAX_ACK_DELAY is malformed"),
     TPARAM_CHECK_INT(INITIAL_MAX_STREAMS_BIDI,
-                     "INITIAL_MAX_STREAMS_BIDI is malformed")
+                     "INITIAL_MAX_STREAMS_BIDI is malformed"),
     TPARAM_CHECK_INT(INITIAL_MAX_STREAMS_UNI,
-                     "INITIAL_MAX_STREAMS_UNI is malformed")
+                     "INITIAL_MAX_STREAMS_UNI is malformed"),
     TPARAM_CHECK_INT(MAX_IDLE_TIMEOUT,
-                     "MAX_IDLE_TIMEOUT is malformed")
+                     "MAX_IDLE_TIMEOUT is malformed"),
     TPARAM_CHECK_INT(MAX_UDP_PAYLOAD_SIZE,
-                     "MAX_UDP_PAYLOAD_SIZE is malformed")
+                     "MAX_UDP_PAYLOAD_SIZE is malformed"),
     TPARAM_CHECK_INT(ACTIVE_CONN_ID_LIMIT,
-                     "ACTIVE_CONN_ID_LIMIT is malformed")
+                     "ACTIVE_CONN_ID_LIMIT is malformed"),
 };
 
 struct tparam_ctx {
