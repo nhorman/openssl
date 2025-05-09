@@ -19,7 +19,7 @@ die "Unrecognised option, must be -C or -H\n"
     unless ($opt eq '-H' || $opt eq '-C');
 
 my %commands     = ();
-my $cmdre        = qr/^\s*int\s+([a-z_][a-z0-9_]*)_main\(\s*int\s+argc\s*,/;
+my $cmdre        = qr/([a-z_][a-z0-9_]*)_main\(\s*int\s+argc\s*,/;
 my $apps_openssl = shift @ARGV;
 my $YEAR         = [gmtime($ENV{SOURCE_DATE_EPOCH} || time())]->[5] + 1900;
 
