@@ -34,9 +34,9 @@ if [ "$ROLE" == "client" ]; then
     echo "TESTCASE is $TESTCASE"
     rm -f $CURLRC 
 
-    echo "Testing ipv4 connectivity"
+    echo "Client Testing ipv4 connectivity"
     ping -c 5 server4
-    echo "Testing ipv6 connectivity"
+    echo "Client Testing ipv6 connectivity"
     ping -6 -c 5 server6
 
     case "$TESTCASE" in
@@ -92,6 +92,11 @@ if [ "$ROLE" == "client" ]; then
 elif [ "$ROLE" == "server" ]; then
     echo "TESTCASE is $TESTCASE"
     rm -f $CURLRC 
+    echo "Server Testing ipv4 connectivity"
+    ping -c 5 server4
+    echo "Server Testing ipv6 connectivity"
+    ping -6 -c 5 server6
+
     case "$TESTCASE" in
     "handshake"|"transfer"|"ipv6")
         NO_ADDR_VALIDATE=yes SSLKEYLOGFILE=/logs/keys.log FILEPREFIX=/www quic-hq-interop-server 443 /certs/cert.pem /certs/priv.key
