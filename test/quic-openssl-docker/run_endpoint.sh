@@ -34,6 +34,11 @@ if [ "$ROLE" == "client" ]; then
     echo "TESTCASE is $TESTCASE"
     rm -f $CURLRC 
 
+    echo "Testing ipv4 connectivity"
+    ping -c 5 server4
+    echo "Testing ipv6 connectivity"
+    ping -6 -c 5 server6
+
     case "$TESTCASE" in
     "http3")
         echo -e "--verbose\n--parallel" >> $CURLRC
