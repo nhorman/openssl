@@ -44,8 +44,11 @@ jobs:
       - name: "Update to docker-compose 2.36"
         run: | 
           curl -SL https://github.com/docker/compose/releases/download/v2.36.0/docker-compose-linux-x86_64 -o ./docker-compose
+          echo "Checking path"
           cat $GITHUB_PATH
+          echo "updating path"
           $(echo -n "$PWD:"; cat $GITHUB_PATH) > $GITHUB_PATH
+          echo "Checking path again"
           cat $GITHUB_PATH
           which docker-compose
           docker-compose --version
@@ -92,8 +95,11 @@ jobs:
       - name: "Update to docker-compose 2.36"
         run: | 
           curl -SL https://github.com/docker/compose/releases/download/v2.36.0/docker-compose-linux-x86_64 -o ./docker-compose
+          echo "Checking path"
           cat $GITHUB_PATH
+          echo "updating path"
           $(echo -n "$PWD:"; cat $GITHUB_PATH) > $GITHUB_PATH
+          echo "checking path again"
           cat $GITHUB_PATH
           which docker-compose
           docker-compose --version
