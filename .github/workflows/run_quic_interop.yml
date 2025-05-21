@@ -50,7 +50,9 @@ jobs:
           echo "$PWD" >> $GITHUB_PATH
           echo "Checking path again"
           cat $GITHUB_PATH
-          which docker-compose
+          echo "Fixing permissions"
+          chmod 755 ./docker-compose
+          echo "Checking version
           docker-compose --version
       - name: Patch Docker compose file
         run: |
@@ -101,7 +103,9 @@ jobs:
           echo "$PWD" >> $GITHUB_PATH
           echo "checking path again"
           cat $GITHUB_PATH
-          which docker-compose
+          echo "fixing permissions"
+          chmod 755 ./docker-compose
+          echo "checking version"
           docker-compose --version
       - name: Patch Docker compose file
         run: |
