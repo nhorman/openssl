@@ -52,7 +52,8 @@ jobs:
           cat $GITHUB_PATH
           echo "Fixing permissions"
           chmod 755 ./docker-compose
-          echo "Checking version"
+      - name: Check docker compose version
+        run: |
           docker-compose --version
       - name: Patch Docker compose file
         run: |
@@ -105,7 +106,8 @@ jobs:
           cat $GITHUB_PATH
           echo "fixing permissions"
           chmod 755 ./docker-compose
-          echo "checking version"
+      - name: Check docker-compose version
+        run: |
           docker-compose --version
       - name: Patch Docker compose file
         run: |
