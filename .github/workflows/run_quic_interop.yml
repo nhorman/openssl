@@ -45,6 +45,9 @@ jobs:
         run: | 
           curl -SL https://github.com/docker/compose/releases/download/v2.36.0/docker-compose-linux-x86_64 -o /usr/bin/docker-compose
           docker-compose --version
+      - name: Patch Docker compose file
+        run: |
+          sed -i -e"/ipv6_address: fd00:cafe:cafe:0::2/a\ \ \ \ \ \ \ \ interface_name: eth0" -e "/ipv6_address: fd00:cafe:cafe:100::2/a\ \ \ \ \ \ \ \ interface_name: eth1" -e"/ipv6_address: fd00:cafe:cafe:100::100/a\ \ \ \ \ \ \ \ interface_name: eth0" -e"/ipv6_address: fd00:cafe:cafe:0::100/a\ \ \ \ \ \ \ \ interface_name: eth0" ./docker-compose.yml
       - name: "run interop with openssl client"
         run: |
           python3 ./run.py -c openssl -t ${{ matrix.tests }} -s ${{ matrix.servers }} --log-dir ./logs-client -d
@@ -87,6 +90,9 @@ jobs:
           curl -SL https://github.com/docker/compose/releases/download/v2.36.0/docker-compose-linux-x86_64 -o ./docker-compose
           sudo mv -f ./docker-compose /usr/bin
           docker-compose --version
+      - name: Patch Docker compose file
+        run: |
+          sed -i -e"/ipv6_address: fd00:cafe:cafe:0::2/a\ \ \ \ \ \ \ \ interface_name: eth0" -e "/ipv6_address: fd00:cafe:cafe:100::2/a\ \ \ \ \ \ \ \ interface_name: eth1" -e"/ipv6_address: fd00:cafe:cafe:100::100/a\ \ \ \ \ \ \ \ interface_name: eth0" -e"/ipv6_address: fd00:cafe:cafe:0::100/a\ \ \ \ \ \ \ \ interface_name: eth0" ./docker-compose.yml
       - name: "run interop with openssl server"
         run: |
           python3 ./run.py -s openssl -t ${{ matrix.tests }} -c ${{ matrix.clients }} --log-dir ./logs-server -d
