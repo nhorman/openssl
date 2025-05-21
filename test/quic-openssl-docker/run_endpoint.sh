@@ -39,6 +39,7 @@ if [ "$ROLE" == "client" ]; then
     echo "Client Testing ipv6 connectivity"
     ping -6 -c 5 server6
     ip route show
+    ip addr show
 
     case "$TESTCASE" in
     "http3")
@@ -98,6 +99,7 @@ elif [ "$ROLE" == "server" ]; then
     echo "Server Testing ipv6 connectivity"
     ping -6 -c 5 fd00:cafe:cafe:0::100
     ip route show
+    ip addr show
 
     case "$TESTCASE" in
     "handshake"|"transfer"|"ipv6")
