@@ -17,8 +17,6 @@ jobs:
             tests: retry
       fail-fast: false
     runs-on: ubuntu-latest
-    concurrency:
-      group: interop-clients-${{ github.run_id }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -56,8 +54,6 @@ jobs:
             tests: amplificationlimit
       fail-fast: false
     runs-on: ubuntu-latest
-    concurrency:
-      group: interop-servers-${{ github.run_id }}
     steps:
       - uses: actions/checkout@v4
         with:
