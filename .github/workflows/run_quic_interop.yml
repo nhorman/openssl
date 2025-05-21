@@ -44,7 +44,8 @@ jobs:
       - name: "Update to docker-compose 2.36"
         run: | 
           curl -SL https://github.com/docker/compose/releases/download/v2.36.0/docker-compose-linux-x86_64 -o ./docker-compose
-          sudo apt-get remove -y docker-compose-plugin
+          sed -i -e"1 i\\/tmp:" $GITHUB_PATH
+          which docker-compose
           sudo mv -f ./docker-compose /usr/bin/
           docker-compose --version
       - name: Patch Docker compose file
@@ -89,9 +90,9 @@ jobs:
           mv ./implementations.tmp implementations.json
       - name: "Update to docker-compose 2.36"
         run: | 
-          curl -SL https://github.com/docker/compose/releases/download/v2.36.0/docker-compose-linux-x86_64 -o ./docker-compose
-          sudo apt-get remove -y docker-compose-plugin
-          sudo mv -f ./docker-compose /usr/bin
+          curl -SL https://github.com/docker/compose/releases/download/v2.36.0/docker-compose-linux-x86_64 -o /tmp/docker-compose
+          sed -i -e"1 i\\/tmp:" $GITHUB_PATH
+          which docker-compose
           docker-compose --version
       - name: Patch Docker compose file
         run: |
