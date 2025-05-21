@@ -41,12 +41,12 @@ jobs:
                          , role: "both"
                          }' ./implementations.json > ./implementations.tmp
           mv ./implementations.tmp implementations.json
-      - name: "run interop with openssl client"
-        run: |
-          python3 ./run.py -c openssl -t ${{ matrix.tests }} -s ${{ matrix.servers }} --log-dir ./logs-client -d
       - name: Patch Docker File
         run: |
          sed -i -e"1 i\version: '3.8'" ./docker-compose.yml
+      - name: "run interop with openssl client"
+        run: |
+          python3 ./run.py -c openssl -t ${{ matrix.tests }} -s ${{ matrix.servers }} --log-dir ./logs-client -d
   run_quic_interop_openssl_server:
     strategy:
       matrix:
