@@ -47,7 +47,7 @@ jobs:
           echo "Checking path"
           cat $GITHUB_PATH
           echo "updating path"
-          $(echo -n "$PWD:"; cat $GITHUB_PATH) > $GITHUB_PATH
+          echo "$PWD" >> $GITHUB_PATH
           echo "Checking path again"
           cat $GITHUB_PATH
           which docker-compose
@@ -98,7 +98,7 @@ jobs:
           echo "Checking path"
           cat $GITHUB_PATH
           echo "updating path"
-          $(echo -n "$PWD:"; cat $GITHUB_PATH) > $GITHUB_PATH
+          echo "$PWD" >> $GITHUB_PATH
           echo "checking path again"
           cat $GITHUB_PATH
           which docker-compose
