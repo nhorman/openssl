@@ -41,9 +41,6 @@ jobs:
                          , role: "both"
                          }' ./implementations.json > ./implementations.tmp
           mv ./implementations.tmp implementations.json
-      - name: Patch Docker compose file
-        run: |
-          sed -i -e"/ipv6_address: fd00:cafe:cafe:0::2/a\ \ \ \ \ \ \ \ interface_name: eth0" -e "/ipv6_address: fd00:cafe:cafe:100::2/a\ \ \ \ \ \ \ \ interface_name: eth1" -e"/ipv6_address: fd00:cafe:cafe:100::100/a\ \ \ \ \ \ \ \ interface_name: eth0" -e"/ipv6_address: fd00:cafe:cafe:0::100/a\ \ \ \ \ \ \ \ interface_name: eth0" ./docker-compose.yml
       - name: "run interop with openssl client"
         run: |
           python3 ./run.py -c openssl -t ${{ matrix.tests }} -s ${{ matrix.servers }} --log-dir ./logs-client -d
