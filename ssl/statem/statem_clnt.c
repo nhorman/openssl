@@ -906,7 +906,8 @@ WORK_STATE ossl_statem_client_post_work(SSL_CONNECTION *s, WORK_STATE wst)
                 return WORK_ERROR;
             }
             if (s->post_handshake_auth != SSL_PHA_REQUESTED) {
-                if (!ssl->method->ssl3_enc->change_cipher_state(s,
+                if (!SSL_IS_QUIC_HANDSHAKE(s)
+                    && !ssl->method->ssl3_enc->change_cipher_state(s,
                         SSL3_CC_APPLICATION | SSL3_CHANGE_CIPHER_CLIENT_WRITE)) {
                     /* SSLfatal() already called */
                     return WORK_ERROR;
@@ -1790,10 +1791,6 @@ MSG_PROCESS_RETURN tls_process_server_hello(SSL_CONNECTION *s, PACKET *pkt)
         if (!ssl->method->ssl3_enc->setup_key_block(s))
             /* SSLfatal() already called */
             goto err;
-        if (!ssl->method->ssl3_enc->change_cipher_state(s,
-             SSL3_CC_HANDSHAKE | SSL3_CHANGE_CIPHER_CLIENT_READ))
-            /* SSLfatal() already called */
-            goto err;
         /*
          * QUIC needs to provide the write handshake at the same time as the read handshake
          * in case the quic stack needs to ACK packets independent of the handshake process
@@ -1802,13 +1799,19 @@ MSG_PROCESS_RETURN tls_process_server_hello(SSL_CONNECTION *s, PACKET *pkt)
             /*
              * calling tls13_change_cipher_state here to provide a write secret
              */
-            if (s->early_data_state != SSL_EARLY_DATA_NONE) {
+            if (s->early_data_state == SSL_EARLY_DATA_NONE) {
                 if (!ssl->method->ssl3_enc->change_cipher_state(s,
                     SSL3_CC_HANDSHAKE | SSL3_CHANGE_CIPHER_CLIENT_WRITE))
                         /* SSLfatal() already called */
                         goto err;
             }
         }
+
+        if (!ssl->method->ssl3_enc->change_cipher_state(s,
+             SSL3_CC_HANDSHAKE | SSL3_CHANGE_CIPHER_CLIENT_READ))
+            /* SSLfatal() already called */
+            goto err;
+       
         /*
          * If we're not doing early-data and we're not going to send a dummy CCS
          * (i.e. no middlebox compat mode) then we can change the write keys
@@ -1818,7 +1821,8 @@ MSG_PROCESS_RETURN tls_process_server_hello(SSL_CONNECTION *s, PACKET *pkt)
          * are changed. Since QUIC doesn't do TLS early data or need middlebox
          * compat this doesn't cause a problem.
          */
-        if (s->early_data_state == SSL_EARLY_DATA_NONE
+        if (!SSL_IS_QUIC_HANDSHAKE(s)
+                && s->early_data_state == SSL_EARLY_DATA_NONE
                 && (s->options & SSL_OP_ENABLE_MIDDLEBOX_COMPAT) == 0
                 && !ssl->method->ssl3_enc->change_cipher_state(s,
                     SSL3_CC_HANDSHAKE | SSL3_CHANGE_CIPHER_CLIENT_WRITE)) {
