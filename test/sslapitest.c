@@ -17,6 +17,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <arpa/inet.h>
 
 #include <openssl/opensslconf.h>
 #include <openssl/bio.h>
@@ -55,6 +56,8 @@
  */
 # define OSSL_NO_USABLE_TLS1_3
 #endif
+
+static int client_handshake_done = 0;
 
 /* Defined in tls-provider.c */
 int tls_provider_init(const OSSL_CORE_HANDLE *handle,
@@ -12661,6 +12664,7 @@ static int crypto_send_cb(SSL *s, const unsigned char *buf, size_t buf_len,
     struct quic_tls_test_data *peer = data->peer;
     size_t max_len = sizeof(peer->rcd_data[data->wenc_level])
                      - peer->rcd_data_len[data->wenc_level];
+    int enc_level = data->wenc_level;
 
     if (!check_app_data(s)) {
         data->err = 1;
@@ -12675,9 +12679,13 @@ static int crypto_send_cb(SSL *s, const unsigned char *buf, size_t buf_len,
         return 1;
     }
 
-    memcpy(peer->rcd_data[data->wenc_level]
-           + peer->rcd_data_len[data->wenc_level], buf, buf_len);
-    peer->rcd_data_len[data->wenc_level] += buf_len;
+    if (client_handshake_done == 0 && data->wenc_level == OSSL_RECORD_PROTECTION_LEVEL_APPLICATION)
+        enc_level = OSSL_RECORD_PROTECTION_LEVEL_HANDSHAKE;
+
+    memcpy(peer->rcd_data[enc_level]
+           + peer->rcd_data_len[enc_level], buf, buf_len);
+    peer->rcd_data_len[enc_level] += buf_len;
+    fprintf(stderr, "Sending record on %p for level %d, len %ld\n", s, enc_level, peer->rcd_data_len[enc_level]);
 
     *consumed = buf_len;
     return 1;
@@ -12686,14 +12694,25 @@ static int crypto_recv_rcd_cb(SSL *s, const unsigned char **buf,
                               size_t *bytes_read, void *arg)
 {
     struct quic_tls_test_data *data = (struct quic_tls_test_data *)arg;
+    size_t i, min_read;
 
     if (!check_app_data(s)) {
         data->err = 1;
         return 0;
     }
 
+    fprintf(stderr, "Receiving record on %p for level %d, len %ld\n", s, data->renc_level, data->rcd_data_len[data->renc_level]);
     *bytes_read = data->rcd_data_len[data->renc_level];
     *buf = data->rcd_data[data->renc_level];
+    min_read = data->rcd_data_len[data->renc_level];
+    if (min_read > 20)
+        min_read = 20;
+    fprintf(stderr, "DATA IS\n");
+    for (i = 0; i < min_read; i++) {
+        fprintf(stderr, "%02x ", ((*buf)[i]));
+    }
+    if (min_read != 0)
+        fprintf(stderr, "\n");
     return 1;
 }
 
@@ -12718,6 +12737,7 @@ static int crypto_release_rcd_cb(SSL *s, size_t bytes_read, void *arg)
         data->err = 1;
         return 0;
     }
+    fprintf(stderr, "ssl %p releaseing %ld bytes of data\n", s, bytes_read);
     data->rcd_data_len[data->renc_level] = 0;
 
     return 1;
@@ -12790,6 +12810,17 @@ end:
     return ret;
 }
 
+static void client_ssl_info(const SSL *s, int where, int ret)
+{
+    if (where & SSL_CB_HANDSHAKE_DONE) {
+        fprintf(stderr, "SSL %p handshake done\n", s);
+        client_handshake_done = 1;
+    } else if (where & SSL_CB_HANDSHAKE_START) {
+        fprintf(stderr, "SSL %p handshake started\n", s);
+        client_handshake_done = 0;
+    }
+}
+
 static int yield_secret_cb(SSL *s, uint32_t prot_level, int direction,
                            const unsigned char *secret, size_t secret_len,
                            void *arg)
@@ -12808,7 +12839,9 @@ static int yield_secret_cb(SSL *s, uint32_t prot_level, int direction,
     case 0: /* read */
         if (!TEST_size_t_le(secret_len, sizeof(data->rsecret)))
             goto err;
-        data->renc_level = prot_level;
+        if (data->renc_level <= prot_level) {
+            data->renc_level = prot_level;
+        }
         memcpy(data->rsecret[prot_level - 1], secret, secret_len);
         data->rsecret_len[prot_level - 1] = secret_len;
         break;
@@ -12816,7 +12849,9 @@ static int yield_secret_cb(SSL *s, uint32_t prot_level, int direction,
     case 1: /* write */
         if (!TEST_size_t_le(secret_len, sizeof(data->wsecret)))
             goto err;
-        data->wenc_level = prot_level;
+        if (data->wenc_level <= prot_level) {
+            data->wenc_level = prot_level;
+        }
         memcpy(data->wsecret[prot_level - 1], secret, secret_len);
         data->wsecret_len[prot_level - 1] = secret_len;
         break;
@@ -12955,6 +12990,8 @@ static int test_quic_tls(int idx)
             || !TEST_true(SSL_set_quic_tls_transport_params(serverssl, sparams,
                                                             sizeof(sparams))))
         goto end;
+
+    SSL_set_info_callback(clientssl, client_ssl_info);
 
     if (idx != 1) {
         if (!TEST_true(create_ssl_connection(serverssl, clientssl, SSL_ERROR_NONE)))
