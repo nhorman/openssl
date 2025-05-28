@@ -12636,6 +12636,7 @@ struct quic_tls_test_data {
     int alert;
     int err;
     int forcefail;
+    int sm_count;
 };
 
 static int clientquicdata = 0xff, serverquicdata = 0xfe;
@@ -12727,6 +12728,7 @@ struct secret_yield_entry {
     uint8_t recorded;
     uint32_t prot_level;
     int direction;
+    int sm_generation;
     SSL *ssl;
 };
 
@@ -12748,16 +12750,18 @@ static int check_secret_history(SSL *s)
     int ret = 0;
     last_dir_history_state last_state = LAST_DIR_UNSET;
     uint32_t last_prot_level = 0;
+    int last_generation = 0;
 
     fprintf(stderr, "Checking history for %p\n", s);
     for (i = 0; secret_history[i].recorded == 1; i++) {
         if (secret_history[i].ssl != s)
             continue;
-        fprintf(stderr, "Got %s(%d) secret for level %d, last level %d, last state %d\n", secret_history[i].direction == 1 ? "Write" : "Read", secret_history[i].direction, secret_history[i].prot_level, last_prot_level, last_state);
+        fprintf(stderr, "Got %s(%d) secret for level %d, last level %d, last state %d, gen %d\n", secret_history[i].direction == 1 ? "Write" : "Read", secret_history[i].direction, secret_history[i].prot_level, last_prot_level, last_state, secret_history[i].sm_generation);
 
         if (last_state == LAST_DIR_UNSET) {
             last_prot_level = secret_history[i].prot_level;
             last_state = secret_history[i].direction;
+            last_generation = secret_history[i].sm_generation;
             continue;
         }
 
@@ -12768,8 +12772,12 @@ static int check_secret_history(SSL *s)
              */
             if (last_prot_level == secret_history[i].prot_level
                 && last_state == LAST_DIR_READ) {
-                TEST_error("Got read key before write key");
-                goto end;
+                if (last_generation == secret_history[i].sm_generation) {
+                    TEST_info("Read before write key in same SSL state machine iteration is ok");
+                } else {
+                    TEST_error("Got read key before write key");
+                    goto end;
+                }
             }
             /* FALLTHROUGH */
         case 0:
@@ -12783,6 +12791,7 @@ static int check_secret_history(SSL *s)
         }
         last_prot_level = secret_history[i].prot_level;
         last_state = secret_history[i].direction;
+        last_generation = secret_history[i].sm_generation;
     }
 
     ret = 1;
@@ -12796,7 +12805,7 @@ static int yield_secret_cb(SSL *s, uint32_t prot_level, int direction,
 {
     struct quic_tls_test_data *data = (struct quic_tls_test_data *)arg;
 
-    fprintf(stderr, "Yield secret callback, level %d %s, ssl %p\n", prot_level, direction == 1 ? "Write" : "Read", s);
+    fprintf(stderr, "Yield secret callback, level %d %s, ssl %p, sm_gen %d\n", prot_level, direction == 1 ? "Write" : "Read", s, data->sm_count);
     if (!check_app_data(s))
         goto err;
 
@@ -12829,6 +12838,7 @@ static int yield_secret_cb(SSL *s, uint32_t prot_level, int direction,
     secret_history[secret_history_idx].prot_level = prot_level;
     secret_history[secret_history_idx].recorded = 1;
     secret_history[secret_history_idx].ssl = s;
+    secret_history[secret_history_idx].sm_generation = data->sm_count;
     secret_history_idx++;
     return 1;
  err:
@@ -12957,11 +12967,13 @@ static int test_quic_tls(int idx)
         goto end;
 
     if (idx != 1) {
-        if (!TEST_true(create_ssl_connection(serverssl, clientssl, SSL_ERROR_NONE)))
+        if (!TEST_true(create_ssl_connection_ex(serverssl, clientssl, SSL_ERROR_NONE,
+                                                &cdata.sm_count, &sdata.sm_count)))
             goto end;
     } else {
         /* We expect this connection to fail */
-        if (!TEST_false(create_ssl_connection(serverssl, clientssl, SSL_ERROR_NONE)))
+        if (!TEST_false(create_ssl_connection_ex(serverssl, clientssl, SSL_ERROR_NONE,
+                                                 &cdata.sm_count, &sdata.sm_count)))
             goto end;
         testresult = 1;
         sdata.err = 0;
@@ -13136,7 +13148,10 @@ static int test_quic_tls_early_data(void)
             || !TEST_true(cdata.wenc_level == OSSL_RECORD_PROTECTION_LEVEL_EARLY))
         goto end;
 
-    if (!TEST_true(create_ssl_connection(serverssl, clientssl, SSL_ERROR_NONE)))
+    sdata.sm_count = 0;
+    cdata.sm_count = 0;
+    if (!TEST_true(create_ssl_connection_ex(serverssl, clientssl, SSL_ERROR_NONE,
+                                            &cdata.sm_count, &sdata.sm_count)))
         goto end;
 
     /* Check no problems during the handshake */
