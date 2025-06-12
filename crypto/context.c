@@ -473,6 +473,8 @@ OSSL_LIB_CTX *OSSL_LIB_CTX_new_child(const OSSL_CORE_HANDLE *handle,
     return ctx;
 }
 
+#endif
+
 int OSSL_LIB_CTX_set_owning_thread(OSSL_LIB_CTX *ctx)
 {
     ctx = ossl_lib_ctx_get_concrete(ctx);
@@ -518,7 +520,6 @@ int OSSL_LIB_CTX_load_config(OSSL_LIB_CTX *ctx, const char *config_file)
 {
     return CONF_modules_load_file_ex(ctx, config_file, NULL, 0) > 0;
 }
-#endif
 
 void OSSL_LIB_CTX_free(OSSL_LIB_CTX *ctx)
 {
