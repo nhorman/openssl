@@ -5932,3 +5932,7 @@ OSSL_STORE_LOADER_settable_ctx_params   ?	3_6_0	EXIST::FUNCTION:
 OSSL_LIB_CTX_set_owning_thread          ?	3_6_0	EXIST::FUNCTION:
 OSSL_LIB_CTX_release_owning_thread      ?	3_6_0	EXIST::FUNCTION:
 OSSL_LIB_CTX_is_owned_by_me             ?	3_6_0	EXIST::FUNCTION:
+OSSL_LIB_CTX_is_owned_by_me_or_unset    ?	3_6_0	EXIST::FUNCTION:
+CRYPTO_THREAD_read_lock_ctx             ?	3_6_0	EXIST::FUNCTION:
+CRYPTO_THREAD_write_lock_ctx            ?	3_6_0	EXIST::FUNCTION:
+CRYPTO_THREAD_unlock_ctx                ?	3_6_0	EXIST::FUNCTION:
