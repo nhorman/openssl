@@ -43,6 +43,12 @@ OSSL_LIB_CTX *app_create_libctx(void)
     }
     if (app_libctx == NULL)
         opt_printf_stderr("Failed to create library context\n");
+
+    /*
+     * Our openssl applications are all single threaded, notify the library
+     * of that here, as it reduces lock overhead
+     */
+    OSSL_LIB_CTX_set_owning_thread(app_libctx);
     return app_libctx;
 }
 
