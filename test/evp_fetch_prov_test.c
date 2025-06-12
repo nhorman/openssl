@@ -86,6 +86,9 @@ static int load_providers(OSSL_LIB_CTX **libctx, OSSL_PROVIDER *prov[])
     if (!TEST_ptr(ctx))
         goto err;
 
+    if (!TEST_true(OSSL_LIB_CTX_set_owning_thread(ctx)))
+        goto err;
+
     if (!TEST_true(OSSL_LIB_CTX_load_config(ctx, config_file)))
         goto err;
     if (test_get_argument_count() > 2)
@@ -128,6 +131,9 @@ static int test_legacy_provider_unloaded(void)
 
     ctx = OSSL_LIB_CTX_new();
     if (!TEST_ptr(ctx))
+        goto err;
+
+    if (!TEST_true(OSSL_LIB_CTX_set_owning_thread(ctx)))
         goto err;
 
     if (!TEST_true(OSSL_LIB_CTX_load_config(ctx, config_file)))

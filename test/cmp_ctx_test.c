@@ -114,6 +114,7 @@ static int test_CTX_libctx_propq(void)
     const char *propq = "?provider=legacy";
     OSSL_CMP_CTX *cmpctx = OSSL_CMP_CTX_new(libctx, propq);
     int res = TEST_ptr(libctx)
+        && OSSL_LIB_CTX_set_owning_thread(libctx)
         && TEST_ptr(cmpctx)
         && TEST_ptr_eq(libctx, OSSL_CMP_CTX_get0_libctx(cmpctx))
         && TEST_str_eq(propq, OSSL_CMP_CTX_get0_propq(cmpctx));

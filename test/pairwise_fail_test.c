@@ -203,6 +203,8 @@ int setup_tests(void)
     libctx = OSSL_LIB_CTX_new();
     if (libctx == NULL)
         return 0;
+    if (!OSSL_LIB_CTX_set_owning_thread(libctx))
+        return 0;
     if (!OSSL_LIB_CTX_load_config(libctx, config_file)) {
         opt_printf_stderr("Failed to load config\n");
         return 0;

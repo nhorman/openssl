@@ -56,6 +56,9 @@ static int test_set_get_conf_diagnostics(void)
     if (!TEST_ptr(ctx))
         goto err;
 
+    if (!TEST_true(OSSL_LIB_CTX_set_owning_thread(ctx)))
+        goto err;
+
     if (!TEST_false(OSSL_LIB_CTX_get_conf_diagnostics(ctx)))
         goto err;
 

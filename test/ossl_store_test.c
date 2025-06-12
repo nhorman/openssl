@@ -233,6 +233,7 @@ static int test_store_attach_unregistered_scheme(void)
 
     ret = TEST_ptr(input)
           && TEST_ptr(libctx = OSSL_LIB_CTX_new())
+          && TEST_true(OSSL_LIB_CTX_set_owning_thread(libctx))
           && TEST_ptr(provider = OSSL_PROVIDER_load(libctx, "default"))
           && TEST_ptr(bio = BIO_new_file(input, "r"))
           && TEST_ptr(store_ctx = OSSL_STORE_attach(bio, "file", libctx, NULL,

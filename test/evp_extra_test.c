@@ -997,6 +997,7 @@ static int test_EVP_set_default_properties(void)
     const char test_fips_propq[] = "fips=yes,provider=fizzbang";
 
     if (!TEST_ptr(ctx = OSSL_LIB_CTX_new())
+            || !TEST_int_eq(OSSL_LIB_CTX_set_owning_thread(ctx), 1)
             || !TEST_ptr(md = EVP_MD_fetch(ctx, "sha256", NULL)))
         goto err;
     EVP_MD_free(md);
@@ -1543,6 +1544,9 @@ static int test_evp_get_ec_pub_legacy(void)
     int ret = 0;
 
     if (!TEST_ptr(libctx = OSSL_LIB_CTX_new()))
+        goto err;
+
+    if (!TEST_true(OSSL_LIB_CTX_set_owning_thread(libctx)))
         goto err;
 
     /* Create the legacy key */
@@ -4214,6 +4218,9 @@ static int test_pkey_ctx_fail_without_provider(int tst)
     if (!TEST_ptr(tmpctx))
         goto err;
 
+    if (!TEST_true(OSSL_LIB_CTX_set_owning_thread(tmpctx)))
+        goto err;
+
     tmpnullprov = OSSL_PROVIDER_load(tmpctx, "null");
     if (!TEST_ptr(tmpnullprov))
         goto err;
@@ -4752,6 +4759,9 @@ static int test_names_do_all(void)
     int testresult = 0;
 
     if (!TEST_ptr(ctx))
+        goto err;
+
+    if (!TEST_true(OSSL_LIB_CTX_set_owning_thread(ctx)))
         goto err;
 
     sha256 = EVP_MD_fetch(ctx, "SHA2-256", NULL);
@@ -6721,6 +6731,9 @@ int setup_tests(void)
             testctx = OSSL_LIB_CTX_new();
             if (!TEST_ptr(testctx))
                 return 0;
+            if (!TEST_true(OSSL_LIB_CTX_set_owning_thread(testctx)))
+                return 0;
+
 #ifdef STATIC_LEGACY
             /*
              * This test is always statically linked against libcrypto. We must not

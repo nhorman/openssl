@@ -1361,6 +1361,7 @@ static int test_evp_md_ctx_copy2(void)
     void *origin_algctx = NULL;
 
     if (!TEST_ptr(ctx = OSSL_LIB_CTX_new())
+            || !TEST_true(OSSL_LIB_CTX_set_owning_thread(ctx))
             || !TEST_ptr(md = EVP_MD_fetch(ctx, "sha256", NULL)))
         goto end;
 

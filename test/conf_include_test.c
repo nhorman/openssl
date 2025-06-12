@@ -208,6 +208,9 @@ static int test_available_providers(void)
     if (!TEST_ptr(libctx))
         return 0;
 
+    if (!TEST_true(OSSL_LIB_CTX_set_owning_thread(libctx)))
+        return 0;
+
     if (!TEST_ptr(rel_conf_file) || !OSSL_LIB_CTX_load_config(libctx, rel_conf_file)) {
         TEST_note("Failed to load config");
         return 0;

@@ -54,9 +54,11 @@ static FIXTURE *set_up(const char *testcase_name)
 
     if (!TEST_ptr(fixture = OPENSSL_zalloc(sizeof(*fixture)))
         || !TEST_ptr(fixture->ctx1 = OSSL_LIB_CTX_new())
+        || !TEST_true(OSSL_LIB_CTX_set_owning_thread(fixture->ctx1))
         || !TEST_ptr(fixture->prov1 = OSSL_PROVIDER_load(fixture->ctx1,
                                                          "default"))
         || !TEST_ptr(fixture->ctx2 = OSSL_LIB_CTX_new())
+        || !TEST_true(OSSL_LIB_CTX_set_owning_thread(fixture->ctx2))
         || !TEST_ptr(fixture->prov2 = OSSL_PROVIDER_load(fixture->ctx2,
                                                          "default"))) {
         tear_down(fixture);
@@ -307,6 +309,9 @@ static int test_evp_pkey_export_to_provider(int n)
 
     if (!TEST_ptr(libctx = OSSL_LIB_CTX_new())
          || !TEST_ptr(prov = OSSL_PROVIDER_load(libctx, "default")))
+        goto end;
+
+    if (!TEST_true(OSSL_LIB_CTX_set_owning_thread(libctx)))
         goto end;
 
     if ((bio = BIO_new_file(cert_filename, "r")) == NULL) {

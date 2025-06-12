@@ -311,6 +311,9 @@ int setup_tests(void)
     if (libctx == NULL)
         return 0;
 
+    if (!OSSL_LIB_CTX_set_owning_thread(libctx))
+        return 0;
+
     ADD_TEST(test_skey_cipher);
     ADD_TEST(test_skey_skeymgmt);
 

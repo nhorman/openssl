@@ -1479,6 +1479,10 @@ int setup_tests(void)
     /* Separate provider/ctx for generating the test data */
     if (!TEST_ptr(keyctx = OSSL_LIB_CTX_new()))
         return 0;
+
+    if (!TEST_true(OSSL_LIB_CTX_set_owning_thread(keyctx)))
+        return 0;
+
     if (!TEST_ptr(keyprov = OSSL_PROVIDER_load(keyctx, "default")))
         return 0;
 

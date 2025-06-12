@@ -549,6 +549,9 @@ static int test_kdf_pbkdf1(void)
     if (!TEST_ptr(libctx = OSSL_LIB_CTX_new()))
         goto err;
 
+    if (!TEST_true(OSSL_LIB_CTX_set_owning_thread(libctx)))
+        goto err;
+
     /* PBKDF1 only available in the legacy provider */
     legacyprov = OSSL_PROVIDER_load(libctx, "legacy");
     if (legacyprov == NULL) {
@@ -592,6 +595,9 @@ static int test_kdf_pbkdf1_key_too_long(void)
     OSSL_PROVIDER *defprov = NULL;
 
     if (!TEST_ptr(libctx = OSSL_LIB_CTX_new()))
+        goto err;
+
+    if (!TEST_true(OSSL_LIB_CTX_set_owning_thread(libctx)))
         goto err;
 
     /* PBKDF1 only available in the legacy provider */
