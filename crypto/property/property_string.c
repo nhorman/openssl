@@ -153,14 +153,14 @@ static OSSL_PROPERTY_IDX ossl_property_string(OSSL_LIB_CTX *ctx, int name,
 
     t = name ? propdata->prop_names : propdata->prop_values;
     p.s = s;
-    if (!CRYPTO_THREAD_read_lock(propdata->lock)) {
+    if (!CRYPTO_THREAD_read_lock_ctx(propdata->lock, ctx)) {
         ERR_raise(ERR_LIB_CRYPTO, ERR_R_UNABLE_TO_GET_READ_LOCK);
         return 0;
     }
     ps = lh_PROPERTY_STRING_retrieve(t, &p);
     if (ps == NULL && create) {
-        CRYPTO_THREAD_unlock(propdata->lock);
-        if (!CRYPTO_THREAD_write_lock(propdata->lock)) {
+        CRYPTO_THREAD_unlock_ctx(propdata->lock, ctx);
+        if (!CRYPTO_THREAD_write_lock_ctx(propdata->lock, ctx)) {
             ERR_raise(ERR_LIB_CRYPTO, ERR_R_UNABLE_TO_GET_WRITE_LOCK);
             return 0;
         }
@@ -173,7 +173,7 @@ static OSSL_PROPERTY_IDX ossl_property_string(OSSL_LIB_CTX *ctx, int name,
             slist = name ? propdata->prop_namelist : propdata->prop_valuelist;
             if (sk_OPENSSL_CSTRING_push(slist, ps_new->s) <= 0) {
                 property_free(ps_new);
-                CRYPTO_THREAD_unlock(propdata->lock);
+                CRYPTO_THREAD_unlock_ctx(propdata->lock, ctx);
                 return 0;
             }
 #endif
@@ -188,13 +188,13 @@ static OSSL_PROPERTY_IDX ossl_property_string(OSSL_LIB_CTX *ctx, int name,
 #endif
                 property_free(ps_new);
                 --*pidx;
-                CRYPTO_THREAD_unlock(propdata->lock);
+                CRYPTO_THREAD_unlock_ctx(propdata->lock, ctx);
                 return 0;
             }
             ps = ps_new;
         }
     }
-    CRYPTO_THREAD_unlock(propdata->lock);
+    CRYPTO_THREAD_unlock_ctx(propdata->lock, ctx);
     return ps != NULL ? ps->idx : 0;
 }
 
@@ -223,7 +223,7 @@ static const char *ossl_property_str(int name, OSSL_LIB_CTX *ctx,
     if (propdata == NULL)
         return NULL;
 
-    if (!CRYPTO_THREAD_read_lock(propdata->lock)) {
+    if (!CRYPTO_THREAD_read_lock_ctx(propdata->lock, ctx)) {
         ERR_raise(ERR_LIB_CRYPTO, ERR_R_UNABLE_TO_GET_READ_LOCK);
         return NULL;
     }
@@ -243,7 +243,7 @@ static const char *ossl_property_str(int name, OSSL_LIB_CTX *ctx,
     r = sk_OPENSSL_CSTRING_value(name ? propdata->prop_namelist
                                       : propdata->prop_valuelist, idx - 1);
 #endif
-    CRYPTO_THREAD_unlock(propdata->lock);
+    CRYPTO_THREAD_unlock_ctx(propdata->lock, ctx);
 
     return r;
 }
