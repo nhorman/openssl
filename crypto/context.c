@@ -475,8 +475,7 @@ OSSL_LIB_CTX *OSSL_LIB_CTX_new_child(const OSSL_CORE_HANDLE *handle,
 
 int OSSL_LIB_CTX_set_owning_thread(OSSL_LIB_CTX *ctx)
 {
-    if (ctx == NULL)
-        return 0;
+    ctx = ossl_lib_ctx_get_concrete(ctx);
     if (ctx->owner_set != 0)
         return 0;
     ctx->owner = CRYPTO_THREAD_get_current_id();
@@ -486,8 +485,7 @@ int OSSL_LIB_CTX_set_owning_thread(OSSL_LIB_CTX *ctx)
 
 int OSSL_LIB_CTX_release_owning_thread(OSSL_LIB_CTX *ctx)
 {
-    if (ctx == NULL)
-        return 0;
+    ctx = ossl_lib_ctx_get_concrete(ctx);
     if (!CRYPTO_THREAD_compare_id(ctx->owner, CRYPTO_THREAD_get_current_id()))
         return 0;
     memset(&ctx->owner, 0, sizeof(CRYPTO_THREAD_ID));
@@ -497,6 +495,7 @@ int OSSL_LIB_CTX_release_owning_thread(OSSL_LIB_CTX *ctx)
 
 int OSSL_LIB_CTX_is_owned_by_me_or_unset(OSSL_LIB_CTX *ctx)
 {
+    ctx = ossl_lib_ctx_get_concrete(ctx);
     if (ctx->owner_set == 0)
         return 1;
     return !!CRYPTO_THREAD_compare_id(ctx->owner, CRYPTO_THREAD_get_current_id());
@@ -505,8 +504,7 @@ int OSSL_LIB_CTX_is_owned_by_me_or_unset(OSSL_LIB_CTX *ctx)
 int OSSL_LIB_CTX_is_owned_by_me(OSSL_LIB_CTX *ctx)
 {
 
-    if (ctx == NULL)
-        return 0;
+    ctx = ossl_lib_ctx_get_concrete(ctx);
     /*
      * contexts not owned by a specific thread aren't owned by anyone
      */
