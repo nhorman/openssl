@@ -171,17 +171,17 @@ static void ossl_method_free(METHOD *method)
 
 static __owur int ossl_property_read_lock(OSSL_METHOD_STORE *p)
 {
-    return p != NULL ? CRYPTO_THREAD_read_lock(p->lock) : 0;
+    return p != NULL ? CRYPTO_THREAD_read_lock_ctx(p->lock, p->ctx) : 0;
 }
 
 static __owur int ossl_property_write_lock(OSSL_METHOD_STORE *p)
 {
-    return p != NULL ? CRYPTO_THREAD_write_lock(p->lock) : 0;
+    return p != NULL ? CRYPTO_THREAD_write_lock_ctx(p->lock, p->ctx) : 0;
 }
 
 static int ossl_property_unlock(OSSL_METHOD_STORE *p)
 {
-    return p != 0 ? CRYPTO_THREAD_unlock(p->lock) : 0;
+    return p != 0 ? CRYPTO_THREAD_unlock_ctx(p->lock, p->ctx) : 0;
 }
 
 static unsigned long query_hash(const QUERY *a)
@@ -271,12 +271,12 @@ void ossl_method_store_free(OSSL_METHOD_STORE *store)
 
 int ossl_method_lock_store(OSSL_METHOD_STORE *store)
 {
-    return store != NULL ? CRYPTO_THREAD_write_lock(store->biglock) : 0;
+    return store != NULL ? CRYPTO_THREAD_write_lock_ctx(store->biglock, store->ctx) : 0;
 }
 
 int ossl_method_unlock_store(OSSL_METHOD_STORE *store)
 {
-    return store != NULL ? CRYPTO_THREAD_unlock(store->biglock) : 0;
+    return store != NULL ? CRYPTO_THREAD_unlock_ctx(store->biglock, store->ctx) : 0;
 }
 
 static ALGORITHM *ossl_method_store_retrieve(OSSL_METHOD_STORE *store, int nid)
