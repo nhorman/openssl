@@ -516,10 +516,12 @@ int OSSL_LIB_CTX_is_owned_by_me(OSSL_LIB_CTX *ctx)
     return !!CRYPTO_THREAD_compare_id(ctx->owner, CRYPTO_THREAD_get_current_id());
 }
 
+#ifndef FIPS_MODULE
 int OSSL_LIB_CTX_load_config(OSSL_LIB_CTX *ctx, const char *config_file)
 {
     return CONF_modules_load_file_ex(ctx, config_file, NULL, 0) > 0;
 }
+#endif
 
 void OSSL_LIB_CTX_free(OSSL_LIB_CTX *ctx)
 {
