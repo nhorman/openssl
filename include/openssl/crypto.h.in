@@ -557,6 +557,27 @@ void OSSL_sleep(uint64_t millis);
 
 void *OSSL_LIB_CTX_get_data(OSSL_LIB_CTX *ctx, int index);
 
+static inline __owur int CRYPTO_THREAD_read_lock_ctx(CRYPTO_RWLOCK *lock, OSSL_LIB_CTX *ctx)
+{
+    if (!OSSL_LIB_CTX_is_owned_by_me(ctx))
+        return CRYPTO_THREAD_read_lock(lock);
+    return 1;
+}
+
+static inline __owur int CRYPTO_THREAD_write_lock_ctx(CRYPTO_RWLOCK *lock, OSSL_LIB_CTX *ctx)
+{
+    if (!OSSL_LIB_CTX_is_owned_by_me(ctx))
+        return CRYPTO_THREAD_write_lock(lock);
+    return 1;
+}
+
+static inline int CRYPTO_THREAD_unlock_ctx(CRYPTO_RWLOCK *lock, OSSL_LIB_CTX *ctx)
+{
+    if (!OSSL_LIB_CTX_is_owned_by_me(ctx))
+        return CRYPTO_THREAD_unlock(lock);
+    return 1;
+}
+
 # ifdef  __cplusplus
 }
 # endif
