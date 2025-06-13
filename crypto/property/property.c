@@ -16,6 +16,7 @@
 #include "internal/property.h"
 #include "internal/provider.h"
 #include "internal/tsan_assist.h"
+#include "internal/threads_common.h"
 #include "crypto/ctype.h"
 #include <openssl/lhash.h>
 #include <openssl/rand.h>

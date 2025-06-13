@@ -28,6 +28,7 @@
 #include "internal/refcount.h"
 #include "internal/bio.h"
 #include "internal/core.h"
+#include "internal/threads_common.h"
 #include "provider_local.h"
 #include "crypto/context.h"
 #ifndef FIPS_MODULE

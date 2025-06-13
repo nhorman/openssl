@@ -31,4 +31,7 @@ int CRYPTO_THREAD_set_local_ex(CRYPTO_THREAD_LOCAL_KEY_ID id,
 void CRYPTO_THREAD_clean_local_for_fips(void);
 # endif
 
+__owur int CRYPTO_THREAD_read_lock_ctx(CRYPTO_RWLOCK *lock, OSSL_LIB_CTX *ctx);
+__owur int CRYPTO_THREAD_write_lock_ctx(CRYPTO_RWLOCK *lock, OSSL_LIB_CTX *ctx);
+int CRYPTO_THREAD_unlock_ctx(CRYPTO_RWLOCK *lock, OSSL_LIB_CTX *ctx);
 #endif

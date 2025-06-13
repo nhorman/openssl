@@ -14,6 +14,7 @@
 #include "crypto/lhash.h"
 #include "property_local.h"
 #include "crypto/context.h"
+#include "internal/threads_common.h"
 
 /*
  * Property strings are a consolidation of all strings seen by the property

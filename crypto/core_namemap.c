@@ -11,6 +11,7 @@
 #include "internal/tsan_assist.h"
 #include "internal/hashtable.h"
 #include "internal/sizes.h"
+#include "internal/threads_common.h"
 #include "crypto/context.h"
 
 #define NAMEMAP_HT_BUCKETS 2048
