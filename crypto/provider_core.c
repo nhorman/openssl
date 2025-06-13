@@ -341,10 +341,10 @@ int ossl_provider_disable_fallback_loading(OSSL_LIB_CTX *libctx)
     struct provider_store_st *store;
 
     if ((store = get_provider_store(libctx)) != NULL) {
-        if (!CRYPTO_THREAD_write_lock(store->lock))
+        if (!CRYPTO_THREAD_write_lock_ctx(store->lock, libctx))
             return 0;
         store->use_fallbacks = 0;
-        CRYPTO_THREAD_unlock(store->lock);
+        CRYPTO_THREAD_unlock_ctx(store->lock, libctx);
         return 1;
     }
     return 0;
@@ -368,7 +368,7 @@ int ossl_provider_info_add_to_store(OSSL_LIB_CTX *libctx,
         return 0;
     }
 
-    if (!CRYPTO_THREAD_write_lock(store->lock))
+    if (!CRYPTO_THREAD_write_lock_ctx(store->lock, libctx))
         return 0;
     if (store->provinfosz == 0) {
         store->provinfo = OPENSSL_zalloc(sizeof(*store->provinfo)
@@ -392,7 +392,7 @@ int ossl_provider_info_add_to_store(OSSL_LIB_CTX *libctx,
 
     ret = 1;
  err:
-    CRYPTO_THREAD_unlock(store->lock);
+    CRYPTO_THREAD_unlock_ctx(store->lock, libctx);
     return ret;
 }
 
@@ -418,12 +418,12 @@ OSSL_PROVIDER *ossl_provider_find(OSSL_LIB_CTX *libctx, const char *name,
 #endif
 
         tmpl.name = (char *)name;
-        if (!CRYPTO_THREAD_write_lock(store->lock))
+        if (!CRYPTO_THREAD_write_lock_ctx(store->lock, libctx))
             return NULL;
         sk_OSSL_PROVIDER_sort(store->providers);
         if ((i = sk_OSSL_PROVIDER_find(store->providers, &tmpl)) != -1)
             prov = sk_OSSL_PROVIDER_value(store->providers, i);
-        CRYPTO_THREAD_unlock(store->lock);
+        CRYPTO_THREAD_unlock_ctx(store->lock, libctx);
         if (prov != NULL && !ossl_provider_up_ref(prov))
             prov = NULL;
     }
@@ -542,7 +542,7 @@ OSSL_PROVIDER *ossl_provider_new(OSSL_LIB_CTX *libctx, const char *name,
             chosen = 1;
             break;
         }
-        if (!CRYPTO_THREAD_read_lock(store->lock))
+        if (!CRYPTO_THREAD_read_lock_ctx(store->lock, libctx))
             return NULL;
         for (i = 0, p = store->provinfo; i < store->numprovinfo; p++, i++) {
             if (strcmp(p->name, name) != 0)
@@ -566,7 +566,7 @@ OSSL_PROVIDER *ossl_provider_new(OSSL_LIB_CTX *libctx, const char *name,
                 return NULL;
             break;
         }
-        CRYPTO_THREAD_unlock(store->lock);
+        CRYPTO_THREAD_unlock_ctx(store->lock, libctx);
     } else {
         template.init = init_function;
     }
@@ -657,7 +657,7 @@ int ossl_provider_add_to_store(OSSL_PROVIDER *prov, OSSL_PROVIDER **actualprov,
     if ((store = get_provider_store(prov->libctx)) == NULL)
         return 0;
 
-    if (!CRYPTO_THREAD_write_lock(store->lock))
+    if (!CRYPTO_THREAD_write_lock_ctx(store->lock, store->libctx))
         return 0;
 
     tmpl.name = (char *)prov->name;
@@ -679,7 +679,7 @@ int ossl_provider_add_to_store(OSSL_PROVIDER *prov, OSSL_PROVIDER **actualprov,
             store->use_fallbacks = 0;
     }
 
-    CRYPTO_THREAD_unlock(store->lock);
+    CRYPTO_THREAD_unlock_ctx(store->lock, store->libctx);
 
     if (actualprov != NULL) {
         if (!ossl_provider_up_ref(actualtmp)) {
@@ -717,7 +717,7 @@ int ossl_provider_add_to_store(OSSL_PROVIDER *prov, OSSL_PROVIDER **actualprov,
     return 1;
 
  err:
-    CRYPTO_THREAD_unlock(store->lock);
+    CRYPTO_THREAD_unlock_ctx(store->lock, store->libctx);
     return 0;
 }
 
@@ -908,10 +908,10 @@ int OSSL_PROVIDER_set_default_search_path(OSSL_LIB_CTX *libctx,
             return 0;
     }
     if ((store = get_provider_store(libctx)) != NULL
-            && CRYPTO_THREAD_write_lock(store->default_path_lock)) {
+            && CRYPTO_THREAD_write_lock_ctx(store->default_path_lock, libctx)) {
         OPENSSL_free(store->default_path);
         store->default_path = p;
-        CRYPTO_THREAD_unlock(store->default_path_lock);
+        CRYPTO_THREAD_unlock_ctx(store->default_path_lock, libctx);
         return 1;
     }
     OPENSSL_free(p);
@@ -924,9 +924,9 @@ const char *OSSL_PROVIDER_get0_default_search_path(OSSL_LIB_CTX *libctx)
     char *path = NULL;
 
     if ((store = get_provider_store(libctx)) != NULL
-            && CRYPTO_THREAD_read_lock(store->default_path_lock)) {
+            && CRYPTO_THREAD_read_lock_ctx(store->default_path_lock, libctx)) {
         path = store->default_path;
-        CRYPTO_THREAD_unlock(store->default_path_lock);
+        CRYPTO_THREAD_unlock_ctx(store->default_path_lock, libctx);
     }
     return path;
 }
@@ -974,17 +974,17 @@ static int provider_init(OSSL_PROVIDER *prov)
             }
 
             if ((store = get_provider_store(prov->libctx)) == NULL
-                    || !CRYPTO_THREAD_read_lock(store->default_path_lock))
+                    || !CRYPTO_THREAD_read_lock_ctx(store->default_path_lock, store->libctx))
                 goto end;
 
             if (store->default_path != NULL) {
                 allocated_load_dir = OPENSSL_strdup(store->default_path);
-                CRYPTO_THREAD_unlock(store->default_path_lock);
+                CRYPTO_THREAD_unlock_ctx(store->default_path_lock, store->libctx);
                 if (allocated_load_dir == NULL)
                     goto end;
                 load_dir = allocated_load_dir;
             } else {
-                CRYPTO_THREAD_unlock(store->default_path_lock);
+                CRYPTO_THREAD_unlock_ctx(store->default_path_lock, store->libctx);
             }
 
             if (load_dir == NULL) {
@@ -1183,17 +1183,17 @@ static int provider_deactivate(OSSL_PROVIDER *prov, int upcalls,
     if (store == NULL)
         lock = 0;
 
-    if (lock && !CRYPTO_THREAD_read_lock(store->lock))
+    if (lock && !CRYPTO_THREAD_read_lock_ctx(store->lock, store->libctx))
         return -1;
-    if (lock && !CRYPTO_THREAD_write_lock(prov->flag_lock)) {
-        CRYPTO_THREAD_unlock(store->lock);
+    if (lock && !CRYPTO_THREAD_write_lock_ctx(prov->flag_lock, prov->libctx)) {
+        CRYPTO_THREAD_unlock_ctx(store->lock, store->libctx);
         return -1;
     }
 
     if (!CRYPTO_atomic_add(&prov->activatecnt, -1, &count, prov->activatecnt_lock)) {
         if (lock) {
-            CRYPTO_THREAD_unlock(prov->flag_lock);
-            CRYPTO_THREAD_unlock(store->lock);
+            CRYPTO_THREAD_unlock_ctx(prov->flag_lock, prov->libctx);
+            CRYPTO_THREAD_unlock_ctx(store->lock, store->libctx);
         }
         return -1;
     }
@@ -1229,8 +1229,8 @@ static int provider_deactivate(OSSL_PROVIDER *prov, int upcalls,
     }
 #endif
     if (lock) {
-        CRYPTO_THREAD_unlock(prov->flag_lock);
-        CRYPTO_THREAD_unlock(store->lock);
+        CRYPTO_THREAD_unlock_ctx(prov->flag_lock, prov->libctx);
+        CRYPTO_THREAD_unlock_ctx(store->lock, store->libctx);
         /*
          * This can be done outside the lock. We tolerate other threads getting
          * the wrong result briefly when creating OSSL_DECODER_CTXs.
@@ -1279,7 +1279,7 @@ static int provider_activate(OSSL_PROVIDER *prov, int lock, int upcalls)
         return -1;
 #endif
 
-    if (lock && !CRYPTO_THREAD_read_lock(store->lock)) {
+    if (lock && !CRYPTO_THREAD_read_lock_ctx(store->lock, store->libctx)) {
 #ifndef FIPS_MODULE
         if (prov->ischild && upcalls)
             ossl_provider_free_parent(prov, 1);
@@ -1287,8 +1287,8 @@ static int provider_activate(OSSL_PROVIDER *prov, int lock, int upcalls)
         return -1;
     }
 
-    if (lock && !CRYPTO_THREAD_write_lock(prov->flag_lock)) {
-        CRYPTO_THREAD_unlock(store->lock);
+    if (lock && !CRYPTO_THREAD_write_lock_ctx(prov->flag_lock, prov->libctx)) {
+        CRYPTO_THREAD_unlock_ctx(store->lock, store->libctx);
 #ifndef FIPS_MODULE
         if (prov->ischild && upcalls)
             ossl_provider_free_parent(prov, 1);
@@ -1303,8 +1303,8 @@ static int provider_activate(OSSL_PROVIDER *prov, int lock, int upcalls)
         }
     }
     if (lock) {
-        CRYPTO_THREAD_unlock(prov->flag_lock);
-        CRYPTO_THREAD_unlock(store->lock);
+        CRYPTO_THREAD_unlock_ctx(prov->flag_lock, prov->libctx);
+        CRYPTO_THREAD_unlock_ctx(store->lock, store->libctx);
         /*
          * This can be done outside the lock. We tolerate other threads getting
          * the wrong result briefly when creating OSSL_DECODER_CTXs.
@@ -1329,10 +1329,10 @@ static int provider_flush_store_cache(const OSSL_PROVIDER *prov)
     if ((store = get_provider_store(prov->libctx)) == NULL)
         return 0;
 
-    if (!CRYPTO_THREAD_read_lock(store->lock))
+    if (!CRYPTO_THREAD_read_lock_ctx(store->lock, store->libctx))
         return 0;
     freeing = store->freeing;
-    CRYPTO_THREAD_unlock(store->lock);
+    CRYPTO_THREAD_unlock_ctx(store->lock, store->libctx);
 
     if (!freeing) {
         int acc
@@ -1361,20 +1361,20 @@ static int provider_remove_store_methods(OSSL_PROVIDER *prov)
     if ((store = get_provider_store(prov->libctx)) == NULL)
         return 0;
 
-    if (!CRYPTO_THREAD_read_lock(store->lock))
+    if (!CRYPTO_THREAD_read_lock_ctx(store->lock, store->libctx))
         return 0;
     freeing = store->freeing;
-    CRYPTO_THREAD_unlock(store->lock);
+    CRYPTO_THREAD_unlock_ctx(store->lock, store->libctx);
 
     if (!freeing) {
         int acc;
 
-        if (!CRYPTO_THREAD_write_lock(prov->opbits_lock))
+        if (!CRYPTO_THREAD_write_lock_ctx(prov->opbits_lock, prov->libctx))
             return 0;
         OPENSSL_free(prov->operation_bits);
         prov->operation_bits = NULL;
         prov->operation_bits_sz = 0;
-        CRYPTO_THREAD_unlock(prov->opbits_lock);
+        CRYPTO_THREAD_unlock_ctx(prov->opbits_lock, prov->libctx);
 
         acc = evp_method_store_remove_all_provided(prov)
 #ifndef FIPS_MODULE
@@ -1440,19 +1440,19 @@ static int provider_activate_fallbacks(struct provider_store_st *store)
     int ret = 0;
     const OSSL_PROVIDER_INFO *p;
 
-    if (!CRYPTO_THREAD_read_lock(store->lock))
+    if (!CRYPTO_THREAD_read_lock_ctx(store->lock, store->libctx))
         return 0;
     use_fallbacks = store->use_fallbacks;
-    CRYPTO_THREAD_unlock(store->lock);
+    CRYPTO_THREAD_unlock_ctx(store->lock, store->libctx);
     if (!use_fallbacks)
         return 1;
 
-    if (!CRYPTO_THREAD_write_lock(store->lock))
+    if (!CRYPTO_THREAD_write_lock_ctx(store->lock, store->libctx))
         return 0;
     /* Check again, just in case another thread changed it */
     use_fallbacks = store->use_fallbacks;
     if (!use_fallbacks) {
-        CRYPTO_THREAD_unlock(store->lock);
+        CRYPTO_THREAD_unlock_ctx(store->lock, store->libctx);
         return 1;
     }
 
@@ -1507,7 +1507,7 @@ static int provider_activate_fallbacks(struct provider_store_st *store)
         ret = 1;
     }
  err:
-    CRYPTO_THREAD_unlock(store->lock);
+    CRYPTO_THREAD_unlock_ctx(store->lock, store->libctx);
     return ret;
 }
 
@@ -1548,11 +1548,11 @@ int ossl_provider_doall_activated(OSSL_LIB_CTX *ctx,
      * Under lock, grab a copy of the provider list and up_ref each
      * provider so that they don't disappear underneath us.
      */
-    if (!CRYPTO_THREAD_read_lock(store->lock))
+    if (!CRYPTO_THREAD_read_lock_ctx(store->lock, store->libctx))
         return 0;
     provs = sk_OSSL_PROVIDER_dup(store->providers);
     if (provs == NULL) {
-        CRYPTO_THREAD_unlock(store->lock);
+        CRYPTO_THREAD_unlock_ctx(store->lock, store->libctx);
         return 0;
     }
     max = sk_OSSL_PROVIDER_num(provs);
@@ -1563,7 +1563,7 @@ int ossl_provider_doall_activated(OSSL_LIB_CTX *ctx,
     for (curr = max - 1; curr >= 0; curr--) {
         OSSL_PROVIDER *prov = sk_OSSL_PROVIDER_value(provs, curr);
 
-        if (!CRYPTO_THREAD_read_lock(prov->flag_lock))
+        if (!CRYPTO_THREAD_read_lock_ctx(prov->flag_lock, prov->libctx))
             goto err_unlock;
         if (prov->flag_activated) {
             /*
@@ -1572,7 +1572,7 @@ int ossl_provider_doall_activated(OSSL_LIB_CTX *ctx,
              * must not do while holding locks.
              */
             if (CRYPTO_UP_REF(&prov->refcnt, &ref) <= 0) {
-                CRYPTO_THREAD_unlock(prov->flag_lock);
+                CRYPTO_THREAD_unlock_ctx(prov->flag_lock, prov->libctx);
                 goto err_unlock;
             }
             /*
@@ -1584,16 +1584,16 @@ int ossl_provider_doall_activated(OSSL_LIB_CTX *ctx,
             if (!CRYPTO_atomic_add(&prov->activatecnt, 1, &ref,
                                    prov->activatecnt_lock)) {
                 CRYPTO_DOWN_REF(&prov->refcnt, &ref);
-                CRYPTO_THREAD_unlock(prov->flag_lock);
+                CRYPTO_THREAD_unlock_ctx(prov->flag_lock, prov->libctx);
                 goto err_unlock;
             }
         } else {
             sk_OSSL_PROVIDER_delete(provs, curr);
             max--;
         }
-        CRYPTO_THREAD_unlock(prov->flag_lock);
+        CRYPTO_THREAD_unlock_ctx(prov->flag_lock, prov->libctx);
     }
-    CRYPTO_THREAD_unlock(store->lock);
+    CRYPTO_THREAD_unlock_ctx(store->lock, store->libctx);
 
     /*
      * Now, we sweep through all providers not under lock
@@ -1612,7 +1612,7 @@ int ossl_provider_doall_activated(OSSL_LIB_CTX *ctx,
     goto finish;
 
  err_unlock:
-    CRYPTO_THREAD_unlock(store->lock);
+    CRYPTO_THREAD_unlock_ctx(store->lock, store->libctx);
  finish:
     /*
      * The pop_free call doesn't do what we want on an error condition. We
@@ -1669,10 +1669,10 @@ int OSSL_PROVIDER_available(OSSL_LIB_CTX *libctx, const char *name)
 
     prov = ossl_provider_find(libctx, name, 0);
     if (prov != NULL) {
-        if (!CRYPTO_THREAD_read_lock(prov->flag_lock))
+        if (!CRYPTO_THREAD_read_lock_ctx(prov->flag_lock, prov->libctx))
             return 0;
         available = prov->flag_activated;
-        CRYPTO_THREAD_unlock(prov->flag_lock);
+        CRYPTO_THREAD_unlock_ctx(prov->flag_lock, prov->libctx);
         ossl_provider_free(prov);
     }
     return available;
@@ -2016,14 +2016,14 @@ int ossl_provider_set_operation_bit(OSSL_PROVIDER *provider, size_t bitnum)
     size_t byte = bitnum / 8;
     unsigned char bit = (1 << (bitnum % 8)) & 0xFF;
 
-    if (!CRYPTO_THREAD_write_lock(provider->opbits_lock))
+    if (!CRYPTO_THREAD_write_lock_ctx(provider->opbits_lock, provider->libctx))
         return 0;
     if (provider->operation_bits_sz <= byte) {
         unsigned char *tmp = OPENSSL_realloc(provider->operation_bits,
                                              byte + 1);
 
         if (tmp == NULL) {
-            CRYPTO_THREAD_unlock(provider->opbits_lock);
+            CRYPTO_THREAD_unlock_ctx(provider->opbits_lock, provider->libctx);
             return 0;
         }
         provider->operation_bits = tmp;
@@ -2032,7 +2032,7 @@ int ossl_provider_set_operation_bit(OSSL_PROVIDER *provider, size_t bitnum)
         provider->operation_bits_sz = byte + 1;
     }
     provider->operation_bits[byte] |= bit;
-    CRYPTO_THREAD_unlock(provider->opbits_lock);
+    CRYPTO_THREAD_unlock_ctx(provider->opbits_lock, provider->libctx);
     return 1;
 }
 
@@ -2048,11 +2048,11 @@ int ossl_provider_test_operation_bit(OSSL_PROVIDER *provider, size_t bitnum,
     }
 
     *result = 0;
-    if (!CRYPTO_THREAD_read_lock(provider->opbits_lock))
+    if (!CRYPTO_THREAD_read_lock_ctx(provider->opbits_lock, provider->libctx))
         return 0;
     if (provider->operation_bits_sz > byte)
         *result = ((provider->operation_bits[byte] & bit) != 0);
-    CRYPTO_THREAD_unlock(provider->opbits_lock);
+    CRYPTO_THREAD_unlock_ctx(provider->opbits_lock, provider->libctx);
     return 1;
 }
 
@@ -2085,7 +2085,7 @@ int ossl_provider_default_props_update(OSSL_LIB_CTX *libctx, const char *props)
     if ((store = get_provider_store(libctx)) == NULL)
         return 0;
 
-    if (!CRYPTO_THREAD_read_lock(store->lock))
+    if (!CRYPTO_THREAD_read_lock_ctx(store->lock, libctx))
         return 0;
 
     max = sk_OSSL_PROVIDER_CHILD_CB_num(store->child_cbs);
@@ -2094,7 +2094,7 @@ int ossl_provider_default_props_update(OSSL_LIB_CTX *libctx, const char *props)
         child_cb->global_props_cb(props, child_cb->cbdata);
     }
 
-    CRYPTO_THREAD_unlock(store->lock);
+    CRYPTO_THREAD_unlock_ctx(store->lock, libctx);
 #endif
     return 1;
 }
@@ -2135,7 +2135,7 @@ static int ossl_provider_register_child_cb(const OSSL_CORE_HANDLE *handle,
     child_cb->global_props_cb = global_props_cb;
     child_cb->cbdata = cbdata;
 
-    if (!CRYPTO_THREAD_write_lock(store->lock)) {
+    if (!CRYPTO_THREAD_write_lock_ctx(store->lock, libctx)) {
         OPENSSL_free(child_cb);
         return 0;
     }
@@ -2151,10 +2151,10 @@ static int ossl_provider_register_child_cb(const OSSL_CORE_HANDLE *handle,
 
         prov = sk_OSSL_PROVIDER_value(store->providers, i);
 
-        if (!CRYPTO_THREAD_read_lock(prov->flag_lock))
+        if (!CRYPTO_THREAD_read_lock_ctx(prov->flag_lock, prov->libctx))
             break;
         activated = prov->flag_activated;
-        CRYPTO_THREAD_unlock(prov->flag_lock);
+        CRYPTO_THREAD_unlock_ctx(prov->flag_lock, prov->libctx);
         /*
          * We hold the store lock while calling the user callback. This means
          * that the user callback must be short and simple and not do anything
@@ -2180,7 +2180,7 @@ static int ossl_provider_register_child_cb(const OSSL_CORE_HANDLE *handle,
         OPENSSL_free(child_cb);
         ret = 0;
     }
-    CRYPTO_THREAD_unlock(store->lock);
+    CRYPTO_THREAD_unlock_ctx(store->lock, libctx);
 
     return ret;
 }
@@ -2200,7 +2200,7 @@ static void ossl_provider_deregister_child_cb(const OSSL_CORE_HANDLE *handle)
     if ((store = get_provider_store(libctx)) == NULL)
         return;
 
-    if (!CRYPTO_THREAD_write_lock(store->lock))
+    if (!CRYPTO_THREAD_write_lock_ctx(store->lock, libctx))
         return;
     max = sk_OSSL_PROVIDER_CHILD_CB_num(store->child_cbs);
     for (i = 0; i < max; i++) {
@@ -2212,7 +2212,7 @@ static void ossl_provider_deregister_child_cb(const OSSL_CORE_HANDLE *handle)
             break;
         }
     }
-    CRYPTO_THREAD_unlock(store->lock);
+    CRYPTO_THREAD_unlock_ctx(store->lock, libctx);
 }
 #endif
 
