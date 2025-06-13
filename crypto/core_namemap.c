@@ -38,6 +38,7 @@ struct ossl_namemap_st {
     STACK_OF(NAMES) *numnames;
 
     TSAN_QUALIFIER int max_number;     /* Current max number */
+    OSSL_LIB_CTX *libctx;              /* associated libctx */
 };
 
 static void name_string_free(char *name)
@@ -87,10 +88,10 @@ int ossl_namemap_empty(OSSL_NAMEMAP *namemap)
     if (namemap == NULL)
         return 1;
 
-    if (!CRYPTO_THREAD_read_lock(namemap->lock))
+    if (!CRYPTO_THREAD_read_lock_ctx(namemap->lock, namemap->libctx))
         return -1;
     rv = namemap->max_number == 0;
-    CRYPTO_THREAD_unlock(namemap->lock);
+    CRYPTO_THREAD_unlock_ctx(namemap->lock, namemap->libctx);
     return rv;
 #else
     /* Have TSAN support */
@@ -118,14 +119,14 @@ int ossl_namemap_doall_names(const OSSL_NAMEMAP *namemap, int number,
      * the user function, so that we're not holding the read lock when in user
      * code. This could lead to deadlocks.
      */
-    if (!CRYPTO_THREAD_read_lock(namemap->lock))
+    if (!CRYPTO_THREAD_read_lock_ctx(namemap->lock, namemap->libctx))
         return 0;
 
     names = sk_NAMES_value(namemap->numnames, number - 1);
     if (names != NULL)
         names = sk_OPENSSL_STRING_dup(names);
 
-    CRYPTO_THREAD_unlock(namemap->lock);
+    CRYPTO_THREAD_unlock_ctx(namemap->lock, namemap->libctx);
 
     if (names == NULL)
         return 0;
@@ -199,14 +200,14 @@ const char *ossl_namemap_num2name(const OSSL_NAMEMAP *namemap, int number,
     if (namemap == NULL || number <= 0)
         return NULL;
 
-    if (!CRYPTO_THREAD_read_lock(namemap->lock))
+    if (!CRYPTO_THREAD_read_lock_ctx(namemap->lock, namemap->libctx))
         return NULL;
 
     names = sk_NAMES_value(namemap->numnames, number - 1);
     if (names != NULL)
         ret = sk_OPENSSL_STRING_value(names, idx);
 
-    CRYPTO_THREAD_unlock(namemap->lock);
+    CRYPTO_THREAD_unlock_ctx(namemap->lock, namemap->libctx);
 
     return ret;
 }
@@ -297,10 +298,10 @@ int ossl_namemap_add_name(OSSL_NAMEMAP *namemap, int number,
     if (name == NULL || *name == 0 || namemap == NULL)
         return 0;
 
-    if (!CRYPTO_THREAD_write_lock(namemap->lock))
+    if (!CRYPTO_THREAD_write_lock_ctx(namemap->lock, namemap->libctx))
         return 0;
     tmp_number = namemap_add_name(namemap, number, name);
-    CRYPTO_THREAD_unlock(namemap->lock);
+    CRYPTO_THREAD_unlock_ctx(namemap->lock, namemap->libctx);
     return tmp_number;
 }
 
@@ -318,7 +319,7 @@ int ossl_namemap_add_names(OSSL_NAMEMAP *namemap, int number,
     if ((tmp = OPENSSL_strdup(names)) == NULL)
         return 0;
 
-    if (!CRYPTO_THREAD_write_lock(namemap->lock)) {
+    if (!CRYPTO_THREAD_write_lock_ctx(namemap->lock, namemap->libctx)) {
         OPENSSL_free(tmp);
         return 0;
     }
@@ -377,7 +378,7 @@ int ossl_namemap_add_names(OSSL_NAMEMAP *namemap, int number,
     }
 
  end:
-    CRYPTO_THREAD_unlock(namemap->lock);
+    CRYPTO_THREAD_unlock_ctx(namemap->lock, namemap->libctx);
     OPENSSL_free(tmp);
     return number;
 }
@@ -536,6 +537,8 @@ OSSL_NAMEMAP *ossl_namemap_new(OSSL_LIB_CTX *libctx)
 
     if ((namemap->numnames = sk_NAMES_new_null()) == NULL)
         goto err;
+
+    namemap->libctx = libctx;
 
     return namemap;
 
