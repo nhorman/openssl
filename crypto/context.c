@@ -61,21 +61,21 @@ int ossl_lib_ctx_write_lock(OSSL_LIB_CTX *ctx)
 {
     if ((ctx = ossl_lib_ctx_get_concrete(ctx)) == NULL)
         return 0;
-    return CRYPTO_THREAD_write_lock(ctx->lock);
+    return CRYPTO_THREAD_write_lock_ctx(ctx->lock, ctx);
 }
 
 int ossl_lib_ctx_read_lock(OSSL_LIB_CTX *ctx)
 {
     if ((ctx = ossl_lib_ctx_get_concrete(ctx)) == NULL)
         return 0;
-    return CRYPTO_THREAD_read_lock(ctx->lock);
+    return CRYPTO_THREAD_read_lock_ctx(ctx->lock, ctx);
 }
 
 int ossl_lib_ctx_unlock(OSSL_LIB_CTX *ctx)
 {
     if ((ctx = ossl_lib_ctx_get_concrete(ctx)) == NULL)
         return 0;
-    return CRYPTO_THREAD_unlock(ctx->lock);
+    return CRYPTO_THREAD_unlock_ctx(ctx->lock, ctx);
 }
 
 int ossl_lib_ctx_is_child(OSSL_LIB_CTX *ctx)
