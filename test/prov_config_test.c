@@ -28,6 +28,8 @@ static int test_double_config(void)
 
     if (!TEST_ptr(ctx))
         return 0;
+    if (!TEST_true(OSSL_LIB_CTX_set_owning_thread(ctx)))
+        return 0;
 
     if (!TEST_true(OSSL_LIB_CTX_load_config(ctx, configfile)))
         goto err;
@@ -53,6 +55,9 @@ static int test_recursive_config(void)
     unsigned long err;
 
     if (!TEST_ptr(ctx))
+        goto err;
+
+    if (!TEST_true(OSSL_LIB_CTX_set_owning_thread(ctx)))
         goto err;
 
     if (!TEST_false(OSSL_LIB_CTX_load_config(ctx, recurseconfigfile)))
@@ -98,6 +103,9 @@ static int test_path_config(void)
 
     ctx = OSSL_LIB_CTX_new();
     if (!TEST_ptr(ctx))
+        return 0;
+
+    if (!TEST_true(OSSL_LIB_CTX_set_owning_thread(ctx)))
         return 0;
 
     if (!TEST_true(OSSL_LIB_CTX_load_config(ctx, pathedconfig)))

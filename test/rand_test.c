@@ -254,6 +254,9 @@ static int test_rand_get0_primary(void)
     if (!TEST_ptr(ctx))
         return 0;
 
+    if (!TEST_true(OSSL_LIB_CTX_set_owning_thread(ctx)))
+        goto err;
+
     if (!TEST_true(OSSL_LIB_CTX_load_config(ctx, configfile)))
         goto err;
 

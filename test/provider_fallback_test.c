@@ -39,6 +39,7 @@ static int test_explicit_provider(void)
     int ok;
 
     ok = TEST_ptr(ctx = OSSL_LIB_CTX_new())
+        && TEST_true(OSSL_LIB_CTX_set_owning_thread(ctx))
         && TEST_ptr(prov = OSSL_PROVIDER_load(ctx, "default"));
 
     if (ok) {

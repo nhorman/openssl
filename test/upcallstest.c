@@ -101,6 +101,9 @@ static int obj_create_test(void)
     if (!TEST_ptr(libctx))
         goto err;
 
+    if (!TEST_true(OSSL_LIB_CTX_set_owning_thread(libctx)))
+        goto err;
+
     if (!TEST_true(OSSL_PROVIDER_add_builtin(libctx, "obj-prov",
                                              obj_provider_init))
             || !TEST_ptr(objprov = OSSL_PROVIDER_load(libctx, "obj-prov")))

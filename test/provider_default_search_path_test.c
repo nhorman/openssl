@@ -39,6 +39,7 @@ static int test_explicit_libctx(void)
             still what we set and are separate. */
     ok = TEST_true(OSSL_PROVIDER_set_default_search_path(NULL, def_libctx_path))
         && TEST_ptr(ctx = OSSL_LIB_CTX_new())
+        && TEST_true(OSSL_LIB_CTX_set_owning_thread(ctx))
         && TEST_true(OSSL_PROVIDER_set_default_search_path(ctx, path))
         && TEST_ptr(retrieved_defctx_path = OSSL_PROVIDER_get0_default_search_path(NULL))
         && TEST_str_eq(def_libctx_path, retrieved_defctx_path)

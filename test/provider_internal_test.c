@@ -107,6 +107,7 @@ static int test_cache_flushes(void)
     int ret = 0;
 
     if (!TEST_ptr(ctx = OSSL_LIB_CTX_new())
+            || !TEST_true(OSSL_LIB_CTX_set_owning_thread(ctx))
             || !TEST_ptr(prov = OSSL_PROVIDER_load(ctx, "default"))
             || !TEST_true(OSSL_PROVIDER_available(ctx, "default"))
             || !TEST_ptr(md = EVP_MD_fetch(ctx, "SHA256", NULL)))

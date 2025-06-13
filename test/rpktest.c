@@ -769,6 +769,9 @@ int setup_tests(void)
     if (libctx == NULL)
         goto err;
 
+    if (!OSSL_LIB_CTX_set_owning_thread(libctx))
+        goto err;
+
     ADD_TEST(test_rpk_api);
     ADD_ALL_TESTS(test_rpk, RPK_TESTS * RPK_DIMS);
     return 1;

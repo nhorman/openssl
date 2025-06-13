@@ -733,6 +733,8 @@ static int fake_rsa_provider_init(const OSSL_CORE_HANDLE *handle,
 {
     if (!TEST_ptr(*provctx = OSSL_LIB_CTX_new()))
         return 0;
+    if (!TEST_true(OSSL_LIB_CTX_set_owning_thread(*provctx)))
+        return 0;
     *out = fake_rsa_method;
     return 1;
 }

@@ -242,6 +242,9 @@ static int fetch_test(int tst)
     if (!TEST_ptr(libctx))
         goto err;
 
+    if (!TEST_true(OSSL_LIB_CTX_set_owning_thread(libctx)))
+        goto err;
+
     if (!TEST_true(OSSL_PROVIDER_add_builtin(libctx, "dummy-prov",
                                              dummy_provider_init))
             || !TEST_ptr(nullprov = OSSL_PROVIDER_load(libctx, "default"))

@@ -238,6 +238,8 @@ int setup_tests(void)
     if (libctx == NULL)
         return 0;
 
+    if (!OSSL_LIB_CTX_set_owning_thread(libctx))
+        return 0;
     if (strcmp(provider_name, "fips") == 0) {
         self_test_args.count = 0;
         OSSL_SELF_TEST_set_callback(libctx, self_test_on_load, &self_test_args);

@@ -95,6 +95,9 @@ static int test_default_props_and_providers(int propsorder)
                                                     testprov_provider_init)))
         goto err;
 
+    if (!TEST_true(OSSL_LIB_CTX_set_owning_thread(libctx)))
+        goto err;
+
     if (propsorder == DEFAULT_PROPS_FIRST
             && !TEST_true(EVP_set_default_properties(libctx, MYPROPERTIES)))
         goto err;

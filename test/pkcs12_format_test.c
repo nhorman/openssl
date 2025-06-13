@@ -992,6 +992,8 @@ int setup_tests(void)
         testctx = OSSL_LIB_CTX_new();
         if (!TEST_ptr(testctx))
             return 0;
+        if (!TEST_true(OSSL_LIB_CTX_set_owning_thread(testctx)))
+            return 0;
         nullprov = OSSL_PROVIDER_load(NULL, "null");
         if (!TEST_ptr(nullprov))
             return 0;

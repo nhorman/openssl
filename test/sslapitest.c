@@ -8220,6 +8220,9 @@ static int int_test_ssl_get_shared_ciphers(int tst, int clnt)
     if (!TEST_ptr(tmplibctx))
         goto end;
 
+    if (!TEST_true(OSSL_LIB_CTX_set_owning_thread(tmplibctx)))
+        goto end;
+
     /*
      * Regardless of whether we're testing with the FIPS provider loaded into
      * libctx, we want one peer to always use the full set of ciphersuites
@@ -9936,6 +9939,9 @@ static int test_sigalgs_available(int idx)
     const char *sigalg_name, *signame_expected;
 
     if (!TEST_ptr(tmpctx))
+        goto end;
+
+    if (!TEST_true(OSSL_LIB_CTX_set_owning_thread(tmpctx)))
         goto end;
 
     if (idx != 0 && idx != 3) {
@@ -13306,6 +13312,9 @@ int setup_tests(void)
 
     libctx = OSSL_LIB_CTX_new();
     if (!TEST_ptr(libctx))
+        return 0;
+
+    if (!TEST_true(OSSL_LIB_CTX_set_owning_thread(libctx)))
         return 0;
 
     defctxnull = OSSL_PROVIDER_load(NULL, "null");

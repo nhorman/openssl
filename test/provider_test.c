@@ -223,6 +223,7 @@ static int test_builtin_provider(void)
 
     ok =
         TEST_ptr(libctx)
+        && TEST_true(OSSL_LIB_CTX_set_owning_thread(libctx))
         && TEST_true(OSSL_PROVIDER_add_builtin(libctx, name,
                                                PROVIDER_INIT_FUNCTION_NAME))
         && test_provider(&libctx, name, NULL);
@@ -241,6 +242,9 @@ static int test_builtin_provider_with_child(void)
     OSSL_PROVIDER *legacy;
 
     if (!TEST_ptr(libctx))
+        return 0;
+
+    if (!TEST_true(OSSL_LIB_CTX_set_owning_thread(libctx)))
         return 0;
 
     legacy = OSSL_PROVIDER_load(libctx, "legacy");
@@ -273,6 +277,9 @@ static int test_loaded_provider(void)
     int res = 0;
 
     if (!TEST_ptr(libctx))
+        return 0;
+
+    if (!TEST_true(OSSL_LIB_CTX_set_owning_thread(libctx)))
         return 0;
 
     /* test_provider will free libctx as part of the test */

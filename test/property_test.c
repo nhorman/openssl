@@ -60,6 +60,7 @@ static int test_property_string(void)
      * pristine state.
      */
     if (TEST_ptr(ctx = OSSL_LIB_CTX_new())
+        && TEST_true(OSSL_LIB_CTX_set_owning_thread(ctx))
         && TEST_ptr(store = ossl_method_store_new(ctx))
         && TEST_int_eq(ossl_property_name(ctx, "fnord", 0), 0)
         && TEST_int_ne(ossl_property_name(ctx, "fnord", 1), 0)
@@ -609,6 +610,9 @@ static int test_fips_mode(void)
     OSSL_LIB_CTX *ctx = NULL;
 
     if (!TEST_ptr(ctx = OSSL_LIB_CTX_new()))
+        goto err;
+
+    if (!TEST_true(OSSL_LIB_CTX_set_owning_thread(ctx)))
         goto err;
 
     ret = TEST_true(EVP_set_default_properties(ctx, "default=yes,fips=yes"))

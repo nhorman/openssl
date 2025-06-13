@@ -164,6 +164,9 @@ int filter_provider_init(const OSSL_CORE_HANDLE *handle,
     if (ourglobals.libctx == NULL)
         goto err;
 
+    if (!OSSL_LIB_CTX_set_owning_thread(ourglobals.libctx))
+        goto err;
+
     ourglobals.deflt = OSSL_PROVIDER_load(ourglobals.libctx, "default");
     if (ourglobals.deflt == NULL)
         goto err;
