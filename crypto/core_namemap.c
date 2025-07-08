@@ -10,6 +10,7 @@
 #include "internal/namemap.h"
 #include "internal/tsan_assist.h"
 #include "internal/hashtable.h"
+#include "internal/lockless.h"
 #include "internal/sizes.h"
 #include "crypto/context.h"
 
@@ -37,6 +38,8 @@ struct ossl_namemap_st {
     CRYPTO_RWLOCK *lock;
     STACK_OF(NAMES) *numnames;
 
+    LLL *pending_names;                /* names pending addition */
+    TSAN_QUALIFIER int pending_ord;    /* ordinal for pending additions */
     TSAN_QUALIFIER int max_number;     /* Current max number */
 };
 
@@ -218,17 +221,19 @@ static int numname_insert(OSSL_NAMEMAP *namemap, int number,
     NAMES *names;
     char *tmpname;
 
+    if (!CRYPTO_THREAD_write_lock(namemap->lock))
+        return 0;
     if (number > 0) {
         names = sk_NAMES_value(namemap->numnames, number - 1);
         if (!ossl_assert(names != NULL)) {
             /* cannot happen */
-            return 0;
+            goto out;
         }
     } else {
         /* a completely new entry */
         names = sk_OPENSSL_STRING_new_null();
         if (names == NULL)
-            return 0;
+            goto out;
     }
 
     if ((tmpname = OPENSSL_strdup(name)) == NULL)
@@ -243,12 +248,15 @@ static int numname_insert(OSSL_NAMEMAP *namemap, int number,
             goto err;
         number = sk_NAMES_num(namemap->numnames);
     }
+    CRYPTO_THREAD_unlock(namemap->lock);
     return number;
 
  err:
     if (number <= 0)
         sk_OPENSSL_STRING_pop_free(names, name_string_free);
     OPENSSL_free(tmpname);
+ out: 
+    CRYPTO_THREAD_unlock(namemap->lock);
     return 0;
 }
 
@@ -261,8 +269,9 @@ static int namemap_add_name(OSSL_NAMEMAP *namemap, int number,
     NAMENUM_KEY key;
 
     /* If it already exists, we don't add it */
-    if ((ret = ossl_namemap_name2num(namemap, name)) != 0)
+    if ((ret = ossl_namemap_name2num(namemap, name)) != 0) {
         return ret;
+    }
 
     if ((number = numname_insert(namemap, number, name)) == 0)
         return 0;
@@ -284,11 +293,63 @@ static int namemap_add_name(OSSL_NAMEMAP *namemap, int number,
     return number;
 }
 
+typedef struct nm_pending_st {
+    int place_in_line;
+    char *p;
+    char *end;
+} NM_PENDING;
+
+typedef struct nm_conflict_st {
+    NM_PENDING *my_pending;
+    int conflict_found;
+} NM_CONFLICT;
+
+static int check_name_conflict(void *a, void *b, void *arg, int restart)
+{
+    NM_PENDING *node = (NM_PENDING *)a;
+    NM_CONFLICT *cflt = (NM_CONFLICT *)arg;
+    char *myp, *myq;
+    char *nodep, *nodeq;
+    /*
+     * If we have reached our entry in the list, there are no conflicts
+     * ahead of us in line, we're done
+     */
+    if (node->place_in_line == cflt->my_pending->place_in_line)
+        return 0;
+
+    /*
+     * If we get here, we're still checking prior entries in the 
+     * list and we have to search for a name match of any string in our
+     * my pending list to any string in this nodes list
+     */
+    for (myp = cflt->my_pending->p; myp < cflt->my_pending->end; myp = myq) {
+        myq = myp + strlen(myp) + 1;
+
+        for (nodep = node->p; nodep < node->end; nodep = nodeq) {
+            nodeq = nodep + strlen(nodep) + 1;
+
+            /*
+             * Compare nodep and myp, if they compare equal, then we have a conflict
+             */
+            if (!strcmp(nodep, myp)) {
+                cflt->conflict_found = 1;
+                return 0;
+            }
+        }
+    }
+
+    /*
+     * Continune the search until we get to our place in line
+     */
+    return -1;
+}
+
 int ossl_namemap_add_name(OSSL_NAMEMAP *namemap, int number,
                           const char *name)
 {
     int tmp_number;
-
+    NM_PENDING *pending = NULL;
+    NM_CONFLICT conflict;
 #ifndef FIPS_MODULE
     if (namemap == NULL)
         namemap = ossl_namemap_stored(NULL);
@@ -297,10 +358,36 @@ int ossl_namemap_add_name(OSSL_NAMEMAP *namemap, int number,
     if (name == NULL || *name == 0 || namemap == NULL)
         return 0;
 
-    if (!CRYPTO_THREAD_write_lock(namemap->lock))
+    pending = OPENSSL_zalloc(sizeof(NM_PENDING));
+    if (pending == NULL)
         return 0;
+    pending->place_in_line = tsan_counter(&namemap->pending_ord);
+    /*
+     * our strdup-ed string gets freed when we remove this from the list
+     */
+    pending->p = strdup(name);
+    pending->end = pending->p + strlen(pending->p) + 1; 
+
+    if (!LLL_insert(namemap->pending_names, pending, NULL)) {
+        OPENSSL_free(pending->p);
+        OPENSSL_free(pending);
+        return 0;
+    }
+
+    /*
+     * Now iterate through our list repeatedly, looking for
+     * duplicate names up to our own place in line
+     */
+    conflict.my_pending = pending;
+    for (;;) {
+        conflict.conflict_found = 0;
+        LLL_iterate(namemap->pending_names, check_name_conflict, &conflict);
+        if (conflict.conflict_found == 0)
+            break;
+    }
+
     tmp_number = namemap_add_name(namemap, number, name);
-    CRYPTO_THREAD_unlock(namemap->lock);
+    LLL_delete(namemap->pending_names, pending, NULL);
     return tmp_number;
 }
 
@@ -308,6 +395,8 @@ int ossl_namemap_add_names(OSSL_NAMEMAP *namemap, int number,
                            const char *names, const char separator)
 {
     char *tmp, *p, *q, *endp;
+    NM_PENDING *pending = NULL;
+    NM_CONFLICT conflict;
 
     /* Check that we have a namemap */
     if (!ossl_assert(namemap != NULL)) {
@@ -318,16 +407,11 @@ int ossl_namemap_add_names(OSSL_NAMEMAP *namemap, int number,
     if ((tmp = OPENSSL_strdup(names)) == NULL)
         return 0;
 
-    if (!CRYPTO_THREAD_write_lock(namemap->lock)) {
-        OPENSSL_free(tmp);
-        return 0;
-    }
     /*
      * Check that no name is an empty string, and that all names have at
      * most one numeric identity together.
      */
     for (p = tmp; *p != '\0'; p = q) {
-        int this_number;
         size_t l;
 
         if ((q = strchr(p, separator)) == NULL) {
@@ -343,6 +427,50 @@ int ossl_namemap_add_names(OSSL_NAMEMAP *namemap, int number,
             number = 0;
             goto end;
         }
+    }
+    endp = p;
+
+    pending = OPENSSL_zalloc(sizeof(NM_PENDING));
+    if (pending == NULL) {
+        number = 0;
+        goto end;
+    }
+
+    pending->place_in_line = tsan_counter(&namemap->pending_ord);
+    /*
+     * our strdup-ed string gets freed when we remove this from the list
+     */
+    pending->p = tmp;
+    pending->end = endp;
+
+    /*
+     * Insert into our pending names list
+     */
+    if (!LLL_insert(namemap->pending_names, pending, NULL)) {
+        OPENSSL_free(tmp);
+        OPENSSL_free(pending);
+        goto end;
+    }
+
+    /*
+     * Now iterate through our list repeatedly, looking for
+     * duplicate names up to our own place in line
+     */
+    conflict.my_pending = pending;
+    for (;;) {
+        conflict.conflict_found = 0;
+        LLL_iterate(namemap->pending_names, check_name_conflict, &conflict);
+        if (conflict.conflict_found == 0)
+            break;
+    }
+
+    /*
+     * make sure that we have one unique number for all the names in this list
+     */
+    for (p = tmp; p < endp; p = q) {
+        int this_number;
+
+        q = p + strlen(p) + 1;
 
         this_number = ossl_namemap_name2num(namemap, p);
 
@@ -356,29 +484,27 @@ int ossl_namemap_add_names(OSSL_NAMEMAP *namemap, int number,
             goto end;
         }
     }
-    endp = p;
 
     /* Now that we have checked, register all names */
     for (p = tmp; p < endp; p = q) {
         int this_number;
-
         q = p + strlen(p) + 1;
 
         this_number = namemap_add_name(namemap, number, p);
-        if (number == 0) {
+        if (number == 0)
             number = this_number;
-        } else if (this_number != number) {
-            ERR_raise_data(ERR_LIB_CRYPTO, ERR_R_INTERNAL_ERROR,
-                           "Got number %d when expecting %d",
-                           this_number, number);
+        if (number != 0 && this_number != number) {
+            ERR_raise_data(ERR_LIB_CRYPTO, CRYPTO_R_CONFLICTING_NAMES,
+                           "\"%s\" has an existing different identity %d (from \"%s\")",
+                           p, this_number, names);
             number = 0;
             goto end;
         }
     }
 
  end:
-    CRYPTO_THREAD_unlock(namemap->lock);
-    OPENSSL_free(tmp);
+    if (pending != NULL)
+        LLL_delete(namemap->pending_names, pending, NULL);
     return number;
 }
 
@@ -518,6 +644,26 @@ OSSL_NAMEMAP *ossl_namemap_stored(OSSL_LIB_CTX *libctx)
     return namemap;
 }
 
+static int pending_compare(void *a, void *b, void *arg, int restart)
+{
+    NM_PENDING *node = (NM_PENDING *)a;
+    NM_PENDING *key = (NM_PENDING *)b;
+    
+    if (node->place_in_line > key->place_in_line)
+        return 1;
+    if (node->place_in_line < key->place_in_line)
+        return -1;
+    return 0;
+}
+
+static void pending_free(void *data)
+{
+    NM_PENDING *d = (NM_PENDING *)data;
+    OPENSSL_free(d->p);
+    OPENSSL_free(d);
+    return;
+}
+
 OSSL_NAMEMAP *ossl_namemap_new(OSSL_LIB_CTX *libctx)
 {
     OSSL_NAMEMAP *namemap;
@@ -537,6 +683,9 @@ OSSL_NAMEMAP *ossl_namemap_new(OSSL_LIB_CTX *libctx)
     if ((namemap->numnames = sk_NAMES_new_null()) == NULL)
         goto err;
 
+    if ((namemap->pending_names = LLL_new(pending_compare, pending_free, 1)) == NULL)
+        goto err;
+
     return namemap;
 
  err:
@@ -552,7 +701,7 @@ void ossl_namemap_free(OSSL_NAMEMAP *namemap)
     sk_NAMES_pop_free(namemap->numnames, names_free);
 
     ossl_ht_free(namemap->namenum_ht);
-
+    LLL_free(namemap->pending_names);
     CRYPTO_THREAD_lock_free(namemap->lock);
     OPENSSL_free(namemap);
 }
