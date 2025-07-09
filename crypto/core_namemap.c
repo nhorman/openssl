@@ -101,6 +101,40 @@ int ossl_namemap_empty(OSSL_NAMEMAP *namemap)
 #endif
 }
 
+typedef struct nm_numname_st {
+    char *tmpinsert;
+    int number;
+    LLL *names_list;
+} NUMNAME;
+
+struct doall_names_info {
+    int number;
+    void (*fn)(const char *name, void *data);
+    void *data;
+};
+
+static int call_for_name(void *a, void *b, void *arg, int restart)
+{
+    char *name = (char *)a;
+    struct doall_names_info *info = (struct doall_names_info *)arg;
+
+    info->fn(name, info->data);
+    return -1;
+}
+
+static int find_numname_number(void *a, void *b, void *arg, int restart)
+{
+    NUMNAME *node = (NUMNAME *)a;
+    struct doall_names_info *info = (struct doall_names_info *)arg;
+
+    if (node->number == info->number) {
+        LLL_iterate(node->names_list, call_for_name, arg);
+        return 0;
+    }
+    return -1;
+
+}
+
 /*
  * Call the callback for all names in the namemap with the given number.
  * A return value 1 means that the callback was called for all names. A
@@ -110,12 +144,19 @@ int ossl_namemap_doall_names(const OSSL_NAMEMAP *namemap, int number,
                              void (*fn)(const char *name, void *data),
                              void *data)
 {
+#if 0
     int i;
     NAMES *names;
+#endif
+    struct doall_names_info info = { number, fn, data };
 
     if (namemap == NULL || number <= 0)
         return 0;
+    if (!LLL_iterate(namemap->numname_list, find_numname_number, &info))
+        return 0;
+    return 1;
 
+#if 0
     /*
      * We duplicate the NAMES stack under a read lock. Subsequently we call
      * the user function, so that we're not holding the read lock when in user
@@ -138,6 +179,7 @@ int ossl_namemap_doall_names(const OSSL_NAMEMAP *namemap, int number,
 
     sk_OPENSSL_STRING_free(names);
     return i > 0;
+#endif 
 }
 
 int ossl_namemap_name2num(const OSSL_NAMEMAP *namemap, const char *name)
@@ -213,13 +255,6 @@ const char *ossl_namemap_num2name(const OSSL_NAMEMAP *namemap, int number,
 
     return ret;
 }
-
-
-typedef struct nm_numname_st {
-    char *tmpinsert;
-    int number;
-    LLL *names_list;
-} NUMNAME;
 
 struct numname_cmp_st {
     int number_count;
