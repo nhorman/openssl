@@ -37,7 +37,7 @@ struct ossl_namemap_st {
 
     CRYPTO_RWLOCK *lock;
     STACK_OF(NAMES) *numnames;
-
+    LLL *numname_list;                 /* list of number to name mappings */
     LLL *pending_names;                /* names pending addition */
     TSAN_QUALIFIER int pending_ord;    /* ordinal for pending additions */
     TSAN_QUALIFIER int max_number;     /* Current max number */
@@ -214,12 +214,141 @@ const char *ossl_namemap_num2name(const OSSL_NAMEMAP *namemap, int number,
     return ret;
 }
 
+
+typedef struct nm_numname_st {
+    char *tmpinsert;
+    int number;
+    LLL *names_list;
+} NUMNAME;
+
+struct numname_cmp_st {
+    int number_count;
+    int initial_num_request;
+};
+
+static int names_list_compare(void *a, void *b, void *arg, int restart)
+{
+    char *node = (char *)a;
+    char *key = (char *)b;
+
+    return strcmp(node, key);
+}
+
+static void names_list_free(void *data)
+{
+    OPENSSL_free(data);
+}
+
+static int find_insert_name(void *a, void *b, void *arg, int restart)
+{
+    NUMNAME *node = (NUMNAME *)a;
+    NUMNAME *key = (NUMNAME *)arg; /* note this is an iterator, key is in arg */
+
+    if (node->number != key->number)
+        return -1;
+
+    /*
+     * We found a match, add the new name
+     */
+    LLL_insert(node->names_list, key->tmpinsert, NULL);
+    return 0;
+}
+
 /* This function is not thread safe, the namemap must be locked */
 static int numname_insert(OSSL_NAMEMAP *namemap, int number,
                           const char *name)
 {
     NAMES *names;
     char *tmpname;
+    NUMNAME *numname;
+    NUMNAME key;
+
+    if (number == 0) {
+        /*
+         * We're inserting a new name at a newly allocated number
+         */
+
+        /*
+         * Allocate a new numname
+         */
+        numname = OPENSSL_zalloc(sizeof(NUMNAME));
+        if (numname == NULL)
+            return 0;
+        /*
+         * And a new names list
+         */
+        numname->names_list = LLL_new(names_list_compare, names_list_free, 1);
+        if (numname->names_list == NULL) {
+            OPENSSL_free(numname);
+            return 0;
+        }
+
+        /*
+         * Dup our name to insert into the names list
+         */
+        tmpname = OPENSSL_strdup(name);
+        if (tmpname == NULL) {
+            LLL_free(numname->names_list);
+            OPENSSL_free(numname);
+            return 0;
+        }
+
+        /*
+         * Because we privately hold the names_list still, insert the new
+         * name now
+         */
+        if (!LLL_insert(numname->names_list, tmpname, NULL)) {
+            /*
+             * Something wen't wrong, free up memory
+             */
+            OPENSSL_free(tmpname);
+            LLL_free(numname->names_list);
+            OPENSSL_free(numname);
+            return 0;
+        }
+
+        /*
+         * Get a new number
+         */
+        numname->number = tsan_counter(&namemap->max_number) + 1;
+
+        /*
+         * and insert our new entry into the numname list
+         */
+        if (!LLL_insert(namemap->numname_list, numname, NULL)) {
+            /*
+             * insert went bad, back everything out
+             * Note we don't need to free tmpname here
+             * as the LLL_free handles that
+             */
+            LLL_free(numname->names_list);
+            OPENSSL_free(numname);
+        }
+    } else {
+        /*
+         * We're inserting to an already allocated number here, so 
+         * we need to iterate through the list, looking for the matching
+         * value, at which point we insert to its names list
+         */
+
+        /* create the key to search for */
+        key.number = number;
+        key.tmpinsert = OPENSSL_strdup(name);
+        if (key.tmpinsert == NULL)
+            return 0;
+
+        /*
+         * search for the key in the list, and add the new name, passed as arg
+         * to that entries name list
+         */
+        if (!LLL_iterate(namemap->numname_list, find_insert_name, &key)) {
+            /*
+             * We didn't find a matching number, thats bad, get out
+             */
+            OPENSSL_free(key.tmpinsert);
+            return 0;
+        }
+    }
 
     if (!CRYPTO_THREAD_write_lock(namemap->lock))
         return 0;
@@ -277,7 +406,7 @@ static int namemap_add_name(OSSL_NAMEMAP *namemap, int number,
         return 0;
 
     /* Using tsan_store alone here is safe since we're under lock */
-    tsan_store(&namemap->max_number, number);
+    //tsan_store(&namemap->max_number, number);
 
     HT_INIT_KEY(&key);
     HT_SET_KEY_STRING_CASE(&key, name, name);
@@ -644,6 +773,26 @@ OSSL_NAMEMAP *ossl_namemap_stored(OSSL_LIB_CTX *libctx)
     return namemap;
 }
 
+static int numname_compare(void *a, void *b, void *arg, int restart)
+{
+    NUMNAME *node = (NUMNAME *)a;
+    NUMNAME *new = (NUMNAME *)b;
+
+    if (node->number < new->number)
+        return -1;
+    else if (node->number > new->number)
+        return 1;
+    return 0;
+}
+
+static void numname_free(void *data)
+{
+    NUMNAME *d = (NUMNAME *)data;
+
+    LLL_free(d->names_list);
+    OPENSSL_free(d);
+}
+
 static int pending_compare(void *a, void *b, void *arg, int restart)
 {
     NM_PENDING *node = (NM_PENDING *)a;
@@ -686,6 +835,9 @@ OSSL_NAMEMAP *ossl_namemap_new(OSSL_LIB_CTX *libctx)
     if ((namemap->pending_names = LLL_new(pending_compare, pending_free, 1)) == NULL)
         goto err;
 
+    if ((namemap->numname_list = LLL_new(numname_compare, numname_free, 1)) == NULL)
+        goto err;
+
     return namemap;
 
  err:
@@ -702,6 +854,7 @@ void ossl_namemap_free(OSSL_NAMEMAP *namemap)
 
     ossl_ht_free(namemap->namenum_ht);
     LLL_free(namemap->pending_names);
+    LLL_free(namemap->numname_list);
     CRYPTO_THREAD_lock_free(namemap->lock);
     OPENSSL_free(namemap);
 }
