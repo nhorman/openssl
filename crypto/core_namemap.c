@@ -35,7 +35,6 @@ struct ossl_namemap_st {
 
     HT *namenum_ht;        /* Name->number mapping */
 
-    CRYPTO_RWLOCK *lock;
     STACK_OF(NAMES) *numnames;
     LLL *numname_list;                 /* list of number to name mappings */
     LLL *pending_names;                /* names pending addition */
@@ -90,10 +89,8 @@ int ossl_namemap_empty(OSSL_NAMEMAP *namemap)
     if (namemap == NULL)
         return 1;
 
-    if (!CRYPTO_THREAD_read_lock(namemap->lock))
         return -1;
     rv = namemap->max_number == 0;
-    CRYPTO_THREAD_unlock(namemap->lock);
     return rv;
 #else
     /* Have TSAN support */
@@ -144,10 +141,6 @@ int ossl_namemap_doall_names(const OSSL_NAMEMAP *namemap, int number,
                              void (*fn)(const char *name, void *data),
                              void *data)
 {
-#if 0
-    int i;
-    NAMES *names;
-#endif
     struct doall_names_info info = { number, fn, data };
 
     if (namemap == NULL || number <= 0)
@@ -155,31 +148,6 @@ int ossl_namemap_doall_names(const OSSL_NAMEMAP *namemap, int number,
     if (!LLL_iterate(namemap->numname_list, find_numname_number, &info))
         return 0;
     return 1;
-
-#if 0
-    /*
-     * We duplicate the NAMES stack under a read lock. Subsequently we call
-     * the user function, so that we're not holding the read lock when in user
-     * code. This could lead to deadlocks.
-     */
-    if (!CRYPTO_THREAD_read_lock(namemap->lock))
-        return 0;
-
-    names = sk_NAMES_value(namemap->numnames, number - 1);
-    if (names != NULL)
-        names = sk_OPENSSL_STRING_dup(names);
-
-    CRYPTO_THREAD_unlock(namemap->lock);
-
-    if (names == NULL)
-        return 0;
-
-    for (i = 0; i < sk_OPENSSL_STRING_num(names); i++)
-        fn(sk_OPENSSL_STRING_value(names, i), data);
-
-    sk_OPENSSL_STRING_free(names);
-    return i > 0;
-#endif 
 }
 
 int ossl_namemap_name2num(const OSSL_NAMEMAP *namemap, const char *name)
@@ -273,10 +241,6 @@ static int find_num_in_numnames(void *a, void *b, void *arg, int restart)
 const char *ossl_namemap_num2name(const OSSL_NAMEMAP *namemap, int number,
                                   int idx)
 {
-#if 0
-    NAMES *names;
-    const char *ret = NULL;
-#endif
     struct num2name_info info = { number, idx, 0, NULL };
 
     if (namemap == NULL || number <= 0)
@@ -285,18 +249,6 @@ const char *ossl_namemap_num2name(const OSSL_NAMEMAP *namemap, int number,
     if (!LLL_iterate(namemap->numname_list, find_num_in_numnames, &info))
         return NULL;
     return info.name;
-
-#if 0
-    if (!CRYPTO_THREAD_read_lock(namemap->lock))
-        return NULL;
-
-    names = sk_NAMES_value(namemap->numnames, number - 1);
-    if (names != NULL)
-        ret = sk_OPENSSL_STRING_value(names, idx);
-
-    CRYPTO_THREAD_unlock(namemap->lock);
-    return ret;
-#endif
 }
 
 struct numname_cmp_st {
@@ -332,11 +284,9 @@ static int find_insert_name(void *a, void *b, void *arg, int restart)
     return 0;
 }
 
-/* This function is not thread safe, the namemap must be locked */
 static int numname_insert(OSSL_NAMEMAP *namemap, int number,
                           const char *name)
 {
-    NAMES *names;
     char *tmpname;
     NUMNAME *numname;
     NUMNAME key;
@@ -401,7 +351,9 @@ static int numname_insert(OSSL_NAMEMAP *namemap, int number,
              */
             LLL_free(numname->names_list);
             OPENSSL_free(numname);
+            return 0;
         }
+        number = numname->number;
     } else {
         /*
          * We're inserting to an already allocated number here, so 
@@ -426,48 +378,11 @@ static int numname_insert(OSSL_NAMEMAP *namemap, int number,
             OPENSSL_free(key.tmpinsert);
             return 0;
         }
+        number = key.number;
     }
-
-    if (!CRYPTO_THREAD_write_lock(namemap->lock))
-        return 0;
-    if (number > 0) {
-        names = sk_NAMES_value(namemap->numnames, number - 1);
-        if (!ossl_assert(names != NULL)) {
-            /* cannot happen */
-            goto out;
-        }
-    } else {
-        /* a completely new entry */
-        names = sk_OPENSSL_STRING_new_null();
-        if (names == NULL)
-            goto out;
-    }
-
-    if ((tmpname = OPENSSL_strdup(name)) == NULL)
-        goto err;
-
-    if (!sk_OPENSSL_STRING_push(names, tmpname))
-        goto err;
-    tmpname = NULL;
-
-    if (number <= 0) {
-        if (!sk_NAMES_push(namemap->numnames, names))
-            goto err;
-        number = sk_NAMES_num(namemap->numnames);
-    }
-    CRYPTO_THREAD_unlock(namemap->lock);
     return number;
-
- err:
-    if (number <= 0)
-        sk_OPENSSL_STRING_pop_free(names, name_string_free);
-    OPENSSL_free(tmpname);
- out: 
-    CRYPTO_THREAD_unlock(namemap->lock);
-    return 0;
 }
 
-/* This function is not thread safe, the namemap must be locked */
 static int namemap_add_name(OSSL_NAMEMAP *namemap, int number,
                             const char *name)
 {
@@ -483,14 +398,11 @@ static int namemap_add_name(OSSL_NAMEMAP *namemap, int number,
     if ((number = numname_insert(namemap, number, name)) == 0)
         return 0;
 
-    /* Using tsan_store alone here is safe since we're under lock */
-    //tsan_store(&namemap->max_number, number);
-
     HT_INIT_KEY(&key);
     HT_SET_KEY_STRING_CASE(&key, name, name);
     val.value = (void *)(intptr_t)number;
     ret = ossl_ht_insert(namemap->namenum_ht, TO_HT_KEY(&key), &val, NULL);
-    if (!ossl_assert(ret != 0)) /* cannot happen as we are under write lock */
+    if (!ossl_assert(ret != 0))
         return 0;
     if (ret < 1) {
         /* unable to insert due to too many collisions */
@@ -901,9 +813,6 @@ OSSL_NAMEMAP *ossl_namemap_new(OSSL_LIB_CTX *libctx)
     if ((namemap = OPENSSL_zalloc(sizeof(*namemap))) == NULL)
         goto err;
 
-    if ((namemap->lock = CRYPTO_THREAD_lock_new()) == NULL)
-        goto err;
-
     if ((namemap->namenum_ht = ossl_ht_new(&htconf)) == NULL)
         goto err;
 
@@ -933,6 +842,5 @@ void ossl_namemap_free(OSSL_NAMEMAP *namemap)
     ossl_ht_free(namemap->namenum_ht);
     LLL_free(namemap->pending_names);
     LLL_free(namemap->numname_list);
-    CRYPTO_THREAD_lock_free(namemap->lock);
     OPENSSL_free(namemap);
 }
