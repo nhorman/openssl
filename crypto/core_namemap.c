@@ -589,25 +589,19 @@ int ossl_namemap_add_names(OSSL_NAMEMAP *namemap, int number,
     for (p = tmp; p < endp; p = q) {
         int this_number;
 
-        q = p + strlen(p) + 1;
-
         this_number = ossl_namemap_name2num(namemap, p);
 
-        if (number == 0) {
+        if (number == 0 && this_number != 0) {
             number = this_number;
-        } else if (this_number != 0 && this_number != number) {
-            ERR_raise_data(ERR_LIB_CRYPTO, CRYPTO_R_CONFLICTING_NAMES,
-                           "\"%s\" has an existing different identity %d (from \"%s\")",
-                           p, this_number, names);
-            number = 0;
-            goto end;
+            break;
         }
+
+        q = p + strlen(p) + 1;
     }
 
     /* Now that we have checked, register all names */
     for (p = tmp; p < endp; p = q) {
         int this_number;
-        q = p + strlen(p) + 1;
 
         this_number = namemap_add_name(namemap, number, p);
         if (number == 0)
@@ -619,6 +613,7 @@ int ossl_namemap_add_names(OSSL_NAMEMAP *namemap, int number,
             number = 0;
             goto end;
         }
+        q = p + strlen(p) + 1;
     }
 
  end:
