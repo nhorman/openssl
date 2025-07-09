@@ -25,32 +25,15 @@ HT_END_KEY_DEFN(NAMENUM_KEY)
  * ==================
  */
 
-typedef STACK_OF(OPENSSL_STRING) NAMES;
-
-DEFINE_STACK_OF(NAMES)
-
 struct ossl_namemap_st {
     /* Flags */
     unsigned int stored:1; /* If 1, it's stored in a library context */
 
     HT *namenum_ht;        /* Name->number mapping */
 
-    STACK_OF(NAMES) *numnames;
     LLL *numname_list;                 /* list of number to name mappings */
-    LLL *pending_names;                /* names pending addition */
-    TSAN_QUALIFIER int pending_ord;    /* ordinal for pending additions */
     TSAN_QUALIFIER int max_number;     /* Current max number */
 };
-
-static void name_string_free(char *name)
-{
-    OPENSSL_free(name);
-}
-
-static void names_free(NAMES *n)
-{
-    sk_OPENSSL_STRING_pop_free(n, name_string_free);
-}
 
 /* OSSL_LIB_CTX_METHOD functions for a namemap stored in a library context */
 
@@ -412,63 +395,10 @@ static int namemap_add_name(OSSL_NAMEMAP *namemap, int number,
     return number;
 }
 
-typedef struct nm_pending_st {
-    int place_in_line;
-    char *p;
-    char *end;
-} NM_PENDING;
-
-typedef struct nm_conflict_st {
-    NM_PENDING *my_pending;
-    int conflict_found;
-} NM_CONFLICT;
-
-static int check_name_conflict(void *a, void *b, void *arg, int restart)
-{
-    NM_PENDING *node = (NM_PENDING *)a;
-    NM_CONFLICT *cflt = (NM_CONFLICT *)arg;
-    char *myp, *myq;
-    char *nodep, *nodeq;
-    /*
-     * If we have reached our entry in the list, there are no conflicts
-     * ahead of us in line, we're done
-     */
-    if (node->place_in_line == cflt->my_pending->place_in_line)
-        return 0;
-
-    /*
-     * If we get here, we're still checking prior entries in the 
-     * list and we have to search for a name match of any string in our
-     * my pending list to any string in this nodes list
-     */
-    for (myp = cflt->my_pending->p; myp < cflt->my_pending->end; myp = myq) {
-        myq = myp + strlen(myp) + 1;
-
-        for (nodep = node->p; nodep < node->end; nodep = nodeq) {
-            nodeq = nodep + strlen(nodep) + 1;
-
-            /*
-             * Compare nodep and myp, if they compare equal, then we have a conflict
-             */
-            if (!strcmp(nodep, myp)) {
-                cflt->conflict_found = 1;
-                return 0;
-            }
-        }
-    }
-
-    /*
-     * Continune the search until we get to our place in line
-     */
-    return -1;
-}
-
 int ossl_namemap_add_name(OSSL_NAMEMAP *namemap, int number,
                           const char *name)
 {
     int tmp_number;
-    NM_PENDING *pending = NULL;
-    NM_CONFLICT conflict;
 #ifndef FIPS_MODULE
     if (namemap == NULL)
         namemap = ossl_namemap_stored(NULL);
@@ -477,36 +407,7 @@ int ossl_namemap_add_name(OSSL_NAMEMAP *namemap, int number,
     if (name == NULL || *name == 0 || namemap == NULL)
         return 0;
 
-    pending = OPENSSL_zalloc(sizeof(NM_PENDING));
-    if (pending == NULL)
-        return 0;
-    pending->place_in_line = tsan_counter(&namemap->pending_ord);
-    /*
-     * our strdup-ed string gets freed when we remove this from the list
-     */
-    pending->p = strdup(name);
-    pending->end = pending->p + strlen(pending->p) + 1; 
-
-    if (!LLL_insert(namemap->pending_names, pending, NULL)) {
-        OPENSSL_free(pending->p);
-        OPENSSL_free(pending);
-        return 0;
-    }
-
-    /*
-     * Now iterate through our list repeatedly, looking for
-     * duplicate names up to our own place in line
-     */
-    conflict.my_pending = pending;
-    for (;;) {
-        conflict.conflict_found = 0;
-        LLL_iterate(namemap->pending_names, check_name_conflict, &conflict);
-        if (conflict.conflict_found == 0)
-            break;
-    }
-
     tmp_number = namemap_add_name(namemap, number, name);
-    LLL_delete(namemap->pending_names, pending, NULL);
     return tmp_number;
 }
 
@@ -514,8 +415,6 @@ int ossl_namemap_add_names(OSSL_NAMEMAP *namemap, int number,
                            const char *names, const char separator)
 {
     char *tmp, *p, *q, *endp;
-    NM_PENDING *pending = NULL;
-    NM_CONFLICT conflict;
 
     /* Check that we have a namemap */
     if (!ossl_assert(namemap != NULL)) {
@@ -548,40 +447,6 @@ int ossl_namemap_add_names(OSSL_NAMEMAP *namemap, int number,
         }
     }
     endp = p;
-
-    pending = OPENSSL_zalloc(sizeof(NM_PENDING));
-    if (pending == NULL) {
-        number = 0;
-        goto end;
-    }
-
-    pending->place_in_line = tsan_counter(&namemap->pending_ord);
-    /*
-     * our strdup-ed string gets freed when we remove this from the list
-     */
-    pending->p = tmp;
-    pending->end = endp;
-
-    /*
-     * Insert into our pending names list
-     */
-    if (!LLL_insert(namemap->pending_names, pending, NULL)) {
-        OPENSSL_free(tmp);
-        OPENSSL_free(pending);
-        goto end;
-    }
-
-    /*
-     * Now iterate through our list repeatedly, looking for
-     * duplicate names up to our own place in line
-     */
-    conflict.my_pending = pending;
-    for (;;) {
-        conflict.conflict_found = 0;
-        LLL_iterate(namemap->pending_names, check_name_conflict, &conflict);
-        if (conflict.conflict_found == 0)
-            break;
-    }
 
     /*
      * make sure that we have one unique number for all the names in this list
@@ -617,8 +482,6 @@ int ossl_namemap_add_names(OSSL_NAMEMAP *namemap, int number,
     }
 
  end:
-    if (pending != NULL)
-        LLL_delete(namemap->pending_names, pending, NULL);
     return number;
 }
 
@@ -778,26 +641,6 @@ static void numname_free(void *data)
     OPENSSL_free(d);
 }
 
-static int pending_compare(void *a, void *b, void *arg, int restart)
-{
-    NM_PENDING *node = (NM_PENDING *)a;
-    NM_PENDING *key = (NM_PENDING *)b;
-    
-    if (node->place_in_line > key->place_in_line)
-        return 1;
-    if (node->place_in_line < key->place_in_line)
-        return -1;
-    return 0;
-}
-
-static void pending_free(void *data)
-{
-    NM_PENDING *d = (NM_PENDING *)data;
-    OPENSSL_free(d->p);
-    OPENSSL_free(d);
-    return;
-}
-
 OSSL_NAMEMAP *ossl_namemap_new(OSSL_LIB_CTX *libctx)
 {
     OSSL_NAMEMAP *namemap;
@@ -809,12 +652,6 @@ OSSL_NAMEMAP *ossl_namemap_new(OSSL_LIB_CTX *libctx)
         goto err;
 
     if ((namemap->namenum_ht = ossl_ht_new(&htconf)) == NULL)
-        goto err;
-
-    if ((namemap->numnames = sk_NAMES_new_null()) == NULL)
-        goto err;
-
-    if ((namemap->pending_names = LLL_new(pending_compare, pending_free, 1)) == NULL)
         goto err;
 
     if ((namemap->numname_list = LLL_new(numname_compare, numname_free, 1)) == NULL)
@@ -832,10 +669,7 @@ void ossl_namemap_free(OSSL_NAMEMAP *namemap)
     if (namemap == NULL || namemap->stored)
         return;
 
-    sk_NAMES_pop_free(namemap->numnames, names_free);
-
     ossl_ht_free(namemap->namenum_ht);
-    LLL_free(namemap->pending_names);
     LLL_free(namemap->numname_list);
     OPENSSL_free(namemap);
 }
