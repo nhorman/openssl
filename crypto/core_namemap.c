@@ -235,15 +235,58 @@ int ossl_namemap_name2num_n(const OSSL_NAMEMAP *namemap,
     return number;
 }
 
+struct num2name_info {
+    int number;
+    int idx;
+    int idx_counter;
+    const char *name;
+};
+
+static int find_idx_in_names(void *a, void *b, void *arg, int restart)
+{
+    const char *name = (char *)a;
+    struct num2name_info *info = (struct num2name_info *)arg;
+
+    if (restart == 1)
+        info->idx_counter = 0;
+
+    if (info->idx == info->idx_counter) {
+        info->name = name;
+        return 0;
+    }
+    info->idx_counter++;
+    return -1;
+}
+
+static int find_num_in_numnames(void *a, void *b, void *arg, int restart)
+{
+    NUMNAME *node = (NUMNAME *)a;
+    struct num2name_info *info = (struct num2name_info *)arg;
+
+    if (node->number == info->number) {
+        LLL_iterate(node->names_list, find_idx_in_names, arg);
+        return 0;
+    }
+    return -1;
+}
+
 const char *ossl_namemap_num2name(const OSSL_NAMEMAP *namemap, int number,
                                   int idx)
 {
+#if 0
     NAMES *names;
     const char *ret = NULL;
+#endif
+    struct num2name_info info = { number, idx, 0, NULL };
 
     if (namemap == NULL || number <= 0)
         return NULL;
 
+    if (!LLL_iterate(namemap->numname_list, find_num_in_numnames, &info))
+        return NULL;
+    return info.name;
+
+#if 0
     if (!CRYPTO_THREAD_read_lock(namemap->lock))
         return NULL;
 
@@ -252,8 +295,8 @@ const char *ossl_namemap_num2name(const OSSL_NAMEMAP *namemap, int number,
         ret = sk_OPENSSL_STRING_value(names, idx);
 
     CRYPTO_THREAD_unlock(namemap->lock);
-
     return ret;
+#endif
 }
 
 struct numname_cmp_st {
