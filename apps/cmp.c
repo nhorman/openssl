@@ -3651,15 +3651,6 @@ int cmp_main(int argc, char **argv)
     if (opt_batch)
         set_base_ui_method(UI_null());
 
-    if (opt_engine != NULL) {
-        engine = setup_engine_methods(opt_engine,
-                                      0 /* not: ENGINE_METHOD_ALL */, 0);
-        if (engine == NULL) {
-            CMP_err1("cannot load engine %s", opt_engine);
-            goto err;
-        }
-    }
-
     OSSL_CMP_CTX_set_log_verbosity(cmp_ctx, opt_verbosity);
     if (!OSSL_CMP_CTX_set_log_cb(cmp_ctx, print_to_bio_out)) {
         CMP_err1("cannot set up error reporting and logging for %s", prog);
