@@ -100,11 +100,6 @@ const OPTIONS req_options[] = {
     OPT_SECTION("General"),
     {"help", OPT_HELP, '-', "Display this summary"},
     {"cipher", OPT_CIPHER, 's', "Specify the cipher for private key encryption"},
-#ifndef OPENSSL_NO_ENGINE
-    {"engine", OPT_ENGINE, 's', "Use engine, possibly a hardware device"},
-    {"keygen_engine", OPT_KEYGEN_ENGINE, 's',
-     "Specify engine to be used for key generation operations"},
-#endif
     {"in", OPT_IN, '<', "X.509 request input file (default stdin)"},
     {"inform", OPT_INFORM, 'F',
      "CSR input format to use (PEM or DER; by default try PEM first)"},
@@ -302,13 +297,6 @@ int req_main(int argc, char **argv)
             e = setup_engine(opt_arg(), 0);
             break;
         case OPT_KEYGEN_ENGINE:
-#ifndef OPENSSL_NO_ENGINE
-            gen_eng = setup_engine(opt_arg(), 0);
-            if (gen_eng == NULL) {
-                BIO_printf(bio_err, "Can't find keygen engine %s\n", *argv);
-                goto opthelp;
-            }
-#endif
             break;
         case OPT_KEY:
             keyfile = opt_arg();
@@ -1056,9 +1044,6 @@ int req_main(int argc, char **argv)
     sk_OPENSSL_STRING_free(vfyopts);
     lh_OPENSSL_STRING_doall(addexts, exts_cleanup);
     lh_OPENSSL_STRING_free(addexts);
-#ifndef OPENSSL_NO_ENGINE
-    release_engine(gen_eng);
-#endif
     OPENSSL_free(keyalgstr);
     X509_REQ_free(req);
     X509_NAME_free(fsubj);

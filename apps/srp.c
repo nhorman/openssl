@@ -204,9 +204,6 @@ const OPTIONS srp_options[] = {
     {"verbose", OPT_VERBOSE, '-', "Talk a lot while doing things"},
     {"config", OPT_CONFIG, '<', "A config file"},
     {"name", OPT_NAME, 's', "The particular srp definition to use"},
-#ifndef OPENSSL_NO_ENGINE
-    {"engine", OPT_ENGINE, 's', "Use engine, possibly a hardware device"},
-#endif
 
     OPT_SECTION("Action"),
     {"add", OPT_ADD, '-', "Add a user and SRP verifier"},

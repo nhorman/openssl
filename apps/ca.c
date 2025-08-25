@@ -182,9 +182,6 @@ const OPTIONS ca_options[] = {
     {"ss_cert", OPT_SS_CERT, '<', "File contains a self signed cert to sign"},
     {"spkac", OPT_SPKAC, '<',
      "File contains DN and signed public key and challenge"},
-#ifndef OPENSSL_NO_ENGINE
-    {"engine", OPT_ENGINE, 's', "Use engine, possibly a hardware device"},
-#endif
 
     OPT_SECTION("Configuration"),
     {"config", OPT_CONFIG, 's', "A config file"},

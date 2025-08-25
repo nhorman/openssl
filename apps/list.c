@@ -1446,18 +1446,7 @@ static void list_provider_info(void)
 #ifndef OPENSSL_NO_DEPRECATED_3_0
 static void list_engines(void)
 {
-# ifndef OPENSSL_NO_ENGINE
-    ENGINE *e;
-
-    BIO_puts(bio_out, "Engines:\n");
-    e = ENGINE_get_first();
-    while (e) {
-        BIO_printf(bio_out, "%s\n", ENGINE_get_id(e));
-        e = ENGINE_get_next(e);
-    }
-# else
     BIO_puts(bio_out, "Engine support is disabled.\n");
-# endif
 }
 #endif
 
@@ -1520,9 +1509,6 @@ static void list_disabled(void)
 #endif
 #ifdef OPENSSL_NO_EC2M
     BIO_puts(bio_out, "EC2M\n");
-#endif
-#if defined(OPENSSL_NO_ENGINE) && !defined(OPENSSL_NO_DEPRECATED_3_0)
-    BIO_puts(bio_out, "ENGINE\n");
 #endif
 #ifdef OPENSSL_NO_GOST
     BIO_puts(bio_out, "GOST\n");

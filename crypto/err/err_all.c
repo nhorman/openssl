@@ -82,9 +82,6 @@ int ossl_err_load_crypto_strings(void)
 # ifndef OPENSSL_NO_TS
         || ossl_err_load_TS_strings() == 0
 # endif
-# ifndef OPENSSL_NO_ENGINE
-        || ossl_err_load_ENGINE_strings() == 0
-# endif
 # ifndef OPENSSL_NO_HTTP
         || ossl_err_load_HTTP_strings() == 0
 # endif

@@ -91,9 +91,6 @@ const OPTIONS ts_options[] = {
     {"help", OPT_HELP, '-', "Display this summary"},
     {"config", OPT_CONFIG, '<', "Configuration file"},
     {"section", OPT_SECTION, 's', "Section to use within config file"},
-#ifndef OPENSSL_NO_ENGINE
-    {"engine", OPT_ENGINE, 's', "Use engine, possibly a hardware device"},
-#endif
     {"inkey", OPT_INKEY, 's', "File with private key for reply"},
     {"signer", OPT_SIGNER, 's', "Signer certificate file"},
     {"chain", OPT_CHAIN, '<', "File with signer CA chain"},
@@ -143,11 +140,7 @@ static char* opt_helplist[] = {
     "    [-signer tsa_cert.pem] [-inkey private_key.pem]",
     "    [-chain certs_file.pem] [-tspolicy oid]",
     "    [-in file] [-token_in] [-out file] [-token_out]",
-#ifndef OPENSSL_NO_ENGINE
-    "    [-text] [-engine id]",
-#else
     "    [-text]",
-#endif
     "",
     " openssl ts -verify -CApath dir -CAfile root-cert.pem -CAstore uri",
     "   -untrusted extra-certs.pem [-data file] [-digest hexstring]",
@@ -713,10 +706,6 @@ static TS_RESP *create_response(CONF *conf, const char *section, const char *eng
         goto end;
     if (!TS_CONF_set_serial(conf, section, serial_cb, resp_ctx))
         goto end;
-#ifndef OPENSSL_NO_ENGINE
-    if (!TS_CONF_set_crypto_device(conf, section, engine))
-        goto end;
-#endif
     if (!TS_CONF_set_signer_cert(conf, section, signer, resp_ctx))
         goto end;
     if (!TS_CONF_set_certs(conf, section, chain, resp_ctx))

@@ -34,9 +34,6 @@ const OPTIONS ecparam_options[] = {
     {"help", OPT_HELP, '-', "Display this summary"},
     {"list_curves", OPT_LIST_CURVES, '-',
      "Prints a list of all curve 'short names'"},
-#ifndef OPENSSL_NO_ENGINE
-    {"engine", OPT_ENGINE, 's', "Use engine, possibly a hardware device"},
-#endif
 
     {"genkey", OPT_GENKEY, '-', "Generate ec key"},
     {"in", OPT_IN, '<', "Input file  - default stdin"},

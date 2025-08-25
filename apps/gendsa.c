@@ -33,9 +33,6 @@ const OPTIONS gendsa_options[] = {
 
     OPT_SECTION("General"),
     {"help", OPT_HELP, '-', "Display this summary"},
-#ifndef OPENSSL_NO_ENGINE
-    {"engine", OPT_ENGINE, 's', "Use engine, possibly a hardware device"},
-#endif
 
     OPT_SECTION("Output"),
     {"out", OPT_OUT, '>', "Output the key to the specified file"},

@@ -61,9 +61,6 @@ const OPTIONS smime_options[] = {
     {"inkey", OPT_INKEY, 's',
      "Input private key (if not signer or recipient)"},
     {"keyform", OPT_KEYFORM, 'f', "Input private key format (ENGINE, other values ignored)"},
-#ifndef OPENSSL_NO_ENGINE
-    {"engine", OPT_ENGINE, 's', "Use engine, possibly a hardware device"},
-#endif
     {"stream", OPT_STREAM, '-', "Enable CMS streaming" },
     {"indef", OPT_INDEF, '-', "Same as -stream" },
     {"noindef", OPT_NOINDEF, '-', "Disable CMS streaming"},

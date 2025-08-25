@@ -33,9 +33,6 @@ const OPTIONS spkac_options[] = {
     {"help", OPT_HELP, '-', "Display this summary"},
     {"spksect", OPT_SPKSECT, 's',
      "Specify the name of an SPKAC-dedicated section of configuration"},
-#ifndef OPENSSL_NO_ENGINE
-    {"engine", OPT_ENGINE, 's', "Use engine, possibly a hardware device"},
-#endif
 
     OPT_SECTION("Input"),
     {"in", OPT_IN, '<', "Input file"},

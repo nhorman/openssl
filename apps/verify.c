@@ -40,9 +40,6 @@ const OPTIONS verify_options[] = {
 
     OPT_SECTION("General"),
     {"help", OPT_HELP, '-', "Display this summary"},
-#ifndef OPENSSL_NO_ENGINE
-    {"engine", OPT_ENGINE, 's', "Use engine, possibly a hardware device"},
-#endif
     {"verbose", OPT_VERBOSE, '-',
         "Print extra information about the operations being performed."},
     {"nameopt", OPT_NAMEOPT, 's', "Certificate subject/issuer name printing options"},

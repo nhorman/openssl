@@ -975,13 +975,6 @@ struct ssl_ctx_st {
     /* The default read buffer length to use (0 means not set) */
     size_t default_read_buf_len;
 
-# ifndef OPENSSL_NO_ENGINE
-    /*
-     * Engine to pass requests for client certs to
-     */
-    ENGINE *client_cert_engine;
-# endif
-
     /* ClientHello callback.  Mostly for extensions, but not entirely. */
     SSL_client_hello_cb_fn client_hello_cb;
     void *client_hello_cb_arg;

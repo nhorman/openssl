@@ -117,10 +117,6 @@ static int mac_digest_sign_init(void *vpmacctx, const char *mdname, void *vkey,
 
     if (pmacctx->key->cipher.cipher != NULL)
         ciphername = (char *)EVP_CIPHER_get0_name(pmacctx->key->cipher.cipher);
-#if !defined(OPENSSL_NO_ENGINE) && !defined(FIPS_MODULE)
-    if (pmacctx->key->cipher.engine != NULL)
-        engine = (char *)ENGINE_get_id(pmacctx->key->cipher.engine);
-#endif
 
     if (!ossl_prov_set_macctx(pmacctx->macctx,
                               (char *)ciphername,

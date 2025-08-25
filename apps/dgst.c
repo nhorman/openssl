@@ -55,11 +55,6 @@ const OPTIONS dgst_options[] = {
     OPT_SECTION("General"),
     {"help", OPT_HELP, '-', "Display this summary"},
     {"list", OPT_LIST, '-', "List digests"},
-#ifndef OPENSSL_NO_ENGINE
-    {"engine", OPT_ENGINE, 's', "Use engine e, possibly a hardware device"},
-    {"engine_impl", OPT_ENGINE_IMPL, '-',
-     "Also use engine given by -engine for digest operations"},
-#endif
     {"passin", OPT_PASSIN, 's', "Input file pass phrase source"},
 
     OPT_SECTION("Output"),

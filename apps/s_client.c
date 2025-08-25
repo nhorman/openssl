@@ -530,11 +530,6 @@ const OPTIONS s_client_options[] = {
 
     OPT_SECTION("General"),
     {"help", OPT_HELP, '-', "Display this summary"},
-#ifndef OPENSSL_NO_ENGINE
-    {"engine", OPT_ENGINE, 's', "Use engine, possibly a hardware device"},
-    {"ssl_client_engine", OPT_SSL_CLIENT_ENGINE, 's',
-     "Specify engine to be used for client certificate operations"},
-#endif
     {"ssl_config", OPT_SSL_CONFIG, 's', "Use specified section for SSL_CTX configuration"},
 #ifndef OPENSSL_NO_CT
     {"ct", OPT_CT, '-', "Request and parse SCTs (also enables OCSP stapling)"},
@@ -913,9 +908,6 @@ int s_client_main(int argc, char **argv)
     int enable_timeouts = 0;
     long socket_mtu = 0;
 #endif
-#ifndef OPENSSL_NO_ENGINE
-    ENGINE *ssl_client_engine = NULL;
-#endif
     ENGINE *e = NULL;
 #if defined(OPENSSL_SYS_WINDOWS) || defined(OPENSSL_SYS_MSDOS)
     struct timeval tv;
@@ -1179,13 +1171,6 @@ int s_client_main(int argc, char **argv)
             e = setup_engine(opt_arg(), 1);
             break;
         case OPT_SSL_CLIENT_ENGINE:
-#ifndef OPENSSL_NO_ENGINE
-            ssl_client_engine = setup_engine(opt_arg(), 0);
-            if (ssl_client_engine == NULL) {
-                BIO_printf(bio_err, "Error getting client auth engine\n");
-                goto opthelp;
-            }
-#endif
             break;
         case OPT_R_CASES:
             if (!opt_rand(o))
@@ -1929,17 +1914,6 @@ int s_client_main(int argc, char **argv)
         }
         SSL_CTX_set0_CA_list(ctx, nm);
     }
-#ifndef OPENSSL_NO_ENGINE
-    if (ssl_client_engine) {
-        if (!SSL_CTX_set_client_cert_engine(ctx, ssl_client_engine)) {
-            BIO_puts(bio_err, "Error setting client auth engine\n");
-            release_engine(ssl_client_engine);
-            goto end;
-        }
-        release_engine(ssl_client_engine);
-    }
-#endif
-
 #ifndef OPENSSL_NO_PSK
     if (psk_key != NULL) {
         if (c_debug)

@@ -97,9 +97,6 @@ const OPTIONS pkcs12_options[] = {
 # endif
     },
 #endif
-#ifndef OPENSSL_NO_ENGINE
-    {"engine", OPT_ENGINE, 's', "Use engine, possibly a hardware device"},
-#endif
     OPT_PROV_OPTIONS,
     OPT_R_OPTIONS,
 

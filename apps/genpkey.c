@@ -30,9 +30,6 @@ typedef enum OPTION_choice {
 const OPTIONS genpkey_options[] = {
     OPT_SECTION("General"),
     {"help", OPT_HELP, '-', "Display this summary"},
-#ifndef OPENSSL_NO_ENGINE
-    {"engine", OPT_ENGINE, 's', "Use engine, possibly a hardware device"},
-#endif
     {"paramfile", OPT_PARAMFILE, '<', "Parameters file"},
     {"algorithm", OPT_ALGORITHM, 's', "The public key algorithm"},
     {"verbose", OPT_VERBOSE, '-', "Output status while generating keys"},

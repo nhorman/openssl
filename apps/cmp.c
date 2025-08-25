@@ -160,7 +160,6 @@ static int opt_crlform = FORMAT_ASN1;
 static char *opt_keyform_s = NULL;
 static int opt_keyform = FORMAT_UNDEF;
 static char *opt_otherpass = NULL;
-static char *opt_engine = NULL;
 
 #if !defined(OPENSSL_NO_SOCK) && !defined(OPENSSL_NO_HTTP)
 /* TLS connection */
@@ -264,9 +263,6 @@ typedef enum OPTION_choice {
 
     OPT_CERTFORM, OPT_CRLFORM, OPT_KEYFORM,
     OPT_OTHERPASS,
-#ifndef OPENSSL_NO_ENGINE
-    OPT_ENGINE,
-#endif
     OPT_PROV_ENUM,
     OPT_R_ENUM,
 
@@ -500,12 +496,6 @@ const OPTIONS cmp_options[] = {
      "Format of the key input (ENGINE, other values ignored)"},
     {"otherpass", OPT_OTHERPASS, 's',
      "Pass phrase source potentially needed for loading certificates of others"},
-#ifndef OPENSSL_NO_ENGINE
-    {"engine", OPT_ENGINE, 's',
-     "Use crypto engine with given identifier, possibly a hardware device."},
-    {OPT_MORE_STR, 0, 0,
-     "Engines may also be defined in OpenSSL config file engine section."},
-#endif
     OPT_PROV_OPTIONS,
     OPT_R_OPTIONS,
 
@@ -678,9 +668,6 @@ static varref cmp_vars[] = { /* must be in same order as enumerated above! */
 
     {&opt_certform_s}, {&opt_crlform_s}, {&opt_keyform_s},
     {&opt_otherpass},
-#ifndef OPENSSL_NO_ENGINE
-    {&opt_engine},
-#endif
 
 #if !defined(OPENSSL_NO_SOCK) && !defined(OPENSSL_NO_HTTP)
     {(char **)&opt_tls_used}, {&opt_tls_cert}, {&opt_tls_key},
@@ -1099,11 +1086,7 @@ static int transform_opts(void)
         return 0;
     }
 
-#ifndef OPENSSL_NO_ENGINE
-# define FORMAT_OPTIONS (OPT_FMT_PEMDER | OPT_FMT_PKCS12 | OPT_FMT_ENGINE)
-#else
 # define FORMAT_OPTIONS (OPT_FMT_PEMDER | OPT_FMT_PKCS12)
-#endif
 
     if (opt_keyform_s != NULL
             && !opt_format(opt_keyform_s, FORMAT_OPTIONS, &opt_keyform)) {
@@ -3069,11 +3052,6 @@ static int get_opts(int argc, char **argv)
         case OPT_OTHERPASS:
             opt_otherpass = opt_str();
             break;
-#ifndef OPENSSL_NO_ENGINE
-        case OPT_ENGINE:
-            opt_engine = opt_str();
-            break;
-#endif
         case OPT_PROV_CASES:
             if (!opt_provider(o))
                 goto opthelp;

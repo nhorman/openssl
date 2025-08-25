@@ -26,9 +26,6 @@ typedef enum OPTION_choice {
 const OPTIONS pkeyparam_options[] = {
     OPT_SECTION("General"),
     {"help", OPT_HELP, '-', "Display this summary"},
-#ifndef OPENSSL_NO_ENGINE
-    {"engine", OPT_ENGINE, 's', "Use engine, possibly a hardware device"},
-#endif
     {"check", OPT_CHECK, '-', "Check key param consistency"},
 
     OPT_SECTION("Input"),

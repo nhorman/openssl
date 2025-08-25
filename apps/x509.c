@@ -183,9 +183,6 @@ const OPTIONS x509_options[] = {
      "Reject certificate for a given purpose"},
 
     OPT_R_OPTIONS,
-#ifndef OPENSSL_NO_ENGINE
-    {"engine", OPT_ENGINE, 's', "Use engine, possibly a hardware device"},
-#endif
     OPT_PROV_OPTIONS,
     {NULL}
 };

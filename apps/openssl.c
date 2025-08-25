@@ -20,9 +20,6 @@
 #include <openssl/x509.h>
 #include <openssl/pem.h>
 #include <openssl/ssl.h>
-#ifndef OPENSSL_NO_ENGINE
-# include <openssl/engine.h>
-#endif
 #include <openssl/err.h>
 /* Needed to get the other O_xxx flags. */
 #ifdef OPENSSL_SYS_VMS

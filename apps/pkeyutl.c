@@ -70,11 +70,6 @@ typedef enum OPTION_choice {
 const OPTIONS pkeyutl_options[] = {
     OPT_SECTION("General"),
     {"help", OPT_HELP, '-', "Display this summary"},
-#ifndef OPENSSL_NO_ENGINE
-    {"engine", OPT_ENGINE, 's', "Use engine, possibly a hardware device"},
-    {"engine_impl", OPT_ENGINE_IMPL, '-',
-     "Also use engine given by -engine for crypto operations"},
-#endif
     {"sign", OPT_SIGN, '-', "Sign input data with private key"},
     {"verify", OPT_VERIFY, '-', "Verify with public key"},
     {"encrypt", OPT_ENCRYPT, '-', "Encrypt input data with public key"},
@@ -668,11 +663,6 @@ static EVP_PKEY_CTX *init_ctx(const char *kdfalg, int *pkeysize,
     EVP_PKEY_CTX *ctx = NULL;
     ENGINE *impl = NULL;
     int rv = -1;
-
-#ifndef OPENSSL_NO_ENGINE
-    if (engine_impl)
-        impl = e;
-#endif
 
     if (kdfalg != NULL) {
         int kdfnid = OBJ_sn2nid(kdfalg);

@@ -258,9 +258,6 @@ const OPTIONS speed_options[] = {
     {"async_jobs", OPT_ASYNCJOBS, 'p',
      "Enable async mode and start specified number of jobs"},
 #endif
-#ifndef OPENSSL_NO_ENGINE
-    {"engine", OPT_ENGINE, 's', "Use engine, possibly a hardware device"},
-#endif
     {"primes", OPT_PRIMES, 'p', "Specify number of primes (for RSA only)"},
     {"mlock", OPT_MLOCK, '-', "Lock memory for better result determinism"},
     {"testmode", OPT_TESTMODE, '-', "Run the speed command in test mode"},

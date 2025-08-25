@@ -39,9 +39,6 @@ const OPTIONS storeutl_options[] = {
     OPT_SECTION("General"),
     {"help", OPT_HELP, '-', "Display this summary"},
     {"", OPT_MD, '-', "Any supported digest"},
-#ifndef OPENSSL_NO_ENGINE
-    {"engine", OPT_ENGINE, 's', "Use engine, possibly a hardware device"},
-#endif
 
     OPT_SECTION("Search"),
     {"certs", OPT_SEARCHFOR_CERTS, '-', "Search for certificates only"},

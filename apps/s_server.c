@@ -975,9 +975,6 @@ const OPTIONS s_server_options[] = {
 #ifndef OPENSSL_NO_SSL_TRACE
     {"trace", OPT_TRACE, '-', "trace protocol messages"},
 #endif
-#ifndef OPENSSL_NO_ENGINE
-    {"engine", OPT_ENGINE, 's', "Use engine, possibly a hardware device"},
-#endif
 
     OPT_SECTION("Network"),
     {"port", OPT_PORT, 'p',
@@ -1820,9 +1817,6 @@ int s_server_main(int argc, char *argv[])
             session_id_prefix = opt_arg();
             break;
         case OPT_ENGINE:
-#ifndef OPENSSL_NO_ENGINE
-            engine = setup_engine(opt_arg(), s_debug);
-#endif
             break;
         case OPT_R_CASES:
             if (!opt_rand(o))

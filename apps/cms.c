@@ -161,9 +161,6 @@ const OPTIONS cms_options[] = {
     {"keyopt", OPT_KEYOPT, 's', "Set public key parameters as n:v pairs"},
     {"keyform", OPT_KEYFORM, 'f',
      "Input private key format (ENGINE, other values ignored)"},
-#ifndef OPENSSL_NO_ENGINE
-    {"engine", OPT_ENGINE, 's', "Use engine e, possibly a hardware device"},
-#endif
     OPT_PROV_OPTIONS,
     OPT_R_OPTIONS,
 
