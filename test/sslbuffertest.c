@@ -339,13 +339,6 @@ static int test_free_buffers(int test)
  end:
     SSL_free(clientssl);
     SSL_free(serverssl);
-#ifndef OPENSSL_NO_DYNAMIC_ENGINE
-    if (e != NULL) {
-        ENGINE_unregister_ciphers(e);
-        ENGINE_finish(e);
-        ENGINE_free(e);
-    }
-#endif
     return result;
 }
 
@@ -372,11 +365,7 @@ int setup_tests(void)
     }
 
     ADD_ALL_TESTS(test_func, 9);
-#if !defined(OPENSSL_NO_TLS1_2) && !defined(OPENSSL_NO_DYNAMIC_ENGINE)
-    ADD_ALL_TESTS(test_free_buffers, 8);
-#else
     ADD_ALL_TESTS(test_free_buffers, 4);
-#endif
     return 1;
 }
 
