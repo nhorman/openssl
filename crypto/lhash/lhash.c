@@ -114,7 +114,7 @@ void OPENSSL_LH_flush(OPENSSL_LHASH *lh)
     lh->num_items = 0;
 }
 
-void *OPENSSL_LH_insert(OPENSSL_LHASH *lh, void *data)
+static ossl_inline void *OPENSSL_LH_insert_int(OPENSSL_LHASH *lh, void *data, void **exist)
 {
     unsigned long hash;
     OPENSSL_LH_NODE *nn, **rn;
@@ -137,11 +137,27 @@ void *OPENSSL_LH_insert(OPENSSL_LHASH *lh, void *data)
         *rn = nn;
         ret = NULL;
         lh->num_items++;
-    } else {                    /* replace same key */
-        ret = (*rn)->data;
-        (*rn)->data = data;
+    } else {                    /* maybe replace same key */
+        if (exist == NULL) {
+            ret = (*rn)->data;
+            (*rn)->data = data;
+        } else {
+            /* noreplace operation, record the found entry and return NULL */
+            *exist = (*rn)->data;
+            ret = NULL;
+        }
     }
     return ret;
+}
+
+void *OPENSSL_LH_insert(OPENSSL_LHASH *lh, void *data)
+{
+    return OPENSSL_LH_insert_int(lh, data, NULL);
+}
+
+void *OPENSSL_LH_insert_noreplace(OPENSSL_LHASH *lh, void *data, void **exist)
+{
+    return OPENSSL_LH_insert_int(lh, data, exist);
 }
 
 void *OPENSSL_LH_delete(OPENSSL_LHASH *lh, const void *data)
