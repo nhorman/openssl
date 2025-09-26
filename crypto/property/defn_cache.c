@@ -89,7 +89,7 @@ OSSL_PROPERTY_LIST *ossl_prop_defn_get(OSSL_LIB_CTX *ctx, const char *prop)
 int ossl_prop_defn_set(OSSL_LIB_CTX *ctx, const char *prop,
                        OSSL_PROPERTY_LIST **pl)
 {
-    PROPERTY_DEFN_ELEM elem, *old, *p = NULL;
+    PROPERTY_DEFN_ELEM elem, *p = NULL, *pexist = NULL;
     size_t len;
     LHASH_OF(PROPERTY_DEFN_ELEM) *property_defns;
     int res = 1;
@@ -109,22 +109,22 @@ int ossl_prop_defn_set(OSSL_LIB_CTX *ctx, const char *prop,
         lh_PROPERTY_DEFN_ELEM_delete(property_defns, &elem);
         goto end;
     }
-    /* check if property definition is in the cache already */
-    if ((p = lh_PROPERTY_DEFN_ELEM_retrieve(property_defns, &elem)) != NULL) {
-        ossl_property_free(*pl);
-        *pl = p->defn;
-        goto end;
-    }
+
     len = strlen(prop);
     p = OPENSSL_malloc(sizeof(*p) + len);
     if (p != NULL) {
         p->prop = p->body;
         p->defn = *pl;
         memcpy(p->body, prop, len + 1);
-        old = lh_PROPERTY_DEFN_ELEM_insert(property_defns, p);
-        if (!ossl_assert(old == NULL))
-            /* This should not happen. An existing entry is handled above. */
+        lh_PROPERTY_DEFN_ELEM_insert_noreplace(property_defns, p, &pexist);
+        if (pexist != NULL) {
+            /*
+             * This entry has already been added, free the new one
+             */
+            ossl_property_free(*pl);
+            *pl = pexist->defn;
             goto end;
+        }
         if (!lh_PROPERTY_DEFN_ELEM_error(property_defns))
             goto end;
     }
