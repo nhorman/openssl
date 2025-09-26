@@ -820,7 +820,7 @@ OSSL_DECODER_CTX_new_for_pkey(EVP_PKEY **pkey,
     };
     DECODER_CACHE *cache
         = ossl_lib_ctx_get_data(libctx, OSSL_LIB_CTX_DECODER_CACHE_INDEX);
-    DECODER_CACHE_ENTRY cacheent, *res, *newcache = NULL;
+    DECODER_CACHE_ENTRY cacheent, *res, *newcache = NULL, *existent = NULL;
     int i = 0;
 
     if (cache == NULL) {
@@ -923,22 +923,19 @@ OSSL_DECODER_CTX_new_for_pkey(EVP_PKEY **pkey,
             ERR_raise(ERR_LIB_OSSL_DECODER, ERR_R_CRYPTO_LIB);
             goto err;
         }
-        res = lh_DECODER_CACHE_ENTRY_retrieve(cache->hashtable, &cacheent);
-        if (res == NULL) {
-            (void)lh_DECODER_CACHE_ENTRY_insert(cache->hashtable, newcache);
-            if (lh_DECODER_CACHE_ENTRY_error(cache->hashtable)) {
-                ctx = NULL;
-                CRYPTO_THREAD_unlock(cache->lock);
-                ERR_raise(ERR_LIB_OSSL_DECODER, ERR_R_CRYPTO_LIB);
-                goto err;
-            }
-        } else {
+        (void)lh_DECODER_CACHE_ENTRY_insert_noreplace(cache->hashtable, newcache, &existent);
+        if (existent != NULL) {
             /*
-             * We raced with another thread to construct this and lost. Free
-             * what we just created and use the entry from the hashtable instead
+             * We raced with another thread to construct this and lost.  Free
+             * what we just created and use the entry from the hashtable instead.
              */
             decoder_cache_entry_free(newcache);
-            ctx = res->template;
+            ctx = existent->template;
+        } else if (lh_DECODER_CACHE_ENTRY_error(cache->hashtable)) {
+            ctx = NULL;
+            CRYPTO_THREAD_unlock(cache->lock);
+            ERR_raise(ERR_LIB_OSSL_DECODER, ERR_R_CRYPTO_LIB);
+            goto err;
         }
     } else {
         ctx = res->template;
