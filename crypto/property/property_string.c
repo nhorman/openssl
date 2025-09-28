@@ -142,7 +142,7 @@ static PROPERTY_STRING *new_property_string(const char *s,
 static OSSL_PROPERTY_IDX ossl_property_string(OSSL_LIB_CTX *ctx, int name,
                                               int create, const char *s)
 {
-    PROPERTY_STRING p, *ps, *ps_new;
+    PROPERTY_STRING p, *ps, *ps_new, *pexist = NULL;
     PROP_TABLE *t;
     OSSL_PROPERTY_IDX *pidx;
     PROPERTY_STRING_DATA *propdata
@@ -153,48 +153,57 @@ static OSSL_PROPERTY_IDX ossl_property_string(OSSL_LIB_CTX *ctx, int name,
 
     t = name ? propdata->prop_names : propdata->prop_values;
     p.s = s;
-    if (!CRYPTO_THREAD_read_lock(propdata->lock)) {
-        ERR_raise(ERR_LIB_CRYPTO, ERR_R_UNABLE_TO_GET_READ_LOCK);
-        return 0;
-    }
-    ps = lh_PROPERTY_STRING_retrieve(t, &p);
-    if (ps == NULL && create) {
-        CRYPTO_THREAD_unlock(propdata->lock);
+    if (create) {
         if (!CRYPTO_THREAD_write_lock(propdata->lock)) {
             ERR_raise(ERR_LIB_CRYPTO, ERR_R_UNABLE_TO_GET_WRITE_LOCK);
             return 0;
         }
         pidx = name ? &propdata->prop_name_idx : &propdata->prop_value_idx;
-        ps = lh_PROPERTY_STRING_retrieve(t, &p);
-        if (ps == NULL && (ps_new = new_property_string(s, pidx)) != NULL) {
+        if ((ps_new = new_property_string(s, pidx)) != NULL) {
 #ifndef OPENSSL_SMALL_FOOTPRINT
             STACK_OF(OPENSSL_CSTRING) *slist;
-
-            slist = name ? propdata->prop_namelist : propdata->prop_valuelist;
-            if (sk_OPENSSL_CSTRING_push(slist, ps_new->s) <= 0) {
-                property_free(ps_new);
-                CRYPTO_THREAD_unlock(propdata->lock);
-                return 0;
-            }
 #endif
-            lh_PROPERTY_STRING_insert(t, ps_new);
-            if (lh_PROPERTY_STRING_error(t)) {
-                /*-
-                 * Undo the previous push which means also decrementing the
-                 * index and freeing the allocated storage.
+            lh_PROPERTY_STRING_insert_noreplace(t, ps_new, &pexist);
+            if (pexist != NULL) {
+                /*
+                 * hit a duplicate entry, free the new one and use the existing
                  */
-#ifndef OPENSSL_SMALL_FOOTPRINT
-                sk_OPENSSL_CSTRING_pop(slist);
-#endif
+                property_free(ps_new);
+                --*pidx;
+                ps_new = pexist; 
+            } else if (lh_PROPERTY_STRING_error(t)) {
+                /*
+                 * hit a duplicate entry
+                 */
                 property_free(ps_new);
                 --*pidx;
                 CRYPTO_THREAD_unlock(propdata->lock);
                 return 0;
             }
+#ifndef OPENSSL_SMALL_FOOTPRINT
+            if (pexist == NULL) {
+                slist = name ? propdata->prop_namelist : propdata->prop_valuelist;
+                if (sk_OPENSSL_CSTRING_push(slist, ps_new->s) <= 0) {
+                    lh_PROPERTY_STRING_delete(t, ps_new);
+                    property_free(ps_new);
+                    *--pidx;
+                    CRYPTO_THREAD_unlock(propdata->lock);
+                    return 0;
+                }
+            }
+#endif
             ps = ps_new;
         }
+        CRYPTO_THREAD_unlock(propdata->lock);
+    } else {
+        if (!CRYPTO_THREAD_read_lock(propdata->lock)) {
+            ERR_raise(ERR_LIB_CRYPTO, ERR_R_UNABLE_TO_GET_READ_LOCK);
+            return 0;
+        }    
+        ps = lh_PROPERTY_STRING_retrieve(t, &p);
+        CRYPTO_THREAD_unlock(propdata->lock);
     }
-    CRYPTO_THREAD_unlock(propdata->lock);
+
     return ps != NULL ? ps->idx : 0;
 }
 
