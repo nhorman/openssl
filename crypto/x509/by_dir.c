@@ -348,7 +348,7 @@ static int get_cert_by_subject_ex(X509_LOOKUP *xl, X509_LOOKUP_TYPE type,
          *       sorted and sorting the would result in O(n^2 log n) complexity.
          */
         if (k > 0) {
-            if (!X509_STORE_lock(xl->store_ctx))
+            if (!ossl_x509_store_read_lock(xl->store_ctx))
                 goto finish;
             j = sk_X509_OBJECT_find(xl->store_ctx->objs, &stmp);
             tmp = sk_X509_OBJECT_value(xl->store_ctx->objs, j);
