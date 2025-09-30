@@ -416,6 +416,7 @@ static int x509_store_add(X509_STORE *store, void *x, int crl)
         ret = 1;
     } else {
         added = sk_X509_OBJECT_push(store->objs, obj);
+        sk_X509_OBJECT_sort(store->objs);
         ret = added != 0;
     }
     X509_STORE_unlock(store);
