@@ -39,6 +39,7 @@ struct lookup_dir_hashes_st {
 struct lookup_dir_entry_st {
     char *dir;
     int dir_type;
+    CRYPTO_RWLOCK *hashlock;
     LHASH_OF(BY_DIR_HASH) *hashes;
 };
 
@@ -156,6 +157,7 @@ static void by_dir_entry_free(BY_DIR_ENTRY *ent)
     OPENSSL_free(ent->dir);
     lh_BY_DIR_HASH_doall(ent->hashes, by_dir_hash_free);
     lh_BY_DIR_HASH_free(ent->hashes);
+    CRYPTO_THREAD_lock_free(ent->hashlock);
     OPENSSL_free(ent);
 }
 
@@ -211,7 +213,8 @@ static int add_cert_dir(BY_DIR *ctx, const char *dir, int type)
             ent->dir_type = type;
             ent->hashes = lh_BY_DIR_HASH_new(by_dir_hash_hash, by_dir_hash_cmp);
             ent->dir = OPENSSL_strndup(ss, len);
-            if (ent->dir == NULL || ent->hashes == NULL) {
+            ent->hashlock = CRYPTO_THREAD_lock_new();
+            if (ent->dir == NULL || ent->hashes == NULL || ent->hashlock == NULL) {
                 by_dir_entry_free(ent);
                 return 0;
             }
@@ -268,7 +271,6 @@ static int get_cert_by_subject_ex(X509_LOOKUP *xl, X509_LOOKUP_TYPE type,
         goto finish;
     for (i = 0; i < sk_BY_DIR_ENTRY_num(ctx->dirs); i++) {
         BY_DIR_ENTRY *ent;
-        int idx;
         BY_DIR_HASH htmp, *hent;
 
         ent = sk_BY_DIR_ENTRY_value(ctx->dirs, i);
@@ -279,14 +281,14 @@ static int get_cert_by_subject_ex(X509_LOOKUP *xl, X509_LOOKUP_TYPE type,
         }
         if (type == X509_LU_CRL && ent->hashes) {
             htmp.hash = h;
-            if (!CRYPTO_THREAD_read_lock(ctx->lock))
+            if (!CRYPTO_THREAD_read_lock(ent->hashlock))
                 goto finish;
             hent = lh_BY_DIR_HASH_retrieve(ent->hashes, &htmp);
             if (hent != NULL)
                 k = hent->suffix;
             else
                 k = 0;
-            CRYPTO_THREAD_unlock(ctx->lock);
+            CRYPTO_THREAD_unlock(ent->hashlock);
         } else {
             k = 0;
             hent = NULL;
@@ -366,7 +368,7 @@ static int get_cert_by_subject_ex(X509_LOOKUP *xl, X509_LOOKUP_TYPE type,
          * simple case where no CRL is present for a hash.
          */
         if (type == X509_LU_CRL && k > 0) {
-            if (!CRYPTO_THREAD_write_lock(ctx->lock))
+            if (!CRYPTO_THREAD_write_lock(ent->hashlock))
                 goto finish;
             /*
              * Look for entry again in case another thread added an entry
@@ -379,7 +381,7 @@ static int get_cert_by_subject_ex(X509_LOOKUP *xl, X509_LOOKUP_TYPE type,
             if (hent == NULL) {
                 hent = OPENSSL_malloc(sizeof(*hent));
                 if (hent == NULL) {
-                    CRYPTO_THREAD_unlock(ctx->lock);
+                    CRYPTO_THREAD_unlock(ent->hashlock);
                     ok = 0;
                     goto finish;
                 }
@@ -387,7 +389,7 @@ static int get_cert_by_subject_ex(X509_LOOKUP *xl, X509_LOOKUP_TYPE type,
                 hent->suffix = k;
                 lh_BY_DIR_HASH_insert(ent->hashes, hent);
                 if (lh_BY_DIR_HASH_error(ent->hashes)) {
-                    CRYPTO_THREAD_unlock(ctx->lock);
+                    CRYPTO_THREAD_unlock(ent->hashlock);
                     OPENSSL_free(hent);
                     ERR_raise(ERR_LIB_X509, ERR_R_CRYPTO_LIB);
                     ok = 0;
@@ -398,7 +400,7 @@ static int get_cert_by_subject_ex(X509_LOOKUP *xl, X509_LOOKUP_TYPE type,
                 hent->suffix = k;
             }
 
-            CRYPTO_THREAD_unlock(ctx->lock);
+            CRYPTO_THREAD_unlock(ent->hashlock);
 
         }
 
