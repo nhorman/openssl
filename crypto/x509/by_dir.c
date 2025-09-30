@@ -39,8 +39,10 @@ struct lookup_dir_hashes_st {
 struct lookup_dir_entry_st {
     char *dir;
     int dir_type;
-    STACK_OF(BY_DIR_HASH) *hashes;
+    LHASH_OF(BY_DIR_HASH) *hashes;
 };
+
+DEFINE_LHASH_OF_EX(BY_DIR_HASH);
 
 typedef struct lookup_dir_st {
     BUF_MEM *buffer;
@@ -136,20 +138,24 @@ static void by_dir_hash_free(BY_DIR_HASH *hash)
     OPENSSL_free(hash);
 }
 
-static int by_dir_hash_cmp(const BY_DIR_HASH *const *a,
-                           const BY_DIR_HASH *const *b)
+static int by_dir_hash_cmp(const BY_DIR_HASH *a,
+                           const BY_DIR_HASH *b)
 {
-    if ((*a)->hash > (*b)->hash)
+    if (a->hash == b->hash)
         return 1;
-    if ((*a)->hash < (*b)->hash)
-        return -1;
     return 0;
+}
+
+static unsigned long by_dir_hash_hash(const BY_DIR_HASH *a)
+{
+    return a->hash;
 }
 
 static void by_dir_entry_free(BY_DIR_ENTRY *ent)
 {
     OPENSSL_free(ent->dir);
-    sk_BY_DIR_HASH_pop_free(ent->hashes, by_dir_hash_free);
+    lh_BY_DIR_HASH_doall(ent->hashes, by_dir_hash_free);
+    lh_BY_DIR_HASH_free(ent->hashes);
     OPENSSL_free(ent);
 }
 
@@ -203,7 +209,7 @@ static int add_cert_dir(BY_DIR *ctx, const char *dir, int type)
             if (ent == NULL)
                 return 0;
             ent->dir_type = type;
-            ent->hashes = sk_BY_DIR_HASH_new(by_dir_hash_cmp);
+            ent->hashes = lh_BY_DIR_HASH_new(by_dir_hash_hash, by_dir_hash_cmp);
             ent->dir = OPENSSL_strndup(ss, len);
             if (ent->dir == NULL || ent->hashes == NULL) {
                 by_dir_entry_free(ent);
@@ -275,14 +281,11 @@ static int get_cert_by_subject_ex(X509_LOOKUP *xl, X509_LOOKUP_TYPE type,
             htmp.hash = h;
             if (!CRYPTO_THREAD_read_lock(ctx->lock))
                 goto finish;
-            idx = sk_BY_DIR_HASH_find(ent->hashes, &htmp);
-            if (idx >= 0) {
-                hent = sk_BY_DIR_HASH_value(ent->hashes, idx);
+            hent = lh_BY_DIR_HASH_retrieve(ent->hashes, &htmp);
+            if (hent != NULL)
                 k = hent->suffix;
-            } else {
-                hent = NULL;
+            else
                 k = 0;
-            }
             CRYPTO_THREAD_unlock(ctx->lock);
         } else {
             k = 0;
@@ -371,8 +374,7 @@ static int get_cert_by_subject_ex(X509_LOOKUP *xl, X509_LOOKUP_TYPE type,
              */
             if (hent == NULL) {
                 htmp.hash = h;
-                idx = sk_BY_DIR_HASH_find(ent->hashes, &htmp);
-                hent = sk_BY_DIR_HASH_value(ent->hashes, idx);
+                hent = lh_BY_DIR_HASH_retrieve(ent->hashes, &htmp);
             }
             if (hent == NULL) {
                 hent = OPENSSL_malloc(sizeof(*hent));
@@ -383,7 +385,8 @@ static int get_cert_by_subject_ex(X509_LOOKUP *xl, X509_LOOKUP_TYPE type,
                 }
                 hent->hash = h;
                 hent->suffix = k;
-                if (!sk_BY_DIR_HASH_push(ent->hashes, hent)) {
+                lh_BY_DIR_HASH_insert(ent->hashes, hent);
+                if (lh_BY_DIR_HASH_error(ent->hashes)) {
                     CRYPTO_THREAD_unlock(ctx->lock);
                     OPENSSL_free(hent);
                     ERR_raise(ERR_LIB_X509, ERR_R_CRYPTO_LIB);
@@ -391,11 +394,6 @@ static int get_cert_by_subject_ex(X509_LOOKUP *xl, X509_LOOKUP_TYPE type,
                     goto finish;
                 }
 
-                /*
-                 * Ensure stack is sorted so that subsequent sk_BY_DIR_HASH_find
-                 * will not mutate the stack and therefore require a write lock.
-                 */
-                sk_BY_DIR_HASH_sort(ent->hashes);
             } else if (hent->suffix < k) {
                 hent->suffix = k;
             }
