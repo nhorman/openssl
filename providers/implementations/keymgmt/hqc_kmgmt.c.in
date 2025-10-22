@@ -154,6 +154,8 @@ static int xof_get_bytes(EVP_MD_CTX *xof_ctx, uint8_t *output, uint32_t output_s
  * | Field                | Description |
  * |----------------------|-------------|
  * | type                 | HQC key type identifier (e.g., EVP_PKEY_HQC_KEM_128). |
+ * | nid                  | nid of this hqc type |
+ * | name                 | Human readable name of the key type. |
  * | ek/priv key len      | Encapsulation (public) key length in bytes. |
  * | dk/pub key len       | Decapsulation (private) key length in bytes. |
  * | seed length          | Length of the seed used for random generation. |
@@ -173,6 +175,8 @@ static int xof_get_bytes(EVP_MD_CTX *xof_ctx, uint8_t *output, uint32_t output_s
 static const HQC_VARIANT_INFO variant_info[EVP_PKEY_HQC_KEM_MAX] = {
     {
         EVP_PKEY_HQC_KEM_128, /* type */
+        EVP_PKEY_HQC_128, /* nid */
+        "HQC-128", /* name */
         2241, /* ek/priv key len */
         2321, /* dk/pub key len */
         48, /* seed length */
@@ -186,6 +190,8 @@ static const HQC_VARIANT_INFO variant_info[EVP_PKEY_HQC_KEM_MAX] = {
         16767881 /* Rejection threshold */
     },
     { EVP_PKEY_HQC_KEM_192,
+        EVP_PKEY_HQC_192,
+        "HQC-192",
         4514,
         4602,
         48,
@@ -198,6 +204,8 @@ static const HQC_VARIANT_INFO variant_info[EVP_PKEY_HQC_KEM_MAX] = {
         114,
         16742417 },
     { EVP_PKEY_HQC_KEM_256,
+        EVP_PKEY_HQC_256,
+        "HQC-256",
         7237,
         7333,
         48,
@@ -331,15 +339,31 @@ static int hqc_kem_replace_keybufs(HQC_KEY *key, uint8_t *newpub, uint8_t *newpr
  *   - The pointer passed to this function becomes invalid after the
  *     call and must not be used again.
  */
-static void hqc_kem_key_free(HQC_KEY *key)
+void hqc_kem_key_free(HQC_KEY *key)
 {
     if (key == NULL)
         return;
 
     OPENSSL_free(key->ek);
     OPENSSL_free(key->dk);
+    OPENSSL_free(key->seed);
     OPENSSL_free(key);
     return;
+}
+
+HQC_KEY *hqc_kem_new(int evp_type)
+{
+    HQC_KEY *new = OPENSSL_zalloc(sizeof(HQC_KEY));
+
+    if (new == NULL)
+        return NULL;
+
+    new->info = &variant_info[evp_type];
+    if (!hqc_kem_replace_keybufs(new, NULL, NULL)) {
+        hqc_kem_key_free(new);
+        new = NULL;
+    }
+    return new;
 }
 
 /**
@@ -379,17 +403,7 @@ static void hqc_kem_key_free(HQC_KEY *key)
  */
 static HQC_KEY *ossl_prov_hqc_kem_new(PROV_CTX *ctx, const char *propq, int evp_type)
 {
-    HQC_KEY *new = OPENSSL_zalloc(sizeof(HQC_KEY));
-
-    if (new == NULL)
-        return NULL;
-
-    new->info = &variant_info[evp_type];
-    if (!hqc_kem_replace_keybufs(new, NULL, NULL)) {
-        hqc_kem_key_free(new);
-        new = NULL;
-    }
-    return new;
+    return hqc_kem_new(evp_type);
 }
 
 /**
@@ -1683,6 +1697,10 @@ static void *hqc_kem_gen(void *vgctx, OSSL_CALLBACK *osslcb, void *cbarg)
             return 0;
     }
 
+    key->seed = OPENSSL_memdup(gctx->seed, key->info->seed_len);
+    if (key->seed == NULL)
+        goto err;
+
     /*
      * Initalize our shake digest as a prng to generate our key seed from
      * the provided seed
@@ -1795,6 +1813,75 @@ err:
     return ret == 1 ? key : NULL;
 }
 
+#ifndef FIPS_MODULE
+/**
+ * @brief Loads and reconstructs an HQC key from a serialized reference.
+ *
+ * This function takes ownership of a reference to an existing HQC key,
+ * reconstitutes the key material using the HQC KEM generator context,
+ * and returns a newly allocated HQC_KEY object. The reference is cleared
+ * (set to NULL) to indicate transfer of ownership.
+ *
+ * The function verifies the running state of the provider and ensures
+ * that the provided reference size matches the expected size of an HQC
+ * key pointer. It then initializes a key generation context based on
+ * the key type, duplicates the seed from the reference, regenerates the
+ * key, and cleans up all intermediate resources.
+ *
+ * @param reference
+ *     Pointer to a variable containing a reference to an HQC_KEY object.
+ *     Ownership of this reference is transferred to the function, and
+ *     the caller’s pointer will be set to NULL on success or failure.
+ * @param reference_sz
+ *     Size of the reference pointer (must match sizeof(HQC_KEY *)).
+ *
+ * @return
+ *     A pointer to a newly allocated HQC_KEY structure on success,
+ *     or NULL if an error occurs (e.g., invalid reference, context
+ *     creation failure, or memory allocation failure).
+ *
+ * @note
+ *     The caller is responsible for freeing the returned HQC_KEY
+ *     using `hqc_kem_key_free()` when it is no longer needed.
+ *
+ * @internal
+ * This function is used internally by the HQC provider to restore
+ * serialized key material into a usable in-memory HQC_KEY object.
+ */
+static void *hqc_load(const void *reference, size_t reference_sz)
+{
+    HQC_KEY *key = NULL;
+    PROV_HQC_GEN_CTX *ctx;
+    const HQC_KEY *ref = reference;
+
+    if (!ossl_prov_is_running() || reference_sz != sizeof(key))
+        goto err;
+
+    ref = *(HQC_KEY **)reference;
+
+    ctx = hqc_kem_gen_init(NULL, OSSL_KEYMGMT_SELECT_KEYPAIR, NULL, ref->info->type);
+    if (ctx == NULL)
+        goto err;
+
+    /*
+     * override the seed
+     */
+    ctx->seed = OPENSSL_memdup(ref->seed, ref->info->seed_len);
+
+    /*
+     * reconstitute the key
+     */
+    key = hqc_kem_gen(ctx, NULL, NULL);
+
+    hqc_kem_cleanup_gen_ctx(ctx);
+    return key;
+err:
+    hqc_kem_key_free(key);
+    hqc_kem_cleanup_gen_ctx(ctx);
+    return NULL;
+}
+#endif
+
 /**
  * @brief Cleans up and frees an HQC KEM key generation context.
  *
@@ -1869,6 +1956,13 @@ static void *hqc_kem_dup(const void *vkey, int selection)
     return dup;
 }
 
+#ifndef FIPS_MODULE
+#define DISPATCH_LOAD_FN \
+    { OSSL_FUNC_KEYMGMT_LOAD, (OSSL_FUNC)hqc_load },
+#else
+#define DISPATCH_LOAD_FN /* Non-FIPS only */
+#endif
+
 #define DECLARE_VARIANT(bits)                                                              \
     static OSSL_FUNC_keymgmt_new_fn hqc_kem_##bits##_new;                                  \
     static OSSL_FUNC_keymgmt_gen_init_fn hqc_kem_##bits##_gen_init;                        \
@@ -1896,7 +1990,7 @@ static void *hqc_kem_dup(const void *vkey, int selection)
         { OSSL_FUNC_KEYMGMT_GEN, (OSSL_FUNC)hqc_kem_gen },                                 \
         { OSSL_FUNC_KEYMGMT_GEN_CLEANUP, (OSSL_FUNC)hqc_kem_gen_cleanup },                 \
         { OSSL_FUNC_KEYMGMT_DUP, (OSSL_FUNC)hqc_kem_dup },                                 \
-        { OSSL_FUNC_KEYMGMT_IMPORT, (OSSL_FUNC)hqc_kem_import },                           \
+        DISPATCH_LOAD_FN { OSSL_FUNC_KEYMGMT_IMPORT, (OSSL_FUNC)hqc_kem_import },          \
         { OSSL_FUNC_KEYMGMT_IMPORT_TYPES, (OSSL_FUNC)hqc_kem_imexport_types },             \
         { OSSL_FUNC_KEYMGMT_EXPORT, (OSSL_FUNC)hqc_key_export },                           \
         { OSSL_FUNC_KEYMGMT_EXPORT_TYPES, (OSSL_FUNC)hqc_kem_imexport_types },             \

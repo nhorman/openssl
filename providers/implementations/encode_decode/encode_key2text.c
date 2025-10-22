@@ -27,6 +27,7 @@
 #include "crypto/rsa.h" /* RSA_PSS_PARAMS_30, etc... */
 #include "crypto/ml_dsa.h"
 #include "crypto/slh_dsa.h"
+#include "crypto/hqc_kem.h"
 #include "prov/bio.h"
 #include "prov/implementations.h"
 #include "internal/encoder.h"
@@ -456,6 +457,47 @@ static int slh_dsa_to_text(BIO *out, const void *key, int selection)
 }
 #endif /* OPENSSL_NO_SLH_DSA */
 
+#ifndef OPENSSL_NO_HQC
+static int hqc_to_text(BIO *out, const void *key, int selection)
+{
+    HQC_KEY *hkey = key;
+
+    if (out == NULL || key == NULL) {
+        ERR_raise(ERR_LIB_PROV, ERR_R_PASSED_NULL_PARAMETER);
+        return 0;
+    }
+
+    if (!(hkey->selection & OSSL_KEYMGMT_SELECT_PUBLIC_KEY)) {
+        ERR_raise_data(ERR_LIB_PROV, PROV_R_MISSING_KEY,
+            "no %s key material available", hkey->info->name);
+        return 0;
+    }
+
+    if ((selection & OSSL_KEYMGMT_SELECT_PRIVATE_KEY) != 0) {
+        if ((hkey->selection & OSSL_KEYMGMT_SELECT_PRIVATE_KEY) == 0) {
+            ERR_raise_data(ERR_LIB_PROV, PROV_R_MISSING_KEY,
+                "no %s key material available", hkey->info->name);
+            return 0;
+        }
+        if (BIO_printf(out, "%s Private-Key:\n", hkey->info->name) <= 0)
+            return 0;
+        if (!ossl_bio_print_labeled_buf(out, "priv:", hkey->dk,
+                hkey->info->dk_size))
+            return 0;
+    } else if ((selection & OSSL_KEYMGMT_SELECT_PUBLIC_KEY) != 0) {
+        if (BIO_printf(out, "%s Public-Key:\n", hkey->info->name) <= 0)
+            return 0;
+    }
+
+    if (!ossl_bio_print_labeled_buf(out, "pub:", hkey->ek,
+            hkey->info->ek_size))
+        return 0;
+
+    return 1;
+}
+
+#endif
+
 static int rsa_to_text(BIO *out, const void *key, int selection)
 {
     const RSA *rsa = key;
@@ -742,4 +784,10 @@ MAKE_TEXT_ENCODER(slh_dsa_shake_192s, slh_dsa);
 MAKE_TEXT_ENCODER(slh_dsa_shake_192f, slh_dsa);
 MAKE_TEXT_ENCODER(slh_dsa_shake_256s, slh_dsa);
 MAKE_TEXT_ENCODER(slh_dsa_shake_256f, slh_dsa);
+#endif
+
+#ifndef OPENSSL_NO_HQC
+MAKE_TEXT_ENCODER(hqc_128, hqc);
+MAKE_TEXT_ENCODER(hqc_192, hqc);
+MAKE_TEXT_ENCODER(hqc_256, hqc);
 #endif

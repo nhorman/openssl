@@ -35,6 +35,7 @@
 #include "crypto/rsa.h"
 #include "crypto/ml_dsa.h"
 #include "crypto/slh_dsa.h"
+#include "crypto/hqc_kem.h"
 #include "crypto/x509.h"
 #include "crypto/ml_kem.h"
 #include "openssl/obj_mac.h"
@@ -882,6 +883,138 @@ err:
 #define slh_dsa_shake_256f_adjust NULL
 #endif /* OPENSSL_NO_SLH_DSA */
 
+#ifndef OPENSSL_NO_HQC
+#define hqc_128_evp_type EVP_PKEY_HQC_128
+#define hqc_192_evp_type EVP_PKEY_HQC_192
+#define hqc_256_evp_type EVP_PKEY_HQC_256
+#define hqc_128_check NULL
+#define hqc_128_adjust NULL
+#define hqc_128_free (free_key_fn *)hqc_kem_key_free
+#define hqc_192_free (free_key_fn *)hqc_kem_key_free
+#define hqc_192_check NULL
+#define hqc_192_adjust NULL
+#define hqc_256_free (free_key_fn *)hqc_kem_key_free
+#define hqc_256_check NULL
+#define hqc_256_adjust NULL
+
+static void *hqc_d2i_PKCS8(const uint8_t **der, long der_len, struct der2key_ctx_st *ctx, int evp_type)
+{
+    PKCS8_PRIV_KEY_INFO *p8inf = NULL;
+    const X509_ALGOR *alg = NULL;
+    const uint8_t *buf;
+    int len;
+    HQC_KEY *key = NULL;
+
+    key = hqc_kem_new(evp_type);
+
+    if (key == NULL)
+        return NULL;
+
+    if ((p8inf = d2i_PKCS8_PRIV_KEY_INFO(NULL, der, der_len)) == NULL)
+        goto err;
+
+    if (!PKCS8_pkey_get0(NULL, &buf, &len, &alg, p8inf))
+        goto err;
+
+    if (OBJ_obj2nid(alg->algorithm) != key->info->nid)
+        goto err;
+
+    if (len != key->info->seed_len)
+        goto err;
+
+    key->seed = OPENSSL_memdup(buf, len);
+    if (key->seed == NULL)
+        goto err;
+    PKCS8_PRIV_KEY_INFO_free(p8inf);
+    return key;
+
+err:
+    hqc_kem_key_free(key);
+    PKCS8_PRIV_KEY_INFO_free(p8inf);
+    return NULL;
+}
+
+static void *
+hqc_128_d2i_PKCS8(const uint8_t **der, long der_len, struct der2key_ctx_st *ctx)
+{
+    void *ret;
+
+    ret = hqc_d2i_PKCS8(der, der_len, ctx, EVP_PKEY_HQC_KEM_128);
+
+    if (ret != NULL)
+        *der += der_len;
+    return ret;
+}
+
+static void *
+hqc_192_d2i_PKCS8(const uint8_t **der, long der_len, struct der2key_ctx_st *ctx)
+{
+    void *ret;
+
+    ret = hqc_d2i_PKCS8(der, der_len, ctx, EVP_PKEY_HQC_KEM_192);
+
+    if (ret != NULL)
+        *der += der_len;
+    return ret;
+}
+
+static void *
+hqc_256_d2i_PKCS8(const uint8_t **der, long der_len, struct der2key_ctx_st *ctx)
+{
+    void *ret;
+
+    ret = hqc_d2i_PKCS8(der, der_len, ctx, EVP_PKEY_HQC_KEM_256);
+
+    if (ret != NULL)
+        *der += der_len;
+    return ret;
+}
+
+static void *make_hqc_pubkey(int evp_type, const uint8_t **der, long der_len,
+    struct der2key_ctx_st *ctx)
+{
+    HQC_KEY *key = hqc_kem_new(evp_type);
+
+    if (key == NULL)
+        return NULL;
+    if (der_len != key->info->ek_size) {
+        ERR_raise_data(ERR_LIB_PROV, PROV_R_INVALID_KEY,
+            "%s invalid public 'ek' vector",
+            key->info->name);
+        goto err;
+    }
+
+    memcpy(key->ek, *der, key->info->ek_size);
+    key->selection |= OSSL_KEYMGMT_SELECT_PUBLIC_KEY;
+    return key;
+
+err:
+    hqc_kem_key_free(key);
+    return NULL;
+}
+
+static ossl_inline void *
+hqc_128_d2i_PUBKEY(const uint8_t **der, long der_len,
+    struct der2key_ctx_st *ctx)
+{
+    return make_hqc_pubkey(EVP_PKEY_HQC_KEM_128, der, der_len, ctx);
+}
+
+static ossl_inline void *
+hqc_192_d2i_PUBKEY(const uint8_t **der, long der_len,
+    struct der2key_ctx_st *ctx)
+{
+    return make_hqc_pubkey(EVP_PKEY_HQC_KEM_192, der, der_len, ctx);
+}
+
+static ossl_inline void *
+hqc_256_d2i_PUBKEY(const uint8_t **der, long der_len,
+    struct der2key_ctx_st *ctx)
+{
+    return make_hqc_pubkey(EVP_PKEY_HQC_KEM_256, der, der_len, ctx);
+}
+#endif
+
 /* ---------------------------------------------------------------------- */
 
 #define rsa_evp_type EVP_PKEY_RSA
@@ -1302,4 +1435,15 @@ MAKE_DECODER("ML-DSA-65", ml_dsa_65, ml_dsa_65, PrivateKeyInfo);
 MAKE_DECODER("ML-DSA-65", ml_dsa_65, ml_dsa_65, SubjectPublicKeyInfo);
 MAKE_DECODER("ML-DSA-87", ml_dsa_87, ml_dsa_87, PrivateKeyInfo);
 MAKE_DECODER("ML-DSA-87", ml_dsa_87, ml_dsa_87, SubjectPublicKeyInfo);
+#endif
+
+#ifndef OPENSSL_NO_HQC
+MAKE_DECODER("HQC-128", hqc_128, hqc_128, PrivateKeyInfo);
+MAKE_DECODER("HQC-128", hqc_128, hqc_128, SubjectPublicKeyInfo);
+
+MAKE_DECODER("HQC-192", hqc_192, hqc_192, PrivateKeyInfo);
+MAKE_DECODER("HQC-192", hqc_192, hqc_192, SubjectPublicKeyInfo);
+
+MAKE_DECODER("HQC-256", hqc_256, hqc_256, PrivateKeyInfo);
+MAKE_DECODER("HQC-256", hqc_256, hqc_256, SubjectPublicKeyInfo);
 #endif

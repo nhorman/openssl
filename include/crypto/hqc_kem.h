@@ -11,6 +11,10 @@
 #define OPENSSL_HEADER_HQC_KEM_H
 #pragma once
 
+#define EVP_PKEY_HQC_128 NID_HQC_128
+#define EVP_PKEY_HQC_192 NID_HQC_192
+#define EVP_PKEY_HQC_256 NID_HQC_256
+
 typedef enum {
     EVP_PKEY_HQC_KEM_128 = 0,
     EVP_PKEY_HQC_KEM_192 = 1,
@@ -20,6 +24,8 @@ typedef enum {
 
 typedef struct hqc_variant_info_st {
     hqc_key_type type;
+    int nid;
+    char *name;
     size_t ek_size;
     size_t dk_size;
     size_t seed_len;
@@ -36,9 +42,13 @@ typedef struct hqc_variant_info_st {
 /* Known as HQC_KEY via crypto/types.h */
 typedef struct ossl_hqc_kem_key_st {
     const HQC_VARIANT_INFO *info; /* key size info */
+    uint8_t *seed; /* seed data */
     uint8_t *ek; /* encryption key */
     uint8_t *dk; /* decryption key */
     int selection; /* Presence status of key parts */
 } HQC_KEY;
+
+void hqc_kem_key_free(HQC_KEY *key);
+HQC_KEY *hqc_kem_new(int evp_type);
 
 #endif /* OPENSSL_HEADER_HQC_KEM_H */

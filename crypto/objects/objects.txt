@@ -1001,6 +1001,8 @@ internet 7		:			: Mail
 
 Private 1		: enterprises		: Enterprises
 
+Enterprises 63215 : openssl : OpenSSL
+
 # RFC 2247
 Enterprises 1466 344	: dcobject		: dcObject
 
@@ -2067,3 +2069,9 @@ tcg-tr-category 37 : tcg-tr-cat-PublicKey 								: Public Key Trait Category
 nistKems 1 : id-alg-ml-kem-512  : ML-KEM-512
 nistKems 2 : id-alg-ml-kem-768  : ML-KEM-768
 nistKems 3 : id-alg-ml-kem-1024 : ML-KEM-1024
+
+
+!Alias experimentalKems OpenSSL 1
+experimentalKems 1 : id-alg-hqc-128 : HQC-128
+experimentalKems 2 : id-alg-hqc-192 : HQC-192
+experimentalKems 3 : id-alg-hqc-256 : HQC-256

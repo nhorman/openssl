@@ -3050,6 +3050,11 @@
 #define NID_Enterprises         389
 #define OBJ_Enterprises         OBJ_Private,1L
 
+#define SN_OpenSSL              "openssl"
+#define LN_OpenSSL              "OpenSSL"
+#define NID_OpenSSL             1505
+#define OBJ_OpenSSL             OBJ_Enterprises,63215L
+
 #define SN_dcObject             "dcobject"
 #define LN_dcObject             "dcObject"
 #define NID_dcObject            390
@@ -6649,6 +6654,23 @@
 #define LN_ML_KEM_1024          "ML-KEM-1024"
 #define NID_ML_KEM_1024         1456
 #define OBJ_ML_KEM_1024         OBJ_nistKems,3L
+
+#define OBJ_experimentalKems            OBJ_OpenSSL,1L
+
+#define SN_HQC_128              "id-alg-hqc-128"
+#define LN_HQC_128              "HQC-128"
+#define NID_HQC_128             1502
+#define OBJ_HQC_128             OBJ_experimentalKems,1L
+
+#define SN_HQC_192              "id-alg-hqc-192"
+#define LN_HQC_192              "HQC-192"
+#define NID_HQC_192             1503
+#define OBJ_HQC_192             OBJ_experimentalKems,2L
+
+#define SN_HQC_256              "id-alg-hqc-256"
+#define LN_HQC_256              "HQC-256"
+#define NID_HQC_256             1504
+#define OBJ_HQC_256             OBJ_experimentalKems,3L
 
 #endif /* OPENSSL_OBJ_MAC_H */
 

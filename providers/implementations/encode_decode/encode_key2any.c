@@ -34,6 +34,7 @@
 #include "crypto/rsa.h"
 #include "crypto/ml_dsa.h"
 #include "crypto/slh_dsa.h"
+#include "crypto/hqc_kem.h"
 #include "prov/implementations.h"
 #include "prov/bio.h"
 #include "prov/provider_ctx.h"
@@ -907,6 +908,41 @@ static int ml_kem_pki_priv_to_der(const void *vkey, unsigned char **pder,
 #define ml_kem_1024_pem_type "ML-KEM-1024"
 #endif
 
+#ifndef OPENSSL_NO_HQC
+#define hqc_check_key_type NULL
+#define hqc_epki_priv_to_der hqc_pki_priv_to_der
+#define prepare_hqc_params NULL
+
+#define hqc_128_evp_type EVP_PKEY_HQC_128
+#define hqc_128_pem_type "HQC-128"
+
+#define hqc_192_evp_type EVP_PKEY_HQC_192
+#define hqc_192_pem_type "HQC-192"
+
+#define hqc_256_evp_type EVP_PKEY_HQC_256
+#define hqc_256_pem_type "HQC-256"
+
+static int hqc_pki_priv_to_der(const void *vkey, unsigned char **pder, void *vctx)
+{
+    const HQC_KEY *key = vkey;
+
+    *pder = OPENSSL_memdup(key->seed, key->info->seed_len);
+
+    return (*pder == NULL) ? 0 : key->info->seed_len;
+}
+
+static int hqc_spki_pub_to_der(const void *vkey, unsigned char **pder,
+    ossl_unused void *ctx)
+{
+    const HQC_KEY *key = vkey;
+
+    *pder = OPENSSL_memdup(key->ek, key->info->ek_size);
+
+    return (*pder == NULL) ? 0 : key->info->ek_size;
+}
+
+#endif
+
 /* ---------------------------------------------------------------------- */
 
 /*
@@ -1766,3 +1802,26 @@ MAKE_ENCODER(ml_dsa_87, ml_dsa, PrivateKeyInfo, pem);
 MAKE_ENCODER(ml_dsa_87, ml_dsa, SubjectPublicKeyInfo, der);
 MAKE_ENCODER(ml_dsa_87, ml_dsa, SubjectPublicKeyInfo, pem);
 #endif /* OPENSSL_NO_ML_DSA */
+
+#ifndef OPENSSL_NO_HQC
+MAKE_ENCODER(hqc_128, hqc, EncryptedPrivateKeyInfo, der);
+MAKE_ENCODER(hqc_128, hqc, EncryptedPrivateKeyInfo, pem);
+MAKE_ENCODER(hqc_128, hqc, PrivateKeyInfo, der);
+MAKE_ENCODER(hqc_128, hqc, PrivateKeyInfo, pem);
+MAKE_ENCODER(hqc_128, hqc, SubjectPublicKeyInfo, der);
+MAKE_ENCODER(hqc_128, hqc, SubjectPublicKeyInfo, pem);
+
+MAKE_ENCODER(hqc_192, hqc, EncryptedPrivateKeyInfo, der);
+MAKE_ENCODER(hqc_192, hqc, EncryptedPrivateKeyInfo, pem);
+MAKE_ENCODER(hqc_192, hqc, PrivateKeyInfo, der);
+MAKE_ENCODER(hqc_192, hqc, PrivateKeyInfo, pem);
+MAKE_ENCODER(hqc_192, hqc, SubjectPublicKeyInfo, der);
+MAKE_ENCODER(hqc_192, hqc, SubjectPublicKeyInfo, pem);
+
+MAKE_ENCODER(hqc_256, hqc, EncryptedPrivateKeyInfo, der);
+MAKE_ENCODER(hqc_256, hqc, EncryptedPrivateKeyInfo, pem);
+MAKE_ENCODER(hqc_256, hqc, PrivateKeyInfo, der);
+MAKE_ENCODER(hqc_256, hqc, PrivateKeyInfo, pem);
+MAKE_ENCODER(hqc_256, hqc, SubjectPublicKeyInfo, der);
+MAKE_ENCODER(hqc_256, hqc, SubjectPublicKeyInfo, pem);
+#endif

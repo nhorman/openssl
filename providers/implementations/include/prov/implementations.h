@@ -816,6 +816,42 @@ extern const OSSL_DISPATCH ossl_ml_kem_1024_to_SubjectPublicKeyInfo_pem_encoder_
 extern const OSSL_DISPATCH ossl_ml_kem_1024_to_text_encoder_functions[];
 #endif
 
+#ifndef OPENSSL_NO_HQC
+extern const OSSL_DISPATCH ossl_hqc_128_to_PrivateKeyInfo_der_encoder_functions[];
+extern const OSSL_DISPATCH ossl_hqc_128_to_PrivateKeyInfo_pem_encoder_functions[];
+extern const OSSL_DISPATCH ossl_hqc_128_to_EncryptedPrivateKeyInfo_der_encoder_functions[];
+extern const OSSL_DISPATCH ossl_hqc_128_to_EncryptedPrivateKeyInfo_pem_encoder_functions[];
+extern const OSSL_DISPATCH ossl_hqc_128_to_SubjectPublicKeyInfo_der_encoder_functions[];
+extern const OSSL_DISPATCH ossl_hqc_128_to_SubjectPublicKeyInfo_pem_encoder_functions[];
+
+extern const OSSL_DISPATCH ossl_hqc_192_to_EncryptedPrivateKeyInfo_der_encoder_functions[];
+extern const OSSL_DISPATCH ossl_hqc_192_to_EncryptedPrivateKeyInfo_pem_encoder_functions[];
+extern const OSSL_DISPATCH ossl_hqc_192_to_PrivateKeyInfo_der_encoder_functions[];
+extern const OSSL_DISPATCH ossl_hqc_192_to_PrivateKeyInfo_pem_encoder_functions[];
+extern const OSSL_DISPATCH ossl_hqc_192_to_SubjectPublicKeyInfo_der_encoder_functions[];
+extern const OSSL_DISPATCH ossl_hqc_192_to_SubjectPublicKeyInfo_pem_encoder_functions[];
+
+extern const OSSL_DISPATCH ossl_hqc_256_to_EncryptedPrivateKeyInfo_der_encoder_functions[];
+extern const OSSL_DISPATCH ossl_hqc_256_to_EncryptedPrivateKeyInfo_pem_encoder_functions[];
+extern const OSSL_DISPATCH ossl_hqc_256_to_PrivateKeyInfo_der_encoder_functions[];
+extern const OSSL_DISPATCH ossl_hqc_256_to_PrivateKeyInfo_pem_encoder_functions[];
+extern const OSSL_DISPATCH ossl_hqc_256_to_SubjectPublicKeyInfo_der_encoder_functions[];
+extern const OSSL_DISPATCH ossl_hqc_256_to_SubjectPublicKeyInfo_pem_encoder_functions[];
+
+extern const OSSL_DISPATCH ossl_PrivateKeyInfo_der_to_hqc_128_decoder_functions[];
+extern const OSSL_DISPATCH ossl_SubjectPublicKeyInfo_der_to_hqc_128_decoder_functions[];
+
+extern const OSSL_DISPATCH ossl_PrivateKeyInfo_der_to_hqc_192_decoder_functions[];
+extern const OSSL_DISPATCH ossl_SubjectPublicKeyInfo_der_to_hqc_192_decoder_functions[];
+
+extern const OSSL_DISPATCH ossl_PrivateKeyInfo_der_to_hqc_256_decoder_functions[];
+extern const OSSL_DISPATCH ossl_SubjectPublicKeyInfo_der_to_hqc_256_decoder_functions[];
+
+extern const OSSL_DISPATCH ossl_hqc_128_to_text_encoder_functions[];
+extern const OSSL_DISPATCH ossl_hqc_192_to_text_encoder_functions[];
+extern const OSSL_DISPATCH ossl_hqc_256_to_text_encoder_functions[];
+#endif
+
 #ifndef OPENSSL_NO_SM2
 extern const OSSL_DISPATCH ossl_PrivateKeyInfo_der_to_sm2_decoder_functions[];
 extern const OSSL_DISPATCH ossl_SubjectPublicKeyInfo_der_to_sm2_decoder_functions[];

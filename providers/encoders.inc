@@ -92,6 +92,12 @@ ENCODER_TEXT("SLH-DSA-SHAKE-256s", slh_dsa_shake_256s, yes),
 ENCODER_TEXT("SLH-DSA-SHAKE-256f", slh_dsa_shake_256f, yes),
 #endif
 
+#ifndef OPENSSL_NO_HQC
+ENCODER_TEXT("HQC-128", hqc_128, no),
+ENCODER_TEXT("HQC-192", hqc_192, no),
+ENCODER_TEXT("HQC-256", hqc_256, no),
+#endif
+
 /*
  * Entries for key type specific output formats.  The structure name on these
  * is the same as the key type name.  This allows us to say something like:
@@ -372,6 +378,28 @@ ENCODER_w_structure("ML-DSA-87", ml_dsa_87, yes, der, SubjectPublicKeyInfo),
 ENCODER_w_structure("ML-DSA-87", ml_dsa_87, yes, pem, SubjectPublicKeyInfo),
 # endif /* OPENSSL_NO_ML_DSA */
 
+# ifndef OPENSSL_NO_HQC
+ENCODER_w_structure("HQC-128", hqc_128, no, der, EncryptedPrivateKeyInfo),
+ENCODER_w_structure("HQC-128", hqc_128, no, pem, EncryptedPrivateKeyInfo),
+ENCODER_w_structure("HQC-128", hqc_128, no, der, PrivateKeyInfo),
+ENCODER_w_structure("HQC-128", hqc_128, no, pem, PrivateKeyInfo),
+ENCODER_w_structure("HQC-128", hqc_128, no, der, SubjectPublicKeyInfo),
+ENCODER_w_structure("HQC-128", hqc_128, no, pem, SubjectPublicKeyInfo),
+
+ENCODER_w_structure("HQC-192", hqc_192, no, der, EncryptedPrivateKeyInfo),
+ENCODER_w_structure("HQC-192", hqc_192, no, pem, EncryptedPrivateKeyInfo),
+ENCODER_w_structure("HQC-192", hqc_192, no, der, PrivateKeyInfo),
+ENCODER_w_structure("HQC-192", hqc_192, no, pem, PrivateKeyInfo),
+ENCODER_w_structure("HQC-192", hqc_192, no, der, SubjectPublicKeyInfo),
+ENCODER_w_structure("HQC-192", hqc_192, no, pem, SubjectPublicKeyInfo),
+
+ENCODER_w_structure("HQC-256", hqc_256, no, der, EncryptedPrivateKeyInfo),
+ENCODER_w_structure("HQC-256", hqc_256, no, pem, EncryptedPrivateKeyInfo),
+ENCODER_w_structure("HQC-256", hqc_256, no, der, PrivateKeyInfo),
+ENCODER_w_structure("HQC-256", hqc_256, no, pem, PrivateKeyInfo),
+ENCODER_w_structure("HQC-256", hqc_256, no, der, SubjectPublicKeyInfo),
+ENCODER_w_structure("HQC-256", hqc_256, no, pem, SubjectPublicKeyInfo),
+# endif
 /*
  * Entries for key type specific output formats.  These are exactly the
  * same as the type specific above, except that they use the key type
