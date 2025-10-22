@@ -10,7 +10,7 @@
  */
 
 /* Serialized OID's */
-static const unsigned char so[9571] = {
+static const unsigned char so[9609] = {
     0x2A,0x86,0x48,0x86,0xF7,0x0D,                 /* [    0] OBJ_rsadsi */
     0x2A,0x86,0x48,0x86,0xF7,0x0D,0x01,            /* [    6] OBJ_pkcs */
     0x2A,0x86,0x48,0x86,0xF7,0x0D,0x02,0x02,       /* [   13] OBJ_md2 */
@@ -1353,9 +1353,13 @@ static const unsigned char so[9571] = {
     0x2A,0x86,0x48,0x86,0xF7,0x0D,0x01,0x09,0x10,0x03,0x1E,  /* [ 9538] OBJ_HKDF_SHA512 */
     0x2A,0x86,0x48,0x86,0xF7,0x0D,0x01,0x09,0x10,0x0D,  /* [ 9549] OBJ_id_smime_ori */
     0x2A,0x86,0x48,0x86,0xF7,0x0D,0x01,0x09,0x10,0x0D,0x03,  /* [ 9559] OBJ_id_smime_ori_kem */
+    0x2B,0x06,0x01,0x04,0x01,0x83,0xED,0x6F,0x01,0x01,  /* [ 9570] OBJ_HQC_128 */
+    0x2B,0x06,0x01,0x04,0x01,0x83,0xED,0x6F,0x01,0x02,  /* [ 9580] OBJ_HQC_192 */
+    0x2B,0x06,0x01,0x04,0x01,0x83,0xED,0x6F,0x01,0x03,  /* [ 9590] OBJ_HQC_256 */
+    0x2B,0x06,0x01,0x04,0x01,0x83,0xED,0x6F,       /* [ 9600] OBJ_OpenSSL */
 };
 
-#define NUM_NID 1501
+#define NUM_NID 1505
 static const ASN1_OBJECT nid_objs[NUM_NID] = {
     {"UNDEF", "undefined", NID_undef},
     {"rsadsi", "RSA Data Security, Inc.", NID_rsadsi, 6, &so[0]},
@@ -2858,9 +2862,13 @@ static const ASN1_OBJECT nid_objs[NUM_NID] = {
     {"id-alg-hkdf-with-sha512", "HKDF-SHA512", NID_HKDF_SHA512, 11, &so[9538]},
     {"id-smime-ori", "id-smime-ori", NID_id_smime_ori, 10, &so[9549]},
     {"id-smime-ori-kem", "id-smime-ori-kem", NID_id_smime_ori_kem, 11, &so[9559]},
+    {"id-alg-hqc-128", "HQC-128", NID_HQC_128, 10, &so[9570]},
+    {"id-alg-hqc-192", "HQC-192", NID_HQC_192, 10, &so[9580]},
+    {"id-alg-hqc-256", "HQC-256", NID_HQC_256, 10, &so[9590]},
+    {"openssl", "OpenSSL", NID_OpenSSL, 8, &so[9600]},
 };
 
-#define NUM_SN 1492
+#define NUM_SN 1496
 static const unsigned int sn_objs[NUM_SN] = {
      364,    /* "AD_DVCS" */
      419,    /* "AES-128-CBC" */
@@ -3493,6 +3501,9 @@ static const unsigned int sn_objs[NUM_SN] = {
     1496,    /* "id-alg-hkdf-with-sha256" */
     1497,    /* "id-alg-hkdf-with-sha384" */
     1498,    /* "id-alg-hkdf-with-sha512" */
+    1501,    /* "id-alg-hqc-128" */
+    1502,    /* "id-alg-hqc-192" */
+    1503,    /* "id-alg-hqc-256" */
     1456,    /* "id-alg-ml-kem-1024" */
     1454,    /* "id-alg-ml-kem-512" */
     1455,    /* "id-alg-ml-kem-768" */
@@ -3889,6 +3900,7 @@ static const unsigned int sn_objs[NUM_SN] = {
      139,    /* "nsSGC" */
       77,    /* "nsSslServerName" */
      681,    /* "onBasis" */
+    1504,    /* "openssl" */
     1283,    /* "oracle-jdk-trustedkeyusage" */
     1282,    /* "oracle-organization" */
     1089,    /* "organizationIdentifier" */
@@ -4356,7 +4368,7 @@ static const unsigned int sn_objs[NUM_SN] = {
     1289,    /* "zstd" */
 };
 
-#define NUM_LN 1492
+#define NUM_LN 1496
 static const unsigned int ln_objs[NUM_LN] = {
      363,    /* "AD Time Stamping" */
      405,    /* "ANSI X9.62" */
@@ -4490,6 +4502,9 @@ static const unsigned int ln_objs[NUM_LN] = {
      988,    /* "HMAC GOST 34.11-2012 256 bit" */
      989,    /* "HMAC GOST 34.11-2012 512 bit" */
      810,    /* "HMAC GOST 34.11-94" */
+    1501,    /* "HQC-128" */
+    1502,    /* "HQC-192" */
+    1503,    /* "HQC-256" */
     1321,    /* "Hardware Module Name" */
      432,    /* "Hold Instruction Call Issuer" */
      430,    /* "Hold Instruction Code" */
@@ -4569,6 +4584,7 @@ static const unsigned int ln_objs[NUM_LN] = {
     1005,    /* "OGRN" */
     1226,    /* "OGRNIP" */
     1404,    /* "Object Identifier Trait" */
+    1504,    /* "OpenSSL" */
     1282,    /* "Oracle organization" */
      161,    /* "PBES2" */
       69,    /* "PBKDF2" */
@@ -5852,7 +5868,7 @@ static const unsigned int ln_objs[NUM_LN] = {
      125,    /* "zlib compression" */
 };
 
-#define NUM_OBJ 1349
+#define NUM_OBJ 1353
 static const unsigned int obj_objs[NUM_OBJ] = {
        0,    /* OBJ_undef                        0 */
      181,    /* OBJ_iso                          1 */
@@ -6590,6 +6606,7 @@ static const unsigned int obj_objs[NUM_OBJ] = {
      794,    /* OBJ_ecdsa_with_SHA256            1 2 840 10045 4 3 2 */
      795,    /* OBJ_ecdsa_with_SHA384            1 2 840 10045 4 3 3 */
      796,    /* OBJ_ecdsa_with_SHA512            1 2 840 10045 4 3 4 */
+    1504,    /* OBJ_OpenSSL                      1 3 6 1 4 1 63215 */
      269,    /* OBJ_id_pkix1_explicit_88         1 3 6 1 5 5 7 0 1 */
      270,    /* OBJ_id_pkix1_implicit_88         1 3 6 1 5 5 7 0 2 */
      271,    /* OBJ_id_pkix1_explicit_93         1 3 6 1 5 5 7 0 3 */
@@ -7078,6 +7095,9 @@ static const unsigned int obj_objs[NUM_OBJ] = {
      648,    /* OBJ_ms_smartcard_login           1 3 6 1 4 1 311 20 2 2 */
      649,    /* OBJ_ms_upn                       1 3 6 1 4 1 311 20 2 3 */
     1291,    /* OBJ_ms_ntds_obj_sid              1 3 6 1 4 1 311 25 2 1 */
+    1501,    /* OBJ_HQC_128                      1 3 6 1 4 1 63215 1 1 */
+    1502,    /* OBJ_HQC_192                      1 3 6 1 4 1 63215 1 2 */
+    1503,    /* OBJ_HQC_256                      1 3 6 1 4 1 63215 1 3 */
     1201,    /* OBJ_blake2bmac                   1 3 6 1 4 1 1722 12 2 1 */
     1202,    /* OBJ_blake2smac                   1 3 6 1 4 1 1722 12 2 2 */
      951,    /* OBJ_ct_precert_scts              1 3 6 1 4 1 11129 2 4 2 */

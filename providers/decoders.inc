@@ -125,6 +125,16 @@ DECODER_w_structure("ML-DSA-65", der, SubjectPublicKeyInfo, ml_dsa_65, yes),
 DECODER_w_structure("ML-DSA-87", der, SubjectPublicKeyInfo, ml_dsa_87, yes),
 #endif /* OPENSSL_NO_ML_DSA */
 
+#ifndef OPENSSL_NO_HQC
+DECODER_w_structure("HQC-128", der, SubjectPublicKeyInfo, hqc_128, no),
+DECODER_w_structure("HQC-128", der, PrivateKeyInfo, hqc_128, no),
+
+DECODER_w_structure("HQC-192", der, SubjectPublicKeyInfo, hqc_192, no),
+DECODER_w_structure("HQC-192", der, PrivateKeyInfo, hqc_192, no),
+
+DECODER_w_structure("HQC-256", der, SubjectPublicKeyInfo, hqc_256, no),
+DECODER_w_structure("HQC-256", der, PrivateKeyInfo, hqc_256, no),
+#endif
 /*
  * A decoder that takes a SubjectPublicKeyInfo and figures out the types of key
  * that it contains. The output is the same SubjectPublicKeyInfo.
