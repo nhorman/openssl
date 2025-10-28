@@ -6,6 +6,7 @@ $EC_KEM_GOAL=../../libdefault.a
 $TEMPLATE_KEM_GOAL=../../libtemplate.a
 $ML_KEM_GOAL=../../libdefault.a ../../libfips.a
 $TLS_ML_KEM_HYBRID_GOAL=../../libdefault.a ../../libfips.a
+$HQC_KEM_GOAL=../../libdefault.a
 
 SOURCE[$RSA_KEM_GOAL]=rsa_kem.c
 
@@ -21,6 +22,10 @@ IF[{- !$disabled{'ml-kem'} -}]
     SOURCE[$TLS_ML_KEM_HYBRID_GOAL]=mlx_kem.c
   ENDIF
   SOURCE[$ML_KEM_GOAL] = ml_kem_kem.c
+ENDIF
+
+IF[{- !$disabled{'hqc'} -}]
+  SOURCE[$HQC_KEM_GOAL] = hqc_kem.c
 ENDIF
 
 SOURCE[$TEMPLATE_KEM_GOAL]=template_kem.c

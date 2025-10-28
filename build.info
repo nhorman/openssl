@@ -77,6 +77,7 @@ DEPEND[]=include/openssl/asn1.h \
          providers/implementations/kem/ec_kem.c \
          providers/implementations/kem/ecx_kem.c \
          providers/implementations/kem/ml_kem_kem.c \
+         providers/implementations/kem/hqc_kem.c \
          providers/implementations/kem/rsa_kem.c \
          providers/implementations/keymgmt/dh_kmgmt.c \
          providers/implementations/keymgmt/dsa_kmgmt.c \
@@ -196,6 +197,7 @@ DEPEND[providers/implementations/asymciphers/rsa_enc.c \
        providers/implementations/kem/ec_kem.c \
        providers/implementations/kem/ecx_kem.c \
        providers/implementations/kem/ml_kem_kem.c \
+       providers/implementations/kem/hqc_kem.c \
        providers/implementations/kem/rsa_kem.c \
        providers/implementations/keymgmt/dh_kmgmt.c \
        providers/implementations/keymgmt/dsa_kmgmt.c \
@@ -311,6 +313,8 @@ GENERATE[providers/implementations/kem/ecx_kem.c]=\
     providers/implementations/kem/ecx_kem.c.in
 GENERATE[providers/implementations/kem/ml_kem_kem.c]=\
     providers/implementations/kem/ml_kem_kem.c.in
+GENERATE[providers/implementations/kem/hqc_kem.c]=\
+    providers/implementations/kem/hqc_kem.c.in
 GENERATE[providers/implementations/kem/rsa_kem.c]=\
     providers/implementations/kem/rsa_kem.c.in
 GENERATE[providers/implementations/keymgmt/dh_kmgmt.c]=\
