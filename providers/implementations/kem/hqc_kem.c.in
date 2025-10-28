@@ -37,6 +37,9 @@ static OSSL_FUNC_kem_settable_ctx_params_fn hqc_kem_settable_ctx_params;
 
 typedef struct {
     HQC_KEY *key;
+    EVP_MD *shake;
+    void *provctx;
+    int op;
 } PROV_HQC_KEM_CTX;
 
 static void *hqc_kem_newctx(void *provctx)
@@ -47,6 +50,7 @@ static void *hqc_kem_newctx(void *provctx)
         return NULL;
 
     ctx->key = NULL;
+    ctx->provctx = provctx;
     return ctx;
 }
 
@@ -54,6 +58,7 @@ static void hqc_kem_freectx(void *vctx)
 {
     PROV_HQC_KEM_CTX *ctx = vctx;
 
+    EVP_MD_free(ctx->shake);
     OPENSSL_free(ctx);
 }
 
@@ -65,28 +70,31 @@ static int hqc_kem_init(void *vctx, int op, void *key,
     if (!ossl_prov_is_running())
         return 0;
     ctx->key = key;
+    ctx->op = op;
+    ctx->shake = EVP_MD_fetch(PROV_LIBCTX_OF(ctx->provctx), "SHAKE256", NULL);
+    if (ctx->shake == NULL)
+        goto err;
+
     return hqc_kem_set_ctx_params(vctx, params);
+err:
+    hqc_kem_freectx(ctx);
+    return 0;
 }
 
 static int hqc_kem_encapsulate_init(void *vctx, void *vkey,
     const OSSL_PARAM params[])
 {
-    HQC_KEY *key = vkey;
-
     return hqc_kem_init(vctx, EVP_PKEY_OP_ENCAPSULATE, key, params);
 }
 
 static int hqc_kem_decapsulate_init(void *vctx, void *vkey,
     const OSSL_PARAM params[])
 {
-    HQC_KEY *key = vkey;
-
     return hqc_kem_init(vctx, EVP_PKEY_OP_DECAPSULATE, key, params);
 }
 
 {
-    -produce_param_decoder('hqc_kem_set_ctx_params',
-        ([ 'OSSL_KEM_PARAM_IKME', 'ikme', 'octet_string' ], ));
+    -produce_param_decoder('hqc_kem_set_ctx_params', );
     -
 }
 
@@ -112,6 +120,44 @@ static int hqc_kem_encapsulate(void *vctx, unsigned char *ctext, size_t *clen,
 {
     PROV_HQC_KEM_CTX *ctx = vctx;
     HQC_KEY *key = ctx->key;
+    uint8_t entropy[48]; /* seed for the shake rng */
+    EVP_MD_CTX *md_ctx = NULL;
+    uint8_t domain = HQC_PRNG_DOMAIN_SEP;
+    uint8_t m[key->info->security_bytes];
+    uint8_t salt[key->info->salt_bytes];
+
+    md_ctx = EVP_MD_CTX_new();
+    if (md_ctx == NULL)
+        goto err;
+
+    /*
+     * Get some entropy to seed the prng below
+     */
+    if (!RAND_bytes_ex(PROV_LIBCTX_OF(ctx->provctx), entropy, 48))
+        goto err;
+
+    /*
+     * Initalize our shake alg as a prng
+     */
+    if (!EVP_DigestInit_ex2(md_ctx, ctx->shake, NULL))
+        goto err;
+    if (!EVP_DigestUpdate(md_ctx, entropy, 48))
+        goto err;
+    if (!EVP_DigestUpdate(md_ctx, &domain, 1))
+        goto err;
+
+    /*
+     * Get some random data for our security bytes
+     */
+    if (!EVP_DigestSqueeze(md_ctx, (unsigned char *)m, key->info->security_bytes))
+        goto err;
+
+    if (!EVP_DigestSqueeze(md_ctx, (unsigned char *)salt, key->info->salt_bytes))
+        goto err;
+
+    return 1;
+err:
+    EVP_MD_CTX_free(md_ctx);
     return 0;
 }
 

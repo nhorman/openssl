@@ -51,4 +51,20 @@ typedef struct ossl_hqc_kem_key_st {
 void hqc_kem_key_free(HQC_KEY *key);
 HQC_KEY *hqc_kem_new(int evp_type);
 
+/**
+ * @def VEC_SIZE(a, b)
+ * @brief Computes the number of elements of size @p b required to store
+ *        @p a units.
+ *
+ * This macro performs ceiling division of @p a by @p b, effectively
+ * returning the smallest integer greater than or equal to (a / b).
+ * Commonly used to determine the number of words or vector blocks
+ * needed to hold a certain number of bits or bytes.
+ *
+ * @param a Total size (e.g., number of bits or bytes).
+ * @param b Unit size (e.g., bits or bytes per word).
+ * @return The number of full units of size @p b needed to store @p a.
+ */
+#define VEC_SIZE(a, b) (((a) / (b)) + ((a) % (b) == 0 ? 0 : 1))
+
 #endif /* OPENSSL_HEADER_HQC_KEM_H */
