@@ -30,6 +30,7 @@ typedef struct hqc_variant_info_st {
     size_t dk_size;
     size_t seed_len;
     size_t security_bytes;
+    size_t shared_secret_bytes;
     uint32_t security_category;
     uint32_t secbits;
     uint32_t n;
@@ -66,5 +67,29 @@ HQC_KEY *hqc_kem_new(int evp_type);
  * @return The number of full units of size @p b needed to store @p a.
  */
 #define VEC_SIZE(a, b) (((a) / (b)) + ((a) % (b) == 0 ? 0 : 1))
+
+/**
+ * @def VEC_BITMASK(a, s)
+ * @brief Generates a bitmask for the remainder bits of @p a relative to
+ *        size @p s.
+ *
+ * This macro produces a mask with the lowest (a % s) bits set to 1 and
+ * the remaining bits cleared. It is typically used to isolate or
+ * operate on the trailing bits of a partially filled vector or word.
+ *
+ * @param a Bit index or size value.
+ * @param s Word or vector size in bits.
+ * @return A bitmask with (a % s) least significant bits set.
+ */
+#define VEC_BITMASK(a, s) ((1UL << (a % s)) - 1)
+
+/**
+ * @def SEED_BYTES
+ * @brief define the length of the seed used for key generation
+ *
+ * All variants of HQC use the same seed size when generating keys
+ * Define that value here
+ */
+#define SEED_BYTES 32
 
 #endif /* OPENSSL_HEADER_HQC_KEM_H */

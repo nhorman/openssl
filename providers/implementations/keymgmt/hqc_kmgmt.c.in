@@ -99,30 +99,6 @@ static int xof_get_bytes(EVP_MD_CTX *xof_ctx, uint8_t *output, uint32_t output_s
 #define KARATSUBA_THRESHOLD 16
 
 /**
- * @def SEED_BYTES
- * @brief define the length of the seed used for key generation
- *
- * All variants of HQC use the same seed size when generating keys
- * Define that value here
- */
-#define SEED_BYTES 32
-
-/**
- * @def VEC_BITMASK(a, s)
- * @brief Generates a bitmask for the remainder bits of @p a relative to
- *        size @p s.
- *
- * This macro produces a mask with the lowest (a % s) bits set to 1 and
- * the remaining bits cleared. It is typically used to isolate or
- * operate on the trailing bits of a partially filled vector or word.
- *
- * @param a Bit index or size value.
- * @param s Word or vector size in bits.
- * @return A bitmask with (a % s) least significant bits set.
- */
-#define VEC_BITMASK(a, s) ((1UL << (a % s)) - 1)
-
-/**
  * @var variant_info
  * @brief Static table containing parameter sets for supported HQC KEM
  *        variants.
@@ -144,6 +120,7 @@ static int xof_get_bytes(EVP_MD_CTX *xof_ctx, uint8_t *output, uint32_t output_s
  * | dk/pub key len       | Decapsulation (private) key length in bytes. |
  * | seed length          | Length of the seed used for random generation. |
  * | security bytes       | Number of bytes representing the security level. |
+ * | shared secret bytes  | Number of bytes in a shared secret for this key. |
  * | security category    | NIST security category (1–5). |
  * | secbits              | Effective security strength in bits. |
  * | N value              | Core polynomial modulus parameter. |
@@ -165,6 +142,7 @@ static const HQC_VARIANT_INFO variant_info[EVP_PKEY_HQC_KEM_MAX] = {
         2321, /* dk/pub key len */
         48, /* seed length */
         16, /* security bytes */
+        32, /* shared secret bytes */
         1, /* security category */
         128, /* secbits */
         17669, /* N value */
@@ -180,6 +158,7 @@ static const HQC_VARIANT_INFO variant_info[EVP_PKEY_HQC_KEM_MAX] = {
         4602,
         48,
         24,
+        32,
         3,
         192,
         35851,
@@ -193,6 +172,7 @@ static const HQC_VARIANT_INFO variant_info[EVP_PKEY_HQC_KEM_MAX] = {
         7237,
         7333,
         48,
+        32,
         32,
         5,
         256,

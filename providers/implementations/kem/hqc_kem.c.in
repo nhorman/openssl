@@ -35,9 +35,32 @@ static OSSL_FUNC_kem_decapsulate_fn hqc_kem_decapsulate;
 static OSSL_FUNC_kem_set_ctx_params_fn hqc_kem_set_ctx_params;
 static OSSL_FUNC_kem_settable_ctx_params_fn hqc_kem_settable_ctx_params;
 
+/**
+ * @def HQC_PRNG_DOMAIN_SEP
+ * @brief Domain separation constant for the HQC PRNG (Pseudo-Random
+ *        Number Generator).
+ *
+ * Used to distinguish the PRNG context from other cryptographic
+ * primitives in HQC operations, ensuring unique input domains for
+ * hashing or seed expansion functions.
+ */
+#define HQC_PRNG_DOMAIN_SEP 0
+
+/** @def HQC_H_FCT_DOMAIN
+ *  @brief Domain separator for the H(·) function in HQC.
+ */
+#define HQC_H_FCT_DOMAIN 1
+
+/** @def HQC_G_FCT_DOMAIN
+ *  @brief Domain separator for the G(·) function in HQC.
+ */
+#define HQC_G_FCT_DOMAIN 0
+
 typedef struct {
     HQC_KEY *key;
     EVP_MD *shake;
+    EVP_MD *sha3_256;
+    EVP_MD *sha3_512;
     void *provctx;
     int op;
 } PROV_HQC_KEM_CTX;
@@ -59,6 +82,8 @@ static void hqc_kem_freectx(void *vctx)
     PROV_HQC_KEM_CTX *ctx = vctx;
 
     EVP_MD_free(ctx->shake);
+    EVP_MD_free(ctx->sha3_256);
+    EVP_MD_free(ctx->sha3_512);
     OPENSSL_free(ctx);
 }
 
@@ -75,6 +100,14 @@ static int hqc_kem_init(void *vctx, int op, void *key,
     if (ctx->shake == NULL)
         goto err;
 
+    ctx->sha3_256 = EVP_MD_fetch(PROV_LIBCTX_OF(ctx->provctx), "SHA3-256", NULL);
+    if (ctx->sha3_256 == NULL)
+        goto err;
+
+    ctx->sha3_512 = EVP_MD_fetch(PROV_LIBCTX_OF(ctx->provctx), "SHA3-512", NULL);
+    if (ctx->sha3_512 == NULL)
+        goto err;
+
     return hqc_kem_set_ctx_params(vctx, params);
 err:
     hqc_kem_freectx(ctx);
@@ -84,13 +117,13 @@ err:
 static int hqc_kem_encapsulate_init(void *vctx, void *vkey,
     const OSSL_PARAM params[])
 {
-    return hqc_kem_init(vctx, EVP_PKEY_OP_ENCAPSULATE, key, params);
+    return hqc_kem_init(vctx, EVP_PKEY_OP_ENCAPSULATE, vkey, params);
 }
 
 static int hqc_kem_decapsulate_init(void *vctx, void *vkey,
     const OSSL_PARAM params[])
 {
-    return hqc_kem_init(vctx, EVP_PKEY_OP_DECAPSULATE, key, params);
+    return hqc_kem_init(vctx, EVP_PKEY_OP_DECAPSULATE, vkey, params);
 }
 
 {
@@ -115,6 +148,136 @@ static const OSSL_PARAM *hqc_kem_settable_ctx_params(ossl_unused void *vctx,
     return hqc_kem_set_ctx_params_list;
 }
 
+static int vec_sample_fixed_weight(EVP_MD_CTX *md_ctx, HQC_KEY *key, uint64_t *v, uint16_t weight)
+{
+    uint32_t support[key->info->omega_r] = { 0 };
+    uint32_t rand_u32[key->info->omega_r] = { 0 };
+    size_t i, k;
+    int32_t j;
+    uint32_t l, m, tmp;
+    uint64_t buff;
+    uint32_t found;
+    uint32_t mask;
+    uint32_t index_tab[key->info->omega_r] = { 0 };
+    uint64_t bit_tab[key->info->omega_r] = { 0 };
+    int32_t pos;
+    uint64_t val;
+    uint64_t mask2;
+    int val1;
+
+    if (!EVP_DigestSqueeze(md_ctx, (uint8_t *)rand_u32, 4 * weight))
+        goto err;
+
+    for (i = 0; i < weight; i++) {
+        buff = rand_u32[i];
+        support[i] = i + ((buff * (key->info->n - 1)) >> 32);
+    }
+
+    for (j = (weight - 1); j-- > 0) {
+        found = 0;
+
+        for (k = i + 1; k < weight; k++)
+            found |= (support[k] == support[i]) ? 1 : 0;
+        mask = -found;
+        support[i] = (mask & i) ^ (~mask & support[i]);
+    }
+
+    /*
+     * Now write out vector support
+     */
+    for (i = 0; i < weight; i++) {
+        index_tab[i] = support[i] >> 6;
+        pos = support[i] & 0x3f;
+        bit_tab[i] = ((uint64_t)1) << pos;
+    }
+
+    for (l = 0; l < VEC_SIZE(key->info->n, 64); l++) {
+        val = 0;
+        for (m = 0; m < weight; m++) {
+            tmp = l - index_tab[m];
+            val1 = 1 ^ ((tmp | -tmp) >> 31);
+            mask2 = -val1;
+            val |= (bit_tab[m] & mask2);
+        }
+        v[i] |= val;
+    }
+
+    return 1;
+err:
+    return 0;
+}
+
+static int hqc_pke_encrypt(PROV_HQC_KEM_CTX *ctx, EVP_MD_CTX *md_ctx, uint64_t *u, uint64_t *v,
+    HQC_KEY *key, uint64_t *m, uint8_t *theta)
+{
+    uint64_t h[VEC_SIZE(key->info->n, 64)] = { 0 };
+    uint64_t s[VEC_SIZE(key->info->n, 64)] = { 0 };
+    uint64_t r1[VEC_SIZE(key->info->n, 64)] = { 0 };
+    uint64_t r2[VEC_SIZE(key->info->n, 64)] = { 0 };
+    uint64_t e[VEC_SIZE(key->info->n, 64)] = { 0 };
+    uint64_t tmp[VEC_SIZE(key->info->n, 64)] = { 0 };
+    uint8_t domain = HQC_XOF_DOMAIN;
+
+    /*
+     * Get h and s vectors
+     * implements hqc_ek_pke_from_string(h, s, ek_pke);
+     */
+    if (!EVP_DigestInit_ex2(md_ctx, ctx->shake, NULL))
+        goto err;
+
+    if (!EVP_DigestUpdate(md_ctx, key->ek, SEED_BYTES))
+        goto err;
+
+    if (!EVP_DigestUpdate(md_ctx, &domain, 1))
+        goto err;
+
+    if (!EVP_DigestSqueeze(md_ctx, (uint8_t *)h, VEC_SIZE(key->info->n, 8)))
+        goto err;
+
+    h[VEC_SIZE(key->info->n, 64) - 1] &= VEC_BITMASK(key->info->n, 64);
+
+    memcpy(s, key->ek + SEED_BYTES, VEC_SIZE(key->info->n, 8));
+
+    /*
+     * Init shake with theta
+     */
+    if (!EVP_DigestInit_ex2(md_ctx, ctx->shake, NULL))
+        goto err;
+
+    if (!EVP_DigestUpdate(md_ctx, theta, SEED_BYTES))
+        goto err;
+
+    if (!EVP_DigestUpdate(md_ctx, &domain, 1))
+        goto err;
+
+    /* we're going to squeeze the above in just a moment */
+
+    // Retrieve h and s from public key
+    // hqc_ek_pke_from_string(h, s, ek_pke);
+
+    // Generate re, e and r1
+    vect_sample_fixed_weight2(&theta_xof_ctx, r2, PARAM_OMEGA_R);
+    vect_sample_fixed_weight2(&theta_xof_ctx, e, PARAM_OMEGA_E);
+    vect_sample_fixed_weight2(&theta_xof_ctx, r1, PARAM_OMEGA_R);
+
+    // Compute u = r1 + r2.h
+    vect_mul(c_pke->u, r2, h);
+    vect_add(c_pke->u, r1, c_pke->u, VEC_N_SIZE_64);
+
+    // Compute v = C.encode(m)
+    code_encode(c_pke->v, m);
+
+    // Compute v = C.encode(m) + Truncate(s.r2 + e)
+    vect_mul(tmp, r2, s);
+    vect_add(tmp, e, tmp, VEC_N_SIZE_64);
+    vect_truncate(tmp);
+    vect_add(c_pke->v, c_pke->v, tmp, VEC_N1N2_SIZE_64);
+
+    return 1;
+err:
+    return 0;
+}
+
 static int hqc_kem_encapsulate(void *vctx, unsigned char *ctext, size_t *clen,
     unsigned char *shsec, size_t *slen)
 {
@@ -125,6 +288,12 @@ static int hqc_kem_encapsulate(void *vctx, unsigned char *ctext, size_t *clen,
     uint8_t domain = HQC_PRNG_DOMAIN_SEP;
     uint8_t m[key->info->security_bytes];
     uint8_t salt[key->info->salt_bytes];
+    uint8_t k_theta[SEED_BYTES + key->info->shared_secret_bytes];
+    uint8_t theta[SEED_BYTES];
+    uint8_t hash_ek_kem[SEED_BYTES];
+    uint64_t u[VEC_SIZE(key->info->n, 64)];
+    uint64_t v[VEC_SIZE(key->info->n, 64)];
+    unsigned int len = 0;
 
     md_ctx = EVP_MD_CTX_new();
     if (md_ctx == NULL)
@@ -154,6 +323,39 @@ static int hqc_kem_encapsulate(void *vctx, unsigned char *ctext, size_t *clen,
 
     if (!EVP_DigestSqueeze(md_ctx, (unsigned char *)salt, key->info->salt_bytes))
         goto err;
+
+    /*
+     * hash our ek key to produce our shared key
+     */
+    if (!EVP_DigestInit_ex2(md_ctx, ctx->sha3_256, NULL))
+        goto err;
+    if (!EVP_DigestUpdate(md_ctx, key->ek, key->info->ek_size))
+        goto err;
+    domain = HQC_H_FCT_DOMAIN;
+    if (!EVP_DigestUpdate(md_ctx, &domain, 1))
+        goto err;
+    memset(hash_ek_kem, 0, key->info->seed_len);
+    if (!EVP_DigestFinal_ex(md_ctx, hash_ek_kem, &len))
+        goto err;
+
+    if (!EVP_DigestInit_ex2(md_ctx, ctx->sha3_512, NULL))
+        goto err;
+    if (!EVP_DigestUpdate(md_ctx, hash_ek_kem, key->info->seed_len))
+        goto err;
+    if (!EVP_DigestUpdate(md_ctx, m, key->info->security_bytes))
+        goto err;
+    if (!EVP_DigestUpdate(md_ctx, salt, key->info->salt_bytes))
+        goto err;
+    domain = HQC_G_FCT_DOMAIN;
+    if (!EVP_DigestUpdate(md_ctx, &domain, 1))
+        goto err;
+    memset(k_theta, 0, key->info->seed_len);
+    if (!EVP_DigestFinal_ex(md_ctx, k_theta, &len))
+        goto err;
+
+    memcpy(theta, k_theta + key->info->seed_len, key->info->seed_len);
+
+    hqc_pke_encrypt(ctx, md_ctx, u, v, key, m, theta);
 
     return 1;
 err:
