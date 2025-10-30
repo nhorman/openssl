@@ -1,0 +1,158 @@
+name: "Run nightly ACVP tests"
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-run-acvp-test:
+    strategy:
+      matrix:
+        versions: [
+          # Stable branches of fips releases + master go here
+          { ossl-branch: 'openssl-3.5' },
+          { ossl-branch: 'master' }
+        ]
+    env:
+      OUTPUTDIR: test_output
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -yq libcjson-dev
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.versions.ossl-branch }}
+          path: 'ossl-source'
+      - name: Configure openssl
+        run: |
+          cd ossl-source
+          ./config --banner=Configured enable-fips no-docs no-tests --prefix=$GITHUB_WORKSPACE/ossl
+          ./configdata.pm --dump
+      - name: Build openssl
+        run: |
+          cd ossl-source
+          make -j
+          make install
+          make install_fips
+          LD_LIBRARY_PATH=$GITHUB_WORKSPACE/ossl/lib64 $GITHUB_WORKSPACE/ossl/bin/openssl fipsinstall -module $GITHUB_WORKSPACE/ossl/lib64/ossl-modules/fips.so -out $GITHUB_WORKSPACE/ossl/ssl/fipsmodule.cnf
+      - name: Create fips config file
+        run: |
+          cat << EOF > $GITHUB_WORKSPACE/ossl/ssl/openssl-fips.cnf
+          HOME          = .
+          openssl_conf = openssl_init
+          config_diagnostics = 1
+          .include fipsmodule.cnf
+
+          [openssl_init]
+          providers = provider_sect
+
+          [provider_sect]
+          default = default_sect
+
+          fips = fips_sect
+          [default_sect]
+          # activate = 1
+
+          EOF
+      - name: Checkout acvp-test-harness
+        uses: actions/checkout@v4
+        with:
+          # fixme for openssl
+          repository: 'openssl-oss/openssl-acvp-test-harness'
+          ref: 'main'
+          path: 'acvp-harness'
+          token: ${{ secrets.TEST_ACVP_TOKEN }}
+      - name: Build acvp-harness
+        run: |
+          cd acvp-harness
+          ln -s $GITHUB_WORKSPACE/ossl-source ./openssl
+          make
+      - name: Run acvp-harness
+        run: |
+          cd acvp-harness
+          INPUTDIR=./tests/static_test_vectors/
+          mkdir $OUTPUTDIR 
+          export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/ossl/lib64
+          export OPENSSL_CONF=$GITHUB_WORKSPACE/ossl/ssl/openssl-fips.cnf
+          export OPENSSL_CONF_INCLUDE=$GITHUB_WORKSPACE/ossl/ssl
+          export OPENSSL_MODULES=$GITHUB_WORKSPACE/ossl/lib64/ossl-modules
+          ldd ./acvpt
+          # unlike every other application on the planet, acvpt exits with 
+          # a return code of 1 for success, rather than 0, so we have to catch
+          # that here.  For some reason github is not honoring the old || true
+          # method of dealing with this, so just ignore the error with a set +e
+          # for now
+          set +e
+          ./acvpt -a 
+
+          # for each vector file in our static_test_vectors directory, we need to compute the 
+          # corresponding response file name, both in the static_test_vectors dir and in 
+          # our output directory for later comparison
+          for file in $(find $INPUTDIR -name '*_vectors*' -type f); do
+            outfilename="$(basename "$file" | sed -e"s/vectors/response/")"
+            checkfile="$(echo "$file" | sed -e"s/_vectors\.json/_response\.json/")"
+
+            echo "Processing $file"
+            # As above, acvtp is backwards in its exit codes, so use
+            # set +e to ignore this, given githubs problem with ||
+            set +e
+            ./acvpt -p fips -i "$file" -o "$OUTPUTDIR/$outfilename"
+            set -e
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.versions.ossl-branch }}
+          path: ./acvp-harness/test_output/*
+      - name: Check for errors
+        run: |
+          # This is a mess.  The json output for various algorithms have a wide range of schemas
+          # which make comparisons very hard. So far:
+          # Non-deterministic json - outputs that have a randomness factor as the input and so
+          # outputs change, leading to impossible comparisons.  Here we just enumerate key values
+          # jq, to take a guess at weather or not the output looks right-ish.
+          #
+          # arraytype json - the output that acvpt give has a missing array container around it
+          # whereas the reference response vector does not, so we need to strip that.
+          #
+          # nonarraytype json - simmilar to arraytype json, but missing the containing array container
+          #
+          # incomplete json - json outputs for which the refrerence responses don't exist, or are empty
+          # I just skip these
+          #
+          # And of course we have to sort everything by keys with json to ensure that they match in the proper order
+          NONDETERMINISTIC_JSON=("KDA-Twostep_response.json" "KDA-Onestep_response.json")
+          ARRAYTYPE_JSON=("ctrDRBG_response.json" \
+                          "hashDRBG_response.json" \
+                          "hmacDRBG_response.json" \
+                          "RSAsigGen_FIPS1865_response.json")
+          NONARRAYTYPE_JSON=("HKDF_response.json")
+          INCOMPLETE_JSON=("RSAkeyGen_crt_response.json")
+          cd acvp-harness
+          for file in $(find ./tests/static_test_vectors -type f -name '*response*.json'); do
+            # Check if there are any test cases that report passing or failure
+            basefile=$(basename $file)
+            echo "Comparing $file to $OUTPUTDIR/$basefile"
+            set +e
+            if [[ " ${NONDETERMINISTIC_JSON[*]} " =~ " $basefile " ]]; then
+              echo "Using non deterministic method"
+              diff -u <(jq 'del(.. | .isSample?) | walk(if type=="object" then keys_unsorted else . end)' $file | jq -S .) <(jq 'del(.[] | select(.acvVersion)) | .[0] | walk(if type=="object" then keys_unsorted else . end)' $OUTPUTDIR/$basefile | jq -S .)
+            elif [[ " ${ARRAYTYPE_JSON[*]} " =~ " $basefile " ]]; then
+              jq -e -S --slurpfile ref <(jq -S 'del(.. | .isSample?)' $file) '.[1]==$ref[0][1]' $OUTPUTDIR/$basefile >/dev/null
+            elif [[ " ${NONARRAYTYPE_JSON[*]} " =~ " $basefile " ]]; then
+              jq -e -S --slurpfile ref <(jq -S 'del(.. | .isSample?)' $file) '.[1]==$ref[0]' $OUTPUTDIR/$basefile >/dev/null
+            elif [[ " ${INCOMPLETE_JSON[*]} " =~ " $basefile " ]]; then
+              echo "This test has incomplete reference output, skipping"
+              continue
+            else
+              echo "Unknown JSON schema"
+              exit 1
+            fi
+            if [ $? -eq 0 ]; then
+              echo "$OUTPUTDIR/$basefile passes"
+            else
+              echo "$OUTPUTDIR/$basefile is incorrect"
+              exit 1
+            fi
+            set -e
+          done 
