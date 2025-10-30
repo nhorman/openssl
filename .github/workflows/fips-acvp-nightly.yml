@@ -1,0 +1,114 @@
+name: "Run nightly ACVP tests"
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-run-acvp-test:
+    strategy:
+      matrix:
+        versions: [
+          # Stable branches of fips releases + master go here
+          { ossl-branch: 'openssl-3.5' },
+          { ossl-branch: 'master' }
+        ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -yq libcjson-dev
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.versions.ossl-branch }}
+          path: 'ossl-source'
+      - name: Configure openssl
+        run: |
+          cd ossl-source
+          ./config --banner=Configured enable-fips no-docs no-tests --prefix=$GITHUB_WORKSPACE/ossl
+          ./configdata.pm --dump
+      - name: Build openssl
+        run: |
+          cd ossl-source
+          make -j
+          make install
+          make install_fips
+          LD_LIBRARY_PATH=$GITHUB_WORKSPACE/ossl/lib64 $GITHUB_WORKSPACE/ossl/bin/openssl fipsinstall -module $GITHUB_WORKSPACE/ossl/lib64/ossl-modules/fips.so -out $GITHUB_WORKSPACE/ossl/ssl/fipsmodule.cnf
+      - name: Create fips config file
+        run: |
+          cat << EOF > $GITHUB_WORKSPACE/ossl/ssl/openssl-fips.cnf
+          HOME          = .
+          openssl_conf = openssl_init
+          config_diagnostics = 1
+          .include fipsmodule.cnf
+
+          [openssl_init]
+          providers = provider_sect
+
+          [provider_sect]
+          default = default_sect
+
+          fips = fips_sect
+          [default_sect]
+          # activate = 1
+
+          EOF
+      - name: Checkout acvp-test-harness
+        uses: actions/checkout@v4
+        with:
+          # fixme for openssl
+          repository: 'openssl-oss/openssl-acvp-test-harness'
+          ref: 'main'
+          path: 'acvp-harness'
+          token: ${{ secrets.TEST_ACVP_TOKEN }}
+      - name: Build acvp-harness
+        run: |
+          cd acvp-harness
+          ln -s $GITHUB_WORKSPACE/ossl-source ./openssl
+          make
+      - name: Run acvp-harness
+        run: |
+          cd acvp-harness
+          INPUTDIR=./tests/static_test_vectors/
+          OUTPUTDIR=./test_output/
+          mkdir ./test_output
+          export LD_LIBRARY_PATH=$GITHUB_WORKSPACE/ossl/lib64
+          export OPENSSL_CONF=$GITHUB_WORKSPACE/ossl/ssl/openssl-fips.cnf
+          export OPENSSL_CONF_INCLUDE=$GITHUB_WORKSPACE/ossl/ssl
+          export OPENSSL_MODULES=$GITHUB_WORKSPACE/ossl/lib64/ossl-modules
+          ldd ./acvpt
+          # unlike every other application on the planet, acvpt exits with 
+          # a return code of 1 for success, rather than 0, so we have to catch
+          # that here.  For some reason github is not honoring the old || true
+          # method of dealing with this, so just ignore the error with a set +e
+          # for now
+          set +e
+          ./acvpt -a 
+          for file in $(find $INPUTDIR -name '*_vectors*' -type f); do
+            outfilename="$(basename "$file" | sed -e"s/vectors/response/")"
+            checkfile="$(echo "$file" | sed -e"s/_vectors\.json/_response\.json/")"
+
+            echo "Processing $file"
+            # As above, acvtp is backwards in its exit codes, so use
+            # set +e to ignore this, given githubs problem with ||
+            set +e
+            ./acvpt -p fips -i "$file" -o "$OUTPUTDIR/$outfilename"
+            set -e
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.versions.ossl-branch }}
+          path: ./acvp-harness/test-output/
+      - name: Check for errors
+        run: |
+          cd acvp-harness
+          for file in $(find ./test-output/ -type f); do
+            # Check if there are any test cases that report passing or failure
+            set -e
+            grep -q "testPassed" $file | grep false
+            if [ $? -eq 0 ]; then
+              echo "Failures in $file"
+              exit 1
+            fi
+            set +e
+          done 
