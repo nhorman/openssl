@@ -61,6 +61,21 @@ static OSSL_FUNC_kem_settable_ctx_params_fn hqc_kem_settable_ctx_params;
  */
 #define HQC_XOF_DOMAIN 1
 
+/**
+ * @def KARATSUBA_THRESHOLD
+ * @brief Threshold for switching to the Karatsuba multiplication
+ *        algorithm.
+ *
+ * When the operand size (in coefficients, words, or bits—depending on
+ * context) exceeds this threshold, the Karatsuba multiplication method
+ * is used instead of the standard (schoolbook) multiplication.
+ *
+ * This value balances performance and overhead: smaller sizes use
+ * simpler algorithms to reduce setup cost, while larger sizes benefit
+ * from Karatsuba’s reduced asymptotic complexity.
+ */
+#define KARATSUBA_THRESHOLD 16
+
 typedef struct {
     HQC_KEY *key;
     EVP_MD *shake;
@@ -217,6 +232,264 @@ err:
     return 0;
 }
 
+static inline uint32_t compare_u32(const uint32_t v1, const uint32_t v2)
+{
+    return 1 ^ (((v1 - v2) | (v2 - v1)) >> 31);
+}
+
+static int vect_sample_fixed_weight2(EVP_MD_CTX *md_ctx, HQC_KEY *key, uint64_t *v, uint16_t weight)
+{
+    uint32_t support[key->info->omega_r];
+    uint32_t rand_u32[key->info->omega_r];
+    uint32_t index_tab[key->info->omega_r];
+    uint64_t bit_tab[key->info->omega_r];
+
+    memset(support, 0, key->info->omega_r * sizeof(uint32_t));
+    memset(rand_u32, 0, key->info->omega_r * sizeof(uint32_t));
+    memset(index_tab, 0, key->info->omega_r * sizeof(uint32_t));
+    memset(bit_tab, 0, key->info->omega_r * sizeof(uint64_t));
+
+    if (!EVP_DigestSqueeze(md_ctx, (unsigned char *)rand_u32, weight * 4))
+        return 0;
+
+    for (size_t i = 0; i < weight; ++i) {
+        uint64_t buff = rand_u32[i];
+        support[i] = i + ((buff * (key->info->n - i)) >> 32);
+    }
+
+    for (int32_t i = (weight - 1); i-- > 0;) {
+        uint32_t found = 0;
+
+        for (size_t j = i + 1; j < weight; ++j) {
+            found |= compare_u32(support[j], support[i]);
+        }
+
+        uint32_t mask = -found;
+        support[i] = (mask & i) ^ (~mask & support[i]);
+    }
+
+    for (size_t i = 0; i < weight; i++) {
+        index_tab[i] = support[i] >> 6;
+        int32_t pos = support[i] & 0x3f;
+        bit_tab[i] = ((uint64_t)1) << pos;
+    }
+
+    uint64_t val = 0;
+    for (uint32_t i = 0; i < VEC_SIZE(key->info->n, 64); i++) {
+        val = 0;
+        for (uint32_t j = 0; j < weight; j++) {
+            uint32_t tmp = i - index_tab[j];
+            int val1 = 1 ^ ((tmp | -tmp) >> 31);
+            uint64_t mask = -val1;
+            val |= (bit_tab[j] & mask);
+        }
+        v[i] |= val;
+    }
+
+    return 1;
+}
+
+/**
+ * @brief Performs polynomial multiplication using the schoolbook method
+ *        over GF(2).
+ *
+ * This function multiplies two binary polynomials represented as
+ * 64-bit word arrays and stores the 128-bit result in the output
+ * buffer. Each input operand is treated as a polynomial with binary
+ * coefficients, and multiplication is performed modulo 2 (XOR-based
+ * accumulation).
+ *
+ * @param r
+ *   Pointer to the output buffer of size @c 2 * n 64-bit words. The
+ *   buffer is zero-initialized at the start of the operation.
+ *
+ * @param a
+ *   Pointer to the first input operand (multiplicand), represented as
+ *   an array of @c n 64-bit words.
+ *
+ * @param b
+ *   Pointer to the second input operand (multiplier), represented as
+ *   an array of @c n 64-bit words.
+ *
+ * @param n
+ *   Number of 64-bit words in each input operand.
+ *
+ * @details
+ *   - Implements classic “schoolbook” polynomial multiplication in
+ *     GF(2)[x].
+ *   - Each bit of @p a is examined; if the bit is set, the polynomial
+ *     @p b is XORed into the result @p r shifted by the bit’s position.
+ *   - Bit-level shifts and XOR operations are used instead of
+ *     arithmetic multiplication or addition.
+ *   - Handles bit shifts across word boundaries, propagating high bits
+ *     into the next word.
+ *
+ * @note
+ *   - The result buffer @p r must be large enough to hold 2 × n 64-bit
+ *     words.
+ *   - Operates entirely in constant-time bitwise logic (no conditional
+ *     branches on secret data).
+ *   - This is a reference (non-optimized) implementation suitable for
+ *     small operand sizes or as a fallback when Karatsuba or FFT-based
+ *     multiplication is not beneficial.
+ */
+static void schoolbook_mul(uint64_t *r, const uint64_t *a, const uint64_t *b, size_t n)
+{
+    size_t i, j, base;
+    int bit, sh, inv;
+    uint64_t mask, ai;
+
+    memset(r, 0, 2 * n * sizeof(uint64_t));
+    for (i = 0; i < n; i++) {
+        ai = a[i];
+        for (bit = 0; bit < 64; bit++) {
+            mask = -((ai >> bit) & 1ULL);
+            base = i;
+            sh = bit;
+            inv = 64 - sh;
+            if (sh == 0) {
+                for (j = 0; j < n; j++) {
+                    r[base + j] ^= b[j] & mask;
+                }
+            } else {
+                for (j = 0; j < n; j++) {
+                    r[base + j] ^= (b[j] << sh) & mask;
+                    r[base + j + 1] ^= (b[j] >> inv) & mask;
+                }
+            }
+        }
+    }
+}
+
+/**
+ * @brief Performs polynomial multiplication using the recursive
+ *        Karatsuba algorithm over GF(2).
+ *
+ * This function computes the product of two binary polynomials
+ * represented as arrays of 64-bit words, using the Karatsuba
+ * divide-and-conquer algorithm for improved efficiency over the
+ * classical schoolbook method. Multiplication and accumulation are
+ * performed with XOR operations, as arithmetic is carried out in GF(2).
+ *
+ * @param r
+ *   Pointer to the output buffer of size @c 2 * n 64-bit words, which
+ *   will hold the resulting product. The buffer is cleared before
+ *   accumulation.
+ *
+ * @param a
+ *   Pointer to the first input operand (multiplicand), represented as
+ *   an array of @c n 64-bit words.
+ *
+ * @param b
+ *   Pointer to the second input operand (multiplier), represented as
+ *   an array of @c n 64-bit words.
+ *
+ * @param n
+ *   Number of 64-bit words in each input operand.
+ *
+ * @param tmp_buffer
+ *   Pointer to a temporary buffer used for storing intermediate
+ *   results and recursive workspace. The buffer must be large enough
+ *   to accommodate several subproducts and temporary vectors.
+ *
+ * @details
+ *   - For small operand sizes (@c n ≤ @c KARATSUBA_THRESHOLD), the
+ *     function falls back to @c schoolbook_mul() for simplicity.
+ *   - The operands are split into low and high halves:
+ *     @f$a = a_0 + x^m a_1@f$, @f$b = b_0 + x^m b_1@f$.
+ *   - The recursive Karatsuba formulation computes:
+ *       - @c z0 = a0 * b0  (low product)
+ *       - @c z2 = a1 * b1  (high product)
+ *       - @c zmid = (a0 + a1) * (b0 + b1)
+ *     and combines them via:
+ *       @f$r = z0 + ((zmid ⊕ z0 ⊕ z2) << m) + (z2 << 2m)@f$.
+ *   - XOR replaces addition to represent modular arithmetic in GF(2).
+ *
+ * @note
+ *   - The algorithm runs in approximately O(n^1.585) time, offering
+ *     better asymptotic performance than the quadratic schoolbook
+ *     method for large n.
+ *   - All arithmetic is constant-time with respect to data values,
+ *     minimizing side-channel leakage.
+ *   - Ensure @p tmp_buffer is sufficiently large; insufficient space
+ *     may cause memory corruption.
+ *   - Used internally for HQC finite-field and polynomial arithmetic
+ *     operations where efficiency is critical.
+ */
+static void karatsuba_mul(uint64_t *r, const uint64_t *a, const uint64_t *b,
+    size_t n, uint64_t *tmp_buffer)
+{
+    if (n <= KARATSUBA_THRESHOLD) {
+        schoolbook_mul(r, a, b, n);
+        return;
+    }
+
+    size_t m = n >> 1;
+    size_t n0 = m;
+    size_t n1 = n - m;
+
+    /* take successive chunks of tmp_buffer for each intermediate result */
+    uint64_t *z0 = tmp_buffer; /* low-half product, size 2*n words */
+    uint64_t *z2 = z0 + 2 * n; /* high-half product, size 2*n words */
+    uint64_t *zmid = z2 + 2 * n; /* middle product, size 2*n words */
+
+    /* ta and tb hold the sums of low and high halves: */
+    /* ta[i] = a0[i] XOR a1[i], tb[i] = b0[i] XOR b1[i] for i < n1 */
+    uint64_t *ta = zmid + 2 * n;
+    uint64_t *tb = ta + n;
+
+    /* buffer for child recursions */
+    uint64_t *child_buffer = tmp_buffer + 8 * n;
+
+    /* 1) low * low */
+    karatsuba_mul(z0, a, b, n0, child_buffer);
+
+    /* 2) high * high */
+    karatsuba_mul(z2, a + m, b + m, n1, child_buffer);
+
+    /* 3) (a0+a1)*(b0+b1) */
+    for (size_t i = 0; i < n1; i++) {
+        uint64_t loa = (i < n0 ? a[i] : 0);
+        uint64_t lob = (i < n0 ? b[i] : 0);
+        ta[i] = loa ^ a[m + i];
+        tb[i] = lob ^ b[m + i];
+    }
+    karatsuba_mul(zmid, ta, tb, n1, child_buffer);
+
+    /* 4) assemble into r */
+    memset(r, 0, 2 * n * sizeof(uint64_t));
+    for (size_t i = 0; i < 2 * n0; i++)
+        r[i] ^= z0[i];
+    for (size_t i = 0; i < 2 * n1; i++)
+        r[2 * m + i] ^= z2[i];
+    for (size_t i = 0; i < 2 * n1; i++) {
+        uint64_t z0i = (i < 2 * n0 ? z0[i] : 0);
+        uint64_t z2i = (i < 2 * n1 ? z2[i] : 0);
+        uint64_t mid = zmid[i] ^ z0i ^ z2i;
+        r[m + i] ^= mid;
+    }
+}
+
+static void reduce(uint64_t *out, const uint64_t *a, const HQC_VARIANT_INFO *info)
+{
+    for (size_t i = 0; i < VEC_SIZE(info->n, 64); i++) {
+        uint64_t r = a[i + VEC_SIZE(info->n, 64) - 1] >> (info->n & 0x3F);
+        uint64_t carry = a[i + VEC_SIZE(info->n, 64)] << (64 - (info->n & 0x3F));
+        out[i] = a[i] ^ r ^ carry;
+    }
+    out[VEC_SIZE(info->n, 64) - 1] &= VEC_BITMASK(info->n, 64);
+}
+
+static void vect_mul(uint64_t *out, const uint64_t *a, const uint64_t *b, const HQC_VARIANT_INFO *info)
+{
+    uint64_t unreduced[2 * VEC_SIZE(info->n, 64)];
+    uint64_t tmp_buffer[16 * VEC_SIZE(info->n, 64)];
+
+    karatsuba_mul(unreduced, a, b, VEC_SIZE(info->n, 64), tmp_buffer);
+
+    reduce(out, unreduced, info);
+}
+
 static int hqc_pke_encrypt(PROV_HQC_KEM_CTX *ctx, EVP_MD_CTX *md_ctx, uint64_t *u, uint64_t *v,
     HQC_KEY *key, uint64_t *m, uint8_t *theta)
 {
@@ -273,9 +546,9 @@ static int hqc_pke_encrypt(PROV_HQC_KEM_CTX *ctx, EVP_MD_CTX *md_ctx, uint64_t *
     /* we're going to squeeze the above in just a moment */
 
     // Generate re, e and r1
-    vect_sample_fixed_weight2(md_ctx, r2, key->info->omega_r);
-    vect_sample_fixed_weight2(md_ctx, e, key->info->omega_e);
-    vect_sample_fixed_weight2(md_ctx, r1, key->info->omega_r);
+    vect_sample_fixed_weight2(md_ctx, key, r2, key->info->omega_r);
+    vect_sample_fixed_weight2(md_ctx, key, e, key->info->omega_e);
+    vect_sample_fixed_weight2(md_ctx, key, r1, key->info->omega_r);
 
     // Compute u = r1 + r2.h
     vect_mul(c_pke->u, r2, h);
