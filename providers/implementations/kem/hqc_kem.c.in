@@ -56,6 +56,11 @@ static OSSL_FUNC_kem_settable_ctx_params_fn hqc_kem_settable_ctx_params;
  */
 #define HQC_G_FCT_DOMAIN 0
 
+/** @def HQC_XOF_DOMAIN
+ *  @brief Domain separator for the XOF function in HQC.
+ */
+#define HQC_XOF_DOMAIN 1
+
 typedef struct {
     HQC_KEY *key;
     EVP_MD *shake;
@@ -150,20 +155,25 @@ static const OSSL_PARAM *hqc_kem_settable_ctx_params(ossl_unused void *vctx,
 
 static int vec_sample_fixed_weight(EVP_MD_CTX *md_ctx, HQC_KEY *key, uint64_t *v, uint16_t weight)
 {
-    uint32_t support[key->info->omega_r] = { 0 };
-    uint32_t rand_u32[key->info->omega_r] = { 0 };
+    uint32_t support[key->info->omega_r];
+    uint32_t rand_u32[key->info->omega_r];
     size_t i, k;
     int32_t j;
     uint32_t l, m, tmp;
     uint64_t buff;
     uint32_t found;
     uint32_t mask;
-    uint32_t index_tab[key->info->omega_r] = { 0 };
-    uint64_t bit_tab[key->info->omega_r] = { 0 };
+    uint32_t index_tab[key->info->omega_r];
+    uint64_t bit_tab[key->info->omega_r];
     int32_t pos;
     uint64_t val;
     uint64_t mask2;
     int val1;
+
+    memset(support, 0, key->info->omega_r * sizeof(uint32_t));
+    memset(rand_u32, 0, key->info->omega_r * sizeof(uint32_t));
+    memset(index_tab, 0, key->info->omega_r * sizeof(uint32_t));
+    memset(bit_tab, 0, key->info->omega_r * sizeof(uint64_t));
 
     if (!EVP_DigestSqueeze(md_ctx, (uint8_t *)rand_u32, 4 * weight))
         goto err;
@@ -173,7 +183,7 @@ static int vec_sample_fixed_weight(EVP_MD_CTX *md_ctx, HQC_KEY *key, uint64_t *v
         support[i] = i + ((buff * (key->info->n - 1)) >> 32);
     }
 
-    for (j = (weight - 1); j-- > 0) {
+    for (j = (weight - 1); j > 0; j--) {
         found = 0;
 
         for (k = i + 1; k < weight; k++)
@@ -210,13 +220,20 @@ err:
 static int hqc_pke_encrypt(PROV_HQC_KEM_CTX *ctx, EVP_MD_CTX *md_ctx, uint64_t *u, uint64_t *v,
     HQC_KEY *key, uint64_t *m, uint8_t *theta)
 {
-    uint64_t h[VEC_SIZE(key->info->n, 64)] = { 0 };
-    uint64_t s[VEC_SIZE(key->info->n, 64)] = { 0 };
-    uint64_t r1[VEC_SIZE(key->info->n, 64)] = { 0 };
-    uint64_t r2[VEC_SIZE(key->info->n, 64)] = { 0 };
-    uint64_t e[VEC_SIZE(key->info->n, 64)] = { 0 };
-    uint64_t tmp[VEC_SIZE(key->info->n, 64)] = { 0 };
+    uint64_t h[VEC_SIZE(key->info->n, 64)];
+    uint64_t s[VEC_SIZE(key->info->n, 64)];
+    uint64_t r1[VEC_SIZE(key->info->n, 64)];
+    uint64_t r2[VEC_SIZE(key->info->n, 64)];
+    uint64_t e[VEC_SIZE(key->info->n, 64)];
+    uint64_t tmp[VEC_SIZE(key->info->n, 64)];
     uint8_t domain = HQC_XOF_DOMAIN;
+
+    memset(h, 0, VEC_SIZE(key->info->n, 8));
+    memset(s, 0, VEC_SIZE(key->info->n, 8));
+    memset(r1, 0, VEC_SIZE(key->info->n, 8));
+    memset(r2, 0, VEC_SIZE(key->info->n, 8));
+    memset(e, 0, VEC_SIZE(key->info->n, 8));
+    memset(tmp, 0, VEC_SIZE(key->info->n, 8));
 
     /*
      * Get h and s vectors
@@ -231,6 +248,9 @@ static int hqc_pke_encrypt(PROV_HQC_KEM_CTX *ctx, EVP_MD_CTX *md_ctx, uint64_t *
     if (!EVP_DigestUpdate(md_ctx, &domain, 1))
         goto err;
 
+    /*
+     * fetch h and s from ek
+     */
     if (!EVP_DigestSqueeze(md_ctx, (uint8_t *)h, VEC_SIZE(key->info->n, 8)))
         goto err;
 
@@ -252,13 +272,10 @@ static int hqc_pke_encrypt(PROV_HQC_KEM_CTX *ctx, EVP_MD_CTX *md_ctx, uint64_t *
 
     /* we're going to squeeze the above in just a moment */
 
-    // Retrieve h and s from public key
-    // hqc_ek_pke_from_string(h, s, ek_pke);
-
     // Generate re, e and r1
-    vect_sample_fixed_weight2(&theta_xof_ctx, r2, PARAM_OMEGA_R);
-    vect_sample_fixed_weight2(&theta_xof_ctx, e, PARAM_OMEGA_E);
-    vect_sample_fixed_weight2(&theta_xof_ctx, r1, PARAM_OMEGA_R);
+    vect_sample_fixed_weight2(md_ctx, r2, key->info->omega_r);
+    vect_sample_fixed_weight2(md_ctx, e, key->info->omega_e);
+    vect_sample_fixed_weight2(md_ctx, r1, key->info->omega_r);
 
     // Compute u = r1 + r2.h
     vect_mul(c_pke->u, r2, h);

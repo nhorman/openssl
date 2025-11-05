@@ -37,6 +37,8 @@ typedef struct hqc_variant_info_st {
     uint32_t n_mu;
     uint16_t omega;
     uint16_t omega_r;
+    uint32_t omega_e;
+    uint32_t salt_bytes;
     uint32_t rej_threshold;
 } HQC_VARIANT_INFO;
 
