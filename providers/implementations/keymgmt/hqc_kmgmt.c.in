@@ -126,6 +126,8 @@ static int xof_get_bytes(EVP_MD_CTX *xof_ctx, uint8_t *output, uint32_t output_s
  * | N Mu value           | Derived constant for arithmetic operations. |
  * | Omega value          | Weight parameter used in error vector generation. |
  * | Omega-R value        | Weight parameter for redundancy or recovery data. |
+ * | Omega-E value        | Weight parameter. |
+ * | Salt Bytes           | Number of bytes to use in salting a message. |
  * | Rejection threshold  | Threshold used in probabilistic rejection sampling. |
  *
  * This structure is used internally by the HQC KEM implementation to 
@@ -148,6 +150,8 @@ static const HQC_VARIANT_INFO variant_info[EVP_PKEY_HQC_KEM_MAX] = {
         243079ULL,             /* N Mu value */
         66,                    /* Omega value */
         75,                    /* Omega-R value */
+        75,                    /* Omega-E value */
+        16,                    /* Salt bytes */
         16767881               /* Rejection threshold */
     },
     {
@@ -165,6 +169,8 @@ static const HQC_VARIANT_INFO variant_info[EVP_PKEY_HQC_KEM_MAX] = {
         119800ULL,
         100,
         114,
+        114,
+        16,
         16742417
     },
     {
@@ -182,6 +188,8 @@ static const HQC_VARIANT_INFO variant_info[EVP_PKEY_HQC_KEM_MAX] = {
         74517ULL,
         131,
         149,
+        149,
+        16,
         16772367
     }
 };
