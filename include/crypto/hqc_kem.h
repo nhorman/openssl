@@ -34,7 +34,13 @@ typedef struct hqc_variant_info_st {
     uint32_t security_category;
     uint32_t secbits;
     uint32_t n;
+    uint32_t n1;
+    uint32_t n2;
+    uint32_t n1n2;
     uint32_t n_mu;
+    uint32_t g;
+    uint32_t k;
+    uint16_t *rs_coefs;
     uint16_t omega;
     uint16_t omega_r;
     uint32_t omega_e;
