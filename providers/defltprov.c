@@ -562,6 +562,11 @@ static const OSSL_ALGORITHM deflt_asym_kem[] = {
     { PROV_NAMES_ML_KEM_512, "provider=default", ossl_ml_kem_asym_kem_functions },
     { PROV_NAMES_ML_KEM_768, "provider=default", ossl_ml_kem_asym_kem_functions },
     { PROV_NAMES_ML_KEM_1024, "provider=default", ossl_ml_kem_asym_kem_functions },
+#ifndef OPENSSL_NO_HQC
+    { PROV_NAMES_HQC_KEM_128, "provider=default", ossl_hqc_kem_asym_kem_functions },
+    { PROV_NAMES_HQC_KEM_192, "provider=default", ossl_hqc_kem_asym_kem_functions },
+    { PROV_NAMES_HQC_KEM_256, "provider=default", ossl_hqc_kem_asym_kem_functions },
+#endif
 #if !defined(OPENSSL_NO_ECX)
     { "X25519MLKEM768", "provider=default", ossl_mlx_kem_asym_kem_functions },
     { "X448MLKEM1024", "provider=default", ossl_mlx_kem_asym_kem_functions },

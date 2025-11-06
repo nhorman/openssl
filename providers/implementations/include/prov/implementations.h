@@ -485,6 +485,9 @@ extern const OSSL_DISPATCH ossl_ml_kem_asym_kem_functions[];
 extern const OSSL_DISPATCH ossl_mlx_kem_asym_kem_functions[];
 #endif
 #endif
+#ifndef OPENSSL_NO_HQC
+extern const OSSL_DISPATCH ossl_hqc_kem_asym_kem_functions[];
+#endif
 
 /* Encoders */
 extern const OSSL_DISPATCH ossl_rsa_to_PKCS1_der_encoder_functions[];
