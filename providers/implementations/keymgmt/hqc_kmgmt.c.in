@@ -807,7 +807,7 @@ static int hqc_kem_get_params(void *vkey, OSSL_PARAM params[])
             return 0;
     }
     if (p.maxsize != NULL) {
-        if (!OSSL_PARAM_set_int(p.bits, key->info->ek_size))
+        if (!OSSL_PARAM_set_int(p.maxsize, key->info->dk_size))
             return 0;
     }
 
