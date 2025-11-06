@@ -17,6 +17,7 @@
 #include <openssl/core_dispatch.h>
 #include <openssl/core_names.h>
 #include <openssl/params.h>
+#include <openssl/rand.h>
 #include <openssl/err.h>
 #include <openssl/proverr.h>
 #include "crypto/hqc_kem.h"
@@ -166,70 +167,6 @@ static const OSSL_PARAM *hqc_kem_settable_ctx_params(ossl_unused void *vctx,
     ossl_unused void *provctx)
 {
     return hqc_kem_set_ctx_params_list;
-}
-
-static int vec_sample_fixed_weight(EVP_MD_CTX *md_ctx, HQC_KEY *key, uint64_t *v, uint16_t weight)
-{
-    uint32_t support[key->info->omega_r];
-    uint32_t rand_u32[key->info->omega_r];
-    size_t i, k;
-    int32_t j;
-    uint32_t l, m, tmp;
-    uint64_t buff;
-    uint32_t found;
-    uint32_t mask;
-    uint32_t index_tab[key->info->omega_r];
-    uint64_t bit_tab[key->info->omega_r];
-    int32_t pos;
-    uint64_t val;
-    uint64_t mask2;
-    int val1;
-
-    memset(support, 0, key->info->omega_r * sizeof(uint32_t));
-    memset(rand_u32, 0, key->info->omega_r * sizeof(uint32_t));
-    memset(index_tab, 0, key->info->omega_r * sizeof(uint32_t));
-    memset(bit_tab, 0, key->info->omega_r * sizeof(uint64_t));
-
-    if (!EVP_DigestSqueeze(md_ctx, (uint8_t *)rand_u32, 4 * weight))
-        goto err;
-
-    for (i = 0; i < weight; i++) {
-        buff = rand_u32[i];
-        support[i] = i + ((buff * (key->info->n - 1)) >> 32);
-    }
-
-    for (j = (weight - 1); j > 0; j--) {
-        found = 0;
-
-        for (k = i + 1; k < weight; k++)
-            found |= (support[k] == support[i]) ? 1 : 0;
-        mask = -found;
-        support[i] = (mask & i) ^ (~mask & support[i]);
-    }
-
-    /*
-     * Now write out vector support
-     */
-    for (i = 0; i < weight; i++) {
-        index_tab[i] = support[i] >> 6;
-        pos = support[i] & 0x3f;
-        bit_tab[i] = ((uint64_t)1) << pos;
-    }
-
-    for (l = 0; l < VEC_SIZE(key->info->n, 64); l++) {
-        val = 0;
-        for (m = 0; m < weight; m++) {
-            tmp = l - index_tab[m];
-            val1 = 1 ^ ((tmp | -tmp) >> 31);
-            mask2 = -val1;
-            val |= (bit_tab[m] & mask2);
-        }
-        v[i] |= val;
-    }
-
-    return 1;
-err:
-    return 0;
 }
 
 static inline uint32_t compare_u32(const uint32_t v1, const uint32_t v2)
@@ -480,14 +417,210 @@ static void reduce(uint64_t *out, const uint64_t *a, const HQC_VARIANT_INFO *inf
     out[VEC_SIZE(info->n, 64) - 1] &= VEC_BITMASK(info->n, 64);
 }
 
-static void vect_mul(uint64_t *out, const uint64_t *a, const uint64_t *b, const HQC_VARIANT_INFO *info)
+static void vect_mul(uint64_t *out, const uint64_t *a, const uint64_t *b, const HQC_KEY *key)
 {
-    uint64_t unreduced[2 * VEC_SIZE(info->n, 64)];
-    uint64_t tmp_buffer[16 * VEC_SIZE(info->n, 64)];
+    uint64_t unreduced[2 * VEC_SIZE(key->info->n, 64)];
+    uint64_t tmp_buffer[16 * VEC_SIZE(key->info->n, 64)];
 
-    karatsuba_mul(unreduced, a, b, VEC_SIZE(info->n, 64), tmp_buffer);
+    karatsuba_mul(unreduced, a, b, VEC_SIZE(key->info->n, 64), tmp_buffer);
 
-    reduce(out, unreduced, info);
+    reduce(out, unreduced, key->info);
+}
+
+/**
+ * @brief Adds two vectors
+ *
+ * @param[out] o Pointer to an array that is the result
+ * @param[in] v1 Pointer to an array that is the first vector
+ * @param[in] v2 Pointer to an array that is the second vector
+ * @param[in] size Integer that is the size of the vectors
+ */
+void vect_add(uint64_t *o, const uint64_t *v1, const uint64_t *v2, uint32_t size)
+{
+    for (uint32_t i = 0; i < size; ++i) {
+        o[i] = v1[i] ^ v2[i];
+    }
+}
+
+static void gf_carryless_mul(uint8_t *c, uint8_t a, uint8_t b)
+{
+    uint16_t h = 0, l = 0, g, u[4];
+    u[0] = 0;
+    u[1] = b & ((1UL << 7) - 1UL);
+    u[2] = u[1] << 1;
+    u[3] = u[2] ^ u[1];
+
+    g = 0;
+    uint16_t tmp1 = a & 3;
+
+    for (int i = 0; i < 4; i++) {
+        uint32_t tmp2 = tmp1 - i;
+        g ^= (u[i] & -(1 - ((tmp2 | -tmp2) >> 31)));
+    }
+
+    l = g;
+    h = 0;
+
+    for (uint8_t i = 2; i < 8; i += 2) {
+        g = 0;
+        uint16_t tmp3 = (a >> i) & 3;
+        for (int j = 0; j < 4; ++j) {
+            uint32_t tmp2 = tmp3 - j;
+            g ^= (u[j] & -(1 - ((tmp2 | -tmp2) >> 31)));
+        }
+
+        l ^= g << i;
+        h ^= g >> (8 - i);
+    }
+
+    uint16_t mask = (-((b >> 7) & 1));
+    l ^= ((a << 7) & mask);
+    h ^= ((a >> (1)) & mask);
+
+    c[0] = l;
+    c[1] = h;
+}
+
+static uint16_t gf_reduce(uint16_t x)
+{
+    uint64_t mod;
+    const int reduction_steps = 2; // For deg(x) = 2 * (8 - 1) = 14, reduce twice to bring degree < 8
+    const size_t gf_reduction_tap_count = 3; // Number of feedback positions
+    static const uint8_t gf_reduction_taps[] = { 4, 3, 2 };
+
+    for (int i = 0; i < reduction_steps; ++i) {
+        mod = x >> 8; // Extract upper bits
+        x &= (1 << 8) - 1; // Keep lower bits
+        x ^= mod; // Pre-XOR with no shift
+
+        uint16_t z1 = 0;
+        for (size_t j = gf_reduction_tap_count; j; --j) {
+            uint16_t z2 = gf_reduction_taps[j - 1];
+            uint16_t dist = z2 - z1;
+            mod <<= dist;
+            x ^= mod;
+            z1 = z2;
+        }
+    }
+
+    return x;
+}
+
+static uint16_t gf_mul(uint16_t a, uint16_t b)
+{
+    uint8_t c[2] = { 0, 0 };
+    uint16_t tmp;
+
+    gf_carryless_mul(c, (uint8_t)a, (uint8_t)b);
+    tmp = (uint16_t)(c[0] ^ (c[1] << 8));
+    return gf_reduce(tmp);
+}
+
+typedef union {
+    uint8_t u8[16]; /**< Byte-wise access (16 bytes) */
+    uint32_t u32[4]; /**< Word-wise access (4 32-bit words) */
+} rm_codeword_t;
+
+/**
+ * @def BIT0MASK(x)
+ * @brief Broadcast the least significant bit of \p x to a 32-bit mask.
+ *
+ * @param x  An integer expression; only bit 0 is examined.
+ * @return   A 32-bit value of all ones (if \p x&1 == 1) or all zeros (if \p x&1 == 0).
+ */
+#define BIT0MASK(x) (int32_t)(-((x) & 1))
+
+static void encode(rm_codeword_t *word, int32_t message)
+{
+    int32_t first_word;
+
+    first_word = BIT0MASK(message >> 7);
+
+    first_word ^= BIT0MASK(message >> 0) & 0xaaaaaaaa;
+    first_word ^= BIT0MASK(message >> 1) & 0xcccccccc;
+    first_word ^= BIT0MASK(message >> 2) & 0xf0f0f0f0;
+    first_word ^= BIT0MASK(message >> 3) & 0xff00ff00;
+    first_word ^= BIT0MASK(message >> 4) & 0xffff0000;
+
+    word->u32[0] = first_word;
+
+    first_word ^= BIT0MASK(message >> 5);
+    word->u32[1] = first_word;
+    first_word ^= BIT0MASK(message >> 6);
+    word->u32[3] = first_word;
+    first_word ^= BIT0MASK(message >> 5);
+    word->u32[2] = first_word;
+    return;
+}
+
+static void code_encode(HQC_KEY *key, uint64_t *em, const uint64_t *m)
+{
+    uint64_t tmp[VEC_SIZE(key->info->n1, 64)];
+    uint8_t msg_bytes[key->info->k];
+    uint8_t cdw_bytes[key->info->n1];
+    size_t i, j, k;
+    uint8_t gate_value = 0;
+    uint8_t *msg_array;
+    rm_codeword_t *code_array = (rm_codeword_t *)em;
+
+    memset(tmp, 0, VEC_SIZE(key->info->n1, 8));
+    memset(msg_bytes, 0, key->info->k);
+    memset(cdw_bytes, 0, key->info->n1);
+
+    /*
+     * Do a reed/solomon encoding of the message to the tmp variable
+     */
+    memcpy(msg_bytes, m, key->info->k);
+    for (i = 0; i < key->info->k; ++i) {
+        gate_value = msg_bytes[key->info->k - 1 - i] ^ cdw_bytes[key->info->n1 - key->info->k - 1];
+
+        for (j = 0; j < key->info->g; ++j) {
+            tmp[j] = gf_mul(gate_value, key->info->rs_coefs[j]);
+        }
+
+        for (k = key->info->n1 - key->info->k - 1; k; --k) {
+            cdw_bytes[k] = cdw_bytes[k - 1] ^ tmp[k];
+        }
+
+        cdw_bytes[0] = tmp[0];
+    }
+
+    memcpy(cdw_bytes + key->info->n1 - key->info->k, msg_bytes, key->info->k);
+    memcpy(tmp, cdw_bytes, key->info->n1);
+
+    /*
+     * Now reed-muller encode the tmp result to em
+     */
+    msg_array = (uint8_t *)tmp;
+    for (size_t i = 0; i < VEC_SIZE(key->info->n1, 8); i++) {
+        // fill entries i * VEC_SIZE(key->info->n2) to (i+1) * VEC_SIZE(key->info->n2, 128)
+        int32_t pos = i * VEC_SIZE(key->info->n2, 128);
+        // encode first word
+        encode(&code_array[pos], msg_array[i]);
+        // copy to other identical codewords
+        for (size_t copy = 1; copy < VEC_SIZE(key->info->n2, 128); copy++) {
+            memcpy(&code_array[pos + copy], &code_array[pos], sizeof(rm_codeword_t));
+        }
+    }
+}
+
+void vect_truncate(uint64_t *v, HQC_KEY *key)
+{
+    size_t orig_words = (key->info->n + 63) / 64;
+    size_t new_full_words = key->info->n1n2 / 64;
+    size_t remaining_bits = key->info->n1n2 % 64;
+
+    // Mask the last word if there's a partial word
+    if (remaining_bits > 0) {
+        uint64_t mask = (UINT64_C(1) << remaining_bits) - 1;
+        v[new_full_words] &= mask;
+        new_full_words++; // keep that partial word
+    }
+
+    // Zero out all subsequent words up to the original length
+    for (size_t i = new_full_words; i < orig_words; i++) {
+        v[i] = 0;
+    }
 }
 
 static int hqc_pke_encrypt(PROV_HQC_KEM_CTX *ctx, EVP_MD_CTX *md_ctx, uint64_t *u, uint64_t *v,
@@ -507,6 +640,8 @@ static int hqc_pke_encrypt(PROV_HQC_KEM_CTX *ctx, EVP_MD_CTX *md_ctx, uint64_t *
     memset(r2, 0, VEC_SIZE(key->info->n, 8));
     memset(e, 0, VEC_SIZE(key->info->n, 8));
     memset(tmp, 0, VEC_SIZE(key->info->n, 8));
+    memset(u, 0, VEC_SIZE(key->info->n, 8));
+    memset(v, 0, VEC_SIZE(key->info->n, 8));
 
     /*
      * Get h and s vectors
@@ -551,17 +686,17 @@ static int hqc_pke_encrypt(PROV_HQC_KEM_CTX *ctx, EVP_MD_CTX *md_ctx, uint64_t *
     vect_sample_fixed_weight2(md_ctx, key, r1, key->info->omega_r);
 
     // Compute u = r1 + r2.h
-    vect_mul(c_pke->u, r2, h);
-    vect_add(c_pke->u, r1, c_pke->u, VEC_N_SIZE_64);
+    vect_mul(u, r2, h, key);
+    vect_add(u, r1, u, VEC_SIZE(key->info->n, 64));
 
     // Compute v = C.encode(m)
-    code_encode(c_pke->v, m);
+    code_encode(key, v, m);
 
     // Compute v = C.encode(m) + Truncate(s.r2 + e)
-    vect_mul(tmp, r2, s);
-    vect_add(tmp, e, tmp, VEC_N_SIZE_64);
-    vect_truncate(tmp);
-    vect_add(c_pke->v, c_pke->v, tmp, VEC_N1N2_SIZE_64);
+    vect_mul(tmp, r2, s, key);
+    vect_add(tmp, e, tmp, VEC_SIZE(key->info->n, 64));
+    vect_truncate(tmp, key);
+    vect_add(v, v, tmp, VEC_SIZE(key->info->n1n2, 64));
 
     return 1;
 err:
@@ -592,7 +727,7 @@ static int hqc_kem_encapsulate(void *vctx, unsigned char *ctext, size_t *clen,
     /*
      * Get some entropy to seed the prng below
      */
-    if (!RAND_bytes_ex(PROV_LIBCTX_OF(ctx->provctx), entropy, 48))
+    if (!RAND_bytes_ex(PROV_LIBCTX_OF(ctx->provctx), entropy, 48, 0))
         goto err;
 
     /*
@@ -645,7 +780,7 @@ static int hqc_kem_encapsulate(void *vctx, unsigned char *ctext, size_t *clen,
 
     memcpy(theta, k_theta + key->info->seed_len, key->info->seed_len);
 
-    hqc_pke_encrypt(ctx, md_ctx, u, v, key, m, theta);
+    hqc_pke_encrypt(ctx, md_ctx, u, v, key, (uint64_t *)m, theta);
 
     return 1;
 err:
@@ -656,8 +791,7 @@ err:
 static int hqc_kem_decapsulate(void *vctx, uint8_t *shsec, size_t *slen,
     const uint8_t *ctext, size_t clen)
 {
-    PROV_HQC_KEM_CTX *ctx = vctx;
-    HQC_KEY *key = ctx->key;
+    /* PROV_HQC_KEM_CTX *ctx = vctx; */
     return 0;
 }
 

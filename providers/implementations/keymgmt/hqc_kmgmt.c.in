@@ -98,6 +98,19 @@ static int xof_get_bytes(EVP_MD_CTX *xof_ctx, uint8_t *output, uint32_t output_s
  */
 #define KARATSUBA_THRESHOLD 16
 
+static uint16_t hqc_1_rs_coefs[] = { 89, 69, 153, 116, 176, 117, 111, 75, 73,
+    233, 242, 233, 65, 210, 21, 139, 103, 173,
+    67, 118, 105, 210, 174, 110, 74, 69, 228,
+    82, 255, 181, 1 };
+static uint16_t hqc_3_rs_coefs[] = { 45, 216, 239, 24, 253, 104, 27, 40, 107, 50,
+    163, 210, 227, 134, 224, 158, 119, 13, 158,
+    1, 238, 164, 82, 43, 15, 232, 246, 142, 50,
+    189, 29, 232, 1 };
+static uint16_t hqc_5_rs_coefs[] = { 49, 167, 49, 39, 200, 121, 124, 91, 240, 63, 148, 71,
+    150, 123, 87, 101, 32, 215, 159, 71, 201, 115, 97,
+    210, 186, 183, 141, 217, 123, 12, 31, 243, 180, 219,
+    152, 239, 99, 141, 4, 246, 191, 144, 8, 232, 47, 27,
+    141, 178, 130, 64, 124, 47, 39, 188, 216, 48, 199, 187, 1 };
 /**
  * @var variant_info
  * @brief Static table containing parameter sets for supported HQC KEM
@@ -124,7 +137,13 @@ static int xof_get_bytes(EVP_MD_CTX *xof_ctx, uint8_t *output, uint32_t output_s
  * | security category    | NIST security category (1–5). |
  * | secbits              | Effective security strength in bits. |
  * | N value              | Core polynomial modulus parameter. |
+ * | N1 value             | Core polynomial modulus parameter. |
+ * | N2 value             | Core polynomial modulus parameter. |
+ * | N1N2 value           | ???. |
  * | N Mu value           | Derived constant for arithmetic operations. |
+ * | G Value              | ??? |
+ * | K Value              | ??? |
+ * | Reed Solomon Coefs   | Coefficients of the Reed Solomon Generator polynomial.|
  * | Omega value          | Weight parameter used in error vector generation. |
  * | Omega-R value        | Weight parameter for redundancy or recovery data. |
  * | Omega-E value        | Weight parameter. |
@@ -148,47 +167,69 @@ static const HQC_VARIANT_INFO variant_info[EVP_PKEY_HQC_KEM_MAX] = {
         1, /* security category */
         128, /* secbits */
         17669, /* N value */
+        46, /* N1 value */
+        384, /* N2 value */
+        17664, /* N1N2 value */
         243079ULL, /* N Mu value */
+        31, /* G value */
+        16, /* K value */
+        hqc_1_rs_coefs, /* Reed Solomon Coefs */
         66, /* Omega value */
         75, /* Omega-R value */
         75, /* Omega-E value */
         16, /* Salt bytes */
         16767881 /* Rejection threshold */
     },
-    { EVP_PKEY_HQC_KEM_192,
-        EVP_PKEY_HQC_192,
-        "HQC-192",
-        4514,
-        4602,
-        48,
-        24,
-        32,
-        3,
-        192,
-        35851,
-        119800ULL,
-        100,
-        114,
-        114,
-        16,
-        16742417 },
-    { EVP_PKEY_HQC_KEM_256,
-        EVP_PKEY_HQC_256,
-        "HQC-256",
-        7237,
-        7333,
-        48,
-        32,
-        32,
-        5,
-        256,
-        57637,
-        74517ULL,
-        131,
-        149,
-        149,
-        16,
-        16772367 }
+    {
+        EVP_PKEY_HQC_KEM_192, /* type */
+        EVP_PKEY_HQC_192, /* nid */
+        "HQC-192", /* name */
+        4514, /* ek/priv key len */
+        4602, /* dk/pub key len */
+        48, /* seed length */
+        24, /* security bytes */
+        32, /* shared secret bytes */
+        3, /* security category */
+        192, /* secbits */
+        35851, /* N value */
+        56, /* N1 value */
+        640, /* N2 value */
+        35840, /* N1N2 value */
+        119800ULL, /* N Mu value */
+        33, /* G value */
+        24, /* K value */
+        hqc_3_rs_coefs, /* Reed Solomon Coefs */
+        100, /* Omega value */
+        114, /* Omega-R value */
+        114, /* Omega-E value */
+        16, /* Salt bytes */
+        16742417 /* Rejection threshold */
+    },
+    {
+        EVP_PKEY_HQC_KEM_256, /* type */
+        EVP_PKEY_HQC_256, /* nid */
+        "HQC-256", /* name */
+        7237, /* ek/priv key len */
+        7333, /* dk/pub key len */
+        48, /* seed length */
+        32, /* security bytes */
+        32, /* shared secret bytes */
+        5, /* security category */
+        256, /* secbits */
+        57637, /* N value */
+        90, /* N1 value */
+        640, /* N2 value */
+        57600, /* N1N2 value */
+        74517ULL, /* N Mu value */
+        59, /* G value */
+        32, /* K value */
+        hqc_5_rs_coefs, /* Reed Solomon Coefs */
+        131, /* Omega value */
+        149, /* Omega-R value */
+        149, /* Omega-E value */
+        16, /* Salt bytes */
+        16772367 /* Rejection threshold */
+    }
 };
 
 /**
