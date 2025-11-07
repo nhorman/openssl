@@ -40,6 +40,9 @@ typedef struct hqc_variant_info_st {
     uint32_t n_mu;
     uint32_t g;
     uint32_t k;
+    uint32_t delta;
+    uint32_t fft;
+    uint32_t m;
     uint16_t *rs_coefs;
     uint16_t omega;
     uint16_t omega_r;
