@@ -579,7 +579,8 @@ static const HQC_VARIANT_INFO variant_info[EVP_PKEY_HQC_KEM_MAX] = {
         4, /* FFT value */
         8, /* M value */
         hqc_1_rs_coefs, /* Reed Solomon Coefs */
-        hqc_1_alpha_ij_pow, /* Alpha ij powers */
+        (uint16_t *)hqc_1_alpha_ij_pow, /* Alpha ij powers */
+        45, /* Alpha ij power stride */
         66, /* Omega value */
         75, /* Omega-R value */
         75, /* Omega-E value */
@@ -608,7 +609,8 @@ static const HQC_VARIANT_INFO variant_info[EVP_PKEY_HQC_KEM_MAX] = {
         5, /* FFT value */
         8, /* M value */
         hqc_3_rs_coefs, /* Reed Solomon Coefs */
-        hqc_3_alpha_ij_pow, /* Alpha ij powers */
+        (uint16_t *)hqc_3_alpha_ij_pow, /* Alpha ij powers */
+        55, /* Alpha ij power stride */
         100, /* Omega value */
         114, /* Omega-R value */
         114, /* Omega-E value */
@@ -637,7 +639,8 @@ static const HQC_VARIANT_INFO variant_info[EVP_PKEY_HQC_KEM_MAX] = {
         5, /* FFT value */
         8, /* M value */
         hqc_5_rs_coefs, /* Reed Solomon Coefs */
-        hqc_5_alpha_ij_pow, /* Alpha ij powers */
+        (uint16_t *)hqc_5_alpha_ij_pow, /* Alpha ij powers */
+        89, /* Alpha ij power stride */
         131, /* Omega value */
         149, /* Omega-R value */
         149, /* Omega-E value */
