@@ -516,6 +516,37 @@ static uint16_t gf_mul(uint16_t a, uint16_t b)
     return gf_reduce(tmp);
 }
 
+uint16_t gf_square(uint16_t a)
+{
+    uint32_t b = a;
+    uint32_t s = b & 1;
+    for (size_t i = 1; i < PARAM_M; ++i) {
+        b <<= 1;
+        s ^= b & (1 << 2 * i);
+    }
+
+    return gf_reduce(s);
+}
+
+uint16_t gf_inverse(uint16_t a)
+{
+    uint16_t inv = a;
+    uint16_t tmp1, tmp2;
+
+    inv = gf_square(a); /* a^2 */
+    tmp1 = gf_mul(inv, a); /* a^3 */
+    inv = gf_square(inv); /* a^4 */
+    tmp2 = gf_mul(inv, tmp1); /* a^7 */
+    tmp1 = gf_mul(inv, tmp2); /* a^11 */
+    inv = gf_mul(tmp1, inv); /* a^15 */
+    inv = gf_square(inv); /* a^30 */
+    inv = gf_square(inv); /* a^60 */
+    inv = gf_square(inv); /* a^120 */
+    inv = gf_mul(inv, tmp2); /* a^127 */
+    inv = gf_square(inv); /* a^254 */
+    return inv;
+}
+
 typedef union {
     uint8_t u8[16]; /**< Byte-wise access (16 bytes) */
     uint32_t u32[4]; /**< Word-wise access (4 32-bit words) */
@@ -667,7 +698,7 @@ void compute_syndromes(HQC_KEY *key, uint16_t *syndromes, uint8_t *cdw)
 {
     for (size_t i = 0; i < 2 * key->info->delta; ++i) {
         for (size_t j = 1; j < key->info->n1; ++j) {
-            syndromes[i] ^= gf_mul(cdw[j], alpha_ij_pow[i][j - 1]);
+            syndromes[i] ^= gf_mul(cdw[j], key->info->alpha_ij_pow[i][j - 1]);
         }
         syndromes[i] ^= cdw[0];
     }
