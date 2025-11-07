@@ -555,7 +555,8 @@ static void encode(rm_codeword_t *word, int32_t message)
 
 static void code_encode(HQC_KEY *key, uint64_t *em, const uint64_t *m)
 {
-    uint64_t tmp[VEC_SIZE(key->info->n1, 64)];
+    uint64_t tmp[VEC_SIZE(key->info->n1, 8)];
+    uint16_t tmp_g[key->info->g];
     uint8_t msg_bytes[key->info->k];
     uint8_t cdw_bytes[key->info->n1];
     size_t i, j, k;
@@ -563,10 +564,10 @@ static void code_encode(HQC_KEY *key, uint64_t *em, const uint64_t *m)
     uint8_t *msg_array;
     rm_codeword_t *code_array = (rm_codeword_t *)em;
 
-    memset(tmp, 0, VEC_SIZE(key->info->n1, 8));
+    memset(tmp, 0, VEC_SIZE(key->info->n1, 8) * sizeof(uint64_t));
     memset(msg_bytes, 0, key->info->k);
     memset(cdw_bytes, 0, key->info->n1);
-
+    memset(tmp_g, 0, key->info->g * sizeof(uint16_t));
     /*
      * Do a reed/solomon encoding of the message to the tmp variable
      */
@@ -575,14 +576,14 @@ static void code_encode(HQC_KEY *key, uint64_t *em, const uint64_t *m)
         gate_value = msg_bytes[key->info->k - 1 - i] ^ cdw_bytes[key->info->n1 - key->info->k - 1];
 
         for (j = 0; j < key->info->g; ++j) {
-            tmp[j] = gf_mul(gate_value, key->info->rs_coefs[j]);
+            tmp_g[j] = gf_mul(gate_value, key->info->rs_coefs[j]);
         }
 
         for (k = key->info->n1 - key->info->k - 1; k; --k) {
-            cdw_bytes[k] = cdw_bytes[k - 1] ^ tmp[k];
+            cdw_bytes[k] = cdw_bytes[k - 1] ^ tmp_g[k];
         }
 
-        cdw_bytes[0] = tmp[0];
+        cdw_bytes[0] = tmp_g[0];
     }
 
     memcpy(cdw_bytes + key->info->n1 - key->info->k, msg_bytes, key->info->k);
@@ -720,6 +721,16 @@ static int hqc_kem_encapsulate(void *vctx, unsigned char *ctext, size_t *clen,
     uint64_t v[VEC_SIZE(key->info->n, 64)];
     unsigned int len = 0;
 
+    if (ctext == NULL) {
+        if (clen == NULL && slen == NULL)
+            return 0;
+        if (clen != NULL)
+            *clen = VEC_SIZE(key->info->n, 8) + VEC_SIZE(key->info->n1n2, 8) + key->info->salt_bytes;
+        if (slen != NULL)
+            *slen = key->info->shared_secret_bytes;
+        return 1;
+    }
+
     md_ctx = EVP_MD_CTX_new();
     if (md_ctx == NULL)
         goto err;
@@ -782,6 +793,12 @@ static int hqc_kem_encapsulate(void *vctx, unsigned char *ctext, size_t *clen,
 
     hqc_pke_encrypt(ctx, md_ctx, u, v, key, (uint64_t *)m, theta);
 
+    memcpy(ctext, u, VEC_SIZE(key->info->n, 8));
+    memcpy(ctext + VEC_SIZE(key->info->n, 8), v, VEC_SIZE(key->info->n1n2, 8));
+    memcpy(ctext + VEC_SIZE(key->info->n, 8) + VEC_SIZE(key->info->n1n2, 8),
+        salt, key->info->salt_bytes);
+    memcpy(shsec, k_theta, key->info->shared_secret_bytes);
+    *slen = key->info->shared_secret_bytes;
     return 1;
 err:
     EVP_MD_CTX_free(md_ctx);
