@@ -521,6 +521,8 @@ typedef union {
     uint32_t u32[4]; /**< Word-wise access (4 32-bit words) */
 } rm_codeword_t;
 
+typedef int16_t rm_expanded_cdw[128];
+
 /**
  * @def BIT0MASK(x)
  * @brief Broadcast the least significant bit of \p x to a 32-bit mask.
@@ -603,6 +605,300 @@ static void code_encode(HQC_KEY *key, uint64_t *em, const uint64_t *m)
             memcpy(&code_array[pos + copy], &code_array[pos], sizeof(rm_codeword_t));
         }
     }
+}
+
+static void expand_and_sum(rm_expanded_cdw *dest, rm_codeword_t src[], int32_t multiplicity)
+{
+    // start with the first copy
+    for (int32_t part = 0; part < 4; part++) {
+        for (int32_t bit = 0; bit < 32; bit++) {
+            (*dest)[part * 32 + bit] = src[0].u32[part] >> bit & 1;
+        }
+    }
+    // sum the rest of the copies
+    for (int32_t copy = 1; copy < multiplicity; copy++) {
+        for (int32_t part = 0; part < 4; part++) {
+            for (int32_t bit = 0; bit < 32; bit++) {
+                (*dest)[part * 32 + bit] += src[copy].u32[part] >> bit & 1;
+            }
+        }
+    }
+}
+
+void hadamard(rm_expanded_cdw *src, rm_expanded_cdw *dst)
+{
+    // the passes move data:
+    // src -> dst -> src -> dst -> src -> dst -> src -> dst
+    // using p1 and p2 alternately
+    rm_expanded_cdw *p1 = src;
+    rm_expanded_cdw *p2 = dst;
+    for (int32_t pass = 0; pass < 7; pass++) {
+        for (int32_t i = 0; i < 64; i++) {
+            (*p2)[i] = (*p1)[2 * i] + (*p1)[2 * i + 1];
+            (*p2)[i + 64] = (*p1)[2 * i] - (*p1)[2 * i + 1];
+        }
+        // swap p1, p2 for next round
+        rm_expanded_cdw *p3 = p1;
+        p1 = p2;
+        p2 = p3;
+    }
+}
+
+int32_t find_peaks(rm_expanded_cdw *transform)
+{
+    int32_t peak_abs_value = 0;
+    int32_t peak_value = 0;
+    int32_t peak_pos = 0;
+    for (int32_t i = 0; i < 128; i++) {
+        // get absolute value
+        int32_t t = (*transform)[i];
+        int32_t pos_mask = -(t > 0);
+        int32_t absolute = (pos_mask & t) | (~pos_mask & -t);
+        peak_value = absolute > peak_abs_value ? t : peak_value;
+        peak_pos = absolute > peak_abs_value ? i : peak_pos;
+        peak_abs_value = absolute > peak_abs_value ? absolute : peak_abs_value;
+    }
+    // set bit 7
+    peak_pos |= 128 * (peak_value > 0);
+    return peak_pos;
+}
+
+void compute_syndromes(HQC_KEY *key, uint16_t *syndromes, uint8_t *cdw)
+{
+    for (size_t i = 0; i < 2 * key->info->delta; ++i) {
+        for (size_t j = 1; j < key->info->n1; ++j) {
+            syndromes[i] ^= gf_mul(cdw[j], alpha_ij_pow[i][j - 1]);
+        }
+        syndromes[i] ^= cdw[0];
+    }
+}
+
+static uint16_t compute_elp(HQC_KEY *key, uint16_t *sigma, const uint16_t *syndromes)
+{
+    uint16_t deg_sigma = 0;
+    uint16_t deg_sigma_p = 0;
+    uint16_t deg_sigma_copy = 0;
+    uint16_t sigma_copy[key->info->delta + 1];
+    uint16_t X_sigma_p[key->info->delta + 1];
+    uint16_t pp = (uint16_t)-1; // 2*rho
+    uint16_t d_p = 1;
+    uint16_t d = syndromes[0];
+
+    uint16_t mask1, mask2, mask12;
+    uint16_t deg_X, deg_X_sigma_p;
+    uint16_t dd;
+    uint16_t mu;
+
+    uint16_t i;
+
+    memset(sigma_copy, 0, (key->info->delta + 1) * sizeof(uint16_t));
+    memset(X_sigma_p, 0, (key->info->delta + 1) * sizeof(uint16_t));
+    X_sigma_p[1] = 1;
+
+    sigma[0] = 1;
+    for (mu = 0; (mu < (2 * key->info->delta)); ++mu) {
+        // Save sigma in case we need it to update X_sigma_p
+        memcpy(sigma_copy, sigma, 2 * key->info->delta);
+        deg_sigma_copy = deg_sigma;
+
+        dd = gf_mul(d, gf_inverse(d_p));
+
+        for (i = 1; (i <= mu + 1) && (i <= key->info->delta); ++i) {
+            sigma[i] ^= gf_mul(dd, X_sigma_p[i]);
+        }
+
+        deg_X = mu - pp;
+        deg_X_sigma_p = deg_X + deg_sigma_p;
+
+        // mask1 = 0xffff if(d != 0) and 0 otherwise
+        mask1 = -((uint16_t)-d >> 15);
+
+        // mask2 = 0xffff if(deg_X_sigma_p > deg_sigma) and 0 otherwise
+        mask2 = -((uint16_t)(deg_sigma - deg_X_sigma_p) >> 15);
+
+        // mask12 = 0xffff if the deg_sigma increased and 0 otherwise
+        volatile uint16_t mask12__ = mask1 & mask2;
+        mask12 = mask12__;
+        deg_sigma ^= mask12 & (deg_X_sigma_p ^ deg_sigma);
+
+        if (mu == (2 * key->info->delta - 1)) {
+            break;
+        }
+
+        pp ^= mask12 & (mu ^ pp);
+        d_p ^= mask12 & (d ^ d_p);
+        for (i = PARAM_DELTA; i; --i) {
+            X_sigma_p[i] = (mask12 & sigma_copy[i - 1]) ^ (~mask12 & X_sigma_p[i - 1]);
+        }
+
+        deg_sigma_p ^= mask12 & (deg_sigma_copy ^ deg_sigma_p);
+        d = syndromes[mu + 1];
+
+        for (i = 1; (i <= mu + 1) && (i <= key->info->delta); ++i) {
+            d ^= gf_mul(sigma[i], syndromes[mu + 1 - i]);
+        }
+    }
+
+    return deg_sigma;
+}
+
+static void compute_roots(HQC_KEY *key, uint8_t *error, uint16_t *sigma)
+{
+    uint16_t w[1 << key->info->m];
+
+    memset(w, 0, (1 << key->info->m) * sizeof(uint16_t));
+
+    fft(w, sigma, key->info->delta + 1);
+    fft_retrieve_error_poly(error, w);
+}
+
+static void compute_z_poly(HQC_KEY *key, uint16_t *z, const uint16_t *sigma, const uint16_t degree, const uint16_t *syndromes)
+{
+    size_t i, j;
+    uint16_t mask;
+
+    z[0] = 1;
+
+    for (i = 1; i < key->info->delta + 1; ++i) {
+        mask = -((uint16_t)(i - degree - 1) >> 15);
+        z[i] = mask & sigma[i];
+    }
+
+    z[1] ^= syndromes[0];
+
+    for (i = 2; i <= key->info->delta; ++i) {
+        mask = -((uint16_t)(i - degree - 1) >> 15);
+        z[i] ^= mask & syndromes[i - 1];
+
+        for (j = 1; j < i; ++j) {
+            z[i] ^= mask & gf_mul(sigma[j], syndromes[i - j - 1]);
+        }
+    }
+}
+
+static void compute_error_values(HQC_KEY *key, uint16_t *error_values,
+    const uint16_t *z, const uint8_t *error)
+{
+    uint16_t beta_j[key->info->delta];
+    uint16_t e_j[key->info->delta];
+    uint16_t delta_counter;
+    uint16_t delta_real_value;
+    uint16_t found;
+    uint16_t mask1;
+    uint16_t mask2;
+    uint16_t tmp1;
+    uint16_t tmp2;
+    uint16_t inverse;
+    uint16_t inverse_power_j;
+
+    memset(beta_j, 0, key->info->delta * sizeof(uint16_t));
+    memset(e_j, 0, key->info->delta * sizeof(uint16_t));
+
+    // Compute the beta_{j_i} page 31 of the documentation
+    delta_counter = 0;
+    for (size_t i = 0; i < key->info->n1; i++) {
+        found = 0;
+        mask1 = (uint16_t)(-((int32_t)error[i]) >> 31); // error[i] != 0
+        for (size_t j = 0; j < key->info->delta; j++) {
+            mask2 = ~((uint16_t)(-((int32_t)j ^ delta_counter) >> 31)); // j == delta_counter
+            beta_j[j] += mask1 & mask2 & gf_exp[i];
+            found += mask1 & mask2 & 1;
+        }
+        delta_counter += found;
+    }
+    delta_real_value = delta_counter;
+
+    // Compute the e_{j_i} page 31 of the documentation
+    for (size_t i = 0; i < key->info->delta; ++i) {
+        tmp1 = 1;
+        tmp2 = 1;
+        inverse = gf_inverse(beta_j[i]);
+        inverse_power_j = 1;
+
+        for (size_t j = 1; j <= key->info->delta; ++j) {
+            inverse_power_j = gf_mul(inverse_power_j, inverse);
+            tmp1 ^= gf_mul(inverse_power_j, z[j]);
+        }
+        for (size_t k = 1; k < key->info->delta; ++k) {
+            tmp2 = gf_mul(tmp2, (1 ^ gf_mul(inverse, beta_j[(i + k) % key->info->delta])));
+        }
+        mask1 = (uint16_t)(((int16_t)i - delta_real_value) >> 15); // i < delta_real_value
+        e_j[i] = mask1 & gf_mul(tmp1, gf_inverse(tmp2));
+    }
+
+    // Place the delta e_{j_i} values at the right coordinates of the output vector
+    delta_counter = 0;
+    for (size_t i = 0; i < key->info->n1; ++i) {
+        found = 0;
+        mask1 = (uint16_t)(-((int32_t)error[i]) >> 31); // error[i] != 0
+        for (size_t j = 0; j < key->info->delta; j++) {
+            mask2 = ~((uint16_t)(-((int32_t)j ^ delta_counter) >> 31)); // j == delta_counter
+            error_values[i] += mask1 & mask2 & e_j[j];
+            found += mask1 & mask2 & 1;
+        }
+        delta_counter += found;
+    }
+}
+
+static void correct_errors(HQC_KEY *key, uint8_t *cdw, const uint16_t *error_values)
+{
+    for (size_t i = 0; i < key->info->n1; ++i)
+        cdw[i] ^= error_values[i];
+}
+
+static void code_decode(HQC_KEY *key, uint64_t *m, const uint64_t *em)
+{
+    uint64_t tmp[VEC_SIZE(key->info->n1, 64)];
+    uint8_t *message_array = (uint8_t *)tmp;
+    rm_codeword_t *code_array = (rm_codeword_t *)em;
+    rm_codeword_cdw expanded;
+    rm_expanded_cdw transform;
+    uint8_t cdw_bytes[key->info->n1];
+    uint16_t syndromes[2 * key->info->delta];
+    uint16_t sigma[1 << key->info->fft];
+    uint8_t error[1 << key->info->m];
+    uint16_t z[key->info->n1];
+    uint16_t error_values[key->info->n1];
+    uint16_t deg;
+
+    memset(tmp, 0, VEC_SIZE(key->info->n1, 64) * sizeof(uint64_t));
+    memset(cdw_bytes, 0, key->info->n1);
+    memset(syndromes, 0, (2 * key->info->delta) * sizeof(uint16_t));
+    memset(sigma, 0, (1 << key->info->fft) * sizeof(uint16_t));
+    memset(error, 0, 1 << key->info->m);
+    memset(z, 0, key->info->n1 * sizeof(uint16_t));
+    memset(error_values, 0, key->info->n1 * sizeof(uint16_t));
+
+    /*
+     * Reed Muller decode
+     */
+    for (size_t i = 0; i < VEC_SIZE(key->info->n1, 8); i++) {
+        // collect the codewords
+        expand_and_sum(&expanded, &codeArray[i * VEC_SIZE(key->info->n2, 128)],
+            VEC_SIZE(key->info->n2, 128));
+        // apply hadamard transform
+        hadamard(&expanded, &transform);
+        // fix the first entry to get the half Hadamard transform
+        transform[0] -= 64 * VEC_SIZE(key->info->n2, 128);
+        // finish the decoding
+        message_array[i] = find_peaks(&transform);
+    }
+
+    /*
+     * Reed Solomon decode
+     */
+    memcpy(cdw_bytes, tmp, key->info->n1);
+    compute_syndromes(key, syndromes, cdw_bytes);
+    deg = compute_elp(key, sigma, syndromes);
+    compute_roots(key, error, sigma);
+    compute_z_poly(key, z, sigma, deg, syndromes);
+    compute_error_values(key, error_values, z, error);
+    correct_errors(key, cdw_bytes, error_values);
+
+    /*
+     * Copy the plaintext to the message pointer
+     */
+    memcpy(m, cdw_bytes + (key->info->g - 1), key->info->k);
 }
 
 void vect_truncate(uint64_t *v, HQC_KEY *key)
@@ -805,10 +1101,163 @@ err:
     return 0;
 }
 
+static int hqc_sample_xof(EVP_MD_CTX *md_ctx, uint64_t *vec, const HQC_VARIANT_INFO *info)
+{
+    uint32_t support[info->omega_r];
+    size_t random_bytes_size = 3 * info->omega;
+    uint8_t rand_bytes[3 * info->omega_r];
+    uint8_t inc;
+    size_t i, j, k;
+    uint32_t index_tab[info->omega_r];
+    uint64_t bit_tab[info->omega_r];
+    int32_t pos;
+    uint64_t val;
+    uint32_t tmp;
+    int val1;
+    uint64_t mask;
+
+    memset(support, 0, info->omega_r * sizeof(uint32_t));
+    memset(rand_bytes, 0, 3 * info->omega_r);
+    memset(index_tab, 0, info->omega_r * sizeof(uint32_t));
+    memset(bit_tab, 0, info->omega_r * sizeof(uint64_t));
+
+    i = 0;
+    j = random_bytes_size;
+    while (i < info->omega) {
+        do {
+            if (j == random_bytes_size) {
+                if (!xof_get_bytes(md_ctx, rand_bytes, random_bytes_size))
+                    return 0;
+                j = 0;
+            }
+            support[i] = ((uint32_t)rand_bytes[j++]) << 16;
+            support[i] |= ((uint32_t)rand_bytes[j++]) << 8;
+            support[i] |= rand_bytes[j++];
+        } while (support[i] >= info->rej_threshold);
+
+        support[i] = barrett_reduce(support[i], info);
+
+        inc = 1;
+        for (k = 0; k < i; k++) {
+            if (support[k] == support[i])
+                inc = 0;
+        }
+        i += inc;
+    }
+
+    for (i = 0; i < info->omega; i++) {
+        index_tab[i] = support[i] >> 6;
+        pos = support[i] & 0x3f;
+        bit_tab[i] = ((uint64_t)1) << pos;
+    }
+
+    val = 0;
+    for (i = 0; i < VEC_SIZE(info->n, 64); i++) {
+        val = 0;
+        for (j = 0; j < info->omega; j++) {
+            tmp = i - index_tab[j];
+            val1 = 1 ^ ((tmp | -tmp) >> 31);
+            mask = -val1;
+            val |= (bit_tab[j] & mask);
+        }
+        vec[i] |= val;
+    }
+
+    return 1;
+}
+
+static uint8_t hqc_pke_decrypt(uint64_t *m_prime, HQC_KEY *key, uint64_t *u, uint64_t *v)
+{
+    uint64_t y[VEC_SIZE(key->info->n, 64)];
+    uint64_t tmp1[VEC_SIZE(key->info->n, 64)];
+    uint64_t tmp2[VEC_SIZE(key->info->n, 64)];
+    EVP_MD_CTX *ctx = EVP_MD_CTX_new();
+    uint8_t result = 0;
+
+    uint8_t domain = HQC_XOF_DOMAIN;
+    if (ctx == NULL)
+        return 0;
+
+    memset(y, 0, VEC_SIZE(key->info->n, 64) * sizeof(uint64_t));
+    memset(tmp1, 0, VEC_SIZE(key->info->n, 64) * sizeof(uint64_t));
+    memset(tmp2, 0, VEC_SIZE(key->info->n, 64) * sizeof(uint64_t));
+
+    if (!EVP_DigestInit_ex2(ctx, ctx->shake, NULL))
+        goto err;
+
+    if (!EVP_DigestUpdate(ctx, key->dk, key->info->seed_bytes))
+        goto err;
+
+    if (!EVP_DigestUpdate(ctx, &domain, 1))
+        goto err;
+
+    if (!hqc_sample_xof(ctx, y, key->info))
+        goto err;
+
+    vect_mul(tmp1, y, u);
+    vect_truncate(tmp1);
+    vect_add(tmp2, v, tmp1, VEC_SIZE(key->info->n1n2, 64))
+
+        code_decode(key, m, tmp2);
+
+    result = 1;
+
+err:
+    memset(y, 0, VEC_SIZE(key->info->n, 64) * sizeof(uint64_t));
+    memset(tmp1, 0, VEC_SIZE(key->info->n, 64) * sizeof(uint64_t));
+    memset(tmp2, 0, VEC_SIZE(key->info->n, 64) * sizeof(uint64_t));
+    EVP_MD_CTX_free(ctx);
+    return result;
+}
+
 static int hqc_kem_decapsulate(void *vctx, uint8_t *shsec, size_t *slen,
     const uint8_t *ctext, size_t clen)
 {
-    /* PROV_HQC_KEM_CTX *ctx = vctx; */
+    PROV_HQC_KEM_CTX *ctx = vctx;
+    HQC_KEY *key = ctx->key;
+    uint8_t ek_pke[key->info->ek_size];
+    uint8_t dk_pke[key->info->seed_bytes];
+    uint8_t sigma[key->info->security_bytes];
+    uint8_t m_prime[key->info->security_bytes];
+    uint8_t hash_ek_kem[key->info->seed_bytes];
+    uint8_t K_theta_prime[key->info->shared_secret_bytes + key->info->seed_bytes];
+    uint8_t K_bar[key->info->shared_secret_bytes];
+    uint8_t theta_prime[key->info->seed_bytes];
+    uint64_t u[VEC_SIZE(key->info->n, 64)];
+    uint64_t u_prime[VEC_SIZE(key->info->n, 64)];
+    uint64_t v[VEC_SIZE(key->info->n, 64)];
+    uint64_t v_prime[VEC_SIZE(key->info->n, 64)];
+    uint8_t salt[key->info->salt_bytes];
+    uint8_t salt_prime[key->info->salt_bytes];
+    uint8_t result;
+
+    memset(ek_pke, 0, key->info->sk_size);
+    memset(dk_pke, 0, key->info->seed_bytes);
+    memset(sigma, 0, key->info->security_bytes);
+    memset(m_prime, 0, key->info->security_bytes);
+    memset(hash_ek_kem, 0, key->info->seed_bytes);
+    memset(K_theta_prime, 0, key->info->shared_secret_bytes + key->info->seed_bytes);
+    memset(K_bar, 0, key->info->shared_secret_bytes);
+    memset(theta_prime, 0, key->info->seed_bytes);
+    memset(u, 0, VEC_SIZE(key->info->n, 64) * sizeof(uint64_t));
+    memset(u_prime, 0, VEC_SIZE(key->info->n, 64) * sizeof(uint64_t));
+    memset(v, 0, VEC_SIZE(key->info->n, 64) * sizeof(uint64_t));
+    memset(v_prime, 0, VEC_SIZE(key->info->n, 64) * sizeof(uint64_t));
+    memset(salt, 0, key->info->salt_bytes);
+    memset(salt_prime, 0, key->info->salt_bytes);
+
+    memcpy(ek_pke, key->dk, key->info->ek_size);
+    memcpy(dk_pke, key->dk, key->dk + key->info->ek_size, key->info->seed_bytes);
+    memcpy(sigma, key->dk, key->dk + key->info->ek_size, key->info->seed_bytes,
+        key->info->security_bytes);
+
+    memcpy(u, ctext, VEC_SIZE(key->info->n, 8));
+    memcpy(v, ctext + VEC_SIZE(key->info->n, 8), VEC_SIZE(key->info->n1n2, 8));
+    memcpy(salt, ctext + VEC_SIZE(key->info->n, 8) + VEC_SIZE(key->info->n1n2, 8),
+        key->info->salt_bytes);
+
+    result = hqc_pke_decrypt((uint64_t *)m_prime, key, u, v);
+
     return 0;
 }
 

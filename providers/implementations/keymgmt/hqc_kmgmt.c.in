@@ -143,6 +143,9 @@ static uint16_t hqc_5_rs_coefs[] = { 49, 167, 49, 39, 200, 121, 124, 91, 240, 63
  * | N Mu value           | Derived constant for arithmetic operations. |
  * | G Value              | ??? |
  * | K Value              | ??? |
+ * | Delta value          | ??? |
+ * | FFT value            | ??? |
+ * | M Value              | ??? |
  * | Reed Solomon Coefs   | Coefficients of the Reed Solomon Generator polynomial.|
  * | Omega value          | Weight parameter used in error vector generation. |
  * | Omega-R value        | Weight parameter for redundancy or recovery data. |
@@ -173,6 +176,9 @@ static const HQC_VARIANT_INFO variant_info[EVP_PKEY_HQC_KEM_MAX] = {
         243079ULL, /* N Mu value */
         31, /* G value */
         16, /* K value */
+        15, /* Delta value */
+        4, /* FFT value */
+        8, /* M value */
         hqc_1_rs_coefs, /* Reed Solomon Coefs */
         66, /* Omega value */
         75, /* Omega-R value */
@@ -198,6 +204,9 @@ static const HQC_VARIANT_INFO variant_info[EVP_PKEY_HQC_KEM_MAX] = {
         119800ULL, /* N Mu value */
         33, /* G value */
         24, /* K value */
+        16, /* Delta value */
+        5, /* FFT value */
+        8, /* M value */
         hqc_3_rs_coefs, /* Reed Solomon Coefs */
         100, /* Omega value */
         114, /* Omega-R value */
@@ -223,6 +232,9 @@ static const HQC_VARIANT_INFO variant_info[EVP_PKEY_HQC_KEM_MAX] = {
         74517ULL, /* N Mu value */
         59, /* G value */
         32, /* K value */
+        29, /* Delta value */
+        5, /* FFT value */
+        8, /* M value */
         hqc_5_rs_coefs, /* Reed Solomon Coefs */
         131, /* Omega value */
         149, /* Omega-R value */
