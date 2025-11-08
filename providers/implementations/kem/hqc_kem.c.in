@@ -62,6 +62,11 @@ static OSSL_FUNC_kem_settable_ctx_params_fn hqc_kem_settable_ctx_params;
  */
 #define HQC_XOF_DOMAIN 1
 
+/** @def HQC_J_FCT_DOMAIN
+ *  @brief Domain separator for the J(·) function in HQC.
+ */
+#define HQC_J_FCT_DOMAIN 3
+
 /**
  * @def KARATSUBA_THRESHOLD
  * @brief Threshold for switching to the Karatsuba multiplication
@@ -181,10 +186,10 @@ static int vect_sample_fixed_weight2(EVP_MD_CTX *md_ctx, HQC_KEY *key, uint64_t 
     uint32_t index_tab[key->info->omega_r];
     uint64_t bit_tab[key->info->omega_r];
 
-    memset(support, 0, key->info->omega_r * sizeof(uint32_t));
-    memset(rand_u32, 0, key->info->omega_r * sizeof(uint32_t));
-    memset(index_tab, 0, key->info->omega_r * sizeof(uint32_t));
-    memset(bit_tab, 0, key->info->omega_r * sizeof(uint64_t));
+    memset(support, 0, sizeof(support));
+    memset(rand_u32, 0, sizeof(rand_u32));
+    memset(index_tab, 0, sizeof(index_tab));
+    memset(bit_tab, 0, sizeof(bit_tab));
 
     if (!EVP_DigestSqueeze(md_ctx, (unsigned char *)rand_u32, weight * 4))
         return 0;
@@ -597,10 +602,10 @@ static void code_encode(HQC_KEY *key, uint64_t *em, const uint64_t *m)
     uint8_t *msg_array;
     rm_codeword_t *code_array = (rm_codeword_t *)em;
 
-    memset(tmp, 0, VEC_SIZE(key->info->n1, 8) * sizeof(uint64_t));
-    memset(msg_bytes, 0, key->info->k);
-    memset(cdw_bytes, 0, key->info->n1);
-    memset(tmp_g, 0, key->info->g * sizeof(uint16_t));
+    memset(tmp, 0, sizeof(tmp));
+    memset(msg_bytes, 0, sizeof(msg_bytes));
+    memset(cdw_bytes, 0, sizeof(cdw_bytes));
+    memset(tmp_g, 0, sizeof(tmp_g));
     /*
      * Do a reed/solomon encoding of the message to the tmp variable
      */
@@ -672,12 +677,12 @@ static void radix_big(HQC_KEY *key, uint16_t *f0, uint16_t *f1, const uint16_t *
 
     size_t i, n;
 
-    memset(Q, 0, 2 * ((1 << (key->info->fft - 2)) + 1) * sizeof(uint16_t));
-    memset(R, 0, 2 * ((1 << (key->info->fft - 2)) + 1) * sizeof(uint16_t));
-    memset(Q0, 0, (1 << (key->info->fft - 2)) * sizeof(uint16_t));
-    memset(Q1, 0, (1 << (key->info->fft - 2)) * sizeof(uint16_t));
-    memset(R0, 0, (1 << (key->info->fft - 2)) * sizeof(uint16_t));
-    memset(R1, 0, (1 << (key->info->fft - 2)) * sizeof(uint16_t));
+    memset(Q, 0, sizeof(Q));
+    memset(R, 0, sizeof(R));
+    memset(Q0, 0, sizeof(Q0));
+    memset(Q1, 0, sizeof(Q1));
+    memset(R0, 0, sizeof(R0));
+    memset(R1, 0, sizeof(R1));
 
     n = 1;
     n <<= (m_f - 2);
@@ -852,13 +857,13 @@ static void fft(HQC_KEY *key, uint16_t *w, const uint16_t *f, size_t f_coeffs)
     uint16_t v[1 << (key->info->m - 1)];
     size_t i, k;
 
-    memset(betas, 0, (key->info->m - 1) * sizeof(uint16_t));
-    memset(betas_sums, 0, (1 << (key->info->m - 1)) * sizeof(uint16_t));
-    memset(f0, 0, (1 << (key->info->fft - 1)) * sizeof(uint16_t));
-    memset(f1, 0, (1 << (key->info->fft - 1)) * sizeof(uint16_t));
-    memset(deltas, 0, (key->info->m - 1) * sizeof(uint16_t));
-    memset(u, 0, (key->info->m - 1) * sizeof(uint16_t));
-    memset(v, 0, (key->info->m - 1) * sizeof(uint16_t));
+    memset(betas, 0, sizeof(betas));
+    memset(betas_sums, 0, sizeof(betas_sums));
+    memset(f0, 0, sizeof(f0));
+    memset(f1, 0, sizeof(f1));
+    memset(deltas, 0, sizeof(deltas));
+    memset(u, 0, sizeof(u));
+    memset(v, 0, sizeof(v));
 
     // Follows Gao and Mateer algorithm
     compute_fft_betas(key, betas);
@@ -1053,8 +1058,8 @@ static uint16_t compute_elp(HQC_KEY *key, uint16_t *sigma, const uint16_t *syndr
 
     uint16_t i;
 
-    memset(sigma_copy, 0, (key->info->delta + 1) * sizeof(uint16_t));
-    memset(X_sigma_p, 0, (key->info->delta + 1) * sizeof(uint16_t));
+    memset(sigma_copy, 0, sizeof(sigma_copy));
+    memset(X_sigma_p, 0, sizeof(X_sigma_p));
     X_sigma_p[1] = 1;
 
     sigma[0] = 1;
@@ -1153,8 +1158,8 @@ static void compute_error_values(HQC_KEY *key, uint16_t *error_values,
     uint16_t inverse;
     uint16_t inverse_power_j;
 
-    memset(beta_j, 0, key->info->delta * sizeof(uint16_t));
-    memset(e_j, 0, key->info->delta * sizeof(uint16_t));
+    memset(beta_j, 0, sizeof(beta_j));
+    memset(e_j, 0, sizeof(e_j));
 
     // Compute the beta_{j_i} page 31 of the documentation
     delta_counter = 0;
@@ -1223,13 +1228,13 @@ static void code_decode(HQC_KEY *key, uint64_t *m, const uint64_t *em)
     uint16_t error_values[key->info->n1];
     uint16_t deg;
 
-    memset(tmp, 0, VEC_SIZE(key->info->n1, 64) * sizeof(uint64_t));
-    memset(cdw_bytes, 0, key->info->n1);
-    memset(syndromes, 0, (2 * key->info->delta) * sizeof(uint16_t));
-    memset(sigma, 0, (1 << key->info->fft) * sizeof(uint16_t));
-    memset(error, 0, 1 << key->info->m);
-    memset(z, 0, key->info->n1 * sizeof(uint16_t));
-    memset(error_values, 0, key->info->n1 * sizeof(uint16_t));
+    memset(tmp, 0, sizeof(tmp));
+    memset(cdw_bytes, 0, sizeof(cdw_bytes));
+    memset(syndromes, 0, sizeof(syndromes));
+    memset(sigma, 0, sizeof(sigma));
+    memset(error, 0, sizeof(error));
+    memset(z, 0, sizeof(z));
+    memset(error_values, 0, sizeof(error_values));
 
     /*
      * Reed Muller decode
@@ -1293,14 +1298,12 @@ static int hqc_pke_encrypt(PROV_HQC_KEM_CTX *ctx, EVP_MD_CTX *md_ctx, uint64_t *
     uint64_t tmp[VEC_SIZE(key->info->n, 64)];
     uint8_t domain = HQC_XOF_DOMAIN;
 
-    memset(h, 0, VEC_SIZE(key->info->n, 8));
-    memset(s, 0, VEC_SIZE(key->info->n, 8));
-    memset(r1, 0, VEC_SIZE(key->info->n, 8));
-    memset(r2, 0, VEC_SIZE(key->info->n, 8));
-    memset(e, 0, VEC_SIZE(key->info->n, 8));
-    memset(tmp, 0, VEC_SIZE(key->info->n, 8));
-    memset(u, 0, VEC_SIZE(key->info->n, 8));
-    memset(v, 0, VEC_SIZE(key->info->n, 8));
+    memset(h, 0, sizeof(h));
+    memset(s, 0, sizeof(s));
+    memset(r1, 0, sizeof(r1));
+    memset(r2, 0, sizeof(r2));
+    memset(e, 0, sizeof(e));
+    memset(tmp, 0, sizeof(tmp));
 
     /*
      * Get h and s vectors
@@ -1388,6 +1391,14 @@ static int hqc_kem_encapsulate(void *vctx, unsigned char *ctext, size_t *clen,
             *slen = key->info->shared_secret_bytes;
         return 1;
     }
+
+    memset(m, 0, sizeof(m));
+    memset(salt, 0, sizeof(salt));
+    memset(k_theta, 0, sizeof(k_theta));
+    memset(theta, 0, sizeof(theta));
+    memset(hash_ek_kem, 0, sizeof(hash_ek_kem));
+    memset(u, 0, sizeof(u));
+    memset(v, 0, sizeof(v));
 
     md_ctx = EVP_MD_CTX_new();
     if (md_ctx == NULL)
@@ -1603,11 +1614,23 @@ err:
     return result;
 }
 
+static uint8_t vect_compare(const uint8_t *v1, const uint8_t *v2, uint32_t size)
+{
+    uint16_t r = 0x0100;
+
+    for (size_t i = 0; i < size; i++) {
+        r |= v1[i] ^ v2[i];
+    }
+
+    return (r - 1) >> 8;
+}
+
 static int hqc_kem_decapsulate(void *vctx, uint8_t *shsec, size_t *slen,
     const uint8_t *ctext, size_t clen)
 {
     PROV_HQC_KEM_CTX *ctx = vctx;
     HQC_KEY *key = ctx->key;
+    HQC_KEY *peerkey = NULL;
     uint8_t ek_pke[key->info->ek_size];
     uint8_t dk_pke[key->info->seed_len];
     uint8_t sigma[key->info->security_bytes];
@@ -1623,6 +1646,15 @@ static int hqc_kem_decapsulate(void *vctx, uint8_t *shsec, size_t *slen,
     uint8_t salt[key->info->salt_bytes];
     uint8_t salt_prime[key->info->salt_bytes];
     uint8_t result;
+    EVP_MD_CTX *md_ctx = NULL;
+    int ret = 0;
+    unsigned int len = 0;
+    uint8_t domain;
+
+    if (slen != NULL && *slen == 0) {
+        *slen = key->info->shared_secret_bytes;
+        return 1;
+    }
 
     memset(ek_pke, 0, sizeof(ek_pke));
     memset(dk_pke, 0, sizeof(dk_pke));
@@ -1632,9 +1664,9 @@ static int hqc_kem_decapsulate(void *vctx, uint8_t *shsec, size_t *slen,
     memset(K_theta_prime, 0, sizeof(K_theta_prime));
     memset(K_bar, 0, sizeof(K_bar));
     memset(theta_prime, 0, sizeof(theta_prime));
-    memset(u, 0, sizeof(u));
+    memset(u, 0, VEC_SIZE(key->info->n, 64) * sizeof(uint64_t));
     memset(u_prime, 0, sizeof(u_prime));
-    memset(v, 0, sizeof(v));
+    memset(v, 0, VEC_SIZE(key->info->n, 64) * sizeof(uint64_t));
     memset(v_prime, 0, sizeof(v_prime));
     memset(salt, 0, sizeof(salt));
     memset(salt_prime, 0, sizeof(salt_prime));
@@ -1651,7 +1683,80 @@ static int hqc_kem_decapsulate(void *vctx, uint8_t *shsec, size_t *slen,
 
     result = hqc_pke_decrypt((uint64_t *)m_prime, key, ctx, u, v);
 
-    return 0;
+    /*
+     * hash ek_pke to produce hash_ek_kem
+     */
+    md_ctx = EVP_MD_CTX_new();
+    if (md_ctx == NULL)
+        goto err;
+
+    if (!EVP_DigestInit_ex2(md_ctx, ctx->sha3_256, NULL))
+        goto err;
+    if (!EVP_DigestUpdate(md_ctx, ek_pke, key->info->shared_secret_bytes))
+        goto err;
+    domain = HQC_H_FCT_DOMAIN;
+    if (!EVP_DigestUpdate(md_ctx, &domain, 1))
+        goto err;
+    if (!EVP_DigestFinal_ex(md_ctx, hash_ek_kem, &len))
+        goto err;
+
+    /*
+     * produce K_theta
+     */
+    if (!EVP_DigestInit_ex2(md_ctx, ctx->sha3_256, NULL))
+        goto err;
+    if (!EVP_DigestUpdate(md_ctx, hash_ek_kem, key->info->seed_len))
+        goto err;
+    if (!EVP_DigestUpdate(md_ctx, m_prime, key->info->security_bytes))
+        goto err;
+    if (!EVP_DigestUpdate(md_ctx, salt, key->info->salt_bytes))
+        goto err;
+    domain = HQC_G_FCT_DOMAIN;
+    if (!EVP_DigestUpdate(md_ctx, &domain, 1))
+        goto err;
+    if (!EVP_DigestFinal_ex(md_ctx, K_theta_prime, &len))
+        goto err;
+
+    memcpy(shsec, K_theta_prime, key->info->shared_secret_bytes);
+    memcpy(theta_prime, K_theta_prime + key->info->shared_secret_bytes, key->info->seed_len);
+    peerkey = hqc_kem_new(key->info->type);
+    memcpy(peerkey->ek, ek_pke, key->info->ek_size);
+    if (!hqc_pke_encrypt(ctx, md_ctx, u_prime, v_prime, peerkey, (uint64_t *)m_prime, theta_prime))
+        goto err;
+    memcpy(salt_prime, salt, key->info->salt_bytes);
+
+    /*
+     * Compute K_bar
+     */
+    if (!EVP_DigestInit_ex2(md_ctx, ctx->sha3_256, NULL))
+        goto err;
+    if (!EVP_DigestUpdate(md_ctx, hash_ek_kem, key->info->seed_len))
+        goto err;
+    if (!EVP_DigestUpdate(md_ctx, sigma, key->info->security_bytes))
+        goto err;
+    if (!EVP_DigestUpdate(md_ctx, u, VEC_SIZE(key->info->n, 8)))
+        goto err;
+    if (!EVP_DigestUpdate(md_ctx, v, VEC_SIZE(key->info->n1n2, 8)))
+        goto err;
+    if (!EVP_DigestUpdate(md_ctx, salt, key->info->salt_bytes))
+        goto err;
+    domain = HQC_J_FCT_DOMAIN;
+    if (!EVP_DigestUpdate(md_ctx, &domain, 1))
+        goto err;
+    if (!EVP_DigestFinal_ex(md_ctx, K_bar, &len))
+        goto err;
+
+    result |= vect_compare((uint8_t *)u, (uint8_t *)u_prime, VEC_SIZE(key->info->n, 8));
+    result |= vect_compare((uint8_t *)v, (uint8_t *)v_prime, VEC_SIZE(key->info->n1n2, 8));
+    result |= vect_compare(salt, salt_prime, key->info->salt_bytes);
+    result -= 1;
+    for (size_t i = 0; i < key->info->shared_secret_bytes; ++i)
+        shsec[i] = (shsec[i] & result) ^ (K_bar[i] & ~result);
+
+    ret = 1;
+err:
+    EVP_MD_CTX_free(md_ctx);
+    return ret;
 }
 
 const OSSL_DISPATCH ossl_hqc_kem_asym_kem_functions[] = {
