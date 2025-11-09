@@ -2034,6 +2034,19 @@ static int xof_get_bytes(EVP_MD_CTX *xof_ctx, uint8_t *output, uint32_t output_s
     return 1;
 }
 
+static void hexdump(uint8_t *val, size_t len, char *msg)
+{
+    int idx = 0;
+
+    fprintf(stderr, "%s\n", msg);
+    for (idx = 0; idx < len; idx++) {
+        fprintf(stderr, "%02x:", val[idx]);
+        if (((idx + 1) % 16) == 0)
+            fprintf(stderr, "\n");
+    }
+    fprintf(stderr, "\n");
+}
+
 /**
  * @brief Generates a new HQC KEM public/private keypair.
  *
@@ -2131,6 +2144,7 @@ static void *hqc_kem_gen(void *vgctx, OSSL_CALLBACK *osslcb, void *cbarg)
     if (key->seed == NULL)
         goto err;
 
+    hexdump(key->seed, key->info->seed_len, "seed:");
     /*
      * Initalize our shake digest as a prng to generate our key seed from
      * the provided seed
@@ -2233,6 +2247,9 @@ static void *hqc_kem_gen(void *vgctx, OSSL_CALLBACK *osslcb, void *cbarg)
 
     key->selection = OSSL_KEYMGMT_SELECT_PRIVATE_KEY | OSSL_KEYMGMT_SELECT_PUBLIC_KEY;
     ret = 1;
+    hexdump(key->ek, key->info->ek_size, "key->ek:");
+    hexdump(key->dk, key->info->dk_size, "key->dk:");
+
 err:
     memset(keypair_seed, 0, 2 * SEED_BYTES);
     memset(seed_kem, 0, sizeof(seed_kem));
