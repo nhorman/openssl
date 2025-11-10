@@ -2299,28 +2299,36 @@ static void *hqc_load(const void *reference, size_t reference_sz)
 {
     HQC_KEY *key = NULL;
     PROV_HQC_GEN_CTX *ctx;
-    const HQC_KEY *ref = reference;
+    const HQC_KEY *ref;
 
     if (!ossl_prov_is_running() || reference_sz != sizeof(key))
         goto err;
 
     ref = *(HQC_KEY **)reference;
 
-    ctx = hqc_kem_gen_init(NULL, OSSL_KEYMGMT_SELECT_KEYPAIR, NULL, ref->info->type);
-    if (ctx == NULL)
-        goto err;
+    if (ref->selection != OSSL_KEYMGMT_SELECT_PUBLIC_KEY) {
+        ctx = hqc_kem_gen_init(NULL, OSSL_KEYMGMT_SELECT_KEYPAIR, NULL, ref->info->type);
+        if (ctx == NULL)
+            goto err;
 
-    /*
-     * override the seed
-     */
-    ctx->seed = OPENSSL_memdup(ref->seed, ref->info->seed_len);
+        /*
+         * override the seed
+         */
+        ctx->seed = OPENSSL_memdup(ref->seed, ref->info->seed_len);
 
-    /*
-     * reconstitute the key
-     */
-    key = hqc_kem_gen(ctx, NULL, NULL);
+        /*
+         * reconstitute the key
+         */
+        key = hqc_kem_gen(ctx, NULL, NULL);
 
-    hqc_kem_cleanup_gen_ctx(ctx);
+        hqc_kem_cleanup_gen_ctx(ctx);
+    } else {
+        key = hqc_kem_new(ref->info->type);
+        if (key != NULL) {
+            memcpy(key->dk, ref->dk, key->info->dk_size);
+            key->selection = ref->selection;
+        }
+    }
     return key;
 err:
     hqc_kem_key_free(key);

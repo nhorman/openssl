@@ -481,16 +481,16 @@ static int hqc_to_text(BIO *out, const void *key, int selection)
         }
         if (BIO_printf(out, "%s Private-Key:\n", hkey->info->name) <= 0)
             return 0;
-        if (!ossl_bio_print_labeled_buf(out, "priv:", hkey->dk,
-                hkey->info->dk_size))
+        if (!ossl_bio_print_labeled_buf(out, "priv:", hkey->ek,
+                hkey->info->ek_size))
             return 0;
     } else if ((selection & OSSL_KEYMGMT_SELECT_PUBLIC_KEY) != 0) {
         if (BIO_printf(out, "%s Public-Key:\n", hkey->info->name) <= 0)
             return 0;
     }
 
-    if (!ossl_bio_print_labeled_buf(out, "pub:", hkey->ek,
-            hkey->info->ek_size))
+    if (!ossl_bio_print_labeled_buf(out, "pub:", hkey->dk,
+            hkey->info->dk_size))
         return 0;
 
     return 1;
