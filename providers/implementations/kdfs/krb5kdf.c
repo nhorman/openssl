@@ -152,6 +152,16 @@ static int krb5kdf_derive(void *vctx, unsigned char *key, size_t keylen,
                    key, keylen);
 }
 
+<<<<<<< HEAD:providers/implementations/kdfs/krb5kdf.c
+=======
+{- produce_param_decoder('krb5kdf_set_ctx_params',
+                         (['OSSL_KDF_PARAM_PROPERTIES',  'propq',    'utf8_string'],
+                          ['OSSL_KDF_PARAM_CIPHER',      'cipher',   'utf8_string'],
+                          ['OSSL_KDF_PARAM_KEY',         'key',      'octet_string'],
+                          ['OSSL_KDF_PARAM_CONSTANT',    'cnst',     'octet_string'],
+                         )); -}
+
+>>>>>>> f45af5ecf6 (Providers: Remove OSSL_ALG_PARAM_ENGINE):providers/implementations/kdfs/krb5kdf.c.in
 static int krb5kdf_set_ctx_params(void *vctx, const OSSL_PARAM params[])
 {
     struct krb5kdf_set_ctx_params_st p;

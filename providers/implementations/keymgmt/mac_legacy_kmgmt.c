@@ -186,7 +186,6 @@ struct mac_common_params_st {
     OSSL_PARAM *key;
     OSSL_PARAM *cipher; /* CMAC */
     OSSL_PARAM *propq;
-    OSSL_PARAM *engine;
 };
 
 #define mac_import_st mac_common_params_st
@@ -352,6 +351,16 @@ static const OSSL_PARAM *mac_gettable_params(void *provctx)
     return mac_get_params_list;
 }
 
+<<<<<<< HEAD:providers/implementations/keymgmt/mac_legacy_kmgmt.c
+=======
+#define cmac_get_params_st mac_common_params_st
+
+{- produce_param_decoder('cmac_get_params',
+                         (['OSSL_PKEY_PARAM_PRIV_KEY', 'key',    'octet_string'],
+                          ['OSSL_PKEY_PARAM_CIPHER',   'cipher', 'utf8_string'],
+                        )); -}
+
+>>>>>>> f45af5ecf6 (Providers: Remove OSSL_ALG_PARAM_ENGINE):providers/implementations/keymgmt/mac_legacy_kmgmt.c.in
 static int cmac_get_params(void *keydata, OSSL_PARAM params[])
 {
     struct mac_common_params_st p;
@@ -455,6 +464,17 @@ static int mac_gen_set_params(void *genctx, const OSSL_PARAM params[])
     return mac_gen_set_params_common(gctx, &p);
 }
 
+<<<<<<< HEAD:providers/implementations/keymgmt/mac_legacy_kmgmt.c
+=======
+#define cmac_gen_set_params_st mac_common_params_st
+
+{- produce_param_decoder('cmac_gen_set_params',
+                         (['OSSL_PKEY_PARAM_PRIV_KEY',   'key',    'octet_string'],
+                          ['OSSL_PKEY_PARAM_CIPHER',     'cipher', 'utf8_string'],
+                          ['OSSL_PKEY_PARAM_PROPERTIES', 'propq',  'utf8_string'],
+                         )); -}
+
+>>>>>>> f45af5ecf6 (Providers: Remove OSSL_ALG_PARAM_ENGINE):providers/implementations/keymgmt/mac_legacy_kmgmt.c.in
 static int cmac_gen_set_params(void *genctx, const OSSL_PARAM params[])
 {
     struct mac_gen_ctx *gctx = genctx;
