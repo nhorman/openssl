@@ -662,24 +662,6 @@ static const OSSL_PARAM *sskdf_common_gettable_ctx_params
     return sskdf_get_ctx_params_list;
 }
 
-<<<<<<< HEAD:providers/implementations/kdfs/sskdf.c
-=======
-#define x963kdf_set_ctx_params_st sskdf_all_set_ctx_params_st
-
-{- produce_param_decoder('x963kdf_set_ctx_params',
-                         (['OSSL_KDF_PARAM_SECRET',            'secret', 'octet_string'],
-                          ['OSSL_KDF_PARAM_KEY',               'secret', 'octet_string'],
-                          ['OSSL_KDF_PARAM_INFO',              'info',   'octet_string', SSKDF_MAX_INFOS],
-                          ['OSSL_KDF_PARAM_PROPERTIES',        'propq',  'utf8_string'],
-                          ['OSSL_KDF_PARAM_DIGEST',            'digest', 'utf8_string'],
-                          ['OSSL_KDF_PARAM_MAC',               'mac',    'utf8_string'],
-                          ['OSSL_KDF_PARAM_SALT',              'salt',   'octet_string'],
-                          ['OSSL_KDF_PARAM_MAC_SIZE',          'size',   'size_t'],
-                          ['OSSL_KDF_PARAM_FIPS_DIGEST_CHECK', 'ind_d',  'int', 'fips'],
-                          ['OSSL_KDF_PARAM_FIPS_KEY_CHECK',    'ind_k',  'int', 'fips'],
-                         )); -}
-
->>>>>>> f45af5ecf6 (Providers: Remove OSSL_ALG_PARAM_ENGINE):providers/implementations/kdfs/sskdf.c.in
 static int x963kdf_set_ctx_params(void *vctx, const OSSL_PARAM params[])
 {
     KDF_SSKDF *ctx = (KDF_SSKDF *)vctx;

@@ -7,9 +7,6 @@
  * https://www.openssl.org/source/license.html
  */
 
-/* We need to use some engine deprecated APIs */
-#define OPENSSL_SUPPRESS_DEPRECATED
-
 #include <string.h>
 #include <openssl/core_dispatch.h>
 #include <openssl/core_names.h>
@@ -18,9 +15,6 @@
 #include <openssl/evp.h>
 #include <openssl/proverr.h>
 #include <openssl/param_build.h>
-#ifndef FIPS_MODULE
-# include <openssl/engine.h>
-#endif
 #include "internal/param_build_set.h"
 #include "prov/implementations.h"
 #include "prov/providercommon.h"
@@ -351,16 +345,6 @@ static const OSSL_PARAM *mac_gettable_params(void *provctx)
     return mac_get_params_list;
 }
 
-<<<<<<< HEAD:providers/implementations/keymgmt/mac_legacy_kmgmt.c
-=======
-#define cmac_get_params_st mac_common_params_st
-
-{- produce_param_decoder('cmac_get_params',
-                         (['OSSL_PKEY_PARAM_PRIV_KEY', 'key',    'octet_string'],
-                          ['OSSL_PKEY_PARAM_CIPHER',   'cipher', 'utf8_string'],
-                        )); -}
-
->>>>>>> f45af5ecf6 (Providers: Remove OSSL_ALG_PARAM_ENGINE):providers/implementations/keymgmt/mac_legacy_kmgmt.c.in
 static int cmac_get_params(void *keydata, OSSL_PARAM params[])
 {
     struct mac_common_params_st p;
@@ -464,17 +448,6 @@ static int mac_gen_set_params(void *genctx, const OSSL_PARAM params[])
     return mac_gen_set_params_common(gctx, &p);
 }
 
-<<<<<<< HEAD:providers/implementations/keymgmt/mac_legacy_kmgmt.c
-=======
-#define cmac_gen_set_params_st mac_common_params_st
-
-{- produce_param_decoder('cmac_gen_set_params',
-                         (['OSSL_PKEY_PARAM_PRIV_KEY',   'key',    'octet_string'],
-                          ['OSSL_PKEY_PARAM_CIPHER',     'cipher', 'utf8_string'],
-                          ['OSSL_PKEY_PARAM_PROPERTIES', 'propq',  'utf8_string'],
-                         )); -}
-
->>>>>>> f45af5ecf6 (Providers: Remove OSSL_ALG_PARAM_ENGINE):providers/implementations/keymgmt/mac_legacy_kmgmt.c.in
 static int cmac_gen_set_params(void *genctx, const OSSL_PARAM params[])
 {
     struct mac_gen_ctx *gctx = genctx;
