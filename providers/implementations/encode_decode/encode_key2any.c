@@ -936,9 +936,9 @@ static int hqc_spki_pub_to_der(const void *vkey, unsigned char **pder,
 {
     const HQC_KEY *key = vkey;
 
-    *pder = OPENSSL_memdup(key->dk, key->info->dk_size);
+    *pder = OPENSSL_memdup(key->ek, key->info->ek_size);
 
-    return (*pder == NULL) ? 0 : key->info->dk_size;
+    return (*pder == NULL) ? 0 : key->info->ek_size;
 }
 
 #endif

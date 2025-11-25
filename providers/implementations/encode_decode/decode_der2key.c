@@ -977,14 +977,14 @@ static void *make_hqc_pubkey(int evp_type, const uint8_t **der, long der_len,
 
     if (key == NULL)
         return NULL;
-    if (der_len - 23 != key->info->dk_size) {
+    if (der_len - 23 != key->info->ek_size) {
         ERR_raise_data(ERR_LIB_PROV, PROV_R_INVALID_KEY,
             "%s invalid public 'ek' vector",
             key->info->name);
         goto err;
     }
 
-    memcpy(key->dk, (*der) + 23, key->info->dk_size);
+    memcpy(key->ek, (*der) + 23, key->info->ek_size);
     key->selection |= OSSL_KEYMGMT_SELECT_PUBLIC_KEY;
     *der += der_len;
     return key;
