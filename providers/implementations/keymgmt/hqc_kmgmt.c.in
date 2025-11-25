@@ -2325,7 +2325,7 @@ static void *hqc_load(const void *reference, size_t reference_sz)
     } else {
         key = hqc_kem_new(ref->info->type);
         if (key != NULL) {
-            memcpy(key->dk, ref->dk, key->info->dk_size);
+            memcpy(key->ek, ref->ek, key->info->ek_size);
             key->selection = ref->selection;
         }
     }
