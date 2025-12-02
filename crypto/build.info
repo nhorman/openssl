@@ -142,4 +142,6 @@ GENERATE[riscv32cpuid.s]=riscv32cpuid.pl
 GENERATE[loongarch64cpuid.s]=loongarch64cpuid.pl
 IF[{- $config{target} =~ /^(?:Cygwin|mingw|VC-|BC-)/ -}]
   SHARED_SOURCE[../libcrypto]=dllmain.c
+ELSE
+  SOURCE[../libcrypto]=posix_setup_teardown.c
 ENDIF

@@ -54,8 +54,18 @@ static CRYPTO_THREAD_LOCAL in_init_config_local;
 
 static CRYPTO_ONCE base = CRYPTO_ONCE_STATIC_INIT;
 static int base_inited = 0;
+
+#if !defined(OPENSSL_SYS_WIN32)
+extern void force_destructor_inclusion();
+#endif
+
 DEFINE_RUN_ONCE_STATIC(ossl_init_base)
 {
+
+#if !defined(OPENSSL_SYS_WIN32)
+    force_destructor_inclusion();
+#endif
+
     /* no need to init trace */
 
     OSSL_TRACE(INIT, "ossl_init_base: setting up stop handlers\n");
@@ -451,6 +461,8 @@ void OPENSSL_cleanup(void)
     base_inited = 0;
 }
 
+
+extern void force_destructor_inclusion();
 /*
  * If this function is called with a non NULL settings value then it must be
  * called prior to any threads making calls to any OpenSSL functions,
