@@ -37,7 +37,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         OPENSSL_thread_stop();
         break;
     case DLL_PROCESS_DETACH:
-        if (lpvReserved != nullptr)
+        if (lpvReserved != NULL)
             OPENSSL_cleanup();
         break;
     }
