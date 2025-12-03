@@ -614,6 +614,13 @@ void ossl_rcu_lock_free(CRYPTO_RCU_LOCK *lock)
     /* make sure we're synchronized */
     ossl_synchronize_rcu(rlock);
 
+    pthread_cond_destroy(&rlock->prior_signal);
+    pthread_cond_destroy(&rlock->alloc_signal);
+
+    pthread_mutex_destroy(&rlock->prior_lock);
+    pthread_mutex_destroy(&rlock->alloc_lock);
+    pthread_mutex_destroy(&rlock->write_lock);
+
     OPENSSL_free(rlock->qp_group);
     /* There should only be a single qp left now */
     OPENSSL_free(rlock);
