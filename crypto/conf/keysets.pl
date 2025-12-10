@@ -111,7 +111,11 @@ my $i;
 print "static const unsigned short CONF_type_default[128] = {";
 for ($i = 0; $i < 128; $i++) {
     print "\n   " if ($i % 8) == 0;
-    printf " 0x%04X,", $V_def[$i];
+    printf " 0x%04X", $V_def[$i];
+    # Don't put a comma in the last entry
+    if ($i != 127) {
+        printf ",";
+    }
 }
 print "\n};\n\n";
 
@@ -119,7 +123,11 @@ print "#ifndef OPENSSL_NO_DEPRECATED_3_0\n";
 print "static const unsigned short CONF_type_win32[128] = {";
 for ($i = 0; $i < 128; $i++) {
     print "\n   " if ($i % 8) == 0;
-    printf " 0x%04X,", $V_w32[$i];
+    printf " 0x%04X", $V_w32[$i];
+    # Don't add a comma on the last entry
+    if ($i != 127) {
+        printf ",";
+    }
 }
 print "\n};\n";
 print "#endif\n";
