@@ -167,11 +167,12 @@ print <<"EOF";
 
 EOF
 
+print "/* clang-format off */\n";
 print "/* Serialized OID's */\n";
 printf "static const unsigned char so[%d] = {\n", $lvalues + 1;
 print @lvalues;
 print "};\n\n";
-
+print "/* clang-format on */\n";
 printf "#define NUM_NID %d\n", $n;
 printf "static const ASN1_OBJECT nid_objs[NUM_NID] = {\n";
 print @out;
