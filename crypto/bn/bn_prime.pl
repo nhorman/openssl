@@ -47,6 +47,9 @@ printf "# define NUMPRIMES %d\n\n", $num;
 printf "static const prime_t primes[%d] = {", $num;
 for (my $i = 0; $i <= $#primes; $i++) {
     printf "\n   " if ($i % 8) == 0;
-    printf " %5d,", $primes[$i];
+    printf " %5d", $primes[$i];
+    if ($i != $#primes) {
+        printf ",";
+    }
 }
 print "\n};\n";
