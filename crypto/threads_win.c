@@ -37,13 +37,6 @@
 
 #if defined(OPENSSL_THREADS) && !defined(CRYPTO_TDEBUG) && defined(OPENSSL_SYS_WINDOWS)
 
-#ifdef USE_RWLOCK
-typedef struct {
-    SRWLOCK lock;
-    int exclusive;
-} CRYPTO_win_rwlock;
-#endif
-
 /*
  * This defines a quescent point (qp)
  * This is the barrier beyond which a writer

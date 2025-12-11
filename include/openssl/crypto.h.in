@@ -81,6 +81,48 @@ typedef struct {
 
 typedef void CRYPTO_RWLOCK;
 
+#if !defined(OPENSSL_THREADS)
+#define DECLARE_STATIC_CRYPTO_RWLOCK(name)         \
+    static unsigned int __(name) _static_lock = 1; \
+    static CRYPTO_RWLOCK *(name) = &__(name) _static_lock;
+#define DECLARE_CRYPTO_RWLOCK(name)                \
+    static unsigned int __(name) _static_lock = 1; \
+    CRYPTO_RWLOCK *(name) = &__(name) _static_lock;
+#else
+#if defined(_WIN32)
+typedef struct {
+    CRYPTO_ONCE setup;
+    int exclusive;
+    union {
+        SRWLOCK slock;
+        CRITICAL_SECTION clock;
+    };
+} CRYPTO_win_rwlock;
+
+#define DECLARE_STATIC_CRYPTO_RWLOCK(name)                                     \
+    static CRYPTO_win_rwlock __name_static_lock = { CRYPTO_ONCE_STATIC_INIT }; \
+    static CRYPTO_RWLOCK *(name) = &__name_static_lock
+#define DECLARE_CRYPTO_RWLOCK(name)                                            \
+    static CRYPTO_win_rwlock __name_static_lock = { CRYPTO_ONCE_STATIC_INIT }; \
+    CRYPTO_RWLOCK *(name) = &__name_static_lock
+#else
+#ifdef USE_RWLOCK
+#define DECLARE_STATIC_CRYPTO_RWLOCK(name)                                   \
+    static pthread_rwlock_t __name_static_lock = PTHREAD_RWLOCK_INITIALIZER; \
+    static CRYPTO_RWLOCK *(name) = &__name_static_lock
+#define DECLARE_CRYPTO_RWLOCK(name)                                          \
+    static pthread_rwlock_t __name_static_lock = PTHREAD_RWLOCK_INITIALIZER; \
+    CRYPTO_RWLOCK *(name) = &__name_static_lock
+#else
+#define DECLARE_STATIC_CRYPTO_RWLOCK(name)                                 \
+    static pthread_mutex_t __name_static_lock = PTHREAD_MUTEX_INITIALIZER; \
+    static CRYPTO_RWLOCK *(name) = &__name_static_lock
+#define DECLARE_CRYPTO_RWLOCK(name)                                        \
+    static pthread_mutex_t __name_static_lock = PTHREAD_MUTEX_INITIALIZER; \
+    CRYPTO_RWLOCK *(name) = &__name_static_lock
+#endif
+#endif
+#endif
 CRYPTO_RWLOCK *CRYPTO_THREAD_lock_new(void);
 __owur int CRYPTO_THREAD_read_lock(CRYPTO_RWLOCK *lock);
 __owur int CRYPTO_THREAD_write_lock(CRYPTO_RWLOCK *lock);
