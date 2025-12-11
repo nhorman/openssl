@@ -41,6 +41,8 @@ struct ossl_init_stop_st {
     OPENSSL_INIT_STOP *next;
 };
 
+DECLARE_STATIC_CRYPTO_RWLOCK(library_refcount_lock);
+
 static OPENSSL_INIT_STOP *stop_handlers = NULL;
 /* Guards access to the optsdone variable on platforms without atomics */
 static CRYPTO_RWLOCK *optsdone_lock = NULL;
