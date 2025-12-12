@@ -389,9 +389,6 @@ void OPENSSL_cleanup(void)
     ossl_store_cleanup_int();
 #endif
 
-    OSSL_TRACE(INIT, "OPENSSL_cleanup: ossl_lib_ctx_default_deinit()\n");
-    ossl_lib_ctx_default_deinit();
-
     ossl_cleanup_thread();
 
     OSSL_TRACE(INIT, "OPENSSL_cleanup: bio_cleanup()\n");
