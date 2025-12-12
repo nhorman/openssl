@@ -556,17 +556,15 @@ int OSSL_LIB_CTX_load_config(OSSL_LIB_CTX *ctx, const char *config_file)
 }
 #endif
 
-void OSSL_LIB_CTX_free(OSSL_LIB_CTX *ctx)
+int ossl_lib_ctx_free_int(OSSL_LIB_CTX *ctx)
 {
     int ref;
 
-    if (ctx == NULL)
-        return;
     if (!CRYPTO_DOWN_REF(&ctx->refcnt, &ref))
-        return;
+        return 0;
     fprintf(stderr, "DROPPING REF COUNT FOR ctx %p to %d\n", (void *)ctx, ref);
     if (ref != 0)
-        return;
+        return ref;
 
 #ifndef FIPS_MODULE
     if (ctx->ischild)
@@ -577,6 +575,17 @@ void OSSL_LIB_CTX_free(OSSL_LIB_CTX *ctx)
     if (ctx != &default_context_int)
 #endif
         OPENSSL_free(ctx);
+    return ref;
+}
+
+void OSSL_LIB_CTX_free(OSSL_LIB_CTX *ctx)
+{
+    int ref;
+
+    if (ctx == NULL)
+        return;
+    ossl_lib_ctx_free_int(ctx);
+    return;
 }
 
 #ifndef FIPS_MODULE
