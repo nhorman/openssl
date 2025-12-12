@@ -18,6 +18,7 @@
 #include "crypto/async.h"
 #include "internal/comp.h"
 #include "internal/err.h"
+#include "internal/tsan_assist.h"
 #include "crypto/err.h"
 #include "crypto/objects.h"
 #include <stdlib.h>
@@ -306,9 +307,25 @@ DEFINE_RUN_ONCE_STATIC(ossl_init_async)
     return 1;
 }
 
+static TSAN_QUALIFIER int library_users = 0;
+
+void OPENSSL_add_library_user(void)
+{
+    tsan_counter(&library_users);
+}
+
 void OPENSSL_cleanup(void)
 {
     OPENSSL_INIT_STOP *currhandler, *lasthandler;
+    int count = tsan_decr(&library_users) - 1;
+
+    if (count < 0) {
+        fprintf(stderr, "library user underflow\n");
+        return;
+    } else if (count > 0) {
+        return;
+    }
+    fprintf(stderr, "Last man out the door, really cleaning up\n");
 
     /*
      * At some point we should consider looking at this function with a view to

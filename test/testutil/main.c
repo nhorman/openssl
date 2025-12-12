@@ -19,10 +19,12 @@ int main(int argc, char *argv[])
 
     gi_ret = global_init();
 
+    OPENSSL_add_library_user();
     test_open_streams();
 
     if (!gi_ret) {
         test_printf_stderr("Global init failed - aborting\n");
+        OPENSSL_cleanup();
         return ret;
     }
 
@@ -39,5 +41,6 @@ int main(int argc, char *argv[])
 end:
     ret = pulldown_test_framework(ret);
     test_close_streams();
+    OPENSSL_cleanup();
     return ret;
 }
