@@ -57,6 +57,8 @@ struct ossl_lib_ctx_st {
     int conf_diagnostics;
 };
 
+static int set_default_context(OSSL_LIB_CTX *defctx);
+
 int ossl_lib_ctx_write_lock(OSSL_LIB_CTX *ctx)
 {
     if ((ctx = ossl_lib_ctx_get_concrete(ctx)) == NULL)
@@ -425,6 +427,7 @@ DEFINE_RUN_ONCE_STATIC(default_context_do_init)
         goto deinit_thread;
 
     default_context_inited = 1;
+    set_default_context(&default_context_int);
     return 1;
 
 deinit_thread:
@@ -450,21 +453,42 @@ static OSSL_LIB_CTX *get_thread_default_context(void)
     return CRYPTO_THREAD_get_local(&default_context_thread_local);
 }
 
-static OSSL_LIB_CTX *get_default_context(void)
+static void drop_default_libctx_ref(void *arg)
 {
-    OSSL_LIB_CTX *current_defctx = get_thread_default_context();
-
-    if (current_defctx == NULL && default_context_inited)
-        current_defctx = &default_context_int;
-    return current_defctx;
+    OSSL_LIB_CTX *defctx = CRYPTO_THREAD_get_local(&default_context_thread_local);
+    if (defctx != NULL)
+        OSSL_LIB_CTX_free(defctx);
 }
 
 static int set_default_context(OSSL_LIB_CTX *defctx)
 {
-    if (defctx == &default_context_int)
-        defctx = NULL;
+    OSSL_LIB_CTX *curr_def_ctx = CRYPTO_THREAD_get_local(&default_context_thread_local);
+    int ret;
+    int ref;
 
-    return CRYPTO_THREAD_set_local(&default_context_thread_local, defctx);
+    if (defctx == curr_def_ctx)
+        return 1;
+
+    if (defctx != NULL) {
+        CRYPTO_UP_REF(&defctx->refcnt, &ref);
+        ret = CRYPTO_THREAD_set_local(&default_context_thread_local, defctx);
+        if (curr_def_ctx != NULL) {
+            OSSL_LIB_CTX_free(curr_def_ctx);
+        } else {
+            ossl_init_thread_start(NULL, NULL, drop_default_libctx_ref);
+        }
+    }
+}
+
+static OSSL_LIB_CTX *get_default_context(void)
+{
+    OSSL_LIB_CTX *current_defctx = get_thread_default_context();
+
+    if (current_defctx == NULL && default_context_inited) {
+        current_defctx = &default_context_int;
+        set_default_context(current_defctx);
+    }
+    return current_defctx;
 }
 #endif
 
@@ -521,7 +545,13 @@ int OSSL_LIB_CTX_load_config(OSSL_LIB_CTX *ctx, const char *config_file)
 
 void OSSL_LIB_CTX_free(OSSL_LIB_CTX *ctx)
 {
-    if (ctx == NULL || ossl_lib_ctx_is_default(ctx))
+    int ref;
+
+    if (ctx == NULL)
+        return;
+    if (!CRYPTO_DOWN_REF(&ctx->refcnt, &ref))
+        return;
+    if (ref != 0)
         return;
 
 #ifndef FIPS_MODULE
