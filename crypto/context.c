@@ -17,11 +17,13 @@
 #include "internal/bio.h"
 #include "internal/provider.h"
 #include "internal/conf.h"
+#include "internal/refcount.h"
 #include "crypto/decoder.h"
 #include "crypto/context.h"
 
 struct ossl_lib_ctx_st {
     CRYPTO_RWLOCK *lock;
+    CRYPTO_REF_COUNT refcnt;
     OSSL_EX_DATA_GLOBAL global;
     CONF_IMODULE *ssl_imod;
     void *property_string_data;
@@ -118,6 +120,9 @@ static void context_deinit_objs(OSSL_LIB_CTX *ctx);
 static int context_init(OSSL_LIB_CTX *ctx)
 {
     int exdata_done = 0;
+
+    if (!CRYPTO_NEW_REF(&ctx->refcnt, 1))
+        goto err;
 
     ctx->lock = CRYPTO_THREAD_lock_new();
     if (ctx->lock == NULL)
@@ -255,6 +260,8 @@ err:
 
 static void context_deinit_objs(OSSL_LIB_CTX *ctx)
 {
+    CRYPTO_FREE_REF(&ctx->refcnt);
+
     /* P2. We want evp_method_store to be cleaned up before the provider store */
     if (ctx->evp_method_store != NULL) {
         ossl_method_store_free(ctx->evp_method_store);
