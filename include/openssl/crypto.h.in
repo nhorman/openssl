@@ -557,6 +557,7 @@ int CRYPTO_memcmp(const void *in_a, const void *in_b, size_t len);
 
 /* Library initialisation functions */
 void OPENSSL_cleanup(void);
+void OPENSSL_add_library_user(void);
 int OPENSSL_init_crypto(uint64_t opts, const OPENSSL_INIT_SETTINGS *settings);
 int OPENSSL_atexit(void (*handler)(void));
 void OPENSSL_thread_stop(void);
