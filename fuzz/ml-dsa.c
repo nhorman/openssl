@@ -619,6 +619,7 @@ static struct op_table_entry ops[] = {
 
 int FuzzerInitialize(int *argc, char ***argv)
 {
+    OPENSSL_add_library_user();
     return 0;
 }
 
