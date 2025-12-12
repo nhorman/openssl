@@ -17,6 +17,7 @@
 #include <openssl/conf_api.h>
 #include "internal/dso.h"
 #include "internal/thread_once.h"
+#include "internal/tsan_assist.h"
 #include <openssl/x509.h>
 #include <openssl/trace.h>
 #include "conf_local.h"
@@ -61,6 +62,8 @@ static void module_lists_free(void)
     initialized_modules = NULL;
 }
 
+static TSAN_QUALIFIER int conf_setup = 0; 
+
 DEFINE_RUN_ONCE_STATIC(do_init_module_list_lock)
 {
     module_list_lock = ossl_rcu_lock_new(1, NULL);
@@ -68,6 +71,8 @@ DEFINE_RUN_ONCE_STATIC(do_init_module_list_lock)
         ERR_raise(ERR_LIB_CONF, ERR_R_CRYPTO_LIB);
         return 0;
     }
+
+    tsan_counter(&conf_setup);
 
     return 1;
 }
@@ -481,6 +486,12 @@ void CONF_modules_unload(int all)
     STACK_OF(CONF_MODULE) *old_modules;
     STACK_OF(CONF_MODULE) *new_modules;
     STACK_OF(CONF_MODULE) *to_delete;
+
+    /*
+     * If we never setup our conf structs, we don't need to do anything here
+     */
+    if (!tsan_load(&conf_setup))
+        return;
 
     if (!conf_modules_finish_int()) /* also inits module list lock */
         return;
