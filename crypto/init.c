@@ -321,16 +321,24 @@ void OPENSSL_cleanup(void)
     if (!base_inited)
         return;
 
-    /* Might be explicitly called and also by atexit */
-    if (stopped)
-        return;
-    stopped = 1;
-
     /*
      * Thread stop may not get automatically called by the thread library for
      * the very last thread in some situations, so call it directly.
      */
     OPENSSL_thread_stop();
+
+    /*
+     * Now get the number of remaining library users, we should be the only one
+     * if we want to procede
+     */
+    if (ossl_lib_ctx_get_library_users() != 1)
+        return;
+    fprintf(stderr, "LAST MAN OUT THE DOOR, REALLY CLEANING UP!\n");
+
+    /* Might be explicitly called and also by atexit */
+    if (stopped)
+        return;
+    stopped = 1;
 
     currhandler = stop_handlers;
     while (currhandler != NULL) {

@@ -18,6 +18,7 @@
 #include "internal/provider.h"
 #include "internal/conf.h"
 #include "internal/refcount.h"
+#include "internal/tsan_assist.h"
 #include "crypto/decoder.h"
 #include "crypto/context.h"
 
@@ -56,6 +57,8 @@ struct ossl_lib_ctx_st {
     int ischild;
     int conf_diagnostics;
 };
+
+static TSAN_QUALIFIER int library_users = 0; 
 
 static int set_default_context(OSSL_LIB_CTX *defctx);
 
@@ -127,6 +130,7 @@ static int context_init(OSSL_LIB_CTX *ctx)
     if (!CRYPTO_NEW_REF(&ctx->refcnt, 1))
         goto err;
 
+    tsan_counter(&library_users);
     ctx->lock = CRYPTO_THREAD_lock_new();
     if (ctx->lock == NULL)
         goto err;
@@ -251,6 +255,7 @@ static int context_init(OSSL_LIB_CTX *ctx)
     return 1;
 
 err:
+    tsan_decr(&library_users);
     context_deinit_objs(ctx);
 
     if (exdata_done)
@@ -431,11 +436,6 @@ DEFINE_RUN_ONCE_STATIC(default_context_do_init)
         goto deinit_thread;
 
     default_context_inited = 1;
-    /*
-     * Need to pre-emptively drop a refcount here, as otherwise the use
-     * of context_init and set_default_context gives us a double count
-     */
-    CRYPTO_DOWN_REF(&default_context_int.refcnt, &ref);
     set_default_context(&default_context_int);
     return 1;
 
@@ -483,6 +483,7 @@ static int set_default_context(OSSL_LIB_CTX *defctx)
 
     if (defctx != NULL) {
         CRYPTO_UP_REF(&defctx->refcnt, &ref);
+        tsan_counter(&library_users);
         fprintf(stderr, "INCREASING REF COUNT FOR CTX %p to %d\n", (void *)defctx, ref);
         ret = CRYPTO_THREAD_set_local(&default_context_thread_local, defctx);
         if (curr_def_ctx != NULL) {
@@ -556,6 +557,11 @@ int OSSL_LIB_CTX_load_config(OSSL_LIB_CTX *ctx, const char *config_file)
 }
 #endif
 
+int ossl_lib_ctx_get_library_users()
+{
+    return tsan_load(&library_users);
+}
+
 int ossl_lib_ctx_free_int(OSSL_LIB_CTX *ctx)
 {
     int ref;
@@ -563,6 +569,7 @@ int ossl_lib_ctx_free_int(OSSL_LIB_CTX *ctx)
     if (!CRYPTO_DOWN_REF(&ctx->refcnt, &ref))
         return 0;
     fprintf(stderr, "DROPPING REF COUNT FOR ctx %p to %d\n", (void *)ctx, ref);
+    tsan_decr(&library_users);
     if (ref != 0)
         return ref;
 
