@@ -39,5 +39,6 @@ int main(int argc, char *argv[])
 end:
     ret = pulldown_test_framework(ret);
     test_close_streams();
+    OPENSSL_cleanup();
     return ret;
 }
