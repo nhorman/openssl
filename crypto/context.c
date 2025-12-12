@@ -427,8 +427,6 @@ static int default_context_inited = 0;
 
 DEFINE_RUN_ONCE_STATIC(default_context_do_init)
 {
-    int ref;
-
     if (!CRYPTO_THREAD_init_local(&default_context_thread_local, NULL))
         goto err;
 
@@ -475,7 +473,7 @@ static void drop_default_libctx_ref(void *arg)
 static int set_default_context(OSSL_LIB_CTX *defctx)
 {
     OSSL_LIB_CTX *curr_def_ctx = CRYPTO_THREAD_get_local(&default_context_thread_local);
-    int ret;
+    int ret = 0;
     int ref;
 
     if (defctx == curr_def_ctx)
@@ -484,7 +482,6 @@ static int set_default_context(OSSL_LIB_CTX *defctx)
     if (defctx != NULL) {
         CRYPTO_UP_REF(&defctx->refcnt, &ref);
         tsan_counter(&library_users);
-        fprintf(stderr, "INCREASING REF COUNT FOR CTX %p to %d\n", (void *)defctx, ref);
         ret = CRYPTO_THREAD_set_local(&default_context_thread_local, defctx);
         if (curr_def_ctx != NULL) {
             OSSL_LIB_CTX_free(curr_def_ctx);
@@ -492,6 +489,7 @@ static int set_default_context(OSSL_LIB_CTX *defctx)
             ossl_init_thread_start(NULL, NULL, drop_default_libctx_ref);
         }
     }
+    return ret;
 }
 
 static OSSL_LIB_CTX *get_default_context(void)
@@ -587,8 +585,6 @@ int ossl_lib_ctx_free_int(OSSL_LIB_CTX *ctx)
 
 void OSSL_LIB_CTX_free(OSSL_LIB_CTX *ctx)
 {
-    int ref;
-
     if (ctx == NULL)
         return;
     ossl_lib_ctx_free_int(ctx);
