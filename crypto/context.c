@@ -123,6 +123,7 @@ static int context_init(OSSL_LIB_CTX *ctx)
 {
     int exdata_done = 0;
 
+    fprintf(stderr, "CREATING NEW CTX %p\n", (void *)ctx);
     if (!CRYPTO_NEW_REF(&ctx->refcnt, 1))
         goto err;
 
@@ -262,6 +263,7 @@ err:
 
 static void context_deinit_objs(OSSL_LIB_CTX *ctx)
 {
+    fprintf(stderr, "FREEING CONTEXT %p\n", (void *)ctx);
     CRYPTO_FREE_REF(&ctx->refcnt);
 
     /* P2. We want evp_method_store to be cleaned up before the provider store */
@@ -420,6 +422,8 @@ static int default_context_inited = 0;
 
 DEFINE_RUN_ONCE_STATIC(default_context_do_init)
 {
+    int ref;
+
     if (!CRYPTO_THREAD_init_local(&default_context_thread_local, NULL))
         goto err;
 
@@ -427,6 +431,11 @@ DEFINE_RUN_ONCE_STATIC(default_context_do_init)
         goto deinit_thread;
 
     default_context_inited = 1;
+    /*
+     * Need to pre-emptively drop a refcount here, as otherwise the use
+     * of context_init and set_default_context gives us a double count
+     */
+    CRYPTO_DOWN_REF(&default_context_int.refcnt, &ref);
     set_default_context(&default_context_int);
     return 1;
 
@@ -456,8 +465,11 @@ static OSSL_LIB_CTX *get_thread_default_context(void)
 static void drop_default_libctx_ref(void *arg)
 {
     OSSL_LIB_CTX *defctx = CRYPTO_THREAD_get_local(&default_context_thread_local);
-    if (defctx != NULL)
+    fprintf(stderr, "In drop_default_libctx_ref\n");
+    if (defctx != NULL) {
         OSSL_LIB_CTX_free(defctx);
+        CRYPTO_THREAD_set_local(&default_context_thread_local, NULL);
+    }
 }
 
 static int set_default_context(OSSL_LIB_CTX *defctx)
@@ -471,6 +483,7 @@ static int set_default_context(OSSL_LIB_CTX *defctx)
 
     if (defctx != NULL) {
         CRYPTO_UP_REF(&defctx->refcnt, &ref);
+        fprintf(stderr, "INCREASING REF COUNT FOR CTX %p to %d\n", (void *)defctx, ref);
         ret = CRYPTO_THREAD_set_local(&default_context_thread_local, defctx);
         if (curr_def_ctx != NULL) {
             OSSL_LIB_CTX_free(curr_def_ctx);
@@ -551,6 +564,7 @@ void OSSL_LIB_CTX_free(OSSL_LIB_CTX *ctx)
         return;
     if (!CRYPTO_DOWN_REF(&ctx->refcnt, &ref))
         return;
+    fprintf(stderr, "DROPPING REF COUNT FOR ctx %p to %d\n", (void *)ctx, ref);
     if (ref != 0)
         return;
 
@@ -559,7 +573,10 @@ void OSSL_LIB_CTX_free(OSSL_LIB_CTX *ctx)
         ossl_provider_deinit_child(ctx);
 #endif
     context_deinit(ctx);
-    OPENSSL_free(ctx);
+#ifndef FIPS_MODULE
+    if (ctx != &default_context_int)
+#endif
+        OPENSSL_free(ctx);
 }
 
 #ifndef FIPS_MODULE
