@@ -37,6 +37,20 @@ features available in OpenSSL 4.0.
 Some functions have been removed that were deprecated in previous
 versions of OpenSSL. See L<ossl-removed-api(7)>.
 
+=head3 Introduction of library reference counting
+
+OpenSSL 3.x encountered various issues with automatic library cleanup via
+atexit() registration.  To address these issues, OpenSSL is moving to a library
+reference counting implementation.  Users of the OpenSSL 4.0 libcrypto library
+should register their software via a call to L<OPENSSL_add_library_user(3)>,
+which will increment the reference count on the library.  Correspondingly, when
+a software component has ceased its use of OpenSSL, it should indicate such via
+a call to L<OPENSSL_cleanup(3)>.  Only after OPENSSL_cleanup() has been called
+an equal number of times to OPENSSL_add_library_user(), will library resources
+be freed.  Failure to balance these calls will result in memory leaks or
+undefined behavior (the latter occuring in the case where OPENSSL_cleanup() is
+called without a prior corresponding call to OPENSSL_add_library_user()).
+
 =head1 OPENSSL 3.6
 
 =head2 Main Changes from OpenSSL 3.5
