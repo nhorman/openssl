@@ -20,6 +20,7 @@
 #include "internal/nelem.h"
 #include "fuzzer.h"
 
+static OSSL_LIBRARY_TOKEN token = OSSL_LIBRARY_TOKEN_INITALIZER;
 /**
  * @brief Consumes an 8-bit unsigned integer from a buffer.
  *
@@ -604,7 +605,8 @@ static struct op_table_entry ops[] = {
 
 int FuzzerInitialize(int *argc, char ***argv)
 {
-    OPENSSL_add_library_user();
+    if (!OPENSSL_add_library_user(&token))
+        return -1;
     return 0;
 }
 
@@ -661,5 +663,5 @@ int FuzzerTestOneInput(const uint8_t *buf, size_t len)
 
 void FuzzerCleanup(void)
 {
-    OPENSSL_cleanup();
+    OPENSSL_cleanup(&token);
 }

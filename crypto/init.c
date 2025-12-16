@@ -308,17 +308,32 @@ DEFINE_RUN_ONCE_STATIC(ossl_init_async)
 }
 
 static TSAN_QUALIFIER int library_users = 0;
+static TSAN_QUALIFIER int library_user_id = 1;
 
-void OPENSSL_add_library_user(void)
+__owur int OPENSSL_add_library_user(OSSL_LIBRARY_TOKEN *token)
 {
+    if (token == NULL || *token != OSSL_LIBRARY_TOKEN_INITALIZER)
+        return 0;
+    *token = tsan_counter(&library_user_id);
+    if (*token == OSSL_LIBRARY_TOKEN_INITALIZER)
+        *token = tsan_counter(&library_user_id);
+
     tsan_counter(&library_users);
+    return 1;
 }
 
-void OPENSSL_cleanup(void)
+void OPENSSL_cleanup(OSSL_LIBRARY_TOKEN *token)
 {
     OPENSSL_INIT_STOP *currhandler, *lasthandler;
-    int count = tsan_decr(&library_users) - 1;
+    int count;
 
+    if (token == NULL || *token == OSSL_LIBRARY_TOKEN_INITALIZER) {
+        fprintf(stderr, "Library token not given or uninitalized\n");
+        return;
+    }
+    *token = OSSL_LIBRARY_TOKEN_INITALIZER;
+
+    count = tsan_decr(&library_users) - 1;
     if (count < 0) {
         fprintf(stderr, "library user underflow\n");
         return;
