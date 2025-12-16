@@ -56,6 +56,15 @@ be freed.  Failure to balance these calls will result in memory leaks or
 undefined behavior (the latter occuring in the case where OPENSSL_cleanup() is
 called without a prior corresponding call to OPENSSL_add_library_user()).
 
+Note also the addition of the use of the B<OSSL_LIBRARY_TOKEN> parameter in both
+the L<OPENSSL_add_library_user(3)> and L<OPENSSL_cleanup(3)> calls.  This
+parameter must be a statically defined variable, and must be unique to each call
+pair.  This is done to call attention to the fact that library cleanup is
+following a new model in OpenSSL 4.0, by triggering build errors for users
+upgrading to the new library, so as to prevent unbalanced reference increments
+and decrements.  This variable should be statically initalized using the
+B<OSSL_LIBRARY_TOKEN_INITALIZER> macro.
+
 =head1 OPENSSL 3.6
 
 =head2 Main Changes from OpenSSL 3.5
