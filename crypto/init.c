@@ -255,7 +255,6 @@ static void OPENSSL_cleanup_int(int legacy_cleanup)
         if (count > 0) {
             return;
         }
-        fprintf(stderr, "Last man out the door, really cleaning up\n");
     } else {
         /*
          * If we are using the legacy OPENSSL_cleanup api, then we need to
@@ -271,7 +270,6 @@ static void OPENSSL_cleanup_int(int legacy_cleanup)
         used = tsan_load(&library_refcount_used);
         if (used != 0)
             return;
-        fprintf(stderr, "Cleaning from legacy api\n");
     }
 
     /*
