@@ -7,6 +7,11 @@
  * https://www.openssl.org/source/license.html
  */
 
+/*
+ * Allow use of deprecated functions without warning
+ */
+#define OPENSSL_SUPPRESS_DEPRECATED
+
 #include <string.h>
 #include "testutil.h"
 extern int do_dso1_setup(int cleanup);
