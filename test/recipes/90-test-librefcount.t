@@ -12,7 +12,7 @@ use OpenSSL::Test::Utils;
 #Load configdata.pm
 
 BEGIN {
-    setup("test_shlibload");
+    setup("test_librefcount");
 }
 use lib srctop_dir('Configurations');
 use lib bldtop_dir('.');

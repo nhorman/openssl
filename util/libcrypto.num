@@ -5800,3 +5800,4 @@ EVP_SIGNATURE_has_message_update        ?	4_0_0	EXIST::FUNCTION:
 EVP_MD_CTX_serialize                    ?	4_0_0	EXIST::FUNCTION:
 EVP_MD_CTX_deserialize                  ?	4_0_0	EXIST::FUNCTION:
 OPENSSL_add_library_user                ?	4_0_0	EXIST::FUNCTION:
+OPENSSL_cleanup_ex                      ?	4_0_0	EXIST::FUNCTION:

@@ -230,7 +230,6 @@ static void setup_trace(const char *str)
 
 static char *help_argv[] = { "help", NULL };
 static char *version_argv[] = { "version", NULL };
-static OSSL_LIBRARY_TOKEN token = OSSL_LIBRARY_TOKEN_INITALIZER;
 
 int main(int argc, char *argv[])
 {
@@ -250,7 +249,7 @@ int main(int argc, char *argv[])
     arg.argv = NULL;
     arg.size = 0;
 
-    if (!OPENSSL_add_library_user(&token)) {
+    if (!OPENSSL_add_library_user()) {
         ret = EXIT_FAILURE;
         goto end;
     }
@@ -378,7 +377,7 @@ end:
 #ifndef OPENSSL_NO_SECURE_MEMORY
     CRYPTO_secure_malloc_done();
 #endif
-    OPENSSL_cleanup(&token);
+    OPENSSL_cleanup_ex();
     EXIT(ret);
 }
 

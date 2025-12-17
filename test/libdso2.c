@@ -6,12 +6,10 @@ static int dso2_cleanup = 1;
 int do_dso2_setup(int do_cleanup);
 int do_dso2_fini(void);
 
-static OSSL_LIBRARY_TOKEN token = OSSL_LIBRARY_TOKEN_INITALIZER;
-
 int do_dso2_setup(int do_cleanup)
 {
     if ((do_cleanup & 2) == 2) {
-        if (!OPENSSL_add_library_user(&token))
+        if (!OPENSSL_add_library_user())
             return 0;
     } else {
         fprintf(stderr, "Skipping OPENSSL_add_library_user in dso2_do_setup()\n");
@@ -27,7 +25,7 @@ int do_dso2_fini(void)
     mymd = NULL;
     if (dso2_cleanup & 0x1) {
         fprintf(stdout, "calling OPENSSL_cleanup from do_dso2_fini()\n");
-        OPENSSL_cleanup(&token);
+        OPENSSL_cleanup_ex();
     } else {
         fprintf(stdout, "skipping call to OPENSSL_cleanup from do_dso2_fini()\n");
     }

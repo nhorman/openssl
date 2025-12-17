@@ -30,8 +30,30 @@ err:
     return ret;
 }
 
+static int test_library_refcount_legacy_usage(void)
+{
+    int ret = 0;
+    if(!TEST_true(do_dso1_setup(3)))
+        goto err;
+    if(!TEST_true(do_dso2_setup(3)))
+        goto err;
+    if (!TEST_true(do_dso1_fini()))
+        goto err;
+    /*
+     * Expressly call OPENSSL_cleanup here to ensure it works as a noop
+     * Given that we are using the refcounting api above
+     */
+    OPENSSL_cleanup();
+    if (!TEST_true(do_dso2_fini()))
+        goto err;
+    ret = 1;
+err:
+    return ret;
+}
+
 int setup_tests(void)
 {
     ADD_TEST(test_library_refcount_init_and_clean);
+    ADD_TEST(test_library_refcount_legacy_usage);
     return 1;
 }

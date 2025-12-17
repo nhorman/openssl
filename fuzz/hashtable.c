@@ -45,7 +45,6 @@ static size_t lookups = 0;
 static size_t foreaches = 0;
 static size_t filters = 0;
 static int valfound;
-static OSSL_LIBRARY_TOKEN token = OSSL_LIBRARY_TOKEN_INITALIZER;
 
 static FUZZER_VALUE *prediction_table = NULL;
 static HT *fuzzer_table = NULL;
@@ -102,7 +101,7 @@ int FuzzerInitialize(int *argc, char ***argv)
 {
     HT_CONFIG fuzz_conf = { NULL, fuzz_free_cb, NULL, 0, 1, 0 };
 
-    if (!OPENSSL_add_library_user(&token))
+    if (!OPENSSL_add_library_user())
         return -1;
 
     OPENSSL_init_crypto(OPENSSL_INIT_LOAD_CRYPTO_STRINGS, NULL);
@@ -394,5 +393,5 @@ void FuzzerCleanup(void)
 {
     ossl_ht_free(fuzzer_table);
     OPENSSL_free(prediction_table);
-    OPENSSL_cleanup(&token);
+    OPENSSL_cleanup_ex();
 }

@@ -12,8 +12,6 @@
 #include "output.h"
 #include "tu_local.h"
 
-static OSSL_LIBRARY_TOKEN token = OSSL_LIBRARY_TOKEN_INITALIZER;
-
 int main(int argc, char *argv[])
 {
     int ret = EXIT_FAILURE;
@@ -22,7 +20,7 @@ int main(int argc, char *argv[])
 
     gi_ret = global_init();
 
-    if (!OPENSSL_add_library_user(&token)) {
+    if (!OPENSSL_add_library_user()) {
         test_printf_stderr("Unable to register library user\n");
         return ret;
     }
@@ -30,7 +28,7 @@ int main(int argc, char *argv[])
 
     if (!gi_ret) {
         test_printf_stderr("Global init failed - aborting\n");
-        OPENSSL_cleanup(&token);
+        OPENSSL_cleanup_ex();
         return ret;
     }
 
@@ -47,6 +45,6 @@ int main(int argc, char *argv[])
 end:
     ret = pulldown_test_framework(ret);
     test_close_streams();
-    OPENSSL_cleanup(&token);
+    OPENSSL_cleanup_ex();
     return ret;
 }

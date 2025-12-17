@@ -514,10 +514,9 @@ int CRYPTO_memcmp(const void *in_a, const void *in_b, size_t len);
 #endif
 
 /* Library initialisation functions */
-typedef int OSSL_LIBRARY_TOKEN;
-#define OSSL_LIBRARY_TOKEN_INITALIZER 0
-void OPENSSL_cleanup(OSSL_LIBRARY_TOKEN *token);
-int OPENSSL_add_library_user(OSSL_LIBRARY_TOKEN *token);
+void OPENSSL_cleanup();
+void OPENSSL_cleanup_ex();
+int OPENSSL_add_library_user();
 int OPENSSL_init_crypto(uint64_t opts, const OPENSSL_INIT_SETTINGS *settings);
 int OPENSSL_atexit(void (*handler)(void));
 void OPENSSL_thread_stop(void);
