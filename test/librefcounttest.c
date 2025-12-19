@@ -35,6 +35,7 @@ err:
     return ret;
 }
 
+#ifndef OPENSSL_NO_DEPRECATED_4_0
 static int test_library_refcount_legacy_usage(void)
 {
     int ret = 0;
@@ -55,10 +56,13 @@ static int test_library_refcount_legacy_usage(void)
 err:
     return ret;
 }
+#endif
 
 int setup_tests(void)
 {
     ADD_TEST(test_library_refcount_init_and_clean);
+#ifndef OPENSSL_NO_DEPRECATED_4_0
     ADD_TEST(test_library_refcount_legacy_usage);
+#endif
     return 1;
 }
