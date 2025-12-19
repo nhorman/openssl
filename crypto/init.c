@@ -252,7 +252,17 @@ static void OPENSSL_cleanup_int(int legacy_cleanup)
     int used;
 
     if (legacy_cleanup == 0) {
-        count = tsan_decr(&library_users) - 1;
+        /*
+         * Note: We have to do this decr/load tomfoolery here because
+         * the implementations of tsan_add (which is used in the implementation
+         * of tsan_decr) is inconsistent.  On most platforms its an atomic fetch/add operation
+         * EXCEPT on armv4, in which its a non-atomic expression evaluation (implying its
+         * an add/fetch operation). because of that we never know if what's returned from
+         * tsan_decr is a pre or post decremented value.  The only way to be sure is to
+         * do the decrement and then load the result to guarantee post decrement evaluation
+         */
+        tsan_decr(&library_users);
+        count = tsan_load(&library_users);
         OPENSSL_assert(count >= 0);
         if (count > 0) {
             return;
