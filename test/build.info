@@ -728,9 +728,12 @@ IF[{- !$disabled{tests} -}]
   ENDIF
 
   IF[{- !$disabled{shared} -}]
-    PROGRAMS{noinst}=shlibloadtest
+    PROGRAMS{noinst}=shlibloadtest librefcounttest
     SOURCE[shlibloadtest]=shlibloadtest.c simpledynamic.c
     INCLUDE[shlibloadtest]=../include ../apps/include
+    INCLUDE[librefcounttest]=../include ../apps/include
+    SOURCE[librefcounttest]=librefcounttest.c
+    DEPEND[librefcounttest]=./libdso1 ./libdso2 libtestutil.a
 
     PROGRAMS{noinst}=moduleloadtest
     SOURCE[moduleloadtest]=moduleloadtest.c simpledynamic.c
@@ -1147,7 +1150,7 @@ IF[{- !$disabled{tests} -}]
   INCLUDE[provider_test]=../include ../apps/include ..
   DEPEND[provider_test]=../libcrypto libtestutil.a
   IF[{- !$disabled{module} -}]
-    MODULES{noinst}=p_test p_ossltest
+    MODULES{noinst}=p_test p_ossltest libdso1 libdso2
     SOURCE[p_test]=p_test.c
     SOURCE[p_ossltest]=p_ossltest.c ../providers/prov_running.c
     INCLUDE[p_test]=../include ..
@@ -1164,6 +1167,20 @@ IF[{- !$disabled{tests} -}]
     IF[{- defined $target{shared_defflag} -}]
       SOURCE[p_minimal]=p_minimal.ld
       GENERATE[p_minimal.ld]=../util/providers.num
+    ENDIF
+    SOURCE[libdso1]=libdso1.c
+    INCLUDE[libdso1]=../include ..
+    DEPEND[libdso1]=../libcrypto
+    IF[{- defined $target{shared_defflag} -}]
+      SOURCE[libdso1]=libdso1.ld
+      GENERATE[libdso1.ld]=./libdso1.num
+    ENDIF
+    SOURCE[libdso2]=libdso2.c
+    INCLUDE[libdso2]=../include ..
+    DEPEND[libdso2]=../libcrypto
+    IF[{- defined $target{shared_defflag} -}]
+      SOURCE[libdso2]=libdso2.ld
+      GENERATE[libdso2.ld]=./libdso2.num
     ENDIF
   ENDIF
   IF[{- $disabled{module} || !$target{dso_scheme} -}]
