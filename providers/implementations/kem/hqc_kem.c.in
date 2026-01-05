@@ -1604,7 +1604,7 @@ static uint8_t hqc_pke_decrypt(uint64_t *m, HQC_KEY *key,
     vect_truncate(tmp1, key);
     vect_add(tmp2, v, tmp1, VEC_SIZE(key->info->n1n2, 64));
 
-        code_decode(key, m, tmp2);
+    code_decode(key, m, tmp2);
 
     result = 1;
 
