@@ -6,10 +6,12 @@
  * in the file LICENSE in the source distribution or at
  * https://www.openssl.org/source/license.html
  */
-{
-    -use OpenSSL::paramnames qw(produce_param_decoder);
-    -
-}
+
+/* clang-format off */
+{-
+use OpenSSL::paramnames qw(produce_param_decoder);
+-}
+/* clang-format on */
 
 #include <openssl/core_dispatch.h>
 #include <openssl/core_names.h>
@@ -924,12 +926,12 @@ static int hqc_kem_validate(const void *vkey, int selection, int check_type)
     return 1; /* TODO implement me */
 }
 
-{
-    -produce_param_decoder('hqc_kem_key_type_params',
-        ([ 'OSSL_PKEY_PARAM_PRIV_KEY', 'privkey', 'octet_string' ],
-            [ 'OSSL_PKEY_PARAM_PUB_KEY', 'pubkey', 'octet_string' ], ));
-    -
-}
+/* clang-format off */
+{- produce_param_decoder('hqc_kem_key_type_params',
+                         (['OSSL_PKEY_PARAM_PRIV_KEY',    'privkey', 'octet_string'],
+                          ['OSSL_PKEY_PARAM_PUB_KEY',     'pubkey',  'octet_string'],
+                         )); -}
+/* clang-format on */
 
 /**
  * @brief Returns the set of import/export parameter types for HQC KEM
@@ -1123,16 +1125,16 @@ static int hqc_kem_import(void *vkey, int selection, const OSSL_PARAM params[])
     return hqc_kem_key_fromdata(vkey, params, selection & OSSL_KEYMGMT_SELECT_PRIVATE_KEY);
 }
 
-{
-    -produce_param_decoder('hqc_kem_get_params',
-        ([ 'OSSL_PKEY_PARAM_BITS', 'bits', 'int' ],
-            [ 'OSSL_PKEY_PARAM_SECURITY_BITS', 'secbits', 'int' ],
-            [ 'OSSL_PKEY_PARAM_MAX_SIZE', 'maxsize', 'int' ],
-            [ 'OSSL_PKEY_PARAM_SECURITY_CATEGORY', 'seccat', 'int' ],
-            [ 'OSSL_PKEY_PARAM_PRIV_KEY', 'privkey', 'octet_string' ],
-            [ 'OSSL_PKEY_PARAM_PUB_KEY', 'pubkey', 'octet_string' ], ));
-    -
-}
+/* clang-format off */
+{- produce_param_decoder('hqc_kem_get_params',
+                         (['OSSL_PKEY_PARAM_BITS',               'bits',      'int'],
+                          ['OSSL_PKEY_PARAM_SECURITY_BITS',      'secbits',   'int'],
+                          ['OSSL_PKEY_PARAM_MAX_SIZE',           'maxsize',   'int'],
+                          ['OSSL_PKEY_PARAM_SECURITY_CATEGORY',  'seccat',    'int'],
+                          ['OSSL_PKEY_PARAM_PRIV_KEY',           'privkey',   'octet_string'],
+                          ['OSSL_PKEY_PARAM_PUB_KEY',            'pubkey',    'octet_string'],
+                          )); -}
+/* clang-format on */
 
 /**
  * @brief Returns the list of gettable parameters for the HQC KEM
@@ -1231,12 +1233,12 @@ static int hqc_kem_get_params(void *vkey, OSSL_PARAM params[])
     return 1;
 }
 
-{
-    -produce_param_decoder('hqc_kem_gen_set_params',
-        ([ 'OSSL_PKEY_PARAM_HQC_SEED', 'seed', 'octet_string' ],
-            [ 'OSSL_PKEY_PARAM_PROPERTIES', 'propq', 'utf8_string' ], ));
-    -
-}
+/* clang-format off */
+{- produce_param_decoder('hqc_kem_gen_set_params',
+                         (['OSSL_PKEY_PARAM_HQC_SEED', 'seed',  'octet_string'],
+                          ['OSSL_PKEY_PARAM_PROPERTIES',  'propq', 'utf8_string'],
+                         )); -}
+/* clang-format on */
 
 /**
  * @brief Applies user-specified parameters to an HQC KEM key generation
