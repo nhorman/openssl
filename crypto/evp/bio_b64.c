@@ -12,6 +12,7 @@
 #include "internal/cryptlib.h"
 #include <openssl/buffer.h>
 #include <openssl/evp.h>
+#include <crypto/evp.h>
 #include "internal/bio.h"
 
 static int b64_write(BIO *h, const char *buf, int num);
@@ -348,6 +349,8 @@ static int b64_write(BIO *b, const char *in, int inl)
         ctx->buf_off = 0;
         ctx->tmp_len = 0;
         EVP_EncodeInit(ctx->base64);
+        if (BIO_get_flags(b) & BIO_FLAGS_BASE64_NO_NL)
+            evp_encode_ctx_set_flags(ctx->base64, EVP_ENCODE_CTX_NO_NEWLINES);
     }
     if (!ossl_assert(ctx->buf_off < (int)sizeof(ctx->buf))) {
         ERR_raise(ERR_LIB_BIO, ERR_R_INTERNAL_ERROR);
