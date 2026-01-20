@@ -438,6 +438,7 @@ my @disablables = (
     "blake2",
     "brotli",
     "brotli-dynamic",
+    "s2n-bignum",
     "buildtest-c++",
     "bulk",
     "cached-fetch",
@@ -605,6 +606,7 @@ our %disabled = ( # "what"         => "comment"
                   "asan"                => "default",
                   "brotli"              => "default",
                   "brotli-dynamic"      => "default",
+                  "s2n-bignum"          => "default",
                   "buildtest-c++"       => "default",
                   "crypto-mdebug"       => "default",
                   "allocfail-tests"     => "default",
@@ -1078,6 +1080,14 @@ while (@argvcopy)
                 elsif (/^--with-zstd-include=(.*)$/)
                         {
                         $withargs{zstd_include}=$1;
+                        }
+                elsif (/^--with-s2nbignum-lib=(.*)$/)
+                        {
+                        $withargs{s2nbignum_lib}=$1;
+                        }
+                elsif (/^--with-s2nbignum-include=(.*)$/)
+                        {
+                        $withargs{s2nbignum_include}=$1;
                         }
                 elsif (/^--with-fuzzer-lib=(.*)$/)
                         {
