@@ -49,6 +49,8 @@ jobs:
         if: ${{ env.FOUND_NEWS_CHANGES_ADDITION == 'no' }}
         run: |
           set +e
+          cat ./names.txt
+          git diff --name-only ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} > ./names.txt
           grep -q "include/openssl" ./names.txt
           if [ $? -eq 0 ]; then
             echo "Changes in this PR may impact public APIS's"
@@ -78,7 +80,7 @@ jobs:
             echo "NEED_NEWS_CHANGES=yes" >> $GITHUB_ENV
           fi
       - name: "Report Results"
-        if: ${{ !(contains(github.event.pull_request.labels.*.name, 'no_news_changes_needed')) }}
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'no_news_changes_needed') }}
         run: |
           if [ "${{ env.NEED_NEWS_CHANGES }}" == "yes" ]; then
             echo "Suggest that you add a NEWS/CHANGES entry for this PR"
