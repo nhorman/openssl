@@ -23,6 +23,8 @@ jobs:
       - name: "Check if we already have a NEWS/CHANGES entry"
         run: |
           git diff --name-only ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} > ./names.txt
+          echo "changed files between ${{ github.event.pull_request.base.sha }} and ${{ github.event.pull_request.head.sha }}"
+          cat ./names.txt
           set +e
           grep -q "NEWS\.md" names.txt
           if [ $? -eq 0 ]; then
@@ -49,8 +51,9 @@ jobs:
         if: ${{ env.FOUND_NEWS_CHANGES_ADDITION == 'no' }}
         run: |
           set +e
-          cat ./names.txt
           git diff --name-only ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }} > ./names.txt
+          echo "changed files between ${{ github.event.pull_request.base.sha }} and ${{ github.event.pull_request.head.sha }}"
+          cat ./names.txt
           grep -q "include/openssl" ./names.txt
           if [ $? -eq 0 ]; then
             echo "Changes in this PR may impact public APIS's"
