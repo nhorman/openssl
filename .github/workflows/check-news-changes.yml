@@ -80,7 +80,7 @@ jobs:
             echo "NEED_NEWS_CHANGES=yes" >> $GITHUB_ENV
           fi
       - name: "Report Results"
-        if: ${{ !contains(github.event.pull_request.labels.*.name, 'no_news_changes_needed') }}
+        if: !contains(github.event.pull_request.labels.*.name, 'no_news_changes_needed')
         run: |
           if [ "${{ env.NEED_NEWS_CHANGES }}" == "yes" ]; then
             echo "Suggest that you add a NEWS/CHANGES entry for this PR"
