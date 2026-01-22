@@ -16,13 +16,976 @@
 #include <limits.h>
 #include <openssl/crypto.h>
 
+#ifdef USE_SLAB_ALLOCATOR
+#include <stdlib.h>
+#include <stdio.h>
+#include <pthread.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdatomic.h>
+#include <sys/queue.h>
+#include <sys/mman.h>
+#include <openssl/crypto.h>
+
+/**
+ * @brief Global and supporting definitions for the slab allocator.
+ *
+ * @var page_size
+ * Cached system page size in bytes. Initialized on first use and shared
+ * by all slab allocator components to ensure consistent slab sizing.
+ *
+ * @struct slab_info
+ * Forward declaration of the internal slab metadata structure. The full
+ * definition is private to the allocator implementation.
+ *
+ * @def SLAB_MAGIC
+ * Magic value stored at the beginning of each slab allocation. This value
+ * is used to distinguish slab-managed memory from non-slab allocations
+ * during free operations and for basic corruption detection.
+ *
+ * @struct slab_stats
+ * Optional per-process statistics for slab allocator activity. These
+ * counters are only present when SLAB_STATS is defined at compile time.
+ *
+ * @var slab_stats::allocs
+ * Number of successful object allocations from slabs.
+ *
+ * @var slab_stats::frees
+ * Number of successful object frees back to slabs.
+ *
+ * @var slab_stats::slab_allocs
+ * Number of slab pages allocated from the operating system.
+ *
+ * @var slab_stats::slab_frees
+ * Number of slab pages released back to the operating system.
+ *
+ * @var slab_stats::failed_slab_frees
+ * Number of attempted frees that did not correspond to a valid slab
+ * allocation.
+ *
+ * @def INC_SLAB_STAT
+ * Atomically increments the specified slab statistic counter using
+ * relaxed memory ordering. When SLAB_STATS is not enabled, this macro
+ * expands to a no-op.
+ */
+static long page_size = 0;
+
+struct slab_info;
+
+#define SLAB_MAGIC 0xdeadf00ddeadf00dUL
+
+#ifdef SLAB_STATS
+struct slab_stats {
+    size_t allocs;
+    size_t frees;
+    size_t slab_allocs;
+    size_t slab_frees;
+    size_t failed_slab_frees;
+};
+
+#define INC_SLAB_STAT(metric) __atomic_add_fetch(metric, 1, __ATOMIC_RELAXED)
+#else
+#define INC_SLAB_STAT(metric)
+#endif
+
+/**
+ * @struct slab_ring
+ * @brief Runtime metadata for a single slab page.
+ *
+ * This structure represents one slab instance backing allocations of a
+ * specific size class. Each slab corresponds to a single page of memory
+ * and is subdivided into a fixed number of equal-sized objects.
+ *
+ * The slab is tracked in a linked list belonging to its size class. Object
+ * availability is managed via a bitmap, where each bit represents the
+ * allocation state of a single object within the slab.
+ */
+struct slab_ring {
+    /**
+     * Linkage for inclusion in the size-class slab list.
+     */
+    LIST_ENTRY(slab_ring)
+    entry;
+
+    /**
+     * Pointer to the slab size-class descriptor associated with this slab.
+     */
+    struct slab_info *info;
+
+    /**
+     * Number of currently available (free) objects in this slab.
+     */
+    uint32_t available_objs;
+
+    /**
+     * Bitmap tracking object allocation state. A set bit indicates an
+     * allocated object; a cleared bit indicates a free object.
+     */
+    uint64_t *bitmap;
+
+    /**
+     * Number of 64-bit words used by the allocation bitmap.
+     */
+    uint32_t bitmap_word_count;
+
+    /**
+     * Pointer to the start of the object storage region within the slab.
+     */
+    void *obj_start;
+
+    /**
+     * Magic value identifying this memory region as a valid slab.
+     * Used for validation and corruption detection.
+     */
+    uint64_t magic;
+};
+
+/**
+ * @brief Head of a slab list for a single size class.
+ *
+ * Defines a linked list type used to track all slab pages belonging to a
+ * particular allocation size class. Each entry in the list is a
+ * @ref slab_ring structure representing one active slab.
+ */
+LIST_HEAD(slab_entries, slab_ring);
+
+/**
+ * @struct slab_template
+ * @brief Precomputed layout parameters for a slab size class.
+ *
+ * This structure contains derived values used to initialize and manage
+ * slabs of a given object size. The values are computed once when a size
+ * class is created and reused for all slabs belonging to that class.
+ */
+struct slab_template {
+    /**
+     * Total number of objects that can be allocated from a slab of this
+     * size class.
+     */
+    uint32_t available_objs;
+
+    /**
+     * Number of 64-bit words required to represent the allocation bitmap
+     * for this slab.
+     */
+    uint32_t bitmap_word_count;
+
+    /**
+     * Bit mask applied to the final bitmap word to ignore unused bits
+     * that do not correspond to valid objects.
+     */
+    uint64_t last_word_mask;
+};
+
+/**
+ * @struct slab_info
+ * @brief Size-class descriptor for the slab allocator.
+ *
+ * This structure represents a single allocation size class and owns all
+ * slabs that service allocations of a specific object size. It maintains
+ * the list of active slabs, synchronization primitives, and precomputed
+ * layout information shared by those slabs.
+ */
+struct slab_info {
+    /**
+     * Read-write lock protecting slab list and availability state for
+     * this size class.
+     */
+    pthread_rwlock_t ring_lock;
+
+    /**
+     * Pointer to a slab that currently has free objects available.
+     * This is a fast-path hint and may be NULL if no slab is available.
+     */
+    struct slab_ring *available;
+
+    /**
+     * List of all slabs belonging to this size class.
+     */
+    struct slab_entries entries;
+
+    /**
+     * Size in bytes of each object allocated from this size class.
+     */
+    size_t obj_size;
+
+    /**
+     * Allocation and slab lifecycle statistics for this size class.
+     */
+#ifdef SLAB_STATS
+    struct slab_stats stats;
+#endif
+
+    /**
+     * Precomputed template values used when creating new slabs for this
+     * size class.
+     */
+    struct slab_template template;
+};
+
+/**
+ * @brief Slab allocator size limits and initializers.
+ *
+ * These macros define the maximum supported slab size class and provide
+ * convenience initializers for slab metadata structures.
+ *
+ * @def MAX_SLAB_IDX
+ * Maximum power-of-two exponent supported by the slab allocator.
+ * The largest slab-managed allocation size is 1 << MAX_SLAB_IDX bytes.
+ *
+ * @def MAX_SLAB
+ * Maximum allocation size, in bytes, that will be serviced by the slab
+ * allocator. Requests larger than this value fall back to the system
+ * allocator.
+ *
+ * @def EMPTY_SLAB_TEMPLATE
+ * Zero-initialized @ref slab_template initializer used as a placeholder
+ * before template values are computed.
+ *
+ * @def SLAB_INFO_INITIALIZER
+ * Static initializer for a @ref slab_info structure. Initializes the
+ * read-write lock, slab list, object size (derived from @p order), and
+ * assigns an empty slab template.
+ *
+ * @param order
+ * Power-of-two exponent used to derive the object size for the slab
+ * size class.
+ */
+#define MAX_SLAB_IDX 8
+#define MAX_SLAB 1 << MAX_SLAB_IDX
+#define EMPTY_SLAB_TEMPLATE { 0, 0 }
+
+#define SLAB_INFO_INITIALIZER(order) { PTHREAD_RWLOCK_INITIALIZER, NULL, LIST_HEAD_INITIALIZER(entries), 1 << (order), EMPTY_SLAB_TEMPLATE }
+
+/**
+ * @brief Global slab size-class table.
+ *
+ * This array defines all slab allocator size classes supported by the
+ * system. Each entry corresponds to a power-of-two object size, starting
+ * at 1 byte (order 0) and extending up to @ref MAX_SLAB bytes.
+ *
+ * The array index represents the size-class order, and the associated
+ * @ref slab_info structure manages all slabs servicing allocations of
+ * size 1 << index.
+ *
+ * Entries are statically initialized using @ref SLAB_INFO_INITIALIZER
+ * and completed during allocator initialization.
+ */
+static struct slab_info slabs[] = {
+    SLAB_INFO_INITIALIZER(0),
+    SLAB_INFO_INITIALIZER(1),
+    SLAB_INFO_INITIALIZER(2),
+    SLAB_INFO_INITIALIZER(3),
+    SLAB_INFO_INITIALIZER(4),
+    SLAB_INFO_INITIALIZER(5),
+    SLAB_INFO_INITIALIZER(6),
+    SLAB_INFO_INITIALIZER(7),
+    SLAB_INFO_INITIALIZER(8),
+};
+
+/**
+ * @brief Round a value up to the next power of two.
+ *
+ * Computes the smallest power-of-two value that is greater than or equal
+ * to the input. This is used by the slab allocator to map arbitrary
+ * allocation sizes to the appropriate size class.
+ *
+ * A value of zero is treated as a special case and returns zero, which
+ * corresponds to size-class index zero.
+ *
+ * @param num
+ * Requested size in bytes.
+ *
+ * @return
+ * The smallest power-of-two value greater than or equal to @p num, or
+ * zero if @p num is zero.
+ */
+static inline size_t slab_size(size_t num)
+{
+    if (num == 0)
+        return 0; /* return index zero */
+
+    /* round up to the next power of two */
+    num--;
+    num |= num >> 1;
+    num |= num >> 2;
+    num |= num >> 4;
+    num |= num >> 8;
+    num |= num >> 16;
+    num |= num >> 32;
+    num++;
+    return num;
+}
+
+/**
+ * @brief Compute the slab index for a given size.
+ *
+ * This function rounds the requested size using slab_size() and
+ * returns the index of the slab corresponding to that size. The
+ * index is computed as the count of trailing zero bits in the
+ * rounded-up size, which effectively yields log2(up_size) for
+ * power-of-two slab sizes.
+ *
+ * @param num  Requested size.
+ *
+ * @return Slab index corresponding to the rounded-up size.
+ */
+static unsigned int get_slab_idx(size_t num)
+{
+    size_t up_size = slab_size(num);
+
+    return __builtin_ctzl(up_size);
+}
+
+/**
+ * @def PAGE_MASK
+ * @brief Mask for aligning addresses down to a page boundary.
+ *
+ * This mask clears the lower bits of an address that represent the
+ * offset within a page, assuming page_size is a power of two.
+ */
+#define PAGE_MASK (~(page_size - 1))
+
+/**
+ * @def PAGE_START
+ * @brief Compute the starting address of the page containing an address.
+ *
+ * This macro applies PAGE_MASK to the given address, yielding the
+ * base (lowest) address of the memory page that contains it.
+ *
+ * @param x  Address within the desired page.
+ *
+ * @return Pointer to the start of the containing page.
+ */
+#define PAGE_START(x) (void *)((uintptr_t)(x) & PAGE_MASK)
+
+/**
+ * @brief Obtain the slab ring associated with an address.
+ *
+ * This function computes the base address of the memory page
+ * containing the given address and treats it as a slab_ring
+ * structure. It is assumed that each slab ring is page-aligned
+ * and located at the start of its corresponding page.
+ *
+ * @param addr  Address within a slab ring page.
+ *
+ * @return Pointer to the slab_ring for the page containing @p addr.
+ */
+static inline struct slab_ring *get_slab_ring(void *addr)
+{
+    return (struct slab_ring *)PAGE_START(addr);
+}
+
+/**
+ * @brief Determine whether an address belongs to an object slab.
+ *
+ * This function retrieves the slab_ring associated with the page
+ * containing the given address and checks its magic value to
+ * determine whether the page represents a valid object slab.
+ *
+ * @param addr  Address to test.
+ *
+ * @return 1 if the address is within an object slab, 0 otherwise.
+ */
+static inline int is_obj_slab(void *addr)
+{
+    struct slab_ring *slab = get_slab_ring(addr);
+
+    return (slab->magic == SLAB_MAGIC) ? 1 : 0;
+}
+
+/**
+ * @brief Select and reserve a free object from a slab.
+ *
+ * This function scans the slab's allocation bitmap to locate a free
+ * object slot. For each bitmap word, it searches for a clear bit,
+ * then atomically sets that bit to reserve the corresponding object.
+ * If another thread races and claims the same bit, the operation is
+ * retried.
+ *
+ * The object address is computed from the bitmap index, bit position,
+ * and object size recorded in the slab metadata.
+ *
+ * @param slab  Pointer to the slab_ring from which to allocate.
+ *
+ * @return Pointer to the allocated object, or NULL if no free objects
+ *         are available in the slab.
+ */
+static void *select_obj(struct slab_ring *slab)
+{
+    uint32_t i;
+    uint64_t value;
+    uint32_t available_bit;
+    uint64_t new_mask;
+    uint32_t obj_offset;
+
+    for (i = 0; i < slab->bitmap_word_count; i++) {
+    try_again:
+        value = __atomic_load_n(&slab->bitmap[i], __ATOMIC_RELAXED);
+        if (value < UINT64_MAX) {
+            /*
+             * Theres an available object somewhere in here
+             * so invert the bitmap of this word to turn all our
+             * 1's to 0's and vice versa, then count the leading
+             * zeros.  The result is the first bit in the bitmap that
+             * is 0, which is our next free object
+             */
+            value = ~value;
+            available_bit = __builtin_ctzl(value);
+
+            /*
+             * Build a mask to turn the bit we found on
+             */
+            new_mask = (uint64_t)1 << available_bit;
+            value = atomic_fetch_or(&slab->bitmap[i], new_mask);
+            if ((value & new_mask) == new_mask) {
+                /* another  thread already set this bit, try again */
+                goto try_again;
+            }
+            /*
+             * We got an object!
+             * compute the object location based on the bit in the bitmap that we just set
+             */
+            obj_offset = (slab->info->obj_size * (i * 64)) + (available_bit * slab->info->obj_size);
+            return (void *)((unsigned char *)slab->obj_start + obj_offset);
+        }
+    }
+    return NULL;
+}
+
+/**
+ * @brief Allocate and initialize a new slab ring page.
+ *
+ * This function uses mmap() to allocate a single page and initializes
+ * a slab_ring structure at the start of that page. It configures the
+ * ring's metadata from the provided slab_info/template, sets up and
+ * clears the allocation bitmap, applies the template's last-word mask
+ * (to mark unusable bits as allocated), computes the object region
+ * start immediately after the bitmap, and sets the slab magic value.
+ *
+ * On success, the slab allocation statistics counter is incremented.
+ *
+ * @param slab  Slab descriptor providing sizing and template data.
+ *
+ * @return Pointer to the initialized slab_ring, or NULL on failure.
+ */
+static struct slab_ring *create_new_slab(struct slab_info *slab)
+{
+    void *new;
+    size_t page_size_long = (size_t)page_size;
+    struct slab_ring *new_ring;
+
+    /*
+     * New slabs must be page aligned so that our page offset math works.
+     * So use mmap to grap a page
+     */
+    new = mmap(NULL, page_size_long, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+    if (new == NULL)
+        return NULL;
+
+    /*
+     * setup this slab
+     */
+    new_ring = get_slab_ring(new);
+
+    new_ring->info = slab;
+    new_ring->available_objs = slab->template.available_objs;
+    new_ring->bitmap_word_count = slab->template.bitmap_word_count;
+    new_ring->bitmap = (uint64_t *)(((unsigned char *)new_ring) + sizeof(struct slab_ring));
+    memset(new_ring->bitmap, 0, sizeof(uint64_t) * new_ring->bitmap_word_count);
+    new_ring->bitmap[new_ring->bitmap_word_count - 1] = slab->template.last_word_mask;
+    new_ring->obj_start = (void *)(new_ring->bitmap + new_ring->bitmap_word_count);
+    new_ring->magic = SLAB_MAGIC;
+    INC_SLAB_STAT(&slab->stats.slab_allocs);
+    return new_ring;
+}
+
+/**
+ * @brief Create a new slab and allocate its first object.
+ *
+ * This function allocates and initializes a new slab page via
+ * create_new_slab(), then reserves the first object slot and returns
+ * its address. Since the slab has not yet been published, it sets the
+ * first bitmap bit directly (non-atomically) as an optimization.
+ *
+ * After selecting the object, the new slab is inserted into the slab's
+ * ring list under a write lock, and the slab's "available" pointer is
+ * updated to publish the new slab for future allocations.
+ *
+ * @param slab  Slab descriptor to which the new slab will be added.
+ *
+ * @return Pointer to the first allocated object in the new slab, or
+ *         NULL on failure.
+ */
+static void *create_obj_in_new_slab(struct slab_info *slab)
+{
+    struct slab_ring *new = create_new_slab(slab);
+    void *obj;
+
+    if (new == NULL)
+        return NULL;
+    /*
+     * we can cheat here a bit, since no one else sees this slab yet
+     */
+    new->bitmap[0] |= 0x1;
+    obj = new->obj_start;
+
+    /*
+     * Now insert the slab to the list
+     */
+    pthread_rwlock_wrlock(&slab->ring_lock);
+    LIST_INSERT_HEAD(&slab->entries, new, entry);
+    pthread_rwlock_unlock(&slab->ring_lock);
+    __atomic_store(&slab->available, &new, __ATOMIC_RELAXED);
+    return obj;
+}
+
+/**
+ * @brief Allocate an object from a slab_info.
+ *
+ * This function attempts to allocate an object from the slab currently
+ * advertised as having availability (slab->available). It loads that
+ * slab pointer atomically and calls select_obj() to reserve a free
+ * object from it.
+ *
+ * If no slab is available, or the selected slab has no free objects,
+ * the function falls back to creating a new slab and returning the
+ * first object from it.
+ *
+ * @param slab  Slab descriptor from which to allocate an object.
+ *
+ * @return Pointer to an allocated object, or NULL on failure.
+ */
+static void *get_slab_obj(struct slab_info *slab)
+{
+    struct slab_ring *idx;
+    void *obj = NULL;
+
+    idx = __atomic_load_n(&slab->available, __ATOMIC_RELAXED);
+    if (idx != NULL)
+        obj = select_obj(idx);
+    if (obj != NULL)
+        return obj;
+
+    /* We need to create a new slab */
+    return create_obj_in_new_slab(slab);
+}
+
+/**
+ * @brief Return an object to its owning slab and free empty slabs.
+ *
+ * This function computes the bitmap position corresponding to @p addr
+ * within the slab's object area and clears that allocation bit,
+ * marking the object as free.
+ *
+ * After freeing the object, if the slab is not the one currently
+ * advertised for allocation (ring->info->available), the function
+ * checks whether the slab has become completely empty. Emptiness is
+ * detected by verifying that all bitmap words are zero except the
+ * final word, which must equal the template's last_word_mask (i.e.,
+ * only the permanently-unusable bits remain set).
+ *
+ * If the slab is empty, it is removed from the slab list under a write
+ * lock and unmapped via munmap(). Statistics counters are updated for
+ * successful and failed frees.
+ *
+ * @param addr  Object address being returned to the slab.
+ * @param ring  Slab ring page that owns @p addr.
+ */
+static void return_to_slab(void *addr, struct slab_ring *ring)
+{
+    uintptr_t base;
+    uintptr_t offset;
+    size_t bit_idx;
+    size_t word_idx;
+    uint64_t value;
+    uint32_t i;
+    struct slab_ring *current;
+    size_t page_size_long = (size_t)page_size;
+    /*
+     * compute the offset of the object from the start of the slab
+     * and use it to compute the bitmap word and bit we need to clear
+     */
+    base = (uintptr_t)ring->obj_start;
+    offset = (uintptr_t)addr - base;
+    bit_idx = offset / ring->info->obj_size;
+    word_idx = bit_idx / 64;
+
+    bit_idx = bit_idx % 64;
+
+    value = (uint64_t)1 << bit_idx;
+    value = ~value;
+
+    /*
+     * Clear the bit for this object
+     */
+    __atomic_and_fetch(&ring->bitmap[word_idx], value, __ATOMIC_RELAXED);
+
+    /*
+     * Get the slab that is current being allocated from
+     */
+    current = __atomic_load_n(&ring->info->available, __ATOMIC_RELAXED);
+    /*
+     * if this is the ring we are currently allocating from, don't touch it
+     */
+    if (current == ring)
+        return;
+
+    /*
+     * Test the entire bitmap to see if there are any more allocated objects
+     */
+    for (i = 0; i < ring->bitmap_word_count; i++) {
+        value = __atomic_load_n(&ring->bitmap[i], __ATOMIC_RELAXED);
+        /*
+         * the last word in the bitmap needs to be compared to the
+         * last_word_mask, as there may be objects that were pre-emptively
+         * masked as unavailable during slab setup
+         */
+        if (i == ring->bitmap_word_count - 1) {
+            if (value == ring->info->template.last_word_mask) {
+                /* This slab is empty and can be freed */
+                INC_SLAB_STAT(&ring->info->stats.slab_frees);
+                pthread_rwlock_wrlock(&ring->info->ring_lock);
+                LIST_REMOVE(ring, entry);
+                pthread_rwlock_unlock(&ring->info->ring_lock);
+                /*
+                 * return the slab to the OS with munmap
+                 */
+                if (munmap(ring, page_size_long)) {
+                    INC_SLAB_STAT(&ring->info->stats.failed_slab_frees);
+                }
+                return;
+            }
+        } else {
+            /*
+             * bitmap words other than the last one just need to be zero
+             * if any of them are non-zero, then this slab is still in use
+             * and we're done
+             */
+            if (value != 0) {
+                break;
+            }
+        }
+    }
+}
+
+/**
+ * @brief Allocate memory using the slab allocator.
+ *
+ * This function selects an appropriate slab based on the requested
+ * allocation size. If the requested size exceeds the maximum slab
+ * size, the allocation is delegated to the system malloc().
+ *
+ * For slab-eligible sizes, the slab index is computed, allocation
+ * statistics are updated, and an object is allocated from the
+ * corresponding slab via get_slab_obj().
+ *
+ * The @p file and @p line parameters are provided for debugging or
+ * accounting purposes and are not otherwise used here.
+ *
+ * @param num   Number of bytes requested.
+ * @param file  Source file requesting the allocation.
+ * @param line  Source line requesting the allocation.
+ *
+ * @return Pointer to the allocated memory, or NULL on failure.
+ */
+static void *slab_malloc(size_t num, const char *file, int line)
+{
+    unsigned int slab_idx;
+
+    if (num == 0)
+        return NULL;
+
+    /*
+     * if we are requested to provide an allocation larger than our biggest
+     * slab, just use malloc
+     */
+    if (num > MAX_SLAB)
+        return malloc(num);
+
+    slab_idx = get_slab_idx(num);
+    INC_SLAB_STAT(&slabs[slab_idx].stats.allocs);
+    return get_slab_obj(&slabs[slab_idx]);
+}
+
+/**
+ * @brief Free memory allocated by the slab allocator.
+ *
+ * This function determines whether the given address belongs to a slab
+ * allocation. If the address is NULL or does not correspond to an
+ * object slab, it is passed through to the system free().
+ *
+ * For slab-allocated objects, the owning slab ring is determined, the
+ * slab free statistics counter is updated, and the object is returned
+ * to its slab via return_to_slab().
+ *
+ * The @p file and @p line parameters are provided for debugging or
+ * accounting purposes and are not otherwise used here.
+ *
+ * @param addr  Address to be freed.
+ * @param file  Source file requesting the free.
+ * @param line  Source line requesting the free.
+ */
+static void slab_free(void *addr, const char *file, int line)
+{
+    struct slab_ring *ring;
+
+    /*
+     * NULL addresses and objects that are not part of a slab
+     * just get freed as they normally would
+     */
+    if (addr == NULL || !is_obj_slab(addr)) {
+        free(addr);
+        return;
+    }
+    ring = get_slab_ring(addr);
+    INC_SLAB_STAT(&ring->info->stats.frees);
+    return_to_slab(addr, ring);
+}
+
+/**
+ * @brief Reallocate memory previously allocated by the slab allocator.
+ *
+ * This function resizes an existing allocation, handling both slab
+ * and non-slab pointers. If @p addr is NULL, it behaves like
+ * slab_malloc().
+ *
+ * If the pointer does not refer to a slab allocation, the request is
+ * delegated to the system realloc(). For slab allocations, the
+ * behavior depends on the new size:
+ *
+ * - If the new size exceeds the maximum slab size, a new buffer is
+ *   allocated with malloc(), the existing object contents (up to the
+ *   slab object size) are copied, and the original slab object is
+ *   freed.
+ * - If the new size fits within the existing slab object size, the
+ *   original pointer is returned unchanged.
+ * - Otherwise, a new slab allocation is made, the contents are copied,
+ *   and the old slab object is freed.
+ *
+ * The @p file and @p line parameters are provided for debugging or
+ * accounting purposes and are not otherwise used here.
+ *
+ * @param addr  Existing allocation, or NULL.
+ * @param num   New size in bytes.
+ * @param file  Source file requesting the reallocation.
+ * @param line  Source line requesting the reallocation.
+ *
+ * @return Pointer to the resized allocation, or NULL on failure.
+ */
+static void *slab_realloc(void *addr, size_t num, const char *file, int line)
+{
+    void *new;
+    struct slab_ring *ring;
+
+    /*
+     * reallocs for NULL are just malloc, so check with the slab allocator
+     */
+    if (addr == NULL)
+        return slab_malloc(num, NULL, 0);
+
+    /*
+     * if the incomming address is not part of a slab already, then its
+     * too big for the slab allocator, and se just use realloc
+     */
+    if (!is_obj_slab(addr))
+        return realloc(addr, num);
+
+    ring = get_slab_ring(addr);
+
+    /*
+     * If the request is too big, then we just use malloc
+     */
+    if (num > MAX_SLAB) {
+        new = malloc(num);
+        /*
+         * If we get an object, then copy the size of the old object
+         * to the new object, which is guaranteed to be less than what
+         * is returned from malloc above
+         */
+        if (new != NULL)
+            memcpy(new, addr, ring->info->obj_size);
+        /*
+         * and free the old object back to the slab allocator
+         */
+        slab_free(addr, NULL, 0);
+        return new;
+    }
+
+    /*
+     * Handy shortcut
+     * If the new requested size still fits into the old object
+     * we can just reuse it
+     */
+    if (num <= ring->info->obj_size)
+        return addr;
+
+    /*
+     * We need to swap slab objects, so get one from the next size we need
+     */
+
+    new = slab_malloc(num, NULL, 0);
+
+    /*
+     * And if its not null, copy the old object into the new space
+     */
+    if (new != NULL)
+        memcpy(new, addr, ring->info->obj_size);
+
+    /*
+     * and free the old object
+     */
+    slab_free(addr, NULL, 0);
+    return new;
+}
+
+/**
+ * @brief Compute per-page slab layout parameters for a slab_info.
+ *
+ * This function determines how many fixed-size objects (@c slab->obj_size)
+ * can fit into a single page once the slab_ring header and allocation
+ * bitmap are accounted for. It iteratively increases the candidate object
+ * count, expanding the bitmap by one 64-bit word whenever the object count
+ * crosses a multiple of 64, and stops when the object area would exceed the
+ * remaining space in the page.
+ *
+ * The results are stored in @c slab->template:
+ * - @c available_objs: number of objects that fit in the page
+ * - @c bitmap_word_count: number of 64-bit bitmap words required
+ * - @c last_word_mask: mask for the final bitmap word, with bits that do
+ *   not correspond to valid objects set to 1 (treated as permanently
+ *   allocated/unavailable).
+ *
+ * @param slab  Slab descriptor whose template fields will be populated.
+ */
+static void compute_slab_template(struct slab_info *slab)
+{
+    uint32_t bitmap_words = 1; /* need at least one bitmap word */
+    uint32_t obj_count;
+    size_t objs_size;
+    size_t available_size = (page_size - sizeof(struct slab_ring)) - (bitmap_words * sizeof(uint64_t));
+    int word_size_increased;
+    int i;
+
+    /*
+     * play some guess and check here, as we are growing both the bitmap and the size of the
+     * objects we are storing in the slab.
+     * iteratively compare an increasing number of objects' storage needs to the available size
+     * in the slab, based on the storage needed to track its meta data.  Stop when we get too big
+     */
+    for (obj_count = 1;; obj_count++) {
+        word_size_increased = 0;
+        if ((obj_count % 64) == 0) {
+            bitmap_words++;
+            available_size = (page_size - sizeof(struct slab_ring)) - (bitmap_words * sizeof(uint64_t));
+            word_size_increased = 1;
+        }
+        objs_size = obj_count * slab->obj_size;
+        if (objs_size > available_size) {
+            /* we went too far */
+            if (word_size_increased == 1)
+                bitmap_words--;
+            obj_count--;
+            break;
+        }
+    }
+    slab->template.available_objs = obj_count;
+    slab->template.bitmap_word_count = bitmap_words;
+    /*
+     * Compute the last_word_mask, which pre-emptively turns on bits in the last word of
+     * the bitmap for objects we don't have space to store.
+     */
+    slab->template.last_word_mask = (uint64_t)1 << (slab->template.available_objs % 64);
+    for (i = slab->template.available_objs % 64; i < 64; i++)
+        slab->template.last_word_mask = slab->template.last_word_mask | (uint64_t)1 << i;
+#ifdef SLAB_STATS
+    memset(&slab->stats, 0, sizeof(struct slab_stats));
+#endif
+    return;
+}
+
+/**
+ * @brief Initialize the slab allocator at program startup.
+ *
+ * This constructor function is executed automatically before main().
+ * It installs the slab allocator's malloc/realloc/free hooks via
+ * CRYPTO_set_mem_functions(), retrieves the system page size, and
+ * computes per-slab template parameters for each slab class.
+ *
+ * Errors are reported to stderr; initialization continues even if
+ * individual steps fail.
+ */
+static __attribute__((constructor)) void setup_slab_allocator()
+{
+    int i;
+
+    if (!CRYPTO_set_mem_functions(slab_malloc, slab_realloc, slab_free))
+        fprintf(stderr, "Failed to setup slag allocator\n");
+    page_size = sysconf(_SC_PAGESIZE);
+    if (page_size == -1)
+        fprintf(stderr, "Failed to get page size\n");
+    for (i = 0; i <= MAX_SLAB_IDX; i++) {
+        compute_slab_template(&slabs[i]);
+    }
+}
+
+/**
+ * @brief Emit slab allocator statistics at program shutdown.
+ *
+ * This destructor function is executed automatically at program exit
+ * when SLAB_STATS is enabled. It emits a JSON-formatted summary of
+ * slab allocator statistics, including object sizes, per-slab object
+ * counts, allocation/free counts, slab allocations, slab frees, and
+ * failed slab frees.
+ *
+ * By default, output is written to stderr. If the environment variable
+ * SLAB_ALLOCATOR_LOG is set, statistics are written to the specified
+ * file instead, falling back to stderr on failure.
+ */
+static __attribute__((destructor)) void slab_cleanup()
+{
+#ifdef SLAB_STATS
+    FILE *fp = stderr;
+    char *path = getenv("SLAB_ALLOCATOR_LOG");
+    int i;
+
+    if (path != NULL) {
+        fp = fopen(path, "w");
+        if (fp == NULL)
+            fp = stderr;
+    }
+    fprintf(fp, "{\"slabs\": [");
+
+    for (i = 0; i <= MAX_SLAB_IDX; i++) {
+        fprintf(fp, "{\"obj_size\":%lu, \"objs_per_slab\":%lu, \"allocs\":%lu, \"frees\":%lu, \"slab_allocs\":%lu, \"slab_frees\":%lu, \"failed_slab_frees\":%lu}",
+            slabs[i].obj_size, slabs[i].template.available_objs,
+            slabs[i].stats.allocs, slabs[i].stats.frees,
+            slabs[i].stats.slab_allocs, slabs[i].stats.slab_frees,
+            slabs[i].stats.failed_slab_frees);
+        if (i != MAX_SLAB_IDX)
+            fprintf(fp, ",");
+    }
+    fprintf(fp, "]}");
+    if (fp != stderr)
+        fclose(fp);
+#endif
+}
+
+#endif
+
 /*
  * the following pointers may be changed as long as 'allow_customize' is set
  */
 static int allow_customize = 1;
+#ifdef USE_SLAB_ALLOCATOR
+static CRYPTO_malloc_fn malloc_impl = slab_malloc;
+static CRYPTO_realloc_fn realloc_impl = slab_realloc;
+static CRYPTO_free_fn free_impl = slab_free;
+#else
 static CRYPTO_malloc_fn malloc_impl = CRYPTO_malloc;
 static CRYPTO_realloc_fn realloc_impl = CRYPTO_realloc;
 static CRYPTO_free_fn free_impl = CRYPTO_free;
+#endif
 
 #if !defined(OPENSSL_NO_CRYPTO_MDEBUG) && !defined(FIPS_MODULE)
 #include "internal/tsan_assist.h"
