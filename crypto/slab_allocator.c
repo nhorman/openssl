@@ -172,11 +172,10 @@ struct slab_ring {
      */
     struct slab_info *info;
 
-#define SLAB_FLAG_FREEING 0
     /**
-     * General purpose flags for this slab
+     * number of objects allocated on this slab 
      */
-    uint32_t flags;
+    uint32_t allocated_objs;
 
     /**
      * Bitmap tracking object allocation state. A set bit indicates an
@@ -545,6 +544,7 @@ static void *select_obj(struct slab_ring *slab)
              */
             obj_offset = (slab->info->obj_size * (i * 64)) + (available_bit * slab->info->obj_size);
             __atomic_add_fetch(slab->info->total_allocated_objs, 1, __ATOMIC_RELAXED);
+            __atomic_add_fetch(&slab->allocated_objs, 1, __ATOMIC_RELAXED);
             return (void *)((unsigned char *)slab->obj_start + obj_offset);
         }
     }
@@ -592,7 +592,6 @@ static struct slab_ring *create_new_slab(struct slab_info *slab)
     memset(new_ring->bitmap, 0, sizeof(uint64_t) * new_ring->bitmap_word_count);
     new_ring->bitmap[new_ring->bitmap_word_count - 1] = slab->template.last_word_mask;
     new_ring->obj_start = (void *)(new_ring->bitmap + new_ring->bitmap_word_count);
-    new_ring->flags = 0;
     new_ring->magic = SLAB_MAGIC;
     INC_SLAB_STAT(&slab->stats->slab_allocs);
     return new_ring;
@@ -628,6 +627,7 @@ static void *create_obj_in_new_slab(struct slab_info *slab)
     new->bitmap[0] |= 0x1;
     obj = new->obj_start;
     __atomic_add_fetch(slab->total_allocated_objs, 1, __ATOMIC_RELAXED);
+    __atomic_add_fetch(&new->allocated_objs, 1, __ATOMIC_RELAXED);
     __atomic_store(&slab->available, &new, __ATOMIC_RELAXED);
     return obj;
 }
@@ -691,7 +691,6 @@ static void return_to_slab(void *addr, struct slab_ring *ring)
     size_t bit_idx;
     size_t word_idx;
     uint64_t value;
-    uint32_t i;
     struct slab_ring *current;
     size_t page_size_long = (size_t)page_size;
     size_t obj_count;
@@ -717,63 +716,49 @@ static void return_to_slab(void *addr, struct slab_ring *ring)
     __atomic_and_fetch(&ring->bitmap[word_idx], value, __ATOMIC_RELAXED);
 
     /*
+     * Drop out total number of allocted objects
+     */
+    __atomic_sub_fetch(ring->info->total_allocated_objs, 1, __ATOMIC_RELAXED);
+
+    /*
+     * and our local slab count of objects
+     */
+    obj_count = __atomic_sub_fetch(&ring->allocated_objs, 1, __ATOMIC_ACQ_REL);
+
+    /*
      * Get the slab that is currently being allocated from
      */
     current = __atomic_load_n(&ring->info->available, __ATOMIC_RELAXED);
     /*
      * if this is the ring we are currently allocating from, don't touch it
+     * Exception: If the thread has exited, the current allocation slab
+     * is fair game, as there will be no more allocations from it.
      */
-    if (current == ring)
+    if (current == ring && !slab_test_flag(info->shared_flags, THREAD_HAS_EXITED))
         return;
 
-    __atomic_sub_fetch(ring->info->total_allocated_objs, 1, __ATOMIC_RELAXED);
 
     /*
-     * Test the entire bitmap to see if there are any more allocated objects
+     * check to see if we are removing the last object in this slab 
      */
-    for (i = 0; i < ring->bitmap_word_count; i++) {
-        value = __atomic_load_n(&ring->bitmap[i], __ATOMIC_RELAXED);
-        /*
-         * the last word in the bitmap needs to be compared to the
-         * last_word_mask, as there may be objects that were pre-emptively
-         * masked as unavailable during slab setup
-         */
-        if (i == ring->bitmap_word_count - 1) {
-            if (value == ring->info->template.last_word_mask) {
-                if (!slab_set_flag(&ring->flags, SLAB_FLAG_FREEING))
-                    return;
-                /* This slab is empty and can be freed */
-                INC_SLAB_STAT(&ring->info->stats->slab_frees);
-                /*
-                 * return the slab to the OS with munmap
-                 */
-                if (munmap(ring, page_size_long))
-                    INC_SLAB_STAT(&ring->info->stats->failed_slab_frees);
-                /*
-                 * One final check here to free up the slab allocator if its
-                 * owning thread has exited while memory was still outstanding
-                 * Note we have to use the stored info pointer above as the ring
-                 * itself was unmapped above
-                 */
-                obj_count = __atomic_load_n(info->total_allocated_objs, __ATOMIC_RELAXED);
-                if (obj_count == 0 && slab_test_flag(info->shared_flags, THREAD_HAS_EXITED))
-                    free(info->thread_info_start);
-                return;
-            }
-        } else {
-            /*
-             * bitmap words other than the last one just need to be zero
-             * or the bitmask computed for our word_idx
-             * if any of them are non-zero, then this slab is still in use
-             * and we're done
-             */
-            if (value != 0) {
-                break;
-            }
-        }
+    if (obj_count == 0) {
+        INC_SLAB_STAT(&ring->info->stats->slab_frees);
+          /*
+           * return the slab to the OS with munmap
+           */
+          if (munmap(ring, page_size_long))
+              INC_SLAB_STAT(&ring->info->stats->failed_slab_frees);
+          /*
+           * One final check here to free up the slab allocator if its
+           * owning thread has exited while memory was still outstanding
+           * Note we have to use the stored info pointer above as the ring
+           * itself was unmapped above
+           */
+          obj_count = __atomic_load_n(info->total_allocated_objs, __ATOMIC_RELAXED);
+          if (obj_count == 0 && slab_test_flag(info->shared_flags, THREAD_HAS_EXITED))
+              free(info->thread_info_start);
     }
 }
-
 /**
  * @brief Allocate memory using the slab allocator.
  *
@@ -1031,9 +1016,9 @@ static void destroy_slab_table(void *data)
     size_t obj_count = __atomic_load_n(info->total_allocated_objs, __ATOMIC_RELAXED);
   
     slab_set_flag(info->shared_flags, THREAD_HAS_EXITED);
-    if (obj_count == 0) 
-        free(data);
-         
+
+    if (obj_count == 0)
+        free(info);
 }
 
 /**
