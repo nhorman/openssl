@@ -543,8 +543,8 @@ static void *select_obj(struct slab_ring *slab)
              * compute the object location based on the bit in the bitmap that we just set
              */
             obj_offset = (slab->info->obj_size * (i * 64)) + (available_bit * slab->info->obj_size);
-            __atomic_add_fetch(slab->info->total_allocated_objs, 1, __ATOMIC_RELAXED);
-            __atomic_add_fetch(&slab->allocated_objs, 1, __ATOMIC_RELAXED);
+            __atomic_add_fetch(slab->info->total_allocated_objs, 1, __ATOMIC_ACQ_REL);
+            __atomic_add_fetch(&slab->allocated_objs, 1, __ATOMIC_ACQ_REL);
             return (void *)((unsigned char *)slab->obj_start + obj_offset);
         }
     }
@@ -626,8 +626,8 @@ static void *create_obj_in_new_slab(struct slab_info *slab)
      */
     new->bitmap[0] |= 0x1;
     obj = new->obj_start;
-    __atomic_add_fetch(slab->total_allocated_objs, 1, __ATOMIC_RELAXED);
-    __atomic_add_fetch(&new->allocated_objs, 1, __ATOMIC_RELAXED);
+    __atomic_add_fetch(slab->total_allocated_objs, 1, __ATOMIC_ACQ_REL);
+    __atomic_add_fetch(&new->allocated_objs, 1, __ATOMIC_ACQ_REL);
     __atomic_store(&slab->available, &new, __ATOMIC_RELAXED);
     return obj;
 }
@@ -716,11 +716,6 @@ static void return_to_slab(void *addr, struct slab_ring *ring)
     __atomic_and_fetch(&ring->bitmap[word_idx], value, __ATOMIC_RELAXED);
 
     /*
-     * Drop out total number of allocted objects
-     */
-    __atomic_sub_fetch(ring->info->total_allocated_objs, 1, __ATOMIC_RELAXED);
-
-    /*
      * and our local slab count of objects
      */
     obj_count = __atomic_sub_fetch(&ring->allocated_objs, 1, __ATOMIC_ACQ_REL);
@@ -754,7 +749,7 @@ static void return_to_slab(void *addr, struct slab_ring *ring)
            * Note we have to use the stored info pointer above as the ring
            * itself was unmapped above
            */
-          obj_count = __atomic_load_n(info->total_allocated_objs, __ATOMIC_RELAXED);
+          obj_count = __atomic_sub_fetch(info->total_allocated_objs, 1, __ATOMIC_ACQ_REL);
           if (obj_count == 0 && slab_test_flag(info->shared_flags, THREAD_HAS_EXITED))
               free(info->thread_info_start);
     }
@@ -1013,7 +1008,7 @@ static void compute_slab_template(struct slab_info *slab)
 static void destroy_slab_table(void *data)
 {
     struct slab_info *info = (struct slab_info *)data;
-    size_t obj_count = __atomic_load_n(info->total_allocated_objs, __ATOMIC_RELAXED);
+    size_t obj_count = __atomic_load_n(info->total_allocated_objs, __ATOMIC_ACQUIRE);
   
     slab_set_flag(info->shared_flags, THREAD_HAS_EXITED);
 
