@@ -310,15 +310,17 @@ struct slab_info {
  */
 #define MAX_SLAB_IDX 8
 #define MAX_SLAB 1 << MAX_SLAB_IDX
-#ifdef SLAB_STATS
 
+#ifdef SLAB_STATS
 #define SLAB_INFO_INITIALIZER(order) { NULL, 1 << (order), NULL, NULL, NULL, &stats[(order)], { 0 } }
 #else
 #define SLAB_INFO_INITIALIZER(order) { NULL, 1 << (order), NULL, NULL, NULL, { 0 } }
 #endif
 
-
+#ifdef SLAB_STATS
 static struct slab_stats stats[MAX_SLAB_IDX + 1] = { { 0 } };
+#endif
+
 /**
  * @brief Global slab size-class table.
  *
