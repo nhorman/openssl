@@ -1062,6 +1062,8 @@ static __attribute__((destructor)) void slab_cleanup()
 {
 #ifdef SLAB_STATS
     FILE *fp = stderr;
+    FILE *cmd = NULL;
+    char cmdstring[PATH_MAX] = { 0 };
     char *path = getenv("SLAB_ALLOCATOR_LOG");
     int i;
 
@@ -1070,7 +1072,10 @@ static __attribute__((destructor)) void slab_cleanup()
         if (fp == NULL)
             fp = stderr;
     }
-    fprintf(fp, "{\"slabs\": [");
+    cmd = fopen("/proc/self/cmdline", "r");
+    fread(cmdstring, PATH_MAX, 1, cmd);
+    fclose(cmd);
+    fprintf(fp, "{ \"cmd\": \"%s\", \"slabs\": [", cmdstring);
 
     for (i = 0; i <= MAX_SLAB_IDX; i++) {
         fprintf(fp, "{\"obj_size\":%lu, \"objs_per_slab\":%u, \"allocs\":%lu, \"frees\":%lu, \"slab_allocs\":%lu, \"slab_frees\":%lu, \"failed_slab_frees\":%lu}",
