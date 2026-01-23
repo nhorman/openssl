@@ -94,6 +94,8 @@
  */
 static long page_size = 0;
 
+static pthread_key_t thread_slab_key;
+
 struct slab_info;
 
 #define SLAB_MAGIC 0xdeadf00ddeadf00dUL
@@ -113,12 +115,12 @@ struct slab_stats {
 #endif
 
 /**
- * @brief slab_ring_set_flag(uint32_t *flagptr, uint8_t flagbit)
+ * @brief slab_set_flag(uint32_t *flagptr, uint8_t flagbit)
  *
  * set a bit in the flags field of a slab ring
  * sets the bit in question and returns if we actually set the bit
  */
-static inline int slab_ring_set_flag(uint32_t *flagptr, uint8_t flagbit)
+static inline int slab_set_flag(uint32_t *flagptr, uint8_t flagbit)
 {
     uint32_t mask_val = (uint32_t)1 << flagbit;
     uint32_t ret = __atomic_fetch_or(flagptr, mask_val, __ATOMIC_RELAXED);
@@ -127,17 +129,29 @@ static inline int slab_ring_set_flag(uint32_t *flagptr, uint8_t flagbit)
 }
 
 /**
- * @brief slab_ring_clear_flag(uint32_t *flagptr, uint8_t flagbit)
+ * @brief slab_clear_flag(uint32_t *flagptr, uint8_t flagbit)
  *
  * clear a bit in the flags field of a slab ring
  * clears the bit in question and returns if we actually cleared the bit
  */
-static inline int slab_ring_clear_flag(uint32_t *flagptr, uint8_t flagbit)
+static inline int slab_clear_flag(uint32_t *flagptr, uint8_t flagbit)
 {
     uint32_t mask_val = ~((uint32_t)1 << flagbit);
     uint32_t ret = __atomic_fetch_and(flagptr, mask_val, __ATOMIC_RELAXED);
 
     return (~mask_val & ret) ? 1 : 0;
+}
+
+/**
+ * @brief slab_test_flag(uint32_t flagptr, uint8_t flagbit)
+ * tests a flag for being set, returns true if the flag is set
+ */
+static inline int slab_test_flag(uint32_t *flagptr, uint8_t flagbit)
+{
+    uint32_t mask_val = (uint32_t)1 << flagbit;
+    uint32_t ret = __atomic_fetch_and(flagptr, mask_val, __ATOMIC_RELAXED);
+
+    return ret == 0 ? 0 : 1;
 }
 
 /**
@@ -154,22 +168,11 @@ static inline int slab_ring_clear_flag(uint32_t *flagptr, uint8_t flagbit)
  */
 struct slab_ring {
     /**
-     * Linkage for inclusion in the size-class slab list.
-     */
-    LIST_ENTRY(slab_ring)
-    entry;
-
-    /**
      * Pointer to the slab size-class descriptor associated with this slab.
      */
     struct slab_info *info;
 
-    /**
-     * Number of currently available (free) objects in this slab.
-     */
-    uint32_t available_objs;
 #define SLAB_FLAG_FREEING 0
-
     /**
      * General purpose flags for this slab
      */
@@ -197,15 +200,6 @@ struct slab_ring {
      */
     uint64_t magic;
 };
-
-/**
- * @brief Head of a slab list for a single size class.
- *
- * Defines a linked list type used to track all slab pages belonging to a
- * particular allocation size class. Each entry in the list is a
- * @ref slab_ring structure representing one active slab.
- */
-LIST_HEAD(slab_entries, slab_ring);
 
 /**
  * @struct slab_template
@@ -246,21 +240,10 @@ struct slab_template {
  */
 struct slab_info {
     /**
-     * Read-write lock protecting slab list and availability state for
-     * this size class.
-     */
-    pthread_rwlock_t ring_lock;
-
-    /**
      * Pointer to a slab that currently has free objects available.
      * This is a fast-path hint and may be NULL if no slab is available.
      */
     struct slab_ring *available;
-
-    /**
-     * List of all slabs belonging to this size class.
-     */
-    struct slab_entries entries;
 
     /**
      * Size in bytes of each object allocated from this size class.
@@ -268,10 +251,26 @@ struct slab_info {
     size_t obj_size;
 
     /**
+     * The start of the slab_info array for the thread that owns this slab allocator
+     */
+    struct slab_info *thread_info_start;
+
+    /**
+     * The total count of objects in all slabs that came form this threads slab allocator
+     */
+    size_t *total_allocated_objs;
+
+#define THREAD_HAS_EXITED 0
+    /**
+     * Flags shared by all the slabs for this threads allocator
+     */
+    uint32_t *shared_flags;
+
+    /**
      * Allocation and slab lifecycle statistics for this size class.
      */
 #ifdef SLAB_STATS
-    struct slab_stats stats;
+    struct slab_stats *stats;
 #endif
 
     /**
@@ -311,10 +310,15 @@ struct slab_info {
  */
 #define MAX_SLAB_IDX 8
 #define MAX_SLAB 1 << MAX_SLAB_IDX
-#define EMPTY_SLAB_TEMPLATE { 0, 0 }
+#ifdef SLAB_STATS
 
-#define SLAB_INFO_INITIALIZER(order) { PTHREAD_RWLOCK_INITIALIZER, NULL, LIST_HEAD_INITIALIZER(entries), 1 << (order), EMPTY_SLAB_TEMPLATE }
+#define SLAB_INFO_INITIALIZER(order) { NULL, 1 << (order), NULL, NULL, NULL, &stats[(order)], { 0 } }
+#else
+#define SLAB_INFO_INITIALIZER(order) { NULL, 1 << (order), NULL, NULL, NULL, { 0 } }
+#endif
 
+
+static struct slab_stats stats[MAX_SLAB_IDX + 1] = { { 0 } };
 /**
  * @brief Global slab size-class table.
  *
@@ -340,6 +344,39 @@ static struct slab_info slabs[] = {
     SLAB_INFO_INITIALIZER(7),
     SLAB_INFO_INITIALIZER(8),
 };
+
+static inline struct slab_info *get_thread_slab_table()
+{
+    struct slab_info *info = pthread_getspecific(thread_slab_key);
+    uint32_t i;
+
+    if (info == NULL) {
+        /*
+         * allocate enough space for:
+         * 1) The copy of the template table
+         * 2) The total object count shared by all slabs
+         * 3) The shared flags common to all slabs in this thread allocator
+         * Note we use calloc here to avoid having to zero the flags and total
+         * allocated obj count below
+         */
+        info = calloc(1, sizeof(slabs) + sizeof(size_t) + sizeof(uint32_t));
+        if (info == NULL)
+            return NULL;
+        memcpy(info, slabs, sizeof(slabs));
+        /*
+         * need to fix up a few pointers
+         */
+        for (i = 0; i <= MAX_SLAB_IDX; i++) {
+            /* point to the start of the table */
+            info[i].thread_info_start = info;
+            /* point to immediately after the table for all slabs */
+            info[i].total_allocated_objs = (size_t *)(((unsigned char *)info) + sizeof(slabs));
+            info[i].shared_flags = (uint32_t *)(info[i].total_allocated_objs + 1);
+        }
+        pthread_setspecific(thread_slab_key, info);
+    }
+    return info;
+}
 
 /**
  * @brief Round a value up to the next power of two.
@@ -505,6 +542,7 @@ static void *select_obj(struct slab_ring *slab)
              * compute the object location based on the bit in the bitmap that we just set
              */
             obj_offset = (slab->info->obj_size * (i * 64)) + (available_bit * slab->info->obj_size);
+            __atomic_add_fetch(slab->info->total_allocated_objs, 1, __ATOMIC_RELAXED);
             return (void *)((unsigned char *)slab->obj_start + obj_offset);
         }
     }
@@ -547,7 +585,6 @@ static struct slab_ring *create_new_slab(struct slab_info *slab)
     new_ring = get_slab_ring(new);
 
     new_ring->info = slab;
-    new_ring->available_objs = slab->template.available_objs;
     new_ring->bitmap_word_count = slab->template.bitmap_word_count;
     new_ring->bitmap = (uint64_t *)(((unsigned char *)new_ring) + sizeof(struct slab_ring));
     memset(new_ring->bitmap, 0, sizeof(uint64_t) * new_ring->bitmap_word_count);
@@ -555,7 +592,7 @@ static struct slab_ring *create_new_slab(struct slab_info *slab)
     new_ring->obj_start = (void *)(new_ring->bitmap + new_ring->bitmap_word_count);
     new_ring->flags = 0;
     new_ring->magic = SLAB_MAGIC;
-    INC_SLAB_STAT(&slab->stats.slab_allocs);
+    INC_SLAB_STAT(&slab->stats->slab_allocs);
     return new_ring;
 }
 
@@ -588,13 +625,7 @@ static void *create_obj_in_new_slab(struct slab_info *slab)
      */
     new->bitmap[0] |= 0x1;
     obj = new->obj_start;
-
-    /*
-     * Now insert the slab to the list
-     */
-    pthread_rwlock_wrlock(&slab->ring_lock);
-    LIST_INSERT_HEAD(&slab->entries, new, entry);
-    pthread_rwlock_unlock(&slab->ring_lock);
+    __atomic_add_fetch(slab->total_allocated_objs, 1, __ATOMIC_RELAXED);
     __atomic_store(&slab->available, &new, __ATOMIC_RELAXED);
     return obj;
 }
@@ -661,6 +692,8 @@ static void return_to_slab(void *addr, struct slab_ring *ring)
     uint32_t i;
     struct slab_ring *current;
     size_t page_size_long = (size_t)page_size;
+    size_t obj_count;
+    struct slab_info *info = ring->info;
 
     /*
      * compute the offset of the object from the start of the slab
@@ -682,7 +715,7 @@ static void return_to_slab(void *addr, struct slab_ring *ring)
     __atomic_and_fetch(&ring->bitmap[word_idx], value, __ATOMIC_RELAXED);
 
     /*
-     * Get the slab that is current being allocated from
+     * Get the slab that is currently being allocated from
      */
     current = __atomic_load_n(&ring->info->available, __ATOMIC_RELAXED);
     /*
@@ -691,12 +724,7 @@ static void return_to_slab(void *addr, struct slab_ring *ring)
     if (current == ring)
         return;
 
-    /*
-     * Only allow one thread to do the free check below.  Use the SLAB_FLAG_FREEING
-     * to do this
-     */
-    if (!slab_ring_set_flag(&ring->flags, SLAB_FLAG_FREEING))
-        return;
+    __atomic_sub_fetch(ring->info->total_allocated_objs, 1, __ATOMIC_RELAXED);
 
     /*
      * Test the entire bitmap to see if there are any more allocated objects
@@ -710,21 +738,30 @@ static void return_to_slab(void *addr, struct slab_ring *ring)
          */
         if (i == ring->bitmap_word_count - 1) {
             if (value == ring->info->template.last_word_mask) {
+                if (!slab_set_flag(&ring->flags, SLAB_FLAG_FREEING))
+                    return;
                 /* This slab is empty and can be freed */
-                INC_SLAB_STAT(&ring->info->stats.slab_frees);
-                pthread_rwlock_wrlock(&ring->info->ring_lock);
-                LIST_REMOVE(ring, entry);
-                pthread_rwlock_unlock(&ring->info->ring_lock);
+                INC_SLAB_STAT(&ring->info->stats->slab_frees);
                 /*
                  * return the slab to the OS with munmap
                  */
                 if (munmap(ring, page_size_long))
-                    INC_SLAB_STAT(&ring->info->stats.failed_slab_frees);
+                    INC_SLAB_STAT(&ring->info->stats->failed_slab_frees);
+                /*
+                 * One final check here to free up the slab allocator if its
+                 * owning thread has exited while memory was still outstanding
+                 * Note we have to use the stored info pointer above as the ring
+                 * itself was unmapped above
+                 */
+                obj_count = __atomic_load_n(info->total_allocated_objs, __ATOMIC_RELAXED);
+                if (obj_count == 0 && slab_test_flag(info->shared_flags, THREAD_HAS_EXITED))
+                    free(info->thread_info_start);
                 return;
             }
         } else {
             /*
              * bitmap words other than the last one just need to be zero
+             * or the bitmask computed for our word_idx
              * if any of them are non-zero, then this slab is still in use
              * and we're done
              */
@@ -763,6 +800,10 @@ static void *slab_malloc(size_t num, const char *file, int line)
 #endif
 {
     unsigned int slab_idx;
+    struct slab_info *myslabs = get_thread_slab_table();
+
+    if (myslabs == NULL)
+        return NULL;
 
     if (num == 0)
         return NULL;
@@ -775,8 +816,8 @@ static void *slab_malloc(size_t num, const char *file, int line)
         return malloc(num);
 
     slab_idx = get_slab_idx(num);
-    INC_SLAB_STAT(&slabs[slab_idx].stats.allocs);
-    return get_slab_obj(&slabs[slab_idx]);
+    INC_SLAB_STAT(&myslabs[slab_idx].stats->allocs);
+    return get_slab_obj(&myslabs[slab_idx]);
 }
 
 /**
@@ -815,7 +856,7 @@ static void slab_free(void *addr, const char *file, int line)
         return;
     }
     ring = get_slab_ring(addr);
-    INC_SLAB_STAT(&ring->info->stats.frees);
+    INC_SLAB_STAT(&ring->info->stats->frees);
     return_to_slab(addr, ring);
 }
 
@@ -979,10 +1020,18 @@ static void compute_slab_template(struct slab_info *slab)
     slab->template.last_word_mask = (uint64_t)1 << (slab->template.available_objs % 64);
     for (i = slab->template.available_objs % 64; i < 64; i++)
         slab->template.last_word_mask = slab->template.last_word_mask | (uint64_t)1 << i;
-#ifdef SLAB_STATS
-    memset(&slab->stats, 0, sizeof(struct slab_stats));
-#endif
     return;
+}
+
+static void destroy_slab_table(void *data)
+{
+    struct slab_info *info = (struct slab_info *)data;
+    size_t obj_count = __atomic_load_n(info->total_allocated_objs, __ATOMIC_RELAXED);
+  
+    slab_set_flag(info->shared_flags, THREAD_HAS_EXITED);
+    if (obj_count == 0) 
+        free(data);
+         
 }
 
 /**
@@ -1011,6 +1060,7 @@ static __attribute__((constructor)) void setup_slab_allocator()
     for (i = 0; i <= MAX_SLAB_IDX; i++) {
         compute_slab_template(&slabs[i]);
     }
+    pthread_key_create(&thread_slab_key, destroy_slab_table);
 }
 
 /**
@@ -1043,9 +1093,9 @@ static __attribute__((destructor)) void slab_cleanup()
     for (i = 0; i <= MAX_SLAB_IDX; i++) {
         fprintf(fp, "{\"obj_size\":%lu, \"objs_per_slab\":%u, \"allocs\":%lu, \"frees\":%lu, \"slab_allocs\":%lu, \"slab_frees\":%lu, \"failed_slab_frees\":%lu}",
             slabs[i].obj_size, slabs[i].template.available_objs,
-            slabs[i].stats.allocs, slabs[i].stats.frees,
-            slabs[i].stats.slab_allocs, slabs[i].stats.slab_frees,
-            slabs[i].stats.failed_slab_frees);
+            slabs[i].stats->allocs, slabs[i].stats->frees,
+            slabs[i].stats->slab_allocs, slabs[i].stats->slab_frees,
+            slabs[i].stats->failed_slab_frees);
         if (i != MAX_SLAB_IDX)
             fprintf(fp, ",");
     }
@@ -1053,4 +1103,5 @@ static __attribute__((destructor)) void slab_cleanup()
     if (fp != stderr)
         fclose(fp);
 #endif
+    pthread_key_delete(thread_slab_key);
 }
