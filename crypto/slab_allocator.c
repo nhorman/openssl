@@ -98,6 +98,13 @@ static pthread_key_t thread_slab_key;
 
 struct slab_info;
 
+#ifdef SLAB_DEBUG
+FILE *slab_fp = NULL;
+#define SLAB_DBG_LOG(fmt, ...) fprintf(slab_fp, fmt, __VA_ARGS__)
+#else
+#define SLAB_DBG_LOG(fmt, ...)
+#endif
+
 #define SLAB_MAGIC 0xdeadf00ddeadf00dUL
 
 #ifdef SLAB_STATS
@@ -375,6 +382,7 @@ static inline struct slab_info *get_thread_slab_table()
             info[i].shared_flags = (uint32_t *)(info[i].total_allocated_objs + 1);
         }
         pthread_setspecific(thread_slab_key, info);
+        SLAB_DBG_LOG("create_allocator: Create Allocator %p\n", (void *)info);
     }
     return info;
 }
@@ -514,6 +522,7 @@ static void *select_obj(struct slab_ring *slab)
     uint32_t available_bit;
     uint64_t new_mask;
     uint32_t obj_offset;
+    size_t ring_count, total_count;
 
     for (i = 0; i < slab->bitmap_word_count; i++) {
     try_again:
@@ -543,8 +552,9 @@ static void *select_obj(struct slab_ring *slab)
              * compute the object location based on the bit in the bitmap that we just set
              */
             obj_offset = (slab->info->obj_size * (i * 64)) + (available_bit * slab->info->obj_size);
-            __atomic_add_fetch(slab->info->total_allocated_objs, 1, __ATOMIC_ACQ_REL);
-            __atomic_add_fetch(&slab->allocated_objs, 1, __ATOMIC_ACQ_REL);
+            total_count = __atomic_add_fetch(slab->info->total_allocated_objs, 1, __ATOMIC_ACQ_REL);
+            ring_count = __atomic_add_fetch(&slab->allocated_objs, 1, __ATOMIC_ACQ_REL);
+            SLAB_DBG_LOG("select_obj: allocator %p ring %p ring_count %lu allocator count %lu\n", (void *)slab->info->thread_info_start, (void *)slab, ring_count, total_count);
             return (void *)((unsigned char *)slab->obj_start + obj_offset);
         }
     }
@@ -618,6 +628,7 @@ static void *create_obj_in_new_slab(struct slab_info *slab)
 {
     struct slab_ring *new = create_new_slab(slab);
     void *obj;
+    size_t ring_count, total_count;
 
     if (new == NULL)
         return NULL;
@@ -626,9 +637,10 @@ static void *create_obj_in_new_slab(struct slab_info *slab)
      */
     new->bitmap[0] |= 0x1;
     obj = new->obj_start;
-    __atomic_add_fetch(slab->total_allocated_objs, 1, __ATOMIC_ACQ_REL);
-    __atomic_add_fetch(&new->allocated_objs, 1, __ATOMIC_ACQ_REL);
+    total_count = __atomic_add_fetch(slab->total_allocated_objs, 1, __ATOMIC_ACQ_REL);
+    ring_count = __atomic_add_fetch(&new->allocated_objs, 1, __ATOMIC_ACQ_REL);
     __atomic_store(&slab->available, &new, __ATOMIC_RELAXED);
+    SLAB_DBG_LOG("select_obj: allocator %p ring %p ring_count %lu allocator count %lu\n", (void *)slab->thread_info_start, (void *)new, ring_count, total_count);
     return obj;
 }
 
@@ -693,7 +705,7 @@ static void return_to_slab(void *addr, struct slab_ring *ring)
     uint64_t value;
     struct slab_ring *current;
     size_t page_size_long = (size_t)page_size;
-    size_t obj_count;
+    size_t obj_count, total_obj_count;
     struct slab_info *info = ring->info;
 
     /*
@@ -719,6 +731,8 @@ static void return_to_slab(void *addr, struct slab_ring *ring)
      * and our local slab count of objects
      */
     obj_count = __atomic_sub_fetch(&ring->allocated_objs, 1, __ATOMIC_ACQ_REL);
+    total_obj_count = __atomic_sub_fetch(info->total_allocated_objs, 1, __ATOMIC_ACQ_REL);
+    SLAB_DBG_LOG("return_to_slab: allocator %p ring %p obj_count %lu total_count %lu\n", (void *)info->thread_info_start, (void *)ring, obj_count, total_obj_count);
 
     /*
      * Get the slab that is currently being allocated from
@@ -741,6 +755,7 @@ static void return_to_slab(void *addr, struct slab_ring *ring)
           /*
            * return the slab to the OS with munmap
            */
+          SLAB_DBG_LOG("return_to_slab: free ring %p allocator %p\n", (void *)ring, (void *)info->thread_info_start);
           if (munmap(ring, page_size_long))
               INC_SLAB_STAT(&ring->info->stats->failed_slab_frees);
           /*
@@ -749,9 +764,10 @@ static void return_to_slab(void *addr, struct slab_ring *ring)
            * Note we have to use the stored info pointer above as the ring
            * itself was unmapped above
            */
-          obj_count = __atomic_sub_fetch(info->total_allocated_objs, 1, __ATOMIC_ACQ_REL);
-          if (obj_count == 0 && slab_test_flag(info->shared_flags, THREAD_HAS_EXITED))
+          if (total_obj_count == 0 && slab_test_flag(info->shared_flags, THREAD_HAS_EXITED)) {
+              SLAB_DBG_LOG("return_to_slab: Free Allocator %p\n", (void *)info->thread_info_start);  
               free(info->thread_info_start);
+          }
     }
 }
 /**
@@ -783,6 +799,7 @@ static void *slab_malloc(size_t num, const char *file, int line)
 {
     unsigned int slab_idx;
     struct slab_info *myslabs = get_thread_slab_table();
+    void *ret;
 
     if (myslabs == NULL)
         return NULL;
@@ -799,7 +816,9 @@ static void *slab_malloc(size_t num, const char *file, int line)
 
     slab_idx = get_slab_idx(num);
     INC_SLAB_STAT(&myslabs[slab_idx].stats->allocs);
-    return get_slab_obj(&myslabs[slab_idx]);
+    ret = get_slab_obj(&myslabs[slab_idx]);
+    SLAB_DBG_LOG("slab_malloc: allocator %p obj %p size %lu ring %p\n", (void *)myslabs[slab_idx].thread_info_start, ret, myslabs[slab_idx].obj_size, (void *)PAGE_START(ret));
+    return ret;
 }
 
 /**
@@ -839,6 +858,7 @@ static void slab_free(void *addr, const char *file, int line)
     }
     ring = get_slab_ring(addr);
     INC_SLAB_STAT(&ring->info->stats->frees);
+    SLAB_DBG_LOG("slab_free: allocator %p obj %p size %lu ring %p\n", (void *)ring->info->thread_info_start, addr, ring->info->obj_size, (void *)PAGE_START(addr));
     return_to_slab(addr, ring);
 }
 
@@ -1030,6 +1050,9 @@ static void destroy_slab_table(void *data)
 static __attribute__((constructor)) void setup_slab_allocator()
 {
     int i;
+#ifdef SLAB_DEBUG
+    char *slab_debug_path = getenv("SLAB_ALLOCATOR_DEBUG_LOG");
+#endif
 
 #ifndef OPENSSL_BUILDING_OPENSSL
     fprintf(stderr, "Setting up slab allocator\n");
@@ -1043,6 +1066,15 @@ static __attribute__((constructor)) void setup_slab_allocator()
         compute_slab_template(&slabs[i]);
     }
     pthread_key_create(&thread_slab_key, destroy_slab_table);
+#ifdef SLAB_DEBUG
+    if (slab_debug_path == NULL)
+        slab_fp = stderr;
+    else
+        slab_fp = fopen(slab_debug_path, "w");
+
+    if (slab_fp == NULL)
+        slab_fp = stderr;
+#endif
 }
 
 /**
@@ -1060,6 +1092,10 @@ static __attribute__((constructor)) void setup_slab_allocator()
  */
 static __attribute__((destructor)) void slab_cleanup()
 {
+#ifdef SLAB_DEBUG
+    fclose(slab_fp);
+#endif
+
 #ifdef SLAB_STATS
     FILE *fp = stderr;
     FILE *cmd = NULL;
