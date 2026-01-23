@@ -103,7 +103,7 @@ $UTIL_COMMON=\
         params_dup.c time.c array_alloc.c aligned_alloc.c deterministic_nonce.c
 
 SOURCE[../libcrypto]=$UTIL_COMMON \
-        mem.c mem_sec.c \
+        mem.c mem_sec.c slab_allocator.c \
         comp_methods.c cversion.c info.c cpt_err.c ebcdic.c uid.c \
         o_dir.c o_fopen.c getenv.c o_init.c init.c trace.c provider.c \
         provider_child.c punycode.c passphrase.c sleep.c \
