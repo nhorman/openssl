@@ -89,6 +89,34 @@ struct slab_stats {
 #endif
 
 /**
+ * @brief slab_ring_set_flag(uint32_t *flagptr, uint8_t flagbit)
+ *
+ * set a bit in the flags field of a slab ring
+ * sets the bit in question and returns if we actually set the bit 
+ */
+static inline int slab_ring_set_flag(uint32_t *flagptr, uint8_t flagbit)
+{
+    uint32_t mask_val = (uint32_t)1 << flagbit;
+    uint32_t ret = __atomic_fetch_or(flagptr, mask_val, __ATOMIC_RELAXED);
+
+    return (mask_val & ret) ? 0 : 1;
+}
+
+/**
+ * @brief slab_ring_clear_flag(uint32_t *flagptr, uint8_t flagbit)
+ *
+ * clear a bit in the flags field of a slab ring
+ * clears the bit in question and returns if we actually cleared the bit 
+ */
+static inline int slab_ring_clear_flag(uint32_t *flagptr, uint8_t flagbit)
+{
+    uint32_t mask_val = ~((uint32_t)1 << flagbit);
+    uint32_t ret = __atomic_fetch_and(flagptr, mask_val, __ATOMIC_RELAXED);
+
+    return (~mask_val & ret) ? 1 : 0;
+}
+
+/**
  * @struct slab_ring
  * @brief Runtime metadata for a single slab page.
  *
@@ -116,6 +144,13 @@ struct slab_ring {
      * Number of currently available (free) objects in this slab.
      */
     uint32_t available_objs;
+
+#define SLAB_FLAG_FREEING 0
+
+    /**
+     * General purpose flags for this slab
+     */
+    uint32_t flags;
 
     /**
      * Bitmap tracking object allocation state. A set bit indicates an
@@ -495,6 +530,7 @@ static struct slab_ring *create_new_slab(struct slab_info *slab)
     memset(new_ring->bitmap, 0, sizeof(uint64_t) * new_ring->bitmap_word_count);
     new_ring->bitmap[new_ring->bitmap_word_count - 1] = slab->template.last_word_mask;
     new_ring->obj_start = (void *)(new_ring->bitmap + new_ring->bitmap_word_count);
+    new_ring->flags = 0;
     new_ring->magic = SLAB_MAGIC;
     INC_SLAB_STAT(&slab->stats.slab_allocs);
     return new_ring;
@@ -629,6 +665,13 @@ static void return_to_slab(void *addr, struct slab_ring *ring)
      * if this is the ring we are currently allocating from, don't touch it
      */
     if (current == ring)
+        return;
+
+    /*
+     * Only allow one thread to do the free check below.  Use the SLAB_FLAG_FREEING
+     * to do this
+     */
+    if (!slab_ring_set_flag(&ring->flags, SLAB_FLAG_FREEING))
         return;
 
     /*
