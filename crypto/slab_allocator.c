@@ -476,7 +476,6 @@ static void *select_obj(struct slab_ring *slab)
     uint32_t available_bit;
     uint64_t new_mask;
     uint32_t obj_offset;
-    void *obj;
 
     for (i = 0; i < slab->bitmap_word_count; i++) {
     try_again:
@@ -533,9 +532,6 @@ static struct slab_ring *create_new_slab(struct slab_info *slab)
     void *new;
     size_t page_size_long = (size_t)page_size;
     struct slab_ring *new_ring;
-    uint32_t count;
-    size_t computed_size;
-    size_t available_size;
 
     /*
      * New slabs must be page aligned so that our page offset math works.
@@ -631,7 +627,6 @@ static void *get_slab_obj(struct slab_info *slab)
         return obj;
 
     /* We need to create a new slab */
-new_slab:
     return create_obj_in_new_slab(slab);
 }
 
@@ -663,8 +658,7 @@ static void return_to_slab(void *addr, struct slab_ring *ring)
     size_t bit_idx;
     size_t word_idx;
     uint64_t value;
-    uint32_t available, new;
-    int i;
+    uint32_t i;
     struct slab_ring *current;
     size_t page_size_long = (size_t)page_size;
 
@@ -762,6 +756,7 @@ static void return_to_slab(void *addr, struct slab_ring *ring)
  * @return Pointer to the allocated memory, or NULL on failure.
  */
 #ifdef OPENSSL_BUILDING_OPENSSL
+void *slab_malloc(size_t num, const char *file, int line);
 void *slab_malloc(size_t num, const char *file, int line)
 #else
 static void *slab_malloc(size_t num, const char *file, int line)
@@ -803,6 +798,7 @@ static void *slab_malloc(size_t num, const char *file, int line)
  * @param line  Source line requesting the free.
  */
 #ifdef OPENSSL_BUILDING_OPENSSL
+void slab_free(void *addr, const char *file, int line);
 void slab_free(void *addr, const char *file, int line)
 #else
 static void slab_free(void *addr, const char *file, int line)
@@ -854,6 +850,7 @@ static void slab_free(void *addr, const char *file, int line)
  * @return Pointer to the resized allocation, or NULL on failure.
  */
 #ifdef OPENSSL_BUILDING_OPENSSL
+void *slab_realloc(void *addr, size_t num, const char *file, int line);
 void *slab_realloc(void *addr, size_t num, const char *file, int line)
 #else
 static void *slab_realloc(void *addr, size_t num, const char *file, int line)
@@ -1044,7 +1041,7 @@ static __attribute__((destructor)) void slab_cleanup()
     fprintf(fp, "{\"slabs\": [");
 
     for (i = 0; i <= MAX_SLAB_IDX; i++) {
-        fprintf(fp, "{\"obj_size\":%lu, \"objs_per_slab\":%lu, \"allocs\":%lu, \"frees\":%lu, \"slab_allocs\":%lu, \"slab_frees\":%lu, \"failed_slab_frees\":%lu}",
+        fprintf(fp, "{\"obj_size\":%lu, \"objs_per_slab\":%u, \"allocs\":%lu, \"frees\":%lu, \"slab_allocs\":%lu, \"slab_frees\":%lu, \"failed_slab_frees\":%lu}",
             slabs[i].obj_size, slabs[i].template.available_objs,
             slabs[i].stats.allocs, slabs[i].stats.frees,
             slabs[i].stats.slab_allocs, slabs[i].stats.slab_frees,
