@@ -322,12 +322,16 @@ sub cmd {
     }
 }
 
+my $slab_idx = 0;
+
 sub app {
     my $cmd = shift;
     my %opts = @_;
     return sub {
         my @cmdargs = ( @{$cmd} );
         my @prog = __fixup_prg(__apps_file(shift @cmdargs, __exeext()));
+        $ENV{SLAB_ALLOCATOR_LOG} = result_dir("slab.$slab_idx.json");
+        $slab_idx = $slab_idx + 1;
         return cmd([ @prog, @cmdargs ],
                    exe_shell => $ENV{EXE_SHELL}, %opts) -> (shift);
     }
