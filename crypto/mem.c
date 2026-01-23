@@ -79,6 +79,7 @@ struct slab_stats {
     size_t allocs;
     size_t frees;
     size_t slab_allocs;
+    size_t slab_victim_saves;
     size_t slab_frees;
     size_t failed_slab_frees;
 };
@@ -235,6 +236,12 @@ struct slab_info {
     struct slab_ring *available;
 
     /**
+     * Vicitim slab.  Give our last free slab a chance to come back from getting
+     * returned to the OS
+     */
+    struct slab_ring *victim;
+
+    /**
      * List of all slabs belonging to this size class.
      */
     struct slab_entries entries;
@@ -288,9 +295,9 @@ struct slab_info {
  */
 #define MAX_SLAB_IDX 8
 #define MAX_SLAB 1 << MAX_SLAB_IDX
-#define EMPTY_SLAB_TEMPLATE { 0, 0 }
+#define EMPTY_SLAB_TEMPLATE { 0  }
 
-#define SLAB_INFO_INITIALIZER(order) { PTHREAD_RWLOCK_INITIALIZER, NULL, LIST_HEAD_INITIALIZER(entries), 1 << (order), EMPTY_SLAB_TEMPLATE }
+#define SLAB_INFO_INITIALIZER(order) { PTHREAD_RWLOCK_INITIALIZER, NULL, NULL, LIST_HEAD_INITIALIZER(entries), 1 << (order), EMPTY_SLAB_TEMPLATE }
 
 /**
  * @brief Global slab size-class table.
@@ -509,20 +516,28 @@ static struct slab_ring *create_new_slab(struct slab_info *slab)
     void *new;
     size_t page_size_long = (size_t)page_size;
     struct slab_ring *new_ring;
+    struct slab_ring *null_victim = NULL;
 
     /*
-     * New slabs must be page aligned so that our page offset math works.
-     * So use mmap to grap a page
+     * before we create a new slab, lets try grab our victim
      */
-    new = mmap(NULL, page_size_long, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
-    if (new == NULL)
-        return NULL;
+    __atomic_exchange(&slab->victim, &null_victim, &new_ring, __ATOMIC_RELAXED);
+    if (new_ring == NULL) {
+        /*
+         * New slabs must be page aligned so that our page offset math works.
+         * So use mmap to grap a page
+         */
+        new = mmap(NULL, page_size_long, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+        if (new == NULL)
+            return NULL;
 
-    /*
-     * setup this slab
-     */
-    new_ring = get_slab_ring(new);
-
+        /*
+         * setup this slab
+         */
+        new_ring = get_slab_ring(new);
+    } else {
+        INC_SLAB_STAT(&slab->stats.slab_victim_saves);
+    }
     new_ring->info = slab;
     new_ring->available_objs = slab->template.available_objs;
     new_ring->bitmap_word_count = slab->template.bitmap_word_count;
@@ -636,7 +651,7 @@ static void return_to_slab(void *addr, struct slab_ring *ring)
     size_t word_idx;
     uint64_t value;
     uint32_t i;
-    struct slab_ring *current;
+    struct slab_ring *current, *victim;
     size_t page_size_long = (size_t)page_size;
     /*
      * compute the offset of the object from the start of the slab
@@ -686,15 +701,23 @@ static void return_to_slab(void *addr, struct slab_ring *ring)
          */
         if (i == ring->bitmap_word_count - 1) {
             if (value == ring->info->template.last_word_mask) {
-                /* This slab is empty and can be freed */
+                /*
+                 * This slab is empty, so we can free it
+                 * but first, lets try to put it in the victim
+                 * cache
+                 */
+                __atomic_exchange(&ring->info->victim, &ring, &victim, __ATOMIC_RELAXED);
+                if (victim == NULL)
+                    return;
+
                 INC_SLAB_STAT(&ring->info->stats.slab_frees);
                 pthread_rwlock_wrlock(&ring->info->ring_lock);
-                LIST_REMOVE(ring, entry);
+                LIST_REMOVE(victim, entry);
                 pthread_rwlock_unlock(&ring->info->ring_lock);
                 /*
                  * return the slab to the OS with munmap
                  */
-                if (munmap(ring, page_size_long)) {
+                if (munmap(victim, page_size_long)) {
                     INC_SLAB_STAT(&ring->info->stats.failed_slab_frees);
                 }
                 return;
@@ -1000,10 +1023,11 @@ static __attribute__((destructor)) void slab_cleanup()
     fprintf(fp, "{\"slabs\": [");
 
     for (i = 0; i <= MAX_SLAB_IDX; i++) {
-        fprintf(fp, "{\"obj_size\":%lu, \"objs_per_slab\":%lu, \"allocs\":%lu, \"frees\":%lu, \"slab_allocs\":%lu, \"slab_frees\":%lu, \"failed_slab_frees\":%lu}",
+        fprintf(fp, "{\"obj_size\":%lu, \"objs_per_slab\":%d, \"allocs\":%lu, \"frees\":%lu, \"slab_allocs\":%lu, \"slab_frees\":%lu, \"victim saves\":%lu, \"failed_slab_frees\":%lu}",
             slabs[i].obj_size, slabs[i].template.available_objs,
             slabs[i].stats.allocs, slabs[i].stats.frees,
             slabs[i].stats.slab_allocs, slabs[i].stats.slab_frees,
+            slabs[i].stats.slab_victim_saves,
             slabs[i].stats.failed_slab_frees);
         if (i != MAX_SLAB_IDX)
             fprintf(fp, ",");
