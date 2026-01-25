@@ -182,7 +182,7 @@ struct slab_ring {
     /**
      * number of objects allocated on this slab 
      */
-    uint32_t allocated_objs;
+    uint32_t allocated_state;
 
     /**
      * Bitmap tracking object allocation state. A set bit indicates an
@@ -552,7 +552,7 @@ static void *select_obj(struct slab_ring *slab)
              * compute the object location based on the bit in the bitmap that we just set
              */
             obj_offset = (slab->info->obj_size * (i * 64)) + (available_bit * slab->info->obj_size);
-            ring_count = __atomic_add_fetch(&slab->allocated_objs, 1, __ATOMIC_ACQ_REL);
+            ring_count = __atomic_add_fetch(&slab->allocated_state, 1, __ATOMIC_ACQ_REL);
             SLAB_DBG_LOG("select_obj: allocator %p ring %p ring_count %lu\n", (void *)slab->info->thread_info_start, (void *)slab, ring_count);
             return (void *)((unsigned char *)slab->obj_start + obj_offset);
         }
@@ -637,7 +637,7 @@ static void *create_obj_in_new_slab(struct slab_info *slab)
     new->bitmap[0] |= 0x1;
     obj = new->obj_start;
     total_count = __atomic_add_fetch(slab->total_allocated_slabs, 1, __ATOMIC_ACQ_REL);
-    ring_count = __atomic_add_fetch(&new->allocated_objs, 1, __ATOMIC_ACQ_REL);
+    ring_count = __atomic_add_fetch(&new->allocated_state, 1, __ATOMIC_ACQ_REL);
     __atomic_store(&slab->available, &new, __ATOMIC_RELAXED);
     SLAB_DBG_LOG("select_obj: allocator %p ring %p ring_count %lu allocator count %lu\n", (void *)slab->thread_info_start, (void *)new, ring_count, total_count);
     return obj;
@@ -729,7 +729,7 @@ static void return_to_slab(void *addr, struct slab_ring *ring)
     /*
      * and our local slab count of objects
      */
-    obj_count = __atomic_sub_fetch(&ring->allocated_objs, 1, __ATOMIC_ACQ_REL);
+    obj_count = __atomic_sub_fetch(&ring->allocated_state, 1, __ATOMIC_ACQ_REL);
     SLAB_DBG_LOG("return_to_slab: allocator %p ring %p obj_count %lu\n", (void *)info->thread_info_start, (void *)ring, obj_count);
 
     /*
