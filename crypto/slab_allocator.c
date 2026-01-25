@@ -177,12 +177,17 @@ struct slab_ring {
     /**
      * Pointer to the slab size-class descriptor associated with this slab.
      */
-    struct slab_info *info;
+    struct slab_stats *stats;
 
     /**
      * number of objects allocated on this slab 
      */
     uint64_t allocated_state;
+
+    /**
+     * size of objects in this slab
+     */
+    size_t obj_size;
 
     /**
      * Bitmap tracking object allocation state. A set bit indicates an
@@ -464,6 +469,8 @@ static inline void slab_ring_mod_allocated_state(struct slab_ring *ring,
     }
 }
 
+#define SLAB_RING_ORPHANED (1 << 0)
+
 static inline void slab_ring_set_flags(struct slab_ring *ring,
                                        uint32_t flags)
 {
@@ -597,7 +604,7 @@ static void *select_obj(struct slab_ring *slab)
              * We got an object!
              * compute the object location based on the bit in the bitmap that we just set
              */
-            obj_offset = (slab->info->obj_size * (i * 64)) + (available_bit * slab->info->obj_size);
+            obj_offset = (slab->obj_size * (i * 64)) + (available_bit * slab->obj_size);
             slab_ring_inc_obj_count(slab, &ring_count, &flags);
             return (void *)((unsigned char *)slab->obj_start + obj_offset);
         }
@@ -640,14 +647,17 @@ static struct slab_ring *create_new_slab(struct slab_info *slab)
      */
     new_ring = get_slab_ring(new);
 
-    new_ring->info = slab;
+#ifdef SLAB_STATS
+    new_ring->stats = slab->stats;
+#endif
+    new_ring->obj_size = slab->obj_size;
     new_ring->bitmap_word_count = slab->template.bitmap_word_count;
     new_ring->bitmap = (uint64_t *)(((unsigned char *)new_ring) + sizeof(struct slab_ring));
     memset(new_ring->bitmap, 0, sizeof(uint64_t) * new_ring->bitmap_word_count);
     new_ring->bitmap[new_ring->bitmap_word_count - 1] = slab->template.last_word_mask;
     new_ring->obj_start = (void *)(new_ring->bitmap + new_ring->bitmap_word_count);
     new_ring->magic = SLAB_MAGIC;
-    INC_SLAB_STAT(&slab->stats->slab_allocs);
+    INC_SLAB_STAT(&new->stats->slab_allocs);
     return new_ring;
 }
 
@@ -681,8 +691,9 @@ static void *create_obj_in_new_slab(struct slab_info *slab)
      */
     new->bitmap[0] |= 0x1;
     obj = new->obj_start;
-    __atomic_add_fetch(slab->total_allocated_slabs, 1, __ATOMIC_ACQ_REL);
     slab_ring_inc_obj_count(new, &ring_count, &flags);
+    if (slab->available != NULL)
+        slab_ring_set_flags(slab->available, SLAB_RING_ORPHANED);
     __atomic_store(&slab->available, &new, __ATOMIC_RELAXED);
     return obj;
 }
@@ -746,10 +757,7 @@ static void return_to_slab(void *addr, struct slab_ring *ring)
     size_t bit_idx;
     size_t word_idx;
     uint64_t value;
-    struct slab_ring *current;
     size_t page_size_long = (size_t)page_size;
-    struct slab_info *info = ring->info;
-    size_t total_slab_count;
     uint32_t obj_count, flags;
 
     /*
@@ -758,7 +766,7 @@ static void return_to_slab(void *addr, struct slab_ring *ring)
      */
     base = (uintptr_t)ring->obj_start;
     offset = (uintptr_t)addr - base;
-    bit_idx = offset / ring->info->obj_size;
+    bit_idx = offset / ring->obj_size;
     word_idx = bit_idx / 64;
 
     bit_idx = bit_idx % 64;
@@ -777,41 +785,16 @@ static void return_to_slab(void *addr, struct slab_ring *ring)
     slab_ring_dec_obj_count(ring, &obj_count, &flags);
 
     /*
-     * Get the slab that is currently being allocated from
-     */
-    current = __atomic_load_n(&ring->info->available, __ATOMIC_RELAXED);
-    /*
-     * if this is the ring we are currently allocating from, don't touch it
-     * Exception: If the thread has exited, the current allocation slab
-     * is fair game, as there will be no more allocations from it.
-     */
-    if (current == ring && !slab_test_flag(info->shared_flags, THREAD_HAS_EXITED))
-        return;
-
-
-    /*
      * check to see if we are removing the last object in this slab 
      */
-    if (obj_count == 0) {
-        INC_SLAB_STAT(&ring->info->stats->slab_frees);
+    if (obj_count == 0 && (flags & SLAB_RING_ORPHANED)) {
+        INC_SLAB_STAT(&ring->stats->slab_frees);
           /*
            * return the slab to the OS with munmap
            */
           SLAB_DBG_LOG("return_to_slab: free ring %p allocator %p\n", (void *)ring, (void *)info->thread_info_start);
           if (munmap(ring, page_size_long))
-              INC_SLAB_STAT(&ring->info->stats->failed_slab_frees);
-
-          total_slab_count = __atomic_sub_fetch(info->total_allocated_slabs, 1, __ATOMIC_ACQ_REL);
-          /*
-           * One final check here to free up the slab allocator if its
-           * owning thread has exited while memory was still outstanding
-           * Note we have to use the stored info pointer above as the ring
-           * itself was unmapped above
-           */
-          if (total_slab_count == 0 && slab_test_flag(info->shared_flags, THREAD_HAS_EXITED)) {
-              SLAB_DBG_LOG("return_to_slab: Free Allocator %p\n", (void *)info->thread_info_start);  
-              free(info->thread_info_start);
-          }
+              INC_SLAB_STAT(&ring->stats->failed_slab_frees);
     }
 }
 /**
@@ -901,7 +884,7 @@ static void slab_free(void *addr, const char *file, int line)
         return;
     }
     ring = get_slab_ring(addr);
-    INC_SLAB_STAT(&ring->info->stats->frees);
+    INC_SLAB_STAT(&ring->stats->frees);
     SLAB_DBG_LOG("slab_free: allocator %p obj %p size %lu ring %p\n", (void *)ring->info->thread_info_start, addr, ring->info->obj_size, (void *)PAGE_START(addr));
     return_to_slab(addr, ring);
 }
@@ -972,7 +955,7 @@ static void *slab_realloc(void *addr, size_t num, const char *file, int line)
          * is returned from malloc above
          */
         if (new != NULL)
-            memcpy(new, addr, ring->info->obj_size);
+            memcpy(new, addr, ring->obj_size);
         /*
          * and free the old object back to the slab allocator
          */
@@ -985,7 +968,7 @@ static void *slab_realloc(void *addr, size_t num, const char *file, int line)
      * If the new requested size still fits into the old object
      * we can just reuse it
      */
-    if (num <= ring->info->obj_size)
+    if (num <= ring->obj_size)
         return addr;
 
     /*
@@ -998,7 +981,7 @@ static void *slab_realloc(void *addr, size_t num, const char *file, int line)
      * And if its not null, copy the old object into the new space
      */
     if (new != NULL)
-        memcpy(new, addr, ring->info->obj_size);
+        memcpy(new, addr, ring->obj_size);
 
     /*
      * and free the old object
@@ -1072,12 +1055,9 @@ static void compute_slab_template(struct slab_info *slab)
 static void destroy_slab_table(void *data)
 {
     struct slab_info *info = (struct slab_info *)data;
-    size_t slab_count = __atomic_load_n(info->total_allocated_slabs, __ATOMIC_ACQUIRE);
   
     slab_set_flag(info->shared_flags, THREAD_HAS_EXITED);
-
-    if (slab_count == 0)
-        free(info);
+    free(info);
 }
 
 /**
