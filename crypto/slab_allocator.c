@@ -182,7 +182,7 @@ struct slab_ring {
     /**
      * number of objects allocated on this slab 
      */
-    uint32_t allocated_state;
+    uint64_t allocated_state;
 
     /**
      * Bitmap tracking object allocation state. A set bit indicates an
@@ -440,6 +440,52 @@ static unsigned int get_slab_idx(size_t num)
 
     return __builtin_ctzl(up_size);
 }
+
+static inline void slab_ring_mod_allocated_state(struct slab_ring *ring,
+                                                 int delta,
+                                                 uint32_t flags,
+                                                 uint32_t *new_count,
+                                                 uint32_t *new_flags)
+{
+    uint64_t curr_allocated_state;
+    uint64_t new_allocated_state;
+
+    curr_allocated_state = __atomic_load_n(&ring->allocated_state, __ATOMIC_RELAXED);
+    for (;;) {
+        *new_count = curr_allocated_state & 0x00000000ffffffffUL;
+        *new_flags = curr_allocated_state >> 32;
+        *new_count += delta;
+        *new_flags |= flags;
+        new_allocated_state = ((uint64_t)*new_flags << 32) | (uint64_t)*new_count;
+        if (__atomic_compare_exchange_n(&ring->allocated_state, &curr_allocated_state,
+                                        new_allocated_state, 0, __ATOMIC_ACQ_REL,
+                                        __ATOMIC_RELAXED))
+            break;
+    }
+}
+
+static inline void slab_ring_set_flags(struct slab_ring *ring,
+                                       uint32_t flags)
+{
+    uint32_t newcount, newflags;
+
+    slab_ring_mod_allocated_state(ring, 0, flags, &newcount, &newflags);
+}
+
+static inline void slab_ring_inc_obj_count(struct slab_ring *ring,
+                                           uint32_t *ret_count,
+                                           uint32_t *ret_flags)
+{
+    slab_ring_mod_allocated_state(ring, 1, 0, ret_count, ret_flags);
+}
+
+static inline void slab_ring_dec_obj_count(struct slab_ring *ring,
+                                           uint32_t *ret_count,
+                                           uint32_t *ret_flags)
+{
+    slab_ring_mod_allocated_state(ring, -1, 0, ret_count, ret_flags);
+}
+
 
 /**
  * @def PAGE_MASK
