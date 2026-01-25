@@ -568,7 +568,7 @@ static void *select_obj(struct slab_ring *slab)
     uint32_t available_bit;
     uint64_t new_mask;
     uint32_t obj_offset;
-    size_t ring_count, total_count;
+    uint32_t ring_count, flags;
 
     for (i = 0; i < slab->bitmap_word_count; i++) {
     try_again:
@@ -598,8 +598,7 @@ static void *select_obj(struct slab_ring *slab)
              * compute the object location based on the bit in the bitmap that we just set
              */
             obj_offset = (slab->info->obj_size * (i * 64)) + (available_bit * slab->info->obj_size);
-            ring_count = __atomic_add_fetch(&slab->allocated_state, 1, __ATOMIC_ACQ_REL);
-            SLAB_DBG_LOG("select_obj: allocator %p ring %p ring_count %lu\n", (void *)slab->info->thread_info_start, (void *)slab, ring_count);
+            slab_ring_inc_obj_count(slab, &ring_count, &flags);
             return (void *)((unsigned char *)slab->obj_start + obj_offset);
         }
     }
@@ -673,7 +672,7 @@ static void *create_obj_in_new_slab(struct slab_info *slab)
 {
     struct slab_ring *new = create_new_slab(slab);
     void *obj;
-    size_t ring_count, total_count;
+    uint32_t ring_count, flags;
 
     if (new == NULL)
         return NULL;
@@ -682,10 +681,9 @@ static void *create_obj_in_new_slab(struct slab_info *slab)
      */
     new->bitmap[0] |= 0x1;
     obj = new->obj_start;
-    total_count = __atomic_add_fetch(slab->total_allocated_slabs, 1, __ATOMIC_ACQ_REL);
-    ring_count = __atomic_add_fetch(&new->allocated_state, 1, __ATOMIC_ACQ_REL);
+    __atomic_add_fetch(slab->total_allocated_slabs, 1, __ATOMIC_ACQ_REL);
+    slab_ring_inc_obj_count(new, &ring_count, &flags);
     __atomic_store(&slab->available, &new, __ATOMIC_RELAXED);
-    SLAB_DBG_LOG("select_obj: allocator %p ring %p ring_count %lu allocator count %lu\n", (void *)slab->thread_info_start, (void *)new, ring_count, total_count);
     return obj;
 }
 
@@ -750,8 +748,9 @@ static void return_to_slab(void *addr, struct slab_ring *ring)
     uint64_t value;
     struct slab_ring *current;
     size_t page_size_long = (size_t)page_size;
-    size_t obj_count, total_slab_count;
     struct slab_info *info = ring->info;
+    size_t total_slab_count;
+    uint32_t obj_count, flags;
 
     /*
      * compute the offset of the object from the start of the slab
@@ -775,8 +774,7 @@ static void return_to_slab(void *addr, struct slab_ring *ring)
     /*
      * and our local slab count of objects
      */
-    obj_count = __atomic_sub_fetch(&ring->allocated_state, 1, __ATOMIC_ACQ_REL);
-    SLAB_DBG_LOG("return_to_slab: allocator %p ring %p obj_count %lu\n", (void *)info->thread_info_start, (void *)ring, obj_count);
+    slab_ring_dec_obj_count(ring, &obj_count, &flags);
 
     /*
      * Get the slab that is currently being allocated from
