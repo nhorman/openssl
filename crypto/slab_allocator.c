@@ -628,6 +628,7 @@ static struct slab_ring *create_new_slab(struct slab_info *slab)
     new_ring->obj_start = (void *)(new_ring->bitmap + new_ring->bitmap_word_count);
     new_ring->magic = SLAB_MAGIC;
     INC_SLAB_STAT(&new_ring->stats->slab_allocs);
+    SLAB_DBG_EVENT("slab",new_ring,"allocate");
     return new_ring;
 }
 
@@ -668,6 +669,7 @@ static void *create_obj_in_new_slab(struct slab_info *slab)
         slab_ring_set_flags(new, SLAB_RING_ORPHANED, &ring_count, &flags);
         if (ring_count == 0) {
             INC_SLAB_STAT(&new->stats->slab_frees);
+            SLAB_DBG_EVENT("slab",new,"free");
             if (munmap(new, page_size_long))
                 INC_SLAB_STAT(&new->stats->failed_slab_frees);
         }
@@ -769,6 +771,7 @@ static void return_to_slab(void *addr, struct slab_ring *ring)
           /*
            * return the slab to the OS with munmap
            */
+          SLAB_DBG_EVENT("slab",ring,"allocate");
           if (munmap(ring, page_size_long))
               INC_SLAB_STAT(&ring->stats->failed_slab_frees);
     }
@@ -1040,6 +1043,7 @@ static void destroy_slab_table(void *data)
             slab_ring_set_flags(info[i].available, SLAB_RING_ORPHANED, &count, &flags);
             if (count == 0) {
                 INC_SLAB_STAT(&info[i].stats->slab_frees);
+                SLAB_DBG_EVENT("slab",info[i].available,"free");
                 if (munmap(info[i].available, page_size_long))
                     INC_SLAB_STAT(&info[i].stats->failed_slab_frees);
             }
