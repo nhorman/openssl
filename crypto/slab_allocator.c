@@ -472,11 +472,11 @@ static inline void slab_ring_mod_allocated_state(struct slab_ring *ring,
 #define SLAB_RING_ORPHANED (1 << 0)
 
 static inline void slab_ring_set_flags(struct slab_ring *ring,
-                                       uint32_t flags)
+                                       uint32_t flags,
+                                       uint32_t *newcount,
+                                       uint32_t *newflags)
 {
-    uint32_t newcount, newflags;
-
-    slab_ring_mod_allocated_state(ring, 0, flags, &newcount, &newflags);
+    slab_ring_mod_allocated_state(ring, 0, flags, newcount, newflags);
 }
 
 static inline void slab_ring_inc_obj_count(struct slab_ring *ring,
@@ -683,6 +683,7 @@ static void *create_obj_in_new_slab(struct slab_info *slab)
     struct slab_ring *new = create_new_slab(slab);
     void *obj;
     uint32_t ring_count, flags;
+    size_t page_size_long = (size_t)page_size;
 
     if (new == NULL)
         return NULL;
@@ -692,9 +693,15 @@ static void *create_obj_in_new_slab(struct slab_info *slab)
     new->bitmap[0] |= 0x1;
     obj = new->obj_start;
     slab_ring_inc_obj_count(new, &ring_count, &flags);
-    if (slab->available != NULL)
-        slab_ring_set_flags(slab->available, SLAB_RING_ORPHANED);
-    __atomic_store(&slab->available, &new, __ATOMIC_RELAXED);
+    new = __atomic_exchange_n(&slab->available, new, __ATOMIC_RELAXED);
+    if (new != NULL) {
+        slab_ring_set_flags(new, SLAB_RING_ORPHANED, &ring_count, &flags);
+        if (ring_count == 0) {
+            INC_SLAB_STAT(&new->stats->slab_frees);
+            if (munmap(new, page_size_long))
+                INC_SLAB_STAT(&new->stats->failed_slab_frees);
+        }
+    }
     return obj;
 }
 
@@ -1055,8 +1062,21 @@ static void compute_slab_template(struct slab_info *slab)
 static void destroy_slab_table(void *data)
 {
     struct slab_info *info = (struct slab_info *)data;
-  
+    uint32_t i;
+    uint32_t count, flags;
+    size_t page_size_long = (size_t)page_size;
+
     slab_set_flag(info->shared_flags, THREAD_HAS_EXITED);
+    for (i = 0; i <= MAX_SLAB_IDX; i++) {
+        if(info[i].available != NULL) {
+            slab_ring_set_flags(info[i].available, SLAB_RING_ORPHANED, &count, &flags);
+            if (count == 0) {
+                INC_SLAB_STAT(&info[i].stats->slab_frees);
+                if (munmap(info[i].available, page_size_long))
+                    INC_SLAB_STAT(&info[i].stats->failed_slab_frees);
+            }
+        }
+    }
     free(info);
 }
 
