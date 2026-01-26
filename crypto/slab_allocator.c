@@ -105,6 +105,7 @@ FILE *slab_fp = NULL;
 #define SLAB_DBG_LOG(fmt, ...)
 #endif
 
+#define SLAB_DBG_EVENT(typ, addr, event) SLAB_DBG_LOG("type:%s:addr:%p:event:%s\n", typ, (void *)addr, event)
 #define SLAB_MAGIC 0xdeadf00ddeadf00dUL
 
 #ifdef SLAB_STATS
@@ -356,7 +357,7 @@ static inline struct slab_info *get_thread_slab_table()
         memcpy(info, slabs, sizeof(slabs));
 
         pthread_setspecific(thread_slab_key, info);
-        SLAB_DBG_LOG("create_allocator: Create Allocator %p\n", (void *)info);
+        SLAB_DBG_EVENT("allocator", info, "allocate");
     }
     return info;
 }
@@ -768,7 +769,6 @@ static void return_to_slab(void *addr, struct slab_ring *ring)
           /*
            * return the slab to the OS with munmap
            */
-          SLAB_DBG_LOG("return_to_slab: free ring %p allocator %p\n", (void *)ring, (void *)info->thread_info_start);
           if (munmap(ring, page_size_long))
               INC_SLAB_STAT(&ring->stats->failed_slab_frees);
     }
@@ -820,7 +820,6 @@ static void *slab_malloc(size_t num, const char *file, int line)
     slab_idx = get_slab_idx(num);
     INC_SLAB_STAT(&myslabs[slab_idx].stats->allocs);
     ret = get_slab_obj(&myslabs[slab_idx]);
-    SLAB_DBG_LOG("slab_malloc: allocator %p obj %p size %lu ring %p\n", (void *)myslabs[slab_idx].thread_info_start, ret, myslabs[slab_idx].obj_size, (void *)PAGE_START(ret));
     return ret;
 }
 
@@ -861,7 +860,6 @@ static void slab_free(void *addr, const char *file, int line)
     }
     ring = get_slab_ring(addr);
     INC_SLAB_STAT(&ring->stats->frees);
-    SLAB_DBG_LOG("slab_free: allocator %p obj %p size %lu ring %p\n", (void *)ring->info->thread_info_start, addr, ring->info->obj_size, (void *)PAGE_START(addr));
     return_to_slab(addr, ring);
 }
 
@@ -1035,6 +1033,8 @@ static void destroy_slab_table(void *data)
     uint32_t count, flags;
     size_t page_size_long = (size_t)page_size;
 
+    if (info == NULL)
+        return;
     for (i = 0; i <= MAX_SLAB_IDX; i++) {
         if(info[i].available != NULL) {
             slab_ring_set_flags(info[i].available, SLAB_RING_ORPHANED, &count, &flags);
@@ -1045,6 +1045,8 @@ static void destroy_slab_table(void *data)
             }
         }
     }
+    SLAB_DBG_EVENT("allocator", info, "free");
+    pthread_setspecific(thread_slab_key, NULL);
     free(info);
 }
 
@@ -1104,6 +1106,11 @@ static __attribute__((constructor)) void setup_slab_allocator()
  */
 static __attribute__((destructor)) void slab_cleanup()
 {
+
+    /*
+     * Clear the main thread allocator
+     */
+    destroy_slab_table(pthread_getspecific(thread_slab_key));
 #ifdef SLAB_DEBUG
     fclose(slab_fp);
 #endif
@@ -1138,5 +1145,6 @@ static __attribute__((destructor)) void slab_cleanup()
     if (fp != stderr)
         fclose(fp);
 #endif
+
     pthread_key_delete(thread_slab_key);
 }
