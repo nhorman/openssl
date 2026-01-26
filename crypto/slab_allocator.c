@@ -262,22 +262,6 @@ struct slab_info {
     size_t obj_size;
 
     /**
-     * The start of the slab_info array for the thread that owns this slab allocator
-     */
-    struct slab_info *thread_info_start;
-
-    /**
-     * The total count of slabs in all slabs that came form this threads slab allocator
-     */
-    size_t *total_allocated_slabs;
-
-#define THREAD_HAS_EXITED 0
-    /**
-     * Flags shared by all the slabs for this threads allocator
-     */
-    uint32_t *shared_flags;
-
-    /**
      * Allocation and slab lifecycle statistics for this size class.
      */
 #ifdef SLAB_STATS
@@ -323,9 +307,9 @@ struct slab_info {
 #define MAX_SLAB 1 << MAX_SLAB_IDX
 
 #ifdef SLAB_STATS
-#define SLAB_INFO_INITIALIZER(order) { NULL, 1 << (order), NULL, NULL, NULL, &stats[(order)], { 0 } }
+#define SLAB_INFO_INITIALIZER(order) { NULL, 1 << (order), &stats[(order)], { 0 } }
 #else
-#define SLAB_INFO_INITIALIZER(order) { NULL, 1 << (order), NULL, NULL, NULL, { 0 } }
+#define SLAB_INFO_INITIALIZER(order) { NULL, 1 << (order), { 0 } }
 #endif
 
 #ifdef SLAB_STATS
@@ -361,31 +345,16 @@ static struct slab_info slabs[] = {
 static inline struct slab_info *get_thread_slab_table()
 {
     struct slab_info *info = pthread_getspecific(thread_slab_key);
-    uint32_t i;
 
     if (info == NULL) {
         /*
-         * allocate enough space for:
-         * 1) The copy of the template table
-         * 2) The total object count shared by all slabs
-         * 3) The shared flags common to all slabs in this thread allocator
-         * Note we use calloc here to avoid having to zero the flags and total
-         * allocated obj count below
+         * allocate enough space for our thread allocator
          */
-        info = calloc(1, sizeof(slabs) + sizeof(size_t) + sizeof(uint32_t));
+        info = calloc(1, sizeof(slabs) + sizeof(size_t));
         if (info == NULL)
             return NULL;
         memcpy(info, slabs, sizeof(slabs));
-        /*
-         * need to fix up a few pointers
-         */
-        for (i = 0; i <= MAX_SLAB_IDX; i++) {
-            /* point to the start of the table */
-            info[i].thread_info_start = info;
-            /* point to immediately after the table for all slabs */
-            info[i].total_allocated_slabs = (size_t *)(((unsigned char *)info) + sizeof(slabs));
-            info[i].shared_flags = (uint32_t *)(info[i].total_allocated_slabs + 1);
-        }
+
         pthread_setspecific(thread_slab_key, info);
         SLAB_DBG_LOG("create_allocator: Create Allocator %p\n", (void *)info);
     }
@@ -1066,7 +1035,6 @@ static void destroy_slab_table(void *data)
     uint32_t count, flags;
     size_t page_size_long = (size_t)page_size;
 
-    slab_set_flag(info->shared_flags, THREAD_HAS_EXITED);
     for (i = 0; i <= MAX_SLAB_IDX; i++) {
         if(info[i].available != NULL) {
             slab_ring_set_flags(info[i].available, SLAB_RING_ORPHANED, &count, &flags);
