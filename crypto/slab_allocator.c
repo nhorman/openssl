@@ -657,7 +657,7 @@ static struct slab_ring *create_new_slab(struct slab_info *slab)
     new_ring->bitmap[new_ring->bitmap_word_count - 1] = slab->template.last_word_mask;
     new_ring->obj_start = (void *)(new_ring->bitmap + new_ring->bitmap_word_count);
     new_ring->magic = SLAB_MAGIC;
-    INC_SLAB_STAT(&new->stats->slab_allocs);
+    INC_SLAB_STAT(&new_ring->stats->slab_allocs);
     return new_ring;
 }
 
