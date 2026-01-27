@@ -135,6 +135,7 @@ static void cleanup(void)
     BIO_free_all(bio_in);
     BIO_free_all(bio_out);
     BIO_free_all(bio_err);
+    OPENSSL_cleanup();
 }
 
 static int setup(void)
