@@ -100,13 +100,13 @@ struct slab_info;
 
 #ifdef SLAB_DEBUG
 FILE *slab_fp = NULL;
-#define SLAB_DBG_LOG(fmt, ...) fprintf(slab_fp, fmt, __VA_ARGS__)
+#define SLAB_DBG_LOG(fmt, ...) fprintf(slab_fp, fmt, __VA_ARGS__); fflush(slab_fp)
 #else
 #define SLAB_DBG_LOG(fmt, ...)
 #endif
 
-#define SLAB_DBG_EVENT_SZ(typ, addr, sz, event) SLAB_DBG_LOG("type:%s:addr:%p:size:%lu:event:%s\n", typ, (void *)addr, sz, event)
-#define SLAB_DBG_EVENT(typ, addr, event) SLAB_DBG_LOG("type:%s:addr:%p:event:%s\n", typ, (void *)addr, event)
+#define SLAB_DBG_EVENT_SZ(typ, addr, sz, event) SLAB_DBG_LOG("type:%s|addr:%p|event:%s|size:%lu|func:%s|line:%lu\n", typ, (void *)addr, event, sz, OPENSSL_FUNC, OPENSSL_LINE)
+#define SLAB_DBG_EVENT(typ, addr, event) SLAB_DBG_LOG("type:%s|addr:%p|event:%s|func:%s|line:%lu\n", typ, (void *)addr, event, OPENSSL_FUNC, OPENSSL_LINE)
 #define SLAB_MAGIC 0xdeadf00ddeadf00dUL
 
 #ifdef SLAB_STATS
@@ -845,12 +845,16 @@ static void *slab_malloc(size_t num, const char *file, int line)
      * if we are requested to provide an allocation larger than our biggest
      * slab, just use malloc
      */
-    if (num > MAX_SLAB)
-        return malloc(num);
+    if (num > MAX_SLAB) {
+        ret = malloc(num);
+        SLAB_DBG_EVENT_SZ("nonslab-obj", ret, num, "allocate");
+        return ret;
+    }
 
     slab_idx = get_slab_idx(num);
     INC_SLAB_STAT(&myslabs[slab_idx].stats->allocs);
     ret = get_slab_obj(&myslabs[slab_idx]);
+    SLAB_DBG_EVENT_SZ("obj", ret, num, "allocate");
     return ret;
 }
 
@@ -886,11 +890,13 @@ static void slab_free(void *addr, const char *file, int line)
      * just get freed as they normally would
      */
     if (addr == NULL || !is_obj_slab(addr)) {
+        SLAB_DBG_EVENT("nonslab-obj", addr, "free");
         free(addr);
         return;
     }
     ring = get_slab_ring(addr);
     INC_SLAB_STAT(&ring->stats->frees);
+    SLAB_DBG_EVENT("obj", addr, "free");
     return_to_slab(addr, ring);
 }
 
@@ -944,8 +950,12 @@ static void *slab_realloc(void *addr, size_t num, const char *file, int line)
      * if the incomming address is not part of a slab already, then its
      * too big for the slab allocator, and se just use realloc
      */
-    if (!is_obj_slab(addr))
-        return realloc(addr, num);
+    if (!is_obj_slab(addr)) {
+        SLAB_DBG_EVENT("nonslab-obj", addr, "free");
+        new = realloc(addr, num);
+        SLAB_DBG_EVENT_SZ("nonslab-obj", addr, num, "allocate");
+        return new;
+    }
 
     ring = get_slab_ring(addr);
 
@@ -954,6 +964,7 @@ static void *slab_realloc(void *addr, size_t num, const char *file, int line)
      */
     if (num > MAX_SLAB) {
         new = malloc(num);
+        SLAB_DBG_EVENT_SZ("nonslab-obj", new, num, "allocate");
         /*
          * If we get an object, then copy the size of the old object
          * to the new object, which is guaranteed to be less than what
