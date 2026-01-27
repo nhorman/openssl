@@ -105,8 +105,8 @@ FILE *slab_fp = NULL;
 #define SLAB_DBG_LOG(fmt, ...)
 #endif
 
-#define SLAB_DBG_EVENT_SZ(typ, addr, sz, event) SLAB_DBG_LOG("type:%s|addr:%p|event:%s|size:%lu|func:%s|line:%lu\n", typ, (void *)addr, event, sz, OPENSSL_FUNC, OPENSSL_LINE)
-#define SLAB_DBG_EVENT(typ, addr, event) SLAB_DBG_LOG("type:%s|addr:%p|event:%s|func:%s|line:%lu\n", typ, (void *)addr, event, OPENSSL_FUNC, OPENSSL_LINE)
+#define SLAB_DBG_EVENT_SZ(typ, addr, sz, event) SLAB_DBG_LOG("type:%s|addr:%p|event:%s|size:%lu|func:%s|line:%d\n", typ, (void *)addr, event, sz, OPENSSL_FUNC, OPENSSL_LINE)
+#define SLAB_DBG_EVENT(typ, addr, event) SLAB_DBG_LOG("type:%s|addr:%p|event:%s|func:%s|line:%d\n", typ, (void *)addr, event, OPENSSL_FUNC, OPENSSL_LINE)
 #define SLAB_MAGIC 0xdeadf00ddeadf00dUL
 
 #ifdef SLAB_STATS
@@ -953,7 +953,7 @@ static void *slab_realloc(void *addr, size_t num, const char *file, int line)
     if (!is_obj_slab(addr)) {
         SLAB_DBG_EVENT("nonslab-obj", addr, "free");
         new = realloc(addr, num);
-        SLAB_DBG_EVENT_SZ("nonslab-obj", addr, num, "allocate");
+        SLAB_DBG_EVENT_SZ("nonslab-obj", new, num, "allocate");
         return new;
     }
 
