@@ -698,8 +698,9 @@ static void *create_obj_in_new_slab(struct slab_info *slab)
         if (ring_count == 0) {
             INC_SLAB_STAT(&new->stats->slab_frees);
             SLAB_DBG_EVENT("slab",new,"free");
-            if (munmap(new, page_size_long))
+            if (munmap(new, page_size_long)) {
                 INC_SLAB_STAT(&new->stats->failed_slab_frees);
+            }
         }
     }
     return obj;
@@ -800,8 +801,9 @@ static void return_to_slab(void *addr, struct slab_ring *ring)
            * return the slab to the OS with munmap
            */
           SLAB_DBG_EVENT("slab",ring,"free");
-          if (munmap(ring, page_size_long))
+          if (munmap(ring, page_size_long)) {
               INC_SLAB_STAT(&ring->stats->failed_slab_frees);
+          }
     }
 }
 /**
@@ -1083,8 +1085,9 @@ static void destroy_slab_table(void *data)
             if (count == 0) {
                 INC_SLAB_STAT(&info[i].stats->slab_frees);
                 SLAB_DBG_EVENT("slab",info[i].available,"free");
-                if (munmap(info[i].available, page_size_long))
+                if (munmap(info[i].available, page_size_long)) {
                     INC_SLAB_STAT(&info[i].stats->failed_slab_frees);
+                }
             }
         }
     }
