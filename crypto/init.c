@@ -220,8 +220,10 @@ void OPENSSL_cleanup(void)
      */
 
     /* If we've not been inited then no need to deinit */
-    if (!base_inited)
+    if (!base_inited) {
+        ossl_lib_ctx_default_deinit();
         return;
+    }
 
     /* Might be explicitly called */
     if (stopped)
