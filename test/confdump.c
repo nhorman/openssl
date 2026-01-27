@@ -47,5 +47,6 @@ int main(int argc, char **argv)
         ERR_print_errors_fp(stderr);
     }
     NCONF_free(conf);
+    OPENSSL_cleanup();
     return ret;
 }
