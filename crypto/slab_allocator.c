@@ -105,6 +105,7 @@ FILE *slab_fp = NULL;
 #define SLAB_DBG_LOG(fmt, ...)
 #endif
 
+#define SLAB_DBG_EVENT_SZ(typ, addr, sz, event) SLAB_DBG_LOG("type:%s:addr:%p:size:%lu:event:%s\n", typ, (void *)addr, sz, event)
 #define SLAB_DBG_EVENT(typ, addr, event) SLAB_DBG_LOG("type:%s:addr:%p:event:%s\n", typ, (void *)addr, event)
 #define SLAB_MAGIC 0xdeadf00ddeadf00dUL
 
@@ -357,7 +358,7 @@ static inline struct slab_info *get_thread_slab_table()
         memcpy(info, slabs, sizeof(slabs));
 
         pthread_setspecific(thread_slab_key, info);
-        SLAB_DBG_EVENT("allocator", info, "allocate");
+        SLAB_DBG_EVENT_SZ("allocator", info, sizeof(slabs), "allocate");
     }
     return info;
 }
@@ -655,7 +656,7 @@ static struct slab_ring *create_new_slab(struct slab_info *slab)
     new_ring->obj_start = (void *)(new_ring->bitmap + new_ring->bitmap_word_count);
     new_ring->magic = SLAB_MAGIC;
     INC_SLAB_STAT(&new_ring->stats->slab_allocs);
-    SLAB_DBG_EVENT("slab",new_ring,"allocate");
+    SLAB_DBG_EVENT_SZ("slab",new_ring, page_size_long, "allocate");
     return new_ring;
 }
 
@@ -798,7 +799,7 @@ static void return_to_slab(void *addr, struct slab_ring *ring)
           /*
            * return the slab to the OS with munmap
            */
-          SLAB_DBG_EVENT("slab",ring,"allocate");
+          SLAB_DBG_EVENT("slab",ring,"free");
           if (munmap(ring, page_size_long))
               INC_SLAB_STAT(&ring->stats->failed_slab_frees);
     }
