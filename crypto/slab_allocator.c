@@ -503,6 +503,13 @@ static inline struct slab_ring *get_slab_ring(void *addr)
     return (struct slab_ring *)PAGE_START(addr);
 }
 
+static inline __attribute__((no_sanitize("address"))) int is_slab_magic_correct(void *addr)
+{
+    struct slab_ring *ring = get_slab_ring(addr);
+
+    return (ring->magic == SLAB_MAGIC) ? 1 : 0;
+}
+
 /**
  * @brief Determine whether an address belongs to an object slab.
  *
@@ -516,9 +523,29 @@ static inline struct slab_ring *get_slab_ring(void *addr)
  */
 static inline int is_obj_slab(void *addr)
 {
-    struct slab_ring *slab = get_slab_ring(addr);
+    uintptr_t brk_limit = (uintptr_t)sbrk(0);
 
-    return (slab->magic == SLAB_MAGIC) ? 1 : 0;
+    /*
+     * check to see if this address is below the brk limit
+     * if it is, we know that this isn't a slab
+     * We do this as a check before we trucate the address
+     * to find the page start, which may not be initialized
+     * for non slab allocations.  If we don't then things like
+     * asan get cranky and warn us about uninitialized usage
+     */
+    if ((uintptr_t)addr < brk_limit)
+        return 0;
+
+    /*
+     * also check if the address is on a page boundary
+     * This indicates that it is not a slab, as slab objects
+     * never start on a page boundary, due to the page_ring meta
+     * data being at the start of every slab
+     */
+    if ((uintptr_t)addr == (uintptr_t)PAGE_START(addr))
+        return 0;
+
+    return is_slab_magic_correct(addr);
 }
 
 /**
