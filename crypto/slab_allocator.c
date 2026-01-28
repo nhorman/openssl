@@ -259,6 +259,11 @@ struct slab_class {
     struct slab_data *available;
 
     /**
+     * Victim cache to recycle a slab to avoid mumap if possible
+     */
+    struct slab_data *victim;
+
+    /**
      * Size in bytes of each object allocated from this size class.
      */
     size_t obj_size;
@@ -305,13 +310,13 @@ struct slab_class {
  * Power-of-two exponent used to derive the object size for the slab
  * size class.
  */
-#define MAX_SLAB_IDX 8
+#define MAX_SLAB_IDX 10
 #define MAX_SLAB 1 << MAX_SLAB_IDX
 
 #ifdef SLAB_STATS
-#define SLAB_INFO_INITIALIZER(order) { NULL, 1 << (order), &stats[(order)], { 0 } }
+#define SLAB_INFO_INITIALIZER(order) { NULL, NULL, 1 << (order), &stats[(order)], { 0 } }
 #else
-#define SLAB_INFO_INITIALIZER(order) { NULL, 1 << (order), { 0 } }
+#define SLAB_INFO_INITIALIZER(order) { NULL, NULL, 1 << (order), { 0 } }
 #endif
 
 #ifdef SLAB_STATS
@@ -342,6 +347,8 @@ static struct slab_class slabs[] = {
     SLAB_INFO_INITIALIZER(6),
     SLAB_INFO_INITIALIZER(7),
     SLAB_INFO_INITIALIZER(8),
+    SLAB_INFO_INITIALIZER(9),
+    SLAB_INFO_INITIALIZER(10),
 };
 
 static inline struct slab_class *get_thread_slab_table()
@@ -352,7 +359,7 @@ static inline struct slab_class *get_thread_slab_table()
         /*
          * allocate enough space for our thread allocator
          */
-        info = calloc(1, sizeof(slabs) + sizeof(size_t));
+        info = calloc(1, sizeof(slabs));
         if (info == NULL)
             return NULL;
         memcpy(info, slabs, sizeof(slabs));
@@ -449,8 +456,8 @@ static inline void slab_data_mod_allocated_state(struct slab_data *ring,
         *new_flags |= flags;
         new_allocated_state = ((uint64_t)*new_flags << 32) | (uint64_t)*new_count;
         if (__atomic_compare_exchange_n(&ring->allocated_state, &curr_allocated_state,
-                                        new_allocated_state, 0, __ATOMIC_RELEASE,
-                                        __ATOMIC_ACQUIRE))
+                                        new_allocated_state, 0, __ATOMIC_ACQ_REL,
+                                        __ATOMIC_RELAXED))
             break;
     }
 }
