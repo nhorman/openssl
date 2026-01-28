@@ -12,8 +12,9 @@
 #include "internal/der.h"
 
 /* Well known OIDs precompiled */
-{-
-    $OUT = oids_to_c::process_leaves('providers/common/der/wrap.asn1',
-                                     { dir => $config{sourcedir},
-                                       filter => \&oids_to_c::filter_to_H });
--}
+{
+    -$OUT = oids_to_c::process_leaves('providers/common/der/wrap.asn1',
+        { dir = > $config { sourcedir },
+            filter = > \& oids_to_c::filter_to_H });
+    -
+}

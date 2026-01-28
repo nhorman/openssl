@@ -13,14 +13,15 @@
 #include "internal/der.h"
 
 /* Well known OIDs precompiled */
-{-
-    $OUT = oids_to_c::process_leaves('providers/common/der/SM2.asn1',
-                                     { dir => $config{sourcedir},
-                                       filter => \&oids_to_c::filter_to_H });
--}
+{
+    -$OUT = oids_to_c::process_leaves('providers/common/der/SM2.asn1',
+        { dir = > $config { sourcedir },
+            filter = > \& oids_to_c::filter_to_H });
+    -
+}
 
 /* Subject Public Key Info */
 int ossl_DER_w_algorithmIdentifier_SM2(WPACKET *pkt, int cont, EC_KEY *ec);
 /* Signature */
 int ossl_DER_w_algorithmIdentifier_SM2_with_MD(WPACKET *pkt, int cont,
-                                               EC_KEY *ec, int mdnid);
+    EC_KEY *ec, int mdnid);

@@ -14,12 +14,12 @@
 
 #include "testutil.h"
 
-#define ENCRYPT  1
-#define DECRYPT  0
+#define ENCRYPT 1
+#define DECRYPT 0
 
-#define DATA_SIZE    1024
-#define MAX_IV       32
-#define BUF_SIZE     (DATA_SIZE + MAX_IV)
+#define DATA_SIZE 1024
+#define MAX_IV 32
+#define BUF_SIZE (DATA_SIZE + MAX_IV)
 
 static const unsigned char KEY[] = {
     0x51, 0x50, 0xd1, 0x77, 0x2f, 0x50, 0x83, 0x4a,
@@ -35,8 +35,8 @@ static const unsigned char IV[] = {
     0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08
 };
 
-static int do_bio_cipher(const EVP_CIPHER* cipher, const unsigned char* key,
-    const unsigned char* iv)
+static int do_bio_cipher(const EVP_CIPHER *cipher, const unsigned char *key,
+    const unsigned char *iv)
 {
     BIO *b, *mem;
     static unsigned char inp[BUF_SIZE] = { 0 };
@@ -108,7 +108,7 @@ static int do_bio_cipher(const EVP_CIPHER* cipher, const unsigned char* key,
             goto err;
         BIO_push(b, mem);
         memset(out, 0, sizeof(out));
-        for (len = 0; (delta = BIO_read(b, out + len, i)); ) {
+        for (len = 0; (delta = BIO_read(b, out + len, i));) {
             len += delta;
         }
         BIO_free_all(b);
@@ -186,7 +186,7 @@ static int do_bio_cipher(const EVP_CIPHER* cipher, const unsigned char* key,
             goto err;
         BIO_push(b, mem);
         memset(out, 0, sizeof(out));
-        for (len = 0; (delta = BIO_read(b, out + len, i)); ) {
+        for (len = 0; (delta = BIO_read(b, out + len, i));) {
             len += delta;
         }
         BIO_free_all(b);
@@ -204,14 +204,13 @@ err:
     return 0;
 }
 
-static int do_test_bio_cipher(const EVP_CIPHER* cipher, int idx)
+static int do_test_bio_cipher(const EVP_CIPHER *cipher, int idx)
 {
-    switch(idx)
-    {
-        case 0:
-            return do_bio_cipher(cipher, KEY, NULL);
-        case 1:
-            return do_bio_cipher(cipher, KEY, IV);
+    switch (idx) {
+    case 0:
+        return do_bio_cipher(cipher, KEY, NULL);
+    case 1:
+        return do_bio_cipher(cipher, KEY, IV);
     }
     return 0;
 }
@@ -236,19 +235,19 @@ static int test_bio_enc_aes_256_ofb(int idx)
     return do_test_bio_cipher(EVP_aes_256_ofb(), idx);
 }
 
-# ifndef OPENSSL_NO_CHACHA
+#ifndef OPENSSL_NO_CHACHA
 static int test_bio_enc_chacha20(int idx)
 {
     return do_test_bio_cipher(EVP_chacha20(), idx);
 }
 
-#  ifndef OPENSSL_NO_POLY1305
+#ifndef OPENSSL_NO_POLY1305
 static int test_bio_enc_chacha20_poly1305(int idx)
 {
     return do_test_bio_cipher(EVP_chacha20_poly1305(), idx);
 }
-#  endif
-# endif
+#endif
+#endif
 
 int setup_tests(void)
 {
@@ -256,11 +255,11 @@ int setup_tests(void)
     ADD_ALL_TESTS(test_bio_enc_aes_128_ctr, 2);
     ADD_ALL_TESTS(test_bio_enc_aes_256_cfb, 2);
     ADD_ALL_TESTS(test_bio_enc_aes_256_ofb, 2);
-# ifndef OPENSSL_NO_CHACHA
+#ifndef OPENSSL_NO_CHACHA
     ADD_ALL_TESTS(test_bio_enc_chacha20, 2);
-#  ifndef OPENSSL_NO_POLY1305
+#ifndef OPENSSL_NO_POLY1305
     ADD_ALL_TESTS(test_bio_enc_chacha20_poly1305, 2);
-#  endif
-# endif
+#endif
+#endif
     return 1;
 }

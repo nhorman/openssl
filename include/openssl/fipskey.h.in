@@ -10,26 +10,26 @@
  */
 
 #ifndef OPENSSL_FIPSKEY_H
-# define OPENSSL_FIPSKEY_H
-# pragma once
+#define OPENSSL_FIPSKEY_H
+#pragma once
 
-# ifdef  __cplusplus
+#ifdef __cplusplus
 extern "C" {
-# endif
+#endif
 
 /*
  * The FIPS validation HMAC key, usable as an array initializer.
  */
 #define FIPS_KEY_ELEMENTS \
-    {- join(', ', map { "0x$_" } unpack("(A2)*", $config{FIPSKEY})) -}
+    { -join(', ', map { "0x$_" } unpack("(A2)*", $config { FIPSKEY })) - }
 
 /*
  * The FIPS validation key, as a string.
  */
 #define FIPS_KEY_STRING "{- $config{FIPSKEY} -}"
 
-# ifdef  __cplusplus
+#ifdef __cplusplus
 }
-# endif
+#endif
 
 #endif

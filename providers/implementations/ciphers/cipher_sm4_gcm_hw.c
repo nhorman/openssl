@@ -15,29 +15,29 @@
 #include "crypto/sm4_platform.h"
 
 static int sm4_gcm_initkey(PROV_GCM_CTX *ctx, const unsigned char *key,
-                           size_t keylen)
+    size_t keylen)
 {
     PROV_SM4_GCM_CTX *actx = (PROV_SM4_GCM_CTX *)ctx;
     SM4_KEY *ks = &actx->ks.ks;
 
-# ifdef HWSM4_CAPABLE
+#ifdef HWSM4_CAPABLE
     if (HWSM4_CAPABLE) {
         HWSM4_set_encrypt_key(key, ks);
-        CRYPTO_gcm128_init(&ctx->gcm, ks, (block128_f) HWSM4_encrypt);
-#  ifdef HWSM4_ctr32_encrypt_blocks
-        ctx->ctr = (ctr128_f) HWSM4_ctr32_encrypt_blocks;
-#  else /* HWSM4_ctr32_encrypt_blocks */
+        CRYPTO_gcm128_init(&ctx->gcm, ks, (block128_f)HWSM4_encrypt);
+#ifdef HWSM4_ctr32_encrypt_blocks
+        ctx->ctr = (ctr128_f)HWSM4_ctr32_encrypt_blocks;
+#else /* HWSM4_ctr32_encrypt_blocks */
         ctx->ctr = (ctr128_f)NULL;
-#  endif
+#endif
     } else
-# endif /* HWSM4_CAPABLE */
-# ifdef VPSM4_CAPABLE
-    if (VPSM4_CAPABLE) {
+#endif /* HWSM4_CAPABLE */
+#ifdef VPSM4_CAPABLE
+        if (VPSM4_CAPABLE) {
         vpsm4_set_encrypt_key(key, ks);
-        CRYPTO_gcm128_init(&ctx->gcm, ks, (block128_f) vpsm4_encrypt);
-        ctx->ctr = (ctr128_f) vpsm4_ctr32_encrypt_blocks;
+        CRYPTO_gcm128_init(&ctx->gcm, ks, (block128_f)vpsm4_encrypt);
+        ctx->ctr = (ctr128_f)vpsm4_ctr32_encrypt_blocks;
     } else
-# endif /* VPSM4_CAPABLE */
+#endif /* VPSM4_CAPABLE */
     {
         ossl_sm4_set_key(key, ks);
         CRYPTO_gcm128_init(&ctx->gcm, ks, (block128_f)ossl_sm4_encrypt);
@@ -49,7 +49,7 @@ static int sm4_gcm_initkey(PROV_GCM_CTX *ctx, const unsigned char *key,
 }
 
 static int hw_gcm_cipher_update(PROV_GCM_CTX *ctx, const unsigned char *in,
-                                size_t len, unsigned char *out)
+    size_t len, unsigned char *out)
 {
     if (ctx->enc) {
         if (ctx->ctr != NULL) {
