@@ -108,8 +108,8 @@ FILE *slab_fp = NULL;
 #define SLAB_DBG_LOG(fmt, ...)
 #endif
 
-#define SLAB_DBG_EVENT_SZ(typ, addr, sz, event) SLAB_DBG_LOG("type:%s|addr:%p|event:%s|size:%lu|func:%s|line:%d\n", typ, (void *)addr, event, sz, OPENSSL_FUNC, OPENSSL_LINE)
-#define SLAB_DBG_EVENT(typ, addr, event) SLAB_DBG_LOG("type:%s|addr:%p|event:%s|func:%s|line:%d\n", typ, (void *)addr, event, OPENSSL_FUNC, OPENSSL_LINE)
+#define SLAB_DBG_EVENT_SZ(typ, addr, sz, event, file, line) SLAB_DBG_LOG("type:%s|addr:%p|event:%s|size:%lu|func:%s|line:%d\n", typ, (void *)addr, event, sz, file == NULL ? OPENSSL_FUNC : file, file == NULL ? OPENSSL_LINE: line)
+#define SLAB_DBG_EVENT(typ, addr, event, file, line) SLAB_DBG_LOG("type:%s|addr:%p|event:%s|func:%s|line:%d\n", typ, (void *)addr, event, file == NULL ? OPENSSL_FUNC : file, file == NULL ? OPENSSL_LINE : line)
 #define SLAB_MAGIC 0xdeadf00ddeadf00dUL
 
 #ifdef SLAB_STATS
@@ -370,7 +370,7 @@ static inline struct slab_class *get_thread_slab_table()
         memcpy(info, slabs, sizeof(slabs));
 
         pthread_setspecific(thread_slab_key, info);
-        SLAB_DBG_EVENT_SZ("allocator", info, sizeof(slabs), "allocate");
+        SLAB_DBG_EVENT_SZ("allocator", info, sizeof(slabs), "allocate", NULL, 0);
     }
     return info;
 }
@@ -734,7 +734,7 @@ static struct slab_data *create_new_slab(struct slab_class *slab)
     new_ring->bitmap[new_ring->bitmap_word_count - 1] = slab->template.last_word_mask;
     new_ring->obj_start = (void *)(new_ring->bitmap + new_ring->bitmap_word_count);
     new_ring->magic = SLAB_MAGIC;
-    SLAB_DBG_EVENT_SZ("slab",new_ring, page_size_long, "allocate");
+    SLAB_DBG_EVENT_SZ("slab",new_ring, page_size_long, "allocate", NULL, 0);
     return new_ring;
 }
 
@@ -778,7 +778,7 @@ static void *create_obj_in_new_slab(struct slab_class *slab)
             if (!__atomic_compare_exchange_n(&slab->victim, &victim_data, new,
                                          0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)) {
                 INC_SLAB_STAT(&new->stats->slab_frees);
-                SLAB_DBG_EVENT("slab",new,"free");
+                SLAB_DBG_EVENT("slab",new,"free", NULL, 0);
                 if (munmap(new, page_size_long)) {
                     INC_SLAB_STAT(&new->stats->failed_slab_frees);
                 }
@@ -893,7 +893,7 @@ static void return_to_slab(void *addr, struct slab_data *ring)
             /*
              * return the slab to the OS with munmap
              */
-            SLAB_DBG_EVENT("slab",ring,"free");
+            SLAB_DBG_EVENT("slab",ring,"free", NULL, 0);
             if (munmap(ring, page_size_long)) {
                 INC_SLAB_STAT(&ring->stats->failed_slab_frees);
             }
@@ -949,14 +949,14 @@ static void *slab_malloc(size_t num, const char *file, int line)
      */
     if (num > MAX_SLAB) {
         ret = malloc(num);
-        SLAB_DBG_EVENT_SZ("nonslab-obj", ret, num, "allocate");
+        SLAB_DBG_EVENT_SZ("nonslab-obj", ret, num, "allocate", file, line);
         return ret;
     }
 
     slab_idx = get_slab_idx(num);
     INC_SLAB_STAT(&myslabs[slab_idx].stats->allocs);
     ret = get_slab_obj(&myslabs[slab_idx]);
-    SLAB_DBG_EVENT_SZ("obj", ret, num, "allocate");
+    SLAB_DBG_EVENT_SZ("obj", ret, num, "allocate", file, line);
     return ret;
 }
 
@@ -992,13 +992,13 @@ static void slab_free(void *addr, const char *file, int line)
      * just get freed as they normally would
      */
     if (addr == NULL || !is_obj_slab(addr)) {
-        SLAB_DBG_EVENT("nonslab-obj", addr, "free");
+        SLAB_DBG_EVENT("nonslab-obj", addr, "free", file, line);
         free(addr);
         return;
     }
     ring = get_slab_data(addr);
     INC_SLAB_STAT(&ring->stats->frees);
-    SLAB_DBG_EVENT("obj", addr, "free");
+    SLAB_DBG_EVENT("obj", addr, "free", file, line);
     return_to_slab(addr, ring);
 }
 
@@ -1053,9 +1053,9 @@ static void *slab_realloc(void *addr, size_t num, const char *file, int line)
      * too big for the slab allocator, and se just use realloc
      */
     if (!is_obj_slab(addr)) {
-        SLAB_DBG_EVENT("nonslab-obj", addr, "free");
+        SLAB_DBG_EVENT("nonslab-obj", addr, "free", file, line);
         new = realloc(addr, num);
-        SLAB_DBG_EVENT_SZ("nonslab-obj", new, num, "allocate");
+        SLAB_DBG_EVENT_SZ("nonslab-obj", new, num, "allocate", file, line);
         return new;
     }
 
@@ -1066,7 +1066,7 @@ static void *slab_realloc(void *addr, size_t num, const char *file, int line)
      */
     if (num > MAX_SLAB) {
         new = malloc(num);
-        SLAB_DBG_EVENT_SZ("nonslab-obj", new, num, "allocate");
+        SLAB_DBG_EVENT_SZ("nonslab-obj", new, num, "allocate", file, line);
         /*
          * If we get an object, then copy the size of the old object
          * to the new object, which is guaranteed to be less than what
@@ -1093,7 +1093,7 @@ static void *slab_realloc(void *addr, size_t num, const char *file, int line)
      * We need to swap slab objects, so get one from the next size we need
      */
 
-    new = slab_malloc(num, NULL, 0);
+    new = slab_malloc(num, file, line);
 
     /*
      * And if its not null, copy the old object into the new space
@@ -1104,7 +1104,7 @@ static void *slab_realloc(void *addr, size_t num, const char *file, int line)
     /*
      * and free the old object
      */
-    slab_free(addr, NULL, 0);
+    slab_free(addr, file, line);
     return new;
 }
 
@@ -1184,21 +1184,21 @@ static void destroy_slab_table(void *data)
             slab_data_set_flags(info[i].available, SLAB_RING_ORPHANED, &count, &flags);
             if (count == 0) {
                 INC_SLAB_STAT(&info[i].stats->slab_frees);
-                SLAB_DBG_EVENT("slab",info[i].available,"free");
+                SLAB_DBG_EVENT("slab",info[i].available,"free", NULL, 0);
                 if (munmap(info[i].available, page_size_long)) {
                     INC_SLAB_STAT(&info[i].stats->failed_slab_frees);
                 }
             }
             if (info[i].victim != NULL) {
                 INC_SLAB_STAT(&info[i].stats->slab_frees);
-                SLAB_DBG_EVENT("slab",info[i].victim,"free");
+                SLAB_DBG_EVENT("slab",info[i].victim,"free", NULL, 0);
                 if (munmap(info[i].victim, page_size_long)) {
                     INC_SLAB_STAT(&info[i].stats->failed_slab_frees);
                }
             }
         }
     }
-    SLAB_DBG_EVENT("allocator", info, "free");
+    SLAB_DBG_EVENT("allocator", info, "free", NULL, 0);
     pthread_setspecific(thread_slab_key, NULL);
     free(info);
 }
