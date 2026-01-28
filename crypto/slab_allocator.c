@@ -58,7 +58,7 @@
  * Cached system page size in bytes. Initialized on first use and shared
  * by all slab allocator components to ensure consistent slab sizing.
  *
- * @struct slab_info
+ * @struct slab_class
  * Forward declaration of the internal slab metadata structure. The full
  * definition is private to the allocator implementation.
  *
@@ -96,7 +96,7 @@ static long page_size = 0;
 
 static pthread_key_t thread_slab_key;
 
-struct slab_info;
+struct slab_class;
 
 #ifdef SLAB_DEBUG
 FILE *slab_fp = NULL;
@@ -164,7 +164,7 @@ static inline int slab_test_flag(uint32_t *flagptr, uint8_t flagbit)
 }
 
 /**
- * @struct slab_ring
+ * @struct slab_data
  * @brief Runtime metadata for a single slab page.
  *
  * This structure represents one slab instance backing allocations of a
@@ -175,7 +175,7 @@ static inline int slab_test_flag(uint32_t *flagptr, uint8_t flagbit)
  * availability is managed via a bitmap, where each bit represents the
  * allocation state of a single object within the slab.
  */
-struct slab_ring {
+struct slab_data {
     /**
      * Pointer to the slab size-class descriptor associated with this slab.
      */
@@ -243,7 +243,7 @@ struct slab_template {
 };
 
 /**
- * @struct slab_info
+ * @struct slab_class
  * @brief Size-class descriptor for the slab allocator.
  *
  * This structure represents a single allocation size class and owns all
@@ -251,12 +251,12 @@ struct slab_template {
  * the list of active slabs, synchronization primitives, and precomputed
  * layout information shared by those slabs.
  */
-struct slab_info {
+struct slab_class {
     /**
      * Pointer to a slab that currently has free objects available.
      * This is a fast-path hint and may be NULL if no slab is available.
      */
-    struct slab_ring *available;
+    struct slab_data *available;
 
     /**
      * Size in bytes of each object allocated from this size class.
@@ -297,7 +297,7 @@ struct slab_info {
  * before template values are computed.
  *
  * @def SLAB_INFO_INITIALIZER
- * Static initializer for a @ref slab_info structure. Initializes the
+ * Static initializer for a @ref slab_class structure. Initializes the
  * read-write lock, slab list, object size (derived from @p order), and
  * assigns an empty slab template.
  *
@@ -326,13 +326,13 @@ static struct slab_stats stats[MAX_SLAB_IDX + 1] = { { 0 } };
  * at 1 byte (order 0) and extending up to @ref MAX_SLAB bytes.
  *
  * The array index represents the size-class order, and the associated
- * @ref slab_info structure manages all slabs servicing allocations of
+ * @ref slab_class structure manages all slabs servicing allocations of
  * size 1 << index.
  *
  * Entries are statically initialized using @ref SLAB_INFO_INITIALIZER
  * and completed during allocator initialization.
  */
-static struct slab_info slabs[] = {
+static struct slab_class slabs[] = {
     SLAB_INFO_INITIALIZER(0),
     SLAB_INFO_INITIALIZER(1),
     SLAB_INFO_INITIALIZER(2),
@@ -344,9 +344,9 @@ static struct slab_info slabs[] = {
     SLAB_INFO_INITIALIZER(8),
 };
 
-static inline struct slab_info *get_thread_slab_table()
+static inline struct slab_class *get_thread_slab_table()
 {
-    struct slab_info *info = pthread_getspecific(thread_slab_key);
+    struct slab_class *info = pthread_getspecific(thread_slab_key);
 
     if (info == NULL) {
         /*
@@ -432,7 +432,7 @@ static unsigned int get_slab_idx(size_t num)
  * @param new_count the modified count after the operation
  * @param new_flags the modified flags after the operation
  */
-static inline void slab_ring_mod_allocated_state(struct slab_ring *ring,
+static inline void slab_data_mod_allocated_state(struct slab_data *ring,
                                                  int delta,
                                                  uint32_t flags,
                                                  uint32_t *new_count,
@@ -463,55 +463,55 @@ static inline void slab_ring_mod_allocated_state(struct slab_ring *ring,
 #define SLAB_RING_ORPHANED (1 << 0)
 
 /**
- * @brief sets flags on a slab_ring
+ * @brief sets flags on a slab_data
  *
- * sets flags on a slab_ring 
+ * sets flags on a slab_data 
  *
  * @param ring The ring to operate on
  * @param flags The flags to set
  * @param newcount Returns the value of the obj count of the slab
  * @param newflags Returns the flag state of the ring
  */
-static inline void slab_ring_set_flags(struct slab_ring *ring,
+static inline void slab_data_set_flags(struct slab_data *ring,
                                        uint32_t flags,
                                        uint32_t *newcount,
                                        uint32_t *newflags)
 {
-    slab_ring_mod_allocated_state(ring, 0, flags, newcount, newflags);
+    slab_data_mod_allocated_state(ring, 0, flags, newcount, newflags);
 }
 
 /**
- * @brief increment count and set flags on a slab_ring
+ * @brief increment count and set flags on a slab_data
  *
- * increment count and set flags on a slab_ring
+ * increment count and set flags on a slab_data
  *
  * @param ring The ring to operate on
  * @param flags The flags to set
  * @param newcount Returns the value of the obj count of the slab
  * @param newflags Returns the flag state of the ring
  */
-static inline void slab_ring_inc_obj_count(struct slab_ring *ring,
+static inline void slab_data_inc_obj_count(struct slab_data *ring,
                                            uint32_t *ret_count,
                                            uint32_t *ret_flags)
 {
-    slab_ring_mod_allocated_state(ring, 1, 0, ret_count, ret_flags);
+    slab_data_mod_allocated_state(ring, 1, 0, ret_count, ret_flags);
 }
 
 /**
- * @brief decrement count and set flags on a slab_ring
+ * @brief decrement count and set flags on a slab_data
  *
- * decrement count and set flags on a slab_ring
+ * decrement count and set flags on a slab_data
  *
  * @param ring The ring to operate on
  * @param flags The flags to set
  * @param newcount Returns the value of the obj count of the slab
  * @param newflags Returns the flag state of the ring
  */
-static inline void slab_ring_dec_obj_count(struct slab_ring *ring,
+static inline void slab_data_dec_obj_count(struct slab_data *ring,
                                            uint32_t *ret_count,
                                            uint32_t *ret_flags)
 {
-    slab_ring_mod_allocated_state(ring, -1, 0, ret_count, ret_flags);
+    slab_data_mod_allocated_state(ring, -1, 0, ret_count, ret_flags);
 }
 
 
@@ -541,22 +541,22 @@ static inline void slab_ring_dec_obj_count(struct slab_ring *ring,
  * @brief Obtain the slab ring associated with an address.
  *
  * This function computes the base address of the memory page
- * containing the given address and treats it as a slab_ring
+ * containing the given address and treats it as a slab_data
  * structure. It is assumed that each slab ring is page-aligned
  * and located at the start of its corresponding page.
  *
  * @param addr  Address within a slab ring page.
  *
- * @return Pointer to the slab_ring for the page containing @p addr.
+ * @return Pointer to the slab_data for the page containing @p addr.
  */
-static inline struct slab_ring *get_slab_ring(void *addr)
+static inline struct slab_data *get_slab_data(void *addr)
 {
-    return (struct slab_ring *)PAGE_START(addr);
+    return (struct slab_data *)PAGE_START(addr);
 }
 
 static inline __attribute__((no_sanitize("address"))) int is_slab_magic_correct(void *addr)
 {
-    struct slab_ring *ring = get_slab_ring(addr);
+    struct slab_data *ring = get_slab_data(addr);
 
     return (ring->magic == SLAB_MAGIC) ? 1 : 0;
 }
@@ -564,7 +564,7 @@ static inline __attribute__((no_sanitize("address"))) int is_slab_magic_correct(
 /**
  * @brief Determine whether an address belongs to an object slab.
  *
- * This function retrieves the slab_ring associated with the page
+ * This function retrieves the slab_data associated with the page
  * containing the given address and checks its magic value to
  * determine whether the page represents a valid object slab.
  *
@@ -611,12 +611,12 @@ static inline int is_obj_slab(void *addr)
  * The object address is computed from the bitmap index, bit position,
  * and object size recorded in the slab metadata.
  *
- * @param slab  Pointer to the slab_ring from which to allocate.
+ * @param slab  Pointer to the slab_data from which to allocate.
  *
  * @return Pointer to the allocated object, or NULL if no free objects
  *         are available in the slab.
  */
-static void *select_obj(struct slab_ring *slab)
+static void *select_obj(struct slab_data *slab)
 {
     uint32_t i;
     uint64_t value;
@@ -653,7 +653,7 @@ static void *select_obj(struct slab_ring *slab)
              * compute the object location based on the bit in the bitmap that we just set
              */
             obj_offset = (slab->obj_size * (i * 64)) + (available_bit * slab->obj_size);
-            slab_ring_inc_obj_count(slab, &ring_count, &flags);
+            slab_data_inc_obj_count(slab, &ring_count, &flags);
             return (void *)((unsigned char *)slab->obj_start + obj_offset);
         }
     }
@@ -664,8 +664,8 @@ static void *select_obj(struct slab_ring *slab)
  * @brief Allocate and initialize a new slab ring page.
  *
  * This function uses mmap() to allocate a single page and initializes
- * a slab_ring structure at the start of that page. It configures the
- * ring's metadata from the provided slab_info/template, sets up and
+ * a slab_data structure at the start of that page. It configures the
+ * ring's metadata from the provided slab_class/template, sets up and
  * clears the allocation bitmap, applies the template's last-word mask
  * (to mark unusable bits as allocated), computes the object region
  * start immediately after the bitmap, and sets the slab magic value.
@@ -674,13 +674,13 @@ static void *select_obj(struct slab_ring *slab)
  *
  * @param slab  Slab descriptor providing sizing and template data.
  *
- * @return Pointer to the initialized slab_ring, or NULL on failure.
+ * @return Pointer to the initialized slab_data, or NULL on failure.
  */
-static struct slab_ring *create_new_slab(struct slab_info *slab)
+static struct slab_data *create_new_slab(struct slab_class *slab)
 {
     void *new;
     size_t page_size_long = (size_t)page_size;
-    struct slab_ring *new_ring;
+    struct slab_data *new_ring;
 
     /*
      * New slabs must be page aligned so that our page offset math works.
@@ -693,14 +693,14 @@ static struct slab_ring *create_new_slab(struct slab_info *slab)
     /*
      * setup this slab
      */
-    new_ring = get_slab_ring(new);
+    new_ring = get_slab_data(new);
 
 #ifdef SLAB_STATS
     new_ring->stats = slab->stats;
 #endif
     new_ring->obj_size = slab->obj_size;
     new_ring->bitmap_word_count = slab->template.bitmap_word_count;
-    new_ring->bitmap = (uint64_t *)(((unsigned char *)new_ring) + sizeof(struct slab_ring));
+    new_ring->bitmap = (uint64_t *)(((unsigned char *)new_ring) + sizeof(struct slab_data));
     memset(new_ring->bitmap, 0, sizeof(uint64_t) * new_ring->bitmap_word_count);
     new_ring->bitmap[new_ring->bitmap_word_count - 1] = slab->template.last_word_mask;
     new_ring->obj_start = (void *)(new_ring->bitmap + new_ring->bitmap_word_count);
@@ -727,9 +727,9 @@ static struct slab_ring *create_new_slab(struct slab_info *slab)
  * @return Pointer to the first allocated object in the new slab, or
  *         NULL on failure.
  */
-static void *create_obj_in_new_slab(struct slab_info *slab)
+static void *create_obj_in_new_slab(struct slab_class *slab)
 {
-    struct slab_ring *new = create_new_slab(slab);
+    struct slab_data *new = create_new_slab(slab);
     void *obj;
     uint32_t ring_count, flags;
     size_t page_size_long = (size_t)page_size;
@@ -741,10 +741,10 @@ static void *create_obj_in_new_slab(struct slab_info *slab)
      */
     new->bitmap[0] |= 0x1;
     obj = new->obj_start;
-    slab_ring_inc_obj_count(new, &ring_count, &flags);
+    slab_data_inc_obj_count(new, &ring_count, &flags);
     new = __atomic_exchange_n(&slab->available, new, __ATOMIC_RELAXED);
     if (new != NULL) {
-        slab_ring_set_flags(new, SLAB_RING_ORPHANED, &ring_count, &flags);
+        slab_data_set_flags(new, SLAB_RING_ORPHANED, &ring_count, &flags);
         if (ring_count == 0) {
             INC_SLAB_STAT(&new->stats->slab_frees);
             SLAB_DBG_EVENT("slab",new,"free");
@@ -757,7 +757,7 @@ static void *create_obj_in_new_slab(struct slab_info *slab)
 }
 
 /**
- * @brief Allocate an object from a slab_info.
+ * @brief Allocate an object from a slab_class.
  *
  * This function attempts to allocate an object from the slab currently
  * advertised as having availability (slab->available). It loads that
@@ -772,9 +772,9 @@ static void *create_obj_in_new_slab(struct slab_info *slab)
  *
  * @return Pointer to an allocated object, or NULL on failure.
  */
-static void *get_slab_obj(struct slab_info *slab)
+static void *get_slab_obj(struct slab_class *slab)
 {
-    struct slab_ring *idx;
+    struct slab_data *idx;
     void *obj = NULL;
 
     idx = __atomic_load_n(&slab->available, __ATOMIC_RELAXED);
@@ -808,7 +808,7 @@ static void *get_slab_obj(struct slab_info *slab)
  * @param addr  Object address being returned to the slab.
  * @param ring  Slab ring page that owns @p addr.
  */
-static void return_to_slab(void *addr, struct slab_ring *ring)
+static void return_to_slab(void *addr, struct slab_data *ring)
 {
     uintptr_t base;
     uintptr_t offset;
@@ -840,7 +840,7 @@ static void return_to_slab(void *addr, struct slab_ring *ring)
     /*
      * and our local slab count of objects
      */
-    slab_ring_dec_obj_count(ring, &obj_count, &flags);
+    slab_data_dec_obj_count(ring, &obj_count, &flags);
 
     /*
      * check to see if we are removing the last object in this slab 
@@ -884,7 +884,7 @@ static void *slab_malloc(size_t num, const char *file, int line)
 #endif
 {
     unsigned int slab_idx;
-    struct slab_info *myslabs = get_thread_slab_table();
+    struct slab_class *myslabs = get_thread_slab_table();
     void *ret;
 
     if (myslabs == NULL)
@@ -935,7 +935,7 @@ void slab_free(void *addr, const char *file, int line)
 static void slab_free(void *addr, const char *file, int line)
 #endif
 {
-    struct slab_ring *ring;
+    struct slab_data *ring;
 
     /*
      * NULL addresses and objects that are not part of a slab
@@ -946,7 +946,7 @@ static void slab_free(void *addr, const char *file, int line)
         free(addr);
         return;
     }
-    ring = get_slab_ring(addr);
+    ring = get_slab_data(addr);
     INC_SLAB_STAT(&ring->stats->frees);
     SLAB_DBG_EVENT("obj", addr, "free");
     return_to_slab(addr, ring);
@@ -990,7 +990,7 @@ static void *slab_realloc(void *addr, size_t num, const char *file, int line)
 #endif
 {
     void *new;
-    struct slab_ring *ring;
+    struct slab_data *ring;
 
     /*
      * reallocs for NULL are just malloc, so check with the slab allocator
@@ -1009,7 +1009,7 @@ static void *slab_realloc(void *addr, size_t num, const char *file, int line)
         return new;
     }
 
-    ring = get_slab_ring(addr);
+    ring = get_slab_data(addr);
 
     /*
      * If the request is too big, then we just use malloc
@@ -1059,10 +1059,10 @@ static void *slab_realloc(void *addr, size_t num, const char *file, int line)
 }
 
 /**
- * @brief Compute per-page slab layout parameters for a slab_info.
+ * @brief Compute per-page slab layout parameters for a slab_class.
  *
  * This function determines how many fixed-size objects (@c slab->obj_size)
- * can fit into a single page once the slab_ring header and allocation
+ * can fit into a single page once the slab_data header and allocation
  * bitmap are accounted for. It iteratively increases the candidate object
  * count, expanding the bitmap by one 64-bit word whenever the object count
  * crosses a multiple of 64, and stops when the object area would exceed the
@@ -1077,12 +1077,12 @@ static void *slab_realloc(void *addr, size_t num, const char *file, int line)
  *
  * @param slab  Slab descriptor whose template fields will be populated.
  */
-static void compute_slab_template(struct slab_info *slab)
+static void compute_slab_template(struct slab_class *slab)
 {
     uint32_t bitmap_words = 1; /* need at least one bitmap word */
     uint32_t obj_count;
     size_t objs_size;
-    size_t available_size = (page_size - sizeof(struct slab_ring)) - (bitmap_words * sizeof(uint64_t));
+    size_t available_size = (page_size - sizeof(struct slab_data)) - (bitmap_words * sizeof(uint64_t));
     int word_size_increased;
     int i;
 
@@ -1096,7 +1096,7 @@ static void compute_slab_template(struct slab_info *slab)
         word_size_increased = 0;
         if ((obj_count % 64) == 0) {
             bitmap_words++;
-            available_size = (page_size - sizeof(struct slab_ring)) - (bitmap_words * sizeof(uint64_t));
+            available_size = (page_size - sizeof(struct slab_data)) - (bitmap_words * sizeof(uint64_t));
             word_size_increased = 1;
         }
         objs_size = obj_count * slab->obj_size;
@@ -1122,7 +1122,7 @@ static void compute_slab_template(struct slab_info *slab)
 
 static void destroy_slab_table(void *data)
 {
-    struct slab_info *info = (struct slab_info *)data;
+    struct slab_class *info = (struct slab_class *)data;
     uint32_t i;
     uint32_t count, flags;
     size_t page_size_long = (size_t)page_size;
@@ -1131,7 +1131,7 @@ static void destroy_slab_table(void *data)
         return;
     for (i = 0; i <= MAX_SLAB_IDX; i++) {
         if(info[i].available != NULL) {
-            slab_ring_set_flags(info[i].available, SLAB_RING_ORPHANED, &count, &flags);
+            slab_data_set_flags(info[i].available, SLAB_RING_ORPHANED, &count, &flags);
             if (count == 0) {
                 INC_SLAB_STAT(&info[i].stats->slab_frees);
                 SLAB_DBG_EVENT("slab",info[i].available,"free");
