@@ -122,7 +122,7 @@ struct slab_stats {
     size_t slab_victim_saves;
 };
 
-#define INC_SLAB_STAT(metric) __atomic_add_fetch(metric, 1, __ATOMIC_RELAXED)
+#define INC_SLAB_STAT(metric) __atomic_add_fetch(metric, 1, __ATOMIC_ACQ_REL)
 #else
 #define INC_SLAB_STAT(metric)
 #endif
@@ -761,6 +761,7 @@ static void *create_obj_in_new_slab(struct slab_class *slab)
     void *obj;
     uint32_t ring_count, flags;
     size_t page_size_long = (size_t)page_size;
+    struct slab_data *victim_data = NULL;
 
     if (new == NULL)
         return NULL;
@@ -774,10 +775,13 @@ static void *create_obj_in_new_slab(struct slab_class *slab)
     if (new != NULL) {
         slab_data_set_flags(new, SLAB_RING_ORPHANED, &ring_count, &flags);
         if (ring_count == 0) {
-            INC_SLAB_STAT(&new->stats->slab_frees);
-            SLAB_DBG_EVENT("slab",new,"free");
-            if (munmap(new, page_size_long)) {
-                INC_SLAB_STAT(&new->stats->failed_slab_frees);
+            if (!__atomic_compare_exchange_n(&slab->victim, &victim_data, new,
+                                         0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)) {
+                INC_SLAB_STAT(&new->stats->slab_frees);
+                SLAB_DBG_EVENT("slab",new,"free");
+                if (munmap(new, page_size_long)) {
+                    INC_SLAB_STAT(&new->stats->failed_slab_frees);
+                }
             }
         }
     }
