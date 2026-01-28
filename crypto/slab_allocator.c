@@ -417,6 +417,21 @@ static unsigned int get_slab_idx(size_t num)
     return __builtin_ctzl(up_size);
 }
 
+/**
+ * @brief atomically modify the allocation_state variable in a slab
+ *
+ * This function atomically adds the delta value provided to the atomic
+ * state (which may be negative) to the count field, and optionally
+ * sets any flags in the flags field.  After doing so the new value
+ * of the count and flags filed are returned in the new_count and new_flags
+ * pointers
+ *
+ * @param ring The ring to modify
+ * @param delta The value to add to the count field (may be negative)
+ * @param flags The flags to set in the flags field
+ * @param new_count the modified count after the operation
+ * @param new_flags the modified flags after the operation
+ */
 static inline void slab_ring_mod_allocated_state(struct slab_ring *ring,
                                                  int delta,
                                                  uint32_t flags,
@@ -434,14 +449,29 @@ static inline void slab_ring_mod_allocated_state(struct slab_ring *ring,
         *new_flags |= flags;
         new_allocated_state = ((uint64_t)*new_flags << 32) | (uint64_t)*new_count;
         if (__atomic_compare_exchange_n(&ring->allocated_state, &curr_allocated_state,
-                                        new_allocated_state, 0, __ATOMIC_ACQ_REL,
-                                        __ATOMIC_RELAXED))
+                                        new_allocated_state, 0, __ATOMIC_RELEASE,
+                                        __ATOMIC_ACQUIRE))
             break;
     }
 }
 
+/**
+ * @def SLAB_RING_ORPHANED
+ * @brief flag to indicate the slab is no longer used by the allocation
+ *        side of the allocator
+ */
 #define SLAB_RING_ORPHANED (1 << 0)
 
+/**
+ * @brief sets flags on a slab_ring
+ *
+ * sets flags on a slab_ring 
+ *
+ * @param ring The ring to operate on
+ * @param flags The flags to set
+ * @param newcount Returns the value of the obj count of the slab
+ * @param newflags Returns the flag state of the ring
+ */
 static inline void slab_ring_set_flags(struct slab_ring *ring,
                                        uint32_t flags,
                                        uint32_t *newcount,
@@ -450,6 +480,16 @@ static inline void slab_ring_set_flags(struct slab_ring *ring,
     slab_ring_mod_allocated_state(ring, 0, flags, newcount, newflags);
 }
 
+/**
+ * @brief increment count and set flags on a slab_ring
+ *
+ * increment count and set flags on a slab_ring
+ *
+ * @param ring The ring to operate on
+ * @param flags The flags to set
+ * @param newcount Returns the value of the obj count of the slab
+ * @param newflags Returns the flag state of the ring
+ */
 static inline void slab_ring_inc_obj_count(struct slab_ring *ring,
                                            uint32_t *ret_count,
                                            uint32_t *ret_flags)
@@ -457,6 +497,16 @@ static inline void slab_ring_inc_obj_count(struct slab_ring *ring,
     slab_ring_mod_allocated_state(ring, 1, 0, ret_count, ret_flags);
 }
 
+/**
+ * @brief decrement count and set flags on a slab_ring
+ *
+ * decrement count and set flags on a slab_ring
+ *
+ * @param ring The ring to operate on
+ * @param flags The flags to set
+ * @param newcount Returns the value of the obj count of the slab
+ * @param newflags Returns the flag state of the ring
+ */
 static inline void slab_ring_dec_obj_count(struct slab_ring *ring,
                                            uint32_t *ret_count,
                                            uint32_t *ret_flags)
