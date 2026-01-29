@@ -455,16 +455,15 @@ static inline void slab_data_mod_allocated_state(struct slab_data *ring,
 
     curr_allocated_state = __atomic_load_n(&ring->allocated_state, __ATOMIC_RELAXED);
     for (;;) {
-        *new_count = curr_allocated_state & 0x00000000ffffffffUL;
-        *new_flags = curr_allocated_state >> 32;
-        *new_count += delta;
-        *new_flags |= flags;
-        new_allocated_state = ((uint64_t)*new_flags << 32) | (uint64_t)*new_count;
+        new_allocated_state = ((uint64_t)(curr_allocated_state & 0x00000000ffffffffUL) + delta) |
+                              ((uint64_t)((curr_allocated_state >> 32) | flags) << 32);
         if (__atomic_compare_exchange_n(&ring->allocated_state, &curr_allocated_state,
                                         new_allocated_state, 0, __ATOMIC_ACQ_REL,
                                         __ATOMIC_RELAXED))
             break;
     }
+    *new_count = (uint32_t)new_allocated_state & 0x00000000ffffffffUL;
+    *new_flags = (uint32_t)new_allocated_state >> 32;
 }
 
 /**
@@ -586,19 +585,6 @@ static inline __attribute__((no_sanitize("address"))) int is_slab_magic_correct(
  */
 static inline int is_obj_slab(void *addr)
 {
-    uintptr_t brk_limit = (uintptr_t)sbrk(0);
-
-    /*
-     * check to see if this address is below the brk limit
-     * if it is, we know that this isn't a slab
-     * We do this as a check before we trucate the address
-     * to find the page start, which may not be initialized
-     * for non slab allocations.  If we don't then things like
-     * asan get cranky and warn us about uninitialized usage
-     */
-    if ((uintptr_t)addr < brk_limit)
-        return 0;
-
     /*
      * also check if the address is on a page boundary
      * This indicates that it is not a slab, as slab objects
@@ -628,7 +614,7 @@ static inline int is_obj_slab(void *addr)
  * @return Pointer to the allocated object, or NULL if no free objects
  *         are available in the slab.
  */
-static void *select_obj(struct slab_data *slab)
+static inline void *select_obj(struct slab_data *slab)
 {
     uint32_t i;
     uint64_t value;
@@ -655,17 +641,13 @@ static void *select_obj(struct slab_data *slab)
              * Build a mask to turn the bit we found on
              */
             new_mask = (uint64_t)1 << available_bit;
-            value = atomic_fetch_or(&slab->bitmap[i], new_mask);
-            if ((value & new_mask) == new_mask) {
-                /* another  thread already set this bit, try again */
-                goto try_again;
-            }
+            __atomic_fetch_or(&slab->bitmap[i], new_mask, __ATOMIC_RELAXED);
             /*
              * We got an object!
              * compute the object location based on the bit in the bitmap that we just set
              */
-            obj_offset = (slab->obj_size * (i * 64)) + (available_bit * slab->obj_size);
             slab_data_inc_obj_count(slab, &ring_count, &flags);
+            obj_offset = (slab->obj_size * (i * 64)) + (available_bit * slab->obj_size);
             return (void *)((unsigned char *)slab->obj_start + obj_offset);
         }
     }
@@ -688,7 +670,7 @@ static void *select_obj(struct slab_data *slab)
  *
  * @return Pointer to the initialized slab_data, or NULL on failure.
  */
-static struct slab_data *create_new_slab(struct slab_class *slab)
+static inline struct slab_data *create_new_slab(struct slab_class *slab)
 {
     void *new;
     size_t page_size_long = (size_t)page_size;
@@ -755,7 +737,7 @@ static struct slab_data *create_new_slab(struct slab_class *slab)
  * @return Pointer to the first allocated object in the new slab, or
  *         NULL on failure.
  */
-static void *create_obj_in_new_slab(struct slab_class *slab)
+static inline void *create_obj_in_new_slab(struct slab_class *slab)
 {
     struct slab_data *new = create_new_slab(slab);
     void *obj;
@@ -804,7 +786,7 @@ static void *create_obj_in_new_slab(struct slab_class *slab)
  *
  * @return Pointer to an allocated object, or NULL on failure.
  */
-static void *get_slab_obj(struct slab_class *slab)
+static inline void *get_slab_obj(struct slab_class *slab)
 {
     struct slab_data *idx;
     void *obj = NULL;
