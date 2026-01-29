@@ -525,6 +525,7 @@ my @disablables = (
     "shared",
     "siphash",
     "siv",
+    "slab-allocator",
     "slh-dsa",
     "sm2",
     "sm2-precomp",
@@ -626,6 +627,7 @@ our %disabled = ( # "what"         => "comment"
                   "msan"                => "default",
                   "rc5"                 => "default",
                   "sctp"                => "default",
+                  "slab-allocator"      => "default",
                   "sslkeylog"           => "default",
                   "tfo"                 => "default",
                   "tls-deprecated-ec"   => "default",
@@ -1626,6 +1628,10 @@ foreach (grep /^-fsanitize=/, @{$config{CFLAGS} || []}) {
 # code knows about it.  Any other flag is taken care of by the configs.
 unless($disabled{threads}) {
     push @{$config{openssl_feature_defines}}, "OPENSSL_THREADS";
+}
+
+unless($disabled{"slab-allocator"}) {
+    push @{$config{openssl_feature_defines}}, "USE_SLAB_ALLOCATOR";
 }
 
 if ($disabled{"unstable-qlog"}) {

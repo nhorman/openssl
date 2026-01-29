@@ -51,6 +51,17 @@
 #include <sys/mman.h>
 #include <openssl/crypto.h>
 
+/* __has_feature is a clang-ism, while __SANITIZE_ADDRESS__ is a gcc-ism */
+#if defined(__has_feature)
+#if __has_feature(address_sanitizer)
+#define __SANITIZE_ADDRESS__ 1
+#endif
+#endif
+
+#ifdef __SANITIZE_ADDRESS__
+#error Slab allocator cannot be used with asan, please disable slab-allocator
+#endif
+
 /**
  * @brief Global and supporting definitions for the slab allocator.
  *
