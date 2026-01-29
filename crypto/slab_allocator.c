@@ -462,8 +462,8 @@ static inline void slab_data_mod_allocated_state(struct slab_data *ring,
                                         __ATOMIC_RELAXED))
             break;
     }
-    *new_count = (uint32_t)new_allocated_state & 0x00000000ffffffffUL;
-    *new_flags = (uint32_t)new_allocated_state >> 32;
+    *new_count = (uint32_t)(new_allocated_state & 0x00000000ffffffffUL);
+    *new_flags = (uint32_t)(new_allocated_state >> 32);
 }
 
 /**
@@ -624,7 +624,6 @@ static inline void *select_obj(struct slab_data *slab)
     uint32_t ring_count, flags;
 
     for (i = 0; i < slab->bitmap_word_count; i++) {
-    try_again:
         value = __atomic_load_n(&slab->bitmap[i], __ATOMIC_RELAXED);
         if (value < UINT64_MAX) {
             /*
