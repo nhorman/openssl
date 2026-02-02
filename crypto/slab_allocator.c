@@ -129,6 +129,7 @@ struct slab_stats {
     size_t frees;
     size_t slab_allocs;
     size_t slab_frees;
+    size_t slab_same_objs;
     size_t failed_slab_frees;
     size_t slab_victim_saves;
 };
@@ -658,6 +659,7 @@ static inline void *select_obj(struct slab_data *slab)
              */
             slab_data_inc_obj_count(slab, &ring_count, &flags);
             obj_offset = (slab->obj_size * (i * 64)) + (available_bit * slab->obj_size);
+            INC_SLAB_STAT(&slab->stats->slab_same_objs);
             return (void *)((unsigned char *)slab->obj_start + obj_offset);
         }
     }
@@ -1266,6 +1268,7 @@ static __attribute__((destructor)) void slab_cleanup()
     char cmdstring[PATH_MAX] = { 0 };
     char *path = getenv("SLAB_ALLOCATOR_LOG");
     int i;
+    double usage_ratio;
 
     if (path != NULL) {
         fp = fopen(path, "w");
@@ -1278,12 +1281,14 @@ static __attribute__((destructor)) void slab_cleanup()
     fprintf(fp, "{ \"cmd\": \"%s\", \"slabs\": [", cmdstring);
 
     for (i = 0; i <= MAX_SLAB_IDX; i++) {
-        fprintf(fp, "{\"obj_size\":%lu, \"objs_per_slab\":%u, \"allocs\":%lu, \"frees\":%lu, \"slab_allocs\":%lu, \"slab_frees\":%lu, \"slab_victim_saves\":%lu, \"failed_slab_frees\":%lu}",
+        usage_ratio = ((double)slabs[i].stats->slab_same_objs / (double)slabs[i].stats->slab_allocs);
+        fprintf(fp, "{\"obj_size\":%lu, \"objs_per_slab\":%u, \"allocs\":%lu, \"frees\":%lu, \"slab_allocs\":%lu, \"slab_frees\":%lu, \"slab_victim_saves\":%lu, \"failed_slab_frees\":%lu, \"obj_slab_usage_ratio\": %lf}",
             slabs[i].obj_size, slabs[i].template.available_objs,
             slabs[i].stats->allocs, slabs[i].stats->frees,
             slabs[i].stats->slab_allocs, slabs[i].stats->slab_frees,
             slabs[i].stats->slab_victim_saves,
-            slabs[i].stats->failed_slab_frees);
+            slabs[i].stats->failed_slab_frees,
+            usage_ratio);
         if (i != MAX_SLAB_IDX)
             fprintf(fp, ",");
     }
