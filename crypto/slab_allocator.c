@@ -218,6 +218,7 @@ struct slab_data {
      * Number of 64-bit words used by the allocation bitmap.
      */
     uint32_t bitmap_word_count;
+    uint32_t last_used_word;
 
     /**
      * Pointer to the start of the object storage region within the slab.
@@ -537,6 +538,14 @@ static inline void slab_data_dec_obj_count(struct slab_data *ring,
     slab_data_mod_allocated_state(ring, -1, 0, ret_count, ret_flags);
 }
 
+/**
+ * @brief slab_data_get_obj_count
+ * weak fetch of the current ring count
+ */
+static inline uint32_t slab_data_get_obj_count(struct slab_data *ring)
+{
+    return (uint32_t)(ring->allocated_state & 0x00000000ffffffffUL);
+}
 
 /**
  * @def PAGE_MASK
@@ -626,7 +635,7 @@ static inline int is_obj_slab(void *addr)
  * @return Pointer to the allocated object, or NULL if no free objects
  *         are available in the slab.
  */
-static inline void *select_obj(struct slab_data *slab)
+static inline void *select_obj(struct slab_data *slab, struct slab_class *class)
 {
     uint32_t i;
     uint64_t value;
@@ -634,9 +643,24 @@ static inline void *select_obj(struct slab_data *slab)
     uint64_t new_mask;
     uint32_t obj_offset;
     uint32_t ring_count, flags;
+    int keep_going = 1;
+    uint32_t last_used_word = slab->last_used_word;
 
-    for (i = 0; i < slab->bitmap_word_count; i++) {
+    /*
+     * shortcut, don't search the whole table if we're already at a full ring count
+     */
+    if (slab_data_get_obj_count(slab) == class->template.available_objs)
+        return NULL;
+
+    /*
+     * Look for an available object.  Start scanning at the last
+     * place we found one, and do a modulo search of the array, until
+     * we get back where we started
+     */
+    for (i = last_used_word; i != last_used_word || keep_going == 1;
+         i = (i+1)%slab->bitmap_word_count) {
         value = __atomic_load_n(&slab->bitmap[i], __ATOMIC_RELAXED);
+        keep_going = 0;
         if (value < UINT64_MAX) {
             /*
              * Theres an available object somewhere in here
@@ -660,6 +684,10 @@ static inline void *select_obj(struct slab_data *slab)
             slab_data_inc_obj_count(slab, &ring_count, &flags);
             obj_offset = (slab->obj_size * (i * 64)) + (available_bit * slab->obj_size);
             INC_SLAB_STAT(&slab->stats->slab_same_objs);
+            /*
+             * If we changed words where we found an object, update that here
+             */
+            slab->last_used_word = i;
             return (void *)((unsigned char *)slab->obj_start + obj_offset);
         }
     }
@@ -723,6 +751,7 @@ static inline struct slab_data *create_new_slab(struct slab_class *slab)
     new_ring->allocated_state = 0;
     new_ring->obj_size = slab->obj_size;
     new_ring->bitmap_word_count = slab->template.bitmap_word_count;
+    new_ring->last_used_word = 0;
     new_ring->bitmap = (uint64_t *)(((unsigned char *)new_ring) + sizeof(struct slab_data));
     memset(new_ring->bitmap, 0, sizeof(uint64_t) * new_ring->bitmap_word_count);
     new_ring->bitmap[new_ring->bitmap_word_count - 1] = slab->template.last_word_mask;
@@ -805,7 +834,7 @@ static inline void *get_slab_obj(struct slab_class *slab)
 
     idx = __atomic_load_n(&slab->available, __ATOMIC_RELAXED);
     if (idx != NULL)
-        obj = select_obj(idx);
+        obj = select_obj(idx, slab);
     if (obj != NULL)
         return obj;
 
