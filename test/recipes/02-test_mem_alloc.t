@@ -7,10 +7,17 @@
 # https://www.openssl.org/source/license.html
 
 use OpenSSL::Test::Simple;
+use OpenSSL::Test;
+use OpenSSL::Test::Utils;
+
+setup("test_mem_alloc");
 
 {
     local $ENV{"ASAN_OPTIONS"} = "allocator_may_return_null=true";
     local $ENV{"MSAN_OPTIONS"} = "allocator_may_return_null=true";
+
+    plan skip_all => "test not supported with slab-allocator"
+        if !disabled('slab-allocator');
 
     simple_test("test_mem_alloc", "mem_alloc_test");
 }
