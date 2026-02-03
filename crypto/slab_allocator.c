@@ -6,7 +6,7 @@
  * This file implements a fixed-size slab allocator optimized for small
  * allocations. Allocation sizes are rounded up to the nearest power of
  * two and mapped to a corresponding slab class. Each slab occupies a
- * single memory page obtained via mmap(2) and is subdivided into equal-
+ * single memory page obtained via mmap(2) or aligned_alloc and is subdivided into equal-
  * sized objects tracked by a lock-free bitmap.
  *
  * The allocator is designed for high concurrency. Object allocation
@@ -36,7 +36,7 @@
  *   - Objects larger than MAX_SLAB bypass the slab allocator
  *   - Slabs are page-sized and may waste space for large object sizes
  *
- * @note This allocator assumes page-aligned mmap() allocations and
+ * @note This allocator assumes page-aligned mmap()/algined_alloc allocations and
  *       relies on a magic value stored at the start of each slab to
  *       distinguish slab-managed objects from heap allocations.
  */
@@ -693,7 +693,7 @@ static inline void *select_obj(struct slab_data *slab, struct slab_class *class)
 /**
  * @brief Allocate and initialize a new slab ring page.
  *
- * This function uses mmap() to allocate a single page and initializes
+ * This function uses mmap()/aligned_alloc to allocate a single page and initializes
  * a slab_data structure at the start of that page. It configures the
  * ring's metadata from the provided slab_class/template, sets up and
  * clears the allocation bitmap, applies the template's last-word mask
@@ -720,7 +720,7 @@ static inline struct slab_data *create_new_slab(struct slab_class *slab)
     if (new == NULL) {
         /*
          * New slabs must be page aligned so that our page offset math works.
-         * So use mmap to grap a page
+         * So use mmap/aligned_alloc to grap a page
          */
         new = aligned_alloc(page_size_long, page_size_long);
         if (new == NULL)
