@@ -58,10 +58,6 @@
 #endif
 #endif
 
-#ifdef __SANITIZE_ADDRESS__
-#error Slab allocator cannot be used with asan, please disable slab-allocator
-#endif
-
 /**
  * @brief Global and supporting definitions for the slab allocator.
  *
@@ -726,7 +722,7 @@ static inline struct slab_data *create_new_slab(struct slab_class *slab)
          * New slabs must be page aligned so that our page offset math works.
          * So use mmap to grap a page
          */
-        new = mmap(NULL, page_size_long, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+        new = aligned_alloc(page_size_long, page_size_long);
         if (new == NULL)
             return NULL;
     } else {
@@ -783,7 +779,6 @@ static inline void *create_obj_in_new_slab(struct slab_class *slab)
     struct slab_data *new = create_new_slab(slab);
     void *obj;
     uint32_t ring_count, flags;
-    size_t page_size_long = (size_t)page_size;
     struct slab_data *victim_data = NULL;
 
     if (new == NULL)
@@ -802,9 +797,7 @@ static inline void *create_obj_in_new_slab(struct slab_class *slab)
                                          0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)) {
                 INC_SLAB_STAT(&new->stats->slab_frees);
                 SLAB_DBG_EVENT("slab",new,"free", NULL, 0);
-                if (munmap(new, page_size_long)) {
-                    INC_SLAB_STAT(&new->stats->failed_slab_frees);
-                }
+                free(new);
             }
         }
     }
@@ -870,7 +863,6 @@ static void return_to_slab(void *addr, struct slab_data *ring)
     size_t bit_idx;
     size_t word_idx;
     uint64_t value;
-    size_t page_size_long = (size_t)page_size;
     uint32_t obj_count, flags;
     struct slab_data *victim_data = NULL;
     struct slab_class *info = get_thread_slab_table();
@@ -899,6 +891,7 @@ static void return_to_slab(void *addr, struct slab_data *ring)
      * check to see if we are removing the last object in this slab 
      */
     if (obj_count == 0 && (flags & SLAB_RING_ORPHANED)) {
+        SLAB_DBG_LOG("type:raw: Slab %p is at count zero and orphaned\n", ring);
         /*
          * Before we free, try to add the slab to the victim cache
          * Note that we may be returning the slab to a different allocator
@@ -917,10 +910,10 @@ static void return_to_slab(void *addr, struct slab_data *ring)
              * return the slab to the OS with munmap
              */
             SLAB_DBG_EVENT("slab",ring,"free", NULL, 0);
-            if (munmap(ring, page_size_long)) {
-                INC_SLAB_STAT(&ring->stats->failed_slab_frees);
-            }
+            free(ring);
             return;
+        } else {
+            SLAB_DBG_LOG("type:raw: put %p in victim cache\n", ring);
         }
     }
 
@@ -1198,7 +1191,6 @@ static void destroy_slab_table(void *data)
     struct slab_class *info = (struct slab_class *)data;
     uint32_t i;
     uint32_t count, flags;
-    size_t page_size_long = (size_t)page_size;
 
     if (info == NULL)
         return;
@@ -1208,16 +1200,17 @@ static void destroy_slab_table(void *data)
             if (count == 0) {
                 INC_SLAB_STAT(&info[i].stats->slab_frees);
                 SLAB_DBG_EVENT("slab",info[i].available,"free", NULL, 0);
-                if (munmap(info[i].available, page_size_long)) {
-                    INC_SLAB_STAT(&info[i].stats->failed_slab_frees);
-                }
+                free(info[i].available);
+            } else {
+                fprintf(stderr, "%p is still %lu\n", info[i].available, count);
             }
-            if (info[i].victim != NULL) {
+        }
+        if (info[i].victim != NULL) {
+            slab_data_set_flags(info[i].victim, SLAB_RING_ORPHANED, &count, &flags);
+            if (count == 0) {
                 INC_SLAB_STAT(&info[i].stats->slab_frees);
                 SLAB_DBG_EVENT("slab",info[i].victim,"free", NULL, 0);
-                if (munmap(info[i].victim, page_size_long)) {
-                    INC_SLAB_STAT(&info[i].stats->failed_slab_frees);
-               }
+                free(info[i].victim);
             }
         }
     }
