@@ -47,6 +47,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdatomic.h>
+#include <malloc.h>
 #include <sys/queue.h>
 #include <sys/mman.h>
 #include <openssl/crypto.h>
@@ -107,6 +108,8 @@ static long page_size = 0;
 static pthread_key_t thread_slab_key;
 
 struct slab_class;
+
+static uint32_t slab_alloc_with_mmap = 0;
 
 #ifdef SLAB_DEBUG
 FILE *slab_fp = NULL;
@@ -443,6 +446,12 @@ static inline void slab_data_mod_allocated_state(struct slab_data *ring,
 #define SLAB_RING_ORPHANED (1 << 0)
 
 /**
+ * @def SLAB_RING_MMAPED
+ * @brief flag to indicate if the slab was allocated via mmap rather than aligned alloc
+ */
+#define SLAB_RING_MMAPED (1 << 1)
+
+/**
  * @brief sets flags on a slab_data
  *
  * sets flags on a slab_data 
@@ -458,6 +467,15 @@ static inline void slab_data_set_flags(struct slab_data *ring,
                                        uint32_t *newflags)
 {
     slab_data_mod_allocated_state(ring, 0, flags, newcount, newflags);
+}
+
+static inline uint32_t slab_data_get_flags(struct slab_data *ring)
+{
+    uint32_t count, flags;
+
+    slab_data_mod_allocated_state(ring, 0, 0, &count, &flags);
+
+    return flags;
 }
 
 /**
@@ -650,6 +668,57 @@ static inline void *select_obj(struct slab_data *slab, struct slab_class *class)
     return NULL;
 }
 
+static inline void *allocate_slab(struct slab_class *slab)
+{
+    uint32_t alloc_with_mmap = __atomic_load_n(&slab_alloc_with_mmap, __ATOMIC_RELAXED);
+    size_t page_size_long = (size_t)page_size;
+    void *ret = NULL;
+    struct slab_data *data;
+    uint32_t count, flags = 0, inflags = 0;
+
+    if (alloc_with_mmap == 0) {
+        ret = aligned_alloc(page_size_long, page_size_long);
+        SLAB_DBG_LOG("type:raw: Allocating slab %p with aligned_alloc\n", ret);
+    } else {
+        ret = mmap(NULL, page_size_long, PROT_READ|PROT_WRITE, MAP_ANONYMOUS|MAP_PRIVATE, -1, 0);
+        SLAB_DBG_LOG("type:raw: Allocating slab %p with mmap\n", ret);
+        inflags = SLAB_RING_MMAPED;
+    }
+
+    if (ret == NULL)
+        return ret;
+    data = get_slab_data(ret);
+    data->allocated_state = 0;
+    slab_data_set_flags(data, inflags, &count, &flags);
+    return ret;
+}
+
+static inline int release_slab(void *slab, int slab_used_mmap)
+{
+    size_t page_size_long = (size_t)page_size;
+    uint32_t alloc_mode = __atomic_load_n(&slab_alloc_with_mmap, __ATOMIC_RELAXED);
+
+    if (slab_used_mmap == 0) {
+        SLAB_DBG_LOG("type:raw: Freeing slab %p with free\n", slab);
+        free(slab);
+        if (!malloc_trim(page_size_long)) {
+            if (alloc_mode == 0) {
+                SLAB_DBG_LOG("type:raw: Unable to trim brk section, switching to mmap\n");
+                __atomic_store_n(&slab_alloc_with_mmap, 1, __ATOMIC_RELAXED);
+            }
+        } else {
+            if (alloc_mode == 1) {
+                SLAB_DBG_LOG("type:raw: brk reduced, switching back to aligned_alloc\n");
+                __atomic_store_n(&slab_alloc_with_mmap, 0, __ATOMIC_RELAXED);
+            }
+        }
+        return 0;
+    } else {
+        SLAB_DBG_LOG("type:raw: Freeing slab %p with munmap\n", slab);
+        return munmap(slab, page_size_long);
+    }
+}
+
 /**
  * @brief Allocate and initialize a new slab ring page.
  *
@@ -669,7 +738,6 @@ static inline void *select_obj(struct slab_data *slab, struct slab_class *class)
 static inline struct slab_data *create_new_slab(struct slab_class *slab)
 {
     void *new;
-    size_t page_size_long = (size_t)page_size;
     struct slab_data *new_ring;
     int used_victim = 0;
     /*
@@ -682,7 +750,7 @@ static inline struct slab_data *create_new_slab(struct slab_class *slab)
          * New slabs must be page aligned so that our page offset math works.
          * So use mmap/aligned_alloc to grap a page
          */
-        new = aligned_alloc(page_size_long, page_size_long);
+        new = allocate_slab(slab);
         if (new == NULL)
             return NULL;
     } else {
@@ -704,7 +772,6 @@ static inline struct slab_data *create_new_slab(struct slab_class *slab)
         INC_SLAB_STAT(&new_ring->stats->slab_allocs);
     }
 
-    new_ring->allocated_state = 0;
     new_ring->obj_size = slab->obj_size;
     new_ring->bitmap_word_count = slab->template.bitmap_word_count;
     new_ring->last_used_word = 0;
@@ -713,7 +780,7 @@ static inline struct slab_data *create_new_slab(struct slab_class *slab)
     new_ring->bitmap[new_ring->bitmap_word_count - 1] = slab->template.last_word_mask;
     new_ring->obj_start = (void *)(new_ring->bitmap + new_ring->bitmap_word_count);
     new_ring->magic = SLAB_MAGIC;
-    SLAB_DBG_EVENT_SZ("slab",new_ring, page_size_long, "allocate", NULL, 0);
+    SLAB_DBG_EVENT_SZ("slab",new_ring, (size_t)page_size, "allocate", NULL, 0);
     return new_ring;
 }
 
@@ -757,7 +824,10 @@ static inline void *create_obj_in_new_slab(struct slab_class *slab)
                                          0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)) {
                 INC_SLAB_STAT(&new->stats->slab_frees);
                 SLAB_DBG_EVENT("slab",new,"free", NULL, 0);
-                free(new);
+                flags = slab_data_get_flags(new);
+                if (release_slab(new, flags & SLAB_RING_MMAPED)) {
+                    INC_SLAB_STAT(&new->stats.failed_slab_frees);
+                }
             }
         }
     }
@@ -867,10 +937,13 @@ static void return_to_slab(void *addr, struct slab_data *ring)
              */
             INC_SLAB_STAT(&ring->stats->slab_frees);
             /*
-             * return the slab to the OS with munmap
+             * return the slab to the OS 
              */
             SLAB_DBG_EVENT("slab",ring,"free", NULL, 0);
-            free(ring);
+            flags = slab_data_get_flags(ring);
+            if (release_slab(ring, flags & SLAB_RING_MMAPED)) {
+                INC_SLAB_STAT(&ring->stats.failed_slab_frees);
+            }
             return;
         } else {
             SLAB_DBG_LOG("type:raw: put %p in victim cache\n", ring);
@@ -1160,7 +1233,9 @@ static void destroy_slab_table(void *data)
             if (count == 0) {
                 INC_SLAB_STAT(&info[i].stats->slab_frees);
                 SLAB_DBG_EVENT("slab",info[i].available,"free", NULL, 0);
-                free(info[i].available);
+                if (release_slab(info[i].available, flags & SLAB_RING_MMAPED)) {
+                    INC_SLAB_STAT(&info[i].stats->failed_slab_frees);
+                }
             }
         }
         if (info[i].victim != NULL) {
@@ -1168,7 +1243,9 @@ static void destroy_slab_table(void *data)
             if (count == 0) {
                 INC_SLAB_STAT(&info[i].stats->slab_frees);
                 SLAB_DBG_EVENT("slab",info[i].victim,"free", NULL, 0);
-                free(info[i].victim);
+                if (release_slab(info[i].victim, flags & SLAB_RING_MMAPED)) {
+                    INC_SLAB_STAT(&info[i].stats->failed_slab_frees);
+                }
             }
         }
     }
