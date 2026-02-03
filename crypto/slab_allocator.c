@@ -1201,8 +1201,6 @@ static void destroy_slab_table(void *data)
                 INC_SLAB_STAT(&info[i].stats->slab_frees);
                 SLAB_DBG_EVENT("slab",info[i].available,"free", NULL, 0);
                 free(info[i].available);
-            } else {
-                fprintf(stderr, "%p is still %lu\n", info[i].available, count);
             }
         }
         if (info[i].victim != NULL) {
