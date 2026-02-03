@@ -136,46 +136,6 @@ struct slab_stats {
 #endif
 
 /**
- * @brief slab_set_flag(uint32_t *flagptr, uint8_t flagbit)
- *
- * set a bit in the flags field of a slab ring
- * sets the bit in question and returns if we actually set the bit
- */
-static inline int slab_set_flag(uint32_t *flagptr, uint8_t flagbit)
-{
-    uint32_t mask_val = (uint32_t)1 << flagbit;
-    uint32_t ret = __atomic_fetch_or(flagptr, mask_val, __ATOMIC_RELAXED);
-
-    return (mask_val & ret) ? 0 : 1;
-}
-
-/**
- * @brief slab_clear_flag(uint32_t *flagptr, uint8_t flagbit)
- *
- * clear a bit in the flags field of a slab ring
- * clears the bit in question and returns if we actually cleared the bit
- */
-static inline int slab_clear_flag(uint32_t *flagptr, uint8_t flagbit)
-{
-    uint32_t mask_val = ~((uint32_t)1 << flagbit);
-    uint32_t ret = __atomic_fetch_and(flagptr, mask_val, __ATOMIC_RELAXED);
-
-    return (~mask_val & ret) ? 1 : 0;
-}
-
-/**
- * @brief slab_test_flag(uint32_t flagptr, uint8_t flagbit)
- * tests a flag for being set, returns true if the flag is set
- */
-static inline int slab_test_flag(uint32_t *flagptr, uint8_t flagbit)
-{
-    uint32_t mask_val = (uint32_t)1 << flagbit;
-    uint32_t ret = __atomic_fetch_and(flagptr, mask_val, __ATOMIC_RELAXED);
-
-    return ret == 0 ? 0 : 1;
-}
-
-/**
  * @struct slab_data
  * @brief Runtime metadata for a single slab page.
  *
