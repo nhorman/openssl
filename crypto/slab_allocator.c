@@ -112,6 +112,8 @@ static pthread_key_t thread_slab_key;
 
 struct slab_class;
 
+#define SLAB_MAX_PAGE_POOL_COUNT 1024 
+
 #ifdef SLAB_DEBUG
 FILE *slab_fp = NULL;
 #define SLAB_DBG_LOG(fmt, ...) fprintf(slab_fp, fmt, __VA_ARGS__); fflush(slab_fp)
@@ -129,8 +131,11 @@ struct slab_stats {
     size_t frees;
     size_t slab_allocs;
     size_t slab_frees;
+    size_t slab_mmaps;
+    size_t slab_pool_allocs;
     size_t failed_slab_frees;
     size_t slab_victim_saves;
+    size_t pool_size_increases;
 };
 
 #define INC_SLAB_STAT(metric) __atomic_add_fetch(metric, 1, __ATOMIC_ACQ_REL)
@@ -235,6 +240,26 @@ struct slab_class {
     struct slab_data *available;
 
     /**
+     * pointer to the pool of pages we have available
+     */
+    void *page_pool;
+
+    /**
+     * number of pages in a pool
+     */
+    uint32_t page_pool_count;
+
+    /*
+     * page pool index we are on
+     */
+    uint32_t page_pool_idx;
+
+    /**
+     * Number of times we call mmap for this slab
+     */
+    uint32_t mmap_count;
+
+    /**
      * Victim cache to recycle a slab to avoid mumap if possible
      */
     struct slab_data *victim;
@@ -290,9 +315,9 @@ struct slab_class {
 #define MAX_SLAB 1 << MAX_SLAB_IDX
 
 #ifdef SLAB_STATS
-#define SLAB_INFO_INITIALIZER(order) { NULL, NULL, 1 << (order), &stats[(order)], { 0 } }
+#define SLAB_INFO_INITIALIZER(order, poolcnt) { NULL, NULL, (poolcnt), 0, 0, NULL, 1 << (order), &stats[(order)], { 0 } }
 #else
-#define SLAB_INFO_INITIALIZER(order) { NULL, NULL, 1 << (order), { 0 } }
+#define SLAB_INFO_INITIALIZER(order, poolcnt) { NULL, NULL, (poolcnt), 0, 0, NULL, 1 << (order), { 0 } }
 #endif
 
 #ifdef SLAB_STATS
@@ -314,17 +339,17 @@ static struct slab_stats stats[MAX_SLAB_IDX + 1] = { { 0 } };
  * and completed during allocator initialization.
  */
 static struct slab_class slabs[] = {
-    SLAB_INFO_INITIALIZER(0),
-    SLAB_INFO_INITIALIZER(1),
-    SLAB_INFO_INITIALIZER(2),
-    SLAB_INFO_INITIALIZER(3),
-    SLAB_INFO_INITIALIZER(4),
-    SLAB_INFO_INITIALIZER(5),
-    SLAB_INFO_INITIALIZER(6),
-    SLAB_INFO_INITIALIZER(7),
-    SLAB_INFO_INITIALIZER(8),
-    SLAB_INFO_INITIALIZER(9),
-    SLAB_INFO_INITIALIZER(10),
+    SLAB_INFO_INITIALIZER(0, 1),
+    SLAB_INFO_INITIALIZER(1, 1),
+    SLAB_INFO_INITIALIZER(2, 1),
+    SLAB_INFO_INITIALIZER(3, 1),
+    SLAB_INFO_INITIALIZER(4, 1),
+    SLAB_INFO_INITIALIZER(5, 1),
+    SLAB_INFO_INITIALIZER(6, 1),
+    SLAB_INFO_INITIALIZER(7, 1),
+    SLAB_INFO_INITIALIZER(8, 1),
+    SLAB_INFO_INITIALIZER(9, 1),
+    SLAB_INFO_INITIALIZER(10, 1),
 };
 
 static inline struct slab_class *get_thread_slab_table()
@@ -645,22 +670,51 @@ static inline struct slab_data *create_new_slab(struct slab_class *slab)
     void *new;
     size_t page_size_long = (size_t)page_size;
     struct slab_data *new_ring;
-    int used_victim = 0;
+
     /*
      * Try to get a victimized slab
      */
     new = __atomic_exchange_n(&slab->victim, NULL, __ATOMIC_RELAXED);
 
     if (new == NULL) {
-        /*
-         * New slabs must be page aligned so that our page offset math works.
-         * So use mmap to grap a page
-         */
-        new = mmap(NULL, page_size_long, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
-        if (new == NULL)
-            return NULL;
+        INC_SLAB_STAT(&slab->stats->slab_allocs);
+        if (slab->page_pool != NULL && slab->page_pool_idx < slab->page_pool_count) {
+            new = slab->page_pool;
+            slab->page_pool_idx++;
+            slab->page_pool = (void *)(((unsigned char *)new) + page_size_long);
+            INC_SLAB_STAT(&slab->stats->slab_pool_allocs);
+        } else {
+            if (slab->mmap_count > slab->obj_size) {
+                /*
+                 * We're using this slab alot
+                 * specifically we're using a heuristic here by checking
+                 * to see if we've mapped as many page as we have in any single
+                 * slab.  If we've done that, lets allocate more pages per
+                 * mmap to try reduce the number of times we have to call mmap
+                 * NOTE: We don't ever try to map more than SLAB_MAX_PAGE_POOL_COUNT
+                 * pages at once.
+                 */
+                if (slab->page_pool_count < SLAB_MAX_PAGE_POOL_COUNT) {
+                    slab->page_pool_count *= 2;
+                    INC_SLAB_STAT(&slab->stats->pool_size_increases);
+                }
+                slab->mmap_count = 0;
+            }
+            slab->mmap_count++;
+            /*
+             * New slabs must be page aligned so that our page offset math works.
+             * So use mmap to grab a pool of pages
+             */
+            new = mmap(NULL, page_size_long * slab->page_pool_count, PROT_READ | PROT_WRITE,
+                       MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+            if (new == NULL)
+                return NULL;
+            INC_SLAB_STAT(&slab->stats->slab_mmaps);
+            slab->page_pool_idx = 1;
+            slab->page_pool = (void *)(((unsigned char *)new) + page_size_long);
+       }
     } else {
-        used_victim = 1;
+        INC_SLAB_STAT(&slab->stats->slab_victim_saves);
     }
 
     /*
@@ -671,12 +725,6 @@ static inline struct slab_data *create_new_slab(struct slab_class *slab)
 #ifdef SLAB_STATS
     new_ring->stats = slab->stats;
 #endif
-
-    if (used_victim == 1) {
-        INC_SLAB_STAT(&new_ring->stats->slab_victim_saves);
-    } else {
-        INC_SLAB_STAT(&new_ring->stats->slab_allocs);
-    }
 
     new_ring->allocated_state = 0;
     new_ring->obj_size = slab->obj_size;
@@ -1238,12 +1286,14 @@ static __attribute__((destructor)) void slab_cleanup()
     fprintf(fp, "{ \"cmd\": \"%s\", \"slabs\": [", cmdstring);
 
     for (i = 0; i <= MAX_SLAB_IDX; i++) {
-        fprintf(fp, "{\"obj_size\":%lu, \"objs_per_slab\":%u, \"allocs\":%lu, \"frees\":%lu, \"slab_allocs\":%lu, \"slab_frees\":%lu, \"slab_victim_saves\":%lu, \"failed_slab_frees\":%lu}",
+        fprintf(fp, "{\"obj_size\":%lu, \"objs_per_slab\":%u, \"allocs\":%lu, \"frees\":%lu, \"slab_allocs\":%lu, \"slab_frees\":%lu, \"slab_victim_saves\":%lu, \"failed_slab_frees\":%lu, \"pool_size_increases\":%lu, \"slab_maps\":%lu}",
             slabs[i].obj_size, slabs[i].template.available_objs,
             slabs[i].stats->allocs, slabs[i].stats->frees,
             slabs[i].stats->slab_allocs, slabs[i].stats->slab_frees,
             slabs[i].stats->slab_victim_saves,
-            slabs[i].stats->failed_slab_frees);
+            slabs[i].stats->failed_slab_frees,
+            slabs[i].stats->pool_size_increases,
+            slabs[i].stats->slab_mmaps);
         if (i != MAX_SLAB_IDX)
             fprintf(fp, ",");
     }
