@@ -758,6 +758,7 @@ static inline struct slab_data *create_new_slab(struct slab_class *slab)
 static inline void *create_obj_in_new_slab(struct slab_class *slab)
 {
     struct slab_data *new = create_new_slab(slab);
+    struct slab_data *old;
     void *obj;
     uint32_t ring_count, flags;
     size_t page_size_long = (size_t)page_size;
@@ -771,16 +772,17 @@ static inline void *create_obj_in_new_slab(struct slab_class *slab)
     new->bitmap[0] |= 0x1;
     obj = new->obj_start;
     slab_data_inc_obj_count(new, &ring_count, &flags);
-    new = __atomic_exchange_n(&slab->available, new, __ATOMIC_RELAXED);
-    if (new != NULL) {
-        slab_data_set_flags(new, SLAB_RING_ORPHANED, &ring_count, &flags);
+    old = slab->available;
+    slab->available = new;
+    if (old != NULL) {
+        slab_data_set_flags(old, SLAB_RING_ORPHANED, &ring_count, &flags);
         if (ring_count == 0) {
-            if (!__atomic_compare_exchange_n(&slab->victim, &victim_data, new,
+            if (!__atomic_compare_exchange_n(&slab->victim, &victim_data, old,
                                          0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)) {
-                INC_SLAB_STAT(&new->stats->slab_frees);
-                SLAB_DBG_EVENT("slab",new,"free", NULL, 0);
-                if (munmap(new, page_size_long)) {
-                    INC_SLAB_STAT(&new->stats->failed_slab_frees);
+                INC_SLAB_STAT(&old->stats->slab_frees);
+                SLAB_DBG_EVENT("slab",old,"free", NULL, 0);
+                if (munmap(old, page_size_long)) {
+                    INC_SLAB_STAT(&old->stats->failed_slab_frees);
                 }
             }
         }
@@ -809,7 +811,7 @@ static inline void *get_slab_obj(struct slab_class *slab)
     struct slab_data *idx;
     void *obj = NULL;
 
-    idx = __atomic_load_n(&slab->available, __ATOMIC_RELAXED);
+    idx = slab->available;
     if (idx != NULL)
         obj = select_obj(idx);
     if (obj != NULL)
@@ -937,10 +939,7 @@ static void *slab_malloc(size_t num, const char *file, int line)
     struct slab_class *myslabs = get_thread_slab_table();
     void *ret;
 
-    if (myslabs == NULL)
-        return NULL;
-
-    if (num == 0)
+    if (myslabs == NULL || num == 0)
         return NULL;
 
     /*
