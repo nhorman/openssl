@@ -106,6 +106,12 @@
  * relaxed memory ordering. When SLAB_STATS is not enabled, this macro
  * expands to a no-op.
  */
+
+#ifdef SLAB_STATS
+static size_t current_alloced_pages = 0;
+static size_t max_alloced_pages = 0;
+#endif
+
 static long page_size = 0;
 
 static pthread_key_t thread_slab_key;
@@ -138,8 +144,10 @@ struct slab_stats {
     size_t pool_size_increases;
 };
 
-#define INC_SLAB_STAT(metric) __atomic_add_fetch(metric, 1, __ATOMIC_ACQ_REL)
+#define ADD_SLAB_STAT(metric, value) __atomic_add_fetch(metric, 1, __ATOMIC_ACQ_REL)
+#define INC_SLAB_STAT(metric) ADD_SLAB_STAT((metric), 1) 
 #else
+#define ADD_SLAB_STAT(metric, value)
 #define INC_SLAB_STAT(metric)
 #endif
 
@@ -649,6 +657,30 @@ static inline void *select_obj(struct slab_data *slab)
     return NULL;
 }
 
+#ifdef SLAB_STATS
+static inline void update_max_alloced_pages()
+{
+    size_t my_max_alloced_pages;
+    size_t my_current_alloced_pages;
+    size_t my_new_max_alloced_pages;
+
+    my_max_alloced_pages = __atomic_load_n(&max_alloced_pages, __ATOMIC_RELAXED);
+    my_current_alloced_pages = __atomic_load_n(&current_alloced_pages, __ATOMIC_RELAXED);
+
+    for(;;) {
+        if (my_current_alloced_pages < my_max_alloced_pages)
+            break;
+        my_new_max_alloced_pages = my_current_alloced_pages;
+
+        if (__atomic_compare_exchange_n(&max_alloced_pages, &my_max_alloced_pages,
+                                        my_new_max_alloced_pages, 0,
+                                        __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)) {
+            break;
+        }
+    }
+}
+#endif
+
 /**
  * @brief Allocate and initialize a new slab ring page.
  *
@@ -709,6 +741,10 @@ static inline struct slab_data *create_new_slab(struct slab_class *slab)
                        MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
             if (new == NULL)
                 return NULL;
+            ADD_SLAB_STAT(&current_alloced_pages, slab->page_pool_count);
+#ifdef SLAB_STATS
+            update_max_alloced_pages();
+#endif
             INC_SLAB_STAT(&slab->stats->slab_mmaps);
             slab->page_pool_idx = 1;
             slab->page_pool = (void *)(((unsigned char *)new) + page_size_long);
@@ -1296,7 +1332,8 @@ static __attribute__((destructor)) void slab_cleanup()
         if (i != MAX_SLAB_IDX)
             fprintf(fp, ",");
     }
-    fprintf(fp, "]}");
+    fprintf(fp, "],");
+    fprintf(fp, "\"max_alloced_pages\":%lu}", max_alloced_pages);
     if (fp != stderr)
         fclose(fp);
 #endif
