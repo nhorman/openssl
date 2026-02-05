@@ -4,18 +4,18 @@ import csv
 import sys
 
 def find_matching_free(idx, csvarray):
-    objtype = csvarray[idx][0]
-    objaddr = csvarray[idx][1]
+    objtype = csvarray[idx]["info"][0]
+    objaddr = csvarray[idx]["info"][1]
 
-    for row in csvarray[idx:]:
-        if row[0] == objtype and row[1] == objaddr and row[2] == "event:free":
+    for entry in csvarray[idx:]:
+        if entry["info"][0] == objtype and entry["info"][1] == objaddr and entry["info"][2] == "event:free":
             return;
-    print(f"{csvarray[idx]} on line {idx} has no matching free")
+    print(f"{csvarray[idx]} on line {csvarray[idx]["index"]} has no matching free")
 
 def scan_for_leaks(objtype, csvarray):
     indexlist = []
-    for index, row in enumerate(csvarray):
-        if row[0] == objtype and row[2] == "event:allocate":
+    for index, entry in enumerate(csvarray):
+        if entry["info"][0] == objtype and entry["info"][2] == "event:allocate":
             indexlist.append(index)
     print(f"Scanning for leaks in {objtype}, {len(indexlist)} instances")
     for idx in indexlist:
@@ -23,15 +23,29 @@ def scan_for_leaks(objtype, csvarray):
 
 
 def main(argv):
-    csvarray = []
+    allocatorarray = []
+    slabarray = []
+    objarray = []
+    nonslabobjarray = []
+    idx = 0
+    print("Reading in log")
     with open(argv[0], newline='') as csvfile:
         csvreader = csv.reader(csvfile, delimiter='|')
         for row in csvreader:
-            csvarray.append(row)
-        scan_for_leaks("type:allocator", csvarray)
-        scan_for_leaks("type:slab", csvarray)
-        scan_for_leaks("type:obj", csvarray)
-        scan_for_leaks("type:nonslab-obj", csvarray)
+            entry = { "index" : idx, "info" : row } 
+            if row[0] == "type:allocator":
+                allocatorarray.append(entry)
+            elif row[0] == "type:slab":
+                slabarray.append(entry)
+            elif row[0] == "type:obj":
+                objarray.append(entry)
+            elif row[0] == "type:nonslab-obj":
+                nonslabobjarray.append(entry)
+            idx = idx + 1
+        scan_for_leaks("type:allocator", allocatorarray)
+        scan_for_leaks("type:slab", slabarray)
+        scan_for_leaks("type:obj", objarray)
+        scan_for_leaks("type:nonslab-obj", nonslabobjarray)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
