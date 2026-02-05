@@ -109,7 +109,7 @@ SOURCE[../libcrypto]=$UTIL_COMMON \
         provider_child.c punycode.c passphrase.c sleep.c \
         quic_vlint.c time.c defaults.c ssl_err.c
 
-IF[{- !$disabled{slab-allocator} -}]
+IF[{- !$disabled{"slab-allocator"} -}]
     SOURCE[../libcrypto]=slab_allocator.c
 ENDIF
 
