@@ -138,6 +138,7 @@ struct slab_stats {
     size_t slab_allocs;
     size_t slab_frees;
     size_t slab_mmaps;
+    size_t slab_munmaps;
     size_t slab_pool_allocs;
     size_t failed_slab_frees;
     size_t slab_victim_saves;
@@ -164,6 +165,8 @@ struct slab_stats {
  * allocation state of a single object within the slab.
  */
 struct slab_data {
+    struct slab_data *page_leader;
+
 #ifdef SLAB_STATS
     /**
      * Pointer to the slab size-class descriptor associated with this slab.
@@ -191,6 +194,8 @@ struct slab_data {
      */
     uint32_t bitmap_word_count;
 
+    uint32_t page_use_count;
+    uint32_t full_page_count;
     /**
      * Pointer to the start of the object storage region within the slab.
      */
@@ -702,6 +707,8 @@ static inline struct slab_data *create_new_slab(struct slab_class *slab)
     void *new;
     size_t page_size_long = (size_t)page_size;
     struct slab_data *new_ring;
+    struct slab_data *slab_page;
+    uint32_t page_idx;
 
     /*
      * Try to get a victimized slab
@@ -709,7 +716,6 @@ static inline struct slab_data *create_new_slab(struct slab_class *slab)
     new = __atomic_exchange_n(&slab->victim, NULL, __ATOMIC_RELAXED);
 
     if (new == NULL) {
-        INC_SLAB_STAT(&slab->stats->slab_allocs);
         if (slab->page_pool != NULL && slab->page_pool_idx < slab->page_pool_count) {
             new = slab->page_pool;
             slab->page_pool_idx++;
@@ -741,11 +747,20 @@ static inline struct slab_data *create_new_slab(struct slab_class *slab)
                        MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
             if (new == NULL)
                 return NULL;
+            INC_SLAB_STAT(&slab->stats->slab_mmaps);
+            for (page_idx = 0; page_idx < slab->page_pool_count; page_idx++) {
+                slab_page = (struct slab_data *)(((uint8_t *)new) + (page_size_long * page_idx));
+                slab_page->page_leader = (struct slab_data *)new;
+                if (slab_page == (struct slab_data *)new) {
+                    slab_page->page_use_count = slab->page_pool_count;
+                    slab_page->full_page_count = slab->page_pool_count;
+                }
+            }
+
             ADD_SLAB_STAT(&current_alloced_pages, slab->page_pool_count);
 #ifdef SLAB_STATS
             update_max_alloced_pages();
 #endif
-            INC_SLAB_STAT(&slab->stats->slab_mmaps);
             slab->page_pool_idx = 1;
             slab->page_pool = (void *)(((unsigned char *)new) + page_size_long);
        }
@@ -799,6 +814,7 @@ static inline void *create_obj_in_new_slab(struct slab_class *slab)
     uint32_t ring_count, flags;
     size_t page_size_long = (size_t)page_size;
     struct slab_data *victim_data = NULL;
+    uint32_t page_count;
 
     if (new == NULL)
         return NULL;
@@ -816,9 +832,13 @@ static inline void *create_obj_in_new_slab(struct slab_class *slab)
             if (!__atomic_compare_exchange_n(&slab->victim, &victim_data, old,
                                          0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)) {
                 INC_SLAB_STAT(&old->stats->slab_frees);
-                SLAB_DBG_EVENT("slab",old,"free", NULL, 0);
-                if (munmap(old, page_size_long)) {
-                    INC_SLAB_STAT(&old->stats->failed_slab_frees);
+                page_count = __atomic_sub_fetch(&old->page_leader->page_use_count, 1, __ATOMIC_RELAXED);
+                if (page_count == 0) {
+                    SLAB_DBG_EVENT("slab",old->page_leader,"free", NULL, 0);
+                    INC_SLAB_STAT(&old->stats->slab_munmaps);
+                    if (munmap(old->page_leader, page_size_long * old->page_leader->full_page_count)) {
+                        INC_SLAB_STAT(&old->stats->failed_slab_frees);
+                    }
                 }
             }
         }
@@ -890,6 +910,7 @@ static void return_to_slab(void *addr, struct slab_data *ring)
     struct slab_data *victim_data = NULL;
     struct slab_class *info = get_thread_slab_table();
     unsigned int idx = get_slab_idx(ring->obj_size);
+    uint32_t page_count;
 
     /*
      * compute the offset of the object from the start of the slab
@@ -924,18 +945,22 @@ static void return_to_slab(void *addr, struct slab_data *ring)
          */
         if (!__atomic_compare_exchange_n(&info[idx].victim, &victim_data, ring,
                                          0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)) {
-            /*
-             * Theres already a victim for this slab, so just free, this one
-             */
-            INC_SLAB_STAT(&ring->stats->slab_frees);
-            /*
-             * return the slab to the OS with munmap
-             */
-            SLAB_DBG_EVENT("slab",ring,"free", NULL, 0);
-            if (munmap(ring, page_size_long)) {
-                INC_SLAB_STAT(&ring->stats->failed_slab_frees);
+            page_count = __atomic_sub_fetch(&ring->page_leader->page_use_count, 1, __ATOMIC_RELAXED);
+            if (page_count == 0) {
+                /*
+                 * Theres already a victim for this slab, so just free, this one
+                 */
+                INC_SLAB_STAT(&ring->stats->slab_frees);
+                /*
+                 * return the slab to the OS with munmap
+                 */
+                SLAB_DBG_EVENT("slab",ring,"free", NULL, 0);
+                INC_SLAB_STAT(&ring->stats->slab_munmaps);
+                if (munmap(ring->page_leader, page_size_long * ring->page_leader->full_page_count)) {
+                    INC_SLAB_STAT(&ring->stats->failed_slab_frees);
+                }
+                return;
             }
-            return;
         }
     }
 
@@ -1211,6 +1236,7 @@ static void destroy_slab_table(void *data)
     uint32_t i;
     uint32_t count, flags;
     size_t page_size_long = (size_t)page_size;
+    uint32_t page_count;
 
     if (info == NULL)
         return;
@@ -1218,18 +1244,26 @@ static void destroy_slab_table(void *data)
         if(info[i].available != NULL) {
             slab_data_set_flags(info[i].available, SLAB_RING_ORPHANED, &count, &flags);
             if (count == 0) {
-                INC_SLAB_STAT(&info[i].stats->slab_frees);
-                SLAB_DBG_EVENT("slab",info[i].available,"free", NULL, 0);
-                if (munmap(info[i].available, page_size_long)) {
-                    INC_SLAB_STAT(&info[i].stats->failed_slab_frees);
+                page_count = __atomic_sub_fetch(&info[i].available->page_leader->page_use_count, 1, __ATOMIC_RELAXED);
+                if (page_count == 0) {
+                    INC_SLAB_STAT(&info[i].stats->slab_frees);
+                    INC_SLAB_STAT(&info[i].stats->slab_munmaps);
+                    SLAB_DBG_EVENT("slab",info[i].available,"free", NULL, 0);
+                    if (munmap(info[i].available->page_leader, page_size_long * info[i].available->page_leader->full_page_count)) {
+                        INC_SLAB_STAT(&info[i].stats->failed_slab_frees);
+                    }
                 }
             }
             if (info[i].victim != NULL) {
-                INC_SLAB_STAT(&info[i].stats->slab_frees);
-                SLAB_DBG_EVENT("slab",info[i].victim,"free", NULL, 0);
-                if (munmap(info[i].victim, page_size_long)) {
-                    INC_SLAB_STAT(&info[i].stats->failed_slab_frees);
-               }
+                page_count = __atomic_sub_fetch(&info[i].victim->page_leader->page_use_count, 1, __ATOMIC_RELAXED);
+                if (page_count == 0) {
+                    INC_SLAB_STAT(&info[i].stats->slab_frees);
+                    INC_SLAB_STAT(&info[i].stats->slab_munmaps);
+                    SLAB_DBG_EVENT("slab",info[i].victim,"free", NULL, 0);
+                    if (munmap(info[i].victim->page_leader, page_size_long * info[i].victim->page_leader->full_page_count)) {
+                        INC_SLAB_STAT(&info[i].stats->failed_slab_frees);
+                    }
+                }
             }
         }
     }
@@ -1321,14 +1355,15 @@ static __attribute__((destructor)) void slab_cleanup()
     fprintf(fp, "{ \"cmd\": \"%s\", \"slabs\": [", cmdstring);
 
     for (i = 0; i <= MAX_SLAB_IDX; i++) {
-        fprintf(fp, "{\"obj_size\":%lu, \"objs_per_slab\":%u, \"allocs\":%lu, \"frees\":%lu, \"slab_allocs\":%lu, \"slab_frees\":%lu, \"slab_victim_saves\":%lu, \"failed_slab_frees\":%lu, \"pool_size_increases\":%lu, \"slab_maps\":%lu}",
+        fprintf(fp, "{\"obj_size\":%lu, \"objs_per_slab\":%u, \"allocs\":%lu, \"frees\":%lu, \"slab_allocs\":%lu, \"slab_frees\":%lu, \"slab_victim_saves\":%lu, \"failed_slab_frees\":%lu, \"pool_size_increases\":%lu, \"slab_maps\":%lu, \"slab_munmaps\":%lu}",
             slabs[i].obj_size, slabs[i].template.available_objs,
             slabs[i].stats->allocs, slabs[i].stats->frees,
             slabs[i].stats->slab_allocs, slabs[i].stats->slab_frees,
             slabs[i].stats->slab_victim_saves,
             slabs[i].stats->failed_slab_frees,
             slabs[i].stats->pool_size_increases,
-            slabs[i].stats->slab_mmaps);
+            slabs[i].stats->slab_mmaps,
+            slabs[i].stats->slab_munmaps);
         if (i != MAX_SLAB_IDX)
             fprintf(fp, ",");
     }
