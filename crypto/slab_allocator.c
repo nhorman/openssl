@@ -774,6 +774,7 @@ static inline struct slab_data *create_new_slab(struct slab_class *slab)
      */
     new_ring = get_slab_data(new);
 
+    SLAB_DBG_EVENT_SZ("slab",new_ring, page_size_long, "allocate", NULL, 0);
 #ifdef SLAB_STATS
     new_ring->stats = slab->stats;
 #endif
@@ -786,7 +787,6 @@ static inline struct slab_data *create_new_slab(struct slab_class *slab)
     new_ring->bitmap[new_ring->bitmap_word_count - 1] = slab->template.last_word_mask;
     new_ring->obj_start = (void *)(new_ring->bitmap + new_ring->bitmap_word_count);
     new_ring->magic = SLAB_MAGIC;
-    SLAB_DBG_EVENT_SZ("slab",new_ring, page_size_long, "allocate", NULL, 0);
     return new_ring;
 }
 
@@ -833,9 +833,9 @@ static inline void *create_obj_in_new_slab(struct slab_class *slab)
             if (!__atomic_compare_exchange_n(&slab->victim, &victim_data, old,
                                          0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)) {
                 INC_SLAB_STAT(&old->stats->slab_frees);
-                page_count = __atomic_sub_fetch(&old->page_leader->page_use_count, 1, __ATOMIC_RELAXED);
+                SLAB_DBG_EVENT("slab",old,"free", NULL, 0);
+                page_count = __atomic_sub_fetch(&old->page_leader->page_use_count, 1, __ATOMIC_ACQ_REL);
                 if (page_count == 0) {
-                    SLAB_DBG_EVENT("slab",old->page_leader,"free", NULL, 0);
                     INC_SLAB_STAT(&old->stats->slab_munmaps);
                     if (munmap(old->page_leader, page_size_long * old->page_leader->full_page_count)) {
                         INC_SLAB_STAT(&old->stats->failed_slab_frees);
@@ -947,12 +947,12 @@ static void return_to_slab(void *addr, struct slab_data *ring)
         if (!__atomic_compare_exchange_n(&info[idx].victim, &victim_data, ring,
                                          0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)) {
             INC_SLAB_STAT(&ring->stats->slab_frees);
-            page_count = __atomic_sub_fetch(&ring->page_leader->page_use_count, 1, __ATOMIC_RELAXED);
+            SLAB_DBG_EVENT("slab",ring,"free", NULL, 0);
+            page_count = __atomic_sub_fetch(&ring->page_leader->page_use_count, 1, __ATOMIC_ACQ_REL);
             if (page_count == 0) {
                 /*
                  * return the slab to the OS with munmap
                  */
-                SLAB_DBG_EVENT("slab",ring,"free", NULL, 0);
                 INC_SLAB_STAT(&ring->stats->slab_munmaps);
                 if (munmap(ring->page_leader, page_size_long * ring->page_leader->full_page_count)) {
                     INC_SLAB_STAT(&ring->stats->failed_slab_frees);
@@ -1244,7 +1244,7 @@ static void destroy_slab_table(void *data)
             if (count == 0) {
                 INC_SLAB_STAT(&info[i].stats->slab_frees);
                 SLAB_DBG_EVENT("slab",info[i].available,"free", NULL, 0);
-                page_count = __atomic_sub_fetch(&info[i].available->page_leader->page_use_count, 1, __ATOMIC_RELAXED);
+                page_count = __atomic_sub_fetch(&info[i].available->page_leader->page_use_count, 1, __ATOMIC_ACQ_REL);
                 if (page_count == 0) {
                     INC_SLAB_STAT(&info[i].stats->slab_munmaps);
                     if (munmap(info[i].available->page_leader, page_size_long * info[i].available->page_leader->full_page_count)) {
@@ -1255,7 +1255,7 @@ static void destroy_slab_table(void *data)
             if (info[i].victim != NULL) {
                 INC_SLAB_STAT(&info[i].stats->slab_frees);
                 SLAB_DBG_EVENT("slab",info[i].victim,"free", NULL, 0);
-                page_count = __atomic_sub_fetch(&info[i].victim->page_leader->page_use_count, 1, __ATOMIC_RELAXED);
+                page_count = __atomic_sub_fetch(&info[i].victim->page_leader->page_use_count, 1, __ATOMIC_ACQ_REL);
                 if (page_count == 0) {
                     INC_SLAB_STAT(&info[i].stats->slab_munmaps);
                     if (munmap(info[i].victim->page_leader, page_size_long * info[i].victim->page_leader->full_page_count)) {
