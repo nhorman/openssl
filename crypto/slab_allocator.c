@@ -716,6 +716,7 @@ static inline struct slab_data *create_new_slab(struct slab_class *slab)
     new = __atomic_exchange_n(&slab->victim, NULL, __ATOMIC_RELAXED);
 
     if (new == NULL) {
+        INC_SLAB_STAT(&slab->stats->slab_allocs);
         if (slab->page_pool != NULL && slab->page_pool_idx < slab->page_pool_count) {
             new = slab->page_pool;
             slab->page_pool_idx++;
@@ -945,12 +946,9 @@ static void return_to_slab(void *addr, struct slab_data *ring)
          */
         if (!__atomic_compare_exchange_n(&info[idx].victim, &victim_data, ring,
                                          0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)) {
+            INC_SLAB_STAT(&ring->stats->slab_frees);
             page_count = __atomic_sub_fetch(&ring->page_leader->page_use_count, 1, __ATOMIC_RELAXED);
             if (page_count == 0) {
-                /*
-                 * Theres already a victim for this slab, so just free, this one
-                 */
-                INC_SLAB_STAT(&ring->stats->slab_frees);
                 /*
                  * return the slab to the OS with munmap
                  */
@@ -1244,22 +1242,22 @@ static void destroy_slab_table(void *data)
         if(info[i].available != NULL) {
             slab_data_set_flags(info[i].available, SLAB_RING_ORPHANED, &count, &flags);
             if (count == 0) {
+                INC_SLAB_STAT(&info[i].stats->slab_frees);
+                SLAB_DBG_EVENT("slab",info[i].available,"free", NULL, 0);
                 page_count = __atomic_sub_fetch(&info[i].available->page_leader->page_use_count, 1, __ATOMIC_RELAXED);
                 if (page_count == 0) {
-                    INC_SLAB_STAT(&info[i].stats->slab_frees);
                     INC_SLAB_STAT(&info[i].stats->slab_munmaps);
-                    SLAB_DBG_EVENT("slab",info[i].available,"free", NULL, 0);
                     if (munmap(info[i].available->page_leader, page_size_long * info[i].available->page_leader->full_page_count)) {
                         INC_SLAB_STAT(&info[i].stats->failed_slab_frees);
                     }
                 }
             }
             if (info[i].victim != NULL) {
+                INC_SLAB_STAT(&info[i].stats->slab_frees);
+                SLAB_DBG_EVENT("slab",info[i].victim,"free", NULL, 0);
                 page_count = __atomic_sub_fetch(&info[i].victim->page_leader->page_use_count, 1, __ATOMIC_RELAXED);
                 if (page_count == 0) {
-                    INC_SLAB_STAT(&info[i].stats->slab_frees);
                     INC_SLAB_STAT(&info[i].stats->slab_munmaps);
-                    SLAB_DBG_EVENT("slab",info[i].victim,"free", NULL, 0);
                     if (munmap(info[i].victim->page_leader, page_size_long * info[i].victim->page_leader->full_page_count)) {
                         INC_SLAB_STAT(&info[i].stats->failed_slab_frees);
                     }
