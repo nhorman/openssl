@@ -749,6 +749,7 @@ static inline struct slab_data *create_new_slab(struct slab_class *slab)
             if (new == NULL)
                 return NULL;
             INC_SLAB_STAT(&slab->stats->slab_mmaps);
+            SLAB_DBG_EVENT_SZ("mmap",new, page_size_long * slab->page_pool_count, "allocate", NULL, 0); 
             for (page_idx = 0; page_idx < slab->page_pool_count; page_idx++) {
                 slab_page = (struct slab_data *)(((uint8_t *)new) + (page_size_long * page_idx));
                 slab_page->page_leader = (struct slab_data *)new;
@@ -837,6 +838,9 @@ static inline void *create_obj_in_new_slab(struct slab_class *slab)
                 page_count = __atomic_sub_fetch(&old->page_leader->page_use_count, 1, __ATOMIC_ACQ_REL);
                 if (page_count == 0) {
                     INC_SLAB_STAT(&old->stats->slab_munmaps);
+                    SLAB_DBG_EVENT_SZ("mmap",old->page_leader,
+                                      page_size_long * old->page_leader->full_page_count,
+                                      "free", NULL, 0); 
                     if (munmap(old->page_leader, page_size_long * old->page_leader->full_page_count)) {
                         INC_SLAB_STAT(&old->stats->failed_slab_frees);
                     }
@@ -954,6 +958,9 @@ static void return_to_slab(void *addr, struct slab_data *ring)
                  * return the slab to the OS with munmap
                  */
                 INC_SLAB_STAT(&ring->stats->slab_munmaps);
+                SLAB_DBG_EVENT_SZ("mmap", ring->page_leader,
+                                  page_size_long * ring->page_leader->full_page_count,
+                                  "free", NULL, 0); 
                 if (munmap(ring->page_leader, page_size_long * ring->page_leader->full_page_count)) {
                     INC_SLAB_STAT(&ring->stats->failed_slab_frees);
                 }
@@ -1247,7 +1254,11 @@ static void destroy_slab_table(void *data)
                 page_count = __atomic_sub_fetch(&info[i].available->page_leader->page_use_count, 1, __ATOMIC_ACQ_REL);
                 if (page_count == 0) {
                     INC_SLAB_STAT(&info[i].stats->slab_munmaps);
-                    if (munmap(info[i].available->page_leader, page_size_long * info[i].available->page_leader->full_page_count)) {
+                    SLAB_DBG_EVENT_SZ("mmap", info[i].available->page_leader,
+                                      page_size_long * info[i].available->page_leader->full_page_count,
+                                      "free", NULL, 0);
+                    if (munmap(info[i].available->page_leader,
+                               page_size_long * info[i].available->page_leader->full_page_count)) {
                         INC_SLAB_STAT(&info[i].stats->failed_slab_frees);
                     }
                 }
@@ -1258,7 +1269,11 @@ static void destroy_slab_table(void *data)
                 page_count = __atomic_sub_fetch(&info[i].victim->page_leader->page_use_count, 1, __ATOMIC_ACQ_REL);
                 if (page_count == 0) {
                     INC_SLAB_STAT(&info[i].stats->slab_munmaps);
-                    if (munmap(info[i].victim->page_leader, page_size_long * info[i].victim->page_leader->full_page_count)) {
+                    SLAB_DBG_EVENT_SZ("mmap", info[i].victim->page_leader,
+                                      page_size_long * info[i].victim->page_leader->full_page_count,
+                                      "free", NULL, 0);
+                    if (munmap(info[i].victim->page_leader,
+                        page_size_long * info[i].victim->page_leader->full_page_count)) {
                         INC_SLAB_STAT(&info[i].stats->failed_slab_frees);
                     }
                 }
