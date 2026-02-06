@@ -175,6 +175,11 @@ struct slab_data {
     uint64_t allocated_state;
 
     /**
+     * Number of pages in use in this slabs pool 
+     */
+    uint64_t page_pool_state;
+
+    /**
      * size of objects in this slab
      */
     size_t obj_size;
@@ -189,9 +194,8 @@ struct slab_data {
      * Number of 64-bit words used by the allocation bitmap.
      */
     uint32_t bitmap_word_count;
-
-    uint32_t page_use_count;
     uint32_t full_page_count;
+
     /**
      * Pointer to the start of the object storage region within the slab.
      */
@@ -356,6 +360,12 @@ static struct slab_class slabs[] = {
     SLAB_INFO_INITIALIZER(10, 1),
 };
 
+/**
+ * @brief get the slab allocator for this thread
+ *
+ * Fetches the per-thread allocator for this thread,
+ * creating it if it doesnt yet exist
+ */
 static inline struct slab_class *get_thread_slab_table()
 {
     struct slab_class *info = pthread_getspecific(thread_slab_key);
@@ -430,6 +440,20 @@ static unsigned int get_slab_idx(size_t num)
 }
 
 /**
+ * @def SLAB_RING_ORPHANED
+ * @brief flag to indicate the slab is no longer used by the allocation
+ *        side of the allocator
+ */
+#define SLAB_RING_ORPHANED (1 << 0)
+
+/**
+ * @def SLAB_POOL_ORPHANED
+ * @brief indicates that the pool which a slab belongs
+ * to is no longer being allocated from
+ */
+#define SLAB_POOL_ORPHANED (1 << 1)
+
+/**
  * @brief atomically modify the allocation_state variable in a slab
  *
  * This function atomically adds the delta value provided to the atomic
@@ -444,34 +468,34 @@ static unsigned int get_slab_idx(size_t num)
  * @param new_count the modified count after the operation
  * @param new_flags the modified flags after the operation
  */
-static inline void slab_data_mod_allocated_state(struct slab_data *ring,
-                                                 int delta,
-                                                 uint32_t flags,
-                                                 uint32_t *new_count,
-                                                 uint32_t *new_flags)
+static inline void slab_data_mod_counter_state(uint64_t *counter,
+                                               int delta,
+                                               uint32_t flags,
+                                               uint32_t *new_count,
+                                               uint32_t *new_flags)
 {
-    uint64_t curr_allocated_state;
-    uint64_t new_allocated_state;
+    uint64_t curr_counter_state;
+    uint64_t new_counter_state;
 
-    curr_allocated_state = __atomic_load_n(&ring->allocated_state, __ATOMIC_RELAXED);
+    curr_counter_state = __atomic_load_n(counter, __ATOMIC_RELAXED);
     for (;;) {
-        new_allocated_state = ((uint64_t)(curr_allocated_state & 0x00000000ffffffffUL) + delta) |
-                              ((uint64_t)((curr_allocated_state >> 32) | flags) << 32);
-        if (__atomic_compare_exchange_n(&ring->allocated_state, &curr_allocated_state,
-                                        new_allocated_state, 0, __ATOMIC_ACQ_REL,
+        if (flags & SLAB_POOL_ORPHANED) {
+            new_counter_state = (uint64_t)(curr_counter_state & 0x00000000ffffffffUL) + delta;
+            if (new_counter_state == 0)
+                new_counter_state = (uint64_t)((new_counter_state >> 32) | flags) << 32;
+        } else {
+            new_counter_state = ((uint64_t)(curr_counter_state & 0x00000000ffffffffUL) + delta) |
+                                 ((uint64_t)((curr_counter_state >> 32) | flags) << 32);
+        }
+
+        if (__atomic_compare_exchange_n(counter, &curr_counter_state,
+                                        new_counter_state, 0, __ATOMIC_ACQ_REL,
                                         __ATOMIC_RELAXED))
             break;
     }
-    *new_count = (uint32_t)(new_allocated_state & 0x00000000ffffffffUL);
-    *new_flags = (uint32_t)(new_allocated_state >> 32);
+    *new_count = (uint32_t)(new_counter_state & 0x00000000ffffffffUL);
+    *new_flags = (uint32_t)(new_counter_state >> 32);
 }
-
-/**
- * @def SLAB_RING_ORPHANED
- * @brief flag to indicate the slab is no longer used by the allocation
- *        side of the allocator
- */
-#define SLAB_RING_ORPHANED (1 << 0)
 
 /**
  * @brief sets flags on a slab_data
@@ -488,7 +512,7 @@ static inline void slab_data_set_flags(struct slab_data *ring,
                                        uint32_t *newcount,
                                        uint32_t *newflags)
 {
-    slab_data_mod_allocated_state(ring, 0, flags, newcount, newflags);
+    slab_data_mod_counter_state(&ring->allocated_state, 0, flags, newcount, newflags);
 }
 
 /**
@@ -505,7 +529,7 @@ static inline void slab_data_inc_obj_count(struct slab_data *ring,
                                            uint32_t *ret_count,
                                            uint32_t *ret_flags)
 {
-    slab_data_mod_allocated_state(ring, 1, 0, ret_count, ret_flags);
+    slab_data_mod_counter_state(&ring->allocated_state, 1, 0, ret_count, ret_flags);
 }
 
 /**
@@ -522,9 +546,24 @@ static inline void slab_data_dec_obj_count(struct slab_data *ring,
                                            uint32_t *ret_count,
                                            uint32_t *ret_flags)
 {
-    slab_data_mod_allocated_state(ring, -1, 0, ret_count, ret_flags);
+    slab_data_mod_counter_state(&ring->allocated_state, -1, 0, ret_count, ret_flags);
 }
 
+/**
+ * @brief modify the page_pool_state of a slab
+ *
+ * This function adds (or subtracts a count from the page_pool_state
+ * Automatically setting the SLAB_POOL_ORPHANED flag if the count
+ * reaches zero
+ */
+static inline void slab_pool_mod_obj_count(struct slab_data *ring,
+                                           int delta,
+                                           uint32_t *ret_count,
+                                           uint32_t *ret_flags)
+{
+    slab_data_mod_counter_state(&ring->page_pool_state, delta,
+                                SLAB_POOL_ORPHANED, ret_count, ret_flags);
+}
 
 /**
  * @def PAGE_MASK
@@ -565,6 +604,9 @@ static inline struct slab_data *get_slab_data(void *addr)
     return (struct slab_data *)PAGE_START(addr);
 }
 
+/**
+ * @brief checks if the slab magic value is correct
+ */
 static inline __attribute__((no_sanitize("address"))) int is_slab_magic_correct(void *addr)
 {
     struct slab_data *ring = get_slab_data(addr);
@@ -654,6 +696,14 @@ static inline void *select_obj(struct slab_data *slab)
 }
 
 #ifdef SLAB_STATS
+/**
+ * @brief update the maximum number of allocated pages we have outstanding
+ * 
+ * Used when stats are enabled, this function computes the current number
+ * of allocated pages, and stores that value to max_allocated_pages, if
+ * and only if the current computed value is larger than the value of
+ * max_alloced_pages
+ */
 static inline void update_max_alloced_pages()
 {
     size_t my_max_alloced_pages;
@@ -701,6 +751,13 @@ static inline struct slab_data *create_new_slab(struct slab_class *slab)
     struct slab_data *slab_page;
     uint32_t page_idx;
 
+    /*
+     * Note, we don't always just allocate a single page here, to save time
+     * and avoid using mmap too much, we try to batch this operation, by allocating
+     * page_pool_count pages to a pool for this allocator, and then iterate over
+     * them on the allocation side.  This keeps us from having to use the slow mmap
+     * call too often
+     */
     INC_SLAB_STAT(&slab->stats->slab_allocs);
     if (slab->page_pool != NULL && slab->page_pool_idx < slab->page_pool_count) {
         new = slab->page_pool;
@@ -739,7 +796,7 @@ static inline struct slab_data *create_new_slab(struct slab_class *slab)
             slab_page = (struct slab_data *)(((uint8_t *)new) + (page_size_long * page_idx));
             slab_page->page_leader = (struct slab_data *)new;
             if (slab_page == (struct slab_data *)new) {
-                slab_page->page_use_count = slab->page_pool_count;
+                slab_page->page_pool_state = slab->page_pool_count;
                 slab_page->full_page_count = slab->page_pool_count;
             }
         }
@@ -814,8 +871,12 @@ static inline void *create_obj_in_new_slab(struct slab_class *slab)
         if (ring_count == 0) {
             INC_SLAB_STAT(&old->stats->slab_frees);
             SLAB_DBG_EVENT("slab",old,"free", NULL, 0);
-            page_count = __atomic_sub_fetch(&old->page_leader->page_use_count, 1, __ATOMIC_ACQ_REL);
-            if (page_count == 0) {
+            slab_pool_mod_obj_count(old->page_leader, -1, &page_count, &flags);
+            if (page_count == 0 && flags & SLAB_POOL_ORPHANED) {
+                /*
+                 * We're the last user of this pool, and the allocation side
+                 * isn't using it anymore, we can return it to the os
+                 */
                 INC_SLAB_STAT(&old->stats->slab_munmaps);
                 SLAB_DBG_EVENT_SZ("mmap",old->page_leader,
                                   page_size_long * old->page_leader->full_page_count,
@@ -890,8 +951,6 @@ static void return_to_slab(void *addr, struct slab_data *ring)
     uint64_t value;
     size_t page_size_long = (size_t)page_size;
     uint32_t obj_count, flags;
-    struct slab_class *info = get_thread_slab_table();
-    unsigned int idx = get_slab_idx(ring->obj_size);
     uint32_t page_count;
 
     /*
@@ -919,8 +978,8 @@ static void return_to_slab(void *addr, struct slab_data *ring)
     if (obj_count == 0 && (flags & SLAB_RING_ORPHANED)) {
         INC_SLAB_STAT(&ring->stats->slab_frees);
         SLAB_DBG_EVENT("slab",ring,"free", NULL, 0);
-        page_count = __atomic_sub_fetch(&ring->page_leader->page_use_count, 1, __ATOMIC_ACQ_REL);
-        if (page_count == 0) {
+        slab_pool_mod_obj_count(ring->page_leader, -1, &page_count, &flags);
+        if (page_count == 0 && (flags & SLAB_POOL_ORPHANED)) {
             /*
              * return the slab to the OS with munmap
              */
@@ -1217,8 +1276,17 @@ static void destroy_slab_table(void *data)
             if (count == 0) {
                 INC_SLAB_STAT(&info[i].stats->slab_frees);
                 SLAB_DBG_EVENT("slab",info[i].available,"free", NULL, 0);
-                page_count = __atomic_sub_fetch(&info[i].available->page_leader->page_use_count, 1, __ATOMIC_ACQ_REL);
-                if (page_count == 0) {
+                /*
+                 * We have to be a bit tricky here.
+                 * We can't just drop the page count by one, as there may be more pages
+                 * in the pool that haven't been touched yet.  But since we know
+                 * we're never going to allocate from this pool again, we can subtract
+                 * all the pages remaining in the pool to see if we hit zero
+                 */
+                slab_pool_mod_obj_count(info[i].available->page_leader,
+                                        (info[i].page_pool_idx - 1) - info[i].available->page_leader->full_page_count,
+                                        &page_count, &flags); 
+                if (page_count == 0 && (flags & SLAB_POOL_ORPHANED)) {
                     INC_SLAB_STAT(&info[i].stats->slab_munmaps);
                     SLAB_DBG_EVENT_SZ("mmap", info[i].available->page_leader,
                                       page_size_long * info[i].available->page_leader->full_page_count,
