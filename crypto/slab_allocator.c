@@ -750,7 +750,7 @@ static inline struct slab_data *create_new_slab(struct slab_class *slab)
         slab->page_pool = (void *)(((unsigned char *)new) + page_size_long);
         INC_SLAB_STAT(&slab->stats->slab_pool_allocs);
     } else {
-        if (slab->mmap_count > slab->obj_size) {
+        if (slab->mmap_count > slab->obj_size * slab->page_pool_count) {
             /*
              * We're using this slab alot
              * specifically we're using a heuristic here by checking
