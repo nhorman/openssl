@@ -141,10 +141,12 @@ struct slab_stats {
     size_t pool_size_increases;
 };
 
-#define ADD_SLAB_STAT(metric, value) __atomic_add_fetch(metric, 1, __ATOMIC_ACQ_REL)
+#define ADD_SLAB_STAT(metric, value) __atomic_add_fetch(metric, value, __ATOMIC_ACQ_REL)
+#define SUB_SLAB_STAT(metric, value) __atomic_sub_fetch(metric, value, __ATOMIC_ACQ_REL)
 #define INC_SLAB_STAT(metric) ADD_SLAB_STAT((metric), 1) 
 #else
 #define ADD_SLAB_STAT(metric, value)
+#define SUB_SLAB_STAT(metric, value)
 #define INC_SLAB_STAT(metric)
 #endif
 
@@ -866,6 +868,7 @@ static inline void *create_obj_in_new_slab(struct slab_class *slab)
                 SLAB_DBG_EVENT_SZ("mmap",old->page_leader,
                                   page_size_long * old->page_leader->full_page_count,
                                   "free", NULL, 0); 
+                SUB_SLAB_STAT(&current_alloced_pages, old->page_leader->full_page_count);
                 if (munmap(old->page_leader, page_size_long * old->page_leader->full_page_count)) {
                     INC_SLAB_STAT(&old->stats->failed_slab_frees);
                 }
@@ -972,6 +975,7 @@ static void return_to_slab(void *addr, struct slab_data *ring)
             SLAB_DBG_EVENT_SZ("mmap", ring->page_leader,
                               page_size_long * ring->page_leader->full_page_count,
                               "free", NULL, 0); 
+            SUB_SLAB_STAT(&current_alloced_pages, ring->page_leader->full_page_count);
             if (munmap(ring->page_leader, page_size_long * ring->page_leader->full_page_count)) {
                 INC_SLAB_STAT(&ring->stats->failed_slab_frees);
             }
@@ -1276,6 +1280,7 @@ static void destroy_slab_table(void *data)
                     SLAB_DBG_EVENT_SZ("mmap", info[i].available->page_leader,
                                       page_size_long * info[i].available->page_leader->full_page_count,
                                       "free", NULL, 0);
+                    SUB_SLAB_STAT(&current_alloced_pages, info[i].available->page_leader->full_page_count);
                     if (munmap(info[i].available->page_leader,
                                page_size_long * info[i].available->page_leader->full_page_count)) {
                         INC_SLAB_STAT(&info[i].stats->failed_slab_frees);
