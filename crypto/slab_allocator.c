@@ -447,13 +447,6 @@ static unsigned int get_slab_idx(size_t num)
 #define SLAB_RING_ORPHANED (1 << 0)
 
 /**
- * @def SLAB_POOL_ORPHANED
- * @brief indicates that the pool which a slab belongs
- * to is no longer being allocated from
- */
-#define SLAB_POOL_ORPHANED (1 << 1)
-
-/**
  * @brief atomically modify the allocation_state variable in a slab
  *
  * This function atomically adds the delta value provided to the atomic
@@ -479,14 +472,8 @@ static inline void slab_data_mod_counter_state(uint64_t *counter,
 
     curr_counter_state = __atomic_load_n(counter, __ATOMIC_RELAXED);
     for (;;) {
-        if (flags & SLAB_POOL_ORPHANED) {
-            new_counter_state = (uint64_t)(curr_counter_state & 0x00000000ffffffffUL) + delta;
-            if (new_counter_state == 0)
-                new_counter_state = (uint64_t)((new_counter_state >> 32) | flags) << 32;
-        } else {
-            new_counter_state = ((uint64_t)(curr_counter_state & 0x00000000ffffffffUL) + delta) |
-                                 ((uint64_t)((curr_counter_state >> 32) | flags) << 32);
-        }
+        new_counter_state = ((uint64_t)(curr_counter_state & 0x00000000ffffffffUL) + delta) |
+                             ((uint64_t)((curr_counter_state >> 32) | flags) << 32);
 
         if (__atomic_compare_exchange_n(counter, &curr_counter_state,
                                         new_counter_state, 0, __ATOMIC_ACQ_REL,
@@ -553,8 +540,6 @@ static inline void slab_data_dec_obj_count(struct slab_data *ring,
  * @brief modify the page_pool_state of a slab
  *
  * This function adds (or subtracts a count from the page_pool_state
- * Automatically setting the SLAB_POOL_ORPHANED flag if the count
- * reaches zero
  */
 static inline void slab_pool_mod_obj_count(struct slab_data *ring,
                                            int delta,
@@ -562,7 +547,7 @@ static inline void slab_pool_mod_obj_count(struct slab_data *ring,
                                            uint32_t *ret_flags)
 {
     slab_data_mod_counter_state(&ring->page_pool_state, delta,
-                                SLAB_POOL_ORPHANED, ret_count, ret_flags);
+                                0, ret_count, ret_flags);
 }
 
 /**
@@ -872,7 +857,7 @@ static inline void *create_obj_in_new_slab(struct slab_class *slab)
             INC_SLAB_STAT(&old->stats->slab_frees);
             SLAB_DBG_EVENT("slab",old,"free", NULL, 0);
             slab_pool_mod_obj_count(old->page_leader, -1, &page_count, &flags);
-            if (page_count == 0 && flags & SLAB_POOL_ORPHANED) {
+            if (page_count == 0) {
                 /*
                  * We're the last user of this pool, and the allocation side
                  * isn't using it anymore, we can return it to the os
@@ -979,7 +964,7 @@ static void return_to_slab(void *addr, struct slab_data *ring)
         INC_SLAB_STAT(&ring->stats->slab_frees);
         SLAB_DBG_EVENT("slab",ring,"free", NULL, 0);
         slab_pool_mod_obj_count(ring->page_leader, -1, &page_count, &flags);
-        if (page_count == 0 && (flags & SLAB_POOL_ORPHANED)) {
+        if (page_count == 0) {
             /*
              * return the slab to the OS with munmap
              */
@@ -1286,7 +1271,7 @@ static void destroy_slab_table(void *data)
                 slab_pool_mod_obj_count(info[i].available->page_leader,
                                         (info[i].page_pool_idx - 1) - info[i].available->page_leader->full_page_count,
                                         &page_count, &flags); 
-                if (page_count == 0 && (flags & SLAB_POOL_ORPHANED)) {
+                if (page_count == 0) {
                     INC_SLAB_STAT(&info[i].stats->slab_munmaps);
                     SLAB_DBG_EVENT_SZ("mmap", info[i].available->page_leader,
                                       page_size_long * info[i].available->page_leader->full_page_count,
