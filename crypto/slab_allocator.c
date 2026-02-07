@@ -543,13 +543,13 @@ static inline void slab_data_dec_obj_count(struct slab_data *ring,
  *
  * This function adds (or subtracts a count from the page_pool_state
  */
-static inline void slab_pool_mod_obj_count(struct slab_data *ring,
+static inline void slab_pool_dec_obj_count(struct slab_data *ring,
                                            int delta,
                                            uint32_t *ret_count,
                                            uint32_t *ret_flags)
 {
-    slab_data_mod_counter_state(&ring->page_pool_state, delta,
-                                0, ret_count, ret_flags);
+    *ret_count = __atomic_sub_fetch(&ring->page_pool_state, delta, __ATOMIC_RELAXED); 
+    *ret_flags = 0;
 }
 
 /**
@@ -858,7 +858,7 @@ static inline void *create_obj_in_new_slab(struct slab_class *slab)
         if (ring_count == 0) {
             INC_SLAB_STAT(&old->stats->slab_frees);
             SLAB_DBG_EVENT("slab",old,"free", NULL, 0);
-            slab_pool_mod_obj_count(old->page_leader, -1, &page_count, &flags);
+            slab_pool_dec_obj_count(old->page_leader, 1, &page_count, &flags);
             if (page_count == 0) {
                 /*
                  * We're the last user of this pool, and the allocation side
@@ -966,7 +966,7 @@ static void return_to_slab(void *addr, struct slab_data *ring)
     if (obj_count == 0 && (flags & SLAB_RING_ORPHANED)) {
         INC_SLAB_STAT(&ring->stats->slab_frees);
         SLAB_DBG_EVENT("slab",ring,"free", NULL, 0);
-        slab_pool_mod_obj_count(ring->page_leader, -1, &page_count, &flags);
+        slab_pool_dec_obj_count(ring->page_leader, 1, &page_count, &flags);
         if (page_count == 0) {
             /*
              * return the slab to the OS with munmap
@@ -1256,6 +1256,7 @@ static void destroy_slab_table(void *data)
     uint32_t count, flags;
     size_t page_size_long = (size_t)page_size;
     uint32_t page_count;
+    int reduction;
 
     if (info == NULL)
         return;
@@ -1272,8 +1273,10 @@ static void destroy_slab_table(void *data)
                  * we're never going to allocate from this pool again, we can subtract
                  * all the pages remaining in the pool to see if we hit zero
                  */
-                slab_pool_mod_obj_count(info[i].available->page_leader,
-                                        (info[i].page_pool_idx - 1) - info[i].available->page_leader->full_page_count,
+                reduction = info[i].available->page_leader->full_page_count -
+                            (info[i].page_pool_idx - 1);
+                slab_pool_dec_obj_count(info[i].available->page_leader,
+                                        reduction,
                                         &page_count, &flags); 
                 if (page_count == 0) {
                     INC_SLAB_STAT(&info[i].stats->slab_munmaps);
