@@ -356,10 +356,10 @@ static struct slab_class slabs[] = {
     SLAB_INFO_INITIALIZER(4, 1),
     SLAB_INFO_INITIALIZER(5, 1),
     SLAB_INFO_INITIALIZER(6, 1),
-    SLAB_INFO_INITIALIZER(7, 1),
-    SLAB_INFO_INITIALIZER(8, 1),
-    SLAB_INFO_INITIALIZER(9, 1),
-    SLAB_INFO_INITIALIZER(10, 1),
+    SLAB_INFO_INITIALIZER(7, 2),
+    SLAB_INFO_INITIALIZER(8, 64),
+    SLAB_INFO_INITIALIZER(9, 64),
+    SLAB_INFO_INITIALIZER(10, 128),
 };
 
 /**
@@ -1256,28 +1256,34 @@ static void destroy_slab_table(void *data)
     uint32_t count, flags;
     size_t page_size_long = (size_t)page_size;
     uint32_t page_count;
-    int reduction;
+    uint32_t reduction;
 
     if (info == NULL)
         return;
     for (i = 0; i <= MAX_SLAB_IDX; i++) {
         if(info[i].available != NULL) {
             slab_data_set_flags(info[i].available, SLAB_RING_ORPHANED, &count, &flags);
+            /*
+             * We have to be a bit careful here.  Even if we're not freeing a slab, we
+             * have to record the fact that any remaining pages in the pool are no
+             * longer available, so we reduce the page pool count by the number of pages
+             * remaining in the pool that we've never used.  This allows either this
+             * context, or some other thread to release the pool when the final slab
+             * is freed.
+             */
+            reduction = (info[i].available->page_leader->full_page_count - info[i].page_pool_idx);
+            slab_pool_dec_obj_count(info[i].available->page_leader,
+                                        reduction, &page_count, &flags);
             if (count == 0) {
                 INC_SLAB_STAT(&info[i].stats->slab_frees);
                 SLAB_DBG_EVENT("slab",info[i].available,"free", NULL, 0);
                 /*
-                 * We have to be a bit tricky here.
-                 * We can't just drop the page count by one, as there may be more pages
-                 * in the pool that haven't been touched yet.  But since we know
-                 * we're never going to allocate from this pool again, we can subtract
-                 * all the pages remaining in the pool to see if we hit zero
+                 * If we're freeing this slab, then we have to reduce the pool count
+                 * by one again, and if we hit zero we eliminate the whole pool.
                  */
-                reduction = info[i].available->page_leader->full_page_count -
-                            (info[i].page_pool_idx - 1);
+                reduction = 1;
                 slab_pool_dec_obj_count(info[i].available->page_leader,
-                                        reduction,
-                                        &page_count, &flags); 
+                                        reduction, &page_count, &flags);
                 if (page_count == 0) {
                     INC_SLAB_STAT(&info[i].stats->slab_munmaps);
                     SLAB_DBG_EVENT_SZ("mmap", info[i].available->page_leader,
