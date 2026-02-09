@@ -141,8 +141,8 @@ struct slab_stats {
     size_t pool_size_increases;
 };
 
-#define ADD_SLAB_STAT(metric, value) __atomic_add_fetch(metric, value, __ATOMIC_ACQ_REL)
-#define SUB_SLAB_STAT(metric, value) __atomic_sub_fetch(metric, value, __ATOMIC_ACQ_REL)
+#define ADD_SLAB_STAT(metric, value) __atomic_add_fetch(metric, value, __ATOMIC_RELAXED)
+#define SUB_SLAB_STAT(metric, value) __atomic_sub_fetch(metric, value, __ATOMIC_RELAXED)
 #define INC_SLAB_STAT(metric) ADD_SLAB_STAT((metric), 1) 
 #else
 #define ADD_SLAB_STAT(metric, value)
@@ -480,7 +480,7 @@ static inline void slab_data_mod_counter_state(uint64_t *counter,
                              ((uint64_t)((curr_counter_state >> 32) | flags) << 32);
 
         if (__atomic_compare_exchange_n(counter, &curr_counter_state,
-                                        new_counter_state, 0, __ATOMIC_ACQ_REL,
+                                        new_counter_state, 0, __ATOMIC_RELAXED,
                                         __ATOMIC_RELAXED))
             break;
     }
@@ -596,7 +596,7 @@ static inline int add_to_victim_list(struct slab_data *victim)
          * Swap this victim for the head of the list
          */
         if (__atomic_compare_exchange_n(&global_victim_lists[victim_idx].list, &expected, victim,
-                                        0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED))
+                                        0, __ATOMIC_RELAXED, __ATOMIC_RELAXED))
             break;
     }
     __atomic_add_fetch(&global_victim_lists[victim_idx].list_count, 1, __ATOMIC_RELAXED);
@@ -616,7 +616,7 @@ static inline struct slab_data *remove_from_victim_list(size_t size)
             return NULL;
         next = __atomic_load_n(&new->page_leader, __ATOMIC_RELAXED);
         if (__atomic_compare_exchange_n(&global_victim_lists[size].list, &new, next,
-                                        0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)) {
+                                        0, __ATOMIC_RELAXED, __ATOMIC_RELAXED)) {
             new->page_leader = new;
             break;
         }
@@ -804,7 +804,7 @@ static inline void update_max_alloced_pages()
 
         if (__atomic_compare_exchange_n(&max_alloced_pages, &my_max_alloced_pages,
                                         my_new_max_alloced_pages, 0,
-                                        __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)) {
+                                        __ATOMIC_RELAXED, __ATOMIC_RELAXED)) {
             break;
         }
     }
