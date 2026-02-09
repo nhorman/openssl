@@ -448,6 +448,8 @@ static unsigned int get_slab_idx(size_t num)
  */
 #define SLAB_RING_ORPHANED (1 << 0)
 
+#define SLAB_POOL_ORPHANED (1 << 1)
+
 /**
  * @brief atomically modify the allocation_state variable in a slab
  *
@@ -545,11 +547,19 @@ static inline void slab_data_dec_obj_count(struct slab_data *ring,
  */
 static inline void slab_pool_dec_obj_count(struct slab_data *ring,
                                            int delta,
+                                           uint32_t flags,
                                            uint32_t *ret_count,
                                            uint32_t *ret_flags)
 {
-    *ret_count = __atomic_sub_fetch(&ring->page_pool_state, delta, __ATOMIC_RELAXED); 
-    *ret_flags = 0;
+    slab_data_mod_counter_state(&ring->page_pool_state, delta * -1, flags, ret_count, ret_flags);
+}
+
+static inline void slab_pool_set_flags(struct slab_data *ring,
+                                       uint32_t flags,
+                                       uint32_t *ret_count,
+                                       uint32_t *ret_flags)
+{
+    slab_data_mod_counter_state(&ring->page_pool_state, 0, flags, ret_count, ret_flags);
 }
 
 /**
@@ -730,7 +740,7 @@ static inline void update_max_alloced_pages()
  *
  * @return Pointer to the initialized slab_data, or NULL on failure.
  */
-static inline struct slab_data *create_new_slab(struct slab_class *slab)
+static inline struct slab_data *create_new_slab(struct slab_class *slab, int *new_pool)
 {
     void *new;
     size_t page_size_long = (size_t)page_size;
@@ -738,6 +748,7 @@ static inline struct slab_data *create_new_slab(struct slab_class *slab)
     struct slab_data *slab_page;
     uint32_t page_idx;
 
+    *new_pool = 0;
     /*
      * Note, we don't always just allocate a single page here, to save time
      * and avoid using mmap too much, we try to batch this operation, by allocating
@@ -777,6 +788,7 @@ static inline struct slab_data *create_new_slab(struct slab_class *slab)
                    MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
         if (new == NULL)
             return NULL;
+        *new_pool = 1;
         INC_SLAB_STAT(&slab->stats->slab_mmaps);
         SLAB_DBG_EVENT_SZ("mmap",new, page_size_long * slab->page_pool_count, "allocate", NULL, 0); 
         for (page_idx = 0; page_idx < slab->page_pool_count; page_idx++) {
@@ -836,7 +848,8 @@ static inline struct slab_data *create_new_slab(struct slab_class *slab)
  */
 static inline void *create_obj_in_new_slab(struct slab_class *slab)
 {
-    struct slab_data *new = create_new_slab(slab);
+    int new_pool = 0;
+    struct slab_data *new = create_new_slab(slab, &new_pool);
     struct slab_data *old;
     void *obj;
     uint32_t ring_count, flags;
@@ -855,11 +868,13 @@ static inline void *create_obj_in_new_slab(struct slab_class *slab)
     slab->available = new;
     if (old != NULL) {
         slab_data_set_flags(old, SLAB_RING_ORPHANED, &ring_count, &flags);
+        if (new_pool == 1)
+            slab_pool_set_flags(old->page_leader, SLAB_POOL_ORPHANED, &page_count, &flags);
         if (ring_count == 0) {
             INC_SLAB_STAT(&old->stats->slab_frees);
             SLAB_DBG_EVENT("slab",old,"free", NULL, 0);
-            slab_pool_dec_obj_count(old->page_leader, 1, &page_count, &flags);
-            if (page_count == 0) {
+            slab_pool_dec_obj_count(old->page_leader, 1, 0, &page_count, &flags);
+            if (page_count == 0 && (flags & SLAB_POOL_ORPHANED)) {
                 /*
                  * We're the last user of this pool, and the allocation side
                  * isn't using it anymore, we can return it to the os
@@ -966,8 +981,8 @@ static void return_to_slab(void *addr, struct slab_data *ring)
     if (obj_count == 0 && (flags & SLAB_RING_ORPHANED)) {
         INC_SLAB_STAT(&ring->stats->slab_frees);
         SLAB_DBG_EVENT("slab",ring,"free", NULL, 0);
-        slab_pool_dec_obj_count(ring->page_leader, 1, &page_count, &flags);
-        if (page_count == 0) {
+        slab_pool_dec_obj_count(ring->page_leader, 1, 0, &page_count, &flags);
+        if (page_count == 0 && (flags & SLAB_POOL_ORPHANED)) {
             /*
              * return the slab to the OS with munmap
              */
@@ -1273,7 +1288,7 @@ static void destroy_slab_table(void *data)
              */
             reduction = (info[i].available->page_leader->full_page_count - info[i].page_pool_idx);
             slab_pool_dec_obj_count(info[i].available->page_leader,
-                                        reduction, &page_count, &flags);
+                                        reduction, SLAB_POOL_ORPHANED, &page_count, &flags);
             if (count == 0) {
                 INC_SLAB_STAT(&info[i].stats->slab_frees);
                 SLAB_DBG_EVENT("slab",info[i].available,"free", NULL, 0);
@@ -1283,8 +1298,8 @@ static void destroy_slab_table(void *data)
                  */
                 reduction = 1;
                 slab_pool_dec_obj_count(info[i].available->page_leader,
-                                        reduction, &page_count, &flags);
-                if (page_count == 0) {
+                                        reduction, SLAB_POOL_ORPHANED, &page_count, &flags);
+                if (page_count == 0 && (flags & SLAB_POOL_ORPHANED)) {
                     INC_SLAB_STAT(&info[i].stats->slab_munmaps);
                     SLAB_DBG_EVENT_SZ("mmap", info[i].available->page_leader,
                                       page_size_long * info[i].available->page_leader->full_page_count,
