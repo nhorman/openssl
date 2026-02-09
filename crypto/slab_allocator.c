@@ -855,28 +855,29 @@ static inline struct slab_data *create_new_slab(struct slab_class *slab, int *ne
          * Tell the caller this is a new pool we are using
          */
         *new_pool = 1;
+        if (slab->mmap_count > slab->template.available_objs * slab->page_pool_count) {
+            /*
+             * We're using this slab alot
+             * specifically we're using a heuristic here by checking
+             * to see if we've mapped as many page as we have in any single
+             * slab.  If we've done that, lets allocate more pages per
+             * mmap to try reduce the number of times we have to call mmap
+             * NOTE: We don't ever try to map more than SLAB_MAX_PAGE_POOL_COUNT
+             * pages at once.
+             */
+            if (slab->page_pool_count < SLAB_MAX_PAGE_POOL_COUNT) {
+                slab->page_pool_count *= 2;
+                INC_SLAB_STAT(&slab->stats->pool_size_increases);
+            }
+            slab->mmap_count = 0;
+        }
+        slab->mmap_count++;
+           
         new = remove_from_victim_list(slab->page_pool_count);
         if (new != NULL) {
             slab_page = (struct slab_data *)new;
             slab_page->page_pool_state = slab_page->full_page_count;
         } else {
-            if (slab->mmap_count > slab->template.available_objs * slab->page_pool_count) {
-                /*
-                 * We're using this slab alot
-                 * specifically we're using a heuristic here by checking
-                 * to see if we've mapped as many page as we have in any single
-                 * slab.  If we've done that, lets allocate more pages per
-                 * mmap to try reduce the number of times we have to call mmap
-                 * NOTE: We don't ever try to map more than SLAB_MAX_PAGE_POOL_COUNT
-                 * pages at once.
-                 */
-                if (slab->page_pool_count < SLAB_MAX_PAGE_POOL_COUNT) {
-                    slab->page_pool_count *= 2;
-                    INC_SLAB_STAT(&slab->stats->pool_size_increases);
-                }
-                slab->mmap_count = 0;
-            }
-            slab->mmap_count++;
             /*
              * New slabs must be page aligned so that our page offset math works.
              * So use mmap to grab a pool of pages
