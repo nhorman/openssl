@@ -562,20 +562,40 @@ static inline void slab_pool_set_flags(struct slab_data *ring,
     slab_data_mod_counter_state(&ring->page_pool_state, 0, flags, ret_count, ret_flags);
 }
 
-static struct slab_data* global_victim_lists[MAX_SLAB_IDX + 1] = { NULL };
+#define MAX_BIAS 5
+#define MIN_BIAS -5
+#define DEFAULT_BIAS 0
+struct victim_entry {
+    int32_t alloc_bias;
+    struct slab_data *list;
+};
 
-static int add_to_victim_list(struct slab_data *victim)
+static struct victim_entry global_victim_lists[MAX_SLAB_IDX + 1] = { {DEFAULT_BIAS, NULL} };
+
+static inline int add_to_victim_list(struct slab_data *victim)
 {
     struct slab_data *expected;
     size_t victim_idx;
-
+    int32_t bias;
     /*
      * Make sure we have the page_leader to add
      */
     victim = victim->page_leader;
     victim_idx = get_slab_idx(victim->full_page_count);
+    bias = __atomic_load_n(&global_victim_lists[victim_idx].alloc_bias, __ATOMIC_RELAXED);
+    /*
+     * We add to the victim list on free, so if we're freeing more than we're allocating
+     * above the minimum bias point, don't add this slab, and tell the caller to free it
+     */
+    if (bias > MIN_BIAS)
+        __atomic_sub_fetch(&global_victim_lists[victim_idx].alloc_bias, 1, __ATOMIC_RELAXED);
+    else
+        return 0;
+    /*
+     * If we're not yet at the minimum free bias, add it to the list
+     */
 
-    expected = __atomic_load_n(&global_victim_lists[victim_idx], __ATOMIC_RELAXED);
+    expected = __atomic_load_n(&global_victim_lists[victim_idx].list, __ATOMIC_RELAXED);
     for (;;) {
         /*
          * override page_leader to be our next pointer in the list
@@ -584,26 +604,33 @@ static int add_to_victim_list(struct slab_data *victim)
         /*
          * Swap this victim for the head of the list
          */
-        if (__atomic_compare_exchange_n(&global_victim_lists[victim_idx], &expected, victim,
+        if (__atomic_compare_exchange_n(&global_victim_lists[victim_idx].list, &expected, victim,
                                         0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED))
             break;
     }
     return 1; 
 }
 
-static struct slab_data *remove_from_victim_list(size_t size)
+static inline struct slab_data *remove_from_victim_list(size_t size)
 {
     size = get_slab_idx(size);
     struct slab_data *new;
     struct slab_data *next;
+    int32_t bias = __atomic_load_n(&global_victim_lists[size].alloc_bias, __ATOMIC_RELAXED);
 
-    new = __atomic_load_n(&global_victim_lists[size], __ATOMIC_RELAXED);
+    /*
+     * Add to our bias on allocation, where we call this function
+     */
+    if (bias < MAX_BIAS)
+        __atomic_add_fetch(&global_victim_lists[size].alloc_bias, 1, __ATOMIC_RELAXED);
+
+    new = __atomic_load_n(&global_victim_lists[size].list, __ATOMIC_RELAXED);
 
     for(;;) {
         if (new == NULL)
             return NULL;
         next = __atomic_load_n(&new->page_leader, __ATOMIC_RELAXED);
-        if (__atomic_compare_exchange_n(&global_victim_lists[size], &new, next,
+        if (__atomic_compare_exchange_n(&global_victim_lists[size].list, &new, next,
                                         0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)) {
             new->page_leader = new;
             break;
@@ -612,6 +639,29 @@ static struct slab_data *remove_from_victim_list(size_t size)
     return new;
 }
 
+static void clean_global_victim_lists()
+{
+    size_t i;
+    struct slab_data *idx, *next;
+    size_t page_size_long = (size_t) page_size;
+    for (i = 0; i < MAX_SLAB_IDX; i++) {
+        idx = global_victim_lists[i].list;
+        while (idx != NULL) {
+            next = idx->page_leader;
+            idx->page_leader = idx;
+            INC_SLAB_STAT(&idx->stats->slab_munmaps);
+            SLAB_DBG_EVENT_SZ("mmap",idx->page_leader,
+                              page_size_long * idx->page_leader->full_page_count,
+                              "free", NULL, 0); 
+            SUB_SLAB_STAT(&current_alloced_pages, idx->page_leader->full_page_count);
+            if (munmap(idx->page_leader, page_size_long * idx->page_leader->full_page_count)) {
+                INC_SLAB_STAT(&idx->stats->failed_slab_frees);
+            }
+            idx = next;
+        }
+    }
+
+}
 /**
  * @def PAGE_MASK
  * @brief Mask for aligning addresses down to a page boundary.
@@ -1440,6 +1490,11 @@ static __attribute__((destructor)) void slab_cleanup()
      * Clear the main thread allocator
      */
     destroy_slab_table(pthread_getspecific(thread_slab_key));
+
+    /*
+     * Clean global victim caches
+     */
+    clean_global_victim_lists();
 #ifdef SLAB_DEBUG
     fclose(slab_fp);
 #endif
