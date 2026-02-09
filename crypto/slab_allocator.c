@@ -877,6 +877,8 @@ static inline struct slab_data *create_new_slab(struct slab_class *slab, int *ne
         if (new != NULL) {
             slab_page = (struct slab_data *)new;
             slab_page->page_pool_state = slab_page->full_page_count;
+            slab->page_pool_idx = 1;
+            slab->page_pool = (void *)(((unsigned char *)new) + page_size_long);
         } else {
             /*
              * New slabs must be page aligned so that our page offset math works.
