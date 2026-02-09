@@ -562,13 +562,13 @@ static inline void slab_pool_set_flags(struct slab_data *ring,
     slab_data_mod_counter_state(&ring->page_pool_state, 0, flags, ret_count, ret_flags);
 }
 
-#define MAX_LIST_COUNT MAX_SLAB_IDX * 10
+#define MAX_LIST_COUNT MAX_SLAB_IDX
 struct victim_entry {
-    int32_t list_count;
     struct slab_data *list;
+    int32_t list_count;
 };
 
-static struct victim_entry global_victim_lists[MAX_SLAB_IDX + 1] = { {0, NULL} };
+static struct victim_entry global_victim_lists[MAX_SLAB_IDX + 1] = { {NULL, 0} };
 
 static inline int add_to_victim_list(struct slab_data *victim)
 {
@@ -582,12 +582,8 @@ static inline int add_to_victim_list(struct slab_data *victim)
     victim_idx = get_slab_idx(victim->full_page_count);
     count = __atomic_load_n(&global_victim_lists[victim_idx].list_count, __ATOMIC_RELAXED);
 
-    if (count < MAX_LIST_COUNT)
-        __atomic_add_fetch(&global_victim_lists[victim_idx].list_count, 1, __ATOMIC_RELAXED);
-    else {
-        SLAB_DBG_LOG("type:raw: victim idx %lu is at count %d, skipping victimization\n", victim_idx, count);
+    if (count >= MAX_LIST_COUNT)
         return 0;
-    }
 
     SLAB_DBG_LOG("type:raw: victim idx %lu caching page pool\n", victim_idx);
     expected = __atomic_load_n(&global_victim_lists[victim_idx].list, __ATOMIC_RELAXED);
@@ -603,6 +599,7 @@ static inline int add_to_victim_list(struct slab_data *victim)
                                         0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED))
             break;
     }
+    __atomic_add_fetch(&global_victim_lists[victim_idx].list_count, 1, __ATOMIC_RELAXED);
     return 1; 
 }
 
@@ -611,7 +608,6 @@ static inline struct slab_data *remove_from_victim_list(size_t size)
     size = get_slab_idx(size);
     struct slab_data *new;
     struct slab_data *next;
-    int32_t count;
 
     new = __atomic_load_n(&global_victim_lists[size].list, __ATOMIC_RELAXED);
 
@@ -625,10 +621,8 @@ static inline struct slab_data *remove_from_victim_list(size_t size)
             break;
         }
     }
-    if (new != NULL) {
-        count = __atomic_sub_fetch(&global_victim_lists[size].list_count, 1, __ATOMIC_RELAXED);
-        SLAB_DBG_LOG("type:raw: Got a pool from victim idx %d, count %d\n", size, count);
-    }
+    if (new != NULL)
+        __atomic_sub_fetch(&global_victim_lists[size].list_count, 1, __ATOMIC_RELAXED);
     return new;
 }
 
@@ -862,7 +856,10 @@ static inline struct slab_data *create_new_slab(struct slab_class *slab, int *ne
          */
         *new_pool = 1;
         new = remove_from_victim_list(slab->page_pool_count);
-        if (new == NULL) {
+        if (new != NULL) {
+            slab_page = (struct slab_data *)new;
+            slab_page->page_pool_state = slab_page->full_page_count;
+        } else {
             if (slab->mmap_count > slab->template.available_objs * slab->page_pool_count) {
                 /*
                  * We're using this slab alot
@@ -891,13 +888,13 @@ static inline struct slab_data *create_new_slab(struct slab_class *slab, int *ne
             INC_SLAB_STAT(&slab->stats->slab_mmaps);
             SLAB_DBG_EVENT_SZ("mmap",new, page_size_long * slab->page_pool_count, "allocate", NULL, 0); 
             ADD_SLAB_STAT(&current_alloced_pages, slab->page_pool_count);
-        }
-        for (page_idx = 0; page_idx < slab->page_pool_count; page_idx++) {
-            slab_page = (struct slab_data *)(((uint8_t *)new) + (page_size_long * page_idx));
-            slab_page->page_leader = (struct slab_data *)new;
-            if (slab_page == (struct slab_data *)new) {
-                slab_page->page_pool_state = slab->page_pool_count;
-                slab_page->full_page_count = slab->page_pool_count;
+            for (page_idx = 0; page_idx < slab->page_pool_count; page_idx++) {
+                slab_page = (struct slab_data *)(((uint8_t *)new) + (page_size_long * page_idx));
+                slab_page->page_leader = (struct slab_data *)new;
+                if (slab_page == (struct slab_data *)new) {
+                    slab_page->page_pool_state = slab->page_pool_count;
+                    slab_page->full_page_count = slab->page_pool_count;
+                }
             }
         }
 
