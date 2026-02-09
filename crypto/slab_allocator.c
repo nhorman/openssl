@@ -562,39 +562,34 @@ static inline void slab_pool_set_flags(struct slab_data *ring,
     slab_data_mod_counter_state(&ring->page_pool_state, 0, flags, ret_count, ret_flags);
 }
 
-#define MAX_BIAS 5
-#define MIN_BIAS -5
-#define DEFAULT_BIAS 0
+#define MAX_LIST_COUNT MAX_SLAB_IDX * 10
 struct victim_entry {
-    int32_t alloc_bias;
+    int32_t list_count;
     struct slab_data *list;
 };
 
-static struct victim_entry global_victim_lists[MAX_SLAB_IDX + 1] = { {DEFAULT_BIAS, NULL} };
+static struct victim_entry global_victim_lists[MAX_SLAB_IDX + 1] = { {0, NULL} };
 
 static inline int add_to_victim_list(struct slab_data *victim)
 {
     struct slab_data *expected;
     size_t victim_idx;
-    int32_t bias;
+    int32_t count;
     /*
      * Make sure we have the page_leader to add
      */
     victim = victim->page_leader;
     victim_idx = get_slab_idx(victim->full_page_count);
-    bias = __atomic_load_n(&global_victim_lists[victim_idx].alloc_bias, __ATOMIC_RELAXED);
-    /*
-     * We add to the victim list on free, so if we're freeing more than we're allocating
-     * above the minimum bias point, don't add this slab, and tell the caller to free it
-     */
-    if (bias > MIN_BIAS)
-        __atomic_sub_fetch(&global_victim_lists[victim_idx].alloc_bias, 1, __ATOMIC_RELAXED);
-    else
-        return 0;
-    /*
-     * If we're not yet at the minimum free bias, add it to the list
-     */
+    count = __atomic_load_n(&global_victim_lists[victim_idx].list_count, __ATOMIC_RELAXED);
 
+    if (count < MAX_LIST_COUNT)
+        __atomic_add_fetch(&global_victim_lists[victim_idx].list_count, 1, __ATOMIC_RELAXED);
+    else {
+        SLAB_DBG_LOG("type:raw: victim idx %lu is at count %d, skipping victimization\n", victim_idx, count);
+        return 0;
+    }
+
+    SLAB_DBG_LOG("type:raw: victim idx %lu caching page pool\n", victim_idx);
     expected = __atomic_load_n(&global_victim_lists[victim_idx].list, __ATOMIC_RELAXED);
     for (;;) {
         /*
@@ -616,13 +611,7 @@ static inline struct slab_data *remove_from_victim_list(size_t size)
     size = get_slab_idx(size);
     struct slab_data *new;
     struct slab_data *next;
-    int32_t bias = __atomic_load_n(&global_victim_lists[size].alloc_bias, __ATOMIC_RELAXED);
-
-    /*
-     * Add to our bias on allocation, where we call this function
-     */
-    if (bias < MAX_BIAS)
-        __atomic_add_fetch(&global_victim_lists[size].alloc_bias, 1, __ATOMIC_RELAXED);
+    int32_t count;
 
     new = __atomic_load_n(&global_victim_lists[size].list, __ATOMIC_RELAXED);
 
@@ -635,6 +624,10 @@ static inline struct slab_data *remove_from_victim_list(size_t size)
             new->page_leader = new;
             break;
         }
+    }
+    if (new != NULL) {
+        count = __atomic_sub_fetch(&global_victim_lists[size].list_count, 1, __ATOMIC_RELAXED);
+        SLAB_DBG_LOG("type:raw: Got a pool from victim idx %d, count %d\n", size, count);
     }
     return new;
 }
