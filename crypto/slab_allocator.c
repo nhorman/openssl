@@ -115,7 +115,7 @@ static pthread_key_t thread_slab_key;
 
 struct slab_class;
 
-#define SLAB_MAX_PAGE_POOL_COUNT 1024 
+#define SLAB_MAX_PAGE_POOL_COUNT (1 << MAX_SLAB_IDX) 
 
 #ifdef SLAB_DEBUG
 FILE *slab_fp = NULL;
@@ -404,7 +404,7 @@ static inline struct slab_class *get_thread_slab_table()
  * The smallest power-of-two value greater than or equal to @p num, or
  * zero if @p num is zero.
  */
-static inline size_t slab_size(size_t num)
+static inline size_t next_pow_2(size_t num)
 {
     if (num == 0)
         return 0; /* return index zero */
@@ -436,7 +436,7 @@ static inline size_t slab_size(size_t num)
  */
 static unsigned int get_slab_idx(size_t num)
 {
-    size_t up_size = slab_size(num);
+    size_t up_size = next_pow_2(num);
 
     return __builtin_ctzl(up_size);
 }
@@ -560,6 +560,56 @@ static inline void slab_pool_set_flags(struct slab_data *ring,
                                        uint32_t *ret_flags)
 {
     slab_data_mod_counter_state(&ring->page_pool_state, 0, flags, ret_count, ret_flags);
+}
+
+static struct slab_data* global_victim_lists[MAX_SLAB_IDX + 1] = { NULL };
+
+static int add_to_victim_list(struct slab_data *victim)
+{
+    struct slab_data *expected;
+    size_t victim_idx;
+
+    /*
+     * Make sure we have the page_leader to add
+     */
+    victim = victim->page_leader;
+    victim_idx = get_slab_idx(victim->full_page_count);
+
+    expected = __atomic_load_n(&global_victim_lists[victim_idx], __ATOMIC_RELAXED);
+    for (;;) {
+        /*
+         * override page_leader to be our next pointer in the list
+         */
+        victim->page_leader = expected;
+        /*
+         * Swap this victim for the head of the list
+         */
+        if (__atomic_compare_exchange_n(&global_victim_lists[victim_idx], &expected, victim,
+                                        0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED))
+            break;
+    }
+    return 1; 
+}
+
+static struct slab_data *remove_from_victim_list(size_t size)
+{
+    size = get_slab_idx(size);
+    struct slab_data *new;
+    struct slab_data *next;
+
+    new = __atomic_load_n(&global_victim_lists[size], __ATOMIC_RELAXED);
+
+    for(;;) {
+        if (new == NULL)
+            return NULL;
+        next = __atomic_load_n(&new->page_leader, __ATOMIC_RELAXED);
+        if (__atomic_compare_exchange_n(&global_victim_lists[size], &new, next,
+                                        0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)) {
+            new->page_leader = new;
+            break;
+        }
+    }
+    return new;
 }
 
 /**
@@ -763,34 +813,42 @@ static inline struct slab_data *create_new_slab(struct slab_class *slab, int *ne
         slab->page_pool = (void *)(((unsigned char *)new) + page_size_long);
         INC_SLAB_STAT(&slab->stats->slab_pool_allocs);
     } else {
-        if (slab->mmap_count > slab->template.available_objs * slab->page_pool_count) {
-            /*
-             * We're using this slab alot
-             * specifically we're using a heuristic here by checking
-             * to see if we've mapped as many page as we have in any single
-             * slab.  If we've done that, lets allocate more pages per
-             * mmap to try reduce the number of times we have to call mmap
-             * NOTE: We don't ever try to map more than SLAB_MAX_PAGE_POOL_COUNT
-             * pages at once.
-             */
-            if (slab->page_pool_count < SLAB_MAX_PAGE_POOL_COUNT) {
-                slab->page_pool_count *= 2;
-                INC_SLAB_STAT(&slab->stats->pool_size_increases);
-            }
-            slab->mmap_count = 0;
-        }
-        slab->mmap_count++;
         /*
-         * New slabs must be page aligned so that our page offset math works.
-         * So use mmap to grab a pool of pages
+         * Weather we get it from the victim cache or create a new pool
+         * Tell the caller this is a new pool we are using
          */
-        new = mmap(NULL, page_size_long * slab->page_pool_count, PROT_READ | PROT_WRITE,
-                   MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
-        if (new == NULL)
-            return NULL;
         *new_pool = 1;
-        INC_SLAB_STAT(&slab->stats->slab_mmaps);
-        SLAB_DBG_EVENT_SZ("mmap",new, page_size_long * slab->page_pool_count, "allocate", NULL, 0); 
+        new = remove_from_victim_list(slab->page_pool_count);
+        if (new == NULL) {
+            if (slab->mmap_count > slab->template.available_objs * slab->page_pool_count) {
+                /*
+                 * We're using this slab alot
+                 * specifically we're using a heuristic here by checking
+                 * to see if we've mapped as many page as we have in any single
+                 * slab.  If we've done that, lets allocate more pages per
+                 * mmap to try reduce the number of times we have to call mmap
+                 * NOTE: We don't ever try to map more than SLAB_MAX_PAGE_POOL_COUNT
+                 * pages at once.
+                 */
+                if (slab->page_pool_count < SLAB_MAX_PAGE_POOL_COUNT) {
+                    slab->page_pool_count *= 2;
+                    INC_SLAB_STAT(&slab->stats->pool_size_increases);
+                }
+                slab->mmap_count = 0;
+            }
+            slab->mmap_count++;
+            /*
+             * New slabs must be page aligned so that our page offset math works.
+             * So use mmap to grab a pool of pages
+             */
+            new = mmap(NULL, page_size_long * slab->page_pool_count, PROT_READ | PROT_WRITE,
+                       MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+            if (new == NULL)
+                return NULL;
+            INC_SLAB_STAT(&slab->stats->slab_mmaps);
+            SLAB_DBG_EVENT_SZ("mmap",new, page_size_long * slab->page_pool_count, "allocate", NULL, 0); 
+            ADD_SLAB_STAT(&current_alloced_pages, slab->page_pool_count);
+        }
         for (page_idx = 0; page_idx < slab->page_pool_count; page_idx++) {
             slab_page = (struct slab_data *)(((uint8_t *)new) + (page_size_long * page_idx));
             slab_page->page_leader = (struct slab_data *)new;
@@ -800,7 +858,6 @@ static inline struct slab_data *create_new_slab(struct slab_class *slab, int *ne
             }
         }
 
-        ADD_SLAB_STAT(&current_alloced_pages, slab->page_pool_count);
 #ifdef SLAB_STATS
         update_max_alloced_pages();
 #endif
@@ -879,13 +936,15 @@ static inline void *create_obj_in_new_slab(struct slab_class *slab)
                  * We're the last user of this pool, and the allocation side
                  * isn't using it anymore, we can return it to the os
                  */
-                INC_SLAB_STAT(&old->stats->slab_munmaps);
-                SLAB_DBG_EVENT_SZ("mmap",old->page_leader,
-                                  page_size_long * old->page_leader->full_page_count,
-                                  "free", NULL, 0); 
-                SUB_SLAB_STAT(&current_alloced_pages, old->page_leader->full_page_count);
-                if (munmap(old->page_leader, page_size_long * old->page_leader->full_page_count)) {
-                    INC_SLAB_STAT(&old->stats->failed_slab_frees);
+                if (!add_to_victim_list(old->page_leader)) {
+                    INC_SLAB_STAT(&old->stats->slab_munmaps);
+                    SLAB_DBG_EVENT_SZ("mmap",old->page_leader,
+                                      page_size_long * old->page_leader->full_page_count,
+                                      "free", NULL, 0); 
+                    SUB_SLAB_STAT(&current_alloced_pages, old->page_leader->full_page_count);
+                    if (munmap(old->page_leader, page_size_long * old->page_leader->full_page_count)) {
+                        INC_SLAB_STAT(&old->stats->failed_slab_frees);
+                    }
                 }
             }
         }
@@ -983,6 +1042,8 @@ static void return_to_slab(void *addr, struct slab_data *ring)
         SLAB_DBG_EVENT("slab",ring,"free", NULL, 0);
         slab_pool_dec_obj_count(ring->page_leader, 1, 0, &page_count, &flags);
         if (page_count == 0 && (flags & SLAB_POOL_ORPHANED)) {
+            if (add_to_victim_list(ring->page_leader))
+                return;
             /*
              * return the slab to the OS with munmap
              */
