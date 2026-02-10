@@ -585,13 +585,13 @@ static inline int add_to_victim_list(struct slab_data *victim)
     /*
      * Make sure we have the page_leader to add
      */
+    victim_idx = get_slab_idx(victim->full_page_count);
     count = __atomic_load_n(&global_victim_lists[victim_idx].list_count, __ATOMIC_RELAXED);
 
     if (count >= MAX_LIST_COUNT)
         return 0;
 
     victim = victim->page_leader;
-    victim_idx = get_slab_idx(victim->full_page_count);
 
     SLAB_DBG_LOG("type:raw: victim idx %lu caching page pool\n", victim_idx);
     expected = __atomic_load_n(&global_victim_lists[victim_idx].list, __ATOMIC_RELAXED);
@@ -697,16 +697,6 @@ static inline struct slab_data *get_slab_data(void *addr)
 }
 
 /**
- * @brief checks if the slab magic value is correct
- */
-static inline __attribute__((no_sanitize("address"))) int is_slab_magic_correct(void *addr)
-{
-    struct slab_data *ring = get_slab_data(addr);
-
-    return (ring->magic == SLAB_MAGIC) ? 1 : 0;
-}
-
-/**
  * @brief Determine whether an address belongs to an object slab.
  *
  * This function retrieves the slab_data associated with the page
@@ -719,16 +709,9 @@ static inline __attribute__((no_sanitize("address"))) int is_slab_magic_correct(
  */
 static inline int is_obj_slab(void *addr)
 {
-    /*
-     * also check if the address is on a page boundary
-     * This indicates that it is not a slab, as slab objects
-     * never start on a page boundary, due to the page_ring meta
-     * data being at the start of every slab
-     */
-    if ((uintptr_t)addr == (uintptr_t)PAGE_START(addr))
-        return 0;
+    struct slab_data *ring = get_slab_data(addr);
 
-    return is_slab_magic_correct(addr);
+    return (ring != addr && ring->magic == SLAB_MAGIC) ? 1 : 0;
 }
 
 /**
