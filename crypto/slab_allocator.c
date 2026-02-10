@@ -1059,20 +1059,6 @@ static void return_to_slab(void *addr, struct slab_data *ring)
     uint32_t page_count;
 
     /*
-     * compute the offset of the object from the start of the slab
-     * and use it to compute the bitmap word and bit we need to clear
-     */
-    base = (uintptr_t)ring->obj_start;
-    offset = (uintptr_t)addr - base;
-    bit_idx = offset / ring->obj_size;
-    word_idx = bit_idx / 64;
-
-    bit_idx = bit_idx % 64;
-
-    value = (uint64_t)1 << bit_idx;
-    value = ~value;
-
-    /*
      * and our local slab count of objects
      */
     slab_data_dec_obj_count(ring, &obj_count, &flags);
@@ -1080,32 +1066,48 @@ static void return_to_slab(void *addr, struct slab_data *ring)
     /*
      * check to see if we are removing the last object in this slab 
      */
-    if (obj_count == 0 && (flags & SLAB_RING_ORPHANED)) {
-        INC_SLAB_STAT(&ring->stats->slab_frees);
-        SLAB_DBG_EVENT("slab",ring,"free", NULL, 0);
-        slab_pool_dec_obj_count(ring->page_leader, 1, 0, &page_count, &flags);
-        if (page_count == 0 && (flags & SLAB_POOL_ORPHANED)) {
-            if (add_to_victim_list(ring->page_leader))
+    if (flags & SLAB_RING_ORPHANED) {
+        if (obj_count == 0) {
+            INC_SLAB_STAT(&ring->stats->slab_frees);
+            SLAB_DBG_EVENT("slab",ring,"free", NULL, 0);
+            slab_pool_dec_obj_count(ring->page_leader, 1, 0, &page_count, &flags);
+            if (page_count == 0 && (flags & SLAB_POOL_ORPHANED)) {
+                if (add_to_victim_list(ring->page_leader))
+                    return;
+                /*
+                 * return the slab to the OS with munmap
+                 */
+                INC_SLAB_STAT(&ring->stats->slab_munmaps);
+                SLAB_DBG_EVENT_SZ("mmap", ring->page_leader,
+                                  page_size_long * ring->page_leader->full_page_count,
+                                  "free", NULL, 0); 
+                SUB_SLAB_STAT(&current_alloced_pages, ring->page_leader->full_page_count);
+                if (munmap(ring->page_leader, page_size_long * ring->page_leader->full_page_count)) {
+                    INC_SLAB_STAT(&ring->stats->failed_slab_frees);
+                }
                 return;
-            /*
-             * return the slab to the OS with munmap
-             */
-            INC_SLAB_STAT(&ring->stats->slab_munmaps);
-            SLAB_DBG_EVENT_SZ("mmap", ring->page_leader,
-                              page_size_long * ring->page_leader->full_page_count,
-                              "free", NULL, 0); 
-            SUB_SLAB_STAT(&current_alloced_pages, ring->page_leader->full_page_count);
-            if (munmap(ring->page_leader, page_size_long * ring->page_leader->full_page_count)) {
-                INC_SLAB_STAT(&ring->stats->failed_slab_frees);
             }
-            return;
         }
-    }
+    } else {
 
-    /*
-     * We didn't free the slab. Clear the bit for this object
-     */
-    __atomic_and_fetch(&ring->bitmap[word_idx], value, __ATOMIC_RELAXED);
+        /*
+         * compute the offset of the object from the start of the slab
+         * and use it to compute the bitmap word and bit we need to clear
+         */
+        base = (uintptr_t)ring->obj_start;
+        offset = (uintptr_t)addr - base;
+        bit_idx = offset / ring->obj_size;
+        word_idx = bit_idx / 64;
+
+        bit_idx = bit_idx % 64;
+
+        value = (uint64_t)1 << bit_idx;
+        value = ~value;
+        /*
+         * We didn't free the slab. Clear the bit for this object
+         */
+        __atomic_and_fetch(&ring->bitmap[word_idx], value, __ATOMIC_RELAXED);
+    }
 }
 /**
  * @brief Allocate memory using the slab allocator.
