@@ -371,19 +371,20 @@ static struct slab_class slabs[] = {
 static inline struct slab_class *get_thread_slab_table()
 {
     struct slab_class *info = pthread_getspecific(thread_slab_key);
+    
+    if (__builtin_expect(!!info, 1))
+        return info;
 
-    if (info == NULL) {
-        /*
-         * allocate enough space for our thread allocator
-         */
-        info = calloc(1, sizeof(slabs));
-        if (info == NULL)
-            return NULL;
-        memcpy(info, slabs, sizeof(slabs));
+    /*
+     * allocate enough space for our thread allocator
+     */
+    info = calloc(1, sizeof(slabs));
+    if (info == NULL)
+        return NULL;
+    memcpy(info, slabs, sizeof(slabs));
 
-        pthread_setspecific(thread_slab_key, info);
-        SLAB_DBG_EVENT_SZ("allocator", info, sizeof(slabs), "allocate", NULL, 0);
-    }
+    pthread_setspecific(thread_slab_key, info);
+    SLAB_DBG_EVENT_SZ("allocator", info, sizeof(slabs), "allocate", NULL, 0);
     return info;
 }
 
@@ -569,7 +570,7 @@ static inline void slab_pool_set_flags(struct slab_data *ring,
     slab_data_mod_counter_state(&ring->page_pool_state, 0, flags, ret_count, ret_flags);
 }
 
-#define MAX_LIST_COUNT MAX_SLAB_IDX
+#define MAX_LIST_COUNT 100
 struct victim_entry {
     struct slab_data *list;
     int32_t list_count;
