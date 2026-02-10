@@ -1013,17 +1013,13 @@ static inline void *create_obj_in_new_slab(struct slab_class *slab)
  */
 static inline void *get_slab_obj(struct slab_class *slab)
 {
-    struct slab_data *idx;
     void *obj = NULL;
 
-    idx = slab->available;
-    if (idx != NULL)
-        obj = select_obj(idx);
-    if (obj != NULL)
-        return obj;
-
-    /* We need to create a new slab */
-    return create_obj_in_new_slab(slab);
+    if (slab->available != NULL)
+        obj = select_obj(slab->available);
+    if (obj == NULL)
+        obj = create_obj_in_new_slab(slab);
+    return obj; 
 }
 
 /**
