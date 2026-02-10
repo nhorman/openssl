@@ -585,12 +585,13 @@ static inline int add_to_victim_list(struct slab_data *victim)
     /*
      * Make sure we have the page_leader to add
      */
-    victim = victim->page_leader;
-    victim_idx = get_slab_idx(victim->full_page_count);
     count = __atomic_load_n(&global_victim_lists[victim_idx].list_count, __ATOMIC_RELAXED);
 
     if (count >= MAX_LIST_COUNT)
         return 0;
+
+    victim = victim->page_leader;
+    victim_idx = get_slab_idx(victim->full_page_count);
 
     SLAB_DBG_LOG("type:raw: victim idx %lu caching page pool\n", victim_idx);
     expected = __atomic_load_n(&global_victim_lists[victim_idx].list, __ATOMIC_RELAXED);
@@ -621,7 +622,7 @@ static inline struct slab_data *remove_from_victim_list(size_t size)
     for(;;) {
         if (new == NULL)
             return NULL;
-        next = __atomic_load_n(&new->page_leader, __ATOMIC_RELAXED);
+        next = new->page_leader;
         if (__atomic_compare_exchange_n(&global_victim_lists[size].list, &new, next,
                                         0, __ATOMIC_RELAXED, __ATOMIC_RELAXED)) {
             new->page_leader = new;
