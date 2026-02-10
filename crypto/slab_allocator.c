@@ -523,6 +523,13 @@ static inline void slab_data_inc_obj_count(struct slab_data *ring,
     slab_data_mod_counter_state(&ring->allocated_state, 1, 0, ret_count, ret_flags);
 }
 
+static inline uint32_t slab_data_get_obj_count(struct slab_data *ring)
+{
+    uint64_t count = __atomic_load_n(&ring->allocated_state, __ATOMIC_RELAXED);
+
+    return (uint32_t)(count & 0x00000000ffffffffUL);
+}
+
 /**
  * @brief decrement count and set flags on a slab_data
  *
@@ -740,7 +747,7 @@ static inline int is_obj_slab(void *addr)
  * @return Pointer to the allocated object, or NULL if no free objects
  *         are available in the slab.
  */
-static inline void *select_obj(struct slab_data *slab)
+static inline void *select_obj(struct slab_data *slab, uint32_t max_objs)
 {
     uint32_t i;
     uint64_t value;
@@ -748,6 +755,10 @@ static inline void *select_obj(struct slab_data *slab)
     uint64_t new_mask;
     uint32_t obj_offset;
     uint32_t ring_count, flags;
+
+    ring_count = slab_data_get_obj_count(slab);
+    if (ring_count == max_objs)
+        return NULL;
 
     for (i = 0; i < slab->bitmap_word_count; i++) {
         value = __atomic_load_n(&slab->bitmap[i], __ATOMIC_RELAXED);
@@ -1016,7 +1027,7 @@ static inline void *get_slab_obj(struct slab_class *slab)
     void *obj = NULL;
 
     if (slab->available != NULL)
-        obj = select_obj(slab->available);
+        obj = select_obj(slab->available, slab->template.available_objs);
     if (obj == NULL)
         obj = create_obj_in_new_slab(slab);
     return obj; 
