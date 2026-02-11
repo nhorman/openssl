@@ -3,81 +3,66 @@
 import csv
 import sys
 
-def find_matching_free(idx, csvarray):
-    objtype = csvarray[idx]["info"][0]
-    objaddr = csvarray[idx]["info"][1]
+def check_append_entry(idx, row, array):
+    if row[1] == "addr:(nil)":
+        # Null addrs can be allocated/freed in any order
+        return
+    event_addr_id = row[0] + row[1]
+    if event_addr_id in array:
+        entry = array[event_addr_id]
+    else:
+        entry = {"index": idx, "row": row, "alloc": 0, "free": 0}
+        array[event_addr_id] = entry
 
-    for entry in csvarray[idx:]:
-        if entry["info"][0] == objtype and entry["info"][1] == objaddr and entry["info"][2] == "event:free":
-            return
-    print(f"{csvarray[idx]} on line {csvarray[idx]["index"]} has no matching free")
-
-def scan_for_leaks(objtype, csvarray):
-    indexlist = []
-    for index, entry in enumerate(csvarray):
-        if entry["info"][0] == objtype and entry["info"][2] == "event:allocate":
-            indexlist.append(index)
-    print(f"Scanning for leaks in {objtype}, {len(indexlist)} allocations")
-    for idx in indexlist:
-        find_matching_free(idx, csvarray)
-        
-def find_double_free_alloc(idx, csvarray):
-    freefound = 0
-    objaddr = csvarray[idx]["info"][1]
-    objtype = csvarray[idx]["info"][0]
-    for entry in csvarray[idx+1:]:
-        if entry["info"][0] == objtype and entry["info"][1] == objaddr and entry["info"][2] == "event:free":
-            freefound = freefound + 1
-            if freefound > 1:
-                print(f"{csvarray[idx]} on line {csvarray[idx]["index"]} is double freed")
-                return
-        if entry["info"][0] == objtype and entry["info"][1] == objaddr and entry["info"][2] == "event:allocate":
-            if freefound == 1:
-                return
-            elif freefound == 0:
-                print(f"{csvarray[idx]} on line {csvarray[idx]["index"]} is double allocated")
-        
-def scan_for_double_frees_allocs(objtype, csvarray):
-    indexlist = []
-    for index, entry in enumerate(csvarray):
-        if entry["info"][0] == objtype and entry["info"][2] == "event:allocate":
-            indexlist.append(index)
-    print(f"Scanning for double frees in {objtype}, {len(indexlist)} allocations")
-    for idx in indexlist:
-        find_double_free_alloc(idx, csvarray)
+    if row[2] == "event:allocate":
+        if entry["alloc"] == 1:
+            print(f"index {event["index"]} row {event["row"]} double allocated\n")
+        entry["alloc"] = 1
+        entry["free"] = 0
+    elif row[2] == "event:free":
+        if entry["alloc"] == 0:
+            print(f"index {entry["index"]} row {entry["row"]} freed before alloc\n")
+        if entry["free"] == 1:
+            print(f"index {entry["index"]} row {entry["row"]} double free\n")
+        del array[event_addr_id]
+    
+def scan_for_leaks(array):
+    for key, value in array.items():
+        if value["alloc"] == 1 and value["free"] == 0:
+            print(f"line {value["index"]} has leaked\n")
 
 def main(argv):
-    allocatorarray = []
-    mmaparray = []
-    slabarray = []
-    objarray = []
-    nonslabobjarray = []
+    allocatorarray = {}
+    mmaparray = {} 
+    slabarray = {} 
+    objarray = {} 
+    nonslabobjarray = {} 
     idx = 0
-    print("Reading in log")
+    print("Parsing log, scanning for out of order allocs/frees")
     with open(argv[0], newline='') as csvfile:
         csvreader = csv.reader(csvfile, delimiter='|')
         for row in csvreader:
-            entry = { "index" : idx, "info" : row } 
-            if row[0] == "type:mmap":
-                mmaparray.append(entry)
             if row[0] == "type:allocator":
-                allocatorarray.append(entry)
+                check_append_entry(idx, row, allocatorarray)
+            elif row[0] == "type:mmap":
+                check_append_entry(idx, row, mmaparray)
             elif row[0] == "type:slab":
-                slabarray.append(entry)
+                check_append_entry(idx, row, slabarray)
             elif row[0] == "type:obj":
-                objarray.append(entry)
+                check_append_entry(idx, row, objarray)
             elif row[0] == "type:nonslab-obj":
-                nonslabobjarray.append(entry)
+                check_append_entry(idx, row, nonslabobjarray)
             idx = idx + 1
-        scan_for_leaks("type:allocator", allocatorarray)
-        scan_for_double_frees_allocs("type:allocator", allocatorarray)
-        scan_for_leaks("type:mmap", mmaparray)
-        scan_for_double_frees_allocs("type:mmap", mmaparray)
-        scan_for_leaks("type:slab", slabarray)
-        scan_for_double_frees_allocs("type:slab", slabarray)
-        scan_for_leaks("type:obj", objarray)
-        scan_for_double_frees_allocs("type:obj", objarray)
-        scan_for_leaks("type:nonslab-obj", nonslabobjarray)
-        scan_for_double_frees_allocs("type:nonslab-obj", nonslabobjarray)
+    print(f"Scanning for allocator leaks ({len(allocatorarray)} suspicious events)\n")
+    scan_for_leaks(allocatorarray)
+    print(f"Scanning for mmap leaks ({len(mmaparray)} suspicious events)\n")
+    scan_for_leaks(mmaparray)
+    print(f"Scanning for slab leaks ({len(slabarray)} suspicious events)\n")
+    scan_for_leaks(slabarray)
+    print(f"Scanning for obj leaks ({len(objarray)} suspicious events)\n")
+    scan_for_leaks(objarray)
+    print(f"Scanning for non slab obj leaks ({len(nonslabobjarray)} suspicious events)\n")
+    scan_for_leaks(nonslabobjarray)
+
 if __name__ == "__main__":
     main(sys.argv[1:])
