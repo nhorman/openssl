@@ -136,6 +136,7 @@ struct slab_stats {
     size_t slab_frees;
     size_t slab_mmaps;
     size_t slab_munmaps;
+    size_t pool_victim_recovers;
     size_t slab_pool_allocs;
     size_t failed_slab_frees;
     size_t pool_size_increases;
@@ -619,19 +620,26 @@ static inline struct slab_data *remove_from_victim_list(size_t size)
     struct slab_data *next;
 
     new = __atomic_load_n(&global_victim_lists[size].list, __ATOMIC_RELAXED);
-
-    for(;;) {
-        if (new == NULL)
-            return NULL;
-        next = new->page_leader;
-        if (__atomic_compare_exchange_n(&global_victim_lists[size].list, &new, next,
-                                        0, __ATOMIC_RELAXED, __ATOMIC_RELAXED)) {
-            new->page_leader = new;
+    do {
+        for(;;) {
+            if (new == NULL)
+                return NULL;
+            next = new->page_leader;
+            if (__atomic_compare_exchange_n(&global_victim_lists[size].list, &new, next,
+                                            0, __ATOMIC_RELAXED, __ATOMIC_RELAXED)) {
+                new->page_leader = new;
+                break;
+            }
+        }
+        if (new != NULL) {
+            __atomic_sub_fetch(&global_victim_lists[size].list_count, 1, __ATOMIC_RELAXED);
             break;
         }
-    }
-    if (new != NULL)
-        __atomic_sub_fetch(&global_victim_lists[size].list_count, 1, __ATOMIC_RELAXED);
+        /*
+         * Allow borrowing from smaller page pools
+         */
+        size--;
+    } while (size != SIZE_MAX);
     return new;
 }
 
@@ -871,10 +879,16 @@ static inline struct slab_data *create_new_slab(struct slab_class *slab, int *ne
            
         new = remove_from_victim_list(slab->page_pool_count);
         if (new != NULL) {
+            INC_SLAB_STAT(&slab->stats->pool_victim_recovers);
             slab_page = (struct slab_data *)new;
             slab_page->page_pool_state = slab_page->full_page_count;
             slab->page_pool_idx = 1;
             slab->page_pool = (void *)(((unsigned char *)new) + page_size_long);
+            /*
+             * Need to reset the full page count here in case we borrow from
+             * another pool size
+             */
+            slab->page_pool_count = slab_page->page_leader->full_page_count;
         } else {
             /*
              * New slabs must be page aligned so that our page offset math works.
@@ -1135,6 +1149,9 @@ static void *slab_malloc(size_t num, const char *file, int line)
     if (myslabs == NULL || num == 0)
         return NULL;
 
+    if (num == 1)
+        fprintf(stderr, "ALLOCATING A SINGLE STUPID BYTE\n");
+
     /*
      * if we are requested to provide an allocation larger than our biggest
      * slab, just use malloc
@@ -1234,6 +1251,8 @@ static void *slab_realloc(void *addr, size_t num, const char *file, int line)
     void *new;
     struct slab_data *ring;
 
+    if (num == 1)
+        fprintf(stderr, "REALLOC A SINGLE STUPID BYTE\n");
     /*
      * reallocs for NULL are just malloc, so check with the slab allocator
      */
@@ -1506,12 +1525,13 @@ static __attribute__((destructor)) void slab_cleanup()
     fprintf(fp, "{ \"cmd\": \"%s\", \"slabs\": [", cmdstring);
 
     for (i = 0; i <= MAX_SLAB_IDX; i++) {
-        fprintf(fp, "{\"obj_size\":%lu, \"objs_per_slab\":%u, \"allocs\":%lu, \"frees\":%lu, \"slab_allocs\":%lu, \"slab_frees\":%lu, \"failed_slab_frees\":%lu, \"pool_size_increases\":%lu}",
+        fprintf(fp, "{\"obj_size\":%lu, \"objs_per_slab\":%u, \"allocs\":%lu, \"frees\":%lu, \"slab_allocs\":%lu, \"slab_frees\":%lu, \"failed_slab_frees\":%lu, \"pool_size_increases\":%lu, \"pool_victim_recovers\":%lu}",
             slabs[i].obj_size, slabs[i].template.available_objs,
             slabs[i].stats->allocs, slabs[i].stats->frees,
             slabs[i].stats->slab_allocs, slabs[i].stats->slab_frees,
             slabs[i].stats->failed_slab_frees,
-            slabs[i].stats->pool_size_increases);
+            slabs[i].stats->pool_size_increases,
+            slabs[i].stats->pool_victim_recovers);
         if (i != MAX_SLAB_IDX)
             fprintf(fp, ",");
         total_mmaps += slabs[i].stats->slab_mmaps;
