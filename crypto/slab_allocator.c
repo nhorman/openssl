@@ -571,32 +571,35 @@ static inline void slab_pool_set_flags(struct slab_data *ring,
     slab_data_mod_counter_state(&ring->page_pool_state, 0, flags, ret_count, ret_flags);
 }
 
-#define MAX_LIST_COUNT 100
+static size_t max_list_count = 500;
+
 struct victim_entry {
     struct slab_data *list;
     int32_t list_count;
 };
 
-static struct victim_entry global_victim_lists[MAX_SLAB_IDX + 1] = { {NULL, 0} };
+static struct victim_entry global_victim_lists = {NULL, 0};
 
 static inline int add_to_victim_list(struct slab_data *victim)
 {
     struct slab_data *expected;
     size_t victim_idx;
     int32_t count;
-    /*
-     * Make sure we have the page_leader to add
-     */
-    victim_idx = get_slab_idx(victim->full_page_count);
-    count = __atomic_load_n(&global_victim_lists[victim_idx].list_count, __ATOMIC_RELAXED);
 
-    if (count >= MAX_LIST_COUNT)
+    count = __atomic_add_fetch(&global_victim_lists.list_count, 1, __ATOMIC_RELAXED);
+
+    if (count >= __atomic_load_n(&max_list_count, __ATOMIC_RELAXED)) {
+        /*
+         * We've maxed the list out, shrink it a bit
+         */
+        __atomic_sub_fetch(&max_list_count, 1, __ATOMIC_RELAXED);
         return 0;
+    }
 
     victim = victim->page_leader;
 
     SLAB_DBG_LOG("type:raw: victim idx %lu caching page pool\n", victim_idx);
-    expected = __atomic_load_n(&global_victim_lists[victim_idx].list, __ATOMIC_RELAXED);
+    expected = __atomic_load_n(&global_victim_lists.list, __ATOMIC_RELAXED);
     for (;;) {
         /*
          * override page_leader to be our next pointer in the list
@@ -605,64 +608,55 @@ static inline int add_to_victim_list(struct slab_data *victim)
         /*
          * Swap this victim for the head of the list
          */
-        if (__atomic_compare_exchange_n(&global_victim_lists[victim_idx].list, &expected, victim,
+        if (__atomic_compare_exchange_n(&global_victim_lists.list, &expected, victim,
                                         0, __ATOMIC_RELAXED, __ATOMIC_RELAXED))
             break;
     }
-    __atomic_add_fetch(&global_victim_lists[victim_idx].list_count, 1, __ATOMIC_RELAXED);
     return 1; 
 }
 
 static inline struct slab_data *remove_from_victim_list(size_t size)
 {
-    size = get_slab_idx(size);
     struct slab_data *new;
     struct slab_data *next;
 
-    new = __atomic_load_n(&global_victim_lists[size].list, __ATOMIC_RELAXED);
-    do {
-        for(;;) {
-            if (new == NULL)
-                return NULL;
-            next = new->page_leader;
-            if (__atomic_compare_exchange_n(&global_victim_lists[size].list, &new, next,
-                                            0, __ATOMIC_RELAXED, __ATOMIC_RELAXED)) {
-                new->page_leader = new;
-                break;
-            }
+    new = __atomic_load_n(&global_victim_lists.list, __ATOMIC_RELAXED);
+    for(;;) {
+        if (new == NULL) {
+            /*
+             * list is empty, allow it to grow some
+             */
+            __atomic_add_fetch(&max_list_count, 1, __ATOMIC_RELAXED);
+            return NULL;
         }
-        if (new != NULL) {
-            __atomic_sub_fetch(&global_victim_lists[size].list_count, 1, __ATOMIC_RELAXED);
+        next = new->page_leader;
+        if (__atomic_compare_exchange_n(&global_victim_lists.list, &new, next,
+                                        0, __ATOMIC_RELAXED, __ATOMIC_RELAXED)) {
+            new->page_leader = new;
             break;
         }
-        /*
-         * Allow borrowing from smaller page pools
-         */
-        size--;
-    } while (size != SIZE_MAX);
+    }
+    __atomic_sub_fetch(&global_victim_lists.list_count, 1, __ATOMIC_RELAXED);
     return new;
 }
 
 static void clean_global_victim_lists()
 {
-    size_t i;
     struct slab_data *idx, *next;
     size_t page_size_long = (size_t) page_size;
-    for (i = 0; i < MAX_SLAB_IDX; i++) {
-        idx = global_victim_lists[i].list;
-        while (idx != NULL) {
-            next = idx->page_leader;
-            idx->page_leader = idx;
-            INC_SLAB_STAT(&idx->stats->slab_munmaps);
-            SLAB_DBG_EVENT_SZ("mmap",idx->page_leader,
-                              page_size_long * idx->page_leader->full_page_count,
-                              "free", NULL, 0); 
-            SUB_SLAB_STAT(&current_alloced_pages, idx->page_leader->full_page_count);
-            if (munmap(idx->page_leader, page_size_long * idx->page_leader->full_page_count)) {
-                INC_SLAB_STAT(&idx->stats->failed_slab_frees);
-            }
-            idx = next;
+    idx = global_victim_lists.list;
+    while (idx != NULL) {
+        next = idx->page_leader;
+        idx->page_leader = idx;
+        INC_SLAB_STAT(&idx->stats->slab_munmaps);
+        SLAB_DBG_EVENT_SZ("mmap",idx->page_leader,
+                          page_size_long * idx->page_leader->full_page_count,
+                          "free", NULL, 0); 
+        SUB_SLAB_STAT(&current_alloced_pages, idx->page_leader->full_page_count);
+        if (munmap(idx->page_leader, page_size_long * idx->page_leader->full_page_count)) {
+            INC_SLAB_STAT(&idx->stats->failed_slab_frees);
         }
+        idx = next;
     }
 
 }
