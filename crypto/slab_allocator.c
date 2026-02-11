@@ -1492,6 +1492,8 @@ static __attribute__((destructor)) void slab_cleanup()
     char cmdstring[PATH_MAX] = { 0 };
     char *path = getenv("SLAB_ALLOCATOR_LOG");
     int i;
+    size_t total_mmaps = 0;
+    size_t total_unmaps = 0;
 
     if (path != NULL) {
         fp = fopen(path, "w");
@@ -1504,18 +1506,19 @@ static __attribute__((destructor)) void slab_cleanup()
     fprintf(fp, "{ \"cmd\": \"%s\", \"slabs\": [", cmdstring);
 
     for (i = 0; i <= MAX_SLAB_IDX; i++) {
-        fprintf(fp, "{\"obj_size\":%lu, \"objs_per_slab\":%u, \"allocs\":%lu, \"frees\":%lu, \"slab_allocs\":%lu, \"slab_frees\":%lu, \"failed_slab_frees\":%lu, \"pool_size_increases\":%lu, \"slab_maps\":%lu, \"slab_munmaps\":%lu}",
+        fprintf(fp, "{\"obj_size\":%lu, \"objs_per_slab\":%u, \"allocs\":%lu, \"frees\":%lu, \"slab_allocs\":%lu, \"slab_frees\":%lu, \"failed_slab_frees\":%lu, \"pool_size_increases\":%lu}",
             slabs[i].obj_size, slabs[i].template.available_objs,
             slabs[i].stats->allocs, slabs[i].stats->frees,
             slabs[i].stats->slab_allocs, slabs[i].stats->slab_frees,
             slabs[i].stats->failed_slab_frees,
-            slabs[i].stats->pool_size_increases,
-            slabs[i].stats->slab_mmaps,
-            slabs[i].stats->slab_munmaps);
+            slabs[i].stats->pool_size_increases);
         if (i != MAX_SLAB_IDX)
             fprintf(fp, ",");
+        total_mmaps += slabs[i].stats->slab_mmaps;
+        total_unmaps += slabs[i].stats->slab_munmaps;
     }
     fprintf(fp, "],");
+    fprintf(fp, "\"total_mmaps\":%lu,\"total_unmaps\":%lu,\n", total_mmaps, total_unmaps);
     fprintf(fp, "\"max_alloced_pages\":%lu}", max_alloced_pages);
     if (fp != stderr)
         fclose(fp);
