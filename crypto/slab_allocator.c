@@ -571,7 +571,7 @@ static inline void slab_pool_set_flags(struct slab_data *ring,
     slab_data_mod_counter_state(&ring->page_pool_state, 0, flags, ret_count, ret_flags);
 }
 
-static size_t max_list_count = 500;
+static size_t max_list_count = 1;
 
 struct victim_entry {
     struct slab_data *list;
@@ -588,7 +588,7 @@ static inline int add_to_victim_list(struct slab_data *victim)
 
     count = __atomic_add_fetch(&global_victim_lists.list_count, 1, __ATOMIC_RELAXED);
 
-    if (count >= __atomic_load_n(&max_list_count, __ATOMIC_RELAXED)) {
+    if ((size_t)count >= __atomic_load_n(&max_list_count, __ATOMIC_RELAXED)) {
         /*
          * We've maxed the list out, shrink it a bit
          */
@@ -598,7 +598,6 @@ static inline int add_to_victim_list(struct slab_data *victim)
 
     victim = victim->page_leader;
 
-    SLAB_DBG_LOG("type:raw: victim idx %lu caching page pool\n", victim_idx);
     expected = __atomic_load_n(&global_victim_lists.list, __ATOMIC_RELAXED);
     for (;;) {
         /*
