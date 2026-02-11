@@ -1149,9 +1149,11 @@ static void *slab_malloc(size_t num, const char *file, int line)
     if (myslabs == NULL || num == 0)
         return NULL;
 
+    /*
+     * Never use the order 0 slab, thats just dumb
+     */
     if (num == 1)
-        fprintf(stderr, "ALLOCATING A SINGLE STUPID BYTE\n");
-
+        num = sizeof(uint32_t);
     /*
      * if we are requested to provide an allocation larger than our biggest
      * slab, just use malloc
@@ -1251,8 +1253,6 @@ static void *slab_realloc(void *addr, size_t num, const char *file, int line)
     void *new;
     struct slab_data *ring;
 
-    if (num == 1)
-        fprintf(stderr, "REALLOC A SINGLE STUPID BYTE\n");
     /*
      * reallocs for NULL are just malloc, so check with the slab allocator
      */
