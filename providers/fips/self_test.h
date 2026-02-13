@@ -56,14 +56,12 @@ enum st_test_category {
     SELF_TEST_KAT_MAC,
 };
 
-enum st_test_state {
-    SELF_TEST_STATE_INIT = 0, /* Test has not been execute yet */
-    SELF_TEST_STATE_IN_PROGRESS, /* Test is currently being executed */
-    SELF_TEST_STATE_PASSED, /* Test is marked as passed */
-    SELF_TEST_STATE_FAILED, /* Test failed */
-    SELF_TEST_STATE_IMPLICIT, /* Marks test as implicitly handled */
-    SELF_TEST_STATE_DEFER, /* Like INIT, but mark test as deferred */
-};
+#define SELF_TEST_STATE_INIT 0
+#define SELF_TEST_STATE_IN_PROGRESS 1
+#define SELF_TEST_STATE_PASSED 2
+#define SELF_TEST_STATE_FAILED 3
+#define SELF_TEST_STATE_IMPLICIT 4
+#define SELF_TEST_STATE_DEFER 5
 
 /* used to store raw parameters for keys and algorithms */
 typedef struct st_kat_param_st {
@@ -157,7 +155,7 @@ typedef struct self_test_st {
     const char *algorithm;
     const char *desc;
     enum st_test_category category;
-    enum st_test_state state;
+    uint32_t state;
     ST_BUFFER pt;
     ST_BUFFER expected; /* Set to NULL if this value changes */
     union {

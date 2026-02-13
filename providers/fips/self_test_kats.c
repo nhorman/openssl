@@ -1132,9 +1132,9 @@ static int SELF_TEST_kats_single(OSSL_SELF_TEST *st, OSSL_LIB_CTX *libctx,
         break;
     }
     if (ret)
-        st_all_tests[id].state = SELF_TEST_STATE_PASSED;
+        CRYPTO_atomic_store_int(&st_all_tests[id].state, SELF_TEST_STATE_PASSED, NULL);
     else {
-        st_all_tests[id].state = SELF_TEST_STATE_FAILED;
+        CRYPTO_atomic_store_int(&st_all_tests[id].state, SELF_TEST_STATE_FAILED, NULL);
         ERR_raise(ERR_LIB_PROV, PROV_R_SELF_TEST_KAT_FAILURE);
     }
 
@@ -1163,6 +1163,7 @@ int SELF_TEST_kats_execute(OSSL_SELF_TEST *st, OSSL_LIB_CTX *libctx,
 {
     EVP_RAND_CTX *saved_rand = NULL;
     int ret;
+    uint32_t state, newstate;
 
     if (id >= ST_ID_MAX || st_all_tests[id].id != id) {
         ERR_raise(ERR_LIB_PROV, PROV_R_INVALID_CONFIG_DATA);
@@ -1173,7 +1174,8 @@ int SELF_TEST_kats_execute(OSSL_SELF_TEST *st, OSSL_LIB_CTX *libctx,
      * Dependency chains may cause a test to be referenced multiple times,
      * immediately return if not in initial state.
      */
-    switch (st_all_tests[id].state) {
+    CRYPTO_atomic_load_int((int *)&st_all_tests[id].state, (int *)&state, NULL);
+    switch (state) {
     case SELF_TEST_STATE_INIT:
     case SELF_TEST_STATE_DEFER:
         break;
@@ -1201,7 +1203,7 @@ int SELF_TEST_kats_execute(OSSL_SELF_TEST *st, OSSL_LIB_CTX *libctx,
     }
 
     /* Mark test as in progress */
-    st_all_tests[id].state = SELF_TEST_STATE_IN_PROGRESS;
+    CRYPTO_atomic_store_int(&st_all_tests[id].state, SELF_TEST_STATE_IN_PROGRESS, NULL);
 
     /* check if there are dependent tests to run */
     if (st_all_tests[id].depends_on) {
@@ -1211,8 +1213,9 @@ int SELF_TEST_kats_execute(OSSL_SELF_TEST *st, OSSL_LIB_CTX *libctx,
         }
     }
 
+    CRYPTO_atomic_load_int((int *)&st_all_tests[id].state, (int *)&state, NULL);
     /* may have already been run through dependency chains */
-    switch (st_all_tests[id].state) {
+    switch (state) {
     case SELF_TEST_STATE_IN_PROGRESS:
         ret = SELF_TEST_kats_single(st, libctx, id);
         break;
@@ -1221,7 +1224,7 @@ int SELF_TEST_kats_execute(OSSL_SELF_TEST *st, OSSL_LIB_CTX *libctx,
         break;
     default:
         /* ensure all states are set to failed if we get here */
-        st_all_tests[id].state = SELF_TEST_STATE_FAILED;
+        CRYPTO_atomic_store_int(&st_all_tests[id].state, SELF_TEST_STATE_FAILED, NULL);
         ret = 0;
     }
 
@@ -1231,20 +1234,24 @@ int SELF_TEST_kats_execute(OSSL_SELF_TEST *st, OSSL_LIB_CTX *libctx,
      * mark it as passed.
      */
     if (st_all_tests[id].state == SELF_TEST_STATE_PASSED)
-        for (int i = 0; i < ST_ID_MAX; i++)
-            if (st_all_tests[i].state == SELF_TEST_STATE_IMPLICIT
+        for (int i = 0; i < ST_ID_MAX; i++) {
+            CRYPTO_atomic_load_int((int *)&st_all_tests[i].state, (int *)&state, NULL);
+            if (state == SELF_TEST_STATE_IMPLICIT
                 && st_all_tests[i].depends_on != NULL)
                 if (!(ret = SELF_TEST_kat_deps(st, libctx, &st_all_tests[i])))
                     break;
+        }
 
 done:
     /*
      * now mark (pass or fail) all the algorithm tests that have been marked
      * by this test implicitly tested.
      */
-    for (int i = 0; i < ST_ID_MAX; i++)
-        if (st_all_tests[i].state == SELF_TEST_STATE_IMPLICIT)
-            st_all_tests[i].state = st_all_tests[id].state;
+    for (int i = 0; i < ST_ID_MAX; i++) {
+        state = SELF_TEST_STATE_IMPLICIT;
+        CRYPTO_atomic_load_int((int *)&st_all_tests[id].state, (int *)&newstate, NULL);
+        CRYPTO_atomic_cmp_exch(&st_all_tests[i].state, &state, newstate, NULL);
+    }
 
     if (switch_rand) {
         RAND_set0_private(libctx, saved_rand);
@@ -1264,6 +1271,7 @@ int SELF_TEST_kats(OSSL_SELF_TEST *st, OSSL_LIB_CTX *libctx)
 {
     EVP_RAND_CTX *saved_rand = ossl_rand_get0_private_noncreating(libctx);
     int i, ret = 1;
+    int state;
 
     if (saved_rand != NULL && !EVP_RAND_CTX_up_ref(saved_rand))
         return 0;
@@ -1277,11 +1285,12 @@ int SELF_TEST_kats(OSSL_SELF_TEST *st, OSSL_LIB_CTX *libctx)
         return 0;
     }
 
-    for (i = 0; i < ST_ID_MAX; i++)
-        if (st_all_tests[i].state == SELF_TEST_STATE_INIT)
+    for (i = 0; i < ST_ID_MAX; i++) {
+        CRYPTO_atomic_load_int((int *)&st_all_tests[i].state, (int *)&state, NULL);
+        if (state == SELF_TEST_STATE_INIT)
             if (!SELF_TEST_kats_execute(st, libctx, i, 0))
                 ret = 0;
-
+    }
     RAND_set0_private(libctx, saved_rand);
     /* The above call will cause main_rand to be freed */
     main_rand = NULL;
@@ -1290,10 +1299,12 @@ int SELF_TEST_kats(OSSL_SELF_TEST *st, OSSL_LIB_CTX *libctx)
 
 int ossl_self_test_in_progress(self_test_id_t id)
 {
+    int state;
+
     if (id >= ST_ID_MAX)
         return 0;
-
-    if (st_all_tests[id].state == SELF_TEST_STATE_IN_PROGRESS)
+    CRYPTO_atomic_load_int((int *)&st_all_tests[id].state, (int *)&state, NULL);
+    if (state == SELF_TEST_STATE_IN_PROGRESS)
         return 1;
     return 0;
 }

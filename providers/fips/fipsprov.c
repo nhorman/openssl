@@ -1309,6 +1309,8 @@ static int FIPS_kat_deferred(OSSL_LIB_CTX *libctx, self_test_id_t id)
     FIPS_GLOBAL *fgbl = ossl_lib_ctx_get_data(libctx,
         OSSL_LIB_CTX_FIPS_PROV_INDEX);
     int ret = 0;
+    uint32_t expected_state = SELF_TEST_STATE_DEFER;
+    uint32_t state;
 
     if (fgbl == NULL) {
         ERR_raise(ERR_LIB_PROV, PROV_R_INVALID_STATE);
@@ -1326,8 +1328,8 @@ static int FIPS_kat_deferred(OSSL_LIB_CTX *libctx, self_test_id_t id)
          * record this test as invoked by the original test, for marking
          * it later as also satisfied
          */
-        if (st_all_tests[id].state == SELF_TEST_STATE_DEFER)
-            st_all_tests[id].state = SELF_TEST_STATE_IMPLICIT;
+        CRYPTO_atomic_cmp_exch(&st_all_tests[id].state, &expected_state,
+            SELF_TEST_STATE_IMPLICIT, NULL);
         /*
          * A self test is in progress for this thread so we let this
          * thread continue and perform the test while all other
@@ -1346,7 +1348,8 @@ static int FIPS_kat_deferred(OSSL_LIB_CTX *libctx, self_test_id_t id)
          * check again as another thread may have just performed this
          * test and marked it as passed
          */
-        switch (st_all_tests[id].state) {
+        CRYPTO_atomic_load_int((int *)&st_all_tests[id].state, (int *)&state, NULL);
+        switch (state) {
         case SELF_TEST_STATE_DEFER:
             break;
         case SELF_TEST_STATE_PASSED:
@@ -1422,14 +1425,16 @@ static void deferred_test_error(int category)
 int ossl_deferred_self_test(OSSL_LIB_CTX *libctx, self_test_id_t id)
 {
     int ret;
+    uint32_t state;
 
     if (id >= ST_ID_MAX) {
         ossl_set_error_state(NULL);
         return 0;
     }
 
+    CRYPTO_atomic_load_int((int *)&st_all_tests[id].state, (int *)&state, NULL);
     /* return immediately if the test is marked as passed */
-    if (st_all_tests[id].state == SELF_TEST_STATE_PASSED)
+    if (state == SELF_TEST_STATE_PASSED)
         return 1;
 
     /*
@@ -1438,8 +1443,8 @@ int ossl_deferred_self_test(OSSL_LIB_CTX *libctx, self_test_id_t id)
      * Immediately mark it and return.
      */
     if (ossl_fips_self_testing()) {
-        if (st_all_tests[id].state == SELF_TEST_STATE_DEFER)
-            st_all_tests[id].state = SELF_TEST_STATE_IMPLICIT;
+        state = SELF_TEST_STATE_DEFER;
+        CRYPTO_atomic_cmp_exch(&st_all_tests[id].state, &state, SELF_TEST_STATE_IMPLICIT, NULL);
         return 1;
     }
 
@@ -1451,7 +1456,8 @@ int ossl_deferred_self_test(OSSL_LIB_CTX *libctx, self_test_id_t id)
      * in FIPS_kat_deferred() so this race is of no real consequence.
      */
     ret = FIPS_kat_deferred(libctx, id);
-    if (!ret || st_all_tests[id].state == SELF_TEST_STATE_FAILED)
+    CRYPTO_atomic_load_int((int *)&st_all_tests[id].state, (int *)&state, NULL);
+    if (!ret || state == SELF_TEST_STATE_FAILED)
         deferred_test_error(st_all_tests[id].category);
     return ret;
 }

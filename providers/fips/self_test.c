@@ -258,6 +258,7 @@ int ossl_fips_self_testing(void)
 int SELF_TEST_post(SELF_TEST_POST_PARAMS *st, int on_demand_test)
 {
     int loclstate;
+    uint32_t state;
 #if !defined(OPENSSL_NO_FIPS_POST)
     int ok = 0;
     long checksum_len;
@@ -329,8 +330,8 @@ int SELF_TEST_post(SELF_TEST_POST_PARAMS *st, int on_demand_test)
         && strcmp(st->defer_tests, "1") == 0) {
         /* Mark all non executed tests as deferred */
         for (int i = 0; i < ST_ID_MAX; i++) {
-            if (st_all_tests[i].state == SELF_TEST_STATE_INIT)
-                st_all_tests[i].state = SELF_TEST_STATE_DEFER;
+            state = SELF_TEST_STATE_INIT;
+            CRYPTO_atomic_cmp_exch(&st_all_tests[i].state, &state, SELF_TEST_STATE_DEFER, NULL);
         }
     }
 
@@ -338,7 +339,7 @@ int SELF_TEST_post(SELF_TEST_POST_PARAMS *st, int on_demand_test)
         /* ensure all states are cleared so all tests are forcibly
          * repeated */
         for (int i = 0; i < ST_ID_MAX; i++) {
-            st_all_tests[i].state = SELF_TEST_STATE_INIT;
+            CRYPTO_atomic_store_int(&st_all_tests[i].state, SELF_TEST_STATE_INIT, NULL);
         }
     }
 
