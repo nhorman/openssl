@@ -261,6 +261,27 @@ int CRYPTO_atomic_load(uint64_t *val, uint64_t *ret, CRYPTO_RWLOCK *lock)
     return 1;
 }
 
+int CRYPTO_atomic_cmp_exch(uint32_t *dst, uint32_t *expected, uint32_t desired,
+    CRYPTO_RWLOCK *lock)
+{
+    int ret = 0;
+
+    if (*dst == *expected) {
+        *dst = desired;
+        ret = 1;
+    } else {
+        *expected = *dst;
+    }
+    return ret;
+}
+
+int CRYPTO_atomic_store_int(uint32_t *dst, uint32_t val, CRYPTO_RWLOCK *lock)
+{
+    *dst = val;
+
+    return 1;
+}
+
 int CRYPTO_atomic_store(uint64_t *dst, uint64_t val, CRYPTO_RWLOCK *lock)
 {
     *dst = val;

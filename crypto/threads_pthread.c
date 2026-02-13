@@ -1155,6 +1155,37 @@ int CRYPTO_atomic_load(uint64_t *val, uint64_t *ret, CRYPTO_RWLOCK *lock)
     return 1;
 }
 
+int CRYPTO_atomic_cmp_exch(uint32_t *dst, uint32_t *expected, uint32_t desired,
+                           CRYPTO_RWLOCK *lock)
+{
+    int ret = 0;
+#if defined(__GNUC__) && defined(__ATOMIC_ACQ_REL) && !defined(BROKEN_CLANG_ATOMICS)
+    if (__atomic_is_lock_free(sizeof(*dst), dst)) {
+        return __atomic_compare_exchange_n(dst, expected, desired,
+                                           0, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED);
+    }
+#elif defined(__sun) && (defined(__SunOS_5_10) || defined(__SunOS_5_11))
+    /* This will work for all future Solaris versions. */
+    if (dst != NULL) {
+        if (atomic_cas_32(dst, *expected, desired) == *expected)
+            return 1;
+        return 0;
+    }
+#endif
+    if (lock == NULL || !CRYPTO_THREAD_write_lock(lock))
+        return 0;
+    if (*dst == *expected) {
+        ret = 1;
+        *dst = desired;
+    } else {
+        *expected = *dst;
+    }
+    if (!CRYPTO_THREAD_unlock(lock))
+        return 0;
+
+    return ret;
+}
+
 int CRYPTO_atomic_store(uint64_t *dst, uint64_t val, CRYPTO_RWLOCK *lock)
 {
 #if defined(__GNUC__) && defined(__ATOMIC_ACQ_REL) && !defined(BROKEN_CLANG_ATOMICS)
@@ -1166,6 +1197,29 @@ int CRYPTO_atomic_store(uint64_t *dst, uint64_t val, CRYPTO_RWLOCK *lock)
     /* This will work for all future Solaris versions. */
     if (dst != NULL) {
         atomic_swap_64(dst, val);
+        return 1;
+    }
+#endif
+    if (lock == NULL || !CRYPTO_THREAD_write_lock(lock))
+        return 0;
+    *dst = val;
+    if (!CRYPTO_THREAD_unlock(lock))
+        return 0;
+
+    return 1;
+}
+
+int CRYPTO_atomic_store_int(uint32_t *dst, uint32_t val, CRYPTO_RWLOCK *lock)
+{
+#if defined(__GNUC__) && defined(__ATOMIC_ACQ_REL) && !defined(BROKEN_CLANG_ATOMICS)
+    if (__atomic_is_lock_free(sizeof(*dst), dst)) {
+        __atomic_store(dst, &val, __ATOMIC_RELEASE);
+        return 1;
+    }
+#elif defined(__sun) && (defined(__SunOS_5_10) || defined(__SunOS_5_11))
+    /* This will work for all future Solaris versions. */
+    if (dst != NULL) {
+        atomic_swap_32(dst, val);
         return 1;
     }
 #endif
