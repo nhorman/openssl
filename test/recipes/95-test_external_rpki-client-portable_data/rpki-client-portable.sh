@@ -11,9 +11,14 @@
 LDFLAGS="-L`pwd`/$BLDTOP -Wl,-rpath,`pwd`/$BLDTOP"
 CFLAGS="-I`pwd`/$BLDTOP/include -I`pwd`/$SRCTOP/include"
 
+pushd $SRCTOP
+SRC_TOP_ABS_PATH=$PWD
+popd
+
 WGET_OPTS='--no-check-certificate'
 wget $WGET_OPTS -O $RPKI_TARBALL $RPKI_DOWNLOAD_URL && tar xzf $RPKI_TARBALL
 wget $WGET_OPTS -O $RPKI_TARBALL.asc $RPKI_DOWNLOAD_URL.asc
+
 #
 # public key comes from
 # https://cdn.openbsd.org/pub/OpenBSD/rpki-client/RELEASE_KEY.asc
@@ -65,6 +70,8 @@ EOF
 gpg --verify $RPKI_TARBALL.asc $RPKI_TARBALL || exit 1
 
 cd $RPKI_SRC
+
+patch -p1 --merge < $SRC_TOP_ABS_PATH/test/recipes/95-test_external_rpki-client-portable_data/patches/0001-fix-ASN1-BIT-STRING-accessors.patch
 
 ./configure --with-openssl-cflags="$CFLAGS" --with-openssl-ldflags="$LDFLAGS" \
             CFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS"

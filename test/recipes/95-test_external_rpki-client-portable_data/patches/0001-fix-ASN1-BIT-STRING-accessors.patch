@@ -1,0 +1,40 @@
+diff -u -r rpki-client-9.7-orig/src/ccr.c rpki-client-9.7/src/ccr.c
+--- rpki-client-9.7-orig/src/ccr.c	2026-02-21 09:53:17.751323551 -0500
++++ rpki-client-9.7/src/ccr.c	2026-02-21 09:57:48.289818687 -0500
+@@ -395,12 +395,10 @@
+ 	if (num_bits > 0)
+ 		unused_bits = 8 - num_bits;
+ 
+-	if (!ASN1_BIT_STRING_set(ripa->address, vrp->addr.addr, num_bytes))
++	if (!ASN1_BIT_STRING_set1(ripa->address, vrp->addr.addr, num_bytes,
++                              unused_bits))
+ 		errx(1, "ASN1_BIT_STRING_set");
+ 
+-	/* ip_addr_parse() handles unused bits, no need to clear them here. */
+-	ripa->address->flags |= ASN1_STRING_FLAG_BITS_LEFT | unused_bits;
+-
+ 	/* XXX - assert that unused bits are zero */
+ 
+ 	if (vrp->maxlength > vrp->addr.prefixlen) {
+diff -u -r rpki-client-9.7-orig/src/ip.c rpki-client-9.7/src/ip.c
+--- rpki-client-9.7-orig/src/ip.c	2026-02-21 09:53:17.751544966 -0500
++++ rpki-client-9.7/src/ip.c	2026-02-21 10:01:12.810715506 -0500
+@@ -173,15 +173,12 @@
+     enum afi afi, const char *fn, struct ip_addr *addr)
+ {
+ 	const unsigned char *data;
+-	int length, unused = 0;
++	size_t length = 0;
++    int unused = 0;
+ 
+ 	data = ASN1_STRING_get0_data(abs);
+-	length = ASN1_STRING_length(abs);
+ 
+-	/* Weird OpenSSL-ism to get unused bit count. */
+-
+-	if ((abs->flags & ASN1_STRING_FLAG_BITS_LEFT))
+-		unused = abs->flags & 0x07;
++    ASN1_BIT_STRING_get_length(abs, &length, &unused);
+ 
+ 	if (length == 0 && unused != 0) {
+ 		warnx("%s: RFC 3779 section 2.2.3.8: "
