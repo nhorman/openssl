@@ -2,6 +2,7 @@
 
 import sys
 import json
+import jsonschema
 import argparse
 from unidiff import PatchSet
 import re
@@ -58,20 +59,42 @@ def lint_reviewers(args):
     except json.JSONDecodeError:
         print(f"Reviewers JSON is mis-formatted\n")
         return
-
+    if args.schema == None:
+        args.schema = "./REVIEWERS.json.schema"
+    try:
+        with open(args.schema, 'r') as file:
+            rev_schema = json.load(file)
+    except FileNotFoundError:
+        pritn(f"Unalbe to load {args.schema}\n")
+        return
+    except json.JSONDecodeError:
+        print(f"Schema JSON is mis-formatted\n")
+    try:
+        jsonschema.validate(instance=rev_json, schema=rev_schema)
+        print(f"{args.reviewers} is valid\n")
+    except jsonschema.exceptions.ValidationError as e:
+        print("Invalid JSON data:")
+        print(e)
+        sys.exit(1)
+    # Make sure every group listed in all the platforms and 
+    # codegroups arrays is valid
     for platform in rev_json["platforms"]:
         for group in platform["groups"]:
             if group in rev_json["groups"]:
                 continue
             else:
                 print(f"Group {group} does not exist for {platform["name"]}\n")
-    for group in rev_json["codegroups"]:
-        for groupid in group["groups"]:
-            if groupid in rev_json["groups"]:
-                continue
-            else:
-                print(f"Group {groupid} does not exist for {group["name"]}\n")
-        
+                sys.exit(1)
+        for group in rev_json["codegroups"]:
+            for groupid in group["groups"]:
+                if groupid in rev_json["groups"]:
+                    continue
+                else:
+                    print(f"Group {groupid} does not exist for {group["name"]}\n")
+                    sys.exit(1)
+
+    return
+
 def load_and_parse_reviewers(args):
     reviewers = []
 
@@ -102,6 +125,7 @@ def main(argv):
     parser.add_argument("-r", "--reviewers", help="select reviewers file")
     parser.add_argument("-t", "--target", help="specify target")
     parser.add_argument("-l", "--lint", action='store_true', help="lint REVIEWERS file")
+    parser.add_argument("-s", "--schema", help="select validation schema")
 
     args = parser.parse_args(argv[1:])
    

@@ -1,0 +1,328 @@
+{
+  "$schema": "https://raw.githubusercontent.com/nhorman/openssl/refs/heads/reviewers/REVIEWERS.json.schema",
+  "type": "object",
+  "properties": {
+    "groups": {
+      "type": "object",
+      "properties": {
+        "committers": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string"
+            },
+            "github_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "description",
+            "github_ids"
+          ]
+        },
+        "linux-aarch64-platform": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string"
+            },
+            "github_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "description",
+            "github_ids"
+          ]
+        },
+        "nonstop-platform": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string"
+            },
+            "github_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "description",
+            "github_ids"
+          ]
+        },
+        "loongarch64": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string"
+            },
+            "github_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "description",
+            "github_ids"
+          ]
+        },
+        "bsd community": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string"
+            },
+            "github_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "description",
+            "github_ids"
+          ]
+        },
+        "solaris community": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string"
+            },
+            "github_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "description",
+            "github_ids"
+          ]
+        },
+        "s390x community": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string"
+            },
+            "github_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "description",
+            "github_ids"
+          ]
+        },
+        "hurd community": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string"
+            },
+            "github_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "description",
+            "github_ids"
+          ]
+        },
+        "ios community": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string"
+            },
+            "github_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "description",
+            "github_ids"
+          ]
+        },
+        "ppc64le community": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string"
+            },
+            "github_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "description",
+            "github_ids"
+          ]
+        },
+        "riscv community": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string"
+            },
+            "github_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "description",
+            "github_ids"
+          ]
+        },
+        "aix community": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string"
+            },
+            "github_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "description",
+            "github_ids"
+          ]
+        },
+        "BC64 community": {
+          "type": "object",
+          "properties": {
+            "description": {
+              "type": "string"
+            },
+            "github_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "description",
+            "github_ids"
+          ]
+        }
+      },
+      "required": [
+        "BC64 community",
+        "aix community",
+        "bsd community",
+        "committers",
+        "hurd community",
+        "ios community",
+        "linux-aarch64-platform",
+        "loongarch64",
+        "nonstop-platform",
+        "ppc64le community",
+        "riscv community",
+        "s390x community",
+        "solaris community"
+      ]
+    },
+    "platforms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "regexs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "groups",
+          "name",
+          "regexs"
+        ]
+      }
+    },
+    "codegroups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "filepathregexs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "filecontentregexs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "filecontentregexs",
+          "filepathregexs",
+          "groups",
+          "name"
+        ]
+      }
+    }
+  },
+  "required": [
+    "codegroups",
+    "groups",
+    "platforms"
+  ]
+}

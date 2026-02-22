@@ -1,4 +1,5 @@
 {
+  "$schema": "https://raw.githubusercontent.com/nhorman/openssl/refs/heads/reviewers/REVIEWERS#",
   "groups": {
     "committers": {
       "description": "OpenSSL Committers",
