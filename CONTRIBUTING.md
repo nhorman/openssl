@@ -1,6 +1,13 @@
 HOW TO CONTRIBUTE TO OpenSSL
 ============================
 
+Table of Contents
+=================
+
+ - [Reporting issues](#Reporting-issues)
+ - [Submitting patches](#Submitting-patches)
+ - [Reviewing patches](#Reviewing-patches)
+
 Please visit our [Getting Started] page for other ideas about how to contribute.
 
   [Getting Started]: <https://openssl-library.org/community/getting-started>
@@ -9,8 +16,14 @@ Development is done on GitHub in the [openssl/openssl] repository.
 
   [openssl/openssl]: <https://github.com/openssl/openssl>
 
+Reporting-issues
+================
+
 To request a new feature, ask a question, or report a bug,
 please open an [issue on GitHub](https://github.com/openssl/openssl/issues).
+
+Submitting-patches
+==================
 
 To submit a patch or implement a new feature, please open a
 [pull request on GitHub](https://github.com/openssl/openssl/pulls).
@@ -115,3 +128,45 @@ guidelines:
 
  8. Guidelines on how to integrate error output of new crypto library modules
     can be found in [crypto/err/README.md](crypto/err/README.md).
+
+Reviewing-patches
+=================
+
+The OpenSSL project is large, with many areas of code that fall outside the subject
+matter expertise of the core project developers.  In addition to the authoring of
+features and bug fixes for the project, the entire community benefits from the review
+of these changes by other community members.  Any participant is welcome and
+encouraged to participate in the review process by commenting on PR's relevant
+to their expertise.
+
+If you, as a community member wish to gain more visibility on PR's which you
+feel might be relevant to you and you're area of expertise, you are welcome to
+add your name to our REVIEWERS file, by opening a PR to modify it.
+
+The REVIEWERS file is used and parsed by our core development team to identify
+those community members who may be interested in changes affecting various areas
+of code.
+
+The REVIEWERS file is in json format, and consists of 3 main sections
+
+The "groups" section:  This is a json set consisting of objects that identify
+topics of interest for which you might be interested (i.e. "ARM/AARCH64" code).
+Each group maps to a set of github user ids that belong to that group
+
+The "platform" section: This is a json array listing all of the available
+targets that openssl may be built for.  Each platform maps to a group in the
+group section, identifying those groups interested in that platform.
+
+The "codegroup" section: This section is a json array containing objects
+identifying both a set of regex values for changed code paths and content
+changes, along with a list of groups from the "groups" section that identifies
+groups interested in changes that match against those regexs.
+
+If you have interest in being informed of a given change, so that you can better
+see reviews relevant to your area of interest, feel free to open a PR adding
+your github id to a given group, or add a new group if one doesn't exist for
+your area of interest yet.
+
+The core development team can then use the `util/get_reviewers.py` utility to
+parse the REVIEWERS file and more easily identify you as someone who may want to
+participate in a review by mentioning you in the corresponding PR.
