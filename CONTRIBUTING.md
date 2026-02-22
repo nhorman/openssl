@@ -149,7 +149,7 @@ of code.
 
 The REVIEWERS file is in json format, and consists of 3 main sections
 
-The "groups" section:  This is a json set consisting of objects that identify
+The "groups" section:  This is a json array consisting of objects that identify
 topics of interest for which you might be interested (i.e. "ARM/AARCH64" code).
 Each group maps to a set of github user ids that belong to that group
 

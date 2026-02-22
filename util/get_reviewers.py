@@ -7,6 +7,12 @@ import argparse
 from unidiff import PatchSet
 import re
 
+def get_group_object(group_name, rev_json):
+    for group in rev_json["groups"]:
+        if group["name"] == group_name:
+            return group
+    return None
+
 def get_patch_filepath_reviewers(patch_set, rev_json):
     ids = []
     for file in patch_set:
@@ -15,7 +21,9 @@ def get_patch_filepath_reviewers(patch_set, rev_json):
                 match = re.search(regex, file.path)
                 if match:
                     for idgroup in group["groups"]:
-                        ids = ids + rev_json["groups"][idgroup]["github_ids"] 
+                        namedgroup = get_group_object(idgroup, rev_json)
+                        if namedgroup != None:
+                            ids = ids + namedgroup["github_ids"] 
     return ids
 
 def get_patch_filecontent_reviewers(patch_set, rev_json):
@@ -26,7 +34,9 @@ def get_patch_filecontent_reviewers(patch_set, rev_json):
                 match = re.search(regex, str(file))
                 if match:
                     for idgroup in group["groups"]:
-                        ids = ids + rev_json["groups"][idgroup]["github_ids"] 
+                        namedgroup = get_group_object(idgroup, rev_json)
+                        if namedgroup != None:
+                            ids = ids + namedgroup["github_ids"] 
     return ids
 
 def get_patch_reviewers(args, rev_json):
@@ -80,14 +90,16 @@ def lint_reviewers(args):
     # codegroups arrays is valid
     for platform in rev_json["platforms"]:
         for group in platform["groups"]:
-            if group in rev_json["groups"]:
+            namedgroup = get_group_object(group, rev_json)
+            if namedgroup != None:
                 continue
             else:
                 print(f"Group {group} does not exist for {platform["name"]}\n")
                 sys.exit(1)
         for group in rev_json["codegroups"]:
             for groupid in group["groups"]:
-                if groupid in rev_json["groups"]:
+                namedgroup = get_group_object(groupid, rev_json)
+                if namedgroup != None:
                     continue
                 else:
                     print(f"Group {groupid} does not exist for {group["name"]}\n")

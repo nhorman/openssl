@@ -1,13 +1,15 @@
 {
   "$schema": "https://raw.githubusercontent.com/nhorman/openssl/refs/heads/reviewers/REVIEWERS#",
-  "groups": {
-    "committers": {
+  "groups": [
+    {
+      "name": "committers",
       "description": "OpenSSL Committers",
       "github_ids": [
         "@openssl/committers"
       ]
     },
-    "linux-aarch64-platform": {
+    {
+      "name": "linux-aarch64-platform",
       "description": "Community maintainers for linux aarch64",
       "github_ids": [
         "@tom-cosgrove-arm",
@@ -15,51 +17,59 @@
         "@xkqian"
       ]
     },
-    "nonstop-platform": {
+    {
+      "name": "nonstop-platform",
       "description": "Community maintainers for nonstop",
       "github_ids": [
         "@rsbeckerca"
       ]
     },
-    "loongarch64": {
+    {
+      "name": "loongarch64",
       "description": "Community maintainers for loongarch64",
       "github_ids": [
         "@shipujin"
       ]
     },
-    "bsd community": {
+    {
+      "name": "bsd community",
       "description": "Community maintainrs for BSD platforms",
       "github_ids": [
         "@pkubaj"
       ]
     },
-    "solaris community": {
+    {
+      "name": "solaris community",
       "description": "Community maintainers for Solaris platforms",
       "github_ids": [
         "@orcl-jlana",
         "@cernoseka"
       ]
     },
-    "s390x community": {
+    {
+      "name": "s390x community",
       "description": "Community maintainers for s390x platforms",
       "github_ids": [
         "@holger-dengler",
         "@ifranzki"
       ]
     },
-    "hurd community": {
+    {
+      "name": "hurd community",
       "description": "Community maintainers for hurd platforms",
       "github_ids": [
         "@sthibaul"
       ]
     },
-    "ios community": {
+    {
+      "name": "ios community",
       "description": "Community maintainers for ios platforms",
       "github_ids": [
         "@fwh-dc"
       ]
     },
-    "ppc64le community": {
+    {
+      "name": "ppc64le community",
       "description": "Community maintainers for ppc64le platforms",
       "github_ids": [
         "@dannytsen",
@@ -67,25 +77,28 @@
         "@naynajain"
       ]
     },
-    "riscv community": {
+    {
+      "name": "riscv community",
       "description": "Community maintainers for riscv platforms",
       "github_ids": [
         "@ZenithalHourlyRate"
       ]
     },
-    "aix community": {
+    {
+      "name": "aix community",
       "description": "Community maintainers for aix platforms",
       "github_ids": [
         "@sanumesh"
       ]
     },
-    "BC64 community": {
+    {
+      "name": "BC64 community",
       "description": "Community maintainers for Windows/Embarcadero platforms",
       "github_ids": [
         "@GermanAizek"
       ]
     }
-  },
+  ],
   "platforms": [
     {
       "name": "All Primary Platforms",
