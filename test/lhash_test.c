@@ -38,6 +38,8 @@ static const size_t n_int_tests = OSSL_NELEM(int_tests);
 static short int_found[OSSL_NELEM(int_tests)];
 static short int_not_found;
 
+
+
 static unsigned long int int_hash(const int *p)
 {
     return 3 & *p; /* To force collisions */
@@ -788,8 +790,133 @@ end:
     return ret;
 }
 
+HT_START_KEY_DEFN(stkey8)
+HT_DEF_KEY_FIELD_CHAR_ARRAY(name, 8)
+HT_END_KEY_DEFN(STKEY8)
+
+HT_START_KEY_DEFN(stkey16)
+HT_DEF_KEY_FIELD_CHAR_ARRAY(name, 16)
+HT_END_KEY_DEFN(STKEY16)
+
+HT_START_KEY_DEFN(stkey32)
+HT_DEF_KEY_FIELD_CHAR_ARRAY(name, 32)
+HT_END_KEY_DEFN(STKEY32)
+
+HT_START_KEY_DEFN(stkey64)
+HT_DEF_KEY_FIELD_CHAR_ARRAY(name, 64)
+HT_END_KEY_DEFN(STKEY64)
+
+HT_START_KEY_DEFN(stkey128)
+HT_DEF_KEY_FIELD_CHAR_ARRAY(name, 128)
+HT_END_KEY_DEFN(STKEY128)
+
+#define SPEED_TEST_COUNT 5000000
+
+IMPLEMENT_HT_VALUE_TYPE_FNS(char, speed, static)
+
+static int hashtable_speed_test(int idx)
+{
+    int i;
+    int ret = 0;
+    STKEY8 key8;
+    STKEY16 key16;
+    STKEY32 key32;
+    STKEY64 key64;
+    STKEY128 key128;
+    HT_KEY *keyptr;
+    const char *name = "myname";
+    char *mydata = "mydata";
+    const char *checkdata;
+#ifdef MEASURE_HASH_PERFORMANCE
+    struct timeval start, end, delta;
+#endif
+
+    HT_CONFIG ht_conf = {
+        NULL,
+        NULL,
+        NULL,
+        0,
+        1,
+        0,
+        1
+    };
+    HT_VALUE *value = NULL;
+    HT *ht = ossl_ht_new(&ht_conf);
+
+    if (ht == NULL) {
+        TEST_error("Could not create hash table\n");
+        goto err;
+    }
+
+    switch(idx) {
+    case 0:
+        HT_INIT_KEY(&key8);
+        HT_SET_KEY_STRING_CASE(&key8, name, name);
+        keyptr = TO_HT_KEY(&key8);
+        break;
+    case 1:
+        HT_INIT_KEY(&key16);
+        HT_SET_KEY_STRING_CASE(&key16, name, name);
+        keyptr = TO_HT_KEY(&key16);
+        break;
+    case 2:
+        HT_INIT_KEY(&key32);
+        HT_SET_KEY_STRING_CASE(&key32, name, name);
+        keyptr = TO_HT_KEY(&key32);
+        break;
+    case 3:
+        HT_INIT_KEY(&key64);
+        HT_SET_KEY_STRING_CASE(&key64, name, name);
+        keyptr = TO_HT_KEY(&key64);
+        break;
+    case 4:
+        HT_INIT_KEY(&key128);
+        HT_SET_KEY_STRING_CASE(&key128, name, name);
+        keyptr = TO_HT_KEY(&key128);
+        break;
+    default:
+        TEST_error("Unknown index\n");
+        goto err;
+    }
+
+    /*
+     * insert a key
+     */
+    if (!ossl_ht_speed_char_insert(ht, keyptr, mydata, NULL)) {
+        TEST_error("Unable to insert key\n");
+        goto err;
+    }
+
+    /*
+     * look it up a bunch
+     */
+#ifdef MEASURE_HASH_PERFORMANCE
+    gettimeofday(&start, NULL);
+#endif
+
+    for (i = 0; i < SPEED_TEST_COUNT; i++) {
+        checkdata = ossl_ht_speed_char_get(ht, keyptr, &value);
+        if (!TEST_ptr_eq(checkdata, mydata)) {
+            TEST_error("Data mismatch\n");
+            goto err;
+        }
+    }
+#ifdef MEASURE_HASH_PERFORMANCE
+    gettimeofday(&end, NULL);
+    timeval_subtract(&delta, &end, &start);
+    TEST_info("lhash speed for idx %d runs in %ld.%ld seconds", idx, delta.tv_sec, delta.tv_usec);
+#endif
+
+    ret = 1;
+
+err:
+    ossl_ht_free(ht);
+    return ret; 
+}
+
 int setup_tests(void)
 {
+    ADD_ALL_TESTS(hashtable_speed_test, 5);
     ADD_TEST(test_int_lhash);
     ADD_TEST(test_stress);
     ADD_ALL_TESTS(test_int_hashtable, 2);
