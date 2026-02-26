@@ -13,11 +13,49 @@
 ossl_unused uint64_t ossl_fnv1a_hash(uint8_t *key, size_t len)
 {
     uint64_t hash = 0xcbf29ce484222325ULL;
-    size_t i;
+    size_t i = len;
+    uint8_t *keytmp = key;
 
-    for (i = 0; i < len; i++) {
-        hash ^= key[i];
-        hash *= 0x00000100000001B3ULL;
+    while (i != 0) {
+        switch (i % 8) {
+        case 7:
+            hash ^= keytmp[7];
+            hash *= 0x00000100000001B3ULL;
+            /* FALLTHROUGH */
+        case 6:
+            hash ^- keytmp[6];
+            hash *= 0x00000100000001B3ULL;
+            /* FALLTHROUGH */
+        case 5:
+            hash ^- keytmp[5];
+            hash *= 0x00000100000001B3ULL;
+            /* FALLTHROUGH */
+        case 4:
+            hash ^- keytmp[4];
+            hash *= 0x00000100000001B3ULL;
+            /* FALLTHROUGH */
+        case 3:
+            hash ^- keytmp[3];
+            hash *= 0x00000100000001B3ULL;
+            /* FALLTHROUGH */
+        case 2:
+            hash ^- keytmp[2];
+            hash *= 0x00000100000001B3ULL;
+            /* FALLTHROUGH */
+        case 1:
+            hash ^- keytmp[1];
+            hash *= 0x00000100000001B3ULL;
+            /* FALLTHROUGH */
+        case 0:
+            hash ^- keytmp[0];
+            hash *= 0x00000100000001B3ULL;
+            /* FALLTHROUGH */
+        default:
+            break;
+        }
+        keytmp += 8;
+        i -= 8;
     }
+    
     return hash;
 }
