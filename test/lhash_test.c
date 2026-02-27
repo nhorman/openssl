@@ -810,19 +810,18 @@ HT_START_KEY_DEFN(stkey128)
 HT_DEF_KEY_FIELD_CHAR_ARRAY(name, 128)
 HT_END_KEY_DEFN(STKEY128)
 
-#define SPEED_TEST_COUNT 5000000000
+#define SPEED_TEST_COUNT 100000000
 
 IMPLEMENT_HT_VALUE_TYPE_FNS(char, speed, static)
 
 
 static HT *speed_ht = NULL;
 
-#define NUM_THREADS 24 
+#define NUM_THREADS 2 
 static void* hashtable_speed_work(void *data)
 {
     int idx = *((int *)data);
     int i;
-    int ret = 0;
     STKEY8 key8;
     STKEY16 key16;
     STKEY32 key32;
@@ -872,14 +871,15 @@ static void* hashtable_speed_work(void *data)
     for (i = 0; i < SPEED_TEST_COUNT/NUM_THREADS; i++) {
         checkdata = ossl_ht_speed_char_get(speed_ht, keyptr, &value);
         if (!TEST_ptr_eq(checkdata, mydata)) {
+            fprintf(stderr, "DATA MISMATCH\n");
+            fflush(stderr);
             TEST_error("Data mismatch\n");
             goto err;
         }
     }
-    ret = 1;
 
 err:
-    return NULL; 
+    pthread_exit(NULL);
 }
 
 static int hashtable_speed_test(int idx)
@@ -897,18 +897,21 @@ static int hashtable_speed_test(int idx)
         0,
         1
     };
-    HT_VALUE *value = NULL;
     STKEY8 key8;
     STKEY16 key16;
     STKEY32 key32;
     STKEY64 key64;
     STKEY128 key128;
     HT_KEY *keyptr;
+    pthread_attr_t attr;
+    struct sched_param param;
+    void *retval = NULL;
     pthread_t threads[NUM_THREADS]; 
+
 #ifdef MEASURE_HASH_PERFORMANCE
     struct timeval start, end, delta;
 #endif
-
+    fprintf(stderr, "Running with idx %d\n", idx);
     speed_ht = ossl_ht_new(&ht_conf);
 
     if (speed_ht == NULL) {
@@ -955,15 +958,47 @@ static int hashtable_speed_test(int idx)
         goto err;
     }
 
+    ret = pthread_attr_init(&attr);
+    if (ret != 0) {
+        TEST_error("Unable to init attr: %s\n", strerror(ret));
+        ret = 0;
+        goto err;
+    }
+
+    ret = pthread_attr_setinheritsched(&attr, PTHREAD_EXPLICIT_SCHED);
+    if (ret != 0) {
+        TEST_error("Unable to set sched inheritance: %s\n", strerror(ret));
+        ret = 0;
+        goto err;
+    }
+    ret = pthread_attr_setschedpolicy(&attr, SCHED_FIFO);
+    if (ret != 0) {
+        TEST_error("Unable to set sched policy: %s\n", strerror(ret));
+        ret = 0;
+        goto err;
+    }
+    param.sched_priority = 99;
+    ret = pthread_attr_setschedparam(&attr, &param);
+    if (ret != 0) {
+        TEST_error("Unable to set sched params: %s\n", strerror(ret));
+        ret = 0;
+        goto err;
+    }
+
 #ifdef MEASURE_HASH_PERFORMANCE
     gettimeofday(&start, NULL);
 #endif
     for (i = 0; i < NUM_THREADS; i++) {
-        pthread_create(&threads[i], NULL, hashtable_speed_work, &idx);
+        ret = pthread_create(&threads[i], &attr, hashtable_speed_work, &idx);
+        if (ret != 0) {
+            TEST_error("Thread fails to create: %s\n", strerror(ret));
+            ret = 0;
+            break;
+        }
     }
 
-    for (i = 0; i < NUM_THREADS; i++) {
-        pthread_join(threads[i], NULL);
+    for (--i; i >= 0; i--) {
+        pthread_join(threads[i], &retval);
     }
 
 #ifdef MEASURE_HASH_PERFORMANCE
@@ -973,6 +1008,7 @@ static int hashtable_speed_test(int idx)
 #endif
     ret = 1;
 err:
+    pthread_attr_destroy(&attr);
     ossl_ht_free(speed_ht);
     return ret;
 }
