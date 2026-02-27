@@ -1025,6 +1025,7 @@ int ossl_frozen_method_store_cache_get(OSSL_METHOD_STORE *store,
 {
     FROZEN_CACHE_KEY key;
     HT_VALUE *val;
+    char alg_name_case[128] = { 0 };
 
     if (store == NULL
         || alg_name == NULL
@@ -1032,9 +1033,10 @@ int ossl_frozen_method_store_cache_get(OSSL_METHOD_STORE *store,
         || store->frozen_algs == NULL)
         return 0;
 
-    HT_INIT_KEY(&key);
-    HT_SET_KEY_STRING_CASE(&key, name, alg_name);
-    HT_SET_KEY_STRING(&key, propq, prop_query);
+    HT_INIT_RAW_KEY(&key);
+    ossl_ht_strcase(alg_name_case, alg_name, strlen(alg_name));
+    HT_COPY_RAW_KEY(TO_HT_KEY(&key), (const uint8_t *)alg_name_case, strlen(alg_name));
+    HT_COPY_RAW_KEY(TO_HT_KEY(&key), (const uint8_t *)prop_query, strlen(prop_query));
 
     val = ossl_ht_get(store->frozen_algs, TO_HT_KEY(&key));
     if (val == NULL)
@@ -1069,10 +1071,13 @@ static int freeze_alg(OSSL_METHOD_STORE *store, ALGORITHM *alg,
     FROZEN_CACHE_KEY key;
     HT_VALUE val = { 0 };
     const OSSL_PROVIDER *prov = NULL;
+    char alg_name_case[128] = { 0 };
 
-    HT_INIT_KEY(&key);
-    HT_SET_KEY_STRING_CASE(&key, name, alg_name);
-    HT_SET_KEY_STRING(&key, propq, propq);
+    HT_INIT_RAW_KEY(&key);
+
+    ossl_ht_strcase(alg_name_case, alg_name, strlen(alg_name));
+    HT_COPY_RAW_KEY(TO_HT_KEY(&key), (const uint8_t *)alg_name_case, strlen(alg_name));
+    HT_COPY_RAW_KEY(TO_HT_KEY(&key), (const uint8_t *)propq, strlen(propq));
 
     if (ossl_ht_get(store->frozen_algs, TO_HT_KEY(&key)) != NULL)
         return 1;
