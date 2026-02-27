@@ -817,7 +817,7 @@ IMPLEMENT_HT_VALUE_TYPE_FNS(char, speed, static)
 
 static HT *speed_ht = NULL;
 
-#define NUM_THREADS 2 
+#define NUM_THREADS 1 
 static void* hashtable_speed_work(void *data)
 {
     int idx = *((int *)data);
@@ -836,28 +836,28 @@ static void* hashtable_speed_work(void *data)
 
     switch(idx) {
     case 0:
-        HT_INIT_KEY(&key8);
-        HT_SET_KEY_STRING_CASE(&key8, name, name);
+        HT_INIT_RAW_KEY(&key8);
+        HT_COPY_RAW_KEY(TO_HT_KEY(&key8), (const uint8_t *)name, strlen(name));
         keyptr = TO_HT_KEY(&key8);
         break;
     case 1:
-        HT_INIT_KEY(&key16);
-        HT_SET_KEY_STRING_CASE(&key16, name, name);
+        HT_INIT_RAW_KEY(&key16);
+        HT_COPY_RAW_KEY(TO_HT_KEY(&key16), (const uint8_t *)name, strlen(name));
         keyptr = TO_HT_KEY(&key16);
         break;
     case 2:
-        HT_INIT_KEY(&key32);
-        HT_SET_KEY_STRING_CASE(&key32, name, name);
+        HT_INIT_RAW_KEY(&key32);
+        HT_COPY_RAW_KEY(TO_HT_KEY(&key32), (const uint8_t *)name, strlen(name));
         keyptr = TO_HT_KEY(&key32);
         break;
     case 3:
-        HT_INIT_KEY(&key64);
-        HT_SET_KEY_STRING_CASE(&key64, name, name);
+        HT_INIT_RAW_KEY(&key64);
+        HT_COPY_RAW_KEY(TO_HT_KEY(&key64), (const uint8_t *)name, strlen(name));
         keyptr = TO_HT_KEY(&key64);
         break;
     case 4:
-        HT_INIT_KEY(&key128);
-        HT_SET_KEY_STRING_CASE(&key128, name, name);
+        HT_INIT_RAW_KEY(&key128);
+        HT_COPY_RAW_KEY(TO_HT_KEY(&key128), (const uint8_t *)name, strlen(name));
         keyptr = TO_HT_KEY(&key128);
         break;
     default:
@@ -921,28 +921,28 @@ static int hashtable_speed_test(int idx)
 
     switch(idx) {
     case 0:
-        HT_INIT_KEY(&key8);
-        HT_SET_KEY_STRING_CASE(&key8, name, name);
+        HT_INIT_RAW_KEY(&key8);
+        HT_COPY_RAW_KEY(TO_HT_KEY(&key8), (const uint8_t *)name, strlen(name));
         keyptr = TO_HT_KEY(&key8);
         break;
     case 1:
-        HT_INIT_KEY(&key16);
-        HT_SET_KEY_STRING_CASE(&key16, name, name);
+        HT_INIT_RAW_KEY(&key16);
+        HT_COPY_RAW_KEY(TO_HT_KEY(&key16), (const uint8_t *)name, strlen(name));
         keyptr = TO_HT_KEY(&key16);
         break;
     case 2:
-        HT_INIT_KEY(&key32);
-        HT_SET_KEY_STRING_CASE(&key32, name, name);
+        HT_INIT_RAW_KEY(&key32);
+        HT_COPY_RAW_KEY(TO_HT_KEY(&key32), (const uint8_t *)name, strlen(name));
         keyptr = TO_HT_KEY(&key32);
         break;
     case 3:
-        HT_INIT_KEY(&key64);
-        HT_SET_KEY_STRING_CASE(&key64, name, name);
+        HT_INIT_RAW_KEY(&key64);
+        HT_COPY_RAW_KEY(TO_HT_KEY(&key64), (const uint8_t *)name, strlen(name));
         keyptr = TO_HT_KEY(&key64);
         break;
     case 4:
-        HT_INIT_KEY(&key128);
-        HT_SET_KEY_STRING_CASE(&key128, name, name);
+        HT_INIT_RAW_KEY(&key128);
+        HT_COPY_RAW_KEY(TO_HT_KEY(&key128), (const uint8_t *)name, strlen(name));
         keyptr = TO_HT_KEY(&key128);
         break;
     default:
@@ -971,13 +971,13 @@ static int hashtable_speed_test(int idx)
         ret = 0;
         goto err;
     }
-    ret = pthread_attr_setschedpolicy(&attr, SCHED_FIFO);
+    ret = pthread_attr_setschedpolicy(&attr, SCHED_OTHER);
     if (ret != 0) {
         TEST_error("Unable to set sched policy: %s\n", strerror(ret));
         ret = 0;
         goto err;
     }
-    param.sched_priority = 99;
+    //param.sched_priority = 20;
     ret = pthread_attr_setschedparam(&attr, &param);
     if (ret != 0) {
         TEST_error("Unable to set sched params: %s\n", strerror(ret));
@@ -1004,7 +1004,7 @@ static int hashtable_speed_test(int idx)
 #ifdef MEASURE_HASH_PERFORMANCE
     gettimeofday(&end, NULL);
     timeval_subtract(&delta, &end, &start);
-    TEST_info("lhash speed for idx %d runs in %ld.%ld seconds", idx, delta.tv_sec, delta.tv_usec);
+    fprintf(stderr, "lhash speed for idx %d runs in %ld.%ld seconds", idx, delta.tv_sec, delta.tv_usec);
 #endif
     ret = 1;
 err:
