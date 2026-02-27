@@ -24,6 +24,7 @@ typedef struct ht_internal_st HT;
  */
 typedef struct ht_key_header_st {
     size_t keysize;
+    size_t bufsize;
     uint8_t *keybuf;
 } HT_KEY;
 
@@ -110,10 +111,27 @@ typedef struct ht_config_st {
 #define HT_INIT_KEY(key)                                                \
     do {                                                                \
         memset((key), 0, sizeof(*(key)));                               \
-        (key)->key_header.keysize = (sizeof(*(key)) - sizeof(HT_KEY));  \
+        (key)->key_header.keysize = (key)->key_header.bufsize = (sizeof(*(key)) - sizeof(HT_KEY));  \
         (key)->key_header.keybuf = (((uint8_t *)key) + sizeof(HT_KEY)); \
     } while (0)
 
+#define HT_INIT_RAW_KEY(key) \
+    do { \
+        HT_INIT_KEY((key)); \
+        (key)->key_header.keysize = 0; \
+    } while (0)
+
+static ossl_inline ossl_unused int ossl_key_raw_copy(HT_KEY *key, const uint8_t *buf, size_t len)
+{
+    if (key->keysize + len > key->bufsize)
+        return 0;
+    memcpy(&key->keybuf[key->keysize], buf, len);
+    key->keysize += len;
+    return 1;
+}
+
+#define HT_COPY_RAW_KEY(key, buf, len) ossl_key_raw_copy(key, buf, len)
+        
 /*
  * Resets a hash table key to a known state
  */
