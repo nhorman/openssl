@@ -810,12 +810,17 @@ HT_START_KEY_DEFN(stkey128)
 HT_DEF_KEY_FIELD_CHAR_ARRAY(name, 128)
 HT_END_KEY_DEFN(STKEY128)
 
-#define SPEED_TEST_COUNT 5000000
+#define SPEED_TEST_COUNT 5000000000
 
 IMPLEMENT_HT_VALUE_TYPE_FNS(char, speed, static)
 
-static int hashtable_speed_test(int idx)
+
+static HT *speed_ht = NULL;
+
+#define NUM_THREADS 24 
+static void* hashtable_speed_work(void *data)
 {
+    int idx = *((int *)data);
     int i;
     int ret = 0;
     STKEY8 key8;
@@ -827,10 +832,62 @@ static int hashtable_speed_test(int idx)
     const char *name = "myname";
     char *mydata = "mydata";
     const char *checkdata;
-#ifdef MEASURE_HASH_PERFORMANCE
-    struct timeval start, end, delta;
-#endif
 
+    HT_VALUE *value = NULL;
+
+    switch(idx) {
+    case 0:
+        HT_INIT_KEY(&key8);
+        HT_SET_KEY_STRING_CASE(&key8, name, name);
+        keyptr = TO_HT_KEY(&key8);
+        break;
+    case 1:
+        HT_INIT_KEY(&key16);
+        HT_SET_KEY_STRING_CASE(&key16, name, name);
+        keyptr = TO_HT_KEY(&key16);
+        break;
+    case 2:
+        HT_INIT_KEY(&key32);
+        HT_SET_KEY_STRING_CASE(&key32, name, name);
+        keyptr = TO_HT_KEY(&key32);
+        break;
+    case 3:
+        HT_INIT_KEY(&key64);
+        HT_SET_KEY_STRING_CASE(&key64, name, name);
+        keyptr = TO_HT_KEY(&key64);
+        break;
+    case 4:
+        HT_INIT_KEY(&key128);
+        HT_SET_KEY_STRING_CASE(&key128, name, name);
+        keyptr = TO_HT_KEY(&key128);
+        break;
+    default:
+        TEST_error("Unknown index\n");
+        goto err;
+    }
+
+    /*
+     * look it up a bunch
+     */
+    for (i = 0; i < SPEED_TEST_COUNT/NUM_THREADS; i++) {
+        checkdata = ossl_ht_speed_char_get(speed_ht, keyptr, &value);
+        if (!TEST_ptr_eq(checkdata, mydata)) {
+            TEST_error("Data mismatch\n");
+            goto err;
+        }
+    }
+    ret = 1;
+
+err:
+    return NULL; 
+}
+
+static int hashtable_speed_test(int idx)
+{
+    int i;
+    int ret = 0;
+    const char *name = "myname";
+    char *mydata = "mydata";
     HT_CONFIG ht_conf = {
         NULL,
         NULL,
@@ -841,9 +898,20 @@ static int hashtable_speed_test(int idx)
         1
     };
     HT_VALUE *value = NULL;
-    HT *ht = ossl_ht_new(&ht_conf);
+    STKEY8 key8;
+    STKEY16 key16;
+    STKEY32 key32;
+    STKEY64 key64;
+    STKEY128 key128;
+    HT_KEY *keyptr;
+    pthread_t threads[NUM_THREADS]; 
+#ifdef MEASURE_HASH_PERFORMANCE
+    struct timeval start, end, delta;
+#endif
 
-    if (ht == NULL) {
+    speed_ht = ossl_ht_new(&ht_conf);
+
+    if (speed_ht == NULL) {
         TEST_error("Could not create hash table\n");
         goto err;
     }
@@ -882,36 +950,31 @@ static int hashtable_speed_test(int idx)
     /*
      * insert a key
      */
-    if (!ossl_ht_speed_char_insert(ht, keyptr, mydata, NULL)) {
+    if (!ossl_ht_speed_char_insert(speed_ht, keyptr, mydata, NULL)) {
         TEST_error("Unable to insert key\n");
         goto err;
     }
 
-    /*
-     * look it up a bunch
-     */
 #ifdef MEASURE_HASH_PERFORMANCE
     gettimeofday(&start, NULL);
 #endif
-
-    for (i = 0; i < SPEED_TEST_COUNT; i++) {
-        checkdata = ossl_ht_speed_char_get(ht, keyptr, &value);
-        if (!TEST_ptr_eq(checkdata, mydata)) {
-            TEST_error("Data mismatch\n");
-            goto err;
-        }
+    for (i = 0; i < NUM_THREADS; i++) {
+        pthread_create(&threads[i], NULL, hashtable_speed_work, &idx);
     }
+
+    for (i = 0; i < NUM_THREADS; i++) {
+        pthread_join(threads[i], NULL);
+    }
+
 #ifdef MEASURE_HASH_PERFORMANCE
     gettimeofday(&end, NULL);
     timeval_subtract(&delta, &end, &start);
     TEST_info("lhash speed for idx %d runs in %ld.%ld seconds", idx, delta.tv_sec, delta.tv_usec);
 #endif
-
     ret = 1;
-
 err:
-    ossl_ht_free(ht);
-    return ret; 
+    ossl_ht_free(speed_ht);
+    return ret;
 }
 
 int setup_tests(void)
