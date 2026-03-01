@@ -353,10 +353,15 @@ STACK_OF(X509_OBJECT) *ossl_x509_store_ht_get_by_name(const X509_STORE *store,
             return NULL;
     }
 
-    HT_INIT_KEY(&key);
-    HT_SET_KEY_FIELD(&key, xn_canon, xn->canon_enc);
-    HT_SET_KEY_FIELD(&key, xn_canon_enclen, xn->canon_enclen);
+    if (xn->cached_hash_value) {
+        HT_INIT_KEY_CACHED(&key, xn->cached_hash_value);
+    } else {
+        HT_INIT_KEY(&key);
+        HT_SET_KEY_FIELD(&key, xn_canon, xn->canon_enc);
+        HT_SET_KEY_FIELD(&key, xn_canon_enclen, xn->canon_enclen);
+    }
     v = ossl_ht_get(store->objs_ht, TO_HT_KEY(&key));
+    ((X509_NAME *)xn)->cached_hash_value = HT_KEY_GET_HASH(&key);
     if (v == NULL)
         return NULL;
     v = ossl_rcu_deref(&v);
@@ -392,16 +397,20 @@ static int x509_name_objs_ht_insert(const X509_STORE *store, const X509_NAME *xn
         return 0;
     }
 
-    HT_INIT_KEY(&key);
-    HT_SET_KEY_FIELD(&key, xn_canon, xn->canon_enc);
-    HT_SET_KEY_FIELD(&key, xn_canon_enclen, xn->canon_enclen);
+    if (xn->cached_hash_value) {
+        HT_INIT_KEY_CACHED(&key, xn->cached_hash_value);
+    } else {
+        HT_INIT_KEY(&key);
+        HT_SET_KEY_FIELD(&key, xn_canon, xn->canon_enc);
+        HT_SET_KEY_FIELD(&key, xn_canon_enclen, xn->canon_enclen);
+    }
     val.value = (void *)objs;
     ret = ossl_ht_insert(store->objs_ht, TO_HT_KEY(&key), &val, NULL);
+    ((X509_NAME *)xn)->cached_hash_value = HT_KEY_GET_HASH(&key);
     if (ret != 1) {
         sk_X509_OBJECT_free(objs);
         return 0;
     }
-
     return 1;
 }
 

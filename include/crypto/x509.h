@@ -46,6 +46,7 @@ struct X509_name_st {
     /* canonical encoding used for rapid Name comparison */
     unsigned char *canon_enc;
     int canon_enclen;
+    uint64_t cached_hash_value;
 } /* X509_NAME */;
 
 /* Signature info structure */
