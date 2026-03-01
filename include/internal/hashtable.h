@@ -23,6 +23,7 @@ typedef struct ht_internal_st HT;
  * Represents a key to a hashtable
  */
 typedef struct ht_key_header_st {
+    uint64_t cached_hash;
     size_t keysize;
     uint8_t *keybuf;
 } HT_KEY;
@@ -114,10 +115,22 @@ typedef struct ht_config_st {
         (key)->key_header.keybuf = (((uint8_t *)key) + sizeof(HT_KEY)); \
     } while (0)
 
+#define HT_INIT_KEY_CACHED(key, hash)         \
+    do {                                      \
+        HT_INIT_KEY((key));                   \
+        (key)->key_header.cached_hash = hash; \
+    } while (0)
+
+#define HT_KEY_GET_HASH(key) (key)->key_header.cached_hash
+
 /*
  * Resets a hash table key to a known state
  */
-#define HT_KEY_RESET(key) memset((key)->key_header.keybuf, 0, (key)->key_header.keysize)
+#define HT_KEY_RESET(key)                                               \
+    do {                                                                \
+        memset((key)->key_header.keybuf, 0, (key)->key_header.keysize); \
+        (key)->key_header.cached_hash = 0;                              \
+    } while (0)
 
 /*
  * Sets a scalar field in a hash table key
