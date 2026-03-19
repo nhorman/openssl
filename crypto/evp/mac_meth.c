@@ -180,6 +180,14 @@ EVP_MAC *EVP_MAC_fetch(OSSL_LIB_CTX *libctx, const char *algorithm,
         evp_mac_free);
 }
 
+int evp_mac_fetch_all(OSSL_LIB_CTX *ctx, OSSL_METHOD_STORE *store)
+{
+    return evp_generic_fetch_all(ctx, OSSL_OP_MAC, store,
+        evp_mac_from_algorithm,
+        evp_mac_up_ref,
+        evp_mac_free);
+}
+
 int EVP_MAC_up_ref(EVP_MAC *mac)
 {
     return evp_mac_up_ref(mac);

@@ -282,6 +282,14 @@ EVP_KEYMGMT *evp_keymgmt_fetch_from_prov(OSSL_PROVIDER *prov,
         evp_keymgmt_free);
 }
 
+int evp_keymgmt_fetch_all(OSSL_LIB_CTX *ctx, OSSL_METHOD_STORE *store)
+{
+    return evp_generic_fetch_all(ctx, OSSL_OP_KEYMGMT, store,
+        keymgmt_from_algorithm,
+        evp_keymgmt_up_ref,
+        evp_keymgmt_free);
+}
+
 EVP_KEYMGMT *EVP_KEYMGMT_fetch(OSSL_LIB_CTX *ctx, const char *algorithm,
     const char *properties)
 {

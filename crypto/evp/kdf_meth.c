@@ -174,6 +174,14 @@ EVP_KDF *EVP_KDF_fetch(OSSL_LIB_CTX *libctx, const char *algorithm,
         evp_kdf_free);
 }
 
+int evp_kdf_fetch_all(OSSL_LIB_CTX *ctx, OSSL_METHOD_STORE *store)
+{
+    return evp_generic_fetch_all(ctx, OSSL_OP_KDF, store,
+        evp_kdf_from_algorithm,
+        evp_kdf_up_ref,
+        evp_kdf_free);
+}
+
 int EVP_KDF_up_ref(EVP_KDF *kdf)
 {
     return evp_kdf_up_ref(kdf);

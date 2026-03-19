@@ -1515,6 +1515,18 @@ static void evp_cipher_free(void *cipher)
     EVP_CIPHER_free(cipher);
 }
 
+int evp_cipher_fetch_all(OSSL_LIB_CTX *ctx, OSSL_METHOD_STORE *store)
+{
+    int ret = evp_generic_fetch_all(ctx,
+        OSSL_OP_CIPHER,
+        store,
+        evp_cipher_from_algorithm,
+        evp_cipher_up_ref,
+        evp_cipher_free);
+
+    return ret;
+}
+
 EVP_CIPHER *EVP_CIPHER_fetch(OSSL_LIB_CTX *ctx, const char *algorithm,
     const char *properties)
 {

@@ -398,3 +398,12 @@ int evp_names_do_all(OSSL_PROVIDER *prov, int number,
     void (*fn)(const char *name, void *data),
     void *data);
 int evp_cipher_cache_constants(EVP_CIPHER *cipher);
+int evp_md_fetch_all(OSSL_LIB_CTX *ctx, OSSL_METHOD_STORE *store);
+int evp_cipher_fetch_all(OSSL_LIB_CTX *ctx, OSSL_METHOD_STORE *store);
+int evp_kdf_fetch_all(OSSL_LIB_CTX *ctx, OSSL_METHOD_STORE *store);
+int evp_rand_fetch_all(OSSL_LIB_CTX *ctx, OSSL_METHOD_STORE *store);
+int evp_mac_fetch_all(OSSL_LIB_CTX *ctx, OSSL_METHOD_STORE *store);
+int evp_keymgmt_fetch_all(OSSL_LIB_CTX *ctx, OSSL_METHOD_STORE *store);
+int evp_skeymgmt_fetch_all(OSSL_LIB_CTX *ctx, OSSL_METHOD_STORE *store);
+int evp_kem_fetch_all(OSSL_LIB_CTX *ctx, OSSL_METHOD_STORE *store);
+int evp_asym_cipher_fetch_all(OSSL_LIB_CTX *ctx, OSSL_METHOD_STORE *store);

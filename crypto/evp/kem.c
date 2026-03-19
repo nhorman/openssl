@@ -475,6 +475,14 @@ EVP_KEM *evp_kem_fetch_from_prov(OSSL_PROVIDER *prov, const char *algorithm,
         evp_kem_free);
 }
 
+int evp_kem_fetch_all(OSSL_LIB_CTX *ctx, OSSL_METHOD_STORE *store)
+{
+    return evp_generic_fetch_all(ctx, OSSL_OP_KEM, store,
+        evp_kem_from_algorithm,
+        evp_kem_up_ref,
+        evp_kem_free);
+}
+
 int EVP_KEM_is_a(const EVP_KEM *kem, const char *name)
 {
     return kem != NULL && evp_is_a(kem->prov, kem->name_id, NULL, name);

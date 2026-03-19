@@ -466,6 +466,7 @@ int evp_generic_fetch_all(OSSL_LIB_CTX *libctx, int operation_id,
         .refcnt_up_method = up_ref_method,
         .destruct_method = free_method,
         .operation_id = operation_id,
+        .store_to_populate = store,
     };
 
     ret = inner_evp_generic_fetch_all(&methdata, NULL);

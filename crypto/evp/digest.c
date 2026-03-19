@@ -978,6 +978,15 @@ static void evp_md_free(void *md)
     EVP_MD_free(md);
 }
 
+int evp_md_fetch_all(OSSL_LIB_CTX *ctx, OSSL_METHOD_STORE *store)
+{
+    int ret = evp_generic_fetch_all(ctx, OSSL_OP_DIGEST, store,
+        evp_md_from_algorithm,
+        evp_md_up_ref,
+        evp_md_free);
+    return ret;
+}
+
 EVP_MD *EVP_MD_fetch(OSSL_LIB_CTX *ctx, const char *algorithm,
     const char *properties)
 {

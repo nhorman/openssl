@@ -477,6 +477,16 @@ EVP_ASYM_CIPHER *EVP_ASYM_CIPHER_fetch(OSSL_LIB_CTX *ctx, const char *algorithm,
         evp_asym_cipher_free);
 }
 
+int evp_asym_cipher_fetch_all(OSSL_LIB_CTX *ctx, OSSL_METHOD_STORE *store)
+{
+    return evp_generic_fetch_all(ctx,
+        OSSL_OP_ASYM_CIPHER,
+        store,
+        evp_asym_cipher_from_algorithm,
+        evp_asym_cipher_up_ref,
+        evp_asym_cipher_free);
+}
+
 EVP_ASYM_CIPHER *evp_asym_cipher_fetch_from_prov(OSSL_PROVIDER *prov,
     const char *algorithm,
     const char *properties)

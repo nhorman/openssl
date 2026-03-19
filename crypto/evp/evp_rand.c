@@ -287,6 +287,14 @@ EVP_RAND *EVP_RAND_fetch(OSSL_LIB_CTX *libctx, const char *algorithm,
         evp_rand_free);
 }
 
+int evp_rand_fetch_all(OSSL_LIB_CTX *ctx, OSSL_METHOD_STORE *store)
+{
+    return evp_generic_fetch_all(ctx, OSSL_OP_RAND, store,
+        evp_rand_from_algorithm,
+        evp_rand_up_ref,
+        evp_rand_free);
+}
+
 int EVP_RAND_up_ref(EVP_RAND *rand)
 {
     return evp_rand_up_ref(rand);
