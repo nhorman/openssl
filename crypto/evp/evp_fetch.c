@@ -32,6 +32,7 @@ struct evp_method_data_st {
     const char *propquery; /* For get_evp_method_from_store() */
 
     OSSL_METHOD_STORE *tmp_store; /* For get_tmp_evp_method_store() */
+    OSSL_METHOD_STORE *store_to_populate; /* store that we want to populate */
 
     unsigned int flag_construct_error_occurred : 1;
 
@@ -73,6 +74,8 @@ static int reserve_evp_method_store(void *store, void *data)
 {
     struct evp_method_data_st *methdata = data;
 
+    store = methdata->store_to_populate;
+
     if (store == NULL
         && (store = get_evp_method_store(methdata->libctx)) == NULL)
         return 0;
@@ -83,6 +86,8 @@ static int reserve_evp_method_store(void *store, void *data)
 static int unreserve_evp_method_store(void *store, void *data)
 {
     struct evp_method_data_st *methdata = data;
+
+    store = methdata->store_to_populate;
 
     if (store == NULL
         && (store = get_evp_method_store(methdata->libctx)) == NULL)
@@ -151,6 +156,8 @@ static void *get_evp_method_from_store(void *store, const OSSL_PROVIDER **prov,
         || (meth_id = evp_method_id(name_id, methdata->operation_id)) == 0)
         return NULL;
 
+    store = methdata->store_to_populate;
+
     if (store == NULL
         && (store = get_evp_method_store(methdata->libctx)) == NULL)
         return NULL;
@@ -190,6 +197,8 @@ static int put_evp_method_in_store(void *store, void *method,
         return 0;
 
     OSSL_TRACE1(QUERY, "put_evp_method_in_store: original store: %p\n", store);
+
+    store = methdata->store_to_populate;
     if (store == NULL
         && (store = get_evp_method_store(methdata->libctx)) == NULL)
         return 0;
@@ -330,6 +339,7 @@ inner_evp_generic_fetch(struct evp_method_data_st *methdata,
         methdata->refcnt_up_method = up_ref_method;
         methdata->destruct_method = free_method;
         methdata->flag_construct_error_occurred = 0;
+        methdata->store_to_populate = store;
         if ((method = ossl_method_construct(methdata->libctx, operation_id,
                  &prov, 0 /* !force_cache */,
                  &mcm, methdata))
