@@ -9,6 +9,7 @@
 
 #include <openssl/core_dispatch.h>
 #include "internal/refcount.h"
+#include "internal/property.h"
 
 #define EVP_CTRL_RET_UNSUPPORTED -1
 
@@ -296,6 +297,13 @@ int ossl_is_partially_overlapping(const void *ptr1, const void *ptr2, int len);
 
 void *evp_generic_fetch(OSSL_LIB_CTX *ctx, int operation_id,
     const char *name, const char *properties,
+    void *(*new_method)(int name_id,
+        const OSSL_ALGORITHM *algodef,
+        OSSL_PROVIDER *prov),
+    int (*up_ref_method)(void *),
+    void (*free_method)(void *));
+int evp_generic_fetch_all(OSSL_LIB_CTX *libctx, int operation_id,
+    OSSL_METHOD_STORE *store,
     void *(*new_method)(int name_id,
         const OSSL_ALGORITHM *algodef,
         OSSL_PROVIDER *prov),

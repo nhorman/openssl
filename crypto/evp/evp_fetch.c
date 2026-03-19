@@ -408,6 +408,61 @@ void *evp_generic_fetch(OSSL_LIB_CTX *libctx, int operation_id,
     return method;
 }
 
+static int
+inner_evp_generic_fetch_all(struct evp_method_data_st *methdata,
+    OSSL_PROVIDER *prov)
+{
+    OSSL_METHOD_STORE *store = get_evp_method_store(methdata->libctx);
+
+    if (store == NULL) {
+        ERR_raise(ERR_LIB_EVP, ERR_R_PASSED_INVALID_ARGUMENT);
+        return 0;
+    }
+
+    OSSL_METHOD_CONSTRUCT_METHOD mcm = {
+        get_tmp_evp_method_store,
+        reserve_evp_method_store,
+        unreserve_evp_method_store,
+        NULL,
+        put_evp_method_in_store,
+        construct_evp_method,
+        destruct_evp_method
+    };
+
+    ossl_method_construct(methdata->libctx, methdata->operation_id,
+        &prov, 0 /* !force_cache */,
+        &mcm, methdata);
+    if (methdata->flag_construct_error_occurred != 0) {
+        ERR_raise(ERR_LIB_EVP, ERR_R_INTERNAL_ERROR);
+        return 0;
+    }
+
+    return 1;
+}
+
+int evp_generic_fetch_all(OSSL_LIB_CTX *libctx, int operation_id,
+    OSSL_METHOD_STORE *store,
+    void *(*new_method)(int name_id,
+        const OSSL_ALGORITHM *algodef,
+        OSSL_PROVIDER *prov),
+    int (*up_ref_method)(void *),
+    void (*free_method)(void *))
+{
+    int ret;
+    struct evp_method_data_st methdata = {
+        .libctx = libctx,
+        .name_id = -1,
+        .method_from_algorithm = new_method,
+        .refcnt_up_method = up_ref_method,
+        .destruct_method = free_method,
+        .operation_id = operation_id,
+    };
+
+    ret = inner_evp_generic_fetch_all(&methdata, NULL);
+    dealloc_tmp_evp_method_store(methdata.tmp_store);
+    return ret;
+}
+
 /*
  * evp_generic_fetch_from_prov() is special, and only returns methods from
  * the given provider.
