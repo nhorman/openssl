@@ -266,7 +266,7 @@ inner_evp_generic_fetch(struct evp_method_data_st *methdata,
     int (*up_ref_method)(void *),
     void (*free_method)(void *))
 {
-    OSSL_METHOD_STORE *store = get_evp_method_store(methdata->libctx);
+    OSSL_METHOD_STORE *store = ossl_lib_ctx_rcu_get_method_store(methdata->libctx);
     OSSL_NAMEMAP *namemap = ossl_namemap_stored(methdata->libctx);
 #ifdef FIPS_MODULE
     /*
@@ -284,6 +284,7 @@ inner_evp_generic_fetch(struct evp_method_data_st *methdata,
     int unsupported, name_id;
 
     if (store == NULL || namemap == NULL) {
+        ossl_lib_ctx_rcu_put_method_store(methdata->libctx);
         ERR_raise(ERR_LIB_EVP, ERR_R_PASSED_INVALID_ARGUMENT);
         return NULL;
     }
@@ -294,6 +295,7 @@ inner_evp_generic_fetch(struct evp_method_data_st *methdata,
      */
     if (!ossl_assert(operation_id > 0)) {
         ERR_raise(ERR_LIB_EVP, ERR_R_INTERNAL_ERROR);
+        ossl_lib_ctx_rcu_put_method_store(methdata->libctx);
         return NULL;
     }
 
@@ -310,6 +312,7 @@ inner_evp_generic_fetch(struct evp_method_data_st *methdata,
      */
     if (name_id != 0 && (meth_id = evp_method_id(name_id, operation_id)) == 0) {
         ERR_raise(ERR_LIB_EVP, ERR_R_INTERNAL_ERROR);
+        ossl_lib_ctx_rcu_put_method_store(methdata->libctx);
         return NULL;
     }
 
@@ -321,6 +324,7 @@ inner_evp_generic_fetch(struct evp_method_data_st *methdata,
 
     if (meth_id == 0
         || !ossl_method_store_cache_get(store, prov, meth_id, propq, &method)) {
+
         OSSL_METHOD_CONSTRUCT_METHOD mcm = {
             get_tmp_evp_method_store,
             reserve_evp_method_store,
@@ -395,6 +399,7 @@ inner_evp_generic_fetch(struct evp_method_data_st *methdata,
             properties == NULL ? "<null>" : properties);
     }
 
+    ossl_lib_ctx_rcu_put_method_store(methdata->libctx);
     return method;
 }
 

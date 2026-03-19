@@ -1374,7 +1374,7 @@ static int provider_remove_store_methods(OSSL_PROVIDER *prov)
     CRYPTO_THREAD_unlock(store->lock);
 
     if (!freeing) {
-        int acc;
+        int acc = 0;
 
         if (!CRYPTO_THREAD_write_lock(prov->opbits_lock))
             return 0;

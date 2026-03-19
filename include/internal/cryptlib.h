@@ -128,6 +128,8 @@ int ossl_lib_ctx_is_global_default(OSSL_LIB_CTX *ctx);
 /* Functions to retrieve pointers to data by index */
 void *ossl_lib_ctx_get_data(OSSL_LIB_CTX *, int /* index */);
 void ossl_lib_ctx_update_method_store(OSSL_LIB_CTX *, void *new_store);
+void *ossl_lib_ctx_rcu_get_method_store(OSSL_LIB_CTX *ctx);
+void ossl_lib_ctx_rcu_put_method_store(OSSL_LIB_CTX *ctx);
 
 void ossl_lib_ctx_default_deinit(void);
 OSSL_EX_DATA_GLOBAL *ossl_lib_ctx_get_ex_data_global(OSSL_LIB_CTX *ctx);

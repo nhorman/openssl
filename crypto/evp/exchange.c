@@ -16,6 +16,7 @@
 #include "internal/provider.h"
 #include "internal/core.h"
 #include "internal/numbers.h" /* includes SIZE_MAX */
+#include "internal/evp_fetch_all.h"
 #include "crypto/evp.h"
 #include "evp_local.h"
 

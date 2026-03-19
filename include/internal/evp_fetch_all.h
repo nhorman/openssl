@@ -9,6 +9,8 @@
 #ifndef EVP_FETCH_ALL_H
 #define EVP_FETCH_ALL_H
 
+#include "internal/property.h"
+
 int evp_cipher_cache_constants(EVP_CIPHER *cipher);
 int evp_md_fetch_all(OSSL_LIB_CTX *ctx, OSSL_METHOD_STORE *store);
 int evp_cipher_fetch_all(OSSL_LIB_CTX *ctx, OSSL_METHOD_STORE *store);

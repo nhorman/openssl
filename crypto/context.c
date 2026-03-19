@@ -17,6 +17,7 @@
 #include "internal/bio.h"
 #include "internal/provider.h"
 #include "internal/conf.h"
+#include "internal/rcu.h"
 #include "crypto/decoder.h"
 #include "crypto/context.h"
 
@@ -26,6 +27,7 @@ struct ossl_lib_ctx_st {
     CONF_IMODULE *ssl_imod;
     void *property_string_data;
     void *evp_method_store;
+    CRYPTO_RCU_LOCK *evp_method_store_lock;
     void *provider_store;
     void *namemap;
     void *property_defns;
@@ -127,6 +129,10 @@ static int context_init(OSSL_LIB_CTX *ctx)
     if (!ossl_do_ex_data_init(ctx))
         goto err;
     exdata_done = 1;
+
+    ctx->evp_method_store_lock = ossl_rcu_lock_new(2, ctx);
+    if (ctx->evp_method_store_lock == NULL)
+        goto err;
 
     /* P2. We want evp_method_store to be cleaned up before the provider store */
     ctx->evp_method_store = ossl_method_store_new(ctx);
@@ -260,6 +266,9 @@ static void context_deinit_objs(OSSL_LIB_CTX *ctx)
         ossl_method_store_free(ctx->evp_method_store);
         ctx->evp_method_store = NULL;
     }
+
+    if (ctx->evp_method_store_lock != NULL)
+        ossl_rcu_lock_free(ctx->evp_method_store_lock);
 
     /* P2. */
     if (ctx->drbg != NULL) {
@@ -619,9 +628,36 @@ int ossl_lib_ctx_is_global_default(OSSL_LIB_CTX *ctx)
 void ossl_lib_ctx_update_method_store(OSSL_LIB_CTX *ctx, void *new_store)
 {
     ctx = ossl_lib_ctx_get_concrete(ctx);
+    void *old_store;
 
-    ossl_method_store_free(ctx->evp_method_store);
-    ctx->evp_method_store = new_store;
+    if (ctx == NULL)
+        return;
+
+    ossl_rcu_write_lock(ctx->evp_method_store_lock);
+    old_store = ossl_rcu_deref(&ctx->evp_method_store);
+    ossl_rcu_assign_ptr(&ctx->evp_method_store, &new_store);
+    ossl_rcu_write_unlock(ctx->evp_method_store_lock);
+    ossl_synchronize_rcu(ctx->evp_method_store_lock);
+    ossl_method_store_free(old_store);
+}
+
+void *ossl_lib_ctx_rcu_get_method_store(OSSL_LIB_CTX *ctx)
+{
+    ctx = ossl_lib_ctx_get_concrete(ctx);
+    if (ctx == NULL)
+        return NULL;
+    ossl_rcu_read_lock(ctx->evp_method_store_lock);
+    return ossl_rcu_deref(&ctx->evp_method_store);
+}
+
+void ossl_lib_ctx_rcu_put_method_store(OSSL_LIB_CTX *ctx)
+{
+    ctx = ossl_lib_ctx_get_concrete(ctx);
+
+    if (ctx == NULL)
+        return;
+
+    ossl_rcu_read_unlock(ctx->evp_method_store_lock);
 }
 
 void *ossl_lib_ctx_get_data(OSSL_LIB_CTX *ctx, int index)
