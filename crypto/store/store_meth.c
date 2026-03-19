@@ -328,7 +328,7 @@ inner_loader_fetch(struct loader_data_st *methdata,
         methdata->propquery = propq;
         methdata->flag_construct_error_occurred = 0;
         if ((method = ossl_method_construct(methdata->libctx, OSSL_OP_STORE,
-                 &prov, 0 /* !force_cache */,
+                 &prov, 0 /* !force_cache */, 0 /* !force_reconstruct */,
                  &mcm, methdata))
             != NULL) {
             /*

@@ -390,7 +390,7 @@ inner_ossl_encoder_fetch(struct encoder_data_st *methdata,
         methdata->propquery = propq;
         methdata->flag_construct_error_occurred = 0;
         if ((method = ossl_method_construct(methdata->libctx, OSSL_OP_ENCODER,
-                 &prov, 0 /* !force_cache */,
+                 &prov, 0 /* !force_cache */, 0 /* !force_reconstruct */,
                  &mcm, methdata))
             != NULL) {
             /*

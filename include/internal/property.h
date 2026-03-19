@@ -51,6 +51,8 @@ int64_t ossl_property_get_number_value(const OSSL_PROPERTY_DEFINITION *prop);
 
 /* Implementation store functions */
 OSSL_METHOD_STORE *ossl_method_store_new(OSSL_LIB_CTX *ctx);
+OSSL_METHOD_STORE *ossl_method_store_new_populate(OSSL_LIB_CTX *ctx);
+
 void ossl_method_store_free(OSSL_METHOD_STORE *store);
 
 int ossl_method_lock_store(OSSL_METHOD_STORE *store);

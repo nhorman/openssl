@@ -28,6 +28,7 @@
 #include "internal/refcount.h"
 #include "internal/bio.h"
 #include "internal/core.h"
+#include "internal/property.h"
 #include "provider_local.h"
 #include "crypto/context.h"
 #ifndef FIPS_MODULE
@@ -1362,6 +1363,7 @@ static int provider_remove_store_methods(OSSL_PROVIDER *prov)
 {
     struct provider_store_st *store;
     int freeing;
+    OSSL_METHOD_STORE *new_method_store = NULL;
 
     if ((store = get_provider_store(prov->libctx)) == NULL)
         return 0;
@@ -1381,18 +1383,25 @@ static int provider_remove_store_methods(OSSL_PROVIDER *prov)
         prov->operation_bits_sz = 0;
         CRYPTO_THREAD_unlock(prov->opbits_lock);
 
-        acc = evp_method_store_remove_all_provided(prov)
 #ifndef FIPS_MODULE
-            + ossl_encoder_store_remove_all_provided(prov)
+        acc = ossl_encoder_store_remove_all_provided(prov)
             + ossl_decoder_store_remove_all_provided(prov)
             + ossl_store_loader_store_remove_all_provided(prov)
 #endif
             ;
 
+        /*
+         * Build a whole new method store
+         */
+        new_method_store = ossl_method_store_new_populate(prov->libctx);
+        if (new_method_store == NULL)
+            return 0;
+        ossl_lib_ctx_update_method_store(prov->libctx, new_method_store);
+
 #ifndef FIPS_MODULE
-        return acc == 4;
+        return acc == 3;
 #else
-        return acc == 1;
+        return acc == 0;
 #endif
     }
     return 1;

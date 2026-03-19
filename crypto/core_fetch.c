@@ -21,6 +21,7 @@ struct construct_data_st {
     OSSL_METHOD_STORE *store;
     int operation_id;
     int force_store;
+    int force_reconstruct;
     OSSL_METHOD_CONSTRUCT_METHOD *mcm;
     void *mcm_data;
 };
@@ -61,6 +62,8 @@ static int ossl_method_construct_precondition(OSSL_PROVIDER *provider,
     int operation_id, int no_store,
     void *cbdata, int *result)
 {
+    struct construct_data_st *data = cbdata;
+
     if (!ossl_assert(result != NULL)) {
         ERR_raise(ERR_LIB_CRYPTO, ERR_R_PASSED_NULL_PARAMETER);
         return 0;
@@ -74,6 +77,8 @@ static int ossl_method_construct_precondition(OSSL_PROVIDER *provider,
         && !ossl_provider_test_operation_bit(provider, operation_id, result))
         return 0;
 
+    if (*result != 0 && data->force_reconstruct)
+        *result = 0;
     /*
      * The result we get tells if methods have already been constructed.
      * However, we want to tell whether construction should happen (true)
@@ -132,7 +137,7 @@ static void ossl_method_construct_this(OSSL_PROVIDER *provider,
 }
 
 void *ossl_method_construct(OSSL_LIB_CTX *libctx, int operation_id,
-    OSSL_PROVIDER **provider_rw, int force_store,
+    OSSL_PROVIDER **provider_rw, int force_store, int force_reconstruct,
     OSSL_METHOD_CONSTRUCT_METHOD *mcm, void *mcm_data)
 {
     void *method = NULL;
@@ -154,6 +159,7 @@ void *ossl_method_construct(OSSL_LIB_CTX *libctx, int operation_id,
     cbdata.force_store = force_store;
     cbdata.mcm = mcm;
     cbdata.mcm_data = mcm_data;
+    cbdata.force_reconstruct = force_reconstruct;
     ossl_algorithm_do_all(libctx, operation_id, provider,
         ossl_method_construct_precondition,
         ossl_method_construct_reserve_store,

@@ -141,7 +141,7 @@ EVP_SKEYMGMT *evp_skeymgmt_fetch_from_prov(OSSL_PROVIDER *prov,
 
 int evp_skeymgmt_fetch_all(OSSL_LIB_CTX *ctx, OSSL_METHOD_STORE *store)
 {
-    return evp_generic_fetch_all(ctx, OSSL_OP_KEYMGMT, store,
+    return evp_generic_fetch_all(ctx, OSSL_OP_SKEYMGMT, store,
         skeymgmt_from_algorithm,
         (int (*)(void *))EVP_SKEYMGMT_up_ref,
         (void (*)(void *))EVP_SKEYMGMT_free);

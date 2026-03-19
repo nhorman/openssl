@@ -13,12 +13,15 @@
 #include <openssl/provider.h>
 #include <openssl/core_names.h>
 #include "internal/provider.h"
+#include "internal/property.h"
 #include "provider_local.h"
 
 OSSL_PROVIDER *OSSL_PROVIDER_try_load_ex(OSSL_LIB_CTX *libctx, const char *name,
     OSSL_PARAM *params, int retain_fallbacks)
 {
     OSSL_PROVIDER *prov = NULL, *actual;
+    OSSL_METHOD_STORE *new_method_store = NULL;
+
     int isnew = 0;
 
     /* Find it or create it */
@@ -46,6 +49,18 @@ OSSL_PROVIDER *OSSL_PROVIDER_try_load_ex(OSSL_LIB_CTX *libctx, const char *name,
         }
     }
 
+    /*
+     * Now that we've added the new provider, lets build a complete new
+     * method store with the new provider algs added
+     */
+    new_method_store = ossl_method_store_new_populate(libctx);
+    if (new_method_store == NULL) {
+        ossl_provider_deactivate(actual, 1);
+        ossl_provider_free(actual);
+        return NULL;
+    }
+
+    ossl_lib_ctx_update_method_store(libctx, new_method_store);
     return actual;
 }
 

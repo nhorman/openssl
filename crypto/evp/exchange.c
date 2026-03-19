@@ -186,6 +186,14 @@ OSSL_PROVIDER *EVP_KEYEXCH_get0_provider(const EVP_KEYEXCH *exchange)
     return exchange->prov;
 }
 
+int evp_keyexch_fetch_all(OSSL_LIB_CTX *ctx, OSSL_METHOD_STORE *store)
+{
+    return evp_generic_fetch_all(ctx, OSSL_OP_KEYEXCH, store,
+        evp_keyexch_from_algorithm,
+        evp_keyexch_up_ref,
+        evp_keyexch_free);
+}
+
 EVP_KEYEXCH *EVP_KEYEXCH_fetch(OSSL_LIB_CTX *ctx, const char *algorithm,
     const char *properties)
 {

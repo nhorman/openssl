@@ -341,7 +341,7 @@ inner_evp_generic_fetch(struct evp_method_data_st *methdata,
         methdata->flag_construct_error_occurred = 0;
         methdata->store_to_populate = store;
         if ((method = ossl_method_construct(methdata->libctx, operation_id,
-                 &prov, 0 /* !force_cache */,
+                 &prov, 0 /* !force_cache */, 0 /* !force_reconstruct */,
                  &mcm, methdata))
             != NULL) {
             /*
@@ -422,9 +422,7 @@ static int
 inner_evp_generic_fetch_all(struct evp_method_data_st *methdata,
     OSSL_PROVIDER *prov)
 {
-    OSSL_METHOD_STORE *store = get_evp_method_store(methdata->libctx);
-
-    if (store == NULL) {
+    if (methdata->store_to_populate == NULL) {
         ERR_raise(ERR_LIB_EVP, ERR_R_PASSED_INVALID_ARGUMENT);
         return 0;
     }
@@ -433,14 +431,14 @@ inner_evp_generic_fetch_all(struct evp_method_data_st *methdata,
         get_tmp_evp_method_store,
         reserve_evp_method_store,
         unreserve_evp_method_store,
-        NULL,
+        get_evp_method_from_store,
         put_evp_method_in_store,
         construct_evp_method,
         destruct_evp_method
     };
 
     ossl_method_construct(methdata->libctx, methdata->operation_id,
-        &prov, 0 /* !force_cache */,
+        &prov, 0 /* !force_cache */, 1 /* force_reconstruct */,
         &mcm, methdata);
     if (methdata->flag_construct_error_occurred != 0) {
         ERR_raise(ERR_LIB_EVP, ERR_R_INTERNAL_ERROR);

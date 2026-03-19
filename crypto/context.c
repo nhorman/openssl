@@ -616,6 +616,14 @@ int ossl_lib_ctx_is_global_default(OSSL_LIB_CTX *ctx)
     return 0;
 }
 
+void ossl_lib_ctx_update_method_store(OSSL_LIB_CTX *ctx, void *new_store)
+{
+    ctx = ossl_lib_ctx_get_concrete(ctx);
+
+    ossl_method_store_free(ctx->evp_method_store);
+    ctx->evp_method_store = new_store;
+}
+
 void *ossl_lib_ctx_get_data(OSSL_LIB_CTX *ctx, int index)
 {
     ctx = ossl_lib_ctx_get_concrete(ctx);

@@ -467,6 +467,14 @@ void EVP_SIGNATURE_free(EVP_SIGNATURE *signature)
     OPENSSL_free(signature);
 }
 
+int evp_signature_fetch_all(OSSL_LIB_CTX *ctx, OSSL_METHOD_STORE *store)
+{
+    return evp_generic_fetch_all(ctx, OSSL_OP_SIGNATURE, store,
+        evp_signature_from_algorithm,
+        evp_signature_up_ref,
+        evp_signature_free);
+}
+
 int EVP_SIGNATURE_up_ref(EVP_SIGNATURE *signature)
 {
     int ref = 0;

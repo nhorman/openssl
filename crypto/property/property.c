@@ -20,6 +20,7 @@
 #include "internal/list.h"
 #include "internal/hashfunc.h"
 #include "internal/time.h"
+#include "internal/evp_fetch_all.h"
 #include <openssl/lhash.h>
 #include <openssl/rand.h>
 #include <openssl/trace.h>
@@ -399,6 +400,31 @@ OSSL_METHOD_STORE *ossl_method_store_new(OSSL_LIB_CTX *ctx)
         }
     }
     return res;
+}
+
+OSSL_METHOD_STORE *ossl_method_store_new_populate(OSSL_LIB_CTX *ctx)
+{
+    OSSL_METHOD_STORE *new = ossl_method_store_new(ctx);
+
+    if (new == NULL)
+        return new;
+
+    if (!evp_md_fetch_all(ctx, new)
+        || !evp_cipher_fetch_all(ctx, new)
+        || !evp_kdf_fetch_all(ctx, new)
+        || !evp_rand_fetch_all(ctx, new)
+        || !evp_mac_fetch_all(ctx, new)
+        || !evp_keymgmt_fetch_all(ctx, new)
+        || !evp_skeymgmt_fetch_all(ctx, new)
+        || !evp_kem_fetch_all(ctx, new)
+        || !evp_signature_fetch_all(ctx, new)
+        || !evp_keyexch_fetch_all(ctx, new)
+        || !evp_asym_cipher_fetch_all(ctx, new)) {
+        ossl_method_store_free(new);
+        return NULL;
+    }
+
+    return new;
 }
 
 void ossl_method_store_free(OSSL_METHOD_STORE *store)
