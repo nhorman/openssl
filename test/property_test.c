@@ -581,7 +581,7 @@ err:
 
 static int test_query_cache_stochastic(void)
 {
-    const int max = 10000, tail = 10;
+    const int max = 10000;
     OSSL_METHOD_STORE *store;
     int i, res = 0;
     char buf[50];
@@ -619,8 +619,7 @@ static int test_query_cache_stochastic(void)
             || result != v + i)
             errors++;
     }
-    /* There is a tiny probability that this will fail when it shouldn't */
-    res = TEST_int_gt(errors, tail) && TEST_int_lt(errors, max - tail);
+    res = TEST_int_eq(errors, 0);
 
 err:
     ossl_method_store_free(store);
