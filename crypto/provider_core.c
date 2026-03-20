@@ -1396,6 +1396,7 @@ static int provider_remove_store_methods(OSSL_PROVIDER *prov)
         new_method_store = ossl_method_store_new_populate(prov->libctx);
         if (new_method_store == NULL)
             return 0;
+        ossl_method_store_make_immutable(new_method_store);
         ossl_lib_ctx_update_method_store(prov->libctx, new_method_store);
 
 #ifndef FIPS_MODULE

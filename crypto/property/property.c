@@ -144,6 +144,11 @@ typedef struct {
 
 } STORED_ALGORITHMS;
 
+#define STORE_CAP_IMMUTABLE (1 << 0)
+#define STORE_IMMUTABLE (1 << 1)
+#define STORE_CAN_BE_IMMUTABLE(x) ((x)->immutable_flags & STORE_CAP_IMMUTABLE)
+#define STORE_IS_IMMUTABLE(x) ((x)->immutable_flags & STORE_IMMUTABLE)
+
 struct ossl_method_store_st {
     OSSL_LIB_CTX *ctx;
     STORED_ALGORITHMS *algs;
@@ -154,6 +159,7 @@ struct ossl_method_store_st {
      * ossl_method_construct_unreserve_store()
      */
     CRYPTO_RWLOCK *biglock;
+    int immutable_flags;
 };
 
 DEFINE_SPARSE_ARRAY_OF(ALGORITHM);
@@ -402,12 +408,22 @@ OSSL_METHOD_STORE *ossl_method_store_new(OSSL_LIB_CTX *ctx)
     return res;
 }
 
+int ossl_method_store_make_immutable(OSSL_METHOD_STORE *store)
+{
+    if (!STORE_CAN_BE_IMMUTABLE(store))
+        return 0;
+    store->immutable_flags |= STORE_IMMUTABLE;
+    return 1;
+}
+
 OSSL_METHOD_STORE *ossl_method_store_new_populate(OSSL_LIB_CTX *ctx)
 {
     OSSL_METHOD_STORE *new = ossl_method_store_new(ctx);
 
     if (new == NULL)
         return new;
+
+    new->immutable_flags |= STORE_CAP_IMMUTABLE;
 
     if (!evp_md_fetch_all(ctx, new)
         || !evp_cipher_fetch_all(ctx, new)
@@ -534,7 +550,8 @@ int ossl_method_store_add(OSSL_METHOD_STORE *store, const OSSL_PROVIDER *prov,
      * method to the algorithm cache, in case the one selected by the next
      * query selects a different implementation
      */
-    ossl_method_cache_flush(sa, nid);
+    if (!STORE_CAN_BE_IMMUTABLE(store))
+        ossl_method_cache_flush(sa, nid);
 
     /*
      * Parse the properties associated with this method, and convert it to a

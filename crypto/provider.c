@@ -60,6 +60,7 @@ OSSL_PROVIDER *OSSL_PROVIDER_try_load_ex(OSSL_LIB_CTX *libctx, const char *name,
         return NULL;
     }
 
+    ossl_method_store_make_immutable(new_method_store);
     ossl_lib_ctx_update_method_store(libctx, new_method_store);
     return actual;
 }
