@@ -82,7 +82,7 @@ typedef struct ex_callbacks_st {
 
 typedef struct ossl_ex_data_global_st {
     CRYPTO_RWLOCK *ex_data_lock;
-    EX_CALLBACKS ex_data[CRYPTO_EX_INDEX__COUNT];
+    EX_CALLBACKS *ex_data[CRYPTO_EX_INDEX__COUNT];
 } OSSL_EX_DATA_GLOBAL;
 
 /* OSSL_LIB_CTX */

@@ -14,12 +14,29 @@
 int ossl_do_ex_data_init(OSSL_LIB_CTX *ctx)
 {
     OSSL_EX_DATA_GLOBAL *global = ossl_lib_ctx_get_ex_data_global(ctx);
+    int i;
 
     if (global == NULL)
         return 0;
 
+    memset(global->ex_data, 0, CRYPTO_EX_INDEX__COUNT * sizeof(EX_CALLBACKS));
     global->ex_data_lock = CRYPTO_THREAD_lock_new();
-    return global->ex_data_lock != NULL;
+    if (global->ex_data_lock == NULL)
+        return 0;
+    for (i = 0; i < CRYPTO_EX_INDEX__COUNT; i++) {
+        global->ex_data[i] = OPENSSL_zalloc(sizeof(EX_CALLBACKS));
+        if (global->ex_data[i] == NULL)
+            goto err;
+    }
+    return 1;
+err:
+    for (i = 0; i < CRYPTO_EX_INDEX__COUNT; i++) {
+        OPENSSL_free(global->ex_data[i]);
+        global->ex_data[i] = NULL;
+    }
+    CRYPTO_THREAD_lock_free(global->ex_data_lock);
+    global->ex_data_lock = NULL;
+    return 0;
 }
 
 /*
@@ -54,7 +71,7 @@ static EX_CALLBACKS *get_and_lock(OSSL_EX_DATA_GLOBAL *global, int class_index,
             return NULL;
     }
 
-    ip = &global->ex_data[class_index];
+    ip = global->ex_data[class_index];
     return ip;
 }
 
@@ -78,10 +95,11 @@ void ossl_crypto_cleanup_all_ex_data_int(OSSL_LIB_CTX *ctx)
         return;
 
     for (i = 0; i < CRYPTO_EX_INDEX__COUNT; ++i) {
-        EX_CALLBACKS *ip = &global->ex_data[i];
+        EX_CALLBACKS *ip = global->ex_data[i];
 
         sk_EX_CALLBACK_pop_free(ip->meth, cleanup_cb);
         ip->meth = NULL;
+        OPENSSL_free(ip);
     }
 
     CRYPTO_THREAD_lock_free(global->ex_data_lock);
