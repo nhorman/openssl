@@ -19,6 +19,7 @@
 #endif
 
 #include "internal/common.h"
+#include "internal/refcount.h"
 
 #include <openssl/crypto.h>
 #include <openssl/buffer.h>
@@ -77,6 +78,8 @@ struct ex_callback_st {
  * a structure allows future changes.
  */
 typedef struct ex_callbacks_st {
+    uint64_t generation;
+    CRYPTO_REF_COUNT refcount;
     STACK_OF(EX_CALLBACK) *meth;
 } EX_CALLBACKS;
 
