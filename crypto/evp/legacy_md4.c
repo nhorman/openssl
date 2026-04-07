@@ -20,9 +20,9 @@ static const EVP_MD md4_md = {
     NID_md4,
     NID_md4WithRSAEncryption,
     MD4_DIGEST_LENGTH,
-    0,
     EVP_ORIG_GLOBAL,
-    MD4_CBLOCK
+    MD4_CBLOCK,
+    0
 };
 
 const EVP_MD *EVP_md4(void)

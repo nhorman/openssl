@@ -14,9 +14,9 @@ static const EVP_MD md2_md = {
     NID_md2,
     NID_md2WithRSAEncryption,
     MD2_DIGEST_LENGTH,
-    0,
     EVP_ORIG_GLOBAL,
-    MD2_BLOCK
+    MD2_BLOCK,
+    0
 };
 
 const EVP_MD *EVP_md2(void)

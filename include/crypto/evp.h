@@ -189,18 +189,16 @@ struct evp_kdf_st {
 struct evp_md_st {
     /* nid */
     int type;
-
     int pkey_type;
     int md_size;
-    unsigned long flags;
     int origin;
     int block_size;
-
     int name_id;
+
+    unsigned long flags;
     char *type_name;
     const char *description;
     OSSL_PROVIDER *prov;
-    CRYPTO_REF_COUNT refcnt;
     OSSL_FUNC_digest_newctx_fn *newctx;
     OSSL_FUNC_digest_init_fn *dinit;
     OSSL_FUNC_digest_update_fn *dupdate;
@@ -218,6 +216,7 @@ struct evp_md_st {
     OSSL_FUNC_digest_gettable_ctx_params_fn *gettable_ctx_params;
     OSSL_FUNC_digest_serialize_fn *serialize;
     OSSL_FUNC_digest_deserialize_fn *deserialize;
+    CRYPTO_REF_COUNT refcnt;
 } /* EVP_MD */;
 
 struct evp_cipher_st {

@@ -20,9 +20,9 @@ static const EVP_MD md5_md = {
     NID_md5,
     NID_md5WithRSAEncryption,
     MD5_DIGEST_LENGTH,
-    0,
     EVP_ORIG_GLOBAL,
-    MD5_CBLOCK
+    MD5_CBLOCK,
+    0
 };
 
 const EVP_MD *EVP_md5(void)

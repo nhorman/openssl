@@ -20,9 +20,9 @@ static const EVP_MD ripemd160_md = {
     NID_ripemd160,
     NID_ripemd160WithRSA,
     RIPEMD160_DIGEST_LENGTH,
-    0,
     EVP_ORIG_GLOBAL,
-    RIPEMD160_CBLOCK
+    RIPEMD160_CBLOCK,
+    0
 };
 
 const EVP_MD *EVP_ripemd160(void)

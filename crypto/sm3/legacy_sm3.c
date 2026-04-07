@@ -15,9 +15,9 @@ static const EVP_MD sm3_md = {
     NID_sm3,
     NID_sm3WithRSAEncryption,
     SM3_DIGEST_LENGTH,
-    0,
     EVP_ORIG_GLOBAL,
-    SM3_CBLOCK
+    SM3_CBLOCK,
+    0
 };
 
 const EVP_MD *EVP_sm3(void)

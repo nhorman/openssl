@@ -20,9 +20,9 @@ static const EVP_MD whirlpool_md = {
     NID_whirlpool,
     0,
     WHIRLPOOL_DIGEST_LENGTH,
-    0,
     EVP_ORIG_GLOBAL,
-    WHIRLPOOL_BBLOCK / 8
+    WHIRLPOOL_BBLOCK / 8,
+    0
 };
 
 const EVP_MD *EVP_whirlpool(void)

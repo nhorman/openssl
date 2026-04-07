@@ -13,8 +13,8 @@ static const EVP_MD null_md = {
     NID_undef,
     NID_undef,
     0,
-    0,
-    EVP_ORIG_GLOBAL
+    EVP_ORIG_GLOBAL,
+    0
 };
 
 const EVP_MD *EVP_md_null(void)
