@@ -301,16 +301,16 @@ static void context_deinit_objs(OSSL_LIB_CTX *ctx)
     }
 #endif
 
-    /* P2. We want evp_method_store to be cleaned up before the provider store */
-    if (ctx->evp_method_store != NULL) {
-        ossl_method_store_free(ctx->evp_method_store);
-        ctx->evp_method_store = NULL;
-    }
-
     /* P1. Needs to be freed before the child provider data is freed */
     if (ctx->provider_store != NULL) {
         ossl_provider_store_free(ctx->provider_store);
         ctx->provider_store = NULL;
+    }
+
+    /* P2. We want evp_method_store to be cleaned up before the provider store */
+    if (ctx->evp_method_store != NULL) {
+        ossl_method_store_free(ctx->evp_method_store);
+        ctx->evp_method_store = NULL;
     }
 
     /* Default priority. */
