@@ -254,12 +254,12 @@ EVP_RAND *EVP_RAND_fetch(OSSL_LIB_CTX *libctx, const char *algorithm,
 
 int EVP_RAND_up_ref(EVP_RAND *rand)
 {
-    return evp_rand_up_ref(rand);
+    return 1;
 }
 
 void EVP_RAND_free(EVP_RAND *rand)
 {
-    evp_rand_free(rand);
+    return;
 }
 
 int evp_rand_get_number(const EVP_RAND *rand)
