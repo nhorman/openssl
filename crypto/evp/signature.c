@@ -22,12 +22,26 @@
 
 static void evp_signature_free(void *data)
 {
-    EVP_SIGNATURE_free(data);
+    int i;
+    EVP_SIGNATURE *signature = data;
+
+    if (signature == NULL)
+        return;
+    CRYPTO_DOWN_REF(&signature->refcnt, &i);
+    if (i > 0)
+        return;
+    OPENSSL_free(signature->type_name);
+    CRYPTO_FREE_REF(&signature->refcnt);
+    OPENSSL_free(signature);
 }
 
 static int evp_signature_up_ref(void *data)
 {
-    return EVP_SIGNATURE_up_ref(data);
+    int ref = 0;
+    EVP_SIGNATURE *signature = data;
+
+    CRYPTO_UP_REF(&signature->refcnt, &ref);
+    return 1;
 }
 
 static EVP_SIGNATURE *evp_signature_new(OSSL_PROVIDER *prov)
@@ -453,23 +467,11 @@ err:
 
 void EVP_SIGNATURE_free(EVP_SIGNATURE *signature)
 {
-    int i;
-
-    if (signature == NULL)
-        return;
-    CRYPTO_DOWN_REF(&signature->refcnt, &i);
-    if (i > 0)
-        return;
-    OPENSSL_free(signature->type_name);
-    CRYPTO_FREE_REF(&signature->refcnt);
-    OPENSSL_free(signature);
+    return;
 }
 
 int EVP_SIGNATURE_up_ref(EVP_SIGNATURE *signature)
 {
-    int ref = 0;
-
-    CRYPTO_UP_REF(&signature->refcnt, &ref);
     return 1;
 }
 

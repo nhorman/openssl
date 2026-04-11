@@ -480,7 +480,6 @@ static void evp_thread_local_free(HT_VALUE *val)
      * does a NULL check prior to freeing, so only one of these for any given EVP type
      * will actually do any real free work
      */
-    TL_FREE(EVP_SIGNATURE, EVP_SIGNATURE, val);
     TL_FREE(EVP_ASYM_CIPHER, EVP_ASYM_CIPHER, val);
     TL_FREE(EVP_KEM, EVP_KEM, val);
     TL_FREE(EVP_SKEYMGMT, EVP_SKEYMGMT, val);
@@ -729,7 +728,7 @@ static ossl_inline void *evp_thread_local_store(OSSL_LIB_CTX *ctx,
             ret = kex;
             break;
         case OSSL_OP_SIGNATURE:
-            TL_CLONE_AND_INSERT(EVP_SIGNATURE, method, cache->cache, key, &sig);
+            TL_INSERT(EVP_SIGNATURE, method, cache->cache, key, &sig);
             ret = sig;
             break;
         case OSSL_OP_ASYM_CIPHER:
@@ -893,8 +892,6 @@ static ossl_inline void *evp_thread_local_fetch(OSSL_LIB_CTX *ctx,
             break;
         case OSSL_OP_SIGNATURE:
             sig = ossl_ht_evpcache_EVP_SIGNATURE_get(cache->cache, TO_HT_KEY(&key), &v);
-            if (sig != NULL)
-                sig->refcnt.val++;
             ret = sig;
             break;
         case OSSL_OP_ASYM_CIPHER:
