@@ -178,12 +178,12 @@ EVP_MAC *EVP_MAC_fetch(OSSL_LIB_CTX *libctx, const char *algorithm,
 
 int EVP_MAC_up_ref(EVP_MAC *mac)
 {
-    return evp_mac_up_ref(mac);
+    return 1;
 }
 
 void EVP_MAC_free(EVP_MAC *mac)
 {
-    evp_mac_free(mac);
+    return;
 }
 
 const OSSL_PROVIDER *EVP_MAC_get0_provider(const EVP_MAC *mac)
