@@ -967,14 +967,31 @@ err:
     return NULL;
 }
 
-static int evp_md_up_ref(void *md)
+static int evp_md_up_ref(void *arg)
 {
-    return EVP_MD_up_ref(md);
+    int ref = 0;
+    EVP_MD *md = arg;
+
+    if (md->origin == EVP_ORIG_DYNAMIC)
+        CRYPTO_UP_REF(&md->refcnt, &ref);
+    return 1;
 }
 
-static void evp_md_free(void *md)
+void evp_md_free(void *arg)
 {
-    EVP_MD_free(md);
+    int i;
+    EVP_MD *md = arg;
+
+    if (md == NULL || md->origin != EVP_ORIG_DYNAMIC)
+        return;
+
+    CRYPTO_DOWN_REF(&md->refcnt, &i);
+    if (i > 0)
+        return;
+
+    OPENSSL_free(md->type_name);
+    CRYPTO_FREE_REF(&md->refcnt);
+    OPENSSL_free(md);
 }
 
 EVP_MD *EVP_MD_fetch(OSSL_LIB_CTX *ctx, const char *algorithm,
@@ -988,27 +1005,12 @@ EVP_MD *EVP_MD_fetch(OSSL_LIB_CTX *ctx, const char *algorithm,
 
 int EVP_MD_up_ref(EVP_MD *md)
 {
-    int ref = 0;
-
-    if (md->origin == EVP_ORIG_DYNAMIC)
-        CRYPTO_UP_REF(&md->refcnt, &ref);
     return 1;
 }
 
 void EVP_MD_free(EVP_MD *md)
 {
-    int i;
-
-    if (md == NULL || md->origin != EVP_ORIG_DYNAMIC)
-        return;
-
-    CRYPTO_DOWN_REF(&md->refcnt, &i);
-    if (i > 0)
-        return;
-
-    OPENSSL_free(md->type_name);
-    CRYPTO_FREE_REF(&md->refcnt);
-    OPENSSL_free(md);
+    return;
 }
 
 void EVP_MD_do_all_provided(OSSL_LIB_CTX *libctx,

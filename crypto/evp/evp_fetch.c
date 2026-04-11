@@ -446,11 +446,11 @@ void evp_flush_thread_local_caches(void)
  * @note The type @p typ must have corresponding functions:
  *       ossl_ht_evpcache_<typ>_from_value() and <typ>_free().
  */
-#define TL_FREE(typ, val)                                    \
+#define TL_FREE(typ, pfx, val)                                    \
     do {                                                     \
         typ *evp = ossl_ht_evpcache_##typ##_from_value(val); \
                                                              \
-        typ##_free(evp);                                     \
+        pfx##_free(evp);                                     \
     } while (0)
 
 /**
@@ -480,17 +480,16 @@ static void evp_thread_local_free(HT_VALUE *val)
      * does a NULL check prior to freeing, so only one of these for any given EVP type
      * will actually do any real free work
      */
-    TL_FREE(EVP_MD, val);
-    TL_FREE(EVP_CIPHER, val);
-    TL_FREE(EVP_MAC, val);
-    TL_FREE(EVP_KDF, val);
-    TL_FREE(EVP_RAND, val);
-    TL_FREE(EVP_KEYMGMT, val);
-    TL_FREE(EVP_KEYEXCH, val);
-    TL_FREE(EVP_SIGNATURE, val);
-    TL_FREE(EVP_ASYM_CIPHER, val);
-    TL_FREE(EVP_KEM, val);
-    TL_FREE(EVP_SKEYMGMT, val);
+    TL_FREE(EVP_CIPHER, EVP_CIPHER, val);
+    TL_FREE(EVP_MAC, EVP_MAC, val);
+    TL_FREE(EVP_KDF, EVP_KDF, val);
+    TL_FREE(EVP_RAND, EVP_RAND, val);
+    TL_FREE(EVP_KEYMGMT, EVP_KEYMGMT, val);
+    TL_FREE(EVP_KEYEXCH, EVP_KEYEXCH, val);
+    TL_FREE(EVP_SIGNATURE, EVP_SIGNATURE, val);
+    TL_FREE(EVP_ASYM_CIPHER, EVP_ASYM_CIPHER, val);
+    TL_FREE(EVP_KEM, EVP_KEM, val);
+    TL_FREE(EVP_SKEYMGMT, EVP_SKEYMGMT, val);
 }
 
 /**
@@ -642,6 +641,17 @@ static ossl_inline char *merge_default_properties_string(int op, const char *nam
         }                                                                               \
     } while (0)
 
+#define TL_INSERT(typ, meth, cache, key, newmeth)                             \
+    do {                                                                                \
+        typ *evp = (typ *)(meth);                                                       \
+        int ref; \
+        *newmeth = NULL;                                                                \
+                                                                                        \
+        ossl_ht_evpcache_##typ##_insert((cache), TO_HT_KEY(&(key)), \
+            evp, NULL); \
+        CRYPTO_DOWN_REF(&evp->refcnt, &ref); \
+        *newmeth = meth;                                    \
+    } while (0)
 /**
  * @brief Store a method in the thread-local EVP cache.
  *
@@ -697,7 +707,7 @@ static ossl_inline void *evp_thread_local_store(OSSL_LIB_CTX *ctx,
 
         switch (operation_id) {
         case OSSL_OP_DIGEST:
-            TL_CLONE_AND_INSERT(EVP_MD, method, cache->cache, key, &md);
+            TL_INSERT(EVP_MD, method, cache->cache, key, &md);
             ret = md;
             break;
         case OSSL_OP_CIPHER:
@@ -861,10 +871,6 @@ static ossl_inline void *evp_thread_local_fetch(OSSL_LIB_CTX *ctx,
         switch (operation_id) {
         case OSSL_OP_DIGEST:
             md = ossl_ht_evpcache_EVP_MD_get(cache->cache, TO_HT_KEY(&key), &v);
-            if (md != NULL) {
-                /* We don't need to atomically mutate refcnt when its thread local */
-                md->refcnt.val++;
-            }
             ret = md;
             break;
         case OSSL_OP_CIPHER:
