@@ -173,12 +173,12 @@ EVP_KDF *EVP_KDF_fetch(OSSL_LIB_CTX *libctx, const char *algorithm,
 
 int EVP_KDF_up_ref(EVP_KDF *kdf)
 {
-    return evp_kdf_up_ref(kdf);
+    return 1;
 }
 
 void EVP_KDF_free(EVP_KDF *kdf)
 {
-    evp_kdf_free(kdf);
+    return;
 }
 
 const OSSL_PARAM *EVP_KDF_gettable_params(const EVP_KDF *kdf)
