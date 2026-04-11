@@ -42,7 +42,6 @@ static void evp_rand_free(void *vrand)
     if (ref > 0)
         return;
     OPENSSL_free(rand->type_name);
-    ossl_provider_free(rand->prov);
     CRYPTO_FREE_REF(&rand->refcnt);
     OPENSSL_free(rand);
 }
@@ -240,11 +239,6 @@ static void *evp_rand_from_algorithm(int name_id,
         return NULL;
     }
 
-    if (prov != NULL && !ossl_provider_up_ref(prov)) {
-        evp_rand_free(rand);
-        ERR_raise(ERR_LIB_EVP, ERR_R_INTERNAL_ERROR);
-        return NULL;
-    }
     rand->prov = prov;
 
     return rand;

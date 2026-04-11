@@ -1498,8 +1498,6 @@ static void *evp_cipher_from_algorithm(const int name_id,
         ERR_raise(ERR_LIB_EVP, EVP_R_INVALID_PROVIDER_FUNCTIONS);
         goto err;
     }
-    if (prov != NULL && !ossl_provider_up_ref(prov))
-        goto err;
 
     cipher->prov = prov;
 
@@ -1567,7 +1565,6 @@ int EVP_CIPHER_up_ref(EVP_CIPHER *cipher)
 void evp_cipher_free_int(EVP_CIPHER *cipher)
 {
     OPENSSL_free(cipher->type_name);
-    ossl_provider_free(cipher->prov);
     CRYPTO_FREE_REF(&cipher->refcnt);
     OPENSSL_free(cipher);
 }

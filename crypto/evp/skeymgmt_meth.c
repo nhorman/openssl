@@ -117,11 +117,6 @@ static void *skeymgmt_from_algorithm(int name_id,
         return NULL;
     }
 
-    if (!ossl_provider_up_ref(prov)) {
-        EVP_SKEYMGMT_free(skeymgmt);
-        ERR_raise(ERR_LIB_EVP, EVP_R_INITIALIZATION_ERROR);
-        return NULL;
-    }
     skeymgmt->prov = prov;
 
     return skeymgmt;
@@ -167,7 +162,6 @@ void EVP_SKEYMGMT_free(EVP_SKEYMGMT *skeymgmt)
     if (ref > 0)
         return;
     OPENSSL_free(skeymgmt->type_name);
-    ossl_provider_free(skeymgmt->prov);
     CRYPTO_FREE_REF(&skeymgmt->refcnt);
     OPENSSL_free(skeymgmt);
 }

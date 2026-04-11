@@ -312,8 +312,7 @@ static EVP_ASYM_CIPHER *evp_asym_cipher_new(OSSL_PROVIDER *prov)
     if (cipher == NULL)
         return NULL;
 
-    if (!CRYPTO_NEW_REF(&cipher->refcnt, 1)
-        || !ossl_provider_up_ref(prov)) {
+    if (!CRYPTO_NEW_REF(&cipher->refcnt, 1)) {
         CRYPTO_FREE_REF(&cipher->refcnt);
         OPENSSL_free(cipher);
         return NULL;
@@ -450,7 +449,6 @@ void EVP_ASYM_CIPHER_free(EVP_ASYM_CIPHER *cipher)
     if (i > 0)
         return;
     OPENSSL_free(cipher->type_name);
-    ossl_provider_free(cipher->prov);
     CRYPTO_FREE_REF(&cipher->refcnt);
     OPENSSL_free(cipher);
 }

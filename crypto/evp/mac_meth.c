@@ -37,7 +37,6 @@ static void evp_mac_free(void *vmac)
     if (ref > 0)
         return;
     OPENSSL_free(mac->type_name);
-    ossl_provider_free(mac->prov);
     CRYPTO_FREE_REF(&mac->refcnt);
     OPENSSL_free(mac);
 }
@@ -159,9 +158,6 @@ static void *evp_mac_from_algorithm(int name_id,
         ERR_raise(ERR_LIB_EVP, EVP_R_INVALID_PROVIDER_FUNCTIONS);
         goto err;
     }
-
-    if (prov != NULL && !ossl_provider_up_ref(prov))
-        goto err;
 
     mac->prov = prov;
 

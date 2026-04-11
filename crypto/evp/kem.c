@@ -287,8 +287,7 @@ static EVP_KEM *evp_kem_new(OSSL_PROVIDER *prov)
     if (kem == NULL)
         return NULL;
 
-    if (!CRYPTO_NEW_REF(&kem->refcnt, 1)
-        || !ossl_provider_up_ref(prov)) {
+    if (!CRYPTO_NEW_REF(&kem->refcnt, 1)) {
         CRYPTO_FREE_REF(&kem->refcnt);
         OPENSSL_free(kem);
         return NULL;
@@ -439,7 +438,6 @@ void EVP_KEM_free(EVP_KEM *kem)
     if (i > 0)
         return;
     OPENSSL_free(kem->type_name);
-    ossl_provider_free(kem->prov);
     CRYPTO_FREE_REF(&kem->refcnt);
     OPENSSL_free(kem);
 }

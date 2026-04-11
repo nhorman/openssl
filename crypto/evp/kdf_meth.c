@@ -38,7 +38,6 @@ static void evp_kdf_free(void *vkdf)
     if (ref > 0)
         return;
     OPENSSL_free(kdf->type_name);
-    ossl_provider_free(kdf->prov);
     CRYPTO_FREE_REF(&kdf->refcnt);
     OPENSSL_free(kdf);
 }
@@ -154,8 +153,6 @@ static void *evp_kdf_from_algorithm(int name_id,
         ERR_raise(ERR_LIB_EVP, EVP_R_INVALID_PROVIDER_FUNCTIONS);
         goto err;
     }
-    if (prov != NULL && !ossl_provider_up_ref(prov))
-        goto err;
 
     kdf->prov = prov;
 

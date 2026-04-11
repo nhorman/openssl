@@ -756,11 +756,11 @@ conclude:
 EVP_MD *evp_md_new(void)
 {
     EVP_MD *md = OPENSSL_zalloc(sizeof(*md));
-
     if (md != NULL && !CRYPTO_NEW_REF(&md->refcnt, 1)) {
         OPENSSL_free(md);
         return NULL;
     }
+
     return md;
 }
 
@@ -952,8 +952,6 @@ static void *evp_md_from_algorithm(int name_id,
         ERR_raise(ERR_LIB_EVP, EVP_R_INVALID_PROVIDER_FUNCTIONS);
         goto err;
     }
-    if (prov != NULL && !ossl_provider_up_ref(prov))
-        goto err;
 
     md->prov = prov;
 
@@ -1009,7 +1007,6 @@ void EVP_MD_free(EVP_MD *md)
         return;
 
     OPENSSL_free(md->type_name);
-    ossl_provider_free(md->prov);
     CRYPTO_FREE_REF(&md->refcnt);
     OPENSSL_free(md);
 }

@@ -627,21 +627,16 @@ static ossl_inline char *merge_default_properties_string(int op, const char *nam
                     OPENSSL_free(tlevp);                                                \
                 } else {                                                                \
                     typ##_up_ref(tlevp);                                                \
-                    if (!ossl_provider_up_ref(tlevp->prov)) {                           \
-                        typ##_free(tlevp);                                              \
-                        typ##_free(tlevp);                                              \
-                    } else {                                                            \
-                        if (ossl_ht_evpcache_##typ##_insert((cache), TO_HT_KEY(&(key)), \
-                                tlevp, NULL)                                            \
-                            <= 0) {                                                     \
-                            typ##_free(tlevp);                                          \
-                            typ##_free(tlevp);                                          \
-                            *newmeth = meth;                                            \
-                        } else {                                                        \
-                            typ##_free(evp);                                            \
-                            *newmeth = tlevp;                                           \
-                        }                                                               \
-                    }                                                                   \
+                    if (ossl_ht_evpcache_##typ##_insert((cache), TO_HT_KEY(&(key)), \
+                            tlevp, NULL)                                            \
+                        <= 0) {                                                     \
+                        typ##_free(tlevp);                                          \
+                        typ##_free(tlevp);                                          \
+                        *newmeth = meth;                                            \
+                    } else {                                                        \
+                        typ##_free(evp);                                            \
+                        *newmeth = tlevp;                                           \
+                    }                                                               \
                 }                                                                       \
             }                                                                           \
         }                                                                               \
