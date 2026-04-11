@@ -480,7 +480,6 @@ static void evp_thread_local_free(HT_VALUE *val)
      * does a NULL check prior to freeing, so only one of these for any given EVP type
      * will actually do any real free work
      */
-    TL_FREE(EVP_KEM, EVP_KEM, val);
     TL_FREE(EVP_SKEYMGMT, EVP_SKEYMGMT, val);
 }
 
@@ -735,7 +734,7 @@ static ossl_inline void *evp_thread_local_store(OSSL_LIB_CTX *ctx,
             ret = acp;
             break;
         case OSSL_OP_KEM:
-            TL_CLONE_AND_INSERT(EVP_KEM, method, cache->cache, key, &kem);
+            TL_INSERT(EVP_KEM, method, cache->cache, key, &kem);
             ret = kem;
             break;
         case OSSL_OP_SKEYMGMT:
@@ -899,8 +898,6 @@ static ossl_inline void *evp_thread_local_fetch(OSSL_LIB_CTX *ctx,
             break;
         case OSSL_OP_KEM:
             kem = ossl_ht_evpcache_EVP_KEM_get(cache->cache, TO_HT_KEY(&key), &v);
-            if (kem != NULL)
-                kem->refcnt.val++;
             ret = kem;
             break;
         case OSSL_OP_SKEYMGMT:
