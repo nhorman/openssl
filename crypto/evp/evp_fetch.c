@@ -474,13 +474,10 @@ void evp_flush_thread_local_caches(void)
 static void evp_thread_local_free(HT_VALUE *val)
 {
     /*
-     * NOTE: We just invoke TL_FREE here for every type as it saves cpu cycles
-     * The TL_FREE macro confirms the type of object we're freeing, and returns NULL
-     * if the type doesn't match.  The corresponding evp type free function already
-     * does a NULL check prior to freeing, so only one of these for any given EVP type
-     * will actually do any real free work
+     * NOTE: Don't need to free anything here, all frees are handled
+     * by the underlying method store when the associated libctx goes away
      */
-    TL_FREE(EVP_SKEYMGMT, EVP_SKEYMGMT, val);
+    return;
 }
 
 /**
@@ -738,7 +735,7 @@ static ossl_inline void *evp_thread_local_store(OSSL_LIB_CTX *ctx,
             ret = kem;
             break;
         case OSSL_OP_SKEYMGMT:
-            TL_CLONE_AND_INSERT(EVP_SKEYMGMT, method, cache->cache, key, &smg);
+            TL_INSERT(EVP_SKEYMGMT, method, cache->cache, key, &smg);
             ret = smg;
             break;
         default:
@@ -902,8 +899,6 @@ static ossl_inline void *evp_thread_local_fetch(OSSL_LIB_CTX *ctx,
             break;
         case OSSL_OP_SKEYMGMT:
             smg = ossl_ht_evpcache_EVP_SKEYMGMT_get(cache->cache, TO_HT_KEY(&key), &v);
-            if (smg != NULL)
-                smg->refcnt.val++;
             ret = smg;
             break;
         default:
