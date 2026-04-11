@@ -480,7 +480,6 @@ static void evp_thread_local_free(HT_VALUE *val)
      * does a NULL check prior to freeing, so only one of these for any given EVP type
      * will actually do any real free work
      */
-    TL_FREE(EVP_CIPHER, EVP_CIPHER, val);
     TL_FREE(EVP_MAC, EVP_MAC, val);
     TL_FREE(EVP_KDF, EVP_KDF, val);
     TL_FREE(EVP_RAND, EVP_RAND, val);
@@ -711,7 +710,7 @@ static ossl_inline void *evp_thread_local_store(OSSL_LIB_CTX *ctx,
             ret = md;
             break;
         case OSSL_OP_CIPHER:
-            TL_CLONE_AND_INSERT(EVP_CIPHER, method, cache->cache, key, &cph);
+            TL_INSERT(EVP_CIPHER, method, cache->cache, key, &cph);
             ret = cph;
             break;
         case OSSL_OP_MAC:
@@ -875,8 +874,6 @@ static ossl_inline void *evp_thread_local_fetch(OSSL_LIB_CTX *ctx,
             break;
         case OSSL_OP_CIPHER:
             cph = ossl_ht_evpcache_EVP_CIPHER_get(cache->cache, TO_HT_KEY(&key), &v);
-            if (cph != NULL)
-                cph->refcnt.val++;
             ret = cph;
             break;
         case OSSL_OP_MAC:

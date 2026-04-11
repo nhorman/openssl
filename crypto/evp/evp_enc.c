@@ -1513,14 +1513,28 @@ err:
     return NULL;
 }
 
-static int evp_cipher_up_ref(void *cipher)
+static int evp_cipher_up_ref(void *arg)
 {
-    return EVP_CIPHER_up_ref(cipher);
+    int ref = 0;
+    EVP_CIPHER *cipher = arg;
+
+    if (cipher->origin == EVP_ORIG_DYNAMIC)
+        CRYPTO_UP_REF(&cipher->refcnt, &ref);
+    return 1;
 }
 
-static void evp_cipher_free(void *cipher)
+static void evp_cipher_free(void *arg)
 {
-    EVP_CIPHER_free(cipher);
+    int i;
+    EVP_CIPHER *cipher = arg;
+
+    if (cipher == NULL || cipher->origin != EVP_ORIG_DYNAMIC)
+        return;
+
+    CRYPTO_DOWN_REF(&cipher->refcnt, &i);
+    if (i > 0)
+        return;
+    evp_cipher_free_int(cipher);
 }
 
 EVP_CIPHER *EVP_CIPHER_fetch(OSSL_LIB_CTX *ctx, const char *algorithm,
@@ -1555,10 +1569,6 @@ int EVP_CIPHER_can_pipeline(const EVP_CIPHER *cipher, int enc)
 
 int EVP_CIPHER_up_ref(EVP_CIPHER *cipher)
 {
-    int ref = 0;
-
-    if (cipher->origin == EVP_ORIG_DYNAMIC)
-        CRYPTO_UP_REF(&cipher->refcnt, &ref);
     return 1;
 }
 
@@ -1571,15 +1581,7 @@ void evp_cipher_free_int(EVP_CIPHER *cipher)
 
 void EVP_CIPHER_free(EVP_CIPHER *cipher)
 {
-    int i;
-
-    if (cipher == NULL || cipher->origin != EVP_ORIG_DYNAMIC)
-        return;
-
-    CRYPTO_DOWN_REF(&cipher->refcnt, &i);
-    if (i > 0)
-        return;
-    evp_cipher_free_int(cipher);
+    return;
 }
 
 void EVP_CIPHER_do_all_provided(OSSL_LIB_CTX *libctx,
