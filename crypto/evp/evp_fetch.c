@@ -545,52 +545,51 @@ static void free_evp_thread_cache(void *arg)
  *       composite key suitable for cache indexing.
  */
 static ossl_inline char *merge_default_properties_string(int op, const char *name, const char *prop,
-    OSSL_PROVIDER *prov, OSSL_LIB_CTX *ctx, char *buf, size_t buf_len)
+    OSSL_PROVIDER *prov, OSSL_LIB_CTX *ctx, char *buf, size_t *buf_len)
 {
     OSSL_PROPERTY_LIST *pq = NULL, **gpq = NULL, *pfull = NULL;
     OSSL_PROPERTY_LIST *dummy_gpq = NULL;
+    int idx = 0;
 
     gpq = ossl_ctx_global_properties(ctx, 0);
 
-    memset(buf, 0, buf_len);
+    memset(buf, 0, *buf_len);
     if (gpq == NULL)
         gpq = &dummy_gpq;
 
-    if (*gpq == NULL && prop == NULL) {
-        /*
-         * Both null, an empty string works here
-         */
-        snprintf(buf, buf_len, "%d%s%p", op, name, (void *)prov);
-        return buf;
-    } else if (*gpq == NULL) {
-        /*
-         * PQ Is not null, so our property string is
-         * just the prop_query
-         */
-        snprintf(buf, buf_len, "%d%s%s%p", op, name, prop, (void *)prov);
-        return buf;
-    } else if (prop == NULL) {
-        /*
-         * gpq not null, just need to turn that into a string
-         */
-        size_t offset;
-        offset = snprintf(buf, buf_len, "%d%s%p", op, name, (void *)prov);
-        ossl_property_list_to_string(ctx, *gpq, &buf[offset], buf_len - offset);
-        return buf;
-    } else {
-        /*
-         * both non-null, need to merge
-         */
-        size_t offset;
+    memcpy(&buf[idx], &op, sizeof(int));
+    idx += sizeof(int);
+    memcpy(&buf[idx], name, strlen(name));
+    idx += strlen(name);
+    if (prov != NULL) {
+        memcpy(&buf[idx], &prov, sizeof(OSSL_PROVIDER *));
+        idx += sizeof(OSSL_PROVIDER *);
+    }
+    if (*gpq != NULL && prop != NULL) {
         pq = ossl_parse_query(ctx, prop, 0);
         pfull = ossl_property_merge(pq, *gpq);
-        offset = snprintf(buf, buf_len, "%d%s%p", op, name, (void *)prov);
-        ossl_property_list_to_string(ctx, pfull, &buf[offset], buf_len - offset);
+        idx += ossl_property_list_to_string(ctx, pfull, &buf[idx], *buf_len - idx);
         ossl_property_free(pfull);
         ossl_property_free(pq);
-        return buf;
+    } else {
+        /*
+         * Only one of gpq or prop is not null
+         */
+        if (prop == NULL) {
+            /*
+             * gpq is valid
+             */
+            idx += ossl_property_list_to_string(ctx, *gpq, &buf[idx], *buf_len - idx);
+        } else {
+            /*
+             * prop is valid
+             */
+            memcpy(&buf[idx], prop, strlen(prop));
+            idx += strlen(prop);
+        }
     }
-    return NULL;
+    *buf_len = idx;
+    return buf;
 }
 
 /*
@@ -674,7 +673,7 @@ static ossl_inline char *merge_default_properties_string(int op, const char *nam
 static ossl_inline void *evp_thread_local_store(OSSL_LIB_CTX *ctx,
     EVP_THREAD_CACHE **c, int operation_id,
     const char *merged_props,
-    void *method)
+    void *method, size_t buflen)
 {
     EVP_CACHE_KEY key;
     void *ret = method;
@@ -694,7 +693,7 @@ static ossl_inline void *evp_thread_local_store(OSSL_LIB_CTX *ctx,
     if (ossl_unlikely(cache == NULL)) {
         goto err;
     } else {
-        HT_INIT_KEY_EXTERNAL(&key, (uint8_t *)merged_props, strlen(merged_props));
+        HT_INIT_KEY_EXTERNAL(&key, (uint8_t *)merged_props, buflen);
 
         switch (operation_id) {
         case OSSL_OP_DIGEST:
@@ -783,7 +782,7 @@ err:
  *       to thread-local isolation.
  */
 static ossl_inline void *evp_thread_local_fetch(OSSL_LIB_CTX *ctx,
-    EVP_THREAD_CACHE **c, int operation_id, const char *merged_props)
+    EVP_THREAD_CACHE **c, int operation_id, const char *merged_props, size_t buflen)
 {
     EVP_CACHE_KEY key;
     void *ret = NULL;
@@ -858,7 +857,7 @@ static ossl_inline void *evp_thread_local_fetch(OSSL_LIB_CTX *ctx,
             goto err;
         }
 
-        HT_INIT_KEY_EXTERNAL(&key, (uint8_t *)merged_props, strlen(merged_props));
+        HT_INIT_KEY_EXTERNAL(&key, (uint8_t *)merged_props, buflen);
         switch (operation_id) {
         case OSSL_OP_DIGEST:
             md = ossl_ht_evpcache_EVP_MD_get(cache->cache, TO_HT_KEY(&key), &v);
@@ -924,9 +923,10 @@ void *evp_generic_fetch(OSSL_LIB_CTX *libctx, int operation_id,
         libctx);
     struct evp_method_data_st methdata;
     char buf[512];
+    size_t buflen = 512;
     const char *merged_props = merge_default_properties_string(operation_id, name,
-        properties, NULL, libctx, buf, 512);
-    void *method = evp_thread_local_fetch(libctx, &cache, operation_id, merged_props);
+        properties, NULL, libctx, buf, &buflen);
+    void *method = evp_thread_local_fetch(libctx, &cache, operation_id, merged_props, buflen);
 
     if (method != NULL)
         return method;
@@ -938,7 +938,7 @@ void *evp_generic_fetch(OSSL_LIB_CTX *libctx, int operation_id,
         new_method, up_ref_method, free_method);
     dealloc_tmp_evp_method_store(methdata.tmp_store);
     if (method != NULL)
-        method = evp_thread_local_store(libctx, &cache, operation_id, merged_props, method);
+        method = evp_thread_local_store(libctx, &cache, operation_id, merged_props, method, buflen);
     return method;
 }
 
@@ -959,12 +959,13 @@ void *evp_generic_fetch_from_prov(OSSL_PROVIDER *prov, int operation_id,
     struct evp_method_data_st methdata;
     void *method;
     char buf[512];
+    size_t buflen = 512;
     EVP_THREAD_CACHE *cache = CRYPTO_THREAD_get_local_ex(CRYPTO_THREAD_LOCAL_EVP_CACHE_KEY,
         ossl_provider_libctx(prov));
     const char *merged_props = merge_default_properties_string(operation_id, name,
-        properties, prov, ossl_provider_libctx(prov), buf, 512);
+        properties, prov, ossl_provider_libctx(prov), buf, &buflen);
 
-    method = evp_thread_local_fetch(ossl_provider_libctx(prov), &cache, operation_id, merged_props);
+    method = evp_thread_local_fetch(ossl_provider_libctx(prov), &cache, operation_id, merged_props, buflen);
 
     if (method != NULL)
         return method;
@@ -976,7 +977,7 @@ void *evp_generic_fetch_from_prov(OSSL_PROVIDER *prov, int operation_id,
         new_method, up_ref_method, free_method);
     dealloc_tmp_evp_method_store(methdata.tmp_store);
     if (method != NULL)
-        method = evp_thread_local_store(ossl_provider_libctx(prov), &cache, operation_id, merged_props, method);
+        method = evp_thread_local_store(ossl_provider_libctx(prov), &cache, operation_id, merged_props, method, buflen);
     return method;
 }
 
