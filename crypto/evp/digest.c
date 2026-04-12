@@ -977,7 +977,7 @@ static int evp_md_up_ref(void *arg)
     return 1;
 }
 
-void evp_md_free(void *arg)
+static void evp_md_free(void *arg)
 {
     int i;
     EVP_MD *md = arg;

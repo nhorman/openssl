@@ -632,7 +632,6 @@ static ossl_inline char *merge_default_properties_string(int op, const char *nam
 #define TL_INSERT(typ, meth, cache, key, newmeth)                             \
     do {                                                                                \
         typ *evp = (typ *)(meth);                                                       \
-        int ref; \
         *newmeth = NULL;                                                                \
                                                                                         \
         ossl_ht_evpcache_##typ##_insert((cache), TO_HT_KEY(&(key)), \

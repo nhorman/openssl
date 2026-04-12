@@ -122,7 +122,7 @@ static void *skeymgmt_from_algorithm(int name_id,
     return skeymgmt;
 }
 
-int evp_skeymgmt_up_ref(void *data)
+static int evp_skeymgmt_up_ref(void *data)
 {
     int ref = 0;
     EVP_SKEYMGMT *skeymgmt = data;
@@ -131,7 +131,7 @@ int evp_skeymgmt_up_ref(void *data)
     return 1;
 }
 
-void evp_skeymgmt_free(void *data)
+static void evp_skeymgmt_free(void *data)
 {
     int ref = 0;
     EVP_SKEYMGMT *skeymgmt = data;
