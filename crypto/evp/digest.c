@@ -23,6 +23,8 @@
 
 #include <crypto/asn1.h>
 
+static void evp_md_free(void *arg);
+
 void evp_md_ctx_clear_digest(EVP_MD_CTX *ctx, int force, int keep_fetched)
 {
     if (ctx->algctx != NULL) {
@@ -963,7 +965,7 @@ static void *evp_md_from_algorithm(int name_id,
     return md;
 
 err:
-    EVP_MD_free(md);
+    evp_md_free(md);
     return NULL;
 }
 

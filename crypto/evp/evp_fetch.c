@@ -380,7 +380,12 @@ inner_evp_generic_fetch(struct evp_method_data_st *methdata,
             if (name_id == 0) {
                 ERR_raise_data(ERR_LIB_EVP, ERR_R_FETCH_FAILED,
                     "Algorithm %s cannot be found", name != NULL ? name : "<null>");
-                free_method(method);
+                /*
+                 * Note, we would normally call free_method here to drop the refcount
+                 * but because we are allowing the method store cache to exclusively
+                 * own methods once construct, and this method is already in the store
+                 * we leave it alone here, alowing method store cleanup to handle the freeing
+                 */
                 method = NULL;
             } else {
                 meth_id = evp_method_id(name_id, operation_id);

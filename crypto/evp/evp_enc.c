@@ -25,6 +25,8 @@
 
 OSSL_SAFE_MATH_SIGNED(int, int)
 
+static void evp_cipher_free(void *arg);
+
 int EVP_CIPHER_CTX_reset(EVP_CIPHER_CTX *ctx)
 {
     if (ctx == NULL)
@@ -1509,7 +1511,7 @@ static void *evp_cipher_from_algorithm(const int name_id,
     return cipher;
 
 err:
-    EVP_CIPHER_free(cipher);
+    evp_cipher_free(cipher);
     return NULL;
 }
 
