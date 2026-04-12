@@ -78,7 +78,7 @@ static void *get_tmp_evp_method_store(void *data)
     struct evp_method_data_st *methdata = data;
 
     if (methdata->tmp_store == NULL) {
-        methdata->tmp_store = ossl_method_store_new(methdata->libctx);
+        methdata->tmp_store = ossl_method_store_new(methdata->libctx, 0);
         OSSL_TRACE1(QUERY, "Allocating a new tmp_store %p\n", (void *)methdata->tmp_store);
     } else {
         OSSL_TRACE1(QUERY, "Using the existing tmp_store %p\n", (void *)methdata->tmp_store);
@@ -637,7 +637,6 @@ static ossl_inline char *merge_default_properties_string(int op, const char *nam
                                                                                         \
         ossl_ht_evpcache_##typ##_insert((cache), TO_HT_KEY(&(key)), \
             evp, NULL); \
-        CRYPTO_DOWN_REF(&evp->refcnt, &ref); \
         *newmeth = meth;                                    \
     } while (0)
 /**
