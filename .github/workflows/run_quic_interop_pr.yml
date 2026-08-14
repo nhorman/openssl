@@ -12,10 +12,9 @@ jobs:
     strategy:
       matrix:
         tests: [http3, transfer, handshake, retry, chacha20, resumption, multiplexing, ipv6, amplificationlimit]
-        servers: [ngtcp2, quiche, nginx, msquic, haproxy]
-        clients: [ngtcp2, quiche, msquic, chrome]
+        peers: [ngtcp2, quiche, nginx, msquic, haproxy]
         exclude:
-          - servers: msquic
+          - peers: msquic
             tests: retry
     steps:
       - name: "Dump github payload"
@@ -73,7 +72,7 @@ jobs:
           docker compose version
       - name: "Run interop with openssl client"
         run: |
-          python3 ./run.py -c openssl -t ${{ matrix.tests }} -s ${{ matrix.servers }} --log-dir ./logs-client -d
+          python3 ./run.py -c openssl -t ${{ matrix.tests }} -s ${{ matrix.peers }} --log-dir ./logs-client -d
       - name: "Run interop with openssl server"
         run: |
-          python3 ./run.py -s openssl -t "${{ matrix.tests }}" -c "${{ matrix.clients }}" --log-dir ./logs-server -d
+          python3 ./run.py -s openssl -t "${{ matrix.tests }}" -c "${{ matrix.peers }}" --log-dir ./logs-server -d
