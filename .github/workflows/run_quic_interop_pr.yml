@@ -37,8 +37,6 @@ jobs:
           repository: 'quic-interop/quic-interop-runner'
           fetch-depth: 0
           persist-credentials: false
-      - name: "Run Client interop"
-        runs-on: ubuntu-latest
       - name: Install python requirements
         run: |
           for i in {1..3}; do pip install -r requirements.txt && break; sleep 10; done
