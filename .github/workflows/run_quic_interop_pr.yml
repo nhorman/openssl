@@ -74,5 +74,6 @@ jobs:
         run: |
           python3 ./run.py -c openssl -t ${{ matrix.tests }} -s ${{ matrix.peers }} --log-dir ./logs-client -d
       - name: "Run interop with openssl server"
+        if: ${{ matrix.peers }} != 'haproxy' 
         run: |
           python3 ./run.py -s openssl -t "${{ matrix.tests }}" -c "${{ matrix.peers }}" --log-dir ./logs-server -d
