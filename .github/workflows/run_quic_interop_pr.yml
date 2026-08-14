@@ -1,4 +1,4 @@
-name: "Run openssl quic interop testing"
+name: "Run openssl quic interop testing on pull request"
 
 on:
   pull_request:
@@ -16,8 +16,8 @@ jobs:
       - name: "Build openssl container"
         run: |
           cd test/quic-openssl-docker/
-          echo "Building ${{ github.server_url }} Branch ${{ github.ref_name }}"
-          docker build -t quay.io/openssl-ci/openssl-quic-interop:latest --build-arg OPENSSL_URL=${{ github.server_url }}/${{ github.repository }} --build-arg OPENSSL_BRANCH=${{ github.ref_name }} .
+          echo "Building ${{ github.server_url }}/${{ github.repository.full_name }} Branch ${{ github.head.ref }}"
+          docker build -t quay.io/openssl-ci/openssl-quic-interop:latest --build-arg OPENSSL_URL=${{ github.server_url }}/${{ github.repository.full_name  }} --build-arg OPENSSL_BRANCH=${{ github.head.ref }} .
 
 #  run_quic_interop_openssl_client:
 #   if: ${{ !inputs.only_interop }}
