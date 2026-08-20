@@ -5033,6 +5033,28 @@ int ossl_quic_peeloff_conn(SSL *listener, SSL *new_conn)
 
     qctx_lock_for_io(&lctx);
 
+    /*
+     * We shouldn't attempt to attach a connection from this listener if the
+     * new connection passed in is already started
+     */
+    if (cctx.qc->started) {
+        QUIC_RAISE_NON_NORMAL_ERROR(NULL, ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED,
+            "The provided new connection is already in use");
+        ret = -1;
+        goto out;
+    }
+
+    /*
+     * We also shouldn't attempt to use a new connection here that was allocated from
+     * another listner
+     */
+    if (cctx.qc->listener != NULL && cctx.qc->listener != lctx.ql) {
+        QUIC_RAISE_NON_NORMAL_ERROR(NULL, ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED,
+            "This connection was allocated from an alternate listener");
+        ret = -1;
+        goto out;
+    }
+
     if (!ossl_quic_port_test_and_set_peeloff(lctx.ql->port, PEELOFF_LISTEN)) {
         QUIC_RAISE_NON_NORMAL_ERROR(NULL, ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED,
             "This listener is using SSL_accept_connection");
