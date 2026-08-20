@@ -5067,6 +5067,7 @@ int ossl_quic_peeloff_conn(SSL *listener, SSL *new_conn)
         qc->obj.engine = ql->engine;
         qc->engine = ql->engine;
         qc->port = ql->port;
+        qc->obj.port = ql->port;
         qc->pending = 1;
 #if defined(OPENSSL_THREADS)
         ossl_crypto_mutex_free(&qc->mutex);
