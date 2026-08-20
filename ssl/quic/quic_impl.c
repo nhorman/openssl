@@ -5078,7 +5078,7 @@ int ossl_quic_peeloff_conn(SSL *listener, SSL *new_conn)
         ossl_quic_channel_set0_tls(new_ch, tls);
         qc->tls = tls;
         ossl_quic_channel_get_peer_addr(new_ch, &qc->init_peer_addr); /* best effort */
-        qc->started = 1;
+        qc->started = 0;
         qc->as_server = 1;
         qc->as_server_state = 1;
         qc->default_stream_mode = SSL_DEFAULT_STREAM_MODE_AUTO_BIDI;
