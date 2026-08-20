@@ -2946,6 +2946,226 @@ err:
     return testresult;
 }
 
+static int bind_dgram(BIO *bio, struct in_addr *ina, unsigned short port)
+{
+    BIO_ADDR *addr = create_addr(ina, port);
+    int caps = BIO_DGRAM_CAP_HANDLES_DST_ADDR | BIO_DGRAM_CAP_HANDLES_SRC_ADDR;
+
+    if (addr == NULL)
+        return 0;
+    if (!BIO_dgram_set_caps(bio, caps)
+        || BIO_dgram_set0_local_addr(bio, addr) != 1) {
+        BIO_ADDR_free(addr);
+        return 0;
+    }
+    return 1;
+}
+
+/*
+ * Listener in SSL_listen_ex() mode, one incoming connection queued,
+ * new_conn still unpeeled. Returns 1 on success.
+ */
+static int ssl_listen_ex_setup(int thread_assisted,
+    SSL_CTX **sctx_out, SSL_CTX **cctx_out, SSL_CTX **nctx_out,
+    SSL **listener_out, SSL **client_out, SSL **new_conn_out)
+{
+    SSL_CTX *sctx = NULL, *cctx = NULL, *nctx = NULL;
+    SSL *listener = NULL, *client = NULL, *new_conn = NULL;
+    BIO *lbio = NULL, *cbio = NULL;
+    BIO_ADDR *peer = NULL;
+    int i, ret = 0;
+    int rc;
+    struct in_addr ina;
+    static unsigned char alpn[] = { 8, 'o', 's', 's', 'l', 't', 'e', 's', 't' };
+
+    ina.s_addr = htonl(0x1f000001);
+
+    if ((sctx = create_server_ctx()) == NULL
+        || (cctx = create_client_ctx()) == NULL
+        || (nctx = SSL_CTX_new_ex(libctx, NULL, thread_assisted ? OSSL_QUIC_client_thread_method() : OSSL_QUIC_method())) == NULL
+        || !BIO_new_bio_dgram_pair(&cbio, 0, &lbio, 0)
+        || !bind_dgram(lbio, &ina, 4433)
+        || !bind_dgram(cbio, &ina, 4444))
+        goto err;
+
+    listener = SSL_new_listener(sctx, 0);
+    if (listener == NULL)
+        goto err;
+    SSL_set_bio(listener, lbio, lbio);
+    lbio = NULL;
+    if (!SSL_set_blocking_mode(listener, 0) || !SSL_listen(listener))
+        goto err;
+
+    client = SSL_new(cctx);
+    peer = create_addr(&ina, 4433);
+    if (client == NULL || peer == NULL
+        || !SSL_set1_initial_peer_addr(client, peer)
+        || SSL_set_alpn_protos(client, alpn, sizeof(alpn)) != 0)
+        goto err;
+    SSL_set_bio(client, cbio, cbio);
+    cbio = NULL;
+    if (!SSL_set_blocking_mode(client, 0))
+        goto err;
+
+    new_conn = SSL_new(nctx);
+    if (new_conn == NULL)
+        goto err;
+    /*
+     * First I/O on the listener: enter PEELOFF_LISTEN. Returns 0 (nothing
+     * queued yet). This is enough for the teardown abort; a successful
+     * peeloff is not required.
+     */
+    rc = SSL_listen_ex(listener, new_conn);
+    TEST_info("SSL_listen_ex (empty) = %d", rc);
+
+    for (i = 0; i < 8; i++) {
+        SSL_connect(client);
+        SSL_handle_events(listener);
+        if (SSL_get_accept_connection_queue_len(listener) >= 1)
+            break;
+    }
+    TEST_info("Accept queue len = %u", (unsigned int)SSL_get_accept_connection_queue_len(listener));
+    if (SSL_get_accept_connection_queue_len(listener) < 1) {
+        goto err;
+    }
+
+    *sctx_out = sctx;
+    *cctx_out = cctx;
+    *nctx_out = nctx;
+    *listener_out = listener;
+    *client_out = client;
+    *new_conn_out = new_conn;
+    BIO_ADDR_free(peer);
+    return 1;
+
+err:
+    ERR_print_errors_fp(stderr);
+    SSL_free(new_conn);
+    SSL_free(client);
+    SSL_free(listener);
+    BIO_free(lbio);
+    BIO_free(cbio);
+    BIO_ADDR_free(peer);
+    SSL_CTX_free(nctx);
+    SSL_CTX_free(cctx);
+    SSL_CTX_free(sctx);
+    return ret;
+}
+
+/*
+ * Test to ensure we don't accidentally get a UAF when freeing
+ * a listener with a parked connection in peeloff mode.  ASAN will trigger
+ * this if we do
+ */
+static int test_ssl_listen_ex_queued_conn(void)
+{
+    SSL_CTX *sctx, *cctx, *nctx;
+    SSL *listener, *client, *new_conn;
+
+    if (!TEST_int_eq(ssl_listen_ex_setup(0, &sctx, &cctx, &nctx,
+                         &listener, &client, &new_conn),
+            1))
+        return 0;
+
+    TEST_info("SSL_free(listener) with a parked channel queued...");
+    SSL_free(listener); /* 4.0.x: assert abort in port_cleanup() */
+
+    SSL_free(client);
+    SSL_free(new_conn);
+    SSL_CTX_free(sctx);
+    SSL_CTX_free(cctx);
+    SSL_CTX_free(nctx);
+    return 1;
+}
+
+static int peeloff(SSL *listener, SSL *new_conn)
+{
+    int rc = SSL_listen_ex(listener, new_conn);
+
+    TEST_info("SSL_listen_ex (peeloff) = %d", rc);
+    if (rc != 1) {
+        ERR_print_errors_fp(stderr);
+        return 0;
+    }
+    return 1;
+}
+
+static int test_ssl_listen_ex_change_bio(void)
+{
+    SSL_CTX *sctx, *cctx, *nctx;
+    SSL *listener, *client, *new_conn;
+    BIO *dummy;
+
+    if (!TEST_int_eq(ssl_listen_ex_setup(0, &sctx, &cctx, &nctx,
+                         &listener, &client, &new_conn),
+            1))
+        return 0;
+
+    if (!TEST_int_eq(peeloff(listener, new_conn), 1))
+        return 0;
+
+    dummy = BIO_new(BIO_s_mem());
+    SSL_set_bio(new_conn, dummy, dummy); /* 4.0.x: UAF write + BIO_free_all */
+    TEST_info("SSL_set_bio returned (no crash — this build is fixed or ASan is off)");
+
+    SSL_free(new_conn);
+    SSL_free(client);
+    SSL_free(listener);
+    SSL_CTX_free(sctx);
+    SSL_CTX_free(cctx);
+    SSL_CTX_free(nctx);
+    return 1;
+}
+
+static int test_ssl_listen_ex_handshake(void)
+{
+    SSL_CTX *sctx, *cctx, *nctx;
+    SSL *listener, *client, *new_conn;
+
+    if (!TEST_int_eq(ssl_listen_ex_setup(0, &sctx, &cctx, &nctx,
+                         &listener, &client, &new_conn),
+            1))
+        return 0;
+
+    if (!TEST_int_eq(peeloff(listener, new_conn), 1))
+        return 0;
+
+    SSL_do_handshake(new_conn); /* 4.0.x: UAF read of freed port */
+    TEST_info("SSL_do_handshake returned (no crash — this build is fixed or ASan is off)");
+
+    SSL_free(new_conn);
+    SSL_free(client);
+    SSL_free(listener);
+    SSL_CTX_free(sctx);
+    SSL_CTX_free(cctx);
+    SSL_CTX_free(nctx);
+    return 1;
+}
+
+static int test_ssl_listen_ex_thread_assist(void)
+{
+    SSL_CTX *sctx, *cctx, *nctx;
+    SSL *listener, *client, *new_conn;
+
+    if (!TEST_int_eq(ssl_listen_ex_setup(0, &sctx, &cctx, &nctx,
+                         &listener, &client, &new_conn),
+            1))
+        return 0;
+
+    if (!TEST_int_eq(peeloff(listener, new_conn), 1))
+        return 0;
+
+    SSL_free(new_conn); /* 4.0.x: NULL deref in thread_assist_wait_stopped */
+    TEST_info("SSL_free returned (no crash — this build is fixed)");
+
+    SSL_free(client);
+    SSL_free(listener);
+    SSL_CTX_free(sctx);
+    SSL_CTX_free(cctx);
+    SSL_CTX_free(nctx);
+    return 1;
+}
+
 static int test_ssl_listen_ex(void)
 {
     SSL_CTX *cctx = NULL, *sctx = NULL, *qmctx = NULL;
@@ -4047,6 +4267,10 @@ int setup_tests(void)
     ADD_ALL_TESTS(test_quic_set_fd, 3);
     ADD_TEST(test_bio_ssl);
     ADD_TEST(test_ssl_listen_ex);
+    ADD_TEST(test_ssl_listen_ex_queued_conn);
+    ADD_TEST(test_ssl_listen_ex_change_bio);
+    ADD_TEST(test_ssl_listen_ex_handshake);
+    ADD_TEST(test_ssl_listen_ex_thread_assist);
     ADD_TEST(test_ssl_client_as_ossl_quic_method);
     ADD_TEST(test_back_pressure);
     ADD_TEST(test_multiple_dgrams);
