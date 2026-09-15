@@ -23,6 +23,253 @@
 #include "rcu_internal.h"
 
 #if defined(OPENSSL_THREADS) && !defined(CRYPTO_TDEBUG) && defined(OPENSSL_SYS_WINDOWS)
+#ifdef REPORT_RWLOCK_CONTENTION
+#ifndef USE_RWLOCK
+#error "Lock Contention requires the use of SRWLOCKS"
+#endif
+
+/*
+ * Normally we would use a BIO here to do this, but we create locks during
+ * library initialization, and creating a bio too early, creates a recursive set
+ * of stack calls that leads us to call CRYPTO_thread_run_once while currently
+ * executing the init routine for various run_once functions, which leads to
+ * deadlock.  Avoid that by just using a FILE pointer.  Also note that we
+ * directly use a pthread_mutex_t to protect access from multiple threads
+ * to the contention log file.  We do this because we want to avoid use
+ * of the CRYPTO_THREAD api so as to prevent recursive blocking reports.
+ */
+static CRYPTO_ONCE init_contention_data_flag = CRYPTO_ONCE_STATIC_INIT;
+SRWLOCK log_lock = SRWLOCK_INIT;
+CRYPTO_THREAD_LOCAL thread_contention_data;
+
+struct stack_info {
+    unsigned int nptrs;
+    int write;
+    uint64_t start;
+    uint64_t duration;
+    void **strings;
+};
+
+#define STACKS_COUNT 32
+#define BT_BUF_SIZE 1024
+struct stack_traces {
+    FILE *fp;
+    int lock_depth;
+    size_t idx;
+    struct stack_info stacks[STACKS_COUNT];
+};
+
+/* The glibc gettid() definition presents only since 2.30. */
+static ossl_inline DWORD get_tid(void)
+{
+    return GetCurrentThreadId();
+}
+
+#ifdef FIPS_MODULE
+#define FIPS_SFX "-fips"
+#else
+#define FIPS_SFX ""
+#endif
+
+static void *init_contention_data(void)
+{
+    struct stack_traces *traces;
+    char fname_fmt[] = "lock-contention-log" FIPS_SFX ".%d.txt";
+    char fname[sizeof(fname_fmt) + sizeof(int) * 3];
+
+    traces = OPENSSL_zalloc(sizeof(struct stack_traces));
+
+    snprintf(fname, sizeof(fname), fname_fmt, get_tid());
+
+    traces->fp = fopen(fname, "w");
+
+    return traces;
+}
+
+static void destroy_contention_data(void *data)
+{
+    struct stack_traces *st = data;
+
+    fclose(st->fp);
+    OPENSSL_free(data);
+}
+
+static void init_contention_data_once(void)
+{
+    /*
+     * Create a thread local key here to store our list of stack traces
+     * to be printed when we unlock the lock we are holding
+     */
+    CRYPTO_THREAD_init_local(&thread_contention_data, destroy_contention_data);
+    return;
+}
+
+static struct stack_traces *get_stack_traces(int init)
+{
+    struct stack_traces *traces = CRYPTO_THREAD_get_local(&thread_contention_data);
+
+    if (!traces && init) {
+        traces = init_contention_data();
+        CRYPTO_THREAD_set_local(&thread_contention_data, traces);
+    }
+
+    return traces;
+}
+
+static void print_stack_traces(struct stack_traces *traces)
+{
+    unsigned int j;
+
+    while (traces != NULL && traces->idx >= 1) {
+        traces->idx--;
+        fprintf(traces->fp,
+            "lock blocked on %s for %zu usec at time %zu tid %d\n",
+            traces->stacks[traces->idx].write == 1 ? "WRITE" : "READ",
+            traces->stacks[traces->idx].duration,
+            traces->stacks[traces->idx].start,
+            get_tid());
+        if (traces->stacks[traces->idx].strings != NULL) {
+            for (j = 0; j < traces->stacks[traces->idx].nptrs; j++) {
+                fprintf(traces->fp, "%p\n", traces->stacks[traces->idx].strings[j]);
+            }
+        } else {
+            fprintf(traces->fp, "No stack trace available\n\n");
+            static const char no_bt[] = "No stack trace available\n\n";
+        }
+        free(traces->stacks[traces->idx].strings);
+    }
+}
+
+static ossl_inline void ossl_init_rwlock_contention_data(void)
+{
+    CRYPTO_THREAD_run_once(&init_contention_data_flag, init_contention_data_once);
+}
+
+typedef union {
+    uint64_t longval;
+    FILETIME ftval;
+} FTUNION;
+
+static int record_lock_contention(SRWLOCK *lock,
+    struct stack_traces *traces, int write)
+{
+    void *buffer[BT_BUF_SIZE];
+    FTUNION start, end;
+
+    GetSystemTimeAsFileTime(&start.ftval);
+    if (write)
+        AcquireSRWLockExclusive(lock);
+    else
+        AcquireSRWLockShared(lock);
+
+    GetSystemTimeAsFileTime(&end.ftval);
+
+    traces->stacks[traces->idx].nptrs = CaptureStackBackTrace(1, 20, buffer, NULL);
+    traces->stacks[traces->idx].strings = OPENSSL_zalloc(sizeof(void *) * traces->stacks[traces->idx].nptrs);
+    if (traces->stacks[traces->idx].strings == NULL) {
+        return 0;
+    }
+    memcpy(traces->stacks[traces->idx].strings, buffer, traces->stacks[traces->idx].nptrs);
+    traces->stacks[traces->idx].duration = (end.longval - start.longval) / 10;
+    traces->stacks[traces->idx].start = start.longval / 10;
+    traces->stacks[traces->idx].write = write;
+    traces->idx++;
+    if (traces->idx >= STACKS_COUNT) {
+        fprintf(stderr, "STACK RECORD OVERFLOW!\n");
+        print_stack_traces(traces);
+    }
+
+    return 0;
+}
+
+static ossl_inline int ossl_rwlock_rdlock(SRWLOCK *lock)
+{
+    struct stack_traces *traces = get_stack_traces(1);
+
+    if (ossl_unlikely(traces == NULL))
+        return ENOMEM;
+
+    traces->lock_depth++;
+    if (!TryAcquireSRWLockShared(lock)) {
+        int ret = record_lock_contention(lock, traces, 0);
+
+        if (ret)
+            traces->lock_depth--;
+
+        return ret;
+    }
+
+    return 0;
+}
+
+static ossl_inline int ossl_rwlock_wrlock(SRWLOCK *lock)
+{
+    struct stack_traces *traces = get_stack_traces(1);
+
+    if (ossl_unlikely(traces == NULL))
+        return ENOMEM;
+
+    traces->lock_depth++;
+    if (!TryAcquireSRWLockExclusive(lock)) {
+        int ret = record_lock_contention(lock, traces, 1);
+
+        if (ret)
+            traces->lock_depth--;
+
+        return ret;
+    }
+
+    return 0;
+}
+
+static ossl_inline int ossl_rwlock_unlock(SRWLOCK *lock, int exclusive)
+{
+    struct stack_traces *traces;
+
+    if (exclusive)
+        ReleaseSRWLockExclusive(lock);
+    else
+        ReleaseSRWLockShared(lock);
+
+    traces = get_stack_traces(0);
+
+    if (traces != NULL) {
+        traces->lock_depth--;
+        assert(traces->lock_depth >= 0);
+        if (traces->lock_depth == 0)
+            print_stack_traces(traces);
+    }
+
+    return 0;
+}
+
+#else /* !REPORT_RWLOCK_CONTENTION */
+
+#if defined(USE_RWLOCK)
+static ossl_inline void ossl_init_rwlock_contention_data(void)
+{
+}
+
+static ossl_inline int ossl_rwlock_rdlock(SRWLOCK *rwlock)
+{
+    return AcquireSRWLockShared(rwlock);
+}
+
+static ossl_inline int ossl_rwlock_wrlock(SRWLOCK *rwlock)
+{
+    return AcquireSRWLockExclusive(rwlock);
+}
+
+static ossl_inline int ossl_rwlock_unlock(SRWLOCK *rwlock, int exclusive)
+{
+    if (exclusive)
+        return ReleaseSRWLockExclusive(rwlock);
+    else
+        return ReleaseSRWLockShared(rwlock);
+}
+#endif /* USE_RWLOCK */
+
+#endif
 
 #ifdef USE_RWLOCK
 typedef struct {
@@ -457,7 +704,7 @@ __owur int CRYPTO_THREAD_read_lock(CRYPTO_RWLOCK *lock)
 #ifdef USE_RWLOCK
     CRYPTO_win_rwlock *rwlock = lock;
 
-    AcquireSRWLockShared(&rwlock->lock);
+    ossl_rwlock_rdlock(&rwlock->lock);
 #else
     EnterCriticalSection(lock);
 #endif
@@ -469,7 +716,7 @@ __owur int CRYPTO_THREAD_write_lock(CRYPTO_RWLOCK *lock)
 #ifdef USE_RWLOCK
     CRYPTO_win_rwlock *rwlock = lock;
 
-    AcquireSRWLockExclusive(&rwlock->lock);
+    ossl_rwlock_wrlock(&rwlock->lock);
     rwlock->exclusive = 1;
 #else
     EnterCriticalSection(lock);
@@ -481,13 +728,11 @@ int CRYPTO_THREAD_unlock(CRYPTO_RWLOCK *lock)
 {
 #ifdef USE_RWLOCK
     CRYPTO_win_rwlock *rwlock = lock;
+    int exclusive = rwlock->exclusive;
 
-    if (rwlock->exclusive) {
+    if (rwlock->exclusive == 1)
         rwlock->exclusive = 0;
-        ReleaseSRWLockExclusive(&rwlock->lock);
-    } else {
-        ReleaseSRWLockShared(&rwlock->lock);
-    }
+    ossl_rwlock_unlock(&rwlock->lock, exclusive);
 #else
     LeaveCriticalSection(lock);
 #endif

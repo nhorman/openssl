@@ -18,6 +18,7 @@
  * but that requires lock creation which gets us into a bad recursive loop
  * when we try to initialize the file pointer
  */
+#ifdef OPENSSL_SYS_UNIX
 #ifdef REPORT_RWLOCK_CONTENTION
 #warning "RWLOCK CONTENTION REPORTING NOT SUPPORTED, Disabling"
 #undef REPORT_RWLOCK_CONTENTION
@@ -29,7 +30,7 @@
 #include <execinfo.h>
 #include <unistd.h>
 #endif
-
+#endif
 #include <openssl/crypto.h>
 #include <crypto/cryptlib.h>
 #include <crypto/sparse_array.h>
