@@ -26,8 +26,10 @@ static void *aes_ccm_newctx(void *provctx, size_t keybits)
 
     CIPHER_PROV_CHECK(provctx, AES_128_CCM);
     ctx = OPENSSL_zalloc(sizeof(*ctx));
-    if (ctx != NULL)
+    if (ctx != NULL) {
         ossl_ccm_initctx(&ctx->base, keybits, ossl_prov_aes_hw_ccm(keybits));
+        OSSL_FIPS_IND_INIT(ctx)
+    }
     return ctx;
 }
 
@@ -62,9 +64,16 @@ static void aes_ccm_freectx(void *vctx)
     OPENSSL_clear_free(ctx, sizeof(*ctx));
 }
 
+static int aes_ccm_get_ctx_params(void *vctx, OSSL_PARAM params[])
+{
+    PROV_AES_CCM_CTX *ctx = (PROV_AES_CCM_CTX *)vctx;
+
+    return ossl_ccm_get_ctx_params(ctx, params) && OSSL_FIPS_IND_GET_CTX_PARAM(ctx, params);
+}
+
 /* ossl_aes128ccm_functions */
-IMPLEMENT_aead_cipher(aes, ccm, CCM, AEAD_FLAGS, 128, 8, 96);
+IMPLEMENT_aead_cipher_fips(aes, ccm, CCM, AEAD_FLAGS, 128, 8, 96);
 /* ossl_aes192ccm_functions */
-IMPLEMENT_aead_cipher(aes, ccm, CCM, AEAD_FLAGS, 192, 8, 96);
+IMPLEMENT_aead_cipher_fips(aes, ccm, CCM, AEAD_FLAGS, 192, 8, 96);
 /* ossl_aes256ccm_functions */
-IMPLEMENT_aead_cipher(aes, ccm, CCM, AEAD_FLAGS, 256, 8, 96);
+IMPLEMENT_aead_cipher_fips(aes, ccm, CCM, AEAD_FLAGS, 256, 8, 96);

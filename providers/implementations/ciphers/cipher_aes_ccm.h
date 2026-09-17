@@ -13,6 +13,7 @@
 #include <openssl/aes.h>
 #include "prov/ciphercommon.h"
 #include "prov/ciphercommon_ccm.h"
+#include "prov/securitycheck.h"
 #include "crypto/aes_platform.h"
 
 typedef struct prov_aes_ccm_ctx_st {
@@ -46,6 +47,7 @@ typedef struct prov_aes_ccm_ctx_st {
         } s390x;
 #endif /* defined(OPENSSL_CPUID_OBJ) && defined(__s390__) */
     } ccm;
+    OSSL_FIPS_IND_DECLARE
 } PROV_AES_CCM_CTX;
 
 int ossl_cipher_set_ccm_aes_initkey(PROV_CCM_CTX *ctx,
