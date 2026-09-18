@@ -39,7 +39,7 @@ use OpenSSL::paramnames qw(produce_param_decoder);
                           ['OSSL_KDF_PARAM_MODE',                    'mode',   'int'],
                           ['OSSL_KDF_PARAM_SALT',                    'salt',   'octet_string'],
                           ['OSSL_KDF_PARAM_INFO',                    'info',   'octet_string'],
-                          ['OSSL_KDF_PARAM_FIPS_APPROVED_INDICATOR', 'ind',    'int', 'fips'],
+                          ['OSSL_KDF_PARAM_FIPS_APPROVED_INDICATOR', 'ind',    'int'],
                          )); -}
 
 {- produce_param_decoder('hkdf_fixed_digest_set_ctx_params',

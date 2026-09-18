@@ -2330,12 +2330,22 @@ static int test_kdf_hmac_drbg_gettables(void)
     /* Fail if we pass the wrong type for params */
     params[1] = OSSL_PARAM_construct_end();
     for (i = 0; gettableparams[i].key != NULL; ++i) {
+        /*
+         * skip acutal integer parameters
+         */
+        if (gettableparams[i].data_type == OSSL_PARAM_INTEGER)
+            continue;
         params[0] = OSSL_PARAM_construct_int(gettableparams[i].key, &j);
         if (!TEST_int_le(EVP_KDF_CTX_get_params(kctx, params), 0))
             goto err;
     }
     /* fail to get params if they are not set yet */
     for (i = 0; gettableparams[i].key != NULL; ++i) {
+        /*
+         * skip any parameter that isn't actually a utf8 string
+         */
+        if (gettableparams[i].data_type != OSSL_PARAM_UTF8_STRING)
+            continue;
         params[0] = OSSL_PARAM_construct_utf8_string(gettableparams[i].key,
             buf, sizeof(buf));
         if (!TEST_int_le(EVP_KDF_CTX_get_params(kctx, params), 0))
