@@ -17,7 +17,7 @@ use OpenSSL::paramnames qw(produce_param_decoder);
                           ['OSSL_SIGNATURE_PARAM_DIGEST',                  'digest', 'utf8_string'],
                           ['OSSL_SIGNATURE_PARAM_NONCE_TYPE',              'nonce',  'uint'],
                           ['OSSL_SIGNATURE_PARAM_FIPS_VERIFY_MESSAGE',     'verify', 'uint', 'fips'],
-                          ['OSSL_SIGNATURE_PARAM_FIPS_APPROVED_INDICATOR', 'ind',    'int', 'fips'],
+                          ['OSSL_SIGNATURE_PARAM_FIPS_APPROVED_INDICATOR', 'ind',    'int'],
                          )); -}
 
 {- produce_param_decoder('ecdsa_set_ctx_params',
