@@ -28,9 +28,7 @@ struct tdes_get_param_list_st {
 struct tdes_get_ctx_param_list_st {
     struct ossl_cipher_get_ctx_param_list_st common;
     OSSL_PARAM *rand;
-#ifdef FIPS_MODULE
     OSSL_PARAM *ind;
-#endif
 };
 
 struct tdes_set_ctx_param_list_st {
