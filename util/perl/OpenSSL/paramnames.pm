@@ -177,6 +177,7 @@ my %params = (
     'OSSL_DIGEST_PARAM_FUNCTION_NAME' =>    "function-name", # utf8 string
     'OSSL_DIGEST_PARAM_CUSTOMIZATION' =>    "customization", # utf8 string
     'OSSL_DIGEST_PARAM_PROPERTIES' => '*OSSL_ALG_PARAM_PROPERTIES',# utf8 string
+    'OSSL_DIGEST_PARAM_FIPS_APPROVED_INDICATOR' => '*OSSL_ALG_PARAM_FIPS_APPROVED_INDICATOR', # int, 0 or 1
 
 # external mu digest parameters
     'OSSL_DIGEST_PARAM_MU_PUB_KEY' =>        "pub",                        # octet string
