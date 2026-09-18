@@ -23,6 +23,7 @@
 struct des_get_ctx_param_list_st {
     struct ossl_cipher_get_ctx_param_list_st common;
     OSSL_PARAM *rand;
+    OSSL_PARAM *ind;
 };
 
 #define des_get_ctx_params_st des_get_ctx_param_list_st

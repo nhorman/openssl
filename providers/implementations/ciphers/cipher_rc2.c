@@ -25,6 +25,7 @@ struct rc2_get_ctx_param_list_st {
     OSSL_PARAM *bits;
     OSSL_PARAM *algid;
     OSSL_PARAM *oldid;
+    OSSL_PARAM *ind;
 };
 
 struct rc2_set_ctx_param_list_st {

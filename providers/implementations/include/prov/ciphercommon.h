@@ -369,6 +369,7 @@ struct ossl_cipher_get_ctx_param_list_st {
     OSSL_PARAM *iv; /* all ciphers */
     OSSL_PARAM *updiv; /* all ciphers */
     OSSL_PARAM *tlsmac; /* generic cipher */
+    OSSL_PARAM *ind; /* fips indicator */
 };
 
 struct ossl_cipher_set_ctx_param_list_st {

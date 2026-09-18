@@ -55,6 +55,7 @@
 struct cipher_cts_get_ctx_param_list_st {
     struct ossl_cipher_get_ctx_param_list_st common;
     OSSL_PARAM *mode;
+    OSSL_PARAM *ind;
 };
 
 struct cipher_cts_set_ctx_param_list_st {
