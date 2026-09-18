@@ -57,7 +57,7 @@ IF[{- !$disabled{tests} -}]
           crltest danetest bad_dtls_test lhash_test sparse_array_test \
           conf_include_test params_api_test params_conversion_test \
           constant_time_test crypto_memcmp_test ct_validation_helpers_test \
-          safe_math_test verify_extra_test clienthellotest \
+          safe_math_test verify_extra_test evp_fipsind_test clienthellotest \
           packettest asynctest secmemtest srptest memleaktest stack_test \
           asn1_string_poison_test \
           ct_test threadstest d2i_test \
@@ -241,9 +241,14 @@ IF[{- !$disabled{tests} -}]
     DEFINE[evp_test]=NO_LEGACY_MODULE
   ENDIF
 
+  SOURCE[evp_fipsind_test] = fips_indicator_test.c
+  INCLUDE[evp_fipsind_test]=../include ../apps/include
+  DEPEND[evp_fipsind_test] =../libcrypto.a libtestutil.a
+
   SOURCE[evp_extra_test]=evp_extra_test.c fake_rsaprov.c fake_pipelineprov.c \
                          helpers/predefined_dsaparams.c \
                          helpers/predefined_dhparams.c
+
   INCLUDE[evp_extra_test]=../include ../apps/include \
                           ../providers/common/include \
                           ../providers/implementations/include
