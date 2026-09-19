@@ -21,11 +21,15 @@ struct indicator_check_data_st {
     int ret;
 };
 
-static int check_cipher_indicator_params(OSSL_LIB_CTX *ctx, EVP_CIPHER_CTX *cctx, const char *name, const char *propq)
+static int check_cipher_indicator_params(OSSL_LIB_CTX *ctx, EVP_CIPHER_CTX *cctx,
+    const char *name, const char *propq,
+    int expect_approved)
 {
     EVP_CIPHER *testciph = NULL;
     const OSSL_PARAM *params;
     const OSSL_PARAM *p;
+    int approved = -1;
+    OSSL_PARAM testp[2] = { OSSL_PARAM_int(OSSL_ALG_PARAM_FIPS_APPROVED_INDICATOR, &approved), OSSL_PARAM_END };
     int ret = 0;
 
     /*
@@ -66,6 +70,18 @@ static int check_cipher_indicator_params(OSSL_LIB_CTX *ctx, EVP_CIPHER_CTX *cctx
         goto out;
     }
 
+    /*
+     * Get the indicator
+     */
+    if (!EVP_CIPHER_CTX_get_params(cctx, testp)) {
+        TEST_error("Failed to get indicator parameter for %s property %s", name, propq);
+        goto out;
+    }
+
+    if (!OSSL_PARAM_get_int(&testp[0], &approved)) {
+        TEST_error("Failed to extract integer param for %s property %s", name, propq);
+        goto out;
+    }
     ret = 1;
 out:
     EVP_CIPHER_free(testciph);
@@ -94,10 +110,10 @@ static void check_cipher_fips_indicator(EVP_CIPHER *cph, void *arg)
         return;
     }
 
-    if (!check_cipher_indicator_params(ind_data->ctx, cctx, name, "provider=default"))
+    if (!check_cipher_indicator_params(ind_data->ctx, cctx, name, "provider=default", 0))
         goto out;
 
-    if (!check_cipher_indicator_params(ind_data->ctx, cctx, name, "fips=yes")) {
+    if (!check_cipher_indicator_params(ind_data->ctx, cctx, name, "fips=yes", 1)) {
         ERR_print_errors_fp(stderr);
         goto out;
     }
