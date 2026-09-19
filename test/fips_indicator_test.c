@@ -82,6 +82,12 @@ static int check_cipher_indicator_params(OSSL_LIB_CTX *ctx, EVP_CIPHER_CTX *cctx
         TEST_error("Failed to extract integer param for %s property %s", name, propq);
         goto out;
     }
+
+    if (approved != expect_approved) {
+        TEST_error("Alg %s property %s got approved %d expected %d", name, propq, approved, expect_approved);
+        goto out;
+    }
+
     ret = 1;
 out:
     EVP_CIPHER_free(testciph);
