@@ -43,9 +43,11 @@ static int check_cipher_indicator_params(OSSL_LIB_CTX *ctx, EVP_CIPHER_CTX *cctx
     }
 
     /*
-     * Init the context for encryption
+     * Init the context for decryption
+     * Note: We're doing decryption here because every fips approved algorithm
+     * gets an approved indicator that we can test for
      */
-    if (!TEST_true(EVP_EncryptInit_ex(cctx, testciph, NULL, NULL, NULL)))
+    if (!TEST_int_eq(EVP_DecryptInit_ex(cctx, testciph, NULL, NULL, NULL), 1))
         goto out;
 
     /*
@@ -95,8 +97,10 @@ static void check_cipher_fips_indicator(EVP_CIPHER *cph, void *arg)
     if (!check_cipher_indicator_params(ind_data->ctx, cctx, name, "provider=default"))
         goto out;
 
-    if (!check_cipher_indicator_params(ind_data->ctx, cctx, name, "fips=yes"))
+    if (!check_cipher_indicator_params(ind_data->ctx, cctx, name, "fips=yes")) {
+        ERR_print_errors_fp(stderr);
         goto out;
+    }
 
     ret = 1;
 out:
