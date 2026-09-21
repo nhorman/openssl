@@ -16,6 +16,7 @@
 #include "testutil.h"
 
 static OSSL_LIB_CTX *libctx = NULL;
+static int skip_legacy = 0;
 
 /*
  * Struct to store method specific functions for testing an indicator
@@ -334,6 +335,10 @@ static void check_fips_indicator(void *alg, void *arg)
         goto out;
     }
 
+    if (skip_legacy == 0) {
+        if (!check_indicator_params(ind_data, cctx, name, "provider=legacy", 0))
+            goto out;
+    }
     ret = 1;
 out:
     ind_data->fns->free_ctx(cctx);
@@ -427,6 +432,9 @@ int setup_tests(void)
             return 0;
         }
     }
+
+    if (!OSSL_PROVIDER_load(libctx, "legacy"))
+        skip_legacy = 1;
 
     ADD_TEST(test_evp_alg_fips_indicator_present);
 
