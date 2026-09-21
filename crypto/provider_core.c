@@ -179,6 +179,7 @@ struct ossl_provider_st {
     OSSL_FUNC_provider_random_bytes_fn *random_bytes;
     OSSL_FUNC_provider_query_operation_fn *query_operation;
     OSSL_FUNC_provider_unquery_operation_fn *unquery_operation;
+    OSSL_FUNC_provider_set_default_fips_approved_fn *set_default_fips_approved;
 
     /*
      * Cache of bit to indicate of query_operation() has been called on
@@ -1091,6 +1092,9 @@ static int provider_init(OSSL_PROVIDER *prov)
                 break;
             case OSSL_FUNC_PROVIDER_UNQUERY_OPERATION:
                 prov->unquery_operation = OSSL_FUNC_provider_unquery_operation(provider_dispatch);
+                break;
+            case OSSL_FUNC_PROVIDER_SET_DEFAULT_FIPS_INDICATOR:
+                prov->set_default_fips_approved = OSSL_FUNC_provider_set_default_fips_approved(provider_dispatch);
                 break;
 #ifndef OPENSSL_NO_ERR
 #ifndef FIPS_MODULE

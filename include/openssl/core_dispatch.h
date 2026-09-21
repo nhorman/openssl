@@ -253,6 +253,8 @@ OSSL_CORE_MAKE_FUNC(int, provider_get_capabilities, (void *provctx, const char *
 OSSL_CORE_MAKE_FUNC(int, provider_self_test, (void *provctx))
 #define OSSL_FUNC_PROVIDER_RANDOM_BYTES 1032
 OSSL_CORE_MAKE_FUNC(int, provider_random_bytes, (void *provctx, int which, void *buf, size_t n, unsigned int strength))
+#define OSSL_FUNC_PROVIDER_SET_DEFAULT_FIPS_INDICATOR 1033
+OSSL_CORE_MAKE_FUNC(int, provider_set_default_fips_approved, (OSSL_PARAM *p))
 
 /* Libssl related functions */
 #define OSSL_FUNC_SSL_QUIC_TLS_CRYPTO_SEND 2001
