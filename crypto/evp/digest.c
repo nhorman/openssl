@@ -656,6 +656,11 @@ const OSSL_PARAM *EVP_MD_CTX_settable_params(EVP_MD_CTX *ctx)
 int EVP_MD_CTX_get_params(EVP_MD_CTX *ctx, OSSL_PARAM params[])
 {
     EVP_PKEY_CTX *pctx = ctx->pctx;
+    int set_indicator = 0;
+
+    if (!ossl_provider_set_default_fips_indicator(EVP_MD_get0_provider(ctx->digest), params))
+        return 0;
+    set_indicator = 1;
 
     /* If we have a pctx then we should try that first */
     if (pctx != NULL
@@ -669,7 +674,7 @@ int EVP_MD_CTX_get_params(EVP_MD_CTX *ctx, OSSL_PARAM params[])
     if (ctx->digest != NULL && ctx->digest->get_ctx_params != NULL)
         return ctx->digest->get_ctx_params(ctx->algctx, params);
 
-    return 0;
+    return set_indicator;
 }
 
 const OSSL_PARAM *EVP_MD_gettable_ctx_params(const EVP_MD *md)
