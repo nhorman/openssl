@@ -15,6 +15,7 @@
 #include <openssl/rand.h>
 #include <openssl/params.h>
 #include <openssl/core_names.h>
+#include <openssl/fipskey.h>
 #include "internal/cryptlib.h"
 #include "internal/provider.h"
 #include "internal/core.h"
@@ -1168,9 +1169,43 @@ int EVP_CIPHER_CTX_set_params(EVP_CIPHER_CTX *ctx, const OSSL_PARAM params[])
 
 int EVP_CIPHER_CTX_get_params(EVP_CIPHER_CTX *ctx, OSSL_PARAM params[])
 {
-    if (ctx->cipher != NULL && ctx->cipher->get_ctx_params != NULL)
-        return ctx->cipher->get_ctx_params(ctx->algctx, params);
-    return 0;
+    char *name = "";
+    OSSL_PARAM prov_params[2] = { OSSL_PARAM_END, OSSL_PARAM_END };
+    const OSSL_PARAM *p;
+
+    if (ctx->cipher != NULL && ctx->cipher->get_ctx_params != NULL) {
+        if (!ctx->cipher->get_ctx_params(ctx->algctx, params))
+            return 0;
+    }
+    p = OSSL_PARAM_locate_const(params, OSSL_ALG_PARAM_FIPS_APPROVED_INDICATOR);
+    if (p != NULL && !OSSL_PARAM_modified(p)) {
+        prov_params[0] = OSSL_PARAM_construct_utf8_ptr(OSSL_PROV_PARAM_NAME, &name, sizeof(name));
+        /*
+         * The caller is requesting a fips indicator, and the underlying algorithm didn't modify
+         * the parameter, implying that this alg has no getter for that param.
+         * That means its either always approved if it came from the fips provider, or its never approved
+         */
+        if (ctx->cipher != NULL && ossl_provider_get_params(EVP_CIPHER_get0_provider(ctx->cipher), prov_params)) {
+            if (!strcmp(name, FIPS_VENDOR)) {
+                /*
+                 * This algs provider is the fips provider. Since the underlying alg didn't set the indicator
+                 * That means that we're always approved for fips
+                 */
+                OSSL_PARAM_set_int((OSSL_PARAM *)p, 1);
+            } else {
+                /*
+                 * This alg isn't from the fips provider, so its never approved
+                 */
+                OSSL_PARAM_set_int((OSSL_PARAM *)p, 0);
+            }
+        } else {
+            /*
+             * We failed to get the provider name, so this can't be an approved alg
+             */
+            OSSL_PARAM_set_int((OSSL_PARAM *)p, 0);
+        }
+    }
+    return 1;
 }
 
 const OSSL_PARAM *EVP_CIPHER_gettable_params(const EVP_CIPHER *cipher)
