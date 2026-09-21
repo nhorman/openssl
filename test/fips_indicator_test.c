@@ -183,6 +183,62 @@ static struct evp_method_fns kdf_methods = {
     kdf_ctx_get_param
 };
 
+/*
+ * Method functions for EVP_MAC
+ */
+#define DUMMY_MAC_CTX 12345
+static void *alloc_mac_ctx(void)
+{
+    return (void *)DUMMY_MAC_CTX;
+}
+
+static void free_mac_ctx(void *ctx)
+{
+    if (ctx == (void *)DUMMY_MAC_CTX)
+        return;
+    EVP_MAC_CTX_free((EVP_MAC_CTX *)ctx);
+}
+
+static const char *mac_get_name(void *alg)
+{
+    return EVP_MAC_get0_name((EVP_MAC *)alg);
+}
+
+static void *mac_fetch(OSSL_LIB_CTX *ctx, const char *name, const char *propq)
+{
+    return EVP_MAC_fetch(ctx, name, propq);
+}
+
+static void mac_free(void *alg)
+{
+    EVP_MAC_free((EVP_MAC *)alg);
+}
+
+static int evp_mac_init(void **ctx, void *alg)
+{
+    if (*ctx != (void *)DUMMY_MAC_CTX)
+        return 0;
+    *ctx = EVP_MAC_CTX_new((EVP_MAC *)alg);
+    if (*ctx == NULL)
+        return 0;
+    return 1;
+}
+
+static int mac_ctx_get_param(void *ctx, OSSL_PARAM params[])
+{
+    return EVP_MAC_CTX_get_params((EVP_MAC_CTX *)ctx, params);
+}
+
+static struct evp_method_fns mac_methods = {
+    alloc_mac_ctx,
+    free_mac_ctx,
+    mac_get_name,
+    mac_fetch,
+    mac_free,
+    evp_mac_init,
+    mac_ctx_get_param
+};
+
 struct indicator_check_data_st {
     OSSL_LIB_CTX *ctx;
     struct evp_method_fns *fns;
@@ -300,6 +356,11 @@ static void check_kdf_fips_indicator(EVP_KDF *kdf, void *arg)
     check_fips_indicator((void *)kdf, arg);
 }
 
+static void check_mac_fips_indicator(EVP_MAC *mac, void *arg)
+{
+    check_fips_indicator((void *)mac, arg);
+}
+
 static int test_evp_alg_fips_indicator_present(void)
 {
     int ret = 0;
@@ -319,6 +380,11 @@ static int test_evp_alg_fips_indicator_present(void)
 
     ind_data.fns = &kdf_methods;
     EVP_KDF_do_all_provided(libctx, check_kdf_fips_indicator, &ind_data);
+    if (ind_data.ret == 0)
+        goto out;
+
+    ind_data.fns = &mac_methods;
+    EVP_MAC_do_all_provided(libctx, check_mac_fips_indicator, &ind_data);
 
 out:
     ret = ind_data.ret;
