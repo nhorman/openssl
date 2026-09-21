@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <openssl/evp.h>
+#include <openssl/kdf.h>
 #include <openssl/core_names.h>
 #include "testutil.h"
 
@@ -26,7 +27,7 @@ struct evp_method_fns {
     const char *(*get_name)(void *alg);
     void *(*alg_fetch)(OSSL_LIB_CTX *libctx, const char *name, const char *propq);
     void (*alg_free)(void *alg);
-    int (*op_init)(void *ctx, void *alg);
+    int (*op_init)(void **ctx, void *alg);
     int (*get_ctx_param)(void *ctx, OSSL_PARAM params[]);
 };
 
@@ -58,9 +59,9 @@ static void cipher_free(void *alg)
     EVP_CIPHER_free((EVP_CIPHER *)alg);
 }
 
-static int evp_cipher_init(void *ctx, void *alg)
+static int evp_cipher_init(void **ctx, void *alg)
 {
-    return EVP_DecryptInit_ex((EVP_CIPHER_CTX *)ctx, (EVP_CIPHER *)alg, NULL, NULL, NULL);
+    return EVP_DecryptInit_ex((EVP_CIPHER_CTX *)*ctx, (EVP_CIPHER *)alg, NULL, NULL, NULL);
 }
 
 static int cipher_ctx_get_param(void *ctx, OSSL_PARAM params[])
@@ -106,9 +107,9 @@ static void md_free(void *alg)
     EVP_MD_free((EVP_MD *)alg);
 }
 
-static int evp_md_init(void *ctx, void *alg)
+static int evp_md_init(void **ctx, void *alg)
 {
-    return EVP_DigestInit((EVP_MD_CTX *)ctx, (EVP_MD *)alg);
+    return EVP_DigestInit((EVP_MD_CTX *)*ctx, (EVP_MD *)alg);
 }
 
 static int md_ctx_get_param(void *ctx, OSSL_PARAM params[])
@@ -124,6 +125,62 @@ static struct evp_method_fns digest_methods = {
     md_free,
     evp_md_init,
     md_ctx_get_param
+};
+
+/*
+ * Method functions for EVP_KDF
+ */
+#define DUMMY_KDF_CTX 12345
+static void *alloc_kdf_ctx(void)
+{
+    return (void *)DUMMY_KDF_CTX;
+}
+
+static void free_kdf_ctx(void *ctx)
+{
+    if (ctx == (void *)DUMMY_KDF_CTX)
+        return;
+    EVP_KDF_CTX_free((EVP_KDF_CTX *)ctx);
+}
+
+static const char *kdf_get_name(void *alg)
+{
+    return EVP_KDF_get0_name((EVP_KDF *)alg);
+}
+
+static void *kdf_fetch(OSSL_LIB_CTX *ctx, const char *name, const char *propq)
+{
+    return EVP_KDF_fetch(ctx, name, propq);
+}
+
+static void kdf_free(void *alg)
+{
+    EVP_KDF_free((EVP_KDF *)alg);
+}
+
+static int evp_kdf_init(void **ctx, void *alg)
+{
+    if (*ctx != (void *)DUMMY_KDF_CTX)
+        return 0;
+    *ctx = EVP_KDF_CTX_new((EVP_KDF *)alg);
+    if (*ctx == NULL)
+        return 0;
+    return 1;
+}
+
+static int kdf_ctx_get_param(void *ctx, OSSL_PARAM params[])
+{
+    return EVP_KDF_CTX_get_params((EVP_KDF_CTX *)ctx, params);
+}
+
+static struct evp_method_fns kdf_methods = {
+    alloc_kdf_ctx,
+    free_kdf_ctx,
+    kdf_get_name,
+    kdf_fetch,
+    kdf_free,
+    evp_kdf_init,
+    kdf_ctx_get_param
 };
 
 struct indicator_check_data_st {
@@ -162,7 +219,7 @@ static int check_indicator_params(struct indicator_check_data_st *ind_data, void
      * Note: We're doing decryption here because every fips approved algorithm
      * gets an approved indicator that we can test for
      */
-    if (!TEST_int_eq(ind_data->fns->op_init(cctx, testevp), 1))
+    if (!TEST_int_eq(ind_data->fns->op_init(&cctx, testevp), 1))
         goto out;
 
     /*
@@ -238,6 +295,11 @@ static void check_digest_fips_indicator(EVP_MD *md, void *arg)
     check_fips_indicator((void *)md, arg);
 }
 
+static void check_kdf_fips_indicator(EVP_KDF *kdf, void *arg)
+{
+    check_fips_indicator((void *)kdf, arg);
+}
+
 static int test_evp_alg_fips_indicator_present(void)
 {
     int ret = 0;
@@ -252,6 +314,11 @@ static int test_evp_alg_fips_indicator_present(void)
 
     ind_data.fns = &digest_methods;
     EVP_MD_do_all_provided(libctx, check_digest_fips_indicator, &ind_data);
+    if (ind_data.ret == 0)
+        goto out;
+
+    ind_data.fns = &kdf_methods;
+    EVP_KDF_do_all_provided(libctx, check_kdf_fips_indicator, &ind_data);
 
 out:
     ret = ind_data.ret;
