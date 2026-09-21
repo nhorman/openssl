@@ -82,6 +82,7 @@ OSSL_LIB_CTX *ossl_provider_libctx(const OSSL_PROVIDER *prov);
 void ossl_provider_teardown(const OSSL_PROVIDER *prov);
 const OSSL_PARAM *ossl_provider_gettable_params(const OSSL_PROVIDER *prov);
 int ossl_provider_get_params(const OSSL_PROVIDER *prov, OSSL_PARAM params[]);
+int ossl_provider_set_default_fips_indicator(const OSSL_PROVIDER *prov, OSSL_PARAM params[]);
 int ossl_provider_get_capabilities(const OSSL_PROVIDER *prov,
     const char *capability,
     OSSL_CALLBACK *cb,

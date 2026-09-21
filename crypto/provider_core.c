@@ -1846,6 +1846,43 @@ int ossl_provider_get_params(const OSSL_PROVIDER *prov, OSSL_PARAM params[])
 }
 
 /**
+ * @brief sets the default value for the fips indicator based on the allocated provider
+ *
+ * This function interrogates an OSSL_PARAM list, and if the OSSL_ALG_PARAM_FIPS_APPROVED_INDICATOR
+ * sets it to the default value the provider requests.  This is here as a convience so that we don't
+ * have to add indicators to algorithms that are always approved or always unapproved
+ * @param prov - the provider that allocated the alg
+ * @para params - array of parameters that may contain the indicator parameter
+ *
+ */
+int ossl_provider_set_default_fips_indicator(const OSSL_PROVIDER *prov, OSSL_PARAM params[])
+{
+    const OSSL_PARAM *p = OSSL_PARAM_locate_const(params, OSSL_ALG_PARAM_FIPS_APPROVED_INDICATOR);
+
+    /*
+     * No found parameter means that the requesting caller doesn't care about this parameter
+     * so just return success
+     */
+    if (p == NULL)
+        return 1;
+
+    /*
+     * Start by defaulting the parameter to 0.  This is ok to do outside the fips boundary
+     * as it will by default be unapproved
+     */
+    if (!OSSL_PARAM_set_int((OSSL_PARAM *)p, 0))
+        return 0;
+
+    /*
+     * If the provider offers a set default method, call it, allowing the provider to
+     * override the default to 1 (approved)
+     */
+    if (prov->set_default_fips_approved != NULL)
+        return prov->set_default_fips_approved((OSSL_PARAM *)p);
+    return 1;
+}
+
+/**
  * @brief Performs a self-test on the given provider.
  *
  * This function calls the `self_test` callback of the given provider to
