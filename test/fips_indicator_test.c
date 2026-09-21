@@ -240,6 +240,62 @@ static struct evp_method_fns mac_methods = {
     mac_ctx_get_param
 };
 
+/*
+ * Method functions for EVP_RAND
+ */
+#define DUMMY_RAND_CTX 12345
+static void *alloc_rand_ctx(void)
+{
+    return (void *)DUMMY_RAND_CTX;
+}
+
+static void free_rand_ctx(void *ctx)
+{
+    if (ctx == (void *)DUMMY_RAND_CTX)
+        return;
+    EVP_RAND_CTX_free((EVP_RAND_CTX *)ctx);
+}
+
+static const char *rand_get_name(void *alg)
+{
+    return EVP_RAND_get0_name((EVP_RAND *)alg);
+}
+
+static void *rand_fetch(OSSL_LIB_CTX *ctx, const char *name, const char *propq)
+{
+    return EVP_RAND_fetch(ctx, name, propq);
+}
+
+static void rand_free(void *alg)
+{
+    EVP_RAND_free((EVP_RAND *)alg);
+}
+
+static int evp_rand_init(void **ctx, void *alg)
+{
+    if (*ctx != (void *)DUMMY_RAND_CTX)
+        return 0;
+    *ctx = EVP_RAND_CTX_new((EVP_RAND *)alg, NULL);
+    if (*ctx == NULL)
+        return 0;
+    return 1;
+}
+
+static int rand_ctx_get_param(void *ctx, OSSL_PARAM params[])
+{
+    return EVP_RAND_CTX_get_params((EVP_RAND_CTX *)ctx, params);
+}
+
+static struct evp_method_fns rand_methods = {
+    alloc_rand_ctx,
+    free_rand_ctx,
+    rand_get_name,
+    rand_fetch,
+    rand_free,
+    evp_rand_init,
+    rand_ctx_get_param
+};
+
 struct indicator_check_data_st {
     OSSL_LIB_CTX *ctx;
     struct evp_method_fns *fns;
@@ -366,6 +422,11 @@ static void check_mac_fips_indicator(EVP_MAC *mac, void *arg)
     check_fips_indicator((void *)mac, arg);
 }
 
+static void check_rand_fips_indicator(EVP_RAND *rand, void *arg)
+{
+    check_fips_indicator((void *)rand, arg);
+}
+
 static int test_evp_alg_fips_indicator_present(void)
 {
     int ret = 0;
@@ -390,6 +451,11 @@ static int test_evp_alg_fips_indicator_present(void)
 
     ind_data.fns = &mac_methods;
     EVP_MAC_do_all_provided(libctx, check_mac_fips_indicator, &ind_data);
+    if (ind_data.ret == 0)
+        goto out;
+
+    ind_data.fns = &rand_methods;
+    EVP_RAND_do_all_provided(libctx, check_rand_fips_indicator, &ind_data);
 
 out:
     ret = ind_data.ret;
