@@ -209,6 +209,8 @@ int EVP_MAC_get_params(EVP_MAC *mac, OSSL_PARAM params[])
 
 int EVP_MAC_CTX_get_params(EVP_MAC_CTX *ctx, OSSL_PARAM params[])
 {
+    if (!ossl_provider_set_default_fips_indicator(EVP_MAC_get0_provider(ctx->meth), params))
+        return 0;
     if (ctx->meth->get_ctx_params != NULL)
         return ctx->meth->get_ctx_params(ctx->algctx, params);
     return 1;
