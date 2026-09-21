@@ -30,6 +30,8 @@
 #include "crypto/evp.h"
 #include "testutil.h"
 
+static int all_unapproved = 0;
+
 typedef struct evp_test_buffer_st EVP_TEST_BUFFER;
 DEFINE_STACK_OF(EVP_TEST_BUFFER)
 
@@ -138,6 +140,19 @@ static int fips_indicator_cb(const char *type, const char *desc,
 
 static int check_fips_approved(EVP_TEST *t, int approved)
 {
+
+    if (all_unapproved == 1) {
+        if (approved) {
+            TEST_error("Got an approved algorithm when nothing can be approved");
+            return 0;
+        }
+        /*
+         * If the fips provider isn't availble (as shown by all_unapproved
+         * then nothing calls the unapproved callback
+         */
+        return 1;
+    }
+
     /*
      * If the expected result is approved
      * then it is expected that approved will be 1
@@ -5764,6 +5779,9 @@ int setup_tests(void)
         provider_name = "default";
     if (!test_get_libctx(&libctx, &prov_null, config_file, &libprov, provider_name))
         return 0;
+
+    if (!OSSL_PROVIDER_available(libctx, "fips"))
+        all_unapproved = 1;
 
     n = test_get_argument_count();
     if (n == 0)
