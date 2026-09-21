@@ -313,8 +313,11 @@ int EVP_KDF_get_params(EVP_KDF *kdf, OSSL_PARAM params[])
 
 int EVP_KDF_CTX_get_params(EVP_KDF_CTX *ctx, OSSL_PARAM params[])
 {
-    if (ctx->meth->get_ctx_params != NULL)
+    if (ctx->meth->get_ctx_params != NULL) {
+        if (!ossl_provider_set_default_fips_indicator(EVP_KDF_get0_provider(ctx->meth), params))
+            return 0;
         return ctx->meth->get_ctx_params(ctx->algctx, params);
+    }
     return 1;
 }
 
