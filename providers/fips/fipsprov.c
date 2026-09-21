@@ -48,6 +48,7 @@ static OSSL_FUNC_provider_get_params_fn fips_get_params;
 static OSSL_FUNC_provider_query_operation_fn fips_query;
 static OSSL_FUNC_provider_query_operation_fn fips_query_internal;
 static OSSL_FUNC_provider_random_bytes_fn fips_random_bytes;
+static OSSL_FUNC_provider_set_default_fips_approved_fn fips_set_default_approved;
 
 #define ALGC(NAMES, FUNC, CHECK)                        \
     {                                                   \
@@ -137,6 +138,23 @@ static int fips_random_bytes(ossl_unused void *vprov, int which,
     if (which == OSSL_PROV_RANDOM_PRIVATE)
         return RAND_priv_bytes_ex(libctx, buf, n, strength);
     return RAND_bytes_ex(libctx, buf, n, strength);
+}
+
+static int fips_set_default_approved(OSSL_PARAM *p)
+{
+
+    /*
+     * if the caller isn't asking for the approved indicator, just return success
+     */
+    if (p != NULL) {
+        /*
+         * All fips algorithms default to approved, and individual algs
+         * can reset that to zero when they actually interrogate the indicator
+         */
+        if (!OSSL_PARAM_set_int(p, 1))
+            return 0;
+    }
+    return 1;
 }
 
 static const OSSL_PARAM *fips_gettable_params(void *provctx)
@@ -785,6 +803,7 @@ static const OSSL_DISPATCH fips_dispatch_table[] = {
         (void (*)(void))ossl_prov_get_capabilities },
     { OSSL_FUNC_PROVIDER_SELF_TEST, (void (*)(void))fips_self_test },
     { OSSL_FUNC_PROVIDER_RANDOM_BYTES, (void (*)(void))fips_random_bytes },
+    { OSSL_FUNC_PROVIDER_SET_DEFAULT_FIPS_INDICATOR, (void (*)(void))fips_set_default_approved },
     OSSL_DISPATCH_END
 };
 
