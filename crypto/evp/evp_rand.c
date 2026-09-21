@@ -421,6 +421,8 @@ EVP_RAND *EVP_RAND_CTX_get0_rand(EVP_RAND_CTX *ctx)
 static int evp_rand_get_ctx_params_locked(EVP_RAND_CTX *ctx,
     OSSL_PARAM params[])
 {
+    if (!ossl_provider_set_default_fips_indicator(EVP_RAND_get0_provider(ctx->meth), params))
+        return 0;
     return ctx->meth->get_ctx_params(ctx->algctx, params);
 }
 
