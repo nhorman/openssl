@@ -242,7 +242,11 @@ int ossl_gcm_get_ctx_params(void *vctx, OSSL_PARAM params[])
 
     if (p.gen != NULL && !OSSL_PARAM_set_uint(p.gen, ctx->iv_gen_rand))
         return 0;
-
+#ifdef FIPS_MODULE
+    if (p.ind != NULL
+        && !OSSL_PARAM_set_int(p.ind, 1))
+        return 0;
+#endif
     return 1;
 }
 

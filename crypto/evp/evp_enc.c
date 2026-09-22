@@ -1168,6 +1168,15 @@ int EVP_CIPHER_CTX_set_params(EVP_CIPHER_CTX *ctx, const OSSL_PARAM params[])
 
 int EVP_CIPHER_CTX_get_params(EVP_CIPHER_CTX *ctx, OSSL_PARAM params[])
 {
+    OSSL_PARAM *p;
+
+    /*
+     * Default any observed FIPS approved indicator to 0
+     */
+    p = OSSL_PARAM_locate(params, OSSL_ALG_PARAM_FIPS_APPROVED_INDICATOR);
+    if (p != NULL)
+        OSSL_PARAM_set_int(p, 0);
+
     if (ctx->cipher != NULL && ctx->cipher->get_ctx_params != NULL)
         return ctx->cipher->get_ctx_params(ctx->algctx, params);
     return 0;

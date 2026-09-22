@@ -55,6 +55,9 @@
 struct cipher_cts_get_ctx_param_list_st {
     struct ossl_cipher_get_ctx_param_list_st common;
     OSSL_PARAM *mode;
+#ifdef FIPS_MODULE
+    OSSL_PARAM *ind;
+#endif
 };
 
 struct cipher_cts_set_ctx_param_list_st {
@@ -130,6 +133,11 @@ int ossl_cipher_cbc_cts_get_ctx_params(void *vctx, OSSL_PARAM params[])
             return 0;
         }
     }
+#ifdef FIPS_MODULE
+    if (p.ind != NULL
+        && !OSSL_PARAM_set_int(p.ind, 1))
+        return 0;
+#endif
     return 1;
 }
 

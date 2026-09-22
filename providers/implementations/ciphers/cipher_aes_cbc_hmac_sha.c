@@ -281,6 +281,12 @@ static int aes_get_ctx_params(void *vctx, OSSL_PARAM params[])
         ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
         return 0;
     }
+#ifdef FIPS_MODULE
+    if (p.ind != NULL
+        && !OSSL_PARAM_set_int(p.ind, 1))
+        return 0;
+#endif
+
     return 1;
 }
 

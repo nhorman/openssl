@@ -608,6 +608,11 @@ int ossl_cipher_common_get_ctx_params(PROV_CIPHER_CTX *ctx, const struct ossl_ci
         ERR_raise(ERR_LIB_PROV, PROV_R_FAILED_TO_SET_PARAMETER);
         return 0;
     }
+#ifdef FIPS_MODULE
+    if (p->ind != NULL
+        && !OSSL_PARAM_set_int(p->ind, 1))
+        return 0;
+#endif
     return 1;
 }
 
