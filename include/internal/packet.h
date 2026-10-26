@@ -763,6 +763,8 @@ struct wpacket_st {
 /* QUIC variable-length integer length prefix */
 #define WPACKET_FLAGS_QUIC_VLINT 4
 
+#define WPACKET_FLAGS_STATIC_POOL 8
+
 /*
  * Initialise a WPACKET with the buffer in |buf|. The buffer must exist
  * for the whole time that the WPACKET is being used. Additionally |lenbytes| of

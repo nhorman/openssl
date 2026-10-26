@@ -100,16 +100,34 @@ static size_t maxmaxsize(size_t lenbytes)
     return ((size_t)1 << (lenbytes * 8)) - 1 + lenbytes;
 }
 
+#ifndef __has_builtin
+#define __has_builtin(x) 0
+#endif
+
 static ossl_inline WPACKET_SUB *wpacket_alloc_sub(WPACKET *wpkt)
 {
+    uint32_t idx;
+
     if (wpkt->spool == NULL || wpkt->spool->available == 0)
         return OPENSSL_zalloc(sizeof(*wpkt->subs));
-    return NULL;
+#if __has_builtin(__builtin_ffs)
+    idx = __builtin_ffs(wpkt->spool->available) - 1;
+#else
+    for (idx = 0; idx < sizeof(uint32_t) * 8; idx++) {
+        if (wpkt->spool->available & (1 << idx))
+            break;
+    }
+#endif
+    wpkt->spool->available &= (~(1 << idx));
+    memset(&wpkt->spool->pool[idx], 0, sizeof(WPACKET_SUB));
+    wpkt->spool->pool[idx].flags = WPACKET_FLAGS_STATIC_POOL;
+    return &wpkt->spool->pool[idx];
 }
 
 static ossl_inline void wpacket_release_sub(WPACKET *wpkt, WPACKET_SUB *sub)
 {
-    OPENSSL_free(sub);
+    if (sub != NULL && !(sub->flags & WPACKET_FLAGS_STATIC_POOL))
+        OPENSSL_free(sub);
 }
 
 static int wpacket_intern_init_len(WPACKET *pkt, size_t lenbytes)
@@ -219,7 +237,10 @@ int WPACKET_set_flags(WPACKET *pkt, unsigned int flags)
     if (!ossl_assert(pkt->subs != NULL))
         return 0;
 
-    pkt->subs->flags = flags;
+    /*
+     * preserve static pool flag
+     */
+    pkt->subs->flags = (pkt->subs->flags & WPACKET_FLAGS_STATIC_POOL) | flags;
 
     return 1;
 }
