@@ -717,6 +717,8 @@ typedef struct wpacket_sub_pool_st {
     WPACKET_SUB *pool;
 } WPACKET_SUB_POOL;
 
+#define INIT_WPACKET_SUB_POOL(subs) { ((1UL << OSSL_NELEM(subs)) - 1), (subs) }
+
 typedef struct wpacket_st WPACKET;
 struct wpacket_st {
     /* The buffer where we store the output data */

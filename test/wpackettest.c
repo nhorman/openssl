@@ -65,6 +65,8 @@ static int cleanup(WPACKET *pkt)
 static int test_WPACKET_init(void)
 {
     WPACKET pkt;
+    WPACKET_SUB subs[1];
+    WPACKET_SUB_POOL pool = INIT_WPACKET_SUB_POOL(subs);
     int i;
     size_t written;
     unsigned char sbuf[3];
@@ -115,7 +117,7 @@ static int test_WPACKET_init(void)
         return cleanup(&pkt);
 
     /* Test initialising from a fixed size buffer */
-    if (!TEST_true(WPACKET_init_static_len(&pkt, sbuf, sizeof(sbuf), 0, NULL))
+    if (!TEST_true(WPACKET_init_static_len(&pkt, sbuf, sizeof(sbuf), 0, &pool))
         /* Adding 3 bytes should succeed */
         || !TEST_true(WPACKET_put_bytes_u24(&pkt, 0xffffff))
         /* Adding 1 more byte should fail */
@@ -125,7 +127,7 @@ static int test_WPACKET_init(void)
         || !TEST_true(WPACKET_get_total_written(&pkt, &written))
         || !TEST_mem_eq(sbuf, written, fixed, sizeof(sbuf))
         /* Initialise with 1 len byte */
-        || !TEST_true(WPACKET_init_static_len(&pkt, sbuf, sizeof(sbuf), 1, NULL))
+        || !TEST_true(WPACKET_init_static_len(&pkt, sbuf, sizeof(sbuf), 1, &pool))
         /* Adding 2 bytes should succeed */
         || !TEST_true(WPACKET_put_bytes_u16(&pkt, 0xfeff))
         /* Adding 1 more byte should fail */

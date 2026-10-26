@@ -903,6 +903,8 @@ int DTLSv1_listen(SSL *ssl, BIO_ADDR *client)
 
         if (next == LISTEN_SEND_VERIFY_REQUEST) {
             WPACKET wpkt;
+            WPACKET_SUB subs[2];
+            WPACKET_SUB_POOL pool = INIT_WPACKET_SUB_POOL(subs);
             unsigned int version;
             size_t wreclen;
 
@@ -933,7 +935,7 @@ int DTLSv1_listen(SSL *ssl, BIO_ADDR *client)
                     wbuf,
                     ssl_get_max_send_fragment(s)
                         + DTLS1_RT_HEADER_LENGTH,
-                    0, NULL)
+                    0, &pool)
                 || !WPACKET_put_bytes_u8(&wpkt, SSL3_RT_HANDSHAKE)
                 || !WPACKET_put_bytes_u16(&wpkt, version)
                 /*

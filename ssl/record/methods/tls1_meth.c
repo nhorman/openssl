@@ -173,11 +173,13 @@ static int setup_record_header(const OSSL_RECORD_LAYER *rl, TLS_RL_RECORD *rec,
     unsigned char *buf, size_t buflen)
 {
     WPACKET hdr;
+    WPACKET_SUB subs[1];
+    WPACKET_SUB_POOL pool = INIT_WPACKET_SUB_POOL(subs);
     size_t hdrsize;
 
     if (buflen < EVP_AEAD_TLS1_AAD_LEN)
         return 0;
-    if (!WPACKET_init_static_len(&hdr, buf, EVP_AEAD_TLS1_AAD_LEN, 0, NULL)
+    if (!WPACKET_init_static_len(&hdr, buf, EVP_AEAD_TLS1_AAD_LEN, 0, &pool)
         || (rl->isdtls && !WPACKET_put_bytes_u16(&hdr, rl->epoch))
         || (rl->isdtls ? !WPACKET_put_bytes_u48(&hdr, rl->sequence)
                        : !WPACKET_put_bytes_u64(&hdr, rl->sequence))

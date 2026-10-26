@@ -187,10 +187,12 @@ static int dtls1_write_hm_header(unsigned char *msgheaderstart,
     size_t fraglen)
 {
     WPACKET msgheader;
+    WPACKET_SUB subs[1];
+    WPACKET_SUB_POOL pool = INIT_WPACKET_SUB_POOL(subs);
     size_t msgheaderlen;
 
     if (!WPACKET_init_static_len(&msgheader, msgheaderstart,
-            DTLS1_HM_HEADER_LENGTH, 0, NULL)
+            DTLS1_HM_HEADER_LENGTH, 0, &pool)
         || !WPACKET_put_bytes_u8(&msgheader, msg_type)
         || !WPACKET_put_bytes_u24(&msgheader, msg_len)
         || !WPACKET_put_bytes_u16(&msgheader, msg_seq)

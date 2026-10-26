@@ -349,7 +349,7 @@ static int wpacket_intern_close(WPACKET *pkt, WPACKET_SUB *sub, int doclose)
 
     if (doclose) {
         pkt->subs = sub->parent;
-        OPENSSL_free(sub);
+        wpacket_release_sub(pkt, sub);
     }
 
     return 1;
