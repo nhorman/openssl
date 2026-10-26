@@ -712,6 +712,11 @@ struct wpacket_sub {
     unsigned int flags;
 };
 
+typedef struct wpacket_sub_pool_st {
+    uint32_t available;
+    WPACKET_SUB *pool;
+} WPACKET_SUB_POOL;
+
 typedef struct wpacket_st WPACKET;
 struct wpacket_st {
     /* The buffer where we store the output data */
@@ -734,6 +739,8 @@ struct wpacket_st {
 
     /* Our sub-packets (always at least one if not finished) */
     WPACKET_SUB *subs;
+
+    WPACKET_SUB_POOL *spool;
 
     /* Writing from the end first? */
     unsigned int endfirst : 1;

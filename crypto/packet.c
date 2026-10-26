@@ -100,6 +100,18 @@ static size_t maxmaxsize(size_t lenbytes)
     return ((size_t)1 << (lenbytes * 8)) - 1 + lenbytes;
 }
 
+static ossl_inline WPACKET_SUB *wpacket_alloc_sub(WPACKET *wpkt)
+{
+    if (wpkt->spool == NULL || wpkt->spool->available == 0)
+        return OPENSSL_zalloc(sizeof(*wpkt->subs));
+    return NULL;
+}
+
+static ossl_inline void wpacket_release_sub(WPACKET *wpkt, WPACKET_SUB *sub)
+{
+    OPENSSL_free(sub);
+}
+
 static int wpacket_intern_init_len(WPACKET *pkt, size_t lenbytes)
 {
     unsigned char *lenchars;
@@ -107,7 +119,7 @@ static int wpacket_intern_init_len(WPACKET *pkt, size_t lenbytes)
     pkt->curr = 0;
     pkt->written = 0;
 
-    if ((pkt->subs = OPENSSL_zalloc(sizeof(*pkt->subs))) == NULL)
+    if ((pkt->subs = wpacket_alloc_sub(pkt)) == NULL)
         return 0;
 
     if (lenbytes == 0)
@@ -117,7 +129,7 @@ static int wpacket_intern_init_len(WPACKET *pkt, size_t lenbytes)
     pkt->subs->lenbytes = lenbytes;
 
     if (!WPACKET_allocate_bytes(pkt, lenbytes, &lenchars)) {
-        OPENSSL_free(pkt->subs);
+        wpacket_release_sub(pkt, pkt->subs);
         pkt->subs = NULL;
         return 0;
     }
@@ -139,6 +151,7 @@ int WPACKET_init_static_len(WPACKET *pkt, unsigned char *buf, size_t len,
     pkt->buf = NULL;
     pkt->maxsize = (max < len) ? max : len;
     pkt->endfirst = 0;
+    pkt->spool = NULL;
 
     return wpacket_intern_init_len(pkt, lenbytes);
 }
@@ -153,6 +166,7 @@ int WPACKET_init_der(WPACKET *pkt, unsigned char *buf, size_t len)
     pkt->buf = NULL;
     pkt->maxsize = len;
     pkt->endfirst = 1;
+    pkt->spool = NULL;
 
     return wpacket_intern_init_len(pkt, 0);
 }
@@ -167,6 +181,7 @@ int WPACKET_init_len(WPACKET *pkt, BUF_MEM *buf, size_t lenbytes)
     pkt->buf = buf;
     pkt->maxsize = maxmaxsize(lenbytes);
     pkt->endfirst = 0;
+    pkt->spool = NULL;
 
     return wpacket_intern_init_len(pkt, lenbytes);
 }
@@ -182,6 +197,7 @@ int WPACKET_init_null(WPACKET *pkt, size_t lenbytes)
     pkt->buf = NULL;
     pkt->maxsize = maxmaxsize(lenbytes);
     pkt->endfirst = 0;
+    pkt->spool = NULL;
 
     return wpacket_intern_init_len(pkt, 0);
 }
@@ -192,6 +208,7 @@ int WPACKET_init_null_der(WPACKET *pkt)
     pkt->buf = NULL;
     pkt->maxsize = SIZE_MAX;
     pkt->endfirst = 1;
+    pkt->spool = NULL;
 
     return wpacket_intern_init_len(pkt, 0);
 }
@@ -357,7 +374,7 @@ int WPACKET_finish(WPACKET *pkt)
 
     ret = wpacket_intern_close(pkt, pkt->subs, 1);
     if (ret) {
-        OPENSSL_free(pkt->subs);
+        wpacket_release_sub(pkt, pkt->subs);
         pkt->subs = NULL;
     }
 
@@ -383,7 +400,7 @@ int WPACKET_start_sub_packet_at_offset_len__(WPACKET *pkt, size_t lenbytes,
     if (lenbytes > 0 && pkt->endfirst)
         return 0;
 
-    if ((sub = OPENSSL_zalloc(sizeof(*sub))) == NULL)
+    if ((sub = wpacket_alloc_sub(pkt)) == NULL)
         return 0;
 
     sub->parent = pkt->subs;
@@ -537,7 +554,7 @@ void WPACKET_cleanup(WPACKET *pkt)
 
     for (sub = pkt->subs; sub != NULL; sub = parent) {
         parent = sub->parent;
-        OPENSSL_free(sub);
+        wpacket_release_sub(pkt, sub);
     }
     pkt->subs = NULL;
 }
