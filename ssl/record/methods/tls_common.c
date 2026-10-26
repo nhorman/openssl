@@ -1795,13 +1795,16 @@ int tls_write_records_default(OSSL_RECORD_LAYER *rl,
     }
 
     /* Clear our TLS_RL_RECORD structures */
-    memset(wr, 0, sizeof(wr));
+    //memset(wr, 0, sizeof(wr));
     for (j = 0; j < numtempl + prefix; j++) {
         unsigned char *compressdata = NULL;
         uint8_t rectype;
 
         thispkt = &pkt[j];
         thiswr = &wr[j];
+        thiswr->orig_len = thiswr->off = thiswr->epoch = thiswr->seq_num = 0;
+        thiswr->comp = NULL;
+
         thistempl = (j < prefix) ? &prefixtempl : &templates[j - prefix];
 
         /*
