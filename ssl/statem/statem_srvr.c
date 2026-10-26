@@ -1856,7 +1856,7 @@ MSG_PROCESS_RETURN tls_process_client_hello(SSL_CONNECTION *s, PACKET *pkt)
                 goto err;
             }
             if (!WPACKET_init_static_len(&inner, s->ext.ech.innerch,
-                    s->ext.ech.innerch_len, 0)) {
+                    s->ext.ech.innerch_len, 0, NULL)) {
                 SSLfatal(s, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
                 goto err;
             }

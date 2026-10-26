@@ -81,7 +81,7 @@ static int slh_sign_internal(SLH_DSA_HASH_CTX *hctx,
         return 0;
     }
 
-    if (!WPACKET_init_static_len(wpkt, sig, sig_len_expected, 0))
+    if (!WPACKET_init_static_len(wpkt, sig, sig_len_expected, 0, NULL))
         return 0;
     if (!PACKET_buf_init(rpkt, m_digest, params->m))
         goto err;
@@ -268,7 +268,7 @@ static uint8_t *msg_encode(const uint8_t *msg, size_t msg_len,
         if (encoded == NULL)
             return NULL;
     }
-    if (!WPACKET_init_static_len(&pkt, encoded, encoded_len, 0)
+    if (!WPACKET_init_static_len(&pkt, encoded, encoded_len, 0, NULL)
         || !WPACKET_put_bytes_u8(&pkt, 0)
         || !WPACKET_put_bytes_u8(&pkt, (uint8_t)ctx_len)
         || !WPACKET_memcpy(&pkt, ctx, ctx_len)

@@ -796,7 +796,7 @@ int WPACKET_init_null_der(WPACKET *pkt);
  * occur if you attempt to write beyond the end of the buffer
  */
 int WPACKET_init_static_len(WPACKET *pkt, unsigned char *buf, size_t len,
-    size_t lenbytes);
+    size_t lenbytes, WPACKET_SUB_POOL *pool);
 
 /*
  * Same as WPACKET_init_static_len except lenbytes is always 0, and we set the

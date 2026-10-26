@@ -893,7 +893,7 @@ int ossl_quic_calculate_retry_integrity_tag(OSSL_LIB_CTX *libctx,
     hdr2.len = 0;
 
     /* Assemble retry pseudo-packet. */
-    if (!WPACKET_init_static_len(&wpkt, buf, sizeof(buf), 0)) {
+    if (!WPACKET_init_static_len(&wpkt, buf, sizeof(buf), 0, NULL)) {
         ERR_raise(ERR_LIB_SSL, ERR_R_CRYPTO_LIB);
         goto err;
     }

@@ -33,7 +33,7 @@ int ossl_ech_make_enc_info(const unsigned char *encoding,
 
     if (encoding == NULL || info == NULL || info_len == NULL)
         return 0;
-    if (!WPACKET_init_static_len(&ipkt, info, *info_len, 0)
+    if (!WPACKET_init_static_len(&ipkt, info, *info_len, 0, NULL)
         || !WPACKET_memcpy(&ipkt, OSSL_ECH_CONTEXT_STRING,
             sizeof(OSSL_ECH_CONTEXT_STRING) - 1)
         /*

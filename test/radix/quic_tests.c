@@ -2301,7 +2301,7 @@ static int script_21_inject_plain(RADIX_FAULT *fault, QUIC_PKT_HDR *hdr,
         return 1;
 
     if (!TEST_true(WPACKET_init_static_len(&wpkt, frame_buf,
-            sizeof(frame_buf), 0)))
+            sizeof(frame_buf), 0, NULL)))
         return 0;
 
     if (!TEST_true(WPACKET_quic_write_vlint(&wpkt, fault->word1)))
@@ -2545,7 +2545,7 @@ static int script_23_inject_plain(RADIX_FAULT *fault, QUIC_PKT_HDR *hdr,
     if (fault->word0 == 0 || hdr->type != QUIC_PKT_TYPE_1RTT)
         return 1;
 
-    if (!TEST_true(WPACKET_init_static_len(&wpkt, frame_buf, sizeof(frame_buf), 0)))
+    if (!TEST_true(WPACKET_init_static_len(&wpkt, frame_buf, sizeof(frame_buf), 0, NULL)))
         return 0;
 
     if (!TEST_true(WPACKET_quic_write_vlint(&wpkt, OSSL_QUIC_FRAME_TYPE_NEW_TOKEN))
@@ -2595,7 +2595,7 @@ static int script_24_inject_plain(RADIX_FAULT *fault, QUIC_PKT_HDR *hdr,
     if (fault->word0 == 0 || hdr->type != QUIC_PKT_TYPE_1RTT)
         return 1;
 
-    if (!TEST_true(WPACKET_init_static_len(&wpkt, frame_buf, sizeof(frame_buf), 0)))
+    if (!TEST_true(WPACKET_init_static_len(&wpkt, frame_buf, sizeof(frame_buf), 0, NULL)))
         return 0;
 
     if (!TEST_true(WPACKET_quic_write_vlint(&wpkt, fault->word1))
@@ -2709,7 +2709,7 @@ static int inject_stream_frame_plain(RADIX_FAULT *fault, QUIC_PKT_HDR *hdr,
         return 1;
 
     if (!TEST_true(WPACKET_init_static_len(&wpkt, frame_buf,
-            sizeof(frame_buf), 0)))
+            sizeof(frame_buf), 0, NULL)))
         return 0;
 
     if (!TEST_true(WPACKET_quic_write_vlint(&wpkt, fault->word1))
@@ -2868,7 +2868,7 @@ static int inject_stream_data_frame_plain(RADIX_FAULT *fault, QUIC_PKT_HDR *hdr,
     }
 
     if (!TEST_true(WPACKET_init_static_len(&wpkt, frame_buf,
-            sizeof(frame_buf), 0)))
+            sizeof(frame_buf), 0, NULL)))
         return 0;
 
     if (!TEST_true(WPACKET_quic_write_vlint(&wpkt, type))
@@ -3107,7 +3107,7 @@ static int inject_new_conn_id_plain(RADIX_FAULT *fault, QUIC_PKT_HDR *hdr,
     }
 
     if (!TEST_true(WPACKET_init_static_len(&wpkt, frame_buf,
-            sizeof(frame_buf), 0)))
+            sizeof(frame_buf), 0, NULL)))
         return 0;
 
     if (!TEST_true(WPACKET_quic_write_vlint(&wpkt, OSSL_QUIC_FRAME_TYPE_NEW_CONN_ID))
@@ -3213,7 +3213,7 @@ static int inject_path_challenge_plain(RADIX_FAULT *fault, QUIC_PKT_HDR *hdr,
         return 1;
 
     if (!TEST_true(WPACKET_init_static_len(&wpkt, frame_buf,
-            sizeof(frame_buf), 0)))
+            sizeof(frame_buf), 0, NULL)))
         return 0;
 
     if (!TEST_true(WPACKET_quic_write_vlint(&wpkt, fault->word1))
@@ -3333,7 +3333,7 @@ static int script_42_inject_plain(RADIX_FAULT *fault, QUIC_PKT_HDR *hdr,
     --fault->word0;
 
     if (!TEST_true(WPACKET_init_static_len(&wpkt, frame_buf,
-            sizeof(frame_buf), 0)))
+            sizeof(frame_buf), 0, NULL)))
         return 0;
 
     if (!TEST_true(WPACKET_quic_write_vlint(&wpkt, OSSL_QUIC_FRAME_TYPE_CRYPTO))
@@ -3409,7 +3409,7 @@ static int script_44_inject_plain(RADIX_FAULT *fault, QUIC_PKT_HDR *hdr,
         return 1;
 
     if (!TEST_true(WPACKET_init_static_len(&wpkt, frame_buf,
-            sizeof(frame_buf), 0)))
+            sizeof(frame_buf), 0, NULL)))
         return 0;
 
     if (!TEST_true(ossl_quic_wire_encode_padding(&wpkt, 1))
@@ -3526,7 +3526,7 @@ static int inject_malformed_ack_plain(RADIX_FAULT *fault, QUIC_PKT_HDR *hdr,
         return 1;
 
     if (!TEST_true(WPACKET_init_static_len(&wpkt, frame_buf,
-            sizeof(frame_buf), 0)))
+            sizeof(frame_buf), 0, NULL)))
         return 0;
 
     type = OSSL_QUIC_FRAME_TYPE_ACK_WITHOUT_ECN;
@@ -3741,7 +3741,7 @@ static int script_52_inject_plain(RADIX_FAULT *fault, QUIC_PKT_HDR *hdr,
     --fault->word0;
 
     if (!TEST_true(WPACKET_init_static_len(&wpkt, frame_buf,
-            sizeof(frame_buf), 0)))
+            sizeof(frame_buf), 0, NULL)))
         return 0;
 
     if (!TEST_true(WPACKET_quic_write_vlint(&wpkt, type)))
@@ -3846,7 +3846,7 @@ static int script_53_inject_plain(RADIX_FAULT *fault, QUIC_PKT_HDR *hdr,
     if (!TEST_ptr(frame_buf = OPENSSL_malloc(frame_len)))
         return 0;
 
-    if (!TEST_true(WPACKET_init_static_len(&wpkt, frame_buf, frame_len, 0))
+    if (!TEST_true(WPACKET_init_static_len(&wpkt, frame_buf, frame_len, 0, NULL))
         || !TEST_true(WPACKET_quic_write_vlint(&wpkt, OSSL_QUIC_FRAME_TYPE_CRYPTO))
         || !TEST_true(WPACKET_quic_write_vlint(&wpkt, offset))
         || !TEST_true(WPACKET_quic_write_vlint(&wpkt, data_len)))
@@ -4061,7 +4061,7 @@ static int script_58_inject_plain(RADIX_FAULT *fault, QUIC_PKT_HDR *hdr,
         return 1;
 
     if (!TEST_true(WPACKET_init_static_len(&wpkt, frame_buf,
-            sizeof(frame_buf), 0)))
+            sizeof(frame_buf), 0, NULL)))
         return 0;
 
     if (fault->word0 == 1) {
@@ -4193,7 +4193,7 @@ static int script_61_inject_plain(RADIX_FAULT *fault, QUIC_PKT_HDR *hdr,
         return 1;
 
     if (!TEST_true(WPACKET_init_static_len(&wpkt, frame_buf,
-            sizeof(frame_buf), 0)))
+            sizeof(frame_buf), 0, NULL)))
         return 0;
 
     if (!TEST_true(WPACKET_quic_write_vlint(&wpkt, fault->word0))
@@ -4317,7 +4317,7 @@ static int script_65_inject_plain(RADIX_FAULT *fault, QUIC_PKT_HDR *hdr,
     --fault->word0;
 
     if (!TEST_true(WPACKET_init_static_len(&wpkt, frame_buf,
-            sizeof(frame_buf), 0)))
+            sizeof(frame_buf), 0, NULL)))
         return 0;
 
     if (!TEST_true(WPACKET_quic_write_vlint(&wpkt, OSSL_QUIC_FRAME_TYPE_CRYPTO))
@@ -4366,7 +4366,7 @@ static int script_66_inject_plain(RADIX_FAULT *fault, QUIC_PKT_HDR *hdr,
         return 1;
 
     if (!TEST_true(WPACKET_init_static_len(&wpkt, frame_buf,
-            sizeof(frame_buf), 0)))
+            sizeof(frame_buf), 0, NULL)))
         return 0;
 
     if (!TEST_true(WPACKET_quic_write_vlint(&wpkt, fault->word1)))
@@ -4698,7 +4698,7 @@ static int script_75_sendmmsg(BIO *b, BIO_MSG *msg, size_t stride,
         memset(hdr.src_conn_id.id, 0x55, 8);
 
         if (!TEST_true(WPACKET_init_static_len(&wpkt, msg[0].data,
-                msg[0].data_len, 0)))
+                msg[0].data_len, 0, NULL)))
             return 0;
 
         if (!TEST_true(ossl_quic_wire_encode_pkt_hdr(&wpkt, 0, &hdr, NULL))
@@ -5023,7 +5023,7 @@ static int script_80_gen_new_conn_id(RADIX_FAULT *fault, QUIC_PKT_HDR *hdr,
 
     fprintf(stderr, "sending new conn id\n");
     if (!TEST_true(WPACKET_init_static_len(&wpkt, frame_buf,
-            sizeof(frame_buf), 0)))
+            sizeof(frame_buf), 0, NULL)))
         return 0;
 
     ossl_quic_channel_get_diag_local_cid(fault->ch, &new_cid);
@@ -5999,7 +5999,7 @@ static int inject_new_cids(RADIX_FAULT *fault, QUIC_PKT_HDR *hdr,
         return 1;
 
     if (!TEST_true(WPACKET_init_static_len(&wpkt, frame_buf,
-            sizeof(frame_buf), 0)))
+            sizeof(frame_buf), 0, NULL)))
         return 0;
 
     ossl_quic_channel_get_diag_local_cid(fault->ch, &new_cid);

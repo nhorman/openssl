@@ -267,7 +267,7 @@ int ossl_a2ulabel(const char *in, char *out, size_t outlen)
     if (!ossl_assert(out != NULL))
         return -1;
 
-    if (!WPACKET_init_static_len(&pkt, (unsigned char *)out, outlen, 0))
+    if (!WPACKET_init_static_len(&pkt, (unsigned char *)out, outlen, 0, NULL))
         return -1;
 
     while (1) {

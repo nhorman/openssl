@@ -265,7 +265,7 @@ int ossl_slh_wots_pk_from_sig(SLH_DSA_HASH_CTX *ctx,
     SLH_ADRS_FN_DECLARE(adrsf, set_chain_address);
     SLH_ADRS_DECLARE(wots_pk_adrs);
 
-    if (!WPACKET_init_static_len(tmp_pkt, tmp, sizeof(tmp), 0))
+    if (!WPACKET_init_static_len(tmp_pkt, tmp, sizeof(tmp), 0, NULL))
         return 0;
 
     slh_bytes_to_nibbles(msg, n, msg_and_csum_nibbles);

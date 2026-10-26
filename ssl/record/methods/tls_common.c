@@ -1579,7 +1579,7 @@ int tls_initialise_write_packets_default(OSSL_RECORD_LAYER *rl,
         TLS_BUFFER_set_offset(wb, align);
 
         if (!WPACKET_init_static_len(thispkt, TLS_BUFFER_get_buf(wb),
-                TLS_BUFFER_get_len(wb), 0)) {
+                TLS_BUFFER_get_len(wb), 0, NULL)) {
             RLAYERfatal(rl, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
             return 0;
         }

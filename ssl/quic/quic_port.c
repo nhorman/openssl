@@ -1325,7 +1325,7 @@ static void port_send_retry(QUIC_PORT *port,
     msg[0].local = NULL;
     msg[0].flags = 0;
 
-    ok = WPACKET_init_static_len(&wpkt, buffer, sizeof(buffer), 0);
+    ok = WPACKET_init_static_len(&wpkt, buffer, sizeof(buffer), 0, NULL);
     if (ok == 0)
         goto err;
 
@@ -1413,7 +1413,7 @@ static void port_send_version_negotiation(QUIC_PORT *port, BIO_ADDR *peer,
     msg[0].local = NULL;
     msg[0].flags = 0;
 
-    if (!WPACKET_init_static_len(&wpkt, buffer, sizeof(buffer), 0))
+    if (!WPACKET_init_static_len(&wpkt, buffer, sizeof(buffer), 0, NULL))
         return;
 
     if (!ossl_quic_wire_encode_pkt_hdr(&wpkt, client_hdr->dst_conn_id.id_len,

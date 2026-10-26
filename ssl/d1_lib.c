@@ -933,7 +933,7 @@ int DTLSv1_listen(SSL *ssl, BIO_ADDR *client)
                     wbuf,
                     ssl_get_max_send_fragment(s)
                         + DTLS1_RT_HEADER_LENGTH,
-                    0)
+                    0, NULL)
                 || !WPACKET_put_bytes_u8(&wpkt, SSL3_RT_HANDSHAKE)
                 || !WPACKET_put_bytes_u16(&wpkt, version)
                 /*
@@ -1653,7 +1653,7 @@ int dtls_listener_cookie_hmac(SSL *ssl, uint64_t timestamp,
         return 0;
 
     /* Build data to HMAC: timestamp || port || raw_address */
-    if (!WPACKET_init_static_len(&pkt, data, sizeof(data), 0)
+    if (!WPACKET_init_static_len(&pkt, data, sizeof(data), 0, NULL)
         || !WPACKET_put_bytes_u64(&pkt, timestamp)
         || !WPACKET_put_bytes_u16(&pkt, port)
         || !WPACKET_memcpy(&pkt, addr_buf, addr_len)

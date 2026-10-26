@@ -303,7 +303,7 @@ static WPACKET *tx_helper_begin(struct tx_helper *h)
     if (!ossl_assert(space_left <= len))
         return NULL;
 
-    if (!WPACKET_init_static_len(&h->txn.wpkt, data, len, 0))
+    if (!WPACKET_init_static_len(&h->txn.wpkt, data, len, 0, NULL))
         return NULL;
 
     if (!WPACKET_set_max_size(&h->txn.wpkt, space_left)) {

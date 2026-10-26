@@ -493,7 +493,7 @@ static int test_construct_ch_small_buf(void)
         || !TEST_true(tls_setup_handshake(s)))
         goto err;
 
-    if (!TEST_true(WPACKET_init_static_len(&pkt, buf, sizeof(buf), 0)))
+    if (!TEST_true(WPACKET_init_static_len(&pkt, buf, sizeof(buf), 0, NULL)))
         goto err;
     have_pkt = 1;
     if (!TEST_true(ssl_set_handshake_header(s, &pkt, SSL3_MT_CLIENT_HELLO)))
@@ -1013,7 +1013,7 @@ static int do_construct_cert_ctx_small_buf(int with_pha)
     }
 
     /* Only the handshake header fits, so the context write overflows. */
-    if (!TEST_true(WPACKET_init_static_len(&pkt, buf, hdr_len(&cfg), 0)))
+    if (!TEST_true(WPACKET_init_static_len(&pkt, buf, hdr_len(&cfg), 0, NULL)))
         goto err;
     have_pkt = 1;
     if (!TEST_true(ssl_set_handshake_header(s, &pkt, SSL3_MT_CERTIFICATE)))
@@ -1322,7 +1322,7 @@ static int test_construct_cke_small_buf(void)
         goto err;
 
     /* Too small for the 65-byte P-256 point: the point write overflows. */
-    if (!TEST_true(WPACKET_init_static_len(&pkt, buf, sizeof(buf), 0)))
+    if (!TEST_true(WPACKET_init_static_len(&pkt, buf, sizeof(buf), 0, NULL)))
         goto err;
     have_pkt = 1;
     if (!TEST_true(ssl_set_handshake_header(s, &pkt,

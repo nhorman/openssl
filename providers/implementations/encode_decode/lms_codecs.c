@@ -128,7 +128,7 @@ int ossl_lms_i2d_pubkey(const LMS_KEY *key, unsigned char **out)
 
         if (buf == NULL)
             return 0;
-        ret = WPACKET_init_static_len(&pkt, buf, sz, 0)
+        ret = WPACKET_init_static_len(&pkt, buf, sz, 0, NULL)
             /* Output HSS format which has a 4 byte value (L = 1) */
             && WPACKET_memcpy(&pkt, hss_lms_32_spkifmt.header + sizeof(hss_lms_32_spkifmt.header) - HSS_HEADER, HSS_HEADER)
             /* Output the LMS encoded public key */

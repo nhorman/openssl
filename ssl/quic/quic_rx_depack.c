@@ -992,7 +992,7 @@ static int depack_do_frame_path_challenge(PACKET *pkt,
         if ((encoded = OPENSSL_malloc(encoded_len)) == NULL)
             goto err;
 
-        if (!WPACKET_init_static_len(&wpkt, encoded, encoded_len, 0))
+        if (!WPACKET_init_static_len(&wpkt, encoded, encoded_len, 0, NULL))
             goto err;
 
         if (!ossl_quic_wire_encode_frame_path_response(&wpkt, frame_data)) {

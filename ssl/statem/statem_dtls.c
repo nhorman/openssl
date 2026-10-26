@@ -190,7 +190,7 @@ static int dtls1_write_hm_header(unsigned char *msgheaderstart,
     size_t msgheaderlen;
 
     if (!WPACKET_init_static_len(&msgheader, msgheaderstart,
-            DTLS1_HM_HEADER_LENGTH, 0)
+            DTLS1_HM_HEADER_LENGTH, 0, NULL)
         || !WPACKET_put_bytes_u8(&msgheader, msg_type)
         || !WPACKET_put_bytes_u24(&msgheader, msg_len)
         || !WPACKET_put_bytes_u16(&msgheader, msg_seq)

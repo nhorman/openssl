@@ -318,7 +318,7 @@ int ossl_hpke_labeled_extract(EVP_KDF_CTX *kctx,
         return 0;
 
     /* labeled_ikm = concat("HPKE-v1", suiteid, label, ikm) */
-    if (!WPACKET_init_static_len(&pkt, labeled_ikm, labeled_ikmlen, 0)
+    if (!WPACKET_init_static_len(&pkt, labeled_ikm, labeled_ikmlen, 0, NULL)
         || !WPACKET_memcpy(&pkt, LABEL_HPKEV1, label_hpkev1len)
         || !WPACKET_memcpy(&pkt, protocol_label, protocol_labellen)
         || !WPACKET_memcpy(&pkt, suiteid, suiteidlen)
@@ -368,7 +368,7 @@ int ossl_hpke_labeled_expand(EVP_KDF_CTX *kctx,
         return 0;
 
     /* labeled_info = concat(okmlen, "HPKE-v1", suiteid, label, info) */
-    if (!WPACKET_init_static_len(&pkt, labeled_info, labeled_infolen, 0)
+    if (!WPACKET_init_static_len(&pkt, labeled_info, labeled_infolen, 0, NULL)
         || !WPACKET_put_bytes_u16(&pkt, okmlen)
         || !WPACKET_memcpy(&pkt, LABEL_HPKEV1, label_hpkev1len)
         || !WPACKET_memcpy(&pkt, protocol_label, protocol_labellen)

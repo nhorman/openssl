@@ -238,7 +238,7 @@ int ossl_slh_fors_pk_from_sig(SLH_DSA_HASH_CTX *ctx, PACKET *fors_sig_rpkt,
     SLH_HASH_FN_DECLARE(hashf, F);
     SLH_HASH_FN_DECLARE(hashf, H);
 
-    if (!WPACKET_init_static_len(wroot_pkt, roots, sizeof(roots), 0))
+    if (!WPACKET_init_static_len(wroot_pkt, roots, sizeof(roots), 0, NULL))
         return 0;
 
     /* Split md into k a-bit values e.g ids[0..k-1] = 12 bits each of md */

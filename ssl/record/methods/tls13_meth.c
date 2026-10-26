@@ -236,7 +236,7 @@ static int tls13_cipher(OSSL_RECORD_LAYER *rl, TLS_RL_RECORD *recs,
         return 0;
     }
 
-    if (!WPACKET_init_static_len(&wpkt, recheader, sizeof(recheader), 0)
+    if (!WPACKET_init_static_len(&wpkt, recheader, sizeof(recheader), 0, NULL)
         || !WPACKET_put_bytes_u8(&wpkt, rec->type)
         || (isdtls
             && (sbit ? !WPACKET_put_bytes_u16(&wpkt, seqnum)

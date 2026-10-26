@@ -632,7 +632,7 @@ int ossl_ml_dsa_pk_encode(ML_DSA_KEY *key)
     if (enc == NULL)
         return 0;
 
-    if (!WPACKET_init_static_len(&pkt, enc, enc_len, 0)
+    if (!WPACKET_init_static_len(&pkt, enc, enc_len, 0, NULL)
         || !WPACKET_memcpy(&pkt, key->rho, sizeof(key->rho)))
         goto err;
     for (i = 0; i < t1_len; i++)
@@ -724,7 +724,7 @@ int ossl_ml_dsa_sk_encode(ML_DSA_KEY *key)
     else
         encode_fn = poly_encode_signed_2;
 
-    if (!WPACKET_init_static_len(&pkt, enc, enc_len, 0)
+    if (!WPACKET_init_static_len(&pkt, enc, enc_len, 0, NULL)
         || !WPACKET_memcpy(&pkt, key->rho, sizeof(key->rho))
         || !WPACKET_memcpy(&pkt, key->K, sizeof(key->K))
         || !WPACKET_memcpy(&pkt, key->tr, sizeof(key->tr)))
@@ -923,7 +923,7 @@ int ossl_ml_dsa_sig_encode(const ML_DSA_SIG *sig, const ML_DSA_PARAMS *params,
     else
         encode_fn = poly_encode_signed_two_to_power_17;
 
-    if (!WPACKET_init_static_len(&pkt, out, params->sig_len, 0)
+    if (!WPACKET_init_static_len(&pkt, out, params->sig_len, 0, NULL)
         || !WPACKET_memcpy(&pkt, sig->c_tilde, sig->c_tilde_len))
         goto err;
 
@@ -1009,7 +1009,7 @@ int ossl_ml_dsa_w1_encode(const VECTOR *w1, uint32_t gamma2,
     int ret = 0;
     size_t i;
 
-    if (!WPACKET_init_static_len(&pkt, out, out_len, 0))
+    if (!WPACKET_init_static_len(&pkt, out, out_len, 0, NULL))
         return 0;
     if (gamma2 == ML_DSA_GAMMA2_Q_MINUS1_DIV32)
         encode_fn = poly_encode_4_bits;

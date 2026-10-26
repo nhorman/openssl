@@ -1602,7 +1602,7 @@ static int setbuf_fromparams(size_t n, OSSL_PARAM *p[],
         if (!WPACKET_init_null(&pkt, 0))
             return 0;
     } else {
-        if (!WPACKET_init_static_len(&pkt, out, *outlen, 0))
+        if (!WPACKET_init_static_len(&pkt, out, *outlen, 0, NULL))
             return 0;
     }
 

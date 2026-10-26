@@ -91,7 +91,7 @@ int i2d_DSA_SIG(const DSA_SIG *sig, unsigned char **ppout)
             return -1;
         }
     } else {
-        if (!WPACKET_init_static_len(&pkt, *ppout, SIZE_MAX, 0))
+        if (!WPACKET_init_static_len(&pkt, *ppout, SIZE_MAX, 0, NULL))
             return -1;
     }
 

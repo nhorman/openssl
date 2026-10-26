@@ -177,7 +177,7 @@ static int setup_record_header(const OSSL_RECORD_LAYER *rl, TLS_RL_RECORD *rec,
 
     if (buflen < EVP_AEAD_TLS1_AAD_LEN)
         return 0;
-    if (!WPACKET_init_static_len(&hdr, buf, EVP_AEAD_TLS1_AAD_LEN, 0)
+    if (!WPACKET_init_static_len(&hdr, buf, EVP_AEAD_TLS1_AAD_LEN, 0, NULL)
         || (rl->isdtls && !WPACKET_put_bytes_u16(&hdr, rl->epoch))
         || (rl->isdtls ? !WPACKET_put_bytes_u48(&hdr, rl->sequence)
                        : !WPACKET_put_bytes_u64(&hdr, rl->sequence))
@@ -590,7 +590,7 @@ int tls1_initialise_write_packets(OSSL_RECORD_LAYER *rl,
         TLS_BUFFER_set_offset(wb, align);
 
         if (!WPACKET_init_static_len(&pkt[0], TLS_BUFFER_get_buf(wb),
-                TLS_BUFFER_get_len(wb), 0)) {
+                TLS_BUFFER_get_len(wb), 0, NULL)) {
             RLAYERfatal(rl, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
             return 0;
         }

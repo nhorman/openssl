@@ -376,7 +376,7 @@ static int test_dtls13_ack_coverage(int server)
             epoch = recnum->epoch;
             seqnum = recnum->seqnum;
         }
-        if (!TEST_true(WPACKET_init_static_len(&pkt, ack, sizeof(ack), 2)))
+        if (!TEST_true(WPACKET_init_static_len(&pkt, ack, sizeof(ack), 2, NULL)))
             goto end;
         if ((i != 0
                 && (!TEST_true(WPACKET_put_bytes_u64(&pkt, epoch))
@@ -1471,7 +1471,7 @@ static int test_dtls13_ack_bitmap_oob(void)
     sc->d1->next_timeout = ossl_time_add(ossl_time_now(), ossl_seconds2time(3600));
 
     /* One RecordNumber entry: epoch and sequence_number, u16 length-prefixed. */
-    if (!TEST_true(WPACKET_init_static_len(&pkt, ack, sizeof(ack), 2))
+    if (!TEST_true(WPACKET_init_static_len(&pkt, ack, sizeof(ack), 2, NULL))
         || !TEST_true(WPACKET_put_bytes_u64(&pkt, pick->epoch))
         || !TEST_true(WPACKET_put_bytes_u64(&pkt, pick->seqnum))
         || !TEST_true(WPACKET_finish(&pkt))

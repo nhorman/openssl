@@ -117,7 +117,7 @@ static int tls_write_records_multiblock_int(OSSL_RECORD_LAYER *rl,
     }
     wb = &rl->wbuf[0];
 
-    if (!WPACKET_init_static_len(&aad_pkt, aad, sizeof(aad), 0)
+    if (!WPACKET_init_static_len(&aad_pkt, aad, sizeof(aad), 0, NULL)
         || !WPACKET_put_bytes_u64(&aad_pkt, rl->sequence)
         || !WPACKET_put_bytes_u8(&aad_pkt, templates[0].type)
         || !WPACKET_put_bytes_u16(&aad_pkt, templates[0].version)

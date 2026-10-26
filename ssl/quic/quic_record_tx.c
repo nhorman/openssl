@@ -440,7 +440,7 @@ static int qtx_write_hdr(OSSL_QTX *qtx, const QUIC_PKT_HDR *hdr, TXE *txe,
     size_t l = 0;
     unsigned char *data = txe_data(txe) + txe->data_len;
 
-    if (!WPACKET_init_static_len(&wpkt, data, txe->alloc_len - txe->data_len, 0))
+    if (!WPACKET_init_static_len(&wpkt, data, txe->alloc_len - txe->data_len, 0, NULL))
         return 0;
 
     if (!ossl_quic_wire_encode_pkt_hdr(&wpkt, hdr->dst_conn_id.id_len,

@@ -139,7 +139,7 @@ static int wpacket_intern_init_len(WPACKET *pkt, size_t lenbytes)
 }
 
 int WPACKET_init_static_len(WPACKET *pkt, unsigned char *buf, size_t len,
-    size_t lenbytes)
+    size_t lenbytes, WPACKET_SUB_POOL *pool)
 {
     size_t max = maxmaxsize(lenbytes);
 
@@ -151,7 +151,7 @@ int WPACKET_init_static_len(WPACKET *pkt, unsigned char *buf, size_t len,
     pkt->buf = NULL;
     pkt->maxsize = (max < len) ? max : len;
     pkt->endfirst = 0;
-    pkt->spool = NULL;
+    pkt->spool = pool;
 
     return wpacket_intern_init_len(pkt, lenbytes);
 }

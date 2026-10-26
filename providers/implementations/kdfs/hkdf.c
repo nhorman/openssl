@@ -789,7 +789,7 @@ static int prov_tls13_hkdf_expand(const EVP_MD *md,
      * + bytes for the hash itself.  We've got the maximum the KDF can handle
      * which should always be sufficient.
      */
-    if (!WPACKET_init_static_len(&pkt, hkdflabel, sizeof(hkdflabel), 0)
+    if (!WPACKET_init_static_len(&pkt, hkdflabel, sizeof(hkdflabel), 0, NULL)
         || !WPACKET_put_bytes_u16(&pkt, outlen)
         || !WPACKET_start_sub_packet_u8(&pkt)
         || !WPACKET_memcpy(&pkt, prefix, prefixlen)

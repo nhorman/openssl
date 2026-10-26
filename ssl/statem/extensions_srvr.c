@@ -1166,7 +1166,7 @@ int tls_parse_ctos_cookie(SSL_CONNECTION *s, PACKET *pkt, unsigned int context,
      * ClientHello so we can add it to the transcript hash.
      * Note: This won't work with custom HRR extensions
      */
-    if (!WPACKET_init_static_len(&hrrpkt, hrr, sizeof(hrr), 0)) {
+    if (!WPACKET_init_static_len(&hrrpkt, hrr, sizeof(hrr), 0, NULL)) {
         SSLfatal(s, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
         return 0;
     }

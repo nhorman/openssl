@@ -2980,7 +2980,7 @@ static int test_wire_pkt_hdr_actual(int tidx, int repeat, int cipher,
     if (!TEST_ptr(buf = OPENSSL_malloc(TEST_PKT_BUF_LEN)))
         goto err;
 
-    if (!TEST_true(WPACKET_init_static_len(&wpkt, buf, TEST_PKT_BUF_LEN, 0)))
+    if (!TEST_true(WPACKET_init_static_len(&wpkt, buf, TEST_PKT_BUF_LEN, 0, NULL)))
         goto err;
 
     if (!TEST_true(PACKET_buf_init(&pkt, t->expected, trunc_len)))
