@@ -17,9 +17,11 @@
 
 #define DEFAULT_BUF_SIZE 256
 
-int WPACKET_allocate_bytes(WPACKET *pkt, size_t len, unsigned char **allocbytes)
+static ossl_inline int WPACKET_reserve_bytes_int(WPACKET *pkt, size_t len, unsigned char **allocbytes);
+
+static ossl_inline int WPACKET_allocate_bytes_int(WPACKET *pkt, size_t len, unsigned char **allocbytes)
 {
-    if (!WPACKET_reserve_bytes(pkt, len, allocbytes))
+    if (!WPACKET_reserve_bytes_int(pkt, len, allocbytes))
         return 0;
 
     pkt->written += len;
@@ -27,11 +29,16 @@ int WPACKET_allocate_bytes(WPACKET *pkt, size_t len, unsigned char **allocbytes)
     return 1;
 }
 
+int WPACKET_allocate_bytes(WPACKET *pkt, size_t len, unsigned char **allocbytes)
+{
+    return WPACKET_allocate_bytes_int(pkt, len, allocbytes);
+}
+
 int WPACKET_sub_allocate_bytes__(WPACKET *pkt, size_t len,
     unsigned char **allocbytes, size_t lenbytes)
 {
     if (!WPACKET_start_sub_packet_len__(pkt, lenbytes)
-        || !WPACKET_allocate_bytes(pkt, len, allocbytes)
+        || !WPACKET_allocate_bytes_int(pkt, len, allocbytes)
         || !WPACKET_close(pkt))
         return 0;
 
@@ -44,7 +51,7 @@ int WPACKET_sub_allocate_bytes__(WPACKET *pkt, size_t len,
                   ? (unsigned char *)(p)->buf->data \
                   : NULL))
 
-int WPACKET_reserve_bytes(WPACKET *pkt, size_t len, unsigned char **allocbytes)
+static ossl_inline int WPACKET_reserve_bytes_int(WPACKET *pkt, size_t len, unsigned char **allocbytes)
 {
     /* Internal API, so should not fail */
     if (!ossl_assert(pkt->subs != NULL && len != 0))
@@ -78,13 +85,18 @@ int WPACKET_reserve_bytes(WPACKET *pkt, size_t len, unsigned char **allocbytes)
     return 1;
 }
 
+int WPACKET_reserve_bytes(WPACKET *pkt, size_t len, unsigned char **allocbytes)
+{
+    return WPACKET_reserve_bytes_int(pkt, len, allocbytes);
+}
+
 int WPACKET_sub_reserve_bytes__(WPACKET *pkt, size_t len,
     unsigned char **allocbytes, size_t lenbytes)
 {
     if (pkt->endfirst && lenbytes > 0)
         return 0;
 
-    if (!WPACKET_reserve_bytes(pkt, lenbytes + len, allocbytes))
+    if (!WPACKET_reserve_bytes_int(pkt, lenbytes + len, allocbytes))
         return 0;
 
     if (*allocbytes != NULL)
@@ -161,7 +173,7 @@ static int wpacket_intern_init_len(WPACKET *pkt, size_t lenbytes)
     pkt->subs->pwritten = lenbytes;
     pkt->subs->lenbytes = lenbytes;
 
-    if (!WPACKET_allocate_bytes(pkt, lenbytes, &lenchars)) {
+    if (!WPACKET_allocate_bytes_int(pkt, lenbytes, &lenchars)) {
         wpacket_sub_free(pkt, pkt->subs);
         pkt->subs = NULL;
         return 0;
@@ -256,7 +268,7 @@ int WPACKET_set_flags(WPACKET *pkt, unsigned int flags)
 }
 
 /* Store the |value| of length |len| at location |data| */
-static int put_value(unsigned char *data, uint64_t value, size_t len)
+static ossl_inline int put_value(unsigned char *data, uint64_t value, size_t len)
 {
     if (data == NULL)
         return 1;
@@ -446,8 +458,8 @@ int WPACKET_start_sub_packet_at_offset_len__(WPACKET *pkt, size_t lenbytes,
 
     sub->packet_len = pkt->written;
 
-    if (!WPACKET_allocate_bytes(pkt, lenbytes, &lenchars)
-        || (offset > 0 && !WPACKET_allocate_bytes(pkt, offset, &lenchars)))
+    if (!WPACKET_allocate_bytes_int(pkt, lenbytes, &lenchars)
+        || (offset > 0 && !WPACKET_allocate_bytes_int(pkt, offset, &lenchars)))
         return 0;
 
     return 1;
@@ -464,7 +476,7 @@ int WPACKET_put_bytes__(WPACKET *pkt, uint64_t val, size_t size)
 
     /* Internal API, so should not fail */
     if (!ossl_assert(size <= sizeof(uint64_t))
-        || !WPACKET_allocate_bytes(pkt, size, &data)
+        || !WPACKET_allocate_bytes_int(pkt, size, &data)
         || !put_value(data, val, size))
         return 0;
 
@@ -503,7 +515,7 @@ int WPACKET_memset(WPACKET *pkt, int ch, size_t len)
     if (len == 0)
         return 1;
 
-    if (!WPACKET_allocate_bytes(pkt, len, &dest))
+    if (!WPACKET_allocate_bytes_int(pkt, len, &dest))
         return 0;
 
     if (dest != NULL)
@@ -519,7 +531,7 @@ int WPACKET_memcpy(WPACKET *pkt, const void *src, size_t len)
     if (len == 0)
         return 1;
 
-    if (!WPACKET_allocate_bytes(pkt, len, &dest))
+    if (!WPACKET_allocate_bytes_int(pkt, len, &dest))
         return 0;
 
     if (dest != NULL)
@@ -618,7 +630,7 @@ int WPACKET_start_quic_sub_packet(WPACKET *pkt)
 int WPACKET_quic_sub_allocate_bytes(WPACKET *pkt, size_t len, unsigned char **allocbytes)
 {
     if (!WPACKET_start_quic_sub_packet_bound(pkt, len)
-        || !WPACKET_allocate_bytes(pkt, len, allocbytes)
+        || !WPACKET_allocate_bytes_int(pkt, len, allocbytes)
         || !WPACKET_close(pkt))
         return 0;
 
@@ -636,7 +648,7 @@ int WPACKET_quic_write_vlint(WPACKET *pkt, uint64_t v)
     if (enclen == 0)
         return 0;
 
-    if (WPACKET_allocate_bytes(pkt, enclen, &b) == 0)
+    if (WPACKET_allocate_bytes_int(pkt, enclen, &b) == 0)
         return 0;
 
     ossl_quic_vlint_encode(b, v);
