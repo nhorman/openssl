@@ -178,12 +178,12 @@ static int setup_record_header(const OSSL_RECORD_LAYER *rl, TLS_RL_RECORD *rec,
     if (buflen < EVP_AEAD_TLS1_AAD_LEN)
         return 0;
     if (!WPACKET_init_static_len(&hdr, buf, EVP_AEAD_TLS1_AAD_LEN, 0)
-        || (rl->isdtls && !WPACKET_put_bytes_u16(&hdr, rl->epoch))
-        || (rl->isdtls ? !WPACKET_put_bytes_u48(&hdr, rl->sequence)
-                       : !WPACKET_put_bytes_u64(&hdr, rl->sequence))
-        || !WPACKET_put_bytes_u8(&hdr, rec->type)
-        || !WPACKET_put_bytes_u16(&hdr, rl->version)
-        || !WPACKET_put_bytes_u16(&hdr, rec->length)
+        || (rl->isdtls && !WPACKET_static_put_bytes_u16(&hdr, rl->epoch))
+        || (rl->isdtls ? !WPACKET_static_put_bytes_u48(&hdr, rl->sequence)
+                       : !WPACKET_static_put_bytes_u64(&hdr, rl->sequence))
+        || !WPACKET_static_put_bytes_u8(&hdr, rec->type)
+        || !WPACKET_static_put_bytes_u16(&hdr, rl->version)
+        || !WPACKET_static_put_bytes_u16(&hdr, rec->length)
         || !WPACKET_finish(&hdr)
         || !WPACKET_get_total_written(&hdr, &hdrsize)
         || hdrsize != EVP_AEAD_TLS1_AAD_LEN) {

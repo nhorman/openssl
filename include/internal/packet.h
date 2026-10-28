@@ -12,6 +12,7 @@
 #pragma once
 
 #include <string.h>
+#include <arpa/inet.h>
 #include <openssl/bn.h>
 #include <openssl/buffer.h>
 #include <openssl/crypto.h>
@@ -971,6 +972,126 @@ int WPACKET_put_bytes__(WPACKET *pkt, uint64_t val, size_t bytes);
     WPACKET_put_bytes__((pkt), (val), 6)
 #define WPACKET_put_bytes_u64(pkt, val) \
     WPACKET_put_bytes__((pkt), (val), 8)
+
+/*
+ * fastpath macros for WPACKET, only for use with static buffers
+ * in which we are writing from the start (i.e. not endfirst)
+ */
+static inline int WPACKET_static_put_bytes_u8(WPACKET *pkt, uint64_t val)
+{
+    uint8_t *cptr = &pkt->staticbuf[pkt->curr];
+
+    if ((pkt->staticbuf == NULL || pkt->endfirst == 1 || val >= UCHAR_MAX))
+        return 0;
+
+    *cptr = (unsigned char)val;
+    pkt->written += 1;
+    pkt->curr += 1;
+    return 1;
+}
+
+static inline int WPACKET_static_put_bytes_u16(WPACKET *pkt, uint64_t val)
+{
+    uint16_t sval;
+    uint16_t *cptr = (uint16_t *)&pkt->staticbuf[pkt->curr];
+
+    if ((pkt->staticbuf == NULL || pkt->endfirst == 1 || val >= USHRT_MAX))
+        return 0;
+
+    sval = htons((uint16_t)val);
+    *cptr = sval;
+    pkt->written += 2;
+    pkt->curr += 2;
+    return 1;
+}
+
+static inline int WPACKET_static_put_bytes_u24(WPACKET *pkt, uint64_t val)
+{
+    uint32_t ival;
+    uint8_t *cptr = (uint8_t *)&pkt->staticbuf[pkt->curr];
+
+    if ((pkt->staticbuf == NULL || pkt->endfirst == 1 || val >= UINT_MAX))
+        return 0;
+
+    ival = htonl((uint32_t)val << 8);
+    memcpy(cptr, &ival, 3);
+
+    pkt->written += 3;
+    pkt->curr += 3;
+    return 1;
+}
+
+static inline int WPACKET_static_put_bytes_u32(WPACKET *pkt, uint64_t val)
+{
+    uint32_t ival;
+    uint32_t *cptr = (uint32_t *)&pkt->staticbuf[pkt->curr];
+
+    if ((pkt->staticbuf == NULL || pkt->endfirst == 1 || val >= UINT_MAX))
+        return 0;
+
+    ival = htonl((uint32_t)val);
+    *cptr = ival;
+
+    pkt->written += 4;
+    pkt->curr += 4;
+    return 1;
+}
+
+#ifndef __has_builtin
+#define __has_builtin(x) 0 // Compatibility fallback for older GCC versions
+#endif
+
+static inline int WPACKET_static_put_bytes_u48(WPACKET *pkt, uint64_t val)
+{
+    if ((pkt->staticbuf == NULL || pkt->endfirst == 1 || val >= 0x1000000000000UL))
+        return 0;
+
+#if __has_builtin(__builtin_bswap64)
+    uint8_t *cptr = (uint8_t *)&pkt->staticbuf[pkt->curr];
+
+    val = __builtin_bswap64(val << 16);
+    memcpy(cptr, &val, 6);
+#else
+    uint8_t *cptr = (uint8_t *)&pkt->staticbuf[pkt->curr];
+
+    *cptr++ = (unsigned char)(val >> 40);
+    *cptr++ = (unsigned char)(val >> 32);
+    *cptr++ = (unsigned char)(val >> 24);
+    *cptr++ = (unsigned char)(val >> 16);
+    *cptr++ = (unsigned char)(val >> 8);
+    *cptr++ = (unsigned char)(val);
+#endif
+    pkt->written += 6;
+    pkt->curr += 6;
+    return 1;
+}
+
+static inline int WPACKET_static_put_bytes_u64(WPACKET *pkt, uint64_t val)
+{
+    if ((pkt->staticbuf == NULL || pkt->endfirst == 1 || val >= ULONG_MAX))
+        return 0;
+
+#if __has_builtin(__builtin_bswap64)
+    uint64_t *cptr = (uint64_t *)&pkt->staticbuf[pkt->curr];
+
+    val = __builtin_bswap64(val);
+    *cptr = val;
+#else
+    uint8_t *cptr = (uint8_t *)&pkt->staticbuf[pkt->curr];
+
+    *cptr++ = (unsigned char)(val >> 56);
+    *cptr++ = (unsigned char)(val >> 48);
+    *cptr++ = (unsigned char)(val >> 40);
+    *cptr++ = (unsigned char)(val >> 32);
+    *cptr++ = (unsigned char)(val >> 24);
+    *cptr++ = (unsigned char)(val >> 16);
+    *cptr++ = (unsigned char)(val >> 8);
+    *cptr++ = (unsigned char)(val);
+#endif
+    pkt->written += 8;
+    pkt->curr += 8;
+    return 1;
+}
 
 /* Set a maximum size that we will not allow the WPACKET to grow beyond */
 int WPACKET_set_max_size(WPACKET *pkt, size_t maxsize);
