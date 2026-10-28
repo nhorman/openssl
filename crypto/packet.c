@@ -117,7 +117,7 @@ static size_t maxmaxsize(size_t lenbytes)
 #define __has_builtin(x) 0
 #endif
 
-static WPACKET_SUB *wpacket_sub_new(WPACKET *pkt)
+static ossl_inline WPACKET_SUB *wpacket_sub_new(WPACKET *pkt)
 {
     WPACKET_SUB *sub;
     uint32_t idx;
@@ -143,7 +143,7 @@ static WPACKET_SUB *wpacket_sub_new(WPACKET *pkt)
     return sub;
 }
 
-static void wpacket_sub_free(WPACKET *pkt, WPACKET_SUB *sub)
+static ossl_inline void wpacket_sub_free(WPACKET *pkt, WPACKET_SUB *sub)
 {
     if (sub == NULL)
         return;
