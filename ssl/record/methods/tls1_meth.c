@@ -213,10 +213,18 @@ static int tls1_cipher(OSSL_RECORD_LAYER *rl, TLS_RL_RECORD *recs,
     size_t reclen[SSL_MAX_PIPELINES];
     unsigned char buf[SSL_MAX_PIPELINES][EVP_AEAD_TLS1_AAD_LEN];
     unsigned char *data[SSL_MAX_PIPELINES];
-    int pad = 0;
+    size_t pad = 0;
     size_t bs, ctr;
     const EVP_CIPHER *enc;
     int outlen;
+    OSSL_PARAM aad_set_params[] = {
+        OSSL_PARAM_octet_string(OSSL_CIPHER_PARAM_AEAD_TLS1_AAD, NULL, EVP_AEAD_TLS1_AAD_LEN),
+        OSSL_PARAM_END
+    };
+    OSSL_PARAM aad_get_params[] = {
+        OSSL_PARAM_size_t(OSSL_CIPHER_PARAM_AEAD_TLS1_AAD_PAD, &pad),
+        OSSL_PARAM_END
+    };
 
     if (n_recs == 0) {
         RLAYERfatal(rl, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
@@ -311,8 +319,16 @@ static int tls1_cipher(OSSL_RECORD_LAYER *rl, TLS_RL_RECORD *recs,
                 return 0;
             }
 
+            aad_set_params[0].data = buf[ctr];
+            if (!EVP_CIPHER_CTX_set_params(ds, aad_set_params)
+                || !EVP_CIPHER_CTX_get_params(ds, aad_get_params)) {
+                RLAYERfatal(rl, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
+                return 0;
+            }
+#if 0
             pad = EVP_CIPHER_CTX_ctrl(ds, EVP_CTRL_AEAD_TLS1_AAD,
                 EVP_AEAD_TLS1_AAD_LEN, buf[ctr]);
+#endif
             if (pad <= 0) {
                 RLAYERfatal(rl, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
                 return 0;
