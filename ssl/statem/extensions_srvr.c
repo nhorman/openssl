@@ -1170,7 +1170,7 @@ int tls_parse_ctos_cookie(SSL_CONNECTION *s, PACKET *pkt, unsigned int context,
         SSLfatal(s, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
         return 0;
     }
-    if (!WPACKET_put_bytes_u8(&hrrpkt, SSL3_MT_SERVER_HELLO)
+    if (!WPACKET_static_put_bytes_u8(&hrrpkt, SSL3_MT_SERVER_HELLO)
         || !WPACKET_start_sub_packet_u24_at_offset(&hrrpkt, msgbody_offs)
         /*
          * We are reconstructing the HRR to be able to calculate the
@@ -1179,13 +1179,13 @@ int tls_parse_ctos_cookie(SSL_CONNECTION *s, PACKET *pkt, unsigned int context,
          * not include the values of message_seq, fragment_offset and
          * fragment_length, setting these values is not required.
          */
-        || !WPACKET_put_bytes_u16(&hrrpkt, version1_2)
+        || !WPACKET_static_put_bytes_u16(&hrrpkt, version1_2)
         || !WPACKET_memcpy(&hrrpkt, hrrrandom, SSL3_RANDOM_SIZE)
         || !WPACKET_sub_memcpy_u8(&hrrpkt, s->tmp_session_id,
             s->tmp_session_id_len)
         || !ssl->method->put_cipher_by_char(s->s3.tmp.new_cipher, &hrrpkt,
             &ciphlen)
-        || !WPACKET_put_bytes_u8(&hrrpkt, 0)
+        || !WPACKET_static_put_bytes_u8(&hrrpkt, 0)
         || !WPACKET_start_sub_packet_u16(&hrrpkt)) {
         WPACKET_cleanup(&hrrpkt);
         SSLfatal(s, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);

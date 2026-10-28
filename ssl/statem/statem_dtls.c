@@ -191,11 +191,11 @@ static int dtls1_write_hm_header(unsigned char *msgheaderstart,
 
     if (!WPACKET_init_static_len(&msgheader, msgheaderstart,
             DTLS1_HM_HEADER_LENGTH, 0)
-        || !WPACKET_put_bytes_u8(&msgheader, msg_type)
-        || !WPACKET_put_bytes_u24(&msgheader, msg_len)
-        || !WPACKET_put_bytes_u16(&msgheader, msg_seq)
-        || !WPACKET_put_bytes_u24(&msgheader, fragoff)
-        || !WPACKET_put_bytes_u24(&msgheader, fraglen)
+        || !WPACKET_static_put_bytes_u8(&msgheader, msg_type)
+        || !WPACKET_static_put_bytes_u24(&msgheader, msg_len)
+        || !WPACKET_static_put_bytes_u16(&msgheader, msg_seq)
+        || !WPACKET_static_put_bytes_u24(&msgheader, fragoff)
+        || !WPACKET_static_put_bytes_u24(&msgheader, fraglen)
         || !WPACKET_get_total_written(&msgheader, &msgheaderlen)
         || msgheaderlen != DTLS1_HM_HEADER_LENGTH
         || !WPACKET_finish(&msgheader)) {

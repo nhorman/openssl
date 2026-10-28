@@ -1654,8 +1654,8 @@ int dtls_listener_cookie_hmac(SSL *ssl, uint64_t timestamp,
 
     /* Build data to HMAC: timestamp || port || raw_address */
     if (!WPACKET_init_static_len(&pkt, data, sizeof(data), 0)
-        || !WPACKET_put_bytes_u64(&pkt, timestamp)
-        || !WPACKET_put_bytes_u16(&pkt, port)
+        || !WPACKET_static_put_bytes_u64(&pkt, timestamp)
+        || !WPACKET_static_put_bytes_u16(&pkt, port)
         || !WPACKET_memcpy(&pkt, addr_buf, addr_len)
         || !WPACKET_get_total_written(&pkt, &data_len)
         || !WPACKET_finish(&pkt)) {
