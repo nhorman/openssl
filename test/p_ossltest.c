@@ -663,9 +663,7 @@ static const OSSL_PARAM *ossl_test_aes128cbc_gettable_ctx_params(void *cctx, voi
 
 static const OSSL_PARAM *ossl_test_aes128cbc_settable_ctx_params(void *cctx, void *vprovctx)
 {
-    PROV_EVP_AES128_CBC_CTX *ctx = (PROV_EVP_AES128_CBC_CTX *)vprovctx;
-
-    return EVP_CIPHER_CTX_settable_params(ctx->sub_ctx);
+    return ossl_cipher_generic_settable_ctx_params(cctx, vprovctx);
 }
 
 static const OSSL_DISPATCH ossl_testaes128_cbc_functions[] = {
@@ -999,9 +997,7 @@ static const OSSL_PARAM *ossl_test_aes128ecb_gettable_ctx_params(void *cctx, voi
 
 static const OSSL_PARAM *ossl_test_aes128ecb_settable_ctx_params(void *cctx, void *vprovctx)
 {
-    PROV_EVP_AES128_ECB_CTX *ctx = (PROV_EVP_AES128_ECB_CTX *)vprovctx;
-
-    return EVP_CIPHER_CTX_settable_params(ctx->sub_ctx);
+    return ossl_cipher_generic_settable_ctx_params(cctx, vprovctx);
 }
 
 static const OSSL_DISPATCH ossl_testaes128_ecb_functions[] = {
@@ -1362,9 +1358,7 @@ static const OSSL_PARAM *ossl_test_aes128gcm_gettable_ctx_params(void *cctx, voi
 
 static const OSSL_PARAM *ossl_test_aes128gcm_settable_ctx_params(void *cctx, void *vprovctx)
 {
-    PROV_EVP_AES128_GCM_CTX *ctx = (PROV_EVP_AES128_GCM_CTX *)vprovctx;
-
-    return EVP_CIPHER_CTX_settable_params(ctx->sub_ctx);
+    return ossl_cipher_generic_settable_ctx_params(cctx, vprovctx);
 }
 
 static const OSSL_DISPATCH ossl_testaes128_gcm_functions[] = {
