@@ -166,6 +166,8 @@ my %params = (
     'OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_ENC_IN' =>             "tls1multi_encin",     # octet_string
     'OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_ENC_LEN' =>            "tls1multi_enclen",    # size_t
 
+    'OSSL_CIPHER_PARAM_IDX_MODE' =>                           "index-mode",          # uint
+
 # digest parameters
     'OSSL_DIGEST_PARAM_XOFLEN' =>       "xoflen",       # size_t
     'OSSL_DIGEST_PARAM_SSL3_MS' =>      "ssl3-ms",      # octet string
@@ -687,17 +689,21 @@ sub output_endifdef {
 # Generate string based macros for public consumption
 sub generate_public_macros {
     my @macros = ();
+    my $idx = 0;
 
     foreach my $name (keys %params) {
         my $val = $params{$name};
         my $def = '# define ' . $name . ' ';
+        my $idxdef = '# define ' . $name . '_IDX' . ' ' . $idx;
 
         if (substr($val, 0, 1) eq '*') {
             $def .= substr($val, 1);
         } else {
             $def .= '"' . $val . '"';
         }
-        push(@macros, $def)
+        $idx = $idx + 1;
+        push(@macros, $def);
+        push(@macros, $idxdef);
     }
     return join("\n", sort @macros);
 }

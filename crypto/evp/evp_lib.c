@@ -304,6 +304,126 @@ int EVP_CIPHER_get_type(const EVP_CIPHER *cipher)
     }
 }
 
+typedef struct ctrl_cache_map {
+    const char *key;
+    uint16_t keyidx;
+    int getset;
+
+} CTRL_CACHE_MAP;
+#define CTRL_GET 1
+#define CTRL_SET 2
+#define CTRL_GLOBAL 3
+
+static unsigned long ctrl_cache_hash(const void *data)
+{
+    const CTRL_CACHE_MAP *entry = (const CTRL_CACHE_MAP *)data;
+
+    return OPENSSL_LH_strhash(entry->key) + entry->getset;
+}
+
+static int ctrl_cache_cmp(const void *a, const void *b)
+{
+    const CTRL_CACHE_MAP *entrya = (const CTRL_CACHE_MAP *)a;
+    const CTRL_CACHE_MAP *entryb = (const CTRL_CACHE_MAP *)b;
+    int delta = strcmp(entrya->key, entryb->key);
+
+    if (!delta)
+        return entrya->getset - entryb->getset;
+    return delta;
+}
+
+static CTRL_CACHE_MAP cipher_param_idx_map[] = {
+    { OSSL_CIPHER_PARAM_KEYLEN, OSSL_CIPHER_PARAM_KEYLEN_IDX, CTRL_GLOBAL },
+    { OSSL_CIPHER_PARAM_RANDOM_KEY, OSSL_CIPHER_PARAM_RANDOM_KEY_IDX, CTRL_GLOBAL },
+    { OSSL_CIPHER_PARAM_IVLEN, OSSL_CIPHER_PARAM_IVLEN_IDX, CTRL_GLOBAL },
+    { OSSL_CIPHER_PARAM_AEAD_TLS1_IV_FIXED, OSSL_CIPHER_PARAM_AEAD_TLS1_IV_FIXED_IDX, CTRL_GLOBAL },
+    { OSSL_CIPHER_PARAM_AEAD_TLS1_SET_IV_INV, OSSL_CIPHER_PARAM_AEAD_TLS1_SET_IV_INV_IDX, CTRL_GLOBAL },
+    { OSSL_CIPHER_PARAM_ROUNDS, OSSL_CIPHER_PARAM_ROUNDS_IDX, CTRL_GLOBAL },
+    { OSSL_CIPHER_PARAM_SPEED, OSSL_CIPHER_PARAM_SPEED_IDX, CTRL_GLOBAL },
+    { OSSL_CIPHER_PARAM_AEAD_TAG, OSSL_CIPHER_PARAM_AEAD_TAG_IDX, CTRL_GLOBAL },
+    { OSSL_CIPHER_PARAM_AEAD_TLS1_AAD, OSSL_CIPHER_PARAM_AEAD_TLS1_AAD_IDX, CTRL_GLOBAL },
+    { OSSL_CIPHER_PARAM_AEAD_TLS1_AAD_PAD, OSSL_CIPHER_PARAM_AEAD_TLS1_AAD_PAD_IDX, CTRL_GLOBAL },
+    { OSSL_CIPHER_PARAM_RC2_KEYBITS, OSSL_CIPHER_PARAM_RC2_KEYBITS_IDX, CTRL_GLOBAL },
+    { OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_MAX_SEND_FRAGMENT, OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_MAX_SEND_FRAGMENT_IDX, CTRL_GLOBAL },
+    { OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_MAX_BUFSIZE, OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_MAX_BUFSIZE_IDX, CTRL_GLOBAL },
+    { OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_AAD, OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_AAD_IDX, CTRL_GLOBAL },
+    { OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_INTERLEAVE, OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_INTERLEAVE_IDX, CTRL_GLOBAL },
+    { OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_AAD_PACKLEN, OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_AAD_PACKLEN_IDX, CTRL_GLOBAL },
+    { OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_ENC_LEN, OSSL_CIPHER_PARAM_TLS1_MULTIBLOCK_ENC_LEN_IDX, CTRL_GLOBAL },
+    { OSSL_CIPHER_PARAM_AEAD_MAC_KEY, OSSL_CIPHER_PARAM_AEAD_MAC_KEY_IDX, CTRL_GLOBAL }
+};
+
+static int evp_cache_ctrl_indicies(EVP_CIPHER *cipher)
+{
+    int ok = 0;
+    int i;
+    const OSSL_PARAM *gettables;
+    const OSSL_PARAM *settables;
+    int gcount, scount;
+    CTRL_CACHE_MAP *mapentries = NULL;
+
+    OPENSSL_LHASH *ctrlmap = OPENSSL_LH_new(ctrl_cache_hash, ctrl_cache_cmp);
+
+    if (ctrlmap == NULL)
+        goto err;
+
+    gettables = EVP_CIPHER_gettable_ctx_params(cipher);
+    settables = EVP_CIPHER_settable_ctx_params(cipher);
+
+    gcount = 0;
+    if (gettables != NULL) {
+        while (gettables[gcount].key != NULL)
+            gcount++;
+    }
+    scount = 0;
+    if (settables != NULL) {
+        while (settables[scount].key != NULL)
+            scount++;
+    }
+    if (gcount + scount == 0)
+        goto err;
+
+    mapentries = OPENSSL_malloc_array((gcount + scount), sizeof(CTRL_CACHE_MAP));
+    if (mapentries == NULL)
+        goto err;
+
+    gcount = 0;
+    while (gettables != NULL && gettables[gcount].key != NULL) {
+        mapentries[gcount].key = gettables[gcount].key;
+        mapentries[gcount].getset = CTRL_GET;
+        mapentries[gcount].keyidx = gcount;
+        if (OPENSSL_LH_insert(ctrlmap, &mapentries[gcount]) != NULL)
+            goto err;
+        if (OPENSSL_LH_error(ctrlmap) != 0)
+            goto err;
+        gcount++;
+    }
+    scount = 0;
+    while (settables != NULL && settables[scount].key != NULL) {
+        mapentries[gcount + scount].key = settables[scount].key;
+        mapentries[gcount + scount].getset = CTRL_SET;
+        mapentries[gcount].keyidx = scount;
+        if (OPENSSL_LH_insert(ctrlmap, &mapentries[gcount + scount]) != NULL)
+            goto err;
+        if (OPENSSL_LH_error(ctrlmap) != 0)
+            goto err;
+        scount++;
+    }
+
+    for (i = 0; i < OSSL_NELEM(cipher_param_idx_map); i++) {
+        if (OPENSSL_LH_insert(ctrlmap, &cipher_param_idx_map[i]) != NULL)
+            goto err;
+        if (OPENSSL_LH_error(ctrlmap) != 0)
+            goto err;
+    }
+
+    ok = 1;
+err:
+    OPENSSL_LH_free(ctrlmap);
+    OPENSSL_free(mapentries);
+    return ok;
+}
+
 int evp_cipher_cache_constants(EVP_CIPHER *cipher)
 {
     int ok, aead = 0, custom_iv = 0, cts = 0, multiblock = 0, randkey = 0;
@@ -311,9 +431,10 @@ int evp_cipher_cache_constants(EVP_CIPHER *cipher)
     size_t ivlen = 0;
     size_t blksz = 0;
     size_t keylen = 0;
+    uint32_t idx_mode = 0;
     unsigned int mode = 0;
     int no_store = cipher->flags & EVP_CIPH_FLAG_NO_STORE;
-    OSSL_PARAM params[11];
+    OSSL_PARAM params[12];
 
     params[0] = OSSL_PARAM_construct_size_t(OSSL_CIPHER_PARAM_BLOCK_SIZE, &blksz);
     params[1] = OSSL_PARAM_construct_size_t(OSSL_CIPHER_PARAM_IVLEN, &ivlen);
@@ -329,6 +450,7 @@ int evp_cipher_cache_constants(EVP_CIPHER *cipher)
         &randkey);
     params[9] = OSSL_PARAM_construct_int(OSSL_CIPHER_PARAM_ENCRYPT_THEN_MAC,
         &encrypt_then_mac);
+    params[10] = OSSL_PARAM_construct_uint(OSSL_CIPHER_PARAM_IDX_MODE, &idx_mode);
     params[10] = OSSL_PARAM_construct_end();
     ok = evp_do_ciph_getparams(cipher, params) > 0;
     if (ok) {
@@ -354,6 +476,9 @@ int evp_cipher_cache_constants(EVP_CIPHER *cipher)
                 OSSL_CIPHER_PARAM_ALGORITHM_ID_PARAMS))
             cipher->flags |= EVP_CIPH_FLAG_CUSTOM_ASN1;
     }
+
+    if (idx_mode != 0 && !evp_cache_ctrl_indicies(cipher))
+        return 0;
     return ok;
 }
 

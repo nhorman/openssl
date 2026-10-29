@@ -222,6 +222,12 @@ struct evp_md_st {
     OSSL_FUNC_digest_deserialize_fn *deserialize;
 } /* EVP_MD */;
 
+typedef struct evp_cipher_ctrl_idx {
+    uint32_t global_idx;
+    uint16_t get_idx;
+    uint16_t set_idx;
+} EVP_CIPHER_CTRL_IDX;
+
 struct evp_cipher_st {
     int nid;
 
@@ -238,6 +244,7 @@ struct evp_cipher_st {
     int name_id;
     char *type_name;
     const char *description;
+
     OSSL_PROVIDER *prov;
     CRYPTO_REF_COUNT refcnt;
     OSSL_FUNC_cipher_newctx_fn *newctx;
@@ -260,6 +267,8 @@ struct evp_cipher_st {
     OSSL_FUNC_cipher_settable_ctx_params_fn *settable_ctx_params;
     OSSL_FUNC_cipher_encrypt_skey_init_fn *einit_skey;
     OSSL_FUNC_cipher_decrypt_skey_init_fn *dinit_skey;
+
+    EVP_CIPHER_CTRL_IDX *idxs;
 } /* EVP_CIPHER */;
 
 #define EVP_MAXCHUNK ((size_t)1 << 30)

@@ -88,6 +88,7 @@ struct ossl_param_st {
     void *data; /* value being passed in or out */
     size_t data_size; /* data size */
     size_t return_size; /* returned content size */
+    uint64_t keyidx; /* idx of this param in indexed mode */
 };
 
 /* Currently supported OSSL_PARAM data types */
