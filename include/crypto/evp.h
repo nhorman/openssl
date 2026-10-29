@@ -224,8 +224,7 @@ struct evp_md_st {
 
 typedef struct evp_cipher_ctrl_idx {
     uint32_t global_idx;
-    uint16_t get_idx;
-    uint16_t set_idx;
+    uint32_t prov_idx;
 } EVP_CIPHER_CTRL_IDX;
 
 struct evp_cipher_st {

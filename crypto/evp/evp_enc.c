@@ -1594,6 +1594,7 @@ int EVP_CIPHER_up_ref(EVP_CIPHER *cipher)
 void evp_cipher_free_int(EVP_CIPHER *cipher)
 {
     OPENSSL_free(cipher->type_name);
+    OPENSSL_free(cipher->idxs);
     ossl_provider_free(cipher->prov);
     CRYPTO_FREE_REF(&cipher->refcnt);
     OPENSSL_free(cipher);

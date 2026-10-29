@@ -356,11 +356,14 @@ static CTRL_CACHE_MAP cipher_param_idx_map[] = {
 static int evp_cache_ctrl_indicies(EVP_CIPHER *cipher)
 {
     int ok = 0;
-    int i;
+    int i, j;
     const OSSL_PARAM *gettables;
     const OSSL_PARAM *settables;
-    int gcount, scount;
+    int gcount, scount, count;
+    CTRL_CACHE_MAP key;
+    CTRL_CACHE_MAP *data;
     CTRL_CACHE_MAP *mapentries = NULL;
+    EVP_CIPHER_CTRL_IDX *ctrl_cache = NULL;
 
     OPENSSL_LHASH *ctrlmap = OPENSSL_LH_new(ctrl_cache_hash, ctrl_cache_cmp);
 
@@ -417,10 +420,60 @@ static int evp_cache_ctrl_indicies(EVP_CIPHER *cipher)
             goto err;
     }
 
+    ctrl_cache = OPENSSL_malloc_array(gcount + scount, sizeof(EVP_CIPHER_CTRL_IDX));
+    if (ctrl_cache == NULL)
+        goto err;
+
+    gcount = 0;
+    count = 0;
+    while (gettables != NULL && gettables[gcount].key != NULL) {
+        key.key = gettables[gcount].key;
+        key.getset = CTRL_GET;
+        data = OPENSSL_LH_retrieve(ctrlmap, &key);
+        if (data == NULL) {
+            ctrl_cache[count].prov_idx = 0xffff;
+        } else {
+            ctrl_cache[count].prov_idx = data->keyidx;
+        }
+        key.getset = CTRL_GLOBAL;
+        data = OPENSSL_LH_retrieve(ctrlmap, &key);
+        if (data == NULL)
+            goto err;
+        ctrl_cache[count].global_idx = data->keyidx;
+        gcount++;
+        count++;
+    }
+
+    scount = 0;
+    while (settables != NULL && settables[scount].key != NULL) {
+        key.key = settables[scount].key;
+        key.getset = CTRL_GLOBAL;
+        data = OPENSSL_LH_retrieve(ctrlmap, &key);
+        if (data == NULL)
+            goto err;
+        for (j = 0; j < count; j++) {
+            if (ctrl_cache[j].global_idx == data->keyidx)
+                break;
+        }
+        ctrl_cache[j].global_idx = data->keyidx;
+        key.getset = CTRL_SET;
+        data = OPENSSL_LH_retrieve(ctrlmap, &key);
+        if (data == NULL) {
+            ctrl_cache[j].prov_idx = (0xffff << 16) | ctrl_cache[j].prov_idx;
+        } else {
+            ctrl_cache[j].prov_idx = (data->keyidx << 16) | ctrl_cache[j].prov_idx;
+        }
+        scount++;
+        count++;
+    }
+    cipher->idxs = ctrl_cache;
     ok = 1;
 err:
     OPENSSL_LH_free(ctrlmap);
     OPENSSL_free(mapentries);
+    if (ok != 1)
+        OPENSSL_free(ctrl_cache);
+
     return ok;
 }
 
