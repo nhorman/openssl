@@ -371,7 +371,8 @@ int EVP_DigestFinalXOF(EVP_MD_CTX *ctx, unsigned char *md, size_t size)
      * older providers can use the supplied value. Ideally we should have just
      * used the size passed into ctx->digest->dfinal().
      */
-    params[i++] = OSSL_PARAM_construct_size_t(OSSL_DIGEST_PARAM_XOFLEN, &size);
+    params[i] = OSSL_PARAM_construct_size_t(OSSL_DIGEST_PARAM_XOFLEN, &size);
+    OSSL_PARAM_SET_HASH(&params[i++], OSSL_DIGEST_PARAM_XOFLEN_HASH);
     params[i++] = OSSL_PARAM_construct_end();
 
     if (ossl_likely(EVP_MD_CTX_set_params(ctx, params) >= 0))
@@ -731,15 +732,18 @@ int EVP_MD_CTX_ctrl(EVP_MD_CTX *ctx, int cmd, int p1, void *p2)
     case EVP_MD_CTRL_XOF_LEN:
         sz = (size_t)p1;
         params[0] = OSSL_PARAM_construct_size_t(OSSL_DIGEST_PARAM_XOFLEN, &sz);
+        OSSL_PARAM_SET_HASH(&params[0], OSSL_DIGEST_PARAM_XOFLEN_HASH);
         break;
     case EVP_MD_CTRL_MICALG:
         set_params = 0;
         params[0] = OSSL_PARAM_construct_utf8_string(OSSL_DIGEST_PARAM_MICALG,
             p2, p1 ? p1 : 9999);
+        OSSL_PARAM_SET_HASH(&params[0], OSSL_DIGEST_PARAM_MICALG_HASH);
         break;
     case EVP_CTRL_SSL3_MASTER_SECRET:
         params[0] = OSSL_PARAM_construct_octet_string(OSSL_DIGEST_PARAM_SSL3_MS,
             p2, p1);
+        OSSL_PARAM_SET_HASH(&params[0], OSSL_DIGEST_PARAM_SSL3_MS_HASH);
         break;
     default:
         goto conclude;

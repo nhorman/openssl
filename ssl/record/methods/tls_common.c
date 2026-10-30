@@ -72,10 +72,15 @@ int ossl_set_tls_provider_parameters(OSSL_RECORD_LAYER *rl,
     if (imacsize > 0)
         macsize = (size_t)imacsize;
 
-    *pprm++ = OSSL_PARAM_construct_int(OSSL_CIPHER_PARAM_TLS_VERSION,
+    *pprm = OSSL_PARAM_construct_int(OSSL_CIPHER_PARAM_TLS_VERSION,
         &rl->version);
-    *pprm++ = OSSL_PARAM_construct_size_t(OSSL_CIPHER_PARAM_TLS_MAC_SIZE,
+    OSSL_PARAM_SET_HASH(pprm, OSSL_CIPHER_PARAM_TLS_VERSION_HASH);
+    *pprm++;
+
+    *pprm = OSSL_PARAM_construct_size_t(OSSL_CIPHER_PARAM_TLS_MAC_SIZE,
         &macsize);
+    OSSL_PARAM_SET_HASH(pprm, OSSL_CIPHER_PARAM_TLS_MAC_SIZE_HASH);
+    *pprm++;
     *pprm = OSSL_PARAM_construct_end();
 
     if (!EVP_CIPHER_CTX_set_params(ctx, params)) {

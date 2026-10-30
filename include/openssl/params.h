@@ -19,6 +19,8 @@
 extern "C" {
 #endif
 
+#define OSSL_PARAM_SET_HASH(param, key) (param)->keyhash = (key)
+
 #define OSSL_PARAM_UNMODIFIED ((size_t)-1)
 
 #define OSSL_PARAM_END \

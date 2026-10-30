@@ -8023,6 +8023,7 @@ const EVP_CIPHER *ssl_evp_cipher_fetch(OSSL_LIB_CTX *libctx,
 
         params[0] = OSSL_PARAM_construct_int(OSSL_CIPHER_PARAM_DECRYPT_ONLY,
             &decrypt_only);
+        OSSL_PARAM_SET_HASH(&params[0], OSSL_CIPHER_PARAM_DECRYPT_ONLY_HASH);
         params[1] = OSSL_PARAM_construct_end();
         if (EVP_CIPHER_get_params((EVP_CIPHER *)ciph, params)
             && decrypt_only) {
