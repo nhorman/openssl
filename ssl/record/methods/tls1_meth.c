@@ -172,24 +172,36 @@ static int tls1_set_crypto_state(OSSL_RECORD_LAYER *rl, int level,
 static int setup_record_header(const OSSL_RECORD_LAYER *rl, TLS_RL_RECORD *rec,
     unsigned char *buf, size_t buflen)
 {
-    WPACKET hdr;
-    size_t hdrsize;
+    uint64_t seq = rl->sequence;
+    unsigned int version = (unsigned int)rl->version;
+    size_t len = rec->length;
+    int i;
 
     if (buflen < EVP_AEAD_TLS1_AAD_LEN)
         return 0;
-    if (!WPACKET_init_static_len(&hdr, buf, EVP_AEAD_TLS1_AAD_LEN, 0)
-        || (rl->isdtls && !WPACKET_put_bytes_u16(&hdr, rl->epoch))
-        || (rl->isdtls ? !WPACKET_put_bytes_u48(&hdr, rl->sequence)
-                       : !WPACKET_put_bytes_u64(&hdr, rl->sequence))
-        || !WPACKET_put_bytes_u8(&hdr, rec->type)
-        || !WPACKET_put_bytes_u16(&hdr, rl->version)
-        || !WPACKET_put_bytes_u16(&hdr, rec->length)
-        || !WPACKET_finish(&hdr)
-        || !WPACKET_get_total_written(&hdr, &hdrsize)
-        || hdrsize != EVP_AEAD_TLS1_AAD_LEN) {
-        WPACKET_cleanup(&hdr);
-        return 0;
+
+    /*
+     * The AAD is a fixed 13 byte layout, so write it directly rather than via
+     * a WPACKET, as WPACKET kills our performance in this hot path
+     */
+    if (rl->isdtls) {
+        /* epoch(2) || seq_num(6) */
+        if (rl->epoch > 0xffff || seq > 0xffffffffffffULL)
+            return 0;
+        seq |= rl->epoch << 48;
     }
+    if (version > 0xffff || len > 0xffff)
+        return 0;
+
+    for (i = 7; i >= 0; i--) {
+        buf[i] = (unsigned char)seq;
+        seq >>= 8;
+    }
+    buf[8] = (unsigned char)rec->type;
+    buf[9] = (unsigned char)(version >> 8);
+    buf[10] = (unsigned char)version;
+    buf[11] = (unsigned char)(len >> 8);
+    buf[12] = (unsigned char)len;
 
     return 1;
 }

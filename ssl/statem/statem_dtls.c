@@ -186,22 +186,27 @@ static int dtls1_write_hm_header(unsigned char *msgheaderstart,
     unsigned short msg_seq, size_t fragoff,
     size_t fraglen)
 {
-    WPACKET msgheader;
-    size_t msgheaderlen;
+    unsigned char *p = msgheaderstart;
 
-    if (!WPACKET_init_static_len(&msgheader, msgheaderstart,
-            DTLS1_HM_HEADER_LENGTH, 0)
-        || !WPACKET_put_bytes_u8(&msgheader, msg_type)
-        || !WPACKET_put_bytes_u24(&msgheader, msg_len)
-        || !WPACKET_put_bytes_u16(&msgheader, msg_seq)
-        || !WPACKET_put_bytes_u24(&msgheader, fragoff)
-        || !WPACKET_put_bytes_u24(&msgheader, fraglen)
-        || !WPACKET_get_total_written(&msgheader, &msgheaderlen)
-        || msgheaderlen != DTLS1_HM_HEADER_LENGTH
-        || !WPACKET_finish(&msgheader)) {
-        WPACKET_cleanup(&msgheader);
+  if (msg_type > 0xff
+        || msg_len > 0xffffff
+        || msg_seq > 0xffff
+        || fragoff > 0xffffff
+        || fraglen > 0xffffff)
         return 0;
-    }
+
+    *p++ = (unsigned char)msg_type;
+    *p++ = (unsigned char)(msg_len >> 16);
+    *p++ = (unsigned char)(msg_len >> 8);
+    *p++ = (unsigned char)msg_len;
+    *p++ = (unsigned char)(msg_seq >> 8);
+    *p++ = (unsigned char)msg_seq;
+    *p++ = (unsigned char)(fragoff >> 16);
+    *p++ = (unsigned char)(fragoff >> 8);
+    *p++ = (unsigned char)fragoff;
+    *p++ = (unsigned char)(fraglen >> 16);
+    *p++ = (unsigned char)(fraglen >> 8);
+    *p   = (unsigned char)fraglen;
 
     return 1;
 }
