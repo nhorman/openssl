@@ -1636,8 +1636,8 @@ int dtls_listener_cookie_hmac(SSL *ssl, uint64_t timestamp,
     size_t addr_len = 0;
     size_t hmac_len = DTLS_LISTENER_COOKIE_HMAC_LEN;
     uint16_t port;
-    WPACKET pkt;
     int ret = 0;
+    int i;
 
     if (sc == NULL || sc->d1 == NULL)
         return 0;
@@ -1652,16 +1652,17 @@ int dtls_listener_cookie_hmac(SSL *ssl, uint64_t timestamp,
     if (!BIO_ADDR_rawaddress(&sc->d1->peer_addr, addr_buf, &addr_len))
         return 0;
 
-    /* Build data to HMAC: timestamp || port || raw_address */
-    if (!WPACKET_init_static_len(&pkt, data, sizeof(data), 0)
-        || !WPACKET_put_bytes_u64(&pkt, timestamp)
-        || !WPACKET_put_bytes_u16(&pkt, port)
-        || !WPACKET_memcpy(&pkt, addr_buf, addr_len)
-        || !WPACKET_get_total_written(&pkt, &data_len)
-        || !WPACKET_finish(&pkt)) {
-        WPACKET_cleanup(&pkt);
+     /* Build data to HMAC: timestamp || port || raw_address */
+    if (addr_len > sizeof(data) - 10)
         return 0;
+    for (i = 7; i >= 0; i--) {
+        data[i] = (unsigned char)timestamp;
+        timestamp >>= 8;
     }
+    data[8] = (unsigned char)(port >> 8);
+    data[9] = (unsigned char)port;
+    memcpy(data + 10, addr_buf, addr_len);
+    data_len = 10 + addr_len;
 
     mctx = EVP_MAC_CTX_new(ctx->hmac);
     if (mctx == NULL)
