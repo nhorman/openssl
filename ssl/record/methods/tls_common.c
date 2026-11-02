@@ -1930,6 +1930,7 @@ int tls_retry_write_records(OSSL_RECORD_LAYER *rl)
     int i, ret;
     TLS_BUFFER *thiswb;
     size_t tmpwrit = 0, left;
+    ERR_STATE *state;
 
     if (rl->nextwbuf >= rl->numwpipes)
         return OSSL_RECORD_RETURN_SUCCESS;
@@ -1961,10 +1962,12 @@ int tls_retry_write_records(OSSL_RECORD_LAYER *rl)
                 msg.data_len = left;
                 msg.peer = &rl->peer;
 
-                ERR_set_mark();
+                state = ERR_get_state();
+                ERR_STATE_set_mark(state);
+
                 if (BIO_sendmmsg(rl->bio, &msg, sizeof(msg), 1, 0, &processed)
                     && processed == 1) {
-                    ERR_clear_last_mark();
+                    ERR_STATE_clear_last_mark(state);
                     tmpwrit = msg.data_len;
                     ret = OSSL_RECORD_RETURN_SUCCESS;
                     i = (int)tmpwrit;
@@ -1975,7 +1978,7 @@ int tls_retry_write_records(OSSL_RECORD_LAYER *rl)
                      * of BIO_should_retry() to check for transient errors.
                      */
                     if (BIO_err_is_non_fatal(err)) {
-                        ERR_pop_to_mark();
+                        ERR_STATE_pop_to_mark(state);
 
                         /*
                          * A connection in blocking mode waits for the socket to
@@ -1996,7 +1999,7 @@ int tls_retry_write_records(OSSL_RECORD_LAYER *rl)
                         i = 0;
                         tmpwrit = 0;
                     } else {
-                        ERR_clear_last_mark();
+                        ERR_STATE_clear_last_mark(state);
                         ERR_raise_data(ERR_LIB_SYS, get_last_sys_error(),
                             "tls_retry_write_records BIO_sendmmsg failure");
                         ret = OSSL_RECORD_RETURN_FATAL;
