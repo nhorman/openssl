@@ -1088,6 +1088,7 @@ int dtls_prepare_record_header(OSSL_RECORD_LAYER *rl,
     unsigned char **recdata)
 {
     size_t maxcomplen;
+    unsigned char *hdr;
     int unifiedheader = rl->version == DTLS1_3_VERSION && rl->epoch > 0;
 
     templ->sequence_number = rl->sequence;
@@ -1098,6 +1099,13 @@ int dtls_prepare_record_header(OSSL_RECORD_LAYER *rl,
     if (rl->compctx != NULL)
         maxcomplen += SSL3_RT_MAX_COMPRESSED_OVERHEAD;
 
+    /*
+     * Everything before the length field has a fixed layout, so allocate it
+     * in one go and fill it in directly rather than making one
+     * WPACKET_put_bytes_*() call per field. The length field itself remains a
+     * WPACKET sub-packet because tls_post_encryption_processing_default()
+     * fills it in with WPACKET_close().
+     */
     if (unifiedheader) {
         uint8_t fixedbits = 0x20;
         uint8_t cbit = 0;
@@ -1110,33 +1118,48 @@ int dtls_prepare_record_header(OSSL_RECORD_LAYER *rl,
         /* Truncate only the wire encoding, not the AEAD nonce counter. */
         seqnum = rl->sequence & DTLS13_UNI_HDR_SEQ_MASK(sbit ? 2 : 1);
 
-        if (!WPACKET_put_bytes_u8(thispkt, unifiedhdrbits)
-            || (sbit ? !WPACKET_put_bytes_u16(thispkt, seqnum)
-                     : !WPACKET_put_bytes_u8(thispkt, seqnum))
-            || !WPACKET_start_sub_packet_u16(thispkt)
-            || (rl->eivlen > 0
-                && !WPACKET_allocate_bytes(thispkt, rl->eivlen, NULL))
-            || (maxcomplen > 0
-                && !WPACKET_reserve_bytes(thispkt, maxcomplen, recdata))) {
-            RLAYERfatal(rl, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
-            return 0;
-        }
+        if (!WPACKET_allocate_bytes(thispkt, sbit ? 3 : 2, &hdr))
+            goto err;
+
+        *hdr++ = unifiedhdrbits;
+        if (sbit)
+            *hdr++ = (unsigned char)(seqnum >> 8);
+        *hdr = (unsigned char)seqnum;
     } else {
-        if (!WPACKET_put_bytes_u8(thispkt, rectype)
-            || !WPACKET_put_bytes_u16(thispkt, templ->version)
-            || !WPACKET_put_bytes_u16(thispkt, templ->epoch)
-            || !WPACKET_put_bytes_u48(thispkt, templ->sequence_number)
-            || !WPACKET_start_sub_packet_u16(thispkt)
-            || (rl->eivlen > 0
-                && !WPACKET_allocate_bytes(thispkt, rl->eivlen, NULL))
-            || (maxcomplen > 0
-                && !WPACKET_reserve_bytes(thispkt, maxcomplen, recdata))) {
-            RLAYERfatal(rl, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
-            return 0;
+        uint64_t seqnum = templ->sequence_number;
+        int i;
+
+        /* type(1) || version(2) || epoch(2) || sequence_number(6) */
+        if (templ->version > 0xffff
+            || templ->epoch > 0xffff
+            || seqnum > 0xffffffffffffULL
+            || !WPACKET_allocate_bytes(thispkt, DTLS1_RT_HEADER_LENGTH - 2,
+                &hdr))
+            goto err;
+
+        hdr[0] = rectype;
+        hdr[1] = (unsigned char)(templ->version >> 8);
+        hdr[2] = (unsigned char)templ->version;
+        hdr[3] = (unsigned char)(templ->epoch >> 8);
+        hdr[4] = (unsigned char)templ->epoch;
+        for (i = 10; i >= 5; i--) {
+            hdr[i] = (unsigned char)seqnum;
+            seqnum >>= 8;
         }
     }
 
+    if (!WPACKET_start_sub_packet_u16(thispkt)
+        || (rl->eivlen > 0
+            && !WPACKET_allocate_bytes(thispkt, rl->eivlen, NULL))
+        || (maxcomplen > 0
+            && !WPACKET_reserve_bytes(thispkt, maxcomplen, recdata)))
+        goto err;
+
     return 1;
+
+err:
+    RLAYERfatal(rl, SSL_AD_INTERNAL_ERROR, ERR_R_INTERNAL_ERROR);
+    return 0;
 }
 
 int dtls_post_encryption_processing(OSSL_RECORD_LAYER *rl,
